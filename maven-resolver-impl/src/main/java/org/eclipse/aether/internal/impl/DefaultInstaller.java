@@ -22,7 +22,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -48,7 +49,7 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalMetadataRegistration;
 import org.eclipse.aether.repository.LocalRepositoryManager;
-import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
 import static java.util.Objects.requireNonNull;
@@ -58,7 +59,7 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultInstaller implements Installer {
-    private final FileProcessor fileProcessor;
+    private final PathProcessor pathProcessor;
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
 
@@ -68,11 +69,11 @@ public class DefaultInstaller implements Installer {
 
     @Inject
     public DefaultInstaller(
-            FileProcessor fileProcessor,
+            PathProcessor pathProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
             Map<String, MetadataGeneratorFactory> metadataFactories,
             SyncContextFactory syncContextFactory) {
-        this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
+        this.pathProcessor = requireNonNull(pathProcessor, "path processor cannot be null");
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
         this.metadataFactories = Collections.unmodifiableMap(metadataFactories);
@@ -163,25 +164,25 @@ public class DefaultInstaller implements Installer {
     private void install(RepositorySystemSession session, RequestTrace trace, Artifact artifact)
             throws InstallationException {
         final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
-        final File srcFile = artifact.getFile();
-        final File dstFile = new File(lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact(artifact));
+        final Path srcPath = artifact.getPath();
+        final Path dstPath = lrm.getRepository().getBasePath().resolve(lrm.getPathForLocalArtifact(artifact));
 
-        artifactInstalling(session, trace, artifact, dstFile);
+        artifactInstalling(session, trace, artifact, dstPath);
 
         Exception exception = null;
         try {
-            if (dstFile.equals(srcFile)) {
-                throw new IllegalStateException("cannot install " + dstFile + " to same path");
+            if (dstPath.equals(srcPath)) {
+                throw new IllegalStateException("cannot install " + dstPath + " to same path");
             }
 
-            fileProcessor.copy(srcFile, dstFile);
-            dstFile.setLastModified(srcFile.lastModified());
+            pathProcessor.copy(srcPath, dstPath);
+            Files.setLastModifiedTime(dstPath, Files.getLastModifiedTime(srcPath));
             lrm.add(session, new LocalArtifactRegistration(artifact));
         } catch (Exception e) {
             exception = e;
             throw new InstallationException("Failed to install artifact " + artifact + ": " + e.getMessage(), e);
         } finally {
-            artifactInstalled(session, trace, artifact, dstFile, exception);
+            artifactInstalled(session, trace, artifact, dstPath, exception);
         }
     }
 
@@ -189,19 +190,19 @@ public class DefaultInstaller implements Installer {
             throws InstallationException {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
 
-        File dstFile = new File(lrm.getRepository().getBasedir(), lrm.getPathForLocalMetadata(metadata));
+        Path dstPath = lrm.getRepository().getBasePath().resolve(lrm.getPathForLocalMetadata(metadata));
 
-        metadataInstalling(session, trace, metadata, dstFile);
+        metadataInstalling(session, trace, metadata, dstPath);
 
         Exception exception = null;
         try {
             if (metadata instanceof MergeableMetadata) {
-                ((MergeableMetadata) metadata).merge(dstFile, dstFile);
+                ((MergeableMetadata) metadata).merge(dstPath, dstPath);
             } else {
-                if (dstFile.equals(metadata.getFile())) {
-                    throw new IllegalStateException("cannot install " + dstFile + " to same path");
+                if (dstPath.equals(metadata.getPath())) {
+                    throw new IllegalStateException("cannot install " + dstPath + " to same path");
                 }
-                fileProcessor.copy(metadata.getFile(), dstFile);
+                pathProcessor.copy(metadata.getPath(), dstPath);
             }
 
             lrm.add(session, new LocalMetadataRegistration(metadata));
@@ -209,51 +210,51 @@ public class DefaultInstaller implements Installer {
             exception = e;
             throw new InstallationException("Failed to install metadata " + metadata + ": " + e.getMessage(), e);
         } finally {
-            metadataInstalled(session, trace, metadata, dstFile, exception);
+            metadataInstalled(session, trace, metadata, dstPath, exception);
         }
     }
 
     private void artifactInstalling(
-            RepositorySystemSession session, RequestTrace trace, Artifact artifact, File dstFile) {
+            RepositorySystemSession session, RequestTrace trace, Artifact artifact, Path dstPath) {
         RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.ARTIFACT_INSTALLING);
         event.setTrace(trace);
         event.setArtifact(artifact);
         event.setRepository(session.getLocalRepositoryManager().getRepository());
-        event.setFile(dstFile);
+        event.setPath(dstPath);
 
         repositoryEventDispatcher.dispatch(event.build());
     }
 
     private void artifactInstalled(
-            RepositorySystemSession session, RequestTrace trace, Artifact artifact, File dstFile, Exception exception) {
+            RepositorySystemSession session, RequestTrace trace, Artifact artifact, Path dstPath, Exception exception) {
         RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.ARTIFACT_INSTALLED);
         event.setTrace(trace);
         event.setArtifact(artifact);
         event.setRepository(session.getLocalRepositoryManager().getRepository());
-        event.setFile(dstFile);
+        event.setPath(dstPath);
         event.setException(exception);
 
         repositoryEventDispatcher.dispatch(event.build());
     }
 
     private void metadataInstalling(
-            RepositorySystemSession session, RequestTrace trace, Metadata metadata, File dstFile) {
+            RepositorySystemSession session, RequestTrace trace, Metadata metadata, Path dstPath) {
         RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.METADATA_INSTALLING);
         event.setTrace(trace);
         event.setMetadata(metadata);
         event.setRepository(session.getLocalRepositoryManager().getRepository());
-        event.setFile(dstFile);
+        event.setPath(dstPath);
 
         repositoryEventDispatcher.dispatch(event.build());
     }
 
     private void metadataInstalled(
-            RepositorySystemSession session, RequestTrace trace, Metadata metadata, File dstFile, Exception exception) {
+            RepositorySystemSession session, RequestTrace trace, Metadata metadata, Path dstPath, Exception exception) {
         RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.METADATA_INSTALLED);
         event.setTrace(trace);
         event.setMetadata(metadata);
         event.setRepository(session.getLocalRepositoryManager().getRepository());
-        event.setFile(dstFile);
+        event.setPath(dstPath);
         event.setException(exception);
 
         repositoryEventDispatcher.dispatch(event.build());

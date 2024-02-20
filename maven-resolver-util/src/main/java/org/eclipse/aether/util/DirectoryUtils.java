@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.LocalRepository;
 
 import static java.util.Objects.requireNonNull;
 
@@ -67,7 +68,7 @@ public final class DirectoryUtils {
         if (namePath.isAbsolute()) {
             result = namePath.normalize();
         } else {
-            result = base.resolve(namePath).normalize();
+            result = base.resolve(name).normalize();
         }
 
         if (!Files.exists(result)) {
@@ -84,7 +85,7 @@ public final class DirectoryUtils {
      * Creates {@link Path} instance out of session configuration, and (if relative) resolve it against local
      * repository basedir. Pre-populates values and invokes {@link #resolveDirectory(String, Path, boolean)}.
      * <p>
-     * For this method to work, {@link org.eclipse.aether.repository.LocalRepository#getBasedir()} must return
+     * For this method to work, {@link LocalRepository#getBasePath()} must return
      * non-{@code null} value, otherwise {@link NullPointerException} is thrown.
      *
      * @param session     The session, may not be {@code null}.
@@ -100,10 +101,10 @@ public final class DirectoryUtils {
         requireNonNull(session, "session is null");
         requireNonNull(defaultName, "defaultName is null");
         requireNonNull(nameKey, "nameKey is null");
-        requireNonNull(session.getLocalRepository().getBasedir(), "session.localRepository.basedir is null");
+        requireNonNull(session.getLocalRepository().getBasePath(), "session.localRepository.basePath is null");
         return resolveDirectory(
                 ConfigUtils.getString(session, defaultName, nameKey),
-                session.getLocalRepository().getBasedir().toPath(),
+                session.getLocalRepository().getBasePath(),
                 mayCreate);
     }
 }

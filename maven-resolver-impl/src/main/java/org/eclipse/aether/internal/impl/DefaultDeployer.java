@@ -22,8 +22,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,7 +61,7 @@ import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
@@ -77,7 +78,7 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultDeployer implements Deployer {
-    private final FileProcessor fileProcessor;
+    private final PathProcessor pathProcessor;
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
 
@@ -96,7 +97,7 @@ public class DefaultDeployer implements Deployer {
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
     public DefaultDeployer(
-            FileProcessor fileProcessor,
+            PathProcessor pathProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
             RepositoryConnectorProvider repositoryConnectorProvider,
             RemoteRepositoryManager remoteRepositoryManager,
@@ -104,7 +105,7 @@ public class DefaultDeployer implements Deployer {
             Map<String, MetadataGeneratorFactory> metadataFactories,
             SyncContextFactory syncContextFactory,
             OfflineController offlineController) {
-        this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
+        this.pathProcessor = requireNonNull(pathProcessor, "path processor cannot be null");
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
         this.repositoryConnectorProvider =
@@ -179,7 +180,7 @@ public class DefaultDeployer implements Deployer {
 
                 iterator.set(artifact);
 
-                ArtifactUpload upload = new ArtifactUpload(artifact, artifact.getFile());
+                ArtifactUpload upload = new ArtifactUpload(artifact, artifact.getPath());
                 upload.setTrace(trace);
                 upload.setListener(new ArtifactUploadListener(catapult, upload));
                 artifactUploads.add(upload);
@@ -257,9 +258,9 @@ public class DefaultDeployer implements Deployer {
             EventCatapult catapult)
             throws DeploymentException {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
-        File basedir = lrm.getRepository().getBasedir();
+        Path basePath = lrm.getRepository().getBasePath();
 
-        File dstFile = new File(basedir, lrm.getPathForRemoteMetadata(metadata, repository, ""));
+        Path dstPath = basePath.resolve(lrm.getPathForRemoteMetadata(metadata, repository, ""));
 
         if (metadata instanceof MergeableMetadata) {
             if (!((MergeableMetadata) metadata).isMerged()) {
@@ -278,7 +279,7 @@ public class DefaultDeployer implements Deployer {
                 RepositoryPolicy policy = getPolicy(session, repository, metadata.getNature());
                 MetadataDownload download = new MetadataDownload();
                 download.setMetadata(metadata);
-                download.setFile(dstFile);
+                download.setPath(dstPath);
                 download.setChecksumPolicy(policy.getChecksumPolicy());
                 download.setListener(SafeTransferListener.wrap(session));
                 download.setTrace(catapult.getTrace());
@@ -287,7 +288,12 @@ public class DefaultDeployer implements Deployer {
                 Exception error = download.getException();
 
                 if (error instanceof MetadataNotFoundException) {
-                    dstFile.delete();
+                    try {
+                        Files.deleteIfExists(dstPath);
+                    } catch (IOException e) {
+                        throw new DeploymentException(
+                                "Failed to delete cached metadata " + metadata + ": " + e.getMessage(), e);
+                    }
                 }
 
                 event = new RepositoryEvent.Builder(session, EventType.METADATA_DOWNLOADED);
@@ -295,7 +301,7 @@ public class DefaultDeployer implements Deployer {
                 event.setMetadata(metadata);
                 event.setRepository(repository);
                 event.setException(error);
-                event.setFile(dstFile);
+                event.setPath(dstPath);
                 repositoryEventDispatcher.dispatch(event.build());
 
                 event = new RepositoryEvent.Builder(session, EventType.METADATA_RESOLVED);
@@ -303,7 +309,7 @@ public class DefaultDeployer implements Deployer {
                 event.setMetadata(metadata);
                 event.setRepository(repository);
                 event.setException(error);
-                event.setFile(dstFile);
+                event.setPath(dstPath);
                 repositoryEventDispatcher.dispatch(event.build());
 
                 if (error != null && !(error instanceof MetadataNotFoundException)) {
@@ -313,16 +319,16 @@ public class DefaultDeployer implements Deployer {
             }
 
             try {
-                ((MergeableMetadata) metadata).merge(dstFile, dstFile);
+                ((MergeableMetadata) metadata).merge(dstPath, dstPath);
             } catch (RepositoryException e) {
                 throw new DeploymentException("Failed to update metadata " + metadata + ": " + e.getMessage(), e);
             }
         } else {
-            if (metadata.getFile() == null) {
+            if (metadata.getPath() == null) {
                 throw new DeploymentException("Failed to update metadata " + metadata + ": No file attached.");
             }
             try {
-                fileProcessor.copy(metadata.getFile(), dstFile);
+                pathProcessor.copy(metadata.getPath(), dstPath);
             } catch (IOException e) {
                 throw new DeploymentException("Failed to update metadata " + metadata + ": " + e.getMessage(), e);
             }
@@ -330,12 +336,12 @@ public class DefaultDeployer implements Deployer {
 
         UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
         check.setItem(metadata);
-        check.setFile(dstFile);
+        check.setPath(dstPath);
         check.setRepository(repository);
         check.setAuthoritativeRepository(repository);
         updateCheckManager.touchMetadata(session, check);
 
-        MetadataUpload upload = new MetadataUpload(metadata, dstFile);
+        MetadataUpload upload = new MetadataUpload(metadata, dstPath);
         upload.setTrace(catapult.getTrace());
         upload.setListener(new MetadataUploadListener(catapult, upload));
         metadataUploads.add(upload);
@@ -377,43 +383,43 @@ public class DefaultDeployer implements Deployer {
             return trace;
         }
 
-        public void artifactDeploying(Artifact artifact, File file) {
+        public void artifactDeploying(Artifact artifact, Path path) {
             RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.ARTIFACT_DEPLOYING);
             event.setTrace(trace);
             event.setArtifact(artifact);
             event.setRepository(repository);
-            event.setFile(file);
+            event.setPath(path);
 
             dispatcher.dispatch(event.build());
         }
 
-        public void artifactDeployed(Artifact artifact, File file, ArtifactTransferException exception) {
+        public void artifactDeployed(Artifact artifact, Path path, ArtifactTransferException exception) {
             RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.ARTIFACT_DEPLOYED);
             event.setTrace(trace);
             event.setArtifact(artifact);
             event.setRepository(repository);
-            event.setFile(file);
+            event.setPath(path);
             event.setException(exception);
 
             dispatcher.dispatch(event.build());
         }
 
-        public void metadataDeploying(Metadata metadata, File file) {
+        public void metadataDeploying(Metadata metadata, Path path) {
             RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.METADATA_DEPLOYING);
             event.setTrace(trace);
             event.setMetadata(metadata);
             event.setRepository(repository);
-            event.setFile(file);
+            event.setPath(path);
 
             dispatcher.dispatch(event.build());
         }
 
-        public void metadataDeployed(Metadata metadata, File file, Exception exception) {
+        public void metadataDeployed(Metadata metadata, Path path, Exception exception) {
             RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.METADATA_DEPLOYED);
             event.setTrace(trace);
             event.setMetadata(metadata);
             event.setRepository(repository);
-            event.setFile(file);
+            event.setPath(path);
             event.setException(exception);
 
             dispatcher.dispatch(event.build());
@@ -436,21 +442,21 @@ public class DefaultDeployer implements Deployer {
         public void transferInitiated(TransferEvent event) throws TransferCancelledException {
             super.transferInitiated(event);
             requireNonNull(event, "event cannot be null");
-            catapult.artifactDeploying(transfer.getArtifact(), transfer.getFile());
+            catapult.artifactDeploying(transfer.getArtifact(), transfer.getPath());
         }
 
         @Override
         public void transferFailed(TransferEvent event) {
             super.transferFailed(event);
             requireNonNull(event, "event cannot be null");
-            catapult.artifactDeployed(transfer.getArtifact(), transfer.getFile(), transfer.getException());
+            catapult.artifactDeployed(transfer.getArtifact(), transfer.getPath(), transfer.getException());
         }
 
         @Override
         public void transferSucceeded(TransferEvent event) {
             super.transferSucceeded(event);
             requireNonNull(event, "event cannot be null");
-            catapult.artifactDeployed(transfer.getArtifact(), transfer.getFile(), null);
+            catapult.artifactDeployed(transfer.getArtifact(), transfer.getPath(), null);
         }
     }
 
@@ -470,21 +476,21 @@ public class DefaultDeployer implements Deployer {
         public void transferInitiated(TransferEvent event) throws TransferCancelledException {
             super.transferInitiated(event);
             requireNonNull(event, "event cannot be null");
-            catapult.metadataDeploying(transfer.getMetadata(), transfer.getFile());
+            catapult.metadataDeploying(transfer.getMetadata(), transfer.getPath());
         }
 
         @Override
         public void transferFailed(TransferEvent event) {
             super.transferFailed(event);
             requireNonNull(event, "event cannot be null");
-            catapult.metadataDeployed(transfer.getMetadata(), transfer.getFile(), transfer.getException());
+            catapult.metadataDeployed(transfer.getMetadata(), transfer.getPath(), transfer.getException());
         }
 
         @Override
         public void transferSucceeded(TransferEvent event) {
             super.transferSucceeded(event);
             requireNonNull(event, "event cannot be null");
-            catapult.metadataDeployed(transfer.getMetadata(), transfer.getFile(), null);
+            catapult.metadataDeployed(transfer.getMetadata(), transfer.getPath(), null);
         }
     }
 }

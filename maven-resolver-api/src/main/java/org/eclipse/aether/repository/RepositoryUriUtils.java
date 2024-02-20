@@ -16,23 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.file;
+package org.eclipse.aether.repository;
+
+import java.io.File;
+import java.net.URI;
 
 /**
  * URL handling for file URLs. Based on org.apache.maven.wagon.PathUtils.
+ *
+ * @since 2.0.0
  */
-final class PathUtils {
+public final class RepositoryUriUtils {
 
-    private PathUtils() {}
+    private RepositoryUriUtils() {}
+
+    public static URI toUri(String repositoryUrl) {
+        final String protocol = protocol(repositoryUrl);
+        if ("file".equals(protocol)
+                || protocol.isEmpty()
+                || protocol.length() == 1
+                        && (Character.isLetter(protocol.charAt(0)) && Character.isUpperCase(protocol.charAt(0)))) {
+            return new File(basedir(repositoryUrl)).toURI();
+        } else {
+            return URI.create(repositoryUrl);
+        }
+    }
 
     /**
-     * Return the protocol name. <br/>
-     * E.g: for input <code>http://www.codehause.org</code> this method will return <code>http</code>
+     * Return the protocol name.
      *
      * @param url the url
-     * @return the host name
+     * @return the protocol or empty string.
      */
-    public static String protocol(final String url) {
+    private static String protocol(final String url) {
         final int pos = url.indexOf(":");
 
         if (pos == -1) {
@@ -47,10 +63,10 @@ final class PathUtils {
      * @param url the file-repository URL
      * @return the basedir of the repository
      */
-    public static String basedir(String url) {
-        String protocol = PathUtils.protocol(url);
+    private static String basedir(String url) {
+        String protocol = protocol(url);
 
-        String retValue = null;
+        String retValue;
 
         if (!protocol.isEmpty()) {
             retValue = url.substring(protocol.length() + 1);
@@ -97,7 +113,7 @@ final class PathUtils {
      * @param url The URL to decode, may be <code>null</code>.
      * @return The decoded URL or <code>null</code> if the input was <code>null</code>.
      */
-    static String decode(String url) {
+    private static String decode(String url) {
         String decoded = url;
         if (url != null) {
             int pos = -1;

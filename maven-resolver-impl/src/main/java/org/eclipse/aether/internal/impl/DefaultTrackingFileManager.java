@@ -21,17 +21,18 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Properties;
 
@@ -51,17 +52,26 @@ import org.slf4j.LoggerFactory;
 public final class DefaultTrackingFileManager implements TrackingFileManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTrackingFileManager.class);
 
+    @Deprecated
     @Override
     public Properties read(File file) {
-        if (Files.isReadable(file.toPath())) {
-            synchronized (getMutex(file)) {
-                try (FileInputStream stream = new FileInputStream(file);
-                        FileLock unused = fileLock(stream.getChannel(), Math.max(1, file.length()), true)) {
-                    Properties props = new Properties();
-                    props.load(stream);
-                    return props;
+        return read(file.toPath());
+    }
+
+    @Override
+    public Properties read(Path path) {
+        if (Files.isReadable(path)) {
+            synchronized (getMutex(path)) {
+                try {
+                    long fileSize = Files.size(path);
+                    try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
+                            FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), true)) {
+                        Properties props = new Properties();
+                        props.load(Channels.newInputStream(fileChannel));
+                        return props;
+                    }
                 } catch (IOException e) {
-                    LOGGER.warn("Failed to read tracking file '{}'", file, e);
+                    LOGGER.warn("Failed to read tracking file '{}'", path, e);
                     throw new UncheckedIOException(e);
                 }
             }
@@ -69,45 +79,57 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         return null;
     }
 
+    @Deprecated
     @Override
     public Properties update(File file, Map<String, String> updates) {
-        Properties props = new Properties();
+        return update(file.toPath(), updates);
+    }
 
+    @Override
+    public Properties update(Path path, Map<String, String> updates) {
+        Properties props = new Properties();
         try {
-            Files.createDirectories(file.getParentFile().toPath());
+            Files.createDirectories(path.getParent());
         } catch (IOException e) {
-            LOGGER.warn("Failed to create tracking file parent '{}'", file, e);
+            LOGGER.warn("Failed to create tracking file parent '{}'", path, e);
             throw new UncheckedIOException(e);
         }
 
-        synchronized (getMutex(file)) {
-            try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
-                    FileLock unused = fileLock(raf.getChannel(), Math.max(1, raf.length()), false)) {
-                if (raf.length() > 0) {
-                    byte[] buffer = new byte[(int) raf.length()];
-                    raf.readFully(buffer);
-                    props.load(new ByteArrayInputStream(buffer));
+        synchronized (getMutex(path)) {
+            try {
+                long fileSize;
+                try {
+                    fileSize = Files.size(path);
+                } catch (IOException e) {
+                    fileSize = 0L;
                 }
-
-                for (Map.Entry<String, String> update : updates.entrySet()) {
-                    if (update.getValue() == null) {
-                        props.remove(update.getKey());
-                    } else {
-                        props.setProperty(update.getKey(), update.getValue());
+                try (FileChannel fileChannel = FileChannel.open(
+                                path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+                        FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), false)) {
+                    if (fileSize > 0) {
+                        props.load(Channels.newInputStream(fileChannel));
                     }
-                }
 
-                LOGGER.debug("Writing tracking file '{}'", file);
-                ByteArrayOutputStream stream = new ByteArrayOutputStream(1024 * 2);
-                props.store(
-                        stream,
-                        "NOTE: This is a Maven Resolver internal implementation file"
-                                + ", its format can be changed without prior notice.");
-                raf.seek(0L);
-                raf.write(stream.toByteArray());
-                raf.setLength(raf.getFilePointer());
+                    for (Map.Entry<String, String> update : updates.entrySet()) {
+                        if (update.getValue() == null) {
+                            props.remove(update.getKey());
+                        } else {
+                            props.setProperty(update.getKey(), update.getValue());
+                        }
+                    }
+
+                    LOGGER.debug("Writing tracking file '{}'", path);
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream(1024 * 2);
+                    props.store(
+                            stream,
+                            "NOTE: This is a Maven Resolver internal implementation file"
+                                    + ", its format can be changed without prior notice.");
+                    fileChannel.position(0);
+                    int written = fileChannel.write(ByteBuffer.wrap(stream.toByteArray()));
+                    fileChannel.truncate(written);
+                }
             } catch (IOException e) {
-                LOGGER.warn("Failed to write tracking file '{}'", file, e);
+                LOGGER.warn("Failed to write tracking file '{}'", path, e);
                 throw new UncheckedIOException(e);
             }
         }
@@ -115,7 +137,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         return props;
     }
 
-    private Object getMutex(File file) {
+    private Object getMutex(Path path) {
         // The interned string of path is (mis)used as mutex, to exclude different threads going for same file,
         // as JVM file locking happens on JVM not on Thread level. This is how original code did it  ¯\_(ツ)_/¯
         /*
@@ -123,13 +145,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
          * piece of code might have locked the same file (unlikely though) or the canonical path fails to capture file
          * identity sufficiently as is the case with Java 1.6 and symlinks on Windows.
          */
-        try {
-            return file.getCanonicalPath().intern();
-        } catch (IOException e) {
-            LOGGER.warn("Failed to canonicalize path {}", file, e);
-            // TODO This is code smell and deprecated
-            return file.getAbsolutePath().intern();
-        }
+        return path.toAbsolutePath().normalize().toString().intern();
     }
 
     @SuppressWarnings({"checkstyle:magicnumber"})

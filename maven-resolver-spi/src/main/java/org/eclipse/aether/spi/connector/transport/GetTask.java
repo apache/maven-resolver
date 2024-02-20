@@ -22,9 +22,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,7 +39,7 @@ import java.util.Map;
  */
 public final class GetTask extends TransportTask {
 
-    private File dataFile;
+    private Path dataPath;
 
     private boolean resume;
 
@@ -78,16 +80,13 @@ public final class GetTask extends TransportTask {
      * @throws IOException If the stream could not be opened.
      */
     public OutputStream newOutputStream(boolean resume) throws IOException {
-        if (dataFile != null) {
+        if (dataPath != null) {
             if (this.resume && resume) {
                 return Files.newOutputStream(
-                        dataFile.toPath(),
-                        StandardOpenOption.CREATE,
-                        StandardOpenOption.WRITE,
-                        StandardOpenOption.APPEND);
+                        dataPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
             } else {
                 return Files.newOutputStream(
-                        dataFile.toPath(),
+                        dataPath,
                         StandardOpenOption.CREATE,
                         StandardOpenOption.WRITE,
                         StandardOpenOption.TRUNCATE_EXISTING);
@@ -106,9 +105,22 @@ public final class GetTask extends TransportTask {
      * be overwritten.
      *
      * @return The data file or {@code null} if the data will be buffered in memory.
+     * @deprecated Use {@link #getDataPath()} instead.
      */
+    @Deprecated
     public File getDataFile() {
-        return dataFile;
+        return dataPath != null ? dataPath.toFile() : null;
+    }
+
+    /**
+     * Gets the file (if any) where the downloaded data should be stored. If the specified file already exists, it will
+     * be overwritten.
+     *
+     * @return The data file or {@code null} if the data will be buffered in memory.
+     * @since 2.0.0
+     */
+    public Path getDataPath() {
+        return dataPath;
     }
 
     /**
@@ -118,9 +130,24 @@ public final class GetTask extends TransportTask {
      *
      * @param dataFile The file to store the downloaded data, may be {@code null} to store the data in memory.
      * @return This task for chaining, never {@code null}.
+     * @deprecated Use {@link #setDataPath(Path)} instead.
      */
+    @Deprecated
     public GetTask setDataFile(File dataFile) {
         return setDataFile(dataFile, false);
+    }
+
+    /**
+     * Sets the file where the downloaded data should be stored. If the specified file already exists, it will be
+     * overwritten. Unless the caller can reasonably expect the resource to be small, use of a data file is strongly
+     * recommended to avoid exhausting heap memory during the download.
+     *
+     * @param dataPath The file to store the downloaded data, may be {@code null} to store the data in memory.
+     * @return This task for chaining, never {@code null}.
+     * @since 2.0.0
+     */
+    public GetTask setDataPath(Path dataPath) {
+        return setDataPath(dataPath, false);
     }
 
     /**
@@ -133,9 +160,27 @@ public final class GetTask extends TransportTask {
      * @param resume {@code true} to request resuming a previous download attempt, starting from the current length of
      *            the data file, {@code false} to download the resource from its beginning.
      * @return This task for chaining, never {@code null}.
+     * @deprecated Use {@link #setDataPath(Path, boolean)} instead.
      */
+    @Deprecated
     public GetTask setDataFile(File dataFile, boolean resume) {
-        this.dataFile = dataFile;
+        return setDataPath(dataFile != null ? dataFile.toPath() : null, resume);
+    }
+
+    /**
+     * Sets the file where the downloaded data should be stored. If the specified file already exists, it will be
+     * overwritten or appended to, depending on the {@code resume} argument and the capabilities of the transporter.
+     * Unless the caller can reasonably expect the resource to be small, use of a data file is strongly recommended to
+     * avoid exhausting heap memory during the download.
+     *
+     * @param dataPath The file to store the downloaded data, may be {@code null} to store the data in memory.
+     * @param resume {@code true} to request resuming a previous download attempt, starting from the current length of
+     *            the data file, {@code false} to download the resource from its beginning.
+     * @return This task for chaining, never {@code null}.
+     * @since 2.0.0
+     */
+    public GetTask setDataPath(Path dataPath, boolean resume) {
+        this.dataPath = dataPath;
         this.resume = resume;
         return this;
     }
@@ -148,8 +193,12 @@ public final class GetTask extends TransportTask {
      */
     public long getResumeOffset() {
         if (resume) {
-            if (dataFile != null) {
-                return dataFile.length();
+            if (dataPath != null) {
+                try {
+                    return Files.size(dataPath);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
             }
             if (dataBytes != null) {
                 return dataBytes.size();
@@ -165,7 +214,7 @@ public final class GetTask extends TransportTask {
      * @return The possibly empty data bytes, never {@code null}.
      */
     public byte[] getDataBytes() {
-        if (dataFile != null || dataBytes == null) {
+        if (dataPath != null || dataBytes == null) {
             return EMPTY;
         }
         return dataBytes.toByteArray();
@@ -179,7 +228,7 @@ public final class GetTask extends TransportTask {
      * @return The possibly empty data string, never {@code null}.
      */
     public String getDataString() {
-        if (dataFile != null || dataBytes == null) {
+        if (dataPath != null || dataBytes == null) {
             return "";
         }
         return new String(dataBytes.toByteArray(), StandardCharsets.UTF_8);

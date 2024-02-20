@@ -20,12 +20,12 @@ package org.eclipse.aether.transport.jetty;
 
 import javax.net.ssl.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.security.cert.X509Certificate;
@@ -205,7 +205,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     @Override
     protected void implGet(GetTask task) throws Exception {
-        boolean resume = task.getResumeOffset() > 0L && task.getDataFile() != null;
+        boolean resume = task.getResumeOffset() > 0L && task.getDataPath() != null;
         Response response;
         InputStreamResponseListener listener;
 
@@ -225,9 +225,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
             if (resume) {
                 long resumeOffset = task.getResumeOffset();
+                long lastModified =
+                        Files.getLastModifiedTime(task.getDataPath()).toMillis();
                 request.headers(h -> {
                     h.add(RANGE, "bytes=" + resumeOffset + '-');
-                    h.addDateField(IF_UNMODIFIED_SINCE, task.getDataFile().lastModified() - MODIFICATION_THRESHOLD);
+                    h.addDateField(IF_UNMODIFIED_SINCE, lastModified - MODIFICATION_THRESHOLD);
                     h.remove(HttpHeader.ACCEPT_ENCODING);
                     h.add(ACCEPT_ENCODING, "identity");
                 });
@@ -273,16 +275,16 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
 
         final boolean downloadResumed = offset > 0L;
-        final File dataFile = task.getDataFile();
+        final Path dataFile = task.getDataPath();
         if (dataFile == null) {
             try (InputStream is = listener.getInputStream()) {
                 utilGet(task, is, true, length, downloadResumed);
             }
         } else {
-            try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile.toPath())) {
-                task.setDataFile(tempFile.getPath().toFile(), downloadResumed);
-                if (downloadResumed && Files.isRegularFile(dataFile.toPath())) {
-                    try (InputStream inputStream = Files.newInputStream(dataFile.toPath())) {
+            try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile)) {
+                task.setDataPath(tempFile.getPath(), downloadResumed);
+                if (downloadResumed && Files.isRegularFile(dataFile)) {
+                    try (InputStream inputStream = Files.newInputStream(dataFile)) {
                         Files.copy(inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
                     }
                 }
@@ -291,15 +293,15 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 }
                 tempFile.move();
             } finally {
-                task.setDataFile(dataFile);
+                task.setDataPath(dataFile);
             }
         }
-        if (task.getDataFile() != null && response.getHeaders().getDateField(LAST_MODIFIED) != -1) {
+        if (task.getDataPath() != null && response.getHeaders().getDateField(LAST_MODIFIED) != -1) {
             long lastModified =
                     response.getHeaders().getDateField(LAST_MODIFIED); // note: Wagon also does first not last
             if (lastModified != -1) {
                 try {
-                    Files.setLastModifiedTime(task.getDataFile().toPath(), FileTime.fromMillis(lastModified));
+                    Files.setLastModifiedTime(task.getDataPath(), FileTime.fromMillis(lastModified));
                 } catch (DateTimeParseException e) {
                     // fall through
                 }

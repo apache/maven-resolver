@@ -18,7 +18,8 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -48,9 +49,9 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
     private final LocalPathComposer localPathComposer;
 
-    SimpleLocalRepositoryManager(File basedir, String type, LocalPathComposer localPathComposer) {
-        requireNonNull(basedir, "base directory cannot be null");
-        repository = new LocalRepository(basedir.getAbsoluteFile(), type);
+    SimpleLocalRepositoryManager(Path basePath, String type, LocalPathComposer localPathComposer) {
+        requireNonNull(basePath, "base directory cannot be null");
+        repository = new LocalRepository(basePath.toAbsolutePath(), type);
         this.localPathComposer = requireNonNull(localPathComposer);
     }
 
@@ -132,14 +133,14 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
         LocalArtifactResult result = new LocalArtifactResult(request);
 
         String path;
-        File file;
+        Path filePath;
 
         // Local repository CANNOT have timestamped installed, they are created only during deploy
         if (Objects.equals(artifact.getVersion(), artifact.getBaseVersion())) {
             path = getPathForLocalArtifact(artifact);
-            file = new File(getRepository().getBasedir(), path);
-            if (file.isFile()) {
-                result.setFile(file);
+            filePath = getRepository().getBasePath().resolve(path);
+            if (Files.isRegularFile(filePath)) {
+                result.setPath(filePath);
                 result.setAvailable(true);
             }
         }
@@ -147,9 +148,9 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
         if (!result.isAvailable()) {
             for (RemoteRepository repository : request.getRepositories()) {
                 path = getPathForRemoteArtifact(artifact, repository, request.getContext());
-                file = new File(getRepository().getBasedir(), path);
-                if (file.isFile()) {
-                    result.setFile(file);
+                filePath = getRepository().getBasePath().resolve(path);
+                if (Files.isRegularFile(filePath)) {
+                    result.setPath(filePath);
                     result.setAvailable(true);
                     break;
                 }
@@ -184,9 +185,9 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
             path = getPathForLocalMetadata(metadata);
         }
 
-        File file = new File(getRepository().getBasedir(), path);
-        if (file.isFile()) {
-            result.setFile(file);
+        Path filePath = getRepository().getBasePath().resolve(path);
+        if (Files.isRegularFile(filePath)) {
+            result.setPath(filePath);
         }
 
         return result;

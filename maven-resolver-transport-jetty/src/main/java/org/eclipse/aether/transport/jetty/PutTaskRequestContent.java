@@ -94,8 +94,8 @@ class PutTaskRequestContent extends AbstractRequestContent {
             ByteBuffer buffer;
             boolean last;
             if (channel == null) {
-                if (putTask.getDataFile() != null) {
-                    channel = Files.newByteChannel(putTask.getDataFile().toPath(), StandardOpenOption.READ);
+                if (putTask.getDataPath() != null) {
+                    channel = Files.newByteChannel(putTask.getDataPath(), StandardOpenOption.READ);
                 } else {
                     channel = Channels.newChannel(putTask.newInputStream());
                 }

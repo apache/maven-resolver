@@ -52,20 +52,20 @@ public class ResolveTransitiveDependencies {
                         Booter.newRepositorySystemSession(system).build()) {
             Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-impl:1.3.3");
 
-            DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
+            DependencyFilter classpathFilter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
 
             CollectRequest collectRequest = new CollectRequest();
             collectRequest.setRoot(new Dependency(artifact, JavaScopes.COMPILE));
             collectRequest.setRepositories(Booter.newRepositories(system, session));
 
-            DependencyRequest dependencyRequest = new DependencyRequest(collectRequest, classpathFlter);
+            DependencyRequest dependencyRequest = new DependencyRequest(collectRequest, classpathFilter);
 
             List<ArtifactResult> artifactResults =
                     system.resolveDependencies(session, dependencyRequest).getArtifactResults();
 
             for (ArtifactResult artifactResult : artifactResults) {
                 System.out.println(artifactResult.getArtifact() + " resolved to "
-                        + artifactResult.getArtifact().getFile());
+                        + artifactResult.getArtifact().getPath());
             }
         }
     }

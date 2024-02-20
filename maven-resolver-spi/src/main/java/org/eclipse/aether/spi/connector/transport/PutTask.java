@@ -18,13 +18,11 @@
  */
 package org.eclipse.aether.spi.connector.transport;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * A task to upload a resource to the remote repository.
@@ -33,7 +31,7 @@ import java.nio.file.Files;
  */
 public final class PutTask extends TransportTask {
 
-    private File dataFile;
+    private Path dataPath;
 
     private byte[] dataBytes = EMPTY;
 
@@ -54,8 +52,8 @@ public final class PutTask extends TransportTask {
      * @throws IOException If the stream could not be opened.
      */
     public InputStream newInputStream() throws IOException {
-        if (dataFile != null) {
-            return Files.newInputStream(dataFile.toPath());
+        if (dataPath != null) {
+            return Files.newInputStream(dataPath);
         }
         return new ByteArrayInputStream(dataBytes);
     }
@@ -66,8 +64,12 @@ public final class PutTask extends TransportTask {
      * @return The total number of bytes to be uploaded.
      */
     public long getDataLength() {
-        if (dataFile != null) {
-            return dataFile.length();
+        if (dataPath != null) {
+            try {
+                return Files.size(dataPath);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
         return dataBytes.length;
     }
@@ -76,9 +78,21 @@ public final class PutTask extends TransportTask {
      * Gets the file (if any) with the data to be uploaded.
      *
      * @return The data file or {@code null} if the data resides in memory.
+     * @deprecated Use {@link #getDataPath()} instead.
      */
+    @Deprecated
     public File getDataFile() {
-        return dataFile;
+        return dataPath != null ? dataPath.toFile() : null;
+    }
+
+    /**
+     * Gets the file (if any) with the data to be uploaded.
+     *
+     * @return The data file or {@code null} if the data resides in memory.
+     * @since 2.0.0
+     */
+    public Path getDataPath() {
+        return dataPath;
     }
 
     /**
@@ -87,9 +101,23 @@ public final class PutTask extends TransportTask {
      *
      * @param dataFile The data file, may be {@code null} if the resource data is provided directly from memory.
      * @return This task for chaining, never {@code null}.
+     * @deprecated Use {@link #setDataPath(Path)} instead.
      */
+    @Deprecated
     public PutTask setDataFile(File dataFile) {
-        this.dataFile = dataFile;
+        return setDataPath(dataFile.toPath());
+    }
+
+    /**
+     * Sets the file with the data to be uploaded. To upload some data residing already in memory, use
+     * {@link #setDataString(String)} or {@link #setDataBytes(byte[])}.
+     *
+     * @param dataPath The data file, may be {@code null} if the resource data is provided directly from memory.
+     * @return This task for chaining, never {@code null}.
+     * @since 2.0.0
+     */
+    public PutTask setDataPath(Path dataPath) {
+        this.dataPath = dataPath;
         dataBytes = EMPTY;
         return this;
     }
@@ -102,7 +130,7 @@ public final class PutTask extends TransportTask {
      */
     public PutTask setDataBytes(byte[] bytes) {
         this.dataBytes = (bytes != null) ? bytes : EMPTY;
-        dataFile = null;
+        dataPath = null;
         return this;
     }
 

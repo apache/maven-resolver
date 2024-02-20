@@ -19,6 +19,7 @@
 package org.eclipse.aether.artifact;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +36,7 @@ public abstract class AbstractArtifact implements Artifact {
 
     private static final Pattern SNAPSHOT_TIMESTAMP = Pattern.compile("^(.*-)?([0-9]{8}\\.[0-9]{6}-[0-9]+)$");
 
+    @Override
     public boolean isSnapshot() {
         return isSnapshot(getVersion());
     }
@@ -43,6 +45,7 @@ public abstract class AbstractArtifact implements Artifact {
         return version.endsWith(SNAPSHOT) || SNAPSHOT_TIMESTAMP.matcher(version).matches();
     }
 
+    @Override
     public String getBaseVersion() {
         return toBaseVersion(getVersion());
     }
@@ -76,28 +79,36 @@ public abstract class AbstractArtifact implements Artifact {
      * @param version The version of the artifact, may be {@code null}.
      * @param properties The properties of the artifact, may be {@code null} if none. The method may assume immutability
      *            of the supplied map, i.e. need not copy it.
-     * @param file The resolved file of the artifact, may be {@code null}.
+     * @param path The resolved file of the artifact, may be {@code null}.
      * @return The new artifact instance, never {@code null}.
      */
-    private Artifact newInstance(String version, Map<String, String> properties, File file) {
+    private Artifact newInstance(String version, Map<String, String> properties, Path path) {
         return new DefaultArtifact(
-                getGroupId(), getArtifactId(), getClassifier(), getExtension(), version, file, properties);
+                getGroupId(), getArtifactId(), getClassifier(), getExtension(), version, path, properties);
     }
 
+    @Override
     public Artifact setVersion(String version) {
         String current = getVersion();
         if (current.equals(version) || (version == null && current.isEmpty())) {
             return this;
         }
-        return newInstance(version, getProperties(), getFile());
+        return newInstance(version, getProperties(), getPath());
     }
 
+    @Deprecated
+    @Override
     public Artifact setFile(File file) {
-        File current = getFile();
-        if (Objects.equals(current, file)) {
+        return setPath(file != null ? file.toPath() : null);
+    }
+
+    @Override
+    public Artifact setPath(Path path) {
+        Path current = getPath();
+        if (Objects.equals(current, path)) {
             return this;
         }
-        return newInstance(getVersion(), getProperties(), file);
+        return newInstance(getVersion(), getProperties(), path);
     }
 
     public Artifact setProperties(Map<String, String> properties) {
@@ -105,7 +116,7 @@ public abstract class AbstractArtifact implements Artifact {
         if (current.equals(properties) || (properties == null && current.isEmpty())) {
             return this;
         }
-        return newInstance(getVersion(), copyProperties(properties), getFile());
+        return newInstance(getVersion(), copyProperties(properties), getPath());
     }
 
     public String getProperty(String key, String defaultValue) {
@@ -163,7 +174,7 @@ public abstract class AbstractArtifact implements Artifact {
                 && Objects.equals(getVersion(), that.getVersion())
                 && Objects.equals(getExtension(), that.getExtension())
                 && Objects.equals(getClassifier(), that.getClassifier())
-                && Objects.equals(getFile(), that.getFile())
+                && Objects.equals(getPath(), that.getPath())
                 && Objects.equals(getProperties(), that.getProperties());
     }
 
@@ -180,7 +191,7 @@ public abstract class AbstractArtifact implements Artifact {
         hash = hash * 31 + getExtension().hashCode();
         hash = hash * 31 + getClassifier().hashCode();
         hash = hash * 31 + getVersion().hashCode();
-        hash = hash * 31 + hash(getFile());
+        hash = hash * 31 + hash(getPath());
         return hash;
     }
 

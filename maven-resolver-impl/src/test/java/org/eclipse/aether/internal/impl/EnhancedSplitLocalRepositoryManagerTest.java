@@ -31,7 +31,7 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
     protected EnhancedLocalRepositoryManager getManager() {
         session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT, Boolean.TRUE.toString());
         return new EnhancedLocalRepositoryManager(
-                basedir,
+                basedir.toPath(),
                 new DefaultLocalPathComposer(),
                 "_remote.repositories",
                 trackingFileManager,

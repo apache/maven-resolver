@@ -19,6 +19,7 @@
 package org.eclipse.aether.artifact;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +44,7 @@ public final class DefaultArtifact extends AbstractArtifact {
 
     private final String extension;
 
-    private final File file;
+    private final Path path;
 
     private final Map<String, String> properties;
 
@@ -116,7 +117,7 @@ public final class DefaultArtifact extends AbstractArtifact {
         extension = get(m.group(4), type == null ? "jar" : type.getExtension());
         classifier = get(m.group(6), type == null ? "" : type.getClassifier());
         this.version = emptify(m.group(7));
-        this.file = null;
+        this.path = null;
         this.properties = merge(properties, (type != null) ? type.getProperties() : null);
     }
 
@@ -205,7 +206,7 @@ public final class DefaultArtifact extends AbstractArtifact {
             this.extension = emptify(type.getExtension());
         }
         this.version = emptify(version);
-        this.file = null;
+        this.path = null;
         this.properties = merge(properties, (type != null) ? type.getProperties() : null);
     }
 
@@ -253,7 +254,36 @@ public final class DefaultArtifact extends AbstractArtifact {
         this.classifier = emptify(classifier);
         this.extension = emptify(extension);
         this.version = emptify(version);
-        this.file = file;
+        this.path = file != null ? file.toPath() : null;
+        this.properties = copyProperties(properties);
+    }
+
+    /**
+     * Creates a new artifact with the specified coordinates, properties and file. Passing {@code null} for any of the
+     * coordinates is equivalent to specifying an empty string.
+     *
+     * @param groupId The group identifier of the artifact, may be {@code null}.
+     * @param artifactId The artifact identifier of the artifact, may be {@code null}.
+     * @param classifier The classifier of the artifact, may be {@code null}.
+     * @param extension The file extension of the artifact, may be {@code null}.
+     * @param version The version of the artifact, may be {@code null}.
+     * @param properties The properties of the artifact, may be {@code null} if none.
+     * @param path The resolved file of the artifact, may be {@code null}.
+     */
+    public DefaultArtifact(
+            String groupId,
+            String artifactId,
+            String classifier,
+            String extension,
+            String version,
+            Map<String, String> properties,
+            Path path) {
+        this.groupId = emptify(groupId);
+        this.artifactId = emptify(artifactId);
+        this.classifier = emptify(classifier);
+        this.extension = emptify(extension);
+        this.version = emptify(version);
+        this.path = path;
         this.properties = copyProperties(properties);
     }
 
@@ -263,7 +293,7 @@ public final class DefaultArtifact extends AbstractArtifact {
             String classifier,
             String extension,
             String version,
-            File file,
+            Path path,
             Map<String, String> properties) {
         // NOTE: This constructor assumes immutability of the provided properties, for internal use only
         this.groupId = emptify(groupId);
@@ -271,7 +301,7 @@ public final class DefaultArtifact extends AbstractArtifact {
         this.classifier = emptify(classifier);
         this.extension = emptify(extension);
         this.version = emptify(version);
-        this.file = file;
+        this.path = path;
         this.properties = properties;
     }
 
@@ -299,8 +329,13 @@ public final class DefaultArtifact extends AbstractArtifact {
         return extension;
     }
 
+    @Deprecated
     public File getFile() {
-        return file;
+        return path != null ? path.toFile() : null;
+    }
+
+    public Path getPath() {
+        return path;
     }
 
     public Map<String, String> getProperties() {

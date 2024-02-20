@@ -19,6 +19,7 @@
 package org.eclipse.aether.spi.connector;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
@@ -42,10 +43,24 @@ public final class ArtifactUpload extends ArtifactTransfer {
      *
      * @param artifact The artifact to upload, may be {@code null}.
      * @param file The local file to upload the artifact from, may be {@code null}.
+     * @deprecated Use {@link #ArtifactUpload(Artifact, Path)} instead.
      */
+    @Deprecated
     public ArtifactUpload(Artifact artifact, File file) {
         setArtifact(artifact);
         setFile(file);
+    }
+
+    /**
+     * Creates a new upload with the specified properties.
+     *
+     * @param artifact The artifact to upload, may be {@code null}.
+     * @param path The local file to upload the artifact from, may be {@code null}.
+     * @since 2.0.0
+     */
+    public ArtifactUpload(Artifact artifact, Path path) {
+        setArtifact(artifact);
+        setPath(path);
     }
 
     @Override
@@ -54,9 +69,16 @@ public final class ArtifactUpload extends ArtifactTransfer {
         return this;
     }
 
+    @Deprecated
     @Override
     public ArtifactUpload setFile(File file) {
         super.setFile(file);
+        return this;
+    }
+
+    @Override
+    public ArtifactUpload setPath(Path path) {
+        super.setPath(path);
         return this;
     }
 
@@ -80,6 +102,6 @@ public final class ArtifactUpload extends ArtifactTransfer {
 
     @Override
     public String toString() {
-        return getArtifact() + " - " + getFile();
+        return getArtifact() + " - " + getPath();
     }
 }

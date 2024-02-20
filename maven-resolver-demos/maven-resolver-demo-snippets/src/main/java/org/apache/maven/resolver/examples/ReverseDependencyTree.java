@@ -22,7 +22,6 @@ import org.apache.maven.resolver.examples.util.Booter;
 import org.apache.maven.resolver.examples.util.ReverseTreeRepositoryListener;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
-import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -30,7 +29,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
-import org.eclipse.aether.util.listener.ChainedRepositoryListener;
 
 /**
  * Example of building reverse dependency tree using custom {@link ReverseTreeRepositoryListener}.
@@ -47,14 +45,11 @@ public class ReverseDependencyTree {
         System.out.println(ReverseDependencyTree.class.getSimpleName());
 
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
-            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
-            try (CloseableSession session = sessionBuilder.build()) {
-                sessionBuilder.setRepositoryListener(new ChainedRepositoryListener(
-                        session.getRepositoryListener(), new ReverseTreeRepositoryListener()));
-            }
-            sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
-            sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
-            try (CloseableSession session = sessionBuilder.build()) {
+            try (CloseableSession session = Booter.newRepositorySystemSession(system)
+                    .withRepositoryListener(new ReverseTreeRepositoryListener())
+                    .setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true)
+                    .setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true)
+                    .build()) {
                 Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
 
                 ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();

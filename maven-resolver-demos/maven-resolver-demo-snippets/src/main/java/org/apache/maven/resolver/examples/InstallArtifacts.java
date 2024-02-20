@@ -47,10 +47,10 @@ public class InstallArtifacts {
                         Booter.newRepositorySystemSession(system).build()) {
             Artifact jarArtifact =
                     new DefaultArtifact("test", "org.apache.maven.resolver.examples", "", "jar", "0.1-SNAPSHOT");
-            jarArtifact = jarArtifact.setFile(new File("src/main/data/demo.jar"));
+            jarArtifact = jarArtifact.setPath(new File("src/main/data/demo.jar").toPath());
 
             Artifact pomArtifact = new SubArtifact(jarArtifact, "", "pom");
-            pomArtifact = pomArtifact.setFile(new File("pom.xml"));
+            pomArtifact = pomArtifact.setPath(new File("pom.xml").toPath());
 
             InstallRequest installRequest = new InstallRequest();
             installRequest.addArtifact(jarArtifact).addArtifact(pomArtifact);

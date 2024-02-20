@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +67,22 @@ public final class ChecksumAlgorithmHelper {
      */
     public static Map<String, String> calculate(File file, List<ChecksumAlgorithmFactory> factories)
             throws IOException {
-        try (InputStream inputStream = new BufferedInputStream(Files.newInputStream(file.toPath()))) {
+        return calculate(file.toPath(), factories);
+    }
+
+    /**
+     * Calculates checksums for specified file.
+     *
+     * @param path        The file for which to calculate checksums, must not be {@code null}.
+     * @param factories   The checksum algorithm factories to use, must not be {@code null}.
+     * @return The calculated checksums, indexed by algorithm name, or the exception that occurred while trying to
+     * calculate it, never {@code null}.
+     * @throws IOException In case of any problem.
+     * @since 2.0.0
+     */
+    public static Map<String, String> calculate(Path path, List<ChecksumAlgorithmFactory> factories)
+            throws IOException {
+        try (InputStream inputStream = new BufferedInputStream(Files.newInputStream(path))) {
             return calculate(inputStream, factories);
         }
     }

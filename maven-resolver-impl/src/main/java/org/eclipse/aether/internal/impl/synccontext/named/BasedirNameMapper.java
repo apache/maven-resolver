@@ -52,13 +52,33 @@ public class BasedirNameMapper implements NameMapper {
 
     private final NameMapper delegate;
 
+    private final Path basePath;
+
     public BasedirNameMapper(final NameMapper delegate) {
-        this.delegate = requireNonNull(delegate);
+        this(delegate, null);
+    }
+
+    /**
+     * Creates basedir name mapper with provided path as base.
+     *
+     * @param delegate The delegate to resolve against basedir, must not be {@code null}. The delegate must be
+     *                 "file system friendly", see {@link NameMapper#isFileSystemFriendly()} method.
+     * @param path The basedir, may be {@code null} in which case given session local repository root is used as
+     *             basedir.
+     * @since 2.0.0
+     */
+    public BasedirNameMapper(final NameMapper delegate, final Path path) {
+        requireNonNull(delegate);
+        if (!delegate.isFileSystemFriendly()) {
+            throw new IllegalArgumentException("delegate must be file-system friendly");
+        }
+        this.delegate = delegate;
+        this.basePath = path;
     }
 
     @Override
     public boolean isFileSystemFriendly() {
-        return delegate.isFileSystemFriendly();
+        return true; // it enforces delegate to be friendly, and itself produces friendly names
     }
 
     @Override
@@ -67,11 +87,12 @@ public class BasedirNameMapper implements NameMapper {
             final Collection<? extends Artifact> artifacts,
             final Collection<? extends Metadata> metadatas) {
         try {
-            final Path basedir =
-                    DirectoryUtils.resolveDirectory(session, DEFAULT_LOCKS_DIR, CONFIG_PROP_LOCKS_DIR, false);
+            final Path basedir = basePath != null
+                    ? basePath
+                    : DirectoryUtils.resolveDirectory(session, DEFAULT_LOCKS_DIR, CONFIG_PROP_LOCKS_DIR, false);
 
             return delegate.nameLocks(session, artifacts, metadatas).stream()
-                    .map(name -> basedir.resolve(name).toAbsolutePath().toString())
+                    .map(name -> basedir.resolve(name).toAbsolutePath().toUri().toASCIIString())
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException(e);

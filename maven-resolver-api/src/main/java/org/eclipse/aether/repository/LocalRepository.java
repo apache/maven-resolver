@@ -19,6 +19,9 @@
 package org.eclipse.aether.repository;
 
 import java.io.File;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -29,7 +32,7 @@ import java.util.Objects;
  */
 public final class LocalRepository implements ArtifactRepository {
 
-    private final File basedir;
+    private final Path basePath;
 
     private final String type;
 
@@ -39,16 +42,39 @@ public final class LocalRepository implements ArtifactRepository {
      * @param basedir The base directory of the repository, may be {@code null}.
      */
     public LocalRepository(String basedir) {
-        this((basedir != null) ? new File(basedir) : null, "");
+        this.basePath = Paths.get(RepositoryUriUtils.toUri(basedir)).toAbsolutePath();
+        this.type = "";
     }
 
     /**
      * Creates a new local repository with the specified base directory and unknown type.
      *
      * @param basedir The base directory of the repository, may be {@code null}.
+     * @since 2.0.0
      */
+    public LocalRepository(URI basedir) {
+        this((basedir != null) ? Paths.get(basedir) : null, "");
+    }
+
+    /**
+     * Creates a new local repository with the specified base directory and unknown type.
+     *
+     * @param basedir The base directory of the repository, may be {@code null}.
+     * @deprecated Use {@link #LocalRepository(Path)} instead.
+     */
+    @Deprecated
     public LocalRepository(File basedir) {
         this(basedir, "");
+    }
+
+    /**
+     * Creates a new local repository with the specified base directory and unknown type.
+     *
+     * @param basePath The base directory of the repository, may be {@code null}.
+     * @since 2.0.0
+     */
+    public LocalRepository(Path basePath) {
+        this(basePath, "");
     }
 
     /**
@@ -56,16 +82,31 @@ public final class LocalRepository implements ArtifactRepository {
      *
      * @param basedir The base directory of the repository, may be {@code null}.
      * @param type The type of the repository, may be {@code null}.
+     * @deprecated Use {@link #LocalRepository(Path, String)} instead.
      */
+    @Deprecated
     public LocalRepository(File basedir, String type) {
-        this.basedir = basedir;
+        this(basedir != null ? basedir.toPath() : null, type);
+    }
+
+    /**
+     * Creates a new local repository with the specified properties.
+     *
+     * @param basePath The base directory of the repository, may be {@code null}.
+     * @param type The type of the repository, may be {@code null}.
+     * @since 2.0.0
+     */
+    public LocalRepository(Path basePath, String type) {
+        this.basePath = basePath;
         this.type = (type != null) ? type : "";
     }
 
+    @Override
     public String getContentType() {
         return type;
     }
 
+    @Override
     public String getId() {
         return "local";
     }
@@ -74,14 +115,26 @@ public final class LocalRepository implements ArtifactRepository {
      * Gets the base directory of the repository.
      *
      * @return The base directory or {@code null} if none.
+     * @deprecated Use {@link #getBasePath()} instead.
      */
+    @Deprecated
     public File getBasedir() {
-        return basedir;
+        return basePath != null ? basePath.toFile() : null;
+    }
+
+    /**
+     * Gets the base directory of the repository.
+     *
+     * @return The base directory or {@code null} if none.
+     * @since 2.0.0
+     */
+    public Path getBasePath() {
+        return basePath;
     }
 
     @Override
     public String toString() {
-        return getBasedir() + " (" + getContentType() + ")";
+        return getBasePath() + " (" + getContentType() + ")";
     }
 
     @Override
@@ -95,13 +148,13 @@ public final class LocalRepository implements ArtifactRepository {
 
         LocalRepository that = (LocalRepository) obj;
 
-        return Objects.equals(basedir, that.basedir) && Objects.equals(type, that.type);
+        return Objects.equals(basePath, that.basePath) && Objects.equals(type, that.type);
     }
 
     @Override
     public int hashCode() {
         int hash = 17;
-        hash = hash * 31 + hash(basedir);
+        hash = hash * 31 + hash(basePath);
         hash = hash * 31 + hash(type);
         return hash;
     }

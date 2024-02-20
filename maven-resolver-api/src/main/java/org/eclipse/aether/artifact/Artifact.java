@@ -19,6 +19,7 @@
 package org.eclipse.aether.artifact;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -97,16 +98,38 @@ public interface Artifact {
      * callers must not assume any relationship between an artifact's filename and its coordinates.
      *
      * @return The file or {@code null} if the artifact isn't resolved.
+     * @deprecated Use {@link #getPath()} instead.
      */
+    @Deprecated
     File getFile();
+
+    /**
+     * Gets the file of this artifact. Note that only resolved artifacts have a file associated with them. In general,
+     * callers must not assume any relationship between an artifact's filename and its coordinates.
+     *
+     * @return The file or {@code null} if the artifact isn't resolved.
+     * @since 2.0.0
+     */
+    Path getPath();
 
     /**
      * Sets the file of the artifact.
      *
      * @param file The file of the artifact, may be {@code null}
      * @return The new artifact, never {@code null}.
+     * @deprecated Use {@link #setPath(Path)} instead.
      */
+    @Deprecated
     Artifact setFile(File file);
+
+    /**
+     * Sets the file of the artifact.
+     *
+     * @param path The file of the artifact, may be {@code null}
+     * @return The new artifact, never {@code null}.
+     * @since 2.0.0
+     */
+    Artifact setPath(Path path);
 
     /**
      * Gets the specified property.

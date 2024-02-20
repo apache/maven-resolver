@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * The result of an artifact resolution request.
  *
  * @see RepositorySystem#resolveArtifacts(org.eclipse.aether.RepositorySystemSession, java.util.Collection)
- * @see Artifact#getFile()
+ * @see Artifact#getPath()
  */
 public final class ArtifactResult {
 
@@ -217,10 +217,10 @@ public final class ArtifactResult {
      * of the specified remote repositories.
      *
      * @return {@code true} if the artifact was resolved, {@code false} otherwise.
-     * @see Artifact#getFile()
+     * @see Artifact#getPath()
      */
     public boolean isResolved() {
-        return getArtifact() != null && getArtifact().getFile() != null;
+        return getArtifact() != null && getArtifact().getPath() != null;
     }
 
     /**

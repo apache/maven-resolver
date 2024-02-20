@@ -48,7 +48,7 @@ public class ChecksumCalculatorTest {
         for (String algo : algos) {
             checksumAlgorithmFactories.add(selector.select(algo));
         }
-        return ChecksumCalculator.newInstance(file, checksumAlgorithmFactories);
+        return ChecksumCalculator.newInstance(file.toPath(), checksumAlgorithmFactories);
     }
 
     private ByteBuffer toBuffer(String data) {

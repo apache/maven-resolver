@@ -107,7 +107,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     protected EnhancedLocalRepositoryManager getManager() {
         return new EnhancedLocalRepositoryManager(
-                basedir,
+                basedir.toPath(),
                 new DefaultLocalPathComposer(),
                 "_remote.repositories",
                 trackingFileManager,

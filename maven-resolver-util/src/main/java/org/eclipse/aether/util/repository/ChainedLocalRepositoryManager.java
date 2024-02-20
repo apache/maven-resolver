@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.util.repository;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -120,7 +119,7 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
 
         for (LocalRepositoryManager lrm : tail) {
             result = lrm.find(session, request);
-            if (result.getFile() != null) {
+            if (result.getPath() != null) {
                 if (ignoreTailAvailability) {
                     result.setAvailable(true);
                     return result;
@@ -141,7 +140,7 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
             artifactPath = getPathForLocalArtifact(request.getArtifact());
         }
 
-        Path file = new File(head.getRepository().getBasedir(), artifactPath).toPath();
+        Path file = head.getRepository().getBasePath().resolve(artifactPath);
         if (Files.isRegularFile(file)) {
             head.add(session, request);
         }
@@ -150,13 +149,13 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
     @Override
     public LocalMetadataResult find(RepositorySystemSession session, LocalMetadataRequest request) {
         LocalMetadataResult result = head.find(session, request);
-        if (result.getFile() != null) {
+        if (result.getPath() != null) {
             return result;
         }
 
         for (LocalRepositoryManager lrm : tail) {
             result = lrm.find(session, request);
-            if (result.getFile() != null) {
+            if (result.getPath() != null) {
                 return result;
             }
         }
@@ -172,7 +171,7 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
             metadataPath = getPathForLocalMetadata(request.getMetadata());
         }
 
-        Path file = new File(head.getRepository().getBasedir(), metadataPath).toPath();
+        Path file = head.getRepository().getBasePath().resolve(metadataPath);
         if (Files.isRegularFile(file)) {
             head.add(session, request);
         }

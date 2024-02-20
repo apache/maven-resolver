@@ -127,10 +127,10 @@ public final class MetadataResult {
      * refetch the metadata from the remote repository.
      *
      * @return {@code true} if the metadata was resolved, {@code false} otherwise.
-     * @see Metadata#getFile()
+     * @see Metadata#getPath()
      */
     public boolean isResolved() {
-        return getMetadata() != null && getMetadata().getFile() != null;
+        return getMetadata() != null && getMetadata().getPath() != null;
     }
 
     /**

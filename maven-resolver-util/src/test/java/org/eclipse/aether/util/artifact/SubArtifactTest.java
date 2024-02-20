@@ -128,7 +128,7 @@ public class SubArtifactTest {
         Map<String, String> props = new HashMap<>();
         props.put("key", "value1");
 
-        Artifact a = new SubArtifact(newMainArtifact("gid:aid:ver"), "", "pom", props, null);
+        Artifact a = new SubArtifact(newMainArtifact("gid:aid:ver"), "", "pom", props, (File) null);
         assertEquals("value1", a.getProperty("key", null));
         props.clear();
         assertEquals("value1", a.getProperty("key", null));

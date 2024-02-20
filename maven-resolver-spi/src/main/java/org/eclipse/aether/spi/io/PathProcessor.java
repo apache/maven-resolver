@@ -18,29 +18,49 @@
  */
 package org.eclipse.aether.spi.io;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 
 /**
  * A utility component to perform file-based operations.
  *
- * @deprecated Use {@link PathProcessor} or {@link ChecksumProcessor} instead.
+ * @since 2.0.0
  */
-@Deprecated
-public interface FileProcessor {
+public interface PathProcessor {
+    /**
+     * Returns last modified of path in milliseconds, if exists.
+     *
+     * @param path The path, may be {@code null}.
+     * @throws UncheckedIOException If an I/O error occurs.
+     */
+    default long lastModified(Path path, long defValue) {
+        try {
+            return Files.getLastModifiedTime(path).toMillis();
+        } catch (NoSuchFileException e) {
+            return defValue;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 
     /**
-     * Creates the directory named by the given abstract pathname, including any necessary but nonexistent parent
-     * directories. Note that if this operation fails it may have succeeded in creating some of the necessary parent
-     * directories.
+     * Returns size of file, if exists.
      *
-     * @param directory The directory to create, may be {@code null}.
-     * @return {@code true} if and only if the directory was created, along with all necessary parent directories;
-     *         {@code false} otherwise
+     * @param path The path, may be {@code null}.
+     * @throws UncheckedIOException If an I/O error occurs.
      */
-    boolean mkdirs(File directory);
+    default long size(Path path, long defValue) {
+        try {
+            return Files.size(path);
+        } catch (NoSuchFileException e) {
+            return defValue;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 
     /**
      * Writes the given data to a file. UTF-8 is assumed as encoding for the data. Creates the necessary directories for
@@ -50,7 +70,7 @@ public interface FileProcessor {
      * @param data The data to write, may be {@code null}.
      * @throws IOException If an I/O error occurs.
      */
-    void write(File target, String data) throws IOException;
+    void write(Path target, String data) throws IOException;
 
     /**
      * Writes the given stream to a file. Creates the necessary directories for the target file. In case of an error,
@@ -60,7 +80,7 @@ public interface FileProcessor {
      * @param source The stream to write to the file, must not be {@code null}.
      * @throws IOException If an I/O error occurs.
      */
-    void write(File target, InputStream source) throws IOException;
+    void write(Path target, InputStream source) throws IOException;
 
     /**
      * Moves the specified source file to the given target file. If the target file already exists, it is overwritten.
@@ -71,7 +91,7 @@ public interface FileProcessor {
      * @param target The file to move to, must not be {@code null}.
      * @throws IOException If an I/O error occurs.
      */
-    void move(File source, File target) throws IOException;
+    void move(Path source, Path target) throws IOException;
 
     /**
      * Copies the specified source file to the given target file. Creates the necessary directories for the target file.
@@ -81,7 +101,7 @@ public interface FileProcessor {
      * @param target The file to copy to, must not be {@code null}.
      * @throws IOException If an I/O error occurs.
      */
-    void copy(File source, File target) throws IOException;
+    void copy(Path source, Path target) throws IOException;
 
     /**
      * Copies the specified source file to the given target file. Creates the necessary directories for the target file.
@@ -93,31 +113,15 @@ public interface FileProcessor {
      * @return The number of copied bytes.
      * @throws IOException If an I/O error occurs.
      */
-    long copy(File source, File target, ProgressListener listener) throws IOException;
+    long copy(Path source, Path target, ProgressListener listener) throws IOException;
 
     /**
      * A listener object that is notified for every progress made while copying files.
      *
-     * @see FileProcessor#copy(File, File, ProgressListener)
+     * @see PathProcessor#copy(Path, Path, ProgressListener)
      */
-    interface ProgressListener extends PathProcessor.ProgressListener {
+    interface ProgressListener {
 
         void progressed(ByteBuffer buffer) throws IOException;
     }
-
-    /**
-     * Reads checksum from specified file.
-     *
-     * @throws IOException in case of any IO error.
-     * @since 1.8.0
-     */
-    String readChecksum(File checksumFile) throws IOException;
-
-    /**
-     * Writes checksum to specified file.
-     *
-     * @throws IOException in case of any IO error.
-     * @since 1.8.0
-     */
-    void writeChecksum(File checksumFile, String checksum) throws IOException;
 }

@@ -60,7 +60,7 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
         requireNonNull(repository, "repository cannot be null");
 
         if ("".equals(repository.getContentType()) || "simple".equals(repository.getContentType())) {
-            return new SimpleLocalRepositoryManager(repository.getBasedir(), "simple", localPathComposer);
+            return new SimpleLocalRepositoryManager(repository.getBasePath(), "simple", localPathComposer);
         } else {
             throw new NoLocalRepositoryManagerException(repository);
         }

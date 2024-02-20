@@ -19,6 +19,7 @@
 package org.eclipse.aether.spi.connector;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.metadata.Metadata;
@@ -43,10 +44,24 @@ public final class MetadataUpload extends MetadataTransfer {
      *
      * @param metadata The metadata to upload, may be {@code null}.
      * @param file The local file to upload the metadata from, may be {@code null}.
+     * @deprecated Use {@link #MetadataUpload(Metadata, Path)} instead.
      */
+    @Deprecated
     public MetadataUpload(Metadata metadata, File file) {
         setMetadata(metadata);
         setFile(file);
+    }
+
+    /**
+     * Creates a new upload with the specified properties.
+     *
+     * @param metadata The metadata to upload, may be {@code null}.
+     * @param path The local file to upload the metadata from, may be {@code null}.
+     * @since 2.0.0
+     */
+    public MetadataUpload(Metadata metadata, Path path) {
+        setMetadata(metadata);
+        setPath(path);
     }
 
     @Override
@@ -55,9 +70,16 @@ public final class MetadataUpload extends MetadataTransfer {
         return this;
     }
 
+    @Deprecated
     @Override
     public MetadataUpload setFile(File file) {
         super.setFile(file);
+        return this;
+    }
+
+    @Override
+    public MetadataUpload setPath(Path path) {
+        super.setPath(path);
         return this;
     }
 
@@ -81,6 +103,6 @@ public final class MetadataUpload extends MetadataTransfer {
 
     @Override
     public String toString() {
-        return getMetadata() + " - " + getFile();
+        return getMetadata() + " - " + getPath();
     }
 }

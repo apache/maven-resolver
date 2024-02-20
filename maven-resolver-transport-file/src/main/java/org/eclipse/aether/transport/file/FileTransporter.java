@@ -18,39 +18,37 @@
  */
 package org.eclipse.aether.transport.file;
 
-import java.io.File;
-import java.nio.file.Files;
+import java.nio.file.*;
 
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryUriUtils;
 import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.transfer.NoTransporterException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A transporter using {@link java.io.File}.
  */
 final class FileTransporter extends AbstractTransporter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileTransporter.class);
-
-    private final File basedir;
+    private final Path basePath;
 
     FileTransporter(RemoteRepository repository) throws NoTransporterException {
-        if (!"file".equalsIgnoreCase(repository.getProtocol())) {
-            throw new NoTransporterException(repository);
+        try {
+            basePath = Paths.get(RepositoryUriUtils.toUri(repository.getUrl())).toAbsolutePath();
+        } catch (FileSystemNotFoundException | IllegalArgumentException e) {
+            throw new NoTransporterException(repository, e);
         }
-        basedir = new File(PathUtils.basedir(repository.getUrl())).getAbsoluteFile();
     }
 
-    File getBasedir() {
-        return basedir;
+    Path getBasePath() {
+        return basePath;
     }
 
+    @Override
     public int classify(Throwable error) {
         if (error instanceof ResourceNotFoundException) {
             return ERROR_NOT_FOUND;
@@ -60,36 +58,34 @@ final class FileTransporter extends AbstractTransporter {
 
     @Override
     protected void implPeek(PeekTask task) throws Exception {
-        getFile(task, true);
+        getPath(task, true);
     }
 
     @Override
     protected void implGet(GetTask task) throws Exception {
-        File file = getFile(task, true);
-        utilGet(task, Files.newInputStream(file.toPath()), true, file.length(), false);
+        Path path = getPath(task, true);
+        utilGet(task, Files.newInputStream(path), true, Files.size(path), false);
     }
 
     @Override
     protected void implPut(PutTask task) throws Exception {
-        File file = getFile(task, false);
-        file.getParentFile().mkdirs();
+        Path path = getPath(task, false);
+        Files.createDirectories(path.getParent());
         try {
-            utilPut(task, Files.newOutputStream(file.toPath()), true);
+            utilPut(task, Files.newOutputStream(path), true);
         } catch (Exception e) {
-            if (!file.delete() && file.exists()) {
-                LOGGER.debug("Could not delete partial file {}", file);
-            }
+            Files.deleteIfExists(path);
             throw e;
         }
     }
 
-    private File getFile(TransportTask task, boolean required) throws Exception {
+    private Path getPath(TransportTask task, boolean required) throws Exception {
         String path = task.getLocation().getPath();
         if (path.contains("../")) {
             throw new IllegalArgumentException("illegal resource path: " + path);
         }
-        File file = new File(basedir, path);
-        if (required && !file.exists()) {
+        Path file = basePath.resolve(path);
+        if (required && !Files.isRegularFile(file)) {
             throw new ResourceNotFoundException("Could not locate " + file);
         }
         return file;

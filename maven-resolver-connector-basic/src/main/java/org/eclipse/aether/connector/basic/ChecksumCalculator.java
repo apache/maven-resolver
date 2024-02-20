@@ -19,12 +19,12 @@
 package org.eclipse.aether.connector.basic;
 
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -78,17 +78,17 @@ final class ChecksumCalculator {
 
     private final List<Checksum> checksums;
 
-    private final File targetFile;
+    private final Path targetFile;
 
     public static ChecksumCalculator newInstance(
-            File targetFile, Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+            Path targetFile, Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         if (checksumAlgorithmFactories == null || checksumAlgorithmFactories.isEmpty()) {
             return null;
         }
         return new ChecksumCalculator(targetFile, checksumAlgorithmFactories);
     }
 
-    private ChecksumCalculator(File targetFile, Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+    private ChecksumCalculator(Path targetFile, Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         this.checksums = new ArrayList<>();
         Set<String> algos = new HashSet<>();
         for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
@@ -107,7 +107,7 @@ final class ChecksumCalculator {
             return;
         }
 
-        try (InputStream in = new BufferedInputStream(Files.newInputStream(targetFile.toPath()))) {
+        try (InputStream in = new BufferedInputStream(Files.newInputStream(targetFile))) {
             long total = 0;
             final byte[] buffer = new byte[1024 * 32];
             while (total < dataOffset) {

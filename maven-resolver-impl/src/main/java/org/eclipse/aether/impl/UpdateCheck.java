@@ -19,6 +19,7 @@
 package org.eclipse.aether.impl;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -37,7 +38,7 @@ public final class UpdateCheck<T, E extends RepositoryException> {
 
     private T item;
 
-    private File file;
+    private Path path;
 
     private boolean fileValid = true;
 
@@ -108,9 +109,21 @@ public final class UpdateCheck<T, E extends RepositoryException> {
      * Returns the local file of the item.
      *
      * @return The local file of the item.
+     * @deprecated Use {@link #getPath()} instead.
      */
+    @Deprecated
     public File getFile() {
-        return file;
+        return path != null ? path.toFile() : null;
+    }
+
+    /**
+     * Returns the local file of the item.
+     *
+     * @return The local file of the item.
+     * @since 2.0.0
+     */
+    public Path getPath() {
+        return path;
     }
 
     /**
@@ -118,9 +131,22 @@ public final class UpdateCheck<T, E extends RepositoryException> {
      *
      * @param file The file of the item, never {@code null} .
      * @return This object for chaining.
+     * @deprecated Use {@link #setPath(Path)} instead.
      */
+    @Deprecated
     public UpdateCheck<T, E> setFile(File file) {
-        this.file = file;
+        return setPath(file != null ? file.toPath() : null);
+    }
+
+    /**
+     * Sets the local file of the item.
+     *
+     * @param path The file of the item, never {@code null} .
+     * @return This object for chaining.
+     * @since 2.0.0
+     */
+    public UpdateCheck<T, E> setPath(Path path) {
+        this.path = path;
         return this;
     }
 

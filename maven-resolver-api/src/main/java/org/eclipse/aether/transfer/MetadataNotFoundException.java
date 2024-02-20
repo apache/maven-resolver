@@ -41,7 +41,7 @@ public class MetadataNotFoundException extends MetadataTransferException {
         if (repository == null) {
             return "";
         } else {
-            return prefix + repository.getId() + " (" + repository.getBasedir() + ")";
+            return prefix + repository.getId() + " (" + repository.getBasePath().toAbsolutePath() + ")";
         }
     }
 

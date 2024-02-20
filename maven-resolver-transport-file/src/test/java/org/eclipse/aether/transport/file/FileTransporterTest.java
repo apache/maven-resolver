@@ -18,11 +18,16 @@
  */
 package org.eclipse.aether.transport.file;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
@@ -35,8 +40,10 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,7 +57,14 @@ public class FileTransporterTest {
 
     private Transporter transporter;
 
-    private File repoDir;
+    private Path repoDir;
+
+    private FileSystem fileSystem;
+
+    enum FS {
+        DEFAULT,
+        JIMFS
+    }
 
     private RemoteRepository newRepo(String url) {
         return new RemoteRepository.Builder("test", "default", url).build();
@@ -61,43 +75,60 @@ public class FileTransporterTest {
             transporter.close();
             transporter = null;
         }
+        if (factory == null) {
+            factory = new FileTransporterFactory();
+        }
+        if (session == null) {
+            session = TestUtils.newSession();
+        }
         transporter = factory.newInstance(session, newRepo(url));
     }
 
-    @BeforeEach
-    void setUp() throws Exception {
-        session = TestUtils.newSession();
-        factory = new FileTransporterFactory();
-        repoDir = TestFileUtils.createTempDir();
-        TestFileUtils.writeString(new File(repoDir, "file.txt"), "test");
-        TestFileUtils.writeString(new File(repoDir, "empty.txt"), "");
-        TestFileUtils.writeString(new File(repoDir, "some space.txt"), "space");
-        newTransporter(repoDir.toURI().toString());
+    void setUp(FS fs) {
+        try {
+            fileSystem = fs == FS.JIMFS ? Jimfs.newFileSystem() : null;
+            repoDir = fileSystem == null ? TestFileUtils.createTempDir().toPath() : fileSystem.getPath(".");
+            Files.write(repoDir.resolve("file.txt"), "test".getBytes(StandardCharsets.UTF_8));
+            Files.write(repoDir.resolve("empty.txt"), "".getBytes(StandardCharsets.UTF_8));
+            Files.write(repoDir.resolve("some space.txt"), "space".getBytes(StandardCharsets.UTF_8));
+            newTransporter(repoDir.toUri().toASCIIString());
+        } catch (Exception e) {
+            Assertions.fail(e);
+        }
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         if (transporter != null) {
             transporter.close();
             transporter = null;
+        }
+        if (fileSystem != null) {
+            fileSystem.close();
         }
         factory = null;
         session = null;
     }
 
-    @Test
-    void testClassify() {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testClassify(FS fs) {
+        setUp(fs);
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new FileNotFoundException()));
         assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(new ResourceNotFoundException("test")));
     }
 
-    @Test
-    void testPeek() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPeek(FS fs) throws Exception {
+        setUp(fs);
         transporter.peek(new PeekTask(URI.create("file.txt")));
     }
 
-    @Test
-    void testPeek_NotFound() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPeek_NotFound(FS fs) throws Exception {
+        setUp(fs);
         try {
             transporter.peek(new PeekTask(URI.create("missing.txt")));
             fail("Expected error");
@@ -106,8 +137,10 @@ public class FileTransporterTest {
         }
     }
 
-    @Test
-    void testPeek_Closed() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPeek_Closed(FS fs) throws Exception {
+        setUp(fs);
         transporter.close();
         try {
             transporter.peek(new PeekTask(URI.create("missing.txt")));
@@ -117,8 +150,10 @@ public class FileTransporterTest {
         }
     }
 
-    @Test
-    void testGet_ToMemory() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_ToMemory(FS fs) throws Exception {
+        setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("file.txt")).setListener(listener);
         transporter.get(task);
@@ -130,13 +165,15 @@ public class FileTransporterTest {
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
-    @Test
-    void testGet_ToFile() throws Exception {
-        File file = TestFileUtils.createTempFile("failure");
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_ToFile(FS fs) throws Exception {
+        setUp(fs);
+        Path file = TestFileUtils.createTempFile("failure").toPath();
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetTask task = new GetTask(URI.create("file.txt")).setDataFile(file).setListener(listener);
+        GetTask task = new GetTask(URI.create("file.txt")).setDataPath(file).setListener(listener);
         transporter.get(task);
-        assertEquals("test", TestFileUtils.readString(file));
+        assertEquals("test", TestFileUtils.readString(file.toFile()));
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
@@ -144,13 +181,15 @@ public class FileTransporterTest {
         assertEquals("test", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
-    @Test
-    void testGet_EmptyResource() throws Exception {
-        File file = TestFileUtils.createTempFile("failure");
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_EmptyResource(FS fs) throws Exception {
+        setUp(fs);
+        Path file = TestFileUtils.createTempFile("failure").toPath();
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetTask task = new GetTask(URI.create("empty.txt")).setDataFile(file).setListener(listener);
+        GetTask task = new GetTask(URI.create("empty.txt")).setDataPath(file).setListener(listener);
         transporter.get(task);
-        assertEquals("", TestFileUtils.readString(file));
+        assertEquals("", TestFileUtils.readString(file.toFile()));
         assertEquals(0L, listener.dataOffset);
         assertEquals(0L, listener.dataLength);
         assertEquals(1, listener.startedCount);
@@ -158,38 +197,48 @@ public class FileTransporterTest {
         assertEquals("", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
-    @Test
-    void testGet_EncodedResourcePath() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_EncodedResourcePath(FS fs) throws Exception {
+        setUp(fs);
         GetTask task = new GetTask(URI.create("some%20space.txt"));
         transporter.get(task);
         assertEquals("space", task.getDataString());
     }
 
-    @Test
-    void testGet_Fragment() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_Fragment(FS fs) throws Exception {
+        setUp(fs);
         GetTask task = new GetTask(URI.create("file.txt#ignored"));
         transporter.get(task);
         assertEquals("test", task.getDataString());
     }
 
-    @Test
-    void testGet_Query() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_Query(FS fs) throws Exception {
+        setUp(fs);
         GetTask task = new GetTask(URI.create("file.txt?ignored"));
         transporter.get(task);
         assertEquals("test", task.getDataString());
     }
 
-    @Test
-    void testGet_FileHandleLeak() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_FileHandleLeak(FS fs) throws Exception {
+        setUp(fs);
         for (int i = 0; i < 100; i++) {
-            File file = TestFileUtils.createTempFile("failure");
-            transporter.get(new GetTask(URI.create("file.txt")).setDataFile(file));
-            assertTrue(file.delete(), i + ", " + file.getAbsolutePath());
+            Path file = TestFileUtils.createTempFile("failure").toPath();
+            transporter.get(new GetTask(URI.create("file.txt")).setDataPath(file));
+            assertTrue(file.toFile().delete(), i + ", " + file.toFile().getAbsolutePath());
         }
     }
 
-    @Test
-    void testGet_NotFound() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_NotFound(FS fs) throws Exception {
+        setUp(fs);
         try {
             transporter.get(new GetTask(URI.create("missing.txt")));
             fail("Expected error");
@@ -198,8 +247,10 @@ public class FileTransporterTest {
         }
     }
 
-    @Test
-    void testGet_Closed() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_Closed(FS fs) throws Exception {
+        setUp(fs);
         transporter.close();
         try {
             transporter.get(new GetTask(URI.create("file.txt")));
@@ -209,8 +260,10 @@ public class FileTransporterTest {
         }
     }
 
-    @Test
-    void testGet_StartCancelled() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_StartCancelled(FS fs) throws Exception {
+        setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelStart = true;
         GetTask task = new GetTask(URI.create("file.txt")).setListener(listener);
@@ -226,8 +279,10 @@ public class FileTransporterTest {
         assertEquals(0, listener.progressedCount);
     }
 
-    @Test
-    void testGet_ProgressCancelled() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_ProgressCancelled(FS fs) throws Exception {
+        setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelProgress = true;
         GetTask task = new GetTask(URI.create("file.txt")).setListener(listener);
@@ -243,8 +298,10 @@ public class FileTransporterTest {
         assertEquals(1, listener.progressedCount);
     }
 
-    @Test
-    void testPut_FromMemory() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_FromMemory(FS fs) throws Exception {
+        setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataString("upload");
         transporter.put(task);
@@ -252,24 +309,28 @@ public class FileTransporterTest {
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
         assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
-        assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
+        assertEquals("upload", new String(Files.readAllBytes(repoDir.resolve("file.txt")), StandardCharsets.UTF_8));
     }
 
-    @Test
-    void testPut_FromFile() throws Exception {
-        File file = TestFileUtils.createTempFile("upload");
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_FromFile(FS fs) throws Exception {
+        setUp(fs);
+        Path file = TestFileUtils.createTempFile("upload").toPath();
         RecordingTransportListener listener = new RecordingTransportListener();
-        PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataFile(file);
+        PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataPath(file);
         transporter.put(task);
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
         assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
-        assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
+        assertEquals("upload", new String(Files.readAllBytes(repoDir.resolve("file.txt")), StandardCharsets.UTF_8));
     }
 
-    @Test
-    void testPut_EmptyResource() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_EmptyResource(FS fs) throws Exception {
+        setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener);
         transporter.put(task);
@@ -277,11 +338,13 @@ public class FileTransporterTest {
         assertEquals(0L, listener.dataLength);
         assertEquals(1, listener.startedCount);
         assertEquals(0, listener.progressedCount);
-        assertEquals("", TestFileUtils.readString(new File(repoDir, "file.txt")));
+        assertEquals("", new String(Files.readAllBytes(repoDir.resolve("file.txt")), StandardCharsets.UTF_8));
     }
 
-    @Test
-    void testPut_NonExistentParentDir() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_NonExistentParentDir(FS fs) throws Exception {
+        setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("dir/sub/dir/file.txt"))
                 .setListener(listener)
@@ -291,11 +354,15 @@ public class FileTransporterTest {
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
         assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
-        assertEquals("upload", TestFileUtils.readString(new File(repoDir, "dir/sub/dir/file.txt")));
+        assertEquals(
+                "upload",
+                new String(Files.readAllBytes(repoDir.resolve("dir/sub/dir/file.txt")), StandardCharsets.UTF_8));
     }
 
-    @Test
-    void testPut_EncodedResourcePath() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_EncodedResourcePath(FS fs) throws Exception {
+        setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("some%20space.txt"))
                 .setListener(listener)
@@ -305,22 +372,26 @@ public class FileTransporterTest {
         assertEquals(2L, listener.dataLength);
         assertEquals(1, listener.startedCount);
         assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
-        assertEquals("OK", TestFileUtils.readString(new File(repoDir, "some space.txt")));
+        assertEquals("OK", new String(Files.readAllBytes(repoDir.resolve("some space.txt")), StandardCharsets.UTF_8));
     }
 
-    @Test
-    void testPut_FileHandleLeak() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_FileHandleLeak(FS fs) throws Exception {
+        setUp(fs);
         for (int i = 0; i < 100; i++) {
-            File src = TestFileUtils.createTempFile("upload");
-            File dst = new File(repoDir, "file.txt");
-            transporter.put(new PutTask(URI.create("file.txt")).setDataFile(src));
-            assertTrue(src.delete(), i + ", " + src.getAbsolutePath());
-            assertTrue(dst.delete(), i + ", " + dst.getAbsolutePath());
+            Path src = TestFileUtils.createTempFile("upload").toPath();
+            Path dst = repoDir.resolve("file.txt");
+            transporter.put(new PutTask(URI.create("file.txt")).setDataPath(src));
+            assertTrue(src.toFile().delete(), i + ", " + src.toFile().getAbsolutePath());
+            assertTrue(Files.deleteIfExists(dst), i + ", " + dst.toAbsolutePath());
         }
     }
 
-    @Test
-    void testPut_Closed() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_Closed(FS fs) throws Exception {
+        setUp(fs);
         transporter.close();
         try {
             transporter.put(new PutTask(URI.create("missing.txt")));
@@ -330,8 +401,10 @@ public class FileTransporterTest {
         }
     }
 
-    @Test
-    void testPut_StartCancelled() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_StartCancelled(FS fs) throws Exception {
+        setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelStart = true;
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataString("upload");
@@ -345,11 +418,13 @@ public class FileTransporterTest {
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
         assertEquals(0, listener.progressedCount);
-        assertFalse(new File(repoDir, "file.txt").exists());
+        assertFalse(Files.exists(repoDir.resolve("file.txt")));
     }
 
-    @Test
-    void testPut_ProgressCancelled() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_ProgressCancelled(FS fs) throws Exception {
+        setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelProgress = true;
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataString("upload");
@@ -363,7 +438,7 @@ public class FileTransporterTest {
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
         assertEquals(1, listener.progressedCount);
-        assertFalse(new File(repoDir, "file.txt").exists());
+        assertFalse(Files.exists(repoDir.resolve("file.txt")));
     }
 
     @Test
@@ -433,9 +508,33 @@ public class FileTransporterTest {
         testInit("file://host/dir", "/dir");
     }
 
+    @Test
+    void testInit_NonDefaultFileSystemRelative() throws Exception {
+        try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
+            Path path = fs.getPath("dir");
+            testInit(path.toUri().toASCIIString(), "/work/dir");
+        }
+    }
+
+    @Test
+    void testInit_NonDefaultFileSystemAbsolute() throws Exception {
+        try (FileSystem fs = Jimfs.newFileSystem(Configuration.unix())) {
+            Path path = fs.getPath("/dir");
+            testInit(path.toUri().toASCIIString(), "/dir");
+        }
+    }
+
     private void testInit(String base, String expected) throws Exception {
         newTransporter(base);
-        File exp = new File(expected).getAbsoluteFile();
-        assertEquals(exp, ((FileTransporter) transporter).getBasedir());
+        String exp = expected;
+        if (base.startsWith("file:")) {
+            // on def FileSystem we do extra dance that we do NOT do in case of non-default File Systems:
+            // like accepting weird URLs/URIs and resolving/abs against CWD, that may not be defined in case
+            // of non-default FileSystems (OTOH, they MAY do it, like JIMFS has $cwd="/work")
+            exp = Paths.get(expected).toAbsolutePath().toString();
+        }
+        // compare path string representation only, as otherwise (Object equality) it would fail
+        // if we end up with non default FS for example
+        assertEquals(exp, ((FileTransporter) transporter).getBasePath().toString());
     }
 }

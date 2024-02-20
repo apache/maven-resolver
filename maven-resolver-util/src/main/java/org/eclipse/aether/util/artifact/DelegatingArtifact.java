@@ -19,6 +19,7 @@
 package org.eclipse.aether.util.artifact;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.AbstractArtifact;
@@ -52,18 +53,22 @@ public abstract class DelegatingArtifact extends AbstractArtifact {
      */
     protected abstract DelegatingArtifact newInstance(Artifact delegate);
 
+    @Override
     public String getGroupId() {
         return delegate.getGroupId();
     }
 
+    @Override
     public String getArtifactId() {
         return delegate.getArtifactId();
     }
 
+    @Override
     public String getVersion() {
         return delegate.getVersion();
     }
 
+    @Override
     public Artifact setVersion(String version) {
         Artifact artifact = delegate.setVersion(version);
         if (artifact != delegate) {
@@ -72,28 +77,50 @@ public abstract class DelegatingArtifact extends AbstractArtifact {
         return this;
     }
 
+    @Override
     public String getBaseVersion() {
         return delegate.getBaseVersion();
     }
 
+    @Override
     public boolean isSnapshot() {
         return delegate.isSnapshot();
     }
 
+    @Override
     public String getClassifier() {
         return delegate.getClassifier();
     }
 
+    @Override
     public String getExtension() {
         return delegate.getExtension();
     }
 
+    @Deprecated
+    @Override
     public File getFile() {
         return delegate.getFile();
     }
 
+    @Override
+    public Path getPath() {
+        return delegate.getPath();
+    }
+
+    @Deprecated
+    @Override
     public Artifact setFile(File file) {
         Artifact artifact = delegate.setFile(file);
+        if (artifact != delegate) {
+            return newInstance(artifact);
+        }
+        return this;
+    }
+
+    @Override
+    public Artifact setPath(Path path) {
+        Artifact artifact = delegate.setPath(path);
         if (artifact != delegate) {
             return newInstance(artifact);
         }

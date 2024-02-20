@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.nio.file.Path;
+
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.TransferResource;
@@ -34,7 +36,7 @@ public class WarnChecksumPolicyTest {
 
     @BeforeEach
     void setup() {
-        policy = new WarnChecksumPolicy(new TransferResource("null", "file:/dev/null", "file.txt", null, null));
+        policy = new WarnChecksumPolicy(new TransferResource("null", "file:/dev/null", "file.txt", (Path) null, null));
         exception = new ChecksumFailureException("test");
     }
 

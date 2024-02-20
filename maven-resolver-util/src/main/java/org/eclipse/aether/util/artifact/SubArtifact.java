@@ -19,6 +19,7 @@
 package org.eclipse.aether.util.artifact;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 
@@ -39,7 +40,7 @@ public final class SubArtifact extends AbstractArtifact {
 
     private final String extension;
 
-    private final File file;
+    private final Path path;
 
     private final Map<String, String> properties;
 
@@ -81,10 +82,26 @@ public final class SubArtifact extends AbstractArtifact {
      * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
      * @param classifier The classifier for this artifact, may be {@code null} if none.
      * @param extension The extension for this artifact, may be {@code null} if none.
+     * @param path The file for this artifact, may be {@code null} if unresolved.
+     * @since 2.0.0
+     */
+    public SubArtifact(Artifact mainArtifact, String classifier, String extension, Path path) {
+        this(mainArtifact, classifier, extension, null, path);
+    }
+
+    /**
+     * Creates a new sub artifact. The classifier and extension specified for this artifact may use the asterisk
+     * character "*" to refer to the corresponding property of the main artifact. For instance, the classifier
+     * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
+     * used to refer to the GPG signature of an artifact.
+     *
+     * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
+     * @param classifier The classifier for this artifact, may be {@code null} if none.
+     * @param extension The extension for this artifact, may be {@code null} if none.
      * @param properties The properties of the artifact, may be {@code null}.
      */
     public SubArtifact(Artifact mainArtifact, String classifier, String extension, Map<String, String> properties) {
-        this(mainArtifact, classifier, extension, properties, null);
+        this(mainArtifact, classifier, extension, properties, (Path) null);
     }
 
     /**
@@ -101,71 +118,112 @@ public final class SubArtifact extends AbstractArtifact {
      */
     public SubArtifact(
             Artifact mainArtifact, String classifier, String extension, Map<String, String> properties, File file) {
+        this(mainArtifact, classifier, extension, properties, file != null ? file.toPath() : null);
+    }
+
+    /**
+     * Creates a new sub artifact. The classifier and extension specified for this artifact may use the asterisk
+     * character "*" to refer to the corresponding property of the main artifact. For instance, the classifier
+     * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
+     * used to refer to the GPG signature of an artifact.
+     *
+     * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
+     * @param classifier The classifier for this artifact, may be {@code null} if none.
+     * @param extension The extension for this artifact, may be {@code null} if none.
+     * @param properties The properties of the artifact, may be {@code null}.
+     * @param path The file for this artifact, may be {@code null} if unresolved.
+     * @since 2.0.0
+     */
+    public SubArtifact(
+            Artifact mainArtifact, String classifier, String extension, Map<String, String> properties, Path path) {
         this.mainArtifact = requireNonNull(mainArtifact, "main artifact cannot be null");
         this.classifier = classifier;
         this.extension = extension;
-        this.file = file;
+        this.path = path;
         this.properties = copyProperties(properties);
     }
 
     private SubArtifact(
-            Artifact mainArtifact, String classifier, String extension, File file, Map<String, String> properties) {
+            Artifact mainArtifact, String classifier, String extension, Path path, Map<String, String> properties) {
         // NOTE: This constructor assumes immutability of the provided properties, for internal use only
         this.mainArtifact = mainArtifact;
         this.classifier = classifier;
         this.extension = extension;
-        this.file = file;
+        this.path = path;
         this.properties = properties;
     }
 
+    @Override
     public String getGroupId() {
         return mainArtifact.getGroupId();
     }
 
+    @Override
     public String getArtifactId() {
         return mainArtifact.getArtifactId();
     }
 
+    @Override
     public String getVersion() {
         return mainArtifact.getVersion();
     }
 
+    @Override
     public String getBaseVersion() {
         return mainArtifact.getBaseVersion();
     }
 
+    @Override
     public boolean isSnapshot() {
         return mainArtifact.isSnapshot();
     }
 
+    @Override
     public String getClassifier() {
         return expand(classifier, mainArtifact.getClassifier());
     }
 
+    @Override
     public String getExtension() {
         return expand(extension, mainArtifact.getExtension());
     }
 
+    @Deprecated
+    @Override
     public File getFile() {
-        return file;
+        return path != null ? path.toFile() : null;
     }
 
+    @Override
+    public Path getPath() {
+        return path;
+    }
+
+    @Deprecated
+    @Override
     public Artifact setFile(File file) {
-        if (Objects.equals(this.file, file)) {
+        return setPath(file != null ? file.toPath() : null);
+    }
+
+    @Override
+    public Artifact setPath(Path path) {
+        if (Objects.equals(this.path, path)) {
             return this;
         }
-        return new SubArtifact(mainArtifact, classifier, extension, file, properties);
+        return new SubArtifact(mainArtifact, classifier, extension, path, properties);
     }
 
+    @Override
     public Map<String, String> getProperties() {
         return properties;
     }
 
+    @Override
     public Artifact setProperties(Map<String, String> properties) {
         if (this.properties.equals(properties) || (properties == null && this.properties.isEmpty())) {
             return this;
         }
-        return new SubArtifact(mainArtifact, classifier, extension, properties, file);
+        return new SubArtifact(mainArtifact, classifier, extension, properties, path);
     }
 
     private static String expand(String pattern, String replacement) {

@@ -19,6 +19,7 @@
 package org.eclipse.aether.repository;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import static java.util.Objects.requireNonNull;
 
@@ -31,7 +32,7 @@ public final class LocalArtifactResult {
 
     private final LocalArtifactRequest request;
 
-    private File file;
+    private Path path;
 
     private boolean available;
 
@@ -61,9 +62,23 @@ public final class LocalArtifactResult {
      * remote repository that is not part of the list of remote repositories used for the query.
      *
      * @return The file to the requested artifact or {@code null} if the artifact does not exist locally.
+     * @deprecated Use {@link #getPath()} instead.
      */
+    @Deprecated
     public File getFile() {
-        return file;
+        return path != null ? path.toFile() : null;
+    }
+
+    /**
+     * Gets the file to the requested artifact. Note that this file must not be used unless {@link #isAvailable()}
+     * returns {@code true}. An artifact file can be found but considered unavailable if the artifact was cached from a
+     * remote repository that is not part of the list of remote repositories used for the query.
+     *
+     * @return The file to the requested artifact or {@code null} if the artifact does not exist locally.
+     * @since 2.0.0
+     */
+    public Path getPath() {
+        return path;
     }
 
     /**
@@ -71,9 +86,22 @@ public final class LocalArtifactResult {
      *
      * @param file The artifact file, may be {@code null}.
      * @return This result for chaining, never {@code null}.
+     * @deprecated Use {@link #setPath(Path)} instead.
      */
+    @Deprecated
     public LocalArtifactResult setFile(File file) {
-        this.file = file;
+        return setPath(file != null ? file.toPath() : null);
+    }
+
+    /**
+     * Sets the file to requested artifact.
+     *
+     * @param path The artifact file, may be {@code null}.
+     * @return This result for chaining, never {@code null}.
+     * @since 2.0.0
+     */
+    public LocalArtifactResult setPath(Path path) {
+        this.path = path;
         return this;
     }
 
@@ -126,6 +154,6 @@ public final class LocalArtifactResult {
 
     @Override
     public String toString() {
-        return getFile() + " (" + (isAvailable() ? "available" : "unavailable") + ")";
+        return getPath() + " (" + (isAvailable() ? "available" : "unavailable") + ")";
     }
 }

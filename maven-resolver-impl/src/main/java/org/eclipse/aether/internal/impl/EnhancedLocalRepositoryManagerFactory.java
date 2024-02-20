@@ -91,7 +91,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
         if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
             return new EnhancedLocalRepositoryManager(
-                    repository.getBasedir(),
+                    repository.getBasePath(),
                     localPathComposer,
                     trackingFilename,
                     trackingFileManager,

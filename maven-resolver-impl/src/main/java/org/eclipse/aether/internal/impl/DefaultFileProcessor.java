@@ -32,7 +32,10 @@ import org.eclipse.aether.util.FileUtils;
 
 /**
  * A utility class helping with file-based operations.
+ *
+ * @deprecated
  */
+@Deprecated
 @Singleton
 @Named
 public class DefaultFileProcessor implements FileProcessor {

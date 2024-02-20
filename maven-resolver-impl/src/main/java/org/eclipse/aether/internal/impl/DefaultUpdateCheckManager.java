@@ -22,7 +22,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +46,7 @@ import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
@@ -118,11 +122,16 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
 
     private final UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
+    private final PathProcessor pathProcessor;
+
     @Inject
     public DefaultUpdateCheckManager(
-            TrackingFileManager trackingFileManager, UpdatePolicyAnalyzer updatePolicyAnalyzer) {
+            TrackingFileManager trackingFileManager,
+            UpdatePolicyAnalyzer updatePolicyAnalyzer,
+            PathProcessor pathProcessor) {
         this.trackingFileManager = requireNonNull(trackingFileManager, "tracking file manager cannot be null");
         this.updatePolicyAnalyzer = requireNonNull(updatePolicyAnalyzer, "update policy analyzer cannot be null");
+        this.pathProcessor = requireNonNull(pathProcessor, "path processor cannot be null");
     }
 
     @Override
@@ -141,15 +150,15 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         Artifact artifact = check.getItem();
         RemoteRepository repository = check.getRepository();
 
-        File artifactFile =
-                requireNonNull(check.getFile(), String.format("The artifact '%s' has no file attached", artifact));
+        Path artifactPath =
+                requireNonNull(check.getPath(), String.format("The artifact '%s' has no file attached", artifact));
 
-        boolean fileExists = check.isFileValid() && artifactFile.exists();
+        boolean fileExists = check.isFileValid() && Files.exists(artifactPath);
 
-        File touchFile = getArtifactTouchFile(artifactFile);
-        Properties props = read(touchFile);
+        Path touchPath = getArtifactTouchFile(artifactPath);
+        Properties props = read(touchPath);
 
-        String updateKey = getUpdateKey(session, artifactFile, repository);
+        String updateKey = getUpdateKey(session, artifactPath, repository);
         String dataKey = getDataKey(repository);
 
         String error = getError(props, dataKey);
@@ -158,7 +167,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         if (error == null) {
             if (fileExists) {
                 // last update was successful
-                lastUpdated = artifactFile.lastModified();
+                lastUpdated = pathProcessor.lastModified(artifactPath, 0L);
             } else {
                 // this is the first attempt ever
                 lastUpdated = TS_NEVER;
@@ -248,16 +257,16 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         Metadata metadata = check.getItem();
         RemoteRepository repository = check.getRepository();
 
-        File metadataFile =
-                requireNonNull(check.getFile(), String.format("The metadata '%s' has no file attached", metadata));
+        Path metadataPath =
+                requireNonNull(check.getPath(), String.format("The metadata '%s' has no file attached", metadata));
 
-        boolean fileExists = check.isFileValid() && metadataFile.exists();
+        boolean fileExists = check.isFileValid() && Files.exists(metadataPath);
 
-        File touchFile = getMetadataTouchFile(metadataFile);
-        Properties props = read(touchFile);
+        Path touchPath = getMetadataTouchFile(metadataPath);
+        Properties props = read(touchPath);
 
-        String updateKey = getUpdateKey(session, metadataFile, repository);
-        String dataKey = getDataKey(metadataFile);
+        String updateKey = getUpdateKey(session, metadataPath, repository);
+        String dataKey = getDataKey(metadataPath);
 
         String error = getError(props, dataKey);
 
@@ -275,7 +284,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
             lastUpdated = getLastUpdated(props, dataKey);
         } else {
             // metadata could not be transferred
-            String transferKey = getTransferKey(session, metadataFile, repository);
+            String transferKey = getTransferKey(session, metadataPath, repository);
             lastUpdated = getLastUpdated(props, transferKey);
         }
 
@@ -344,12 +353,12 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         return props.getProperty(key + ERROR_KEY_SUFFIX);
     }
 
-    private File getArtifactTouchFile(File artifactFile) {
-        return new File(artifactFile.getPath() + UPDATED_KEY_SUFFIX);
+    private Path getArtifactTouchFile(Path artifactPath) {
+        return artifactPath.getParent().resolve(artifactPath.getFileName() + UPDATED_KEY_SUFFIX);
     }
 
-    private File getMetadataTouchFile(File metadataFile) {
-        return new File(metadataFile.getParent(), "resolver-status.properties");
+    private Path getMetadataTouchFile(Path metadataPath) {
+        return metadataPath.getParent().resolve("resolver-status.properties");
     }
 
     private String getDataKey(RemoteRepository repository) {
@@ -375,12 +384,12 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         return getRepoKey(session, repository);
     }
 
-    private String getDataKey(File metadataFile) {
-        return metadataFile.getName();
+    private String getDataKey(Path metadataPath) {
+        return metadataPath.getFileName().toString();
     }
 
-    private String getTransferKey(RepositorySystemSession session, File metadataFile, RemoteRepository repository) {
-        return metadataFile.getName() + '/' + getRepoKey(session, repository);
+    private String getTransferKey(RepositorySystemSession session, Path metadataPath, RemoteRepository repository) {
+        return metadataPath.getFileName().toString() + '/' + getRepoKey(session, repository);
     }
 
     private String getRepoKey(RepositorySystemSession session, RemoteRepository repository) {
@@ -409,8 +418,8 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         return result;
     }
 
-    private String getUpdateKey(RepositorySystemSession session, File file, RemoteRepository repository) {
-        return file.getAbsolutePath() + '|' + getRepoKey(session, repository);
+    private String getUpdateKey(RepositorySystemSession session, Path path, RemoteRepository repository) {
+        return path.toAbsolutePath() + "|" + getRepoKey(session, repository);
     }
 
     private int getSessionState(RepositorySystemSession session) {
@@ -453,8 +462,8 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         return updatePolicyAnalyzer.isUpdatedRequired(session, lastModified, policy);
     }
 
-    private Properties read(File touchFile) {
-        Properties props = trackingFileManager.read(touchFile);
+    private Properties read(Path touchPath) {
+        Properties props = trackingFileManager.read(touchPath);
         return (props != null) ? props : new Properties();
     }
 
@@ -462,18 +471,22 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
     public void touchArtifact(RepositorySystemSession session, UpdateCheck<Artifact, ArtifactTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
-        File artifactFile = check.getFile();
-        File touchFile = getArtifactTouchFile(artifactFile);
+        Path artifactPath = check.getPath();
+        Path touchPath = getArtifactTouchFile(artifactPath);
 
-        String updateKey = getUpdateKey(session, artifactFile, check.getRepository());
+        String updateKey = getUpdateKey(session, artifactPath, check.getRepository());
         String dataKey = getDataKey(check.getAuthoritativeRepository());
         String transferKey = getTransferKey(session, check.getRepository());
 
         setUpdated(session, updateKey);
-        Properties props = write(touchFile, dataKey, transferKey, check.getException());
+        Properties props = write(touchPath, dataKey, transferKey, check.getException());
 
-        if (artifactFile.exists() && !hasErrors(props)) {
-            touchFile.delete();
+        if (Files.exists(artifactPath) && !hasErrors(props)) {
+            try {
+                Files.deleteIfExists(touchPath);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 
@@ -490,18 +503,18 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
     public void touchMetadata(RepositorySystemSession session, UpdateCheck<Metadata, MetadataTransferException> check) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(check, "check cannot be null");
-        File metadataFile = check.getFile();
-        File touchFile = getMetadataTouchFile(metadataFile);
+        Path metadataPath = check.getPath();
+        Path touchPath = getMetadataTouchFile(metadataPath);
 
-        String updateKey = getUpdateKey(session, metadataFile, check.getRepository());
-        String dataKey = getDataKey(metadataFile);
-        String transferKey = getTransferKey(session, metadataFile, check.getRepository());
+        String updateKey = getUpdateKey(session, metadataPath, check.getRepository());
+        String dataKey = getDataKey(metadataPath);
+        String transferKey = getTransferKey(session, metadataPath, check.getRepository());
 
         setUpdated(session, updateKey);
-        write(touchFile, dataKey, transferKey, check.getException());
+        write(touchPath, dataKey, transferKey, check.getException());
     }
 
-    private Properties write(File touchFile, String dataKey, String transferKey, Exception error) {
+    private Properties write(Path touchPath, String dataKey, String transferKey, Exception error) {
         Map<String, String> updates = new HashMap<>();
 
         String timestamp = Long.toString(System.currentTimeMillis());
@@ -524,6 +537,6 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
             updates.put(transferKey + UPDATED_KEY_SUFFIX, timestamp);
         }
 
-        return trackingFileManager.update(touchFile, updates);
+        return trackingFileManager.update(touchPath, updates);
     }
 }

@@ -22,8 +22,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,7 +62,7 @@ import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
-import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transfer.ArtifactFilteredOutException;
@@ -110,7 +113,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultArtifactResolver.class);
 
-    private final FileProcessor fileProcessor;
+    private final PathProcessor pathProcessor;
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
 
@@ -133,7 +136,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
     public DefaultArtifactResolver(
-            FileProcessor fileProcessor,
+            PathProcessor pathProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
             VersionResolver versionResolver,
             UpdateCheckManager updateCheckManager,
@@ -143,7 +146,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             OfflineController offlineController,
             Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors,
             RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
-        this.fileProcessor = requireNonNull(fileProcessor, "file processor cannot be null");
+        this.pathProcessor = requireNonNull(pathProcessor, "path processor cannot be null");
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
         this.versionResolver = requireNonNull(versionResolver, "version resolver cannot be null");
@@ -227,13 +230,13 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                     String localPath = session.getSystemScopeHandler().getSystemPath(artifact);
                     if (localPath != null) {
                         // unhosted artifact, just validate file
-                        File file = new File(localPath);
-                        if (!file.isFile()) {
+                        Path path = Paths.get(localPath);
+                        if (!Files.isRegularFile(path)) {
                             failures = true;
                             result.addException(
                                     ArtifactResult.NO_REPOSITORY, new ArtifactNotFoundException(artifact, localPath));
                         } else {
-                            artifact = artifact.setFile(file);
+                            artifact = artifact.setPath(path);
                             result.setArtifact(artifact);
                             artifactResolved(session, trace, artifact, null, result.getExceptions());
                         }
@@ -282,9 +285,9 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                     }
 
                     if (workspace != null) {
-                        File file = workspace.findArtifact(artifact);
-                        if (file != null) {
-                            artifact = artifact.setFile(file);
+                        Path path = workspace.findArtifactPath(artifact);
+                        if (path != null) {
+                            artifact = artifact.setPath(path);
                             result.setArtifact(artifact);
                             result.setRepository(workspace.getRepository());
                             artifactResolved(session, trace, artifact, result.getRepository(), null);
@@ -309,7 +312,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         }
 
                         try {
-                            artifact = artifact.setFile(getFile(session, artifact, local.getFile()));
+                            artifact = artifact.setPath(getPath(session, artifact, local.getPath()));
                             result.setArtifact(artifact);
                             artifactResolved(session, trace, artifact, result.getRepository(), null);
                         } catch (ArtifactTransferException e) {
@@ -328,7 +331,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         continue;
                     }
 
-                    if (local.getFile() != null) {
+                    if (local.getPath() != null) {
                         LOGGER.info(
                                 "Artifact {} is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from {}",
                                 artifact,
@@ -393,7 +396,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                     ArtifactRequest request = result.getRequest();
 
                     Artifact artifact = result.getArtifact();
-                    if (artifact == null || artifact.getFile() == null) {
+                    if (artifact == null || artifact.getPath() == null) {
                         failures = true;
                         if (result.getExceptions().isEmpty()) {
                             Exception exception =
@@ -420,7 +423,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
         if (lar.isAvailable()) {
             return true;
         }
-        if (lar.getFile() != null) {
+        if (lar.getPath() != null) {
             // resolution of version range found locally installed artifact
             if (vr.getRepository() instanceof LocalRepository) {
                 // resolution of (snapshot) version found locally installed artifact
@@ -433,29 +436,31 @@ public class DefaultArtifactResolver implements ArtifactResolver {
         return false;
     }
 
-    private File getFile(RepositorySystemSession session, Artifact artifact, File file)
+    private Path getPath(RepositorySystemSession session, Artifact artifact, Path path)
             throws ArtifactTransferException {
         if (artifact.isSnapshot()
                 && !artifact.getVersion().equals(artifact.getBaseVersion())
                 && ConfigUtils.getBoolean(
                         session, DEFAULT_SNAPSHOT_NORMALIZATION, CONFIG_PROP_SNAPSHOT_NORMALIZATION)) {
-            String name = file.getName().replace(artifact.getVersion(), artifact.getBaseVersion());
-            File dst = new File(file.getParent(), name);
+            String name = path.getFileName().toString().replace(artifact.getVersion(), artifact.getBaseVersion());
+            Path dst = path.getParent().resolve(name);
 
-            boolean copy = dst.length() != file.length() || dst.lastModified() != file.lastModified();
-            if (copy) {
-                try {
-                    fileProcessor.copy(file, dst);
-                    dst.setLastModified(file.lastModified());
-                } catch (IOException e) {
-                    throw new ArtifactTransferException(artifact, null, e);
+            try {
+                long pathLastModified = pathProcessor.lastModified(path, 0L);
+                boolean copy = pathProcessor.size(dst, 0L) != pathProcessor.size(path, 0L)
+                        || pathProcessor.lastModified(dst, 0L) != pathLastModified;
+                if (copy) {
+                    pathProcessor.copy(path, dst);
+                    Files.setLastModifiedTime(dst, FileTime.fromMillis(pathLastModified));
                 }
+            } catch (IOException e) {
+                throw new ArtifactTransferException(artifact, null, e);
             }
 
-            file = dst;
+            path = dst;
         }
 
-        return file;
+        return path;
     }
 
     private void performDownloads(RepositorySystemSession session, ResolutionGroup group) {
@@ -499,13 +504,13 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             download.setRequestContext(item.request.getRequestContext());
             download.setListener(SafeTransferListener.wrap(session));
             download.setTrace(item.trace);
-            if (item.local.getFile() != null) {
-                download.setFile(item.local.getFile());
+            if (item.local.getPath() != null) {
+                download.setPath(item.local.getPath());
                 download.setExistenceCheck(true);
             } else {
                 String path =
                         lrm.getPathForRemoteArtifact(artifact, group.repository, item.request.getRequestContext());
-                download.setFile(new File(lrm.getRepository().getBasedir(), path));
+                download.setPath(lrm.getRepository().getBasePath().resolve(path));
             }
 
             boolean snapshot = artifact.isSnapshot();
@@ -515,7 +520,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             if ((errorPolicy & ResolutionErrorPolicy.CACHE_ALL) != 0) {
                 UpdateCheck<Artifact, ArtifactTransferException> check = new UpdateCheck<>();
                 check.setItem(artifact);
-                check.setFile(download.getFile());
+                check.setPath(download.getPath());
                 check.setFileValid(false);
                 check.setRepository(group.repository);
                 check.setArtifactPolicy(policy.getArtifactUpdatePolicy());
@@ -551,7 +556,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 item.resolved.set(true);
                 item.result.setRepository(group.repository);
                 try {
-                    artifact = artifact.setFile(getFile(session, artifact, download.getFile()));
+                    artifact = artifact.setPath(getPath(session, artifact, download.getPath()));
                     item.result.setArtifact(artifact);
 
                     lrm.add(
@@ -601,7 +606,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
         event.setRepository(repository);
         event.setExceptions(exceptions != null ? new ArrayList<>(exceptions) : null);
         if (artifact != null) {
-            event.setFile(artifact.getFile());
+            event.setPath(artifact.getPath());
         }
 
         repositoryEventDispatcher.dispatch(event.build());
@@ -629,7 +634,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
         event.setRepository(repository);
         event.setException(exception);
         if (artifact != null) {
-            event.setFile(artifact.getFile());
+            event.setPath(artifact.getPath());
         }
 
         repositoryEventDispatcher.dispatch(event.build());

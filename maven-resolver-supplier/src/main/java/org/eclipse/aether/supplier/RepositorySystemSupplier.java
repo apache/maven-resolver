@@ -93,7 +93,8 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy;
-import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.spi.io.ChecksumProcessor;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
@@ -136,18 +137,32 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         }
     }
 
-    private FileProcessor fileProcessor;
+    private PathProcessor pathProcessor;
 
-    public final FileProcessor getFileProcessor() {
+    public final PathProcessor getPathProcessor() {
         checkClosed();
-        if (fileProcessor == null) {
-            fileProcessor = createFileProcessor();
+        if (pathProcessor == null) {
+            pathProcessor = createPathProcessor();
         }
-        return fileProcessor;
+        return pathProcessor;
     }
 
-    protected FileProcessor createFileProcessor() {
-        return new DefaultFileProcessor();
+    protected PathProcessor createPathProcessor() {
+        return new DefaultPathProcessor();
+    }
+
+    private ChecksumProcessor checksumProcessor;
+
+    public final ChecksumProcessor getChecksumProcessor() {
+        checkClosed();
+        if (checksumProcessor == null) {
+            checksumProcessor = createChecksumProcessor();
+        }
+        return checksumProcessor;
+    }
+
+    protected ChecksumProcessor createChecksumProcessor() {
+        return new DefaultChecksumProcessor(getPathProcessor());
     }
 
     private TrackingFileManager trackingFileManager;
@@ -260,7 +275,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected UpdateCheckManager createUpdateCheckManager() {
-        return new DefaultUpdateCheckManager(getTrackingFileManager(), getUpdatePolicyAnalyzer());
+        return new DefaultUpdateCheckManager(getTrackingFileManager(), getUpdatePolicyAnalyzer(), getPathProcessor());
     }
 
     private Map<String, NamedLockFactory> namedLockFactories;
@@ -509,7 +524,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         HashMap<String, TrustedChecksumsSource> result = new HashMap<>();
         result.put(
                 SparseDirectoryTrustedChecksumsSource.NAME,
-                new SparseDirectoryTrustedChecksumsSource(getFileProcessor(), getLocalPathComposer()));
+                new SparseDirectoryTrustedChecksumsSource(getChecksumProcessor(), getLocalPathComposer()));
         result.put(
                 SummaryFileTrustedChecksumsSource.NAME,
                 new SummaryFileTrustedChecksumsSource(getLocalPathComposer(), getRepositorySystemLifecycle()));
@@ -611,7 +626,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 getTransporterProvider(),
                 getRepositoryLayoutProvider(),
                 getChecksumPolicyProvider(),
-                getFileProcessor(),
+                getChecksumProcessor(),
                 getProvidedChecksumsSources());
     }
 
@@ -658,7 +673,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected Installer createInstaller() {
         return new DefaultInstaller(
-                getFileProcessor(),
+                getPathProcessor(),
                 getRepositoryEventDispatcher(),
                 getMetadataGeneratorFactories(),
                 getSyncContextFactory());
@@ -676,7 +691,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected Deployer createDeployer() {
         return new DefaultDeployer(
-                getFileProcessor(),
+                getPathProcessor(),
                 getRepositoryEventDispatcher(),
                 getRepositoryConnectorProvider(),
                 getRemoteRepositoryManager(),
@@ -755,7 +770,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected ArtifactResolver createArtifactResolver() {
         return new DefaultArtifactResolver(
-                getFileProcessor(),
+                getPathProcessor(),
                 getRepositoryEventDispatcher(),
                 getVersionResolver(),
                 getUpdateCheckManager(),
@@ -785,7 +800,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 getRemoteRepositoryManager(),
                 getSyncContextFactory(),
                 getOfflineController(),
-                getRemoteRepositoryFilterManager());
+                getRemoteRepositoryFilterManager(),
+                getPathProcessor());
     }
 
     private VersionScheme versionScheme;

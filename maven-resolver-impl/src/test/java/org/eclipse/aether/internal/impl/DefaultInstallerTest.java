@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,10 +32,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
-import org.eclipse.aether.internal.test.util.TestFileProcessor;
-import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
-import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.*;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
@@ -86,7 +84,7 @@ public class DefaultInstallerTest {
         localArtifactFile = new File(session.getLocalRepository().getBasedir(), localArtifactPath);
 
         installer = new DefaultInstaller(
-                new TestFileProcessor(),
+                new TestPathProcessor(),
                 new StubRepositoryEventDispatcher(),
                 Collections.emptyMap(),
                 new StubSyncContextFactory());
@@ -331,9 +329,9 @@ public class DefaultInstallerTest {
         installer.install(session, request);
 
         installer = new DefaultInstaller(
-                new DefaultFileProcessor() {
+                new DefaultPathProcessor() {
                     @Override
-                    public long copy(File src, File target, ProgressListener listener) throws IOException {
+                    public long copy(Path src, Path target, ProgressListener listener) throws IOException {
                         throw new IOException("copy called");
                     }
                 },
