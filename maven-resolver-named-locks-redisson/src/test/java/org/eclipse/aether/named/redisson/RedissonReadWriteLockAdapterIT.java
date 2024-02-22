@@ -16,21 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.named.support;
+package org.eclipse.aether.named.redisson;
 
-/**
- * Exception thrown when lock upgrade attempted that we do not support. This exception when used within {@link Retry}
- * helper should never be reattempted, hence is marked with {@link Retry.DoNotRetry} marker.
- *
- * @since 1.9.13
- */
-public final class LockUpgradeNotSupportedException extends RuntimeException implements Retry.DoNotRetry {
-    /**
-     * Constructor for case, when current thread attempts lock upgrade on given lock instance.
-     */
-    public LockUpgradeNotSupportedException(NamedLockSupport namedLock) {
-        super("Thread " + Thread.currentThread().getName()
-                + " already holds shared lock for '" + namedLock.key()
-                + "', but asks for exclusive lock; lock upgrade not supported");
+import org.junit.jupiter.api.BeforeAll;
+
+public class RedissonReadWriteLockAdapterIT extends NamedLockFactoryAdapterTestSupport {
+    @BeforeAll
+    static void createNamedLockFactory() {
+        container.start();
+        System.setProperty(RedissonNamedLockFactorySupport.SYSTEM_PROP_REDIS_ADDRESS, container.getRedisURI());
+        setNamedLockFactory(new RedissonReadWriteLockNamedLockFactory());
     }
 }

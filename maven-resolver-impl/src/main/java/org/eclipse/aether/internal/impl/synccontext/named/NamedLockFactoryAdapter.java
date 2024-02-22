@@ -19,7 +19,6 @@
 package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +30,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
@@ -196,87 +196,82 @@ public final class NamedLockFactoryAdapter {
 
         @Override
         public void acquire(Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas) {
-            Collection<String> keys = lockNaming.nameLocks(session, artifacts, metadatas);
+            Collection<NamedLockKey> keys = lockNaming.nameLocks(session, artifacts, metadatas);
             if (keys.isEmpty()) {
                 return;
             }
 
-            final int attempts = retry + 1;
-            final ArrayList<IllegalStateException> illegalStateExceptions = new ArrayList<>();
-            for (int attempt = 1; attempt <= attempts; attempt++) {
+            final String timeStr = time + " " + timeUnit;
+            final String lockKind = shared ? "shared" : "exclusive";
+            final NamedLock namedLock = namedLockFactory.getLock(keys);
+            if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(
-                        "Attempt {}: Need {} {} lock(s) for {}", attempt, keys.size(), shared ? "read" : "write", keys);
-                int acquiredLockCount = 0;
+                        "Need {} lock for {} from {}",
+                        lockKind,
+                        namedLock.key().resources(),
+                        namedLock.key().name());
+            }
+
+            final int attempts = retry + 1;
+            for (int attempt = 1; attempt <= attempts; attempt++) {
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace(
+                            "Attempt {}: Acquire {} lock from {}",
+                            attempt,
+                            lockKind,
+                            namedLock.key().name());
+                }
                 try {
                     if (attempt > 1) {
                         Thread.sleep(retryWait);
                     }
-                    for (String key : keys) {
-                        NamedLock namedLock = namedLockFactory.getLock(key);
-                        LOGGER.trace("Acquiring {} lock for '{}'", shared ? "read" : "write", key);
+                    boolean locked;
+                    if (shared) {
+                        locked = namedLock.lockShared(time, timeUnit);
+                    } else {
+                        locked = namedLock.lockExclusively(time, timeUnit);
+                    }
 
-                        boolean locked;
-                        if (shared) {
-                            locked = namedLock.lockShared(time, timeUnit);
-                        } else {
-                            locked = namedLock.lockExclusively(time, timeUnit);
-                        }
+                    if (locked) {
+                        // we are done, get out
+                        locks.push(namedLock);
+                        return;
+                    }
 
-                        if (!locked) {
-                            String timeStr = time + " " + timeUnit;
-                            LOGGER.trace(
-                                    "Failed to acquire {} lock for '{}' in {}",
-                                    shared ? "read" : "write",
-                                    key,
-                                    timeStr);
-
-                            namedLock.close();
-                            closeAll();
-                            illegalStateExceptions.add(new IllegalStateException(
-                                    "Attempt " + attempt + ": Could not acquire " + (shared ? "read" : "write")
-                                            + " lock for '" + namedLock.name() + "' in " + timeStr));
-                            break;
-                        } else {
-                            locks.push(namedLock);
-                            acquiredLockCount++;
-                        }
+                    // we failed; retry
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace(
+                                "Failed to acquire {} lock for '{}' in {}",
+                                lockKind,
+                                namedLock.key().name(),
+                                timeStr);
                     }
                 } catch (InterruptedException e) {
+                    // if we are here, means we were interrupted: fail
+                    close();
                     Thread.currentThread().interrupt();
                     throw new RuntimeException(e);
                 }
-                LOGGER.trace("Attempt {}: Total locks acquired: {}", attempt, acquiredLockCount);
-                if (acquiredLockCount == keys.size()) {
-                    break;
-                }
             }
-            if (!illegalStateExceptions.isEmpty()) {
-                IllegalStateException ex = new IllegalStateException("Could not acquire lock(s)");
-                illegalStateExceptions.forEach(ex::addSuppressed);
-                throw namedLockFactory.onFailure(ex);
-            }
-        }
-
-        private void closeAll() {
-            if (locks.isEmpty()) {
-                return;
-            }
-
-            // Release locks in reverse insertion order
-            int released = 0;
-            while (!locks.isEmpty()) {
-                try (NamedLock namedLock = locks.pop()) {
-                    LOGGER.trace("Releasing {} lock for '{}'", shared ? "read" : "write", namedLock.name());
-                    namedLock.unlock();
-                    released++;
-                }
-            }
-            LOGGER.trace("Total locks released: {}", released);
+            // if we are here, means all attempts were unsuccessful: fail
+            close();
+            IllegalStateException ex = new IllegalStateException("Could not acquire " + lockKind + " lock for "
+                    + namedLock.key().resources() + " using lock "
+                    + namedLock.key().name() + " in " + timeStr);
+            throw namedLockFactory.onFailure(ex);
         }
 
         @Override
         public void close() {
-            closeAll();
+            while (!locks.isEmpty()) {
+                try (NamedLock namedLock = locks.pop()) {
+                    namedLock.unlock();
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace(
+                                "Unlocked and closed {} lock of {}", shared ? "shared" : "exclusive", namedLock.key());
+                    }
+                }
+            }
         }
     }
 }

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 
@@ -63,7 +64,7 @@ public class HashingNameMapper implements NameMapper {
     }
 
     @Override
-    public Collection<String> nameLocks(
+    public Collection<NamedLockKey> nameLocks(
             RepositorySystemSession session,
             Collection<? extends Artifact> artifacts,
             Collection<? extends Metadata> metadatas) {
@@ -72,7 +73,7 @@ public class HashingNameMapper implements NameMapper {
             throw new IllegalArgumentException("allowed depth value is between 0 and 4 (inclusive)");
         }
         return delegate.nameLocks(session, artifacts, metadatas).stream()
-                .map(n -> hashName(n, depth))
+                .map(k -> NamedLockKey.of(hashName(k.name(), depth), k.resources()))
                 .collect(Collectors.toList());
     }
 

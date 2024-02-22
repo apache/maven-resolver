@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.channels.FileChannel;
-import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +32,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.eclipse.aether.named.NamedLock;
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.support.FileLockNamedLock;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
@@ -51,10 +52,16 @@ import static org.eclipse.aether.named.support.Retry.retry;
 public class FileLockNamedLockFactory extends NamedLockFactorySupport {
     public static final String NAME = "file-lock";
 
+    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we "delete on close" or not
+    private static final boolean IS_WINDOWS =
+            System.getProperty("os.name", "unknown").startsWith("Windows");
+
     /**
-     * Tweak: on Windows, the presence of {@link StandardOpenOption#DELETE_ON_CLOSE} causes concurrency issues. This
+     * Tweak: on Windows, the presence of <em>StandardOpenOption#DELETE_ON_CLOSE</em> causes concurrency issues. This
      * flag allows to have it removed from effective flags, at the cost that lockfile directory becomes crowded
-     * with 0 byte sized lock files that are never cleaned up. Default value is {@code true}.
+     * with 0 byte sized lock files that are never cleaned up. Default value is {@code true} on non-Windows OS.
+     * See <a href="https://bugs.openjdk.org/browse/JDK-8252883">JDK-8252883</a> for Windows related bug. Users
+     * on Windows can still force "delete on close" by explicitly setting this property to {@code true}.
      *
      * @see <a href="https://bugs.openjdk.org/browse/JDK-8252883">JDK-8252883</a>
      * @configurationSource {@link System#getProperty(String, String)}
@@ -64,10 +71,10 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
     public static final String SYSTEM_PROP_DELETE_LOCK_FILES = "aether.named.file-lock.deleteLockFiles";
 
     private static final boolean DELETE_LOCK_FILES =
-            Boolean.parseBoolean(System.getProperty(SYSTEM_PROP_DELETE_LOCK_FILES, Boolean.TRUE.toString()));
+            Boolean.parseBoolean(System.getProperty(SYSTEM_PROP_DELETE_LOCK_FILES, Boolean.toString(!IS_WINDOWS)));
 
     /**
-     * Tweak: on Windows, the presence of {@link StandardOpenOption#DELETE_ON_CLOSE} causes concurrency issues. This
+     * Tweak: on Windows, the presence of <em>StandardOpenOption#DELETE_ON_CLOSE</em> causes concurrency issues. This
      * flag allows to implement similar fix as referenced JDK bug report: retry and hope the best. Default value is
      * 5 attempts (will retry 4 times).
      *
@@ -92,70 +99,69 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
 
     private static final long SLEEP_MILLIS = Long.parseLong(System.getProperty(SYSTEM_PROP_SLEEP_MILLIS, "50"));
 
-    private final ConcurrentMap<String, FileChannel> fileChannels;
+    private final ConcurrentMap<NamedLockKey, FileChannel> fileChannels;
 
     public FileLockNamedLockFactory() {
         this.fileChannels = new ConcurrentHashMap<>();
     }
 
     @Override
-    protected NamedLockSupport createLock(final String name) {
-        Path path = Paths.get(URI.create(name));
-        FileChannel fileChannel = fileChannels.computeIfAbsent(name, k -> {
+    protected NamedLockSupport createLock(final NamedLockKey key) {
+        Path path = Paths.get(URI.create(key.name()));
+        FileChannel fileChannel = fileChannels.computeIfAbsent(key, k -> {
             try {
                 Files.createDirectories(path.getParent());
                 FileChannel channel = retry(
                         ATTEMPTS,
                         SLEEP_MILLIS,
                         () -> {
-                            try {
-                                if (DELETE_LOCK_FILES) {
-                                    return FileChannel.open(
-                                            path,
-                                            StandardOpenOption.READ,
-                                            StandardOpenOption.WRITE,
-                                            StandardOpenOption.CREATE,
-                                            StandardOpenOption.DELETE_ON_CLOSE);
-                                } else {
-                                    return FileChannel.open(
-                                            path,
-                                            StandardOpenOption.READ,
-                                            StandardOpenOption.WRITE,
-                                            StandardOpenOption.CREATE);
-                                }
-                            } catch (AccessDeniedException e) {
-                                return null;
+                            if (DELETE_LOCK_FILES) {
+                                return FileChannel.open(
+                                        path,
+                                        StandardOpenOption.READ,
+                                        StandardOpenOption.WRITE,
+                                        StandardOpenOption.CREATE,
+                                        StandardOpenOption.DELETE_ON_CLOSE);
+                            } else {
+                                return FileChannel.open(
+                                        path,
+                                        StandardOpenOption.READ,
+                                        StandardOpenOption.WRITE,
+                                        StandardOpenOption.CREATE);
                             }
                         },
                         null,
                         null);
 
                 if (channel == null) {
-                    throw new IllegalStateException("Could not open file channel for '" + name + "' after "
-                            + SYSTEM_PROP_ATTEMPTS + " attempts; giving up");
+                    throw new IllegalStateException(
+                            "Could not open file channel for '" + key + "' after " + ATTEMPTS + " attempts; giving up");
                 }
                 return channel;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Interrupted while opening file channel for '" + name + "'", e);
+                throw new RuntimeException("Interrupted while opening file channel for '" + key + "'", e);
             } catch (IOException e) {
-                throw new UncheckedIOException("Failed to open file channel for '" + name + "'", e);
+                throw new UncheckedIOException("Failed to open file channel for '" + key + "'", e);
             }
         });
-        return new FileLockNamedLock(name, fileChannel, this);
+        return new FileLockNamedLock(key, fileChannel, this);
     }
 
     @Override
-    protected void destroyLock(final String name) {
-        FileChannel fileChannel = fileChannels.remove(name);
-        if (fileChannel == null) {
-            throw new IllegalStateException("File channel expected, but does not exist: " + name);
-        }
+    protected void destroyLock(final NamedLock namedLock) {
+        if (namedLock instanceof FileLockNamedLock) {
+            final NamedLockKey key = namedLock.key();
+            FileChannel fileChannel = fileChannels.remove(key);
+            if (fileChannel == null) {
+                throw new IllegalStateException("File channel expected, but does not exist: " + key);
+            }
 
-        try {
-            fileChannel.close();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Failed to close file channel for '" + name + "'", e);
+            try {
+                fileChannel.close();
+            } catch (IOException e) {
+                throw new UncheckedIOException("Failed to close file channel for '" + key + "'", e);
+            }
         }
     }
 }

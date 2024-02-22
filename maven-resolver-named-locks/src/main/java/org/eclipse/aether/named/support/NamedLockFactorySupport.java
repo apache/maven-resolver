@@ -18,14 +18,20 @@
  */
 package org.eclipse.aether.named.support;
 
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
+import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.NamedLockKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +55,13 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ConcurrentMap<String, NamedLockHolder> locks;
+    private final ConcurrentMap<NamedLockKey, NamedLockHolder> locks;
+
+    private final AtomicInteger compositeCounter;
 
     private final boolean diagnosticEnabled;
+
+    private final AtomicBoolean shutdown = new AtomicBoolean(false);
 
     public NamedLockFactorySupport() {
         this(DIAGNOSTIC_ENABLED);
@@ -59,6 +69,7 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
 
     public NamedLockFactorySupport(boolean diagnosticEnabled) {
         this.locks = new ConcurrentHashMap<>();
+        this.compositeCounter = new AtomicInteger(0);
         this.diagnosticEnabled = diagnosticEnabled;
     }
 
@@ -72,26 +83,62 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
     }
 
     @Override
-    public NamedLockSupport getLock(final String name) {
-        return locks.compute(name, (k, v) -> {
+    public final NamedLock getLock(final Collection<NamedLockKey> keys) {
+        requireNonNull(keys, "keys");
+        if (shutdown.get()) {
+            throw new IllegalStateException("factory already shut down");
+        }
+        if (keys.isEmpty()) {
+            throw new IllegalArgumentException("empty keys");
+        } else {
+            return doGetLock(keys);
+        }
+    }
+
+    protected NamedLock doGetLock(final Collection<NamedLockKey> keys) {
+        if (keys.size() == 1) {
+            NamedLockKey key = keys.iterator().next();
+            return getLockAndRefTrack(key, () -> createLock(key));
+        } else {
+            return new CompositeNamedLock(
+                    NamedLockKey.of(
+                            "composite-" + compositeCounter.incrementAndGet(),
+                            keys.stream()
+                                    .map(NamedLockKey::resources)
+                                    .flatMap(Collection::stream)
+                                    .collect(Collectors.toList())),
+                    this,
+                    keys.stream()
+                            .map(k -> getLockAndRefTrack(k, () -> createLock(k)))
+                            .collect(Collectors.toList()));
+        }
+    }
+
+    protected NamedLock getLockAndRefTrack(final NamedLockKey key, Supplier<NamedLockSupport> supplier) {
+        return locks.compute(key, (k, v) -> {
                     if (v == null) {
-                        v = new NamedLockHolder(createLock(k));
+                        v = new NamedLockHolder(supplier.get());
                     }
-                    v.incRef();
-                    return v;
+                    return v.incRef();
                 })
                 .namedLock;
     }
 
     @Override
     public void shutdown() {
+        if (shutdown.compareAndSet(false, true)) {
+            doShutdown();
+        }
+    }
+
+    protected void doShutdown() {
         // override if needed
     }
 
     @Override
     public <E extends Throwable> E onFailure(E failure) {
         if (isDiagnosticEnabled()) {
-            Map<String, NamedLockHolder> locks = new HashMap<>(this.locks); // copy
+            Map<NamedLockKey, NamedLockHolder> locks = new HashMap<>(this.locks); // copy
             int activeLocks = locks.size();
             logger.info("Diagnostic dump of lock factory");
             logger.info("===============================");
@@ -99,14 +146,17 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
             logger.info("Active locks: {}", activeLocks);
             logger.info("");
             if (activeLocks > 0) {
-                for (Map.Entry<String, NamedLockHolder> entry : locks.entrySet()) {
-                    String name = entry.getKey();
+                for (Map.Entry<NamedLockKey, NamedLockHolder> entry : locks.entrySet()) {
+                    NamedLockKey key = entry.getKey();
                     int refCount = entry.getValue().referenceCount.get();
                     NamedLockSupport lock = entry.getValue().namedLock;
-                    logger.info("Name: {}", name);
+                    logger.info("Name: {}", key.name());
                     logger.info("RefCount: {}", refCount);
+                    logger.info("Resources:");
+                    key.resources().forEach(r -> logger.info(" - {}", r));
                     Map<Thread, Deque<String>> diag = lock.diagnosticState();
-                    diag.forEach((key, value) -> logger.info("  {} -> {}", key, value));
+                    logger.info("State:");
+                    diag.forEach((k, v) -> logger.info("  {} -> {}", k, v));
                 }
                 logger.info("");
             }
@@ -114,10 +164,10 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
         return failure;
     }
 
-    public void closeLock(final String name) {
-        locks.compute(name, (k, v) -> {
+    public void closeLock(final NamedLockKey key) {
+        locks.compute(key, (k, v) -> {
             if (v != null && v.decRef() == 0) {
-                destroyLock(v.namedLock.name());
+                destroyLock(v.namedLock);
                 return null;
             }
             return v;
@@ -128,13 +178,13 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
      * Implementations shall create and return {@link NamedLockSupport} for given {@code name}, this method must never
      * return {@code null}.
      */
-    protected abstract NamedLockSupport createLock(String name);
+    protected abstract NamedLockSupport createLock(NamedLockKey key);
 
     /**
      * Implementation may override this (empty) method to perform some sort of implementation specific cleanup for
      * given lock name. Invoked when reference count for given name drops to zero and named lock was removed.
      */
-    protected void destroyLock(final String name) {
+    protected void destroyLock(final NamedLock namedLock) {
         // override if needed
     }
 
@@ -148,8 +198,9 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
             this.referenceCount = new AtomicInteger(0);
         }
 
-        private int incRef() {
-            return referenceCount.incrementAndGet();
+        private NamedLockHolder incRef() {
+            referenceCount.incrementAndGet();
+            return this;
         }
 
         private int decRef() {

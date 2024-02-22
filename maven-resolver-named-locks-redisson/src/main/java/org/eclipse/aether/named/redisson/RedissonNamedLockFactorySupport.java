@@ -37,8 +37,6 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
 
     private static final String DEFAULT_CONFIG_FILE_NAME = "maven-resolver-redisson.yaml";
 
-    private static final String DEFAULT_REDIS_ADDRESS = "redis://localhost:6379";
-
     private static final String DEFAULT_CLIENT_NAME = "maven-resolver";
 
     /**
@@ -50,6 +48,18 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
      */
     public static final String SYSTEM_PROP_CONFIG_FILE = "aether.syncContext.named.redisson.configFile";
 
+    /**
+     * Address of the Redis instance. Optional.
+     *
+     * @since 2.0.0
+     * @configurationSource {@link System#getProperty(String, String)}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REDIS_ADDRESS}
+     */
+    public static final String SYSTEM_PROP_REDIS_ADDRESS = "aether.syncContext.named.redisson.address";
+
+    public static final String DEFAULT_REDIS_ADDRESS = "redis://localhost:6379";
+
     protected final RedissonClient redissonClient;
 
     public RedissonNamedLockFactorySupport() {
@@ -57,7 +67,7 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
     }
 
     @Override
-    public void shutdown() {
+    protected void doShutdown() {
         logger.trace("Shutting down Redisson client with id '{}'", redissonClient.getId());
         redissonClient.shutdown();
     }
@@ -95,7 +105,8 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
             }
         } else {
             config = new Config();
-            config.useSingleServer().setAddress(DEFAULT_REDIS_ADDRESS).setClientName(DEFAULT_CLIENT_NAME);
+            String defaultRedisAddress = System.getProperty(SYSTEM_PROP_REDIS_ADDRESS, DEFAULT_REDIS_ADDRESS);
+            config.useSingleServer().setAddress(defaultRedisAddress).setClientName(DEFAULT_CLIENT_NAME);
         }
 
         RedissonClient redissonClient = Redisson.create(config);

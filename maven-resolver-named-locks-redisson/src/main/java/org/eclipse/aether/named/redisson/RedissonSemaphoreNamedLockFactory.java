@@ -25,6 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.aether.named.NamedLock;
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
 import org.redisson.api.RSemaphore;
 
@@ -38,31 +40,34 @@ public class RedissonSemaphoreNamedLockFactory extends RedissonNamedLockFactoryS
 
     private static final String TYPED_NAME_PREFIX = NAME_PREFIX + NAME + ":";
 
-    private final ConcurrentMap<String, RSemaphore> semaphores;
+    private final ConcurrentMap<NamedLockKey, RSemaphore> semaphores;
 
     public RedissonSemaphoreNamedLockFactory() {
         this.semaphores = new ConcurrentHashMap<>();
     }
 
     @Override
-    protected AdaptedSemaphoreNamedLock createLock(final String name) {
-        RSemaphore semaphore = semaphores.computeIfAbsent(name, k -> {
-            RSemaphore result = redissonClient.getSemaphore(TYPED_NAME_PREFIX + k);
+    protected AdaptedSemaphoreNamedLock createLock(final NamedLockKey key) {
+        RSemaphore semaphore = semaphores.computeIfAbsent(key, k -> {
+            RSemaphore result = redissonClient.getSemaphore(TYPED_NAME_PREFIX + k.name());
             result.trySetPermits(Integer.MAX_VALUE);
             return result;
         });
-        return new AdaptedSemaphoreNamedLock(name, this, new RedissonSemaphore(semaphore));
+        return new AdaptedSemaphoreNamedLock(key, this, new RedissonSemaphore(semaphore));
     }
 
     @Override
-    protected void destroyLock(final String name) {
-        RSemaphore semaphore = semaphores.remove(name);
-        if (semaphore == null) {
-            throw new IllegalStateException("Semaphore expected, but does not exist: " + name);
+    protected void destroyLock(final NamedLock namedLock) {
+        if (namedLock instanceof AdaptedSemaphoreNamedLock) {
+            final NamedLockKey key = namedLock.key();
+            RSemaphore semaphore = semaphores.remove(key);
+            if (semaphore == null) {
+                throw new IllegalStateException("Semaphore expected, but does not exist: " + key);
+            }
+            /* There is no reasonable way to destroy the semaphore in Redis because we cannot know
+             * when the last process has stopped using it.
+             */
         }
-        /* Threre is no reasonable way to destroy the semaphore in Redis because we cannot know
-         * when the last process has stopped using it.
-         */
     }
 
     private static final class RedissonSemaphore implements AdaptedSemaphoreNamedLock.AdaptedSemaphore {

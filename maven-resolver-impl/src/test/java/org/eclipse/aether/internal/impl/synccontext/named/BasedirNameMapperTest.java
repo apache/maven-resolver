@@ -26,6 +26,7 @@ import java.util.Iterator;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.emptyList;
@@ -39,7 +40,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
 
     @Test
     void nullsAndEmptyInputs() {
-        Collection<String> names;
+        Collection<NamedLockKey> names;
 
         names = mapper.nameLocks(session, null, null);
         assertTrue(names.isEmpty());
@@ -59,10 +60,10 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         configProperties.put("aether.syncContext.named.basedir.locksDir", null);
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
-        Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(names.size(), 1);
         assertEquals(
-                names.iterator().next(),
+                names.iterator().next().name(),
                 basedir.toUri() + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
@@ -71,10 +72,10 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         configProperties.put("aether.syncContext.named.basedir.locksDir", "my/locks");
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
-        Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(names.size(), 1);
         assertEquals(
-                names.iterator().next(),
+                names.iterator().next().name(),
                 basedir.toUri() + PS + "my" + PS + "locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
@@ -87,9 +88,9 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         configProperties.put("aether.syncContext.named.basedir.locksDir", absoluteLocksDir);
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
-        Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(names.size(), 1);
-        assertEquals(names.iterator().next(), customBaseDir + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
+        assertEquals(names.iterator().next().name(), customBaseDir + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
@@ -97,10 +98,10 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
-        Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(names.size(), 1);
         assertEquals(
-                names.iterator().next(),
+                names.iterator().next().name(),
                 basedir.toUri() + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
@@ -110,10 +111,10 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
 
         DefaultMetadata metadata =
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
-        Collection<String> names = mapper.nameLocks(session, null, singletonList(metadata));
+        Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(names.size(), 1);
         assertEquals(
-                names.iterator().next(),
+                names.iterator().next().name(),
                 basedir.toUri() + PS + ".locks" + PS + "293b3990971f4b4b02b220620d2538eaac5f221b");
     }
 
@@ -124,17 +125,17 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         DefaultArtifact artifact = new DefaultArtifact("agroup:artifact:1.0");
         DefaultMetadata metadata =
                 new DefaultMetadata("bgroup", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
-        Collection<String> names = mapper.nameLocks(session, singletonList(artifact), singletonList(metadata));
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), singletonList(metadata));
 
         assertEquals(names.size(), 2);
-        Iterator<String> namesIterator = names.iterator();
+        Iterator<NamedLockKey> namesIterator = names.iterator();
 
         // they are sorted as well
         assertEquals(
-                namesIterator.next(),
+                namesIterator.next().name(),
                 basedir.toUri() + PS + ".locks" + PS + "d36504431d00d1c6e4d1c34258f2bf0a004de085");
         assertEquals(
-                namesIterator.next(),
+                namesIterator.next().name(),
                 basedir.toUri() + PS + ".locks" + PS + "fbcebba60d7eb931eca634f6ca494a8a1701b638");
     }
 }

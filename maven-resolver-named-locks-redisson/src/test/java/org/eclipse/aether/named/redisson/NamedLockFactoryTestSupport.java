@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.named.hazelcast;
+package org.eclipse.aether.named.redisson;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import com.redis.testcontainers.RedisContainer;
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.NamedLockKey;
@@ -31,14 +32,17 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.Timeout;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * UT support for {@link NamedLockFactory}.
  */
+@Testcontainers(disabledWithoutDocker = true)
 public abstract class NamedLockFactoryTestSupport {
-    protected static final HazelcastClientUtils utils = new HazelcastClientUtils();
+    protected static RedisContainer container =
+            new RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag(RedisContainer.DEFAULT_TAG));
 
     protected static NamedLockFactory namedLockFactory;
 
@@ -47,7 +51,7 @@ public abstract class NamedLockFactoryTestSupport {
         if (namedLockFactory != null) {
             namedLockFactory.shutdown();
         }
-        utils.cleanup();
+        container.stop();
     }
 
     @Test

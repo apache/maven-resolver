@@ -18,6 +18,11 @@
  */
 package org.eclipse.aether.named;
 
+import java.util.Collection;
+import java.util.Collections;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * A factory of {@link NamedLock}s.
  */
@@ -26,10 +31,23 @@ public interface NamedLockFactory {
      * Creates or reuses existing {@link NamedLock}. Returns instance MUST BE treated as "resource", best in
      * try-with-resource block.
      *
-     * @param name the lock name, must not be {@code null}.
+     * @param key the lock key, must not be {@code null}.
      * @return named lock instance, never {@code null}.
      */
-    NamedLock getLock(String name);
+    default NamedLock getLock(NamedLockKey key) {
+        requireNonNull(key, "key");
+        return getLock(Collections.singleton(key));
+    }
+
+    /**
+     * Creates or reuses existing {@link NamedLock}. Returns instance MUST BE treated as "resource", best in
+     * try-with-resource block.
+     *
+     * @param keys the lock keys, must not be {@code null} and must not be empty collection.
+     * @return named lock instance, never {@code null}.
+     * @since 2.0.0
+     */
+    NamedLock getLock(Collection<NamedLockKey> keys);
 
     /**
      * Performs a clean shut down of the factory.

@@ -24,6 +24,7 @@ import java.util.Iterator;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.emptyList;
@@ -36,7 +37,7 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
 
     @Test
     void nullsAndEmptyInputs() {
-        Collection<String> names;
+        Collection<NamedLockKey> names;
 
         names = mapper.nameLocks(session, null, null);
         assertTrue(names.isEmpty());
@@ -54,18 +55,18 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
     @Test
     void singleArtifact() {
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
-        Collection<String> names = mapper.nameLocks(session, singletonList(artifact), null);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(names.size(), 1);
-        assertEquals(names.iterator().next(), "artifact~group~artifact~1.0.lock");
+        assertEquals(names.iterator().next().name(), "artifact~group~artifact~1.0.lock");
     }
 
     @Test
     void singleMetadata() {
         DefaultMetadata metadata =
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
-        Collection<String> names = mapper.nameLocks(session, null, singletonList(metadata));
+        Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(names.size(), 1);
-        assertEquals(names.iterator().next(), "metadata~group~artifact.lock");
+        assertEquals(names.iterator().next().name(), "metadata~group~artifact.lock");
     }
 
     @Test
@@ -73,13 +74,13 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
         DefaultArtifact artifact = new DefaultArtifact("agroup:artifact:1.0");
         DefaultMetadata metadata =
                 new DefaultMetadata("bgroup", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
-        Collection<String> names = mapper.nameLocks(session, singletonList(artifact), singletonList(metadata));
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), singletonList(metadata));
 
         assertEquals(names.size(), 2);
-        Iterator<String> namesIterator = names.iterator();
+        Iterator<NamedLockKey> namesIterator = names.iterator();
 
         // they are sorted as well
-        assertEquals(namesIterator.next(), "artifact~agroup~artifact~1.0.lock");
-        assertEquals(namesIterator.next(), "metadata~bgroup~artifact.lock");
+        assertEquals(namesIterator.next().name(), "artifact~agroup~artifact~1.0.lock");
+        assertEquals(namesIterator.next().name(), "metadata~bgroup~artifact.lock");
     }
 }
