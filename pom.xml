@@ -50,6 +50,7 @@
     <module>maven-resolver-util</module>
     <module>maven-resolver-named-locks</module>
     <module>maven-resolver-named-locks-hazelcast</module>
+    <module>maven-resolver-named-locks-ipc</module>
     <module>maven-resolver-named-locks-redisson</module>
     <module>maven-resolver-impl</module>
     <module>maven-resolver-test-util</module>
