@@ -138,8 +138,7 @@ public interface RepositoryLayout {
      * Typical case to return {@code false} (to omit checksums) is for artifact signatures, that are already a
      * "sub-artifact" of some main artifact (for example a JAR), and they can be validated by some other means.
      *
-     * @see org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind
-     * @see #getChecksumAlgorithmFactories()
+     * @see org.eclipse.aether.spi.artifact.ArtifactPredicate#isWithoutChecksum(Artifact)
      * @since 1.8.0
      */
     boolean hasChecksums(Artifact artifact);

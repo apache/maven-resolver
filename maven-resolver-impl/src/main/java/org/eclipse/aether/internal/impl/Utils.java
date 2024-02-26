@@ -32,12 +32,18 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicyRequest;
+import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 
 /**
  * Internal utility methods.
  */
 final class Utils {
+
+    public static PrioritizedComponents<ArtifactGeneratorFactory> sortArtifactGeneratorFactories(
+            RepositorySystemSession session, Map<String, ArtifactGeneratorFactory> factories) {
+        return PrioritizedComponents.reuseOrCreate(session, factories, ArtifactGeneratorFactory::getPriority);
+    }
 
     public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories(
             RepositorySystemSession session, Map<String, MetadataGeneratorFactory> factories) {

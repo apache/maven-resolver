@@ -25,17 +25,16 @@ import javax.inject.Singleton;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.artifact.ArtifactPredicate;
+import org.eclipse.aether.spi.artifact.ArtifactPredicateFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
@@ -64,37 +63,28 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_CHECKSUMS_ALGORITHMS}
+     * @configurationRepoIdSuffix Yes
      */
     public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = CONFIG_PROPS_PREFIX + "checksumAlgorithms";
 
     public static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
 
-    /**
-     * Comma-separated list of extensions with leading dot (example ".asc") that should have checksums omitted.
-     * These are applied to sub-artifacts only. Note: to achieve 1.7.x aether.checksums.forSignature=true behaviour,
-     * pass empty string as value for this property.
-     *
-     * @since 1.8.0
-     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS}
-     */
-    public static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
-            CONFIG_PROPS_PREFIX + "omitChecksumsForExtensions";
-
-    public static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
-
     private float priority;
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
+
+    private final ArtifactPredicateFactory artifactPredicateFactory;
 
     public float getPriority() {
         return priority;
     }
 
     @Inject
-    public Maven2RepositoryLayoutFactory(ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector) {
+    public Maven2RepositoryLayoutFactory(
+            ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
+            ArtifactPredicateFactory artifactPredicateFactory) {
         this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
+        this.artifactPredicateFactory = requireNonNull(artifactPredicateFactory);
     }
 
     /**
@@ -123,40 +113,17 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
                         CONFIG_PROP_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
                         CONFIG_PROP_CHECKSUMS_ALGORITHMS)));
 
-        // ensure uniqueness of (potentially user set) extension list
-        Set<String> omitChecksumsForExtensions = Arrays.stream(ConfigUtils.getString(
-                                session,
-                                DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS,
-                                CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS)
-                        .split(","))
-                .filter(s -> s != null && !s.trim().isEmpty())
-                .collect(Collectors.toSet());
-
-        // validation: enforce that all strings in this set are having leading dot
-        if (omitChecksumsForExtensions.stream().anyMatch(s -> !s.startsWith("."))) {
-            throw new IllegalArgumentException(String.format(
-                    "The configuration %s contains illegal values: %s (all entries must start with '.' (dot))",
-                    CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, omitChecksumsForExtensions));
-        }
-
-        return new Maven2RepositoryLayout(
-                checksumAlgorithmFactorySelector, checksumsAlgorithms, omitChecksumsForExtensions);
+        return new Maven2RepositoryLayout(checksumsAlgorithms, artifactPredicateFactory.newInstance(session));
     }
 
     private static class Maven2RepositoryLayout implements RepositoryLayout {
-        private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
-
         private final List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms;
-
-        private final Set<String> extensionsWithoutChecksums;
+        private final ArtifactPredicate artifactPredicate;
 
         private Maven2RepositoryLayout(
-                ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
-                List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms,
-                Set<String> extensionsWithoutChecksums) {
-            this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
+                List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms, ArtifactPredicate artifactPredicate) {
             this.configuredChecksumAlgorithms = Collections.unmodifiableList(configuredChecksumAlgorithms);
-            this.extensionsWithoutChecksums = requireNonNull(extensionsWithoutChecksums);
+            this.artifactPredicate = requireNonNull(artifactPredicate);
         }
 
         private URI toUri(String path) {
@@ -174,13 +141,7 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
 
         @Override
         public boolean hasChecksums(Artifact artifact) {
-            String artifactExtension = artifact.getExtension(); // ie. pom.asc
-            for (String extensionWithoutChecksums : extensionsWithoutChecksums) {
-                if (artifactExtension.endsWith(extensionWithoutChecksums)) {
-                    return false;
-                }
-            }
-            return true;
+            return !artifactPredicate.isWithoutChecksum(artifact);
         }
 
         @Override
@@ -229,7 +190,7 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
 
         @Override
         public List<ChecksumLocation> getChecksumLocations(Artifact artifact, boolean upload, URI location) {
-            if (!hasChecksums(artifact) || isChecksum(artifact.getExtension())) {
+            if (artifactPredicate.isWithoutChecksum(artifact) || artifactPredicate.isChecksum(artifact)) {
                 return Collections.emptyList();
             }
             return getChecksumLocations(location);
@@ -246,10 +207,6 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
                 checksumLocations.add(ChecksumLocation.forLocation(location, checksumAlgorithmFactory));
             }
             return checksumLocations;
-        }
-
-        private boolean isChecksum(String extension) {
-            return checksumAlgorithmFactorySelector.isChecksumExtension(extension);
         }
     }
 }

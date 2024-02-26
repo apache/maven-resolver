@@ -61,6 +61,7 @@
     <module>maven-resolver-transport-jdk-parent</module>
     <module>maven-resolver-transport-apache</module>
     <module>maven-resolver-transport-wagon</module>
+    <module>maven-resolver-generator-gnupg</module>
     <module>maven-resolver-supplier</module>
     <module>maven-resolver-demos</module>
     <module>maven-resolver-tools</module>
@@ -171,6 +172,11 @@
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-transport-wagon</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-generator-gnupg</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -577,6 +583,7 @@
           <artifactId>apache-rat-plugin</artifactId>
           <configuration>
             <excludes combine.children="append">
+              <exclude>src/main/resources/**/*.key</exclude>
               <exclude>src/test/resources/**/*.ini</exclude>
               <exclude>src/test/resources/**/*.txt</exclude>
               <exclude>src/test/resources/ssl/*-store</exclude>
