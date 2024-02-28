@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.bouncycastle.util.encoders.Hex;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys;
 import org.eclipse.aether.generator.gnupg.GnupgSignatureArtifactGeneratorFactory;
@@ -34,7 +35,7 @@ import org.eclipse.sisu.Priority;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.CONFIG_PROP_KEY_ID;
+import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.CONFIG_PROP_KEY_FINGERPRINT;
 
 /**
  * Loader that looks for configuration.
@@ -78,10 +79,15 @@ public final class GpgConfLoader implements GnupgSignatureArtifactGeneratorFacto
     }
 
     @Override
-    public Long loadKeyId(RepositorySystemSession session) {
-        String keyIdStr = ConfigUtils.getString(session, null, CONFIG_PROP_KEY_ID);
-        if (keyIdStr != null) {
-            return Long.parseLong(keyIdStr);
+    public byte[] loadKeyFingerprint(RepositorySystemSession session) {
+        String keyFingerprint = ConfigUtils.getString(session, null, CONFIG_PROP_KEY_FINGERPRINT);
+        if (keyFingerprint != null) {
+            if (keyFingerprint.trim().length() == 40) {
+                return Hex.decode(keyFingerprint);
+            } else {
+                throw new IllegalArgumentException(
+                        "Key fingerprint configuration is wrong (hex encoded, 40 characters)");
+            }
         }
         return null;
     }

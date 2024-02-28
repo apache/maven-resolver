@@ -45,12 +45,13 @@ public final class GnupgConfigurationKeys {
     public static final boolean DEFAULT_ENABLED = false;
 
     /**
-     * The PGP KeyID, optional. If not set, first secret key found will be used.
+     * The PGP Key fingerprint as hex string (40 characters long), optional. If not set, first secret key found will
+     * be used.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link Long}
+     * @configurationType {@link String}
      */
-    public static final String CONFIG_PROP_KEY_ID = CONFIG_PROPS_PREFIX + "keyId";
+    public static final String CONFIG_PROP_KEY_FINGERPRINT = CONFIG_PROPS_PREFIX + "keyFingerprint";
 
     /**
      * The path to the OpenPGP transferable secret key file. If relative, is resolved from local repository root.
@@ -86,7 +87,7 @@ public final class GnupgConfigurationKeys {
     public static final String RESOLVER_GPG_KEY = "RESOLVER_GPG_KEY";
 
     /**
-     * Env variable name to pass in key ID.
+     * Env variable name to pass in key fingerprint (hex encoded, 40 characters long).
      */
-    public static final String RESOLVER_GPG_KEY_ID = "RESOLVER_GPG_KEY_ID";
+    public static final String RESOLVER_GPG_KEY_FINGERPRINT = "RESOLVER_GPG_KEY_FINGERPRINT";
 }

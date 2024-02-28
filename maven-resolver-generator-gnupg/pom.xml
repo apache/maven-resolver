@@ -35,9 +35,8 @@
     <Automatic-Module-Name>org.apache.maven.resolver.generator.gnupg</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
 
-    <bouncycastleVersion>1.77</bouncycastleVersion>
-
     <javaVersion>17</javaVersion>
+    <bouncycastleVersion>1.77</bouncycastleVersion>
   </properties>
 
   <dependencies>

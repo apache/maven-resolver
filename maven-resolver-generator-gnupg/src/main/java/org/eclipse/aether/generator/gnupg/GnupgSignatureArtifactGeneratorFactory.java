@@ -27,10 +27,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.*;
@@ -65,9 +66,9 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
         }
 
         /**
-         * Returns the key ID, or {@code null}.
+         * Returns the key fingerprint, or {@code null}.
          */
-        default Long loadKeyId(RepositorySystemSession session) throws IOException {
+        default byte[] loadKeyFingerprint(RepositorySystemSession session) throws IOException {
             return null;
         }
 
@@ -93,20 +94,11 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
 
     @Override
     public ArtifactGenerator newInstance(RepositorySystemSession session, InstallRequest request) {
-        return createArtifactGenerator(session, request.getArtifacts());
+        return null;
     }
 
     @Override
     public ArtifactGenerator newInstance(RepositorySystemSession session, DeployRequest request) {
-        return createArtifactGenerator(session, request.getArtifacts());
-    }
-
-    @Override
-    public float getPriority() {
-        return 100;
-    }
-
-    private ArtifactGenerator createArtifactGenerator(RepositorySystemSession session, Collection<Artifact> artifacts) {
         final boolean enabled = ConfigUtils.getBoolean(
                 session, GnupgConfigurationKeys.DEFAULT_ENABLED, GnupgConfigurationKeys.CONFIG_PROP_ENABLED);
         if (!enabled) {
@@ -114,24 +106,26 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
         }
 
         try {
-            return doCreateSigner(session, artifacts, artifactPredicateFactory.newInstance(session)::hasChecksums);
+            return doCreateArtifactGenerator(
+                    session, request.getArtifacts(), artifactPredicateFactory.newInstance(session)::hasChecksums);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    private Collection<Loader> loaders(RepositorySystemSession session) {
-        boolean interactive = ConfigUtils.getBoolean(
-                session, ConfigurationProperties.DEFAULT_INTERACTIVE, ConfigurationProperties.INTERACTIVE);
-        return loaders.values().stream()
-                .filter(l -> interactive || !l.isInteractive())
-                .collect(Collectors.toList());
+    @Override
+    public float getPriority() {
+        return 100;
     }
 
-    private GnupgSignatureArtifactGenerator doCreateSigner(
+    private GnupgSignatureArtifactGenerator doCreateArtifactGenerator(
             RepositorySystemSession session, Collection<Artifact> artifacts, Predicate<Artifact> artifactPredicate)
             throws IOException {
-        Collection<Loader> loaders = loaders(session);
+        boolean interactive = ConfigUtils.getBoolean(
+                session, ConfigurationProperties.DEFAULT_INTERACTIVE, ConfigurationProperties.INTERACTIVE);
+        List<Loader> loaders = this.loaders.values().stream()
+                .filter(l -> interactive || !l.isInteractive())
+                .toList();
 
         byte[] keyRingMaterial = null;
         for (Loader loader : loaders) {
@@ -144,10 +138,10 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
             throw new IllegalArgumentException("Key ring material not found");
         }
 
-        Long keyId = null;
+        byte[] fingerprint = null;
         for (Loader loader : loaders) {
-            keyId = loader.loadKeyId(session);
-            if (keyId != null) {
+            fingerprint = loader.loadKeyFingerprint(session);
+            if (fingerprint != null) {
                 break;
             }
         }
@@ -158,12 +152,10 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
                     new BcKeyFingerprintCalculator());
 
             PGPSecretKey secretKey = null;
-            if (keyId != null) {
-                secretKey = pgpSecretKeyRingCollection.getSecretKey(keyId);
-            } else {
-                for (PGPSecretKeyRing ring : pgpSecretKeyRingCollection) {
-                    for (PGPSecretKey key : ring) {
-                        if (!key.isPrivateKeyEmpty()) {
+            for (PGPSecretKeyRing ring : pgpSecretKeyRingCollection) {
+                for (PGPSecretKey key : ring) {
+                    if (!key.isPrivateKeyEmpty()) {
+                        if (fingerprint == null || Arrays.equals(fingerprint, key.getFingerprint())) {
                             secretKey = key;
                             break;
                         }
