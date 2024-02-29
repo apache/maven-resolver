@@ -23,13 +23,13 @@ import javax.inject.Singleton;
 
 import java.nio.charset.StandardCharsets;
 
+import org.bouncycastle.util.encoders.Hex;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys;
 import org.eclipse.aether.generator.gnupg.GnupgSignatureArtifactGeneratorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.sisu.Priority;
 
-import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.RESOLVER_GPG_KEY_ID;
+import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.*;
 
 /**
  * Loader that looks for environment variables.
@@ -48,7 +48,7 @@ public final class GpgEnvLoader implements GnupgSignatureArtifactGeneratorFactor
 
     @Override
     public byte[] loadKeyRingMaterial(RepositorySystemSession session) {
-        String keyMaterial = ConfigUtils.getString(session, null, "env." + GnupgConfigurationKeys.RESOLVER_GPG_KEY);
+        String keyMaterial = ConfigUtils.getString(session, null, "env." + RESOLVER_GPG_KEY);
         if (keyMaterial != null) {
             return keyMaterial.getBytes(StandardCharsets.UTF_8);
         }
@@ -56,18 +56,22 @@ public final class GpgEnvLoader implements GnupgSignatureArtifactGeneratorFactor
     }
 
     @Override
-    public Long loadKeyId(RepositorySystemSession session) {
-        String keyIdStr = ConfigUtils.getString(session, null, "env." + RESOLVER_GPG_KEY_ID);
-        if (keyIdStr != null) {
-            return Long.parseLong(keyIdStr);
+    public byte[] loadKeyFingerprint(RepositorySystemSession session) {
+        String keyFingerprint = ConfigUtils.getString(session, null, "env." + RESOLVER_GPG_KEY_FINGERPRINT);
+        if (keyFingerprint != null) {
+            if (keyFingerprint.trim().length() == 40) {
+                return Hex.decode(keyFingerprint);
+            } else {
+                throw new IllegalArgumentException(
+                        "Key fingerprint configuration is wrong (hex encoded, 40 characters)");
+            }
         }
         return null;
     }
 
     @Override
     public char[] loadPassword(RepositorySystemSession session, long keyId) {
-        String keyPassword =
-                ConfigUtils.getString(session, null, "env." + GnupgConfigurationKeys.RESOLVER_GPG_KEY_PASS);
+        String keyPassword = ConfigUtils.getString(session, null, "env." + RESOLVER_GPG_KEY_PASS);
         if (keyPassword != null) {
             return keyPassword.toCharArray();
         }
