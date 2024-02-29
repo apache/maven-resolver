@@ -25,15 +25,17 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositoryException;
@@ -73,6 +75,7 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +86,30 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultDeployer implements Deployer {
+    private class DeferredDeployRequest implements Runnable {
+        private final RepositorySystemSession session;
+        private final SyncContextFactory syncContextFactory;
+        private final CopyOnWriteArrayList<DeployRequest> requests;
+
+        private DeferredDeployRequest(RepositorySystemSession session, SyncContextFactory syncContextFactory) {
+            this.session = session;
+            this.syncContextFactory = syncContextFactory;
+            this.requests = new CopyOnWriteArrayList<>();
+        }
+
+        @Override
+        public void run() {
+            try (SyncContext syncContext = syncContextFactory.newInstance(session, true)) {
+                for (DeployRequest request : requests) {
+                    deploy(syncContext, session, request);
+                }
+            } catch (DeploymentException e) {
+                logger.warn("Failure during deferred deployment", e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final PathProcessor pathProcessor;
@@ -140,6 +167,22 @@ public class DefaultDeployer implements Deployer {
                     "Cannot deploy while " + request.getRepository().getId() + " ("
                             + request.getRepository().getUrl() + ") is in offline mode",
                     e);
+        }
+
+        boolean deployAtSessionEnd = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_DEPLOY_AT_SESSION_END,
+                ConfigurationProperties.DEPLOY_AT_SESSION_END + "."
+                        + request.getRepository().getId(),
+                ConfigurationProperties.DEPLOY_AT_SESSION_END);
+        if (deployAtSessionEnd) {
+            ((DeferredDeployRequest) session.getData().computeIfAbsent(DeferredDeployRequest.class.getName(), () -> {
+                        DeferredDeployRequest result = new DeferredDeployRequest(session, syncContextFactory);
+                        session.addOnSessionEndedHandler(result);
+                        return result;
+                    }))
+                    .requests.add(request);
+            return new DeployResult(request, false);
         }
 
         try (SyncContext syncContext = syncContextFactory.newInstance(session, true)) {

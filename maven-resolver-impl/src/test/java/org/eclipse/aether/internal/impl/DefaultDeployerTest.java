@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -34,6 +35,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
+import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestPathProcessor;
@@ -345,5 +347,16 @@ public class DefaultDeployerTest {
         props = new Properties();
         TestFileUtils.readProps(metadataFile, props);
         assertNull(props.get("old"), props.toString());
+    }
+
+    @Test
+    void testDeferred() throws DeploymentException {
+        session.setConfigProperty(ConfigurationProperties.DEPLOY_AT_SESSION_END, Boolean.TRUE);
+
+        request.addArtifact(artifact);
+
+        DeployResult result = deployer.deploy(session, request);
+
+        assertFalse(result.isExecuted());
     }
 }

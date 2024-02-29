@@ -24,14 +24,17 @@ import javax.inject.Singleton;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -54,6 +57,7 @@ import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +68,30 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultInstaller implements Installer {
+    private class DeferredInstallRequest implements Runnable {
+        private final RepositorySystemSession session;
+        private final SyncContextFactory syncContextFactory;
+        private final CopyOnWriteArrayList<InstallRequest> requests;
+
+        private DeferredInstallRequest(RepositorySystemSession session, SyncContextFactory syncContextFactory) {
+            this.session = session;
+            this.syncContextFactory = syncContextFactory;
+            this.requests = new CopyOnWriteArrayList<>();
+        }
+
+        @Override
+        public void run() {
+            try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
+                for (InstallRequest request : requests) {
+                    install(syncContext, session, request);
+                }
+            } catch (InstallationException e) {
+                logger.warn("Failure during deferred installation", e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final PathProcessor pathProcessor;
@@ -95,6 +123,21 @@ public class DefaultInstaller implements Installer {
     public InstallResult install(RepositorySystemSession session, InstallRequest request) throws InstallationException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(request, "request cannot be null");
+
+        boolean installAtSessionEnd = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_INSTALL_AT_SESSION_END,
+                ConfigurationProperties.INSTALL_AT_SESSION_END);
+        if (installAtSessionEnd) {
+            ((DeferredInstallRequest) session.getData().computeIfAbsent(DeferredInstallRequest.class.getName(), () -> {
+                        DeferredInstallRequest result = new DeferredInstallRequest(session, syncContextFactory);
+                        session.addOnSessionEndedHandler(result);
+                        return result;
+                    }))
+                    .requests.add(request);
+            return new InstallResult(request, false);
+        }
+
         try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
             return install(syncContext, session, request);
         }

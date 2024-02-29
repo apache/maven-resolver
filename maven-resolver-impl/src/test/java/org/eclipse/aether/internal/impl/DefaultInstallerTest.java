@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -371,5 +372,16 @@ public class DefaultInstallerTest {
                 artifact.getFile().lastModified(),
                 localArtifactFile.lastModified(),
                 "artifact timestamp was not set to src file");
+    }
+
+    @Test
+    void testDeferred() throws InstallationException {
+        session.setConfigProperty(ConfigurationProperties.INSTALL_AT_SESSION_END, Boolean.TRUE);
+
+        request.addArtifact(artifact);
+
+        InstallResult result = installer.install(session, request);
+
+        assertFalse(result.isExecuted());
     }
 }

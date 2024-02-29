@@ -28,13 +28,15 @@ import org.eclipse.aether.metadata.Metadata;
 import static java.util.Objects.requireNonNull;
 
 /**
- * The result of installing artifacts and their accompanying metadata into the a remote repository.
+ * The result of installing artifacts and their accompanying metadata into the local repository.
  *
  * @see org.eclipse.aether.RepositorySystem#install(org.eclipse.aether.RepositorySystemSession, InstallRequest)
  */
 public final class InstallResult {
 
     private final InstallRequest request;
+
+    private final boolean executed;
 
     private Collection<Artifact> artifacts;
 
@@ -46,9 +48,21 @@ public final class InstallResult {
      * @param request The installation request, must not be {@code null}.
      */
     public InstallResult(InstallRequest request) {
+        this(request, true);
+    }
+
+    /**
+     * Creates a new result for the specified request.
+     *
+     * @param request The installation request, must not be {@code null}.
+     * @param executed Boolean telling whether the request was executed.
+     * @since 2.0.0
+     */
+    public InstallResult(InstallRequest request, boolean executed) {
         this.request = requireNonNull(request, "install request cannot be null");
-        artifacts = Collections.emptyList();
-        metadata = Collections.emptyList();
+        this.executed = executed;
+        this.artifacts = Collections.emptyList();
+        this.metadata = Collections.emptyList();
     }
 
     /**
@@ -58,6 +72,15 @@ public final class InstallResult {
      */
     public InstallRequest getRequest() {
         return request;
+    }
+
+    /**
+     * Returns {@code true} if request was executed and this result was populated.
+     *
+     * @since 2.0.0
+     */
+    public boolean isExecuted() {
+        return executed;
     }
 
     /**

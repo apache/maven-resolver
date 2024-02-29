@@ -40,7 +40,9 @@ public class AllResolverDemos {
         ResolveTransitiveDependencies.main(args);
         ReverseDependencyTree.main(args);
         InstallArtifacts.main(args);
+        DeferredInstallArtifacts.main(args);
         DeployArtifacts.main(args);
+        DeferredDeployArtifacts.main(args);
 
         ResolverDemo.main(args);
     }

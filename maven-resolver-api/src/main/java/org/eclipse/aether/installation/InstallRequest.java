@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -30,7 +29,7 @@ import org.eclipse.aether.metadata.Metadata;
 /**
  * A request to install artifacts and their accompanying metadata into the local repository.
  *
- * @see RepositorySystem#install(RepositorySystemSession, InstallRequest)
+ * @see org.eclipse.aether.RepositorySystem#install(org.eclipse.aether.RepositorySystemSession, InstallRequest)
  */
 public final class InstallRequest {
 

@@ -82,6 +82,20 @@ public final class ConfigurationProperties {
     public static final String PREFIX_GENERATOR = PREFIX_AETHER + "generator.";
 
     /**
+     * Prefix for install related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_INSTALL = PREFIX_AETHER + "install.";
+
+    /**
+     * Prefix for deploy related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_DEPLOY = PREFIX_AETHER + "deploy.";
+
+    /**
      * Prefix for transport related configurations. <em>For internal use only.</em>
      *
      * @since 2.0.0
@@ -521,6 +535,44 @@ public final class ConfigurationProperties {
      * @since 2.0.0
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER = "levelOrder";
+
+    /**
+     * Boolean flag to enable "install at session end". When enabled, Resolver will hold back all install requests
+     * received and will execute them as part of "on session close" hook instead.
+     *
+     * @since 2.0.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_INSTALL_AT_SESSION_END}
+     * @configurationRepoIdSuffix No
+     */
+    public static final String INSTALL_AT_SESSION_END = PREFIX_INSTALL + "atSessionEnd";
+
+    /**
+     * Default value if {@link #INSTALL_AT_SESSION_END} is not set: {@code false}.
+     *
+     * @since 2.0.0
+     */
+    public static final boolean DEFAULT_INSTALL_AT_SESSION_END = false;
+
+    /**
+     * Boolean flag to enable "deploy at session end". When enabled, Resolver will hold back all deploy requests
+     * received and will execute them as part of "on session close" hook instead.
+     *
+     * @since 2.0.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_DEPLOY_AT_SESSION_END}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String DEPLOY_AT_SESSION_END = PREFIX_DEPLOY + "atSessionEnd";
+
+    /**
+     * Default value if {@link #DEPLOY_AT_SESSION_END} is not set: {@code false}.
+     *
+     * @since 2.0.0
+     */
+    public static final boolean DEFAULT_DEPLOY_AT_SESSION_END = false;
 
     private ConfigurationProperties() {
         // hide constructor

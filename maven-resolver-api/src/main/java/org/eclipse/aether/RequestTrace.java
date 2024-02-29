@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether;
 
+import java.util.Objects;
+
 /**
  * A trace of nested requests that are performed by the repository system. This trace information can be used to
  * correlate repository events with higher level operations in the application code that eventually caused the events. A
@@ -97,6 +99,23 @@ public class RequestTrace {
      */
     public RequestTrace newChild(Object data) {
         return new RequestTrace(this, data);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        RequestTrace that = (RequestTrace) o;
+        return Objects.equals(parent, that.parent) && Objects.equals(data, that.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(parent, data);
     }
 
     @Override

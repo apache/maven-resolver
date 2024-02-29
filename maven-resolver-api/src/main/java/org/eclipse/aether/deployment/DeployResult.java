@@ -22,20 +22,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * The result of deploying artifacts and their accompanying metadata into the a remote repository.
+ * The result of deploying artifacts and their accompanying metadata into a remote repository.
  *
- * @see RepositorySystem#deploy(org.eclipse.aether.RepositorySystemSession, DeployRequest)
+ * @see org.eclipse.aether.RepositorySystem#deploy(org.eclipse.aether.RepositorySystemSession, DeployRequest)
  */
 public final class DeployResult {
 
     private final DeployRequest request;
+
+    private final boolean executed;
 
     private Collection<Artifact> artifacts;
 
@@ -47,9 +48,21 @@ public final class DeployResult {
      * @param request The deployment request, must not be {@code null}.
      */
     public DeployResult(DeployRequest request) {
+        this(request, true);
+    }
+
+    /**
+     * Creates a new result for the specified request.
+     *
+     * @param request The deployment request, must not be {@code null}.
+     * @param executed Boolean telling whether the request was executed.
+     * @since 2.0.0
+     */
+    public DeployResult(DeployRequest request, boolean executed) {
         this.request = requireNonNull(request, "deploy request cannot be null");
-        artifacts = Collections.emptyList();
-        metadata = Collections.emptyList();
+        this.executed = executed;
+        this.artifacts = Collections.emptyList();
+        this.metadata = Collections.emptyList();
     }
 
     /**
@@ -59,6 +72,15 @@ public final class DeployResult {
      */
     public DeployRequest getRequest() {
         return request;
+    }
+
+    /**
+     * Returns {@code true} if request was executed and this result was populated.
+     *
+     * @since 2.0.0
+     */
+    public boolean isExecuted() {
+        return executed;
     }
 
     /**
