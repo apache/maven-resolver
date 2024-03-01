@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -88,26 +89,28 @@ import static java.util.Objects.requireNonNull;
 public class DefaultDeployer implements Deployer {
     private class DeferredDeployRequest implements Runnable {
         private final RepositorySystemSession session;
-        private final SyncContextFactory syncContextFactory;
         private final CopyOnWriteArrayList<DeployRequest> requests;
 
-        private DeferredDeployRequest(RepositorySystemSession session, SyncContextFactory syncContextFactory) {
+        private DeferredDeployRequest(RepositorySystemSession session) {
             this.session = session;
-            this.syncContextFactory = syncContextFactory;
             this.requests = new CopyOnWriteArrayList<>();
         }
 
         @Override
         public void run() {
-            try (SyncContext syncContext = syncContextFactory.newInstance(session, true)) {
-                for (DeployRequest request : requests) {
-                    deploy(syncContext, session, request);
-                }
+            try {
+                deferredDeploy(session, requests);
             } catch (DeploymentException e) {
                 logger.warn("Failure during deferred deployment", e);
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private static class Batch {
+        private final List<ArtifactGenerator> artifactGenerators = new ArrayList<>();
+        private final List<Artifact> artifacts = new ArrayList<>();
+        private final List<Metadata> metadata = new ArrayList<>();
     }
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -177,32 +180,12 @@ public class DefaultDeployer implements Deployer {
                 ConfigurationProperties.DEPLOY_AT_SESSION_END);
         if (deployAtSessionEnd) {
             ((DeferredDeployRequest) session.getData().computeIfAbsent(DeferredDeployRequest.class.getName(), () -> {
-                        DeferredDeployRequest result = new DeferredDeployRequest(session, syncContextFactory);
+                        DeferredDeployRequest result = new DeferredDeployRequest(session);
                         session.addOnSessionEndedHandler(result);
                         return result;
                     }))
                     .requests.add(request);
             return new DeployResult(request, false);
-        }
-
-        try (SyncContext syncContext = syncContextFactory.newInstance(session, true)) {
-            return deploy(syncContext, session, request);
-        }
-    }
-
-    private DeployResult deploy(SyncContext syncContext, RepositorySystemSession session, DeployRequest request)
-            throws DeploymentException {
-        DeployResult result = new DeployResult(request);
-
-        RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
-
-        RemoteRepository repository = request.getRepository();
-
-        RepositoryConnector connector;
-        try {
-            connector = repositoryConnectorProvider.newRepositoryConnector(session, repository);
-        } catch (NoRepositoryConnectorException e) {
-            throw new DeploymentException("Failed to deploy artifacts/metadata: " + e.getMessage(), e);
         }
 
         List<Artifact> artifacts = new ArrayList<>(request.getArtifacts());
@@ -222,81 +205,10 @@ public class DefaultDeployer implements Deployer {
             }
             artifacts.addAll(generatedArtifacts);
 
-            List<? extends MetadataGenerator> generators = getMetadataGenerators(session, request);
-
-            List<ArtifactUpload> artifactUploads = new ArrayList<>();
-            List<MetadataUpload> metadataUploads = new ArrayList<>();
-            IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
-
-            EventCatapult catapult = new EventCatapult(session, trace, repository, repositoryEventDispatcher);
-
-            List<Metadata> metadatas = Utils.prepareMetadata(generators, artifacts);
-
-            syncContext.acquire(artifacts, Utils.combine(request.getMetadata(), metadatas));
-
-            for (Metadata metadata : metadatas) {
-                upload(metadataUploads, session, metadata, repository, connector, catapult);
-                processedMetadata.put(metadata, null);
-            }
-
-            for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
-                Artifact artifact = iterator.next();
-
-                for (MetadataGenerator generator : generators) {
-                    artifact = generator.transformArtifact(artifact);
-                }
-
-                iterator.set(artifact);
-
-                ArtifactUpload upload = new ArtifactUpload(artifact, artifact.getPath());
-                upload.setTrace(trace);
-                upload.setListener(new ArtifactUploadListener(catapult, upload));
-                artifactUploads.add(upload);
-            }
-
-            connector.put(artifactUploads, null);
-
-            for (ArtifactUpload upload : artifactUploads) {
-                if (upload.getException() != null) {
-                    throw new DeploymentException(
-                            "Failed to deploy artifacts: "
-                                    + upload.getException().getMessage(),
-                            upload.getException());
-                }
-                if (upload.getArtifact().getProperty(ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID, null) == null) {
-                    result.addArtifact(upload.getArtifact());
-                }
-            }
-
-            metadatas = Utils.finishMetadata(generators, artifacts);
-
-            syncContext.acquire(null, metadatas);
-
-            for (Metadata metadata : metadatas) {
-                upload(metadataUploads, session, metadata, repository, connector, catapult);
-                processedMetadata.put(metadata, null);
-            }
-
-            for (Metadata metadata : request.getMetadata()) {
-                if (!processedMetadata.containsKey(metadata)) {
-                    upload(metadataUploads, session, metadata, repository, connector, catapult);
-                    processedMetadata.put(metadata, null);
-                }
-            }
-
-            connector.put(null, metadataUploads);
-
-            for (MetadataUpload upload : metadataUploads) {
-                if (upload.getException() != null) {
-                    throw new DeploymentException(
-                            "Failed to deploy metadata: "
-                                    + upload.getException().getMessage(),
-                            upload.getException());
-                }
-                result.addMetadata(upload.getMetadata());
+            try (SyncContext syncContext = syncContextFactory.newInstance(session, true)) {
+                return deploy(syncContext, session, request, artifacts);
             }
         } finally {
-            connector.close();
             for (ArtifactGenerator artifactGenerator : artifactGenerators) {
                 try {
                     artifactGenerator.close();
@@ -305,12 +217,148 @@ public class DefaultDeployer implements Deployer {
                 }
             }
         }
+    }
+
+    private void deferredDeploy(RepositorySystemSession session, List<DeployRequest> requests)
+            throws DeploymentException {
+        LinkedHashMap<RemoteRepository, Batch> batches = new LinkedHashMap<>();
+        try {
+            for (DeployRequest request : requests) {
+                List<ArtifactGenerator> artifactGenerators = getArtifactGenerators(session, request);
+                List<Artifact> artifacts = new ArrayList<>(request.getArtifacts());
+                List<Artifact> generatedArtifacts = new ArrayList<>();
+                for (ArtifactGenerator artifactGenerator : artifactGenerators) {
+                    Collection<? extends Artifact> generated = artifactGenerator.generate(generatedArtifacts);
+                    for (Artifact generatedArtifact : generated) {
+                        Map<String, String> properties = new HashMap<>(generatedArtifact.getProperties());
+                        properties.put(
+                                ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID,
+                                requireNonNull(artifactGenerator.generatorId(), "generatorId"));
+                        Artifact ga = generatedArtifact.setProperties(properties);
+                        generatedArtifacts.add(ga);
+                    }
+                }
+                artifacts.addAll(generatedArtifacts);
+
+                Batch batch = batches.computeIfAbsent(request.getRepository(), k -> new Batch());
+                batch.artifactGenerators.addAll(artifactGenerators);
+                batch.artifacts.addAll(artifacts);
+                batch.metadata.addAll(request.getMetadata());
+            }
+
+            for (Map.Entry<RemoteRepository, Batch> entry : batches.entrySet()) {
+                DeployRequest deployRequest = new DeployRequest();
+                deployRequest.setRepository(entry.getKey());
+                deployRequest.setArtifacts(entry.getValue().artifacts);
+                deployRequest.setMetadata(entry.getValue().metadata);
+
+                try (SyncContext syncContext = syncContextFactory.newInstance(session, true)) {
+                    deploy(syncContext, session, deployRequest, entry.getValue().artifacts);
+                }
+            }
+        } finally {
+            for (Batch batch : batches.values()) {
+                for (ArtifactGenerator artifactGenerator : batch.artifactGenerators) {
+                    try {
+                        artifactGenerator.close();
+                    } catch (Exception e) {
+                        logger.warn("ArtifactGenerator close failure: {}", artifactGenerator.generatorId(), e);
+                    }
+                }
+            }
+        }
+    }
+
+    private DeployResult deploy(
+            SyncContext syncContext, RepositorySystemSession session, DeployRequest request, List<Artifact> artifacts)
+            throws DeploymentException {
+        DeployResult result = new DeployResult(request);
+
+        RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
+
+        RemoteRepository repository = request.getRepository();
+
+        RepositoryConnector connector;
+        try {
+            connector = repositoryConnectorProvider.newRepositoryConnector(session, repository);
+        } catch (NoRepositoryConnectorException e) {
+            throw new DeploymentException("Failed to deploy artifacts/metadata: " + e.getMessage(), e);
+        }
+
+        List<MetadataGenerator> generators = getMetadataGenerators(session, request);
+
+        List<ArtifactUpload> artifactUploads = new ArrayList<>();
+        List<MetadataUpload> metadataUploads = new ArrayList<>();
+        IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
+
+        EventCatapult catapult = new EventCatapult(session, trace, repository, repositoryEventDispatcher);
+
+        List<Metadata> metadatas = Utils.prepareMetadata(generators, artifacts);
+
+        syncContext.acquire(artifacts, Utils.combine(request.getMetadata(), metadatas));
+
+        for (Metadata metadata : metadatas) {
+            upload(metadataUploads, session, metadata, repository, connector, catapult);
+            processedMetadata.put(metadata, null);
+        }
+
+        for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
+            Artifact artifact = iterator.next();
+
+            for (MetadataGenerator generator : generators) {
+                artifact = generator.transformArtifact(artifact);
+            }
+
+            iterator.set(artifact);
+
+            ArtifactUpload upload = new ArtifactUpload(artifact, artifact.getPath());
+            upload.setTrace(trace);
+            upload.setListener(new ArtifactUploadListener(catapult, upload));
+            artifactUploads.add(upload);
+        }
+
+        connector.put(artifactUploads, null);
+
+        for (ArtifactUpload upload : artifactUploads) {
+            if (upload.getException() != null) {
+                throw new DeploymentException(
+                        "Failed to deploy artifacts: " + upload.getException().getMessage(), upload.getException());
+            }
+            if (upload.getArtifact().getProperty(ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID, null) == null) {
+                result.addArtifact(upload.getArtifact());
+            }
+        }
+
+        metadatas = Utils.finishMetadata(generators, artifacts);
+
+        syncContext.acquire(null, metadatas);
+
+        for (Metadata metadata : metadatas) {
+            upload(metadataUploads, session, metadata, repository, connector, catapult);
+            processedMetadata.put(metadata, null);
+        }
+
+        for (Metadata metadata : request.getMetadata()) {
+            if (!processedMetadata.containsKey(metadata)) {
+                upload(metadataUploads, session, metadata, repository, connector, catapult);
+                processedMetadata.put(metadata, null);
+            }
+        }
+
+        connector.put(null, metadataUploads);
+
+        for (MetadataUpload upload : metadataUploads) {
+            if (upload.getException() != null) {
+                throw new DeploymentException(
+                        "Failed to deploy metadata: " + upload.getException().getMessage(), upload.getException());
+            }
+            result.addMetadata(upload.getMetadata());
+        }
 
         return result;
     }
 
-    private List<? extends ArtifactGenerator> getArtifactGenerators(
-            RepositorySystemSession session, DeployRequest request) {
+    private List<ArtifactGenerator> getArtifactGenerators(RepositorySystemSession session, DeployRequest request) {
         PrioritizedComponents<ArtifactGeneratorFactory> factories =
                 Utils.sortArtifactGeneratorFactories(session, artifactFactories);
 
@@ -326,8 +374,7 @@ public class DefaultDeployer implements Deployer {
         return generators;
     }
 
-    private List<? extends MetadataGenerator> getMetadataGenerators(
-            RepositorySystemSession session, DeployRequest request) {
+    private List<MetadataGenerator> getMetadataGenerators(RepositorySystemSession session, DeployRequest request) {
         PrioritizedComponents<MetadataGeneratorFactory> factories =
                 Utils.sortMetadataGeneratorFactories(session, metadataFactories);
 

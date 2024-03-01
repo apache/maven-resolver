@@ -70,25 +70,29 @@ import static java.util.Objects.requireNonNull;
 public class DefaultInstaller implements Installer {
     private class DeferredInstallRequest implements Runnable {
         private final RepositorySystemSession session;
-        private final SyncContextFactory syncContextFactory;
         private final CopyOnWriteArrayList<InstallRequest> requests;
 
-        private DeferredInstallRequest(RepositorySystemSession session, SyncContextFactory syncContextFactory) {
+        private DeferredInstallRequest(RepositorySystemSession session) {
             this.session = session;
-            this.syncContextFactory = syncContextFactory;
             this.requests = new CopyOnWriteArrayList<>();
         }
 
         @Override
         public void run() {
-            try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
-                for (InstallRequest request : requests) {
-                    install(syncContext, session, request);
-                }
+            try {
+                deferredInstall(session, requests);
             } catch (InstallationException e) {
                 logger.warn("Failure during deferred installation", e);
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    private static class Batch {
+        private final List<ArtifactGenerator> artifactGenerators;
+
+        private Batch(List<ArtifactGenerator> artifactGenerators) {
+            this.artifactGenerators = artifactGenerators;
         }
     }
 
@@ -130,24 +134,13 @@ public class DefaultInstaller implements Installer {
                 ConfigurationProperties.INSTALL_AT_SESSION_END);
         if (installAtSessionEnd) {
             ((DeferredInstallRequest) session.getData().computeIfAbsent(DeferredInstallRequest.class.getName(), () -> {
-                        DeferredInstallRequest result = new DeferredInstallRequest(session, syncContextFactory);
+                        DeferredInstallRequest result = new DeferredInstallRequest(session);
                         session.addOnSessionEndedHandler(result);
                         return result;
                     }))
                     .requests.add(request);
             return new InstallResult(request, false);
         }
-
-        try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
-            return install(syncContext, session, request);
-        }
-    }
-
-    private InstallResult install(SyncContext syncContext, RepositorySystemSession session, InstallRequest request)
-            throws InstallationException {
-        InstallResult result = new InstallResult(request);
-
-        RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
         List<Artifact> artifacts = new ArrayList<>(request.getArtifacts());
         List<? extends ArtifactGenerator> artifactGenerators = getArtifactGenerators(session, request);
@@ -166,53 +159,9 @@ public class DefaultInstaller implements Installer {
             }
             artifacts.addAll(generatedArtifacts);
 
-            List<? extends MetadataGenerator> metadataGenerators = getMetadataGenerators(session, request);
-
-            IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
-
-            List<Metadata> metadatas = Utils.prepareMetadata(metadataGenerators, artifacts);
-
-            syncContext.acquire(artifacts, Utils.combine(request.getMetadata(), metadatas));
-
-            for (Metadata metadata : metadatas) {
-                install(session, trace, metadata);
-                processedMetadata.put(metadata, null);
-                result.addMetadata(metadata);
+            try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
+                return install(syncContext, session, request, artifacts);
             }
-
-            for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
-                Artifact artifact = iterator.next();
-
-                for (MetadataGenerator generator : metadataGenerators) {
-                    artifact = generator.transformArtifact(artifact);
-                }
-
-                iterator.set(artifact);
-
-                install(session, trace, artifact);
-                if (artifact.getProperty(ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID, null) == null) {
-                    result.addArtifact(artifact);
-                }
-            }
-
-            metadatas = Utils.finishMetadata(metadataGenerators, artifacts);
-
-            syncContext.acquire(null, metadatas);
-
-            for (Metadata metadata : metadatas) {
-                install(session, trace, metadata);
-                processedMetadata.put(metadata, null);
-                result.addMetadata(metadata);
-            }
-
-            for (Metadata metadata : request.getMetadata()) {
-                if (!processedMetadata.containsKey(metadata)) {
-                    install(session, trace, metadata);
-                    result.addMetadata(metadata);
-                }
-            }
-
-            return result;
         } finally {
             for (ArtifactGenerator artifactGenerator : artifactGenerators) {
                 try {
@@ -224,8 +173,110 @@ public class DefaultInstaller implements Installer {
         }
     }
 
-    private List<? extends ArtifactGenerator> getArtifactGenerators(
-            RepositorySystemSession session, InstallRequest request) {
+    private void deferredInstall(RepositorySystemSession session, List<InstallRequest> requests)
+            throws InstallationException {
+        InstallRequest deferredInstallRequest = new InstallRequest();
+        List<Batch> batches = new ArrayList<>();
+        try {
+            for (InstallRequest request : requests) {
+                List<ArtifactGenerator> artifactGenerators = getArtifactGenerators(session, request);
+                List<Artifact> artifacts = new ArrayList<>(request.getArtifacts());
+                List<Artifact> generatedArtifacts = new ArrayList<>();
+                for (ArtifactGenerator artifactGenerator : artifactGenerators) {
+                    Collection<? extends Artifact> generated = artifactGenerator.generate(generatedArtifacts);
+                    for (Artifact generatedArtifact : generated) {
+                        Map<String, String> properties = new HashMap<>(generatedArtifact.getProperties());
+                        properties.put(
+                                ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID,
+                                requireNonNull(artifactGenerator.generatorId(), "generatorId"));
+                        Artifact ga = generatedArtifact.setProperties(properties);
+                        generatedArtifacts.add(ga);
+                    }
+                }
+                artifacts.addAll(generatedArtifacts);
+
+                batches.add(new Batch(artifactGenerators));
+                artifacts.forEach(deferredInstallRequest::addArtifact);
+                request.getMetadata().forEach(deferredInstallRequest::addMetadata);
+            }
+
+            try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
+                install(
+                        syncContext,
+                        session,
+                        deferredInstallRequest,
+                        new ArrayList<>(deferredInstallRequest.getArtifacts()));
+            }
+        } finally {
+            for (Batch batch : batches) {
+                for (ArtifactGenerator artifactGenerator : batch.artifactGenerators) {
+                    try {
+                        artifactGenerator.close();
+                    } catch (Exception e) {
+                        logger.warn("ArtifactGenerator close failure: {}", artifactGenerator.generatorId(), e);
+                    }
+                }
+            }
+        }
+    }
+
+    private InstallResult install(
+            SyncContext syncContext, RepositorySystemSession session, InstallRequest request, List<Artifact> artifacts)
+            throws InstallationException {
+        InstallResult result = new InstallResult(request);
+
+        RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
+
+        List<MetadataGenerator> metadataGenerators = getMetadataGenerators(session, request);
+
+        IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
+
+        List<Metadata> metadatas = Utils.prepareMetadata(metadataGenerators, artifacts);
+
+        syncContext.acquire(artifacts, Utils.combine(request.getMetadata(), metadatas));
+
+        for (Metadata metadata : metadatas) {
+            install(session, trace, metadata);
+            processedMetadata.put(metadata, null);
+            result.addMetadata(metadata);
+        }
+
+        for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
+            Artifact artifact = iterator.next();
+
+            for (MetadataGenerator generator : metadataGenerators) {
+                artifact = generator.transformArtifact(artifact);
+            }
+
+            iterator.set(artifact);
+
+            install(session, trace, artifact);
+            if (artifact.getProperty(ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID, null) == null) {
+                result.addArtifact(artifact);
+            }
+        }
+
+        metadatas = Utils.finishMetadata(metadataGenerators, artifacts);
+
+        syncContext.acquire(null, metadatas);
+
+        for (Metadata metadata : metadatas) {
+            install(session, trace, metadata);
+            processedMetadata.put(metadata, null);
+            result.addMetadata(metadata);
+        }
+
+        for (Metadata metadata : request.getMetadata()) {
+            if (!processedMetadata.containsKey(metadata)) {
+                install(session, trace, metadata);
+                result.addMetadata(metadata);
+            }
+        }
+
+        return result;
+    }
+
+    private List<ArtifactGenerator> getArtifactGenerators(RepositorySystemSession session, InstallRequest request) {
         PrioritizedComponents<ArtifactGeneratorFactory> factories =
                 Utils.sortArtifactGeneratorFactories(session, artifactFactories);
 
@@ -241,8 +292,7 @@ public class DefaultInstaller implements Installer {
         return generators;
     }
 
-    private List<? extends MetadataGenerator> getMetadataGenerators(
-            RepositorySystemSession session, InstallRequest request) {
+    private List<MetadataGenerator> getMetadataGenerators(RepositorySystemSession session, InstallRequest request) {
         PrioritizedComponents<MetadataGeneratorFactory> factories =
                 Utils.sortMetadataGeneratorFactories(session, metadataFactories);
 
