@@ -36,7 +36,7 @@ public final class JdkTransporterConfigurationKeys {
      * Use string representation of HttpClient version enum "HTTP_2" or "HTTP_1_1" to set default HTTP protocol to use.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.String}
+     * @configurationType {@link String}
      * @configurationDefaultValue {@link #DEFAULT_HTTP_VERSION}
      * @configurationRepoIdSuffix Yes
      */
@@ -51,7 +51,7 @@ public final class JdkTransporterConfigurationKeys {
      * <a href="https://bugs.openjdk.org/browse/JDK-8225647">JDK-8225647</a> for details.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.Integer}
+     * @configurationType {@link Integer}
      * @configurationDefaultValue {@link #DEFAULT_MAX_CONCURRENT_REQUESTS}
      * @configurationRepoIdSuffix Yes
      */

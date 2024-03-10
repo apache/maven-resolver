@@ -35,21 +35,13 @@
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.transport.jdk</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-
-    <javaVersion>11</javaVersion>
   </properties>
 
   <dependencies>
     <!-- These dependencies are actually included in this multi-release JAR -->
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-transport-jdk-8</artifactId>
-      <version>${project.version}</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-transport-jdk-11</artifactId>
+      <artifactId>maven-resolver-transport-jdk-17</artifactId>
       <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
@@ -112,27 +104,15 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
           <execution>
-            <id>java8</id>
+            <id>java17</id>
             <goals>
               <goal>unpack-dependencies</goal>
             </goals>
             <phase>generate-resources</phase>
             <configuration>
-              <includeArtifactIds>maven-resolver-transport-jdk-8</includeArtifactIds>
+              <includeArtifactIds>maven-resolver-transport-jdk-17</includeArtifactIds>
               <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
               <excludes>META-INF/maven/**</excludes>
-            </configuration>
-          </execution>
-          <execution>
-            <id>java11</id>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <includeArtifactIds>maven-resolver-transport-jdk-11</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/generated-resources/META-INF/versions/11</outputDirectory>
-              <includes>**/*.class</includes>
             </configuration>
           </execution>
           <execution>
