@@ -34,8 +34,6 @@
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.test.http</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-
-    <javaVersion>11</javaVersion>
   </properties>
 
   <dependencies>

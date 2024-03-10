@@ -34,8 +34,6 @@
 
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.demo.snippets</Automatic-Module-Name>
-    <!-- Jetty 10.x needs Java 11, generator-signer needs 17: we want both to work -->
-    <javaVersion>17</javaVersion>
   </properties>
 
   <dependencies>

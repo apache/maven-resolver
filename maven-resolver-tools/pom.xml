@@ -32,7 +32,6 @@
   <description>Various tools.</description>
 
   <properties>
-    <javaVersion>17</javaVersion>
     <maven.deploy.skip>true</maven.deploy.skip>
 
     <Automatic-Module-Name>org.apache.maven.resolver.tools</Automatic-Module-Name>
