@@ -29,6 +29,11 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.impl.scope.InternalScopeManager;
+import org.eclipse.aether.internal.impl.scope.ManagedDependencyContextRefiner;
+import org.eclipse.aether.internal.impl.scope.ManagedScopeDeriver;
+import org.eclipse.aether.internal.impl.scope.ManagedScopeSelector;
+import org.eclipse.aether.internal.impl.scope.ScopeManagerImpl;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.util.artifact.DefaultArtifactTypeRegistry;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
@@ -38,9 +43,6 @@ import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
-import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
-import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
-import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.traverser.FatArtifactTraverser;
@@ -56,15 +58,10 @@ import static java.util.Objects.requireNonNull;
  * Extend this class and override methods to customize, if needed.
  *
  * @since 2.0.0
- *
- * @deprecated (To be removed as it was introduced in 2.0.0-alpha-2!) This class is wrong, as it uses Resolver 1.x
- * bits that do interpret dependency scopes. The proper session supplier should be provided by consumer project
- * (Maven) that also defines the dependency scopes and their meaning and semantics, as session need to be equipped
- * with these bits. Session is very much dependent on the consumer project.
  */
-@Deprecated
 public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected final RepositorySystem repositorySystem;
+    protected final InternalScopeManager scopeManager = getScopeManager();
 
     public SessionBuilderSupplier(RepositorySystem repositorySystem) {
         this.repositorySystem = requireNonNull(repositorySystem);
@@ -77,6 +74,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         session.setDependencyGraphTransformer(getDependencyGraphTransformer());
         session.setArtifactTypeRegistry(getArtifactTypeRegistry());
         session.setArtifactDescriptorPolicy(getArtifactDescriptorPolicy());
+        session.setScopeManager(scopeManager);
     }
 
     protected DependencyTraverser getDependencyTraverser() {
@@ -89,7 +87,8 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
 
     protected DependencySelector getDependencySelector() {
         return new AndDependencySelector(
-                new ScopeDependencySelector("test", "provided"),
+                new ScopeDependencySelector(
+                        Maven3ScopeManagerConfiguration.DS_TEST, Maven3ScopeManagerConfiguration.DS_PROVIDED),
                 new OptionalDependencySelector(),
                 new ExclusionDependencySelector());
     }
@@ -97,9 +96,9 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected DependencyGraphTransformer getDependencyGraphTransformer() {
         return new ChainedDependencyGraphTransformer(
                 new ConflictResolver(
-                        new NearestVersionSelector(), new JavaScopeSelector(),
-                        new SimpleOptionalitySelector(), new JavaScopeDeriver()),
-                new JavaDependencyContextRefiner());
+                        new NearestVersionSelector(), new ManagedScopeSelector(scopeManager),
+                        new SimpleOptionalitySelector(), new ManagedScopeDeriver(scopeManager)),
+                new ManagedDependencyContextRefiner(scopeManager));
     }
 
     protected ArtifactTypeRegistry getArtifactTypeRegistry() {
@@ -121,6 +120,10 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
 
     protected ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
         return new SimpleArtifactDescriptorPolicy(true, true);
+    }
+
+    protected InternalScopeManager getScopeManager() {
+        return new ScopeManagerImpl(Maven3ScopeManagerConfiguration.INSTANCE);
     }
 
     /**

@@ -47,6 +47,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.transfer.TransferListener;
 
 import static java.util.Objects.requireNonNull;
@@ -127,6 +128,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     private Supplier<RepositoryCache> repositoryCacheSupplier = DEFAULT_REPOSITORY_CACHE_SUPPLIER;
 
     private SystemScopeHandler systemScopeHandler = SystemScopeHandler.LEGACY;
+
+    private ScopeManager scopeManager;
 
     private final ArrayList<Runnable> onSessionCloseHandlers = new ArrayList<>();
 
@@ -360,6 +363,12 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     }
 
     @Override
+    public DefaultSessionBuilder setScopeManager(ScopeManager scopeManager) {
+        this.scopeManager = scopeManager;
+        return this;
+    }
+
+    @Override
     public SessionBuilder addOnSessionEndedHandler(Runnable handler) {
         requireNonNull(handler, "null handler");
         onSessionCloseHandlers.add(handler);
@@ -482,6 +491,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 sessionDataSupplier.get(),
                 repositoryCacheSupplier.get(),
                 systemScopeHandler,
+                scopeManager,
                 onSessionCloseHandlers,
                 repositorySystem,
                 repositorySystemLifecycle);

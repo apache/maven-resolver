@@ -40,6 +40,7 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.transfer.TransferListener;
 
 /**
@@ -396,6 +397,14 @@ public interface RepositorySystemSession {
          * @return The session for chaining, never {@code null}.
          */
         SessionBuilder setSystemScopeHandler(SystemScopeHandler systemScopeHandler);
+
+        /**
+         * Sets the scope manager for session, may be {@code null}.
+         *
+         * @param scopeManager The scope manager, may be {@code null}.
+         * @return The session for chaining, never {@code null}.
+         */
+        SessionBuilder setScopeManager(ScopeManager scopeManager);
 
         /**
          * Adds on session ended handler to be immediately registered when this builder creates session.
@@ -758,6 +767,14 @@ public interface RepositorySystemSession {
      * @since 2.0.0
      */
     SystemScopeHandler getSystemScopeHandler();
+
+    /**
+     * Returns the scope manager to be used in this session, may be {@code null} if not set.
+     *
+     * @return The scope manager or {@code null} if not set.
+     * @since 2.0.0
+     */
+    ScopeManager getScopeManager();
 
     /**
      * Registers a handler to execute when this session closed.

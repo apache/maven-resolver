@@ -38,6 +38,7 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.util.listener.ChainedRepositoryListener;
 import org.eclipse.aether.util.listener.ChainedTransferListener;
@@ -104,6 +105,8 @@ public final class DefaultCloseableSession implements CloseableSession {
 
     private final SystemScopeHandler systemScopeHandler;
 
+    private final ScopeManager scopeManager;
+
     private final RepositorySystem repositorySystem;
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
@@ -138,6 +141,7 @@ public final class DefaultCloseableSession implements CloseableSession {
             SessionData data,
             RepositoryCache cache,
             SystemScopeHandler systemScopeHandler,
+            ScopeManager scopeManager,
             List<Runnable> onSessionEndedHandlers,
             RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle) {
@@ -168,6 +172,7 @@ public final class DefaultCloseableSession implements CloseableSession {
         this.data = requireNonNull(data);
         this.cache = cache;
         this.systemScopeHandler = requireNonNull(systemScopeHandler);
+        this.scopeManager = scopeManager;
 
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
@@ -332,6 +337,11 @@ public final class DefaultCloseableSession implements CloseableSession {
     @Override
     public SystemScopeHandler getSystemScopeHandler() {
         return systemScopeHandler;
+    }
+
+    @Override
+    public ScopeManager getScopeManager() {
+        return scopeManager;
     }
 
     @Override

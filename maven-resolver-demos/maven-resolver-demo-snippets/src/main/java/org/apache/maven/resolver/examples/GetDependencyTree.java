@@ -47,6 +47,8 @@ public class GetDependencyTree {
             Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
 
             CollectRequest collectRequest = new CollectRequest();
+            collectRequest.setResolutionScope(
+                    session.getScopeManager().getResolutionScope("main-runtime").orElseThrow());
             collectRequest.setRoot(new Dependency(artifact, ""));
             collectRequest.setRepositories(Booter.newRepositories(system, session));
 

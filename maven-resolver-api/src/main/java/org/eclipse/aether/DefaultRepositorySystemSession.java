@@ -42,6 +42,7 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.transfer.TransferListener;
 
 import static java.util.Objects.requireNonNull;
@@ -126,6 +127,8 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     private SystemScopeHandler systemScopeHandler;
 
+    private ScopeManager scopeManager;
+
     private final Function<Runnable, Boolean> onSessionEndedRegistrar;
 
     /**
@@ -205,6 +208,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         setData(session.getData());
         setCache(session.getCache());
         setSystemScopeHandler(session.getSystemScopeHandler());
+        setScopeManager(session.getScopeManager());
         this.onSessionEndedRegistrar = session::addOnSessionEndedHandler;
     }
 
@@ -820,6 +824,24 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     public DefaultRepositorySystemSession setSystemScopeHandler(SystemScopeHandler systemScopeHandler) {
         verifyStateForMutation();
         this.systemScopeHandler = requireNonNull(systemScopeHandler);
+        return this;
+    }
+
+    @Override
+    public ScopeManager getScopeManager() {
+        return scopeManager;
+    }
+
+    /**
+     * Sets the scope manager, may be {@code null}.
+     *
+     * @param scopeManager The scope manager, may be {@code null}.
+     * @return The session for chaining, never {@code null}.
+     * @since 2.0.0
+     */
+    public DefaultRepositorySystemSession setScopeManager(ScopeManager scopeManager) {
+        verifyStateForMutation();
+        this.scopeManager = scopeManager;
         return this;
     }
 

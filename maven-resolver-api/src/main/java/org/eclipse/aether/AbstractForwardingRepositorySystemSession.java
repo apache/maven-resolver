@@ -34,6 +34,7 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.transfer.TransferListener;
 
 /**
@@ -194,6 +195,11 @@ public abstract class AbstractForwardingRepositorySystemSession implements Repos
     @Override
     public SystemScopeHandler getSystemScopeHandler() {
         return getSession().getSystemScopeHandler();
+    }
+
+    @Override
+    public ScopeManager getScopeManager() {
+        return getSession().getScopeManager();
     }
 
     @Override

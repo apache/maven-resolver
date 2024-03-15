@@ -44,6 +44,7 @@ import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.impl.scope.InternalScopeManager;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -52,6 +53,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.scope.ResolutionScope;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
@@ -114,7 +116,9 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             throws DependencyCollectionException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(request, "request cannot be null");
-        session = optimizeSession(session);
+
+        InternalScopeManager scopeManager = (InternalScopeManager) session.getScopeManager();
+        session = setUpSession(session, request, scopeManager);
 
         RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
@@ -246,7 +250,11 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             throw new DependencyCollectionException(result);
         }
 
-        return result;
+        if (request.getResolutionScope() != null) {
+            return scopeManager.postProcess(request.getResolutionScope(), result);
+        } else {
+            return result;
+        }
     }
 
     /**
@@ -283,9 +291,17 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             Results results)
             throws DependencyCollectionException;
 
-    protected RepositorySystemSession optimizeSession(RepositorySystemSession session) {
+    protected RepositorySystemSession setUpSession(
+            RepositorySystemSession session, CollectRequest collectRequest, InternalScopeManager scopeManager) {
         DefaultRepositorySystemSession optimized = new DefaultRepositorySystemSession(session);
         optimized.setArtifactTypeRegistry(CachingArtifactTypeRegistry.newInstance(session));
+
+        ResolutionScope resolutionScope = collectRequest.getResolutionScope();
+        if (resolutionScope != null) {
+            requireNonNull(scopeManager, "ScopeManager is not set on session");
+            optimized.setDependencySelector(scopeManager.getDependencySelector(resolutionScope));
+            optimized.setDependencyGraphTransformer(scopeManager.getDependencyGraphTransformer(resolutionScope));
+        }
         return optimized;
     }
 
