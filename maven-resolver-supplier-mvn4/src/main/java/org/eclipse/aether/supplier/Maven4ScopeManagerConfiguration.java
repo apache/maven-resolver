@@ -30,6 +30,7 @@ import org.eclipse.aether.impl.scope.BuildScopeSource;
 import org.eclipse.aether.impl.scope.CommonBuilds;
 import org.eclipse.aether.impl.scope.InternalScopeManager;
 import org.eclipse.aether.impl.scope.ScopeManagerConfiguration;
+import org.eclipse.aether.internal.impl.scope.ScopeManagerDump;
 import org.eclipse.aether.scope.DependencyScope;
 import org.eclipse.aether.scope.ResolutionScope;
 
@@ -171,5 +172,11 @@ public final class Maven4ScopeManagerConfiguration implements ScopeManagerConfig
                 Collections.singletonList(system),
                 nonTransitiveDependencyScopes));
         return result;
+    }
+
+    // ===
+
+    public static void main(String... args) {
+        ScopeManagerDump.dump(Maven4ScopeManagerConfiguration.INSTANCE);
     }
 }

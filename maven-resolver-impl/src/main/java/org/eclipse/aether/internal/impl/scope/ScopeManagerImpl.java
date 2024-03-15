@@ -240,23 +240,47 @@ public final class ScopeManagerImpl implements InternalScopeManager {
         return null;
     }
 
-    private Set<String> getDirectlyIncludedLabels(ResolutionScopeImpl resolutionScope) {
-        return resolutionScope.getDirectlyIncluded().stream()
+    /**
+     * Visible for testing.
+     */
+    Set<String> getDirectlyIncludedLabels(ResolutionScope resolutionScope) {
+        return translate(resolutionScope).getDirectlyIncluded().stream()
                 .map(DependencyScope::getId)
                 .collect(Collectors.toSet());
     }
 
-    private Set<String> getDirectlyExcludedLabels(ResolutionScopeImpl resolutionScope) {
+    /**
+     * Visible for testing.
+     */
+    Set<String> getDirectlyExcludedLabels(ResolutionScope resolutionScope) {
+        ResolutionScopeImpl rs = translate(resolutionScope);
         return dependencyScopes.values().stream()
-                .filter(s -> !resolutionScope.getDirectlyIncluded().contains(s))
+                .filter(s -> !rs.getDirectlyIncluded().contains(s))
                 .map(DependencyScope::getId)
                 .collect(Collectors.toSet());
     }
 
-    private Set<String> getTransitivelyExcludedLabels(ResolutionScopeImpl resolutionScope) {
-        return resolutionScope.getTransitivelyExcluded().stream()
+    /**
+     * Visible for testing.
+     */
+    Set<String> getTransitivelyExcludedLabels(ResolutionScope resolutionScope) {
+        return translate(resolutionScope).getTransitivelyExcluded().stream()
                 .map(DependencyScope::getId)
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Visible for testing.
+     */
+    Set<BuildScopeQuery> getPresence(DependencyScope dependencyScope) {
+        return translate(dependencyScope).getPresence();
+    }
+
+    /**
+     * Visible for testing.
+     */
+    BuildScopeSource getBuildScopeSource() {
+        return buildScopeSource;
     }
 
     private DependencyScopeImpl translate(DependencyScope dependencyScope) {
