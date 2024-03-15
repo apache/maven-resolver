@@ -24,6 +24,9 @@ import java.util.Set;
  * Build scope is certain combination of {@link ProjectPath} and {@link BuildPath}.
  *
  * @since 2.0.0
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface BuildScope {
     /**

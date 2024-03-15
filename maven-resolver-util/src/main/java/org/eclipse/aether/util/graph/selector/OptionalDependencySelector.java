@@ -28,7 +28,10 @@ import static java.util.Objects.requireNonNull;
  * A dependency selector that excludes optional dependencies which occur beyond level one of the dependency graph.
  *
  * @see Dependency#isOptional()
+ * @see org.eclipse.aether.internal.impl.scope.OptionalDependencySelector
+ * @deprecated This class is deprecated.
  */
+@Deprecated
 public final class OptionalDependencySelector implements DependencySelector {
 
     private final int depth;
