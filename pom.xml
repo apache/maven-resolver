@@ -99,7 +99,7 @@
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.9.0.M2</sisuVersion>
     <guiceVersion>6.0.0</guiceVersion>
-    <slf4jVersion>2.0.11</slf4jVersion>
+    <slf4jVersion>2.0.12</slf4jVersion>
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
     <jettyVersion>10.0.20</jettyVersion>
     <!-- used by supplier and demo only -->
