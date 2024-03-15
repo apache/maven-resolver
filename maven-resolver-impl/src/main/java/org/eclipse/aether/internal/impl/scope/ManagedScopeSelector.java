@@ -93,7 +93,8 @@ public final class ManagedScopeSelector extends ScopeSelector {
         } else {
             for (DependencyScope dependencyScope : dependencyScopesByWidthDescending) {
                 if (scopes.contains(dependencyScope.getId())) {
-                    return dependencyScope.getId();
+                    effectiveScope = dependencyScope.getId();
+                    break;
                 }
             }
         }
