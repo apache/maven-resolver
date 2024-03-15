@@ -41,6 +41,21 @@ import static java.util.Objects.requireNonNull;
  */
 public final class ScopeDependencySelector implements DependencySelector {
     /**
+     * This enables "legacy" mode (proper): in Resolver 1.x "transitive" state depended on the presence or
+     * absence of the root node.
+     */
+    public static ScopeDependencySelector legacy(Collection<String> included, Collection<String> excluded) {
+        return new ScopeDependencySelector(
+                Objects.hash(true, 0, 1, Integer.MAX_VALUE, included, excluded),
+                true,
+                0,
+                1,
+                Integer.MAX_VALUE,
+                included,
+                excluded);
+    }
+
+    /**
      * Selects dependencies by scope always (from root).
      */
     public static ScopeDependencySelector fromRoot(Collection<String> included, Collection<String> excluded) {
@@ -75,10 +90,17 @@ public final class ScopeDependencySelector implements DependencySelector {
             throw new IllegalArgumentException("applyTo must be greater or equal than applyFrom");
         }
         return new ScopeDependencySelector(
-                Objects.hash(0, applyFrom, applyTo, included, excluded), 0, applyFrom, applyTo, included, excluded);
+                Objects.hash(false, 0, applyFrom, applyTo, included, excluded),
+                false,
+                0,
+                applyFrom,
+                applyTo,
+                included,
+                excluded);
     }
 
     private final int seed;
+    private final boolean shiftIfRootNull;
     private final int depth;
     private final int applyFrom;
     private final int applyTo;
@@ -86,8 +108,15 @@ public final class ScopeDependencySelector implements DependencySelector {
     private final Collection<String> excluded;
 
     private ScopeDependencySelector(
-            int seed, int depth, int applyFrom, int applyTo, Collection<String> included, Collection<String> excluded) {
+            int seed,
+            boolean shiftIfRootNull,
+            int depth,
+            int applyFrom,
+            int applyTo,
+            Collection<String> included,
+            Collection<String> excluded) {
         this.seed = seed;
+        this.shiftIfRootNull = shiftIfRootNull;
         this.depth = depth;
         this.applyFrom = applyFrom;
         this.applyTo = applyTo;
@@ -109,7 +138,13 @@ public final class ScopeDependencySelector implements DependencySelector {
     @Override
     public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
-        return new ScopeDependencySelector(seed, depth + 1, applyFrom, applyTo, included, excluded);
+        if (depth == 0 && shiftIfRootNull && context.getDependency() == null) {
+            return new ScopeDependencySelector(
+                    seed, shiftIfRootNull, depth + 1, applyFrom + 1, applyTo, included, excluded);
+        } else {
+            return new ScopeDependencySelector(
+                    seed, shiftIfRootNull, depth + 1, applyFrom, applyTo, included, excluded);
+        }
     }
 
     @Override
@@ -122,8 +157,10 @@ public final class ScopeDependencySelector implements DependencySelector {
 
         ScopeDependencySelector that = (ScopeDependencySelector) obj;
         return seed == that.seed
+                && shiftIfRootNull == that.shiftIfRootNull
                 && depth == that.depth
                 && applyFrom == that.applyFrom
+                && applyTo == that.applyTo
                 && Objects.equals(included, that.included)
                 && Objects.equals(excluded, that.excluded);
     }
@@ -132,8 +169,10 @@ public final class ScopeDependencySelector implements DependencySelector {
     public int hashCode() {
         int hash = 17;
         hash = hash * 31 + seed;
+        hash = hash * 31 + (shiftIfRootNull ? 0 : 1);
         hash = hash * 31 + depth;
         hash = hash * 31 + applyFrom;
+        hash = hash * 31 + applyTo;
         hash = hash * 31 + (included != null ? included.hashCode() : 0);
         hash = hash * 31 + (excluded != null ? excluded.hashCode() : 0);
         return hash;

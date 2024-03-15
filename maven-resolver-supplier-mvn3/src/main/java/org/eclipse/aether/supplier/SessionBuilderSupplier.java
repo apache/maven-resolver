@@ -91,7 +91,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
 
     protected DependencySelector getDependencySelector() {
         return new AndDependencySelector(
-                ScopeDependencySelector.fromDirect(
+                ScopeDependencySelector.legacy(
                         null,
                         Arrays.asList(
                                 Maven3ScopeManagerConfiguration.DS_TEST, Maven3ScopeManagerConfiguration.DS_PROVIDED)),
