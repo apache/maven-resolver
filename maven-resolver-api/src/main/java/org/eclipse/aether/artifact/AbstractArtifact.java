@@ -96,6 +96,15 @@ public abstract class AbstractArtifact implements Artifact {
         return newInstance(version, getProperties(), getPath());
     }
 
+    /**
+     * This method should (and in Resolver is) overridden, but is kept just to preserve backward compatibility if
+     * this class is extended somewhere.
+     */
+    public Path getPath() {
+        File file = getFile();
+        return file != null ? file.toPath() : null;
+    }
+
     @Deprecated
     @Override
     public Artifact setFile(File file) {
