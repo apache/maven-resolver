@@ -87,9 +87,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
 
     protected DependencySelector getDependencySelector() {
         return new AndDependencySelector(
-                ScopeDependencySelector.legacy(
-                        null,
-                        Arrays.asList(JavaScopes.TEST, JavaScopes.PROVIDED)),
+                ScopeDependencySelector.legacy(null, Arrays.asList(JavaScopes.TEST, JavaScopes.PROVIDED)),
                 OptionalDependencySelector.fromDirect(),
                 new ExclusionDependencySelector());
     }
