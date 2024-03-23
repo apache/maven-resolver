@@ -30,12 +30,11 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
-import org.eclipse.aether.impl.scope.InternalScopeManager;
 import org.eclipse.aether.internal.impl.scope.OptionalDependencySelector;
 import org.eclipse.aether.internal.impl.scope.ScopeDependencySelector;
-import org.eclipse.aether.internal.impl.scope.ScopeManagerImpl;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.util.artifact.DefaultArtifactTypeRegistry;
+import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
@@ -90,8 +89,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         return new AndDependencySelector(
                 ScopeDependencySelector.legacy(
                         null,
-                        Arrays.asList(
-                                Maven3ScopeManagerConfiguration.DS_TEST, Maven3ScopeManagerConfiguration.DS_PROVIDED)),
+                        Arrays.asList(JavaScopes.TEST, JavaScopes.PROVIDED)),
                 OptionalDependencySelector.fromDirect(),
                 new ExclusionDependencySelector());
     }
@@ -123,10 +121,6 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
 
     protected ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
         return new SimpleArtifactDescriptorPolicy(true, true);
-    }
-
-    protected InternalScopeManager getScopeManager() {
-        return new ScopeManagerImpl(Maven3ScopeManagerConfiguration.INSTANCE);
     }
 
     /**

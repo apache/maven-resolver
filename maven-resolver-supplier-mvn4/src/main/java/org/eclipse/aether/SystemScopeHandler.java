@@ -19,7 +19,7 @@
 package org.eclipse.aether;
 
 /**
- * This class here is merely to provide backward compatibility to Maven3. Pretend is not here.
+ * This class here is merely to provide backward compatibility to Maven4-alpha-13. Pretend is not here.
  *
  * @since 2.0.0
  */
