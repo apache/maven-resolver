@@ -28,6 +28,7 @@ import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.scope.DependencyScope;
 import org.eclipse.aether.scope.ResolutionScope;
 import org.eclipse.aether.scope.ScopeManager;
+import org.eclipse.aether.scope.SystemDependencyScope;
 
 /**
  * Internal scope manager.
@@ -101,6 +102,15 @@ public interface InternalScopeManager extends ScopeManager {
      * Should be invoked only via {@link ScopeManagerConfiguration#buildDependencyScopes(InternalScopeManager)}.
      */
     DependencyScope createDependencyScope(String id, boolean transitive, Collection<BuildScopeQuery> presence);
+
+    /**
+     * Creates system dependency scope instance. This method may be invoked only once, as there can be only one
+     * instance of {@link SystemDependencyScope}!
+     * <p>
+     * Should be invoked only via {@link ScopeManagerConfiguration#buildDependencyScopes(InternalScopeManager)}.
+     */
+    SystemDependencyScope createSystemDependencyScope(
+            String id, boolean transitive, Collection<BuildScopeQuery> presence, String systemPathProperty);
 
     /**
      * Creates resolution scope instance.

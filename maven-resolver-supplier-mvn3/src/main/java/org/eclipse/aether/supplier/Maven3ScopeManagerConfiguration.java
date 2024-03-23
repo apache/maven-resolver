@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.impl.scope.BuildScopeMatrixSource;
 import org.eclipse.aether.impl.scope.BuildScopeSource;
 import org.eclipse.aether.impl.scope.CommonBuilds;
@@ -79,11 +79,6 @@ public final class Maven3ScopeManagerConfiguration implements ScopeManagerConfig
     }
 
     @Override
-    public Optional<String> getSystemDependencyScopeLabel() {
-        return Optional.of(DS_SYSTEM);
-    }
-
-    @Override
     public BuildScopeSource getBuildScopeSource() {
         return new BuildScopeMatrixSource(
                 Collections.singletonList(CommonBuilds.PROJECT_PATH_MAIN),
@@ -105,7 +100,8 @@ public final class Maven3ScopeManagerConfiguration implements ScopeManagerConfig
                         select(CommonBuilds.PROJECT_PATH_TEST, CommonBuilds.BUILD_PATH_RUNTIME))));
         result.add(internalScopeManager.createDependencyScope(
                 DS_TEST, false, byProjectPath(CommonBuilds.PROJECT_PATH_TEST)));
-        result.add(internalScopeManager.createDependencyScope(DS_SYSTEM, false, all()));
+        result.add(internalScopeManager.createSystemDependencyScope(
+                DS_SYSTEM, false, all(), ArtifactProperties.LOCAL_PATH));
         return result;
     }
 

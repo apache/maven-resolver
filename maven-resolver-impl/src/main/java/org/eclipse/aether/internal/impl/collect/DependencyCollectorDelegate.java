@@ -54,6 +54,7 @@ import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.scope.ResolutionScope;
+import org.eclipse.aether.scope.SystemDependencyScope;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
@@ -410,7 +411,8 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
     }
 
     protected static boolean isLackingDescriptor(RepositorySystemSession session, Artifact artifact) {
-        return session.getSystemScopeHandler().getSystemPath(artifact) != null;
+        SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
+        return systemDependencyScope != null && systemDependencyScope.getSystemPath(artifact) != null;
     }
 
     protected static List<RemoteRepository> getRemoteRepositories(

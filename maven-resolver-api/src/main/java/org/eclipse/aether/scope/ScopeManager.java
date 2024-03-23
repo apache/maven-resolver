@@ -42,7 +42,7 @@ public interface ScopeManager {
      * always a leaf on graph), is not in any repository, but is actually hosted on host OS file system. On resolution
      * resolver merely checks is file present or not.
      */
-    Optional<DependencyScope> getSystemScope();
+    Optional<SystemDependencyScope> getSystemScope();
 
     /**
      * Returns a specific dependency scope by label.

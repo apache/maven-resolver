@@ -27,8 +27,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencySelector;
@@ -42,6 +44,7 @@ import org.eclipse.aether.impl.scope.ProjectPath;
 import org.eclipse.aether.impl.scope.ScopeManagerConfiguration;
 import org.eclipse.aether.scope.DependencyScope;
 import org.eclipse.aether.scope.ResolutionScope;
+import org.eclipse.aether.scope.SystemDependencyScope;
 import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
@@ -59,7 +62,7 @@ public final class ScopeManagerImpl implements InternalScopeManager {
     private final boolean strictDependencyScopes;
     private final boolean strictResolutionScopes;
     private final BuildScopeSource buildScopeSource;
-    private final String systemLabel;
+    private final AtomicReference<SystemDependencyScopeImpl> systemDependencyScope;
     private final Map<String, DependencyScopeImpl> dependencyScopes;
     private final Map<String, ResolutionScopeImpl> resolutionScopes;
 
@@ -68,7 +71,7 @@ public final class ScopeManagerImpl implements InternalScopeManager {
         this.strictDependencyScopes = configuration.isStrictDependencyScopes();
         this.strictResolutionScopes = configuration.isStrictResolutionScopes();
         this.buildScopeSource = configuration.getBuildScopeSource();
-        this.systemLabel = configuration.getSystemDependencyScopeLabel().orElse(null);
+        this.systemDependencyScope = new AtomicReference<>(null);
         this.dependencyScopes = Collections.unmodifiableMap(buildDependencyScopes(configuration));
         this.resolutionScopes = Collections.unmodifiableMap(buildResolutionScopes(configuration));
     }
@@ -93,13 +96,8 @@ public final class ScopeManagerImpl implements InternalScopeManager {
     }
 
     @Override
-    public Optional<DependencyScope> getSystemScope() {
-        if (systemLabel != null) {
-            return Optional.of(requireNonNull(
-                    dependencyScopes.get(systemLabel),
-                    "config specified label for system dependency scope but did not create it"));
-        }
-        return Optional.empty();
+    public Optional<SystemDependencyScope> getSystemScope() {
+        return Optional.ofNullable(systemDependencyScope.get());
     }
 
     @Override
@@ -188,6 +186,17 @@ public final class ScopeManagerImpl implements InternalScopeManager {
     }
 
     @Override
+    public SystemDependencyScope createSystemDependencyScope(
+            String id, boolean transitive, Collection<BuildScopeQuery> presence, String systemPathProperty) {
+        SystemDependencyScopeImpl system = new SystemDependencyScopeImpl(id, transitive, presence, systemPathProperty);
+        if (systemDependencyScope.compareAndSet(null, system)) {
+            return system;
+        } else {
+            throw new IllegalStateException("system dependency scope already created");
+        }
+    }
+
+    @Override
     public ResolutionScope createResolutionScope(
             String id,
             Mode mode,
@@ -202,7 +211,8 @@ public final class ScopeManagerImpl implements InternalScopeManager {
         for (BuildScope buildScope : buildScopeSource.query(wantedPresence)) {
             dependencyScopes.values().stream()
                     .filter(s -> buildScopeSource.query(s.getPresence()).contains(buildScope))
-                    .filter(s -> !s.getId().equals(systemLabel)) // system scope must be always explicitly added
+                    .filter(s -> systemDependencyScope.get() == null
+                            || !systemDependencyScope.get().is(s.id)) // system scope must be always explicitly added
                     .forEach(result::add);
         }
         return result;
@@ -313,7 +323,7 @@ public final class ScopeManagerImpl implements InternalScopeManager {
         return id;
     }
 
-    private final class DependencyScopeImpl implements DependencyScope {
+    private class DependencyScopeImpl implements DependencyScope {
         private final String id;
         private final boolean transitive;
         private final Set<BuildScopeQuery> presence;
@@ -373,7 +383,31 @@ public final class ScopeManagerImpl implements InternalScopeManager {
         }
     }
 
-    private final class ResolutionScopeImpl implements ResolutionScope {
+    private class SystemDependencyScopeImpl extends DependencyScopeImpl implements SystemDependencyScope {
+        private final String systemPathProperty;
+
+        private SystemDependencyScopeImpl(
+                String id, boolean transitive, Collection<BuildScopeQuery> presence, String systemPathProperty) {
+            super(id, transitive, presence);
+            this.systemPathProperty = requireNonNull(systemPathProperty);
+        }
+
+        @Override
+        public String getSystemPath(Artifact artifact) {
+            return artifact.getProperty(systemPathProperty, null);
+        }
+
+        @Override
+        public void setSystemPath(Map<String, String> properties, String systemPath) {
+            if (systemPath == null) {
+                properties.remove(systemPathProperty);
+            } else {
+                properties.put(systemPathProperty, systemPath);
+            }
+        }
+    }
+
+    private class ResolutionScopeImpl implements ResolutionScope {
 
         private final String id;
         private final Mode mode;

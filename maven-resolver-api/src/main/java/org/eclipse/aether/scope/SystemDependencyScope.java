@@ -16,50 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether;
+package org.eclipse.aether.scope;
 
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * In Resolver 1.x line, the "system" scope represented special artifacts. In 2.x resolver testing for this scope
- * is now delegated to consumer application. Class or component that wants to test for this special dependency scope
- * should use this interface, with implementation provided by consumer application.
+ * A special dependency scope: "system".
  * <p>
- * System is a special scope that tells resolver that dependency is not to be found in any regular repository, so it
- * should not even try to resolve the artifact from them. Dependency in this scope does not have artifact descriptor
- * either. Artifacts in this scope should have the "local path" property set, pointing to a file on local system, where
- * the backing file should reside. Resolution of artifacts in this scope fails, if backing file does not exist
- * (no property set, or property contains invalid path, or the path points to a non-existent file).
+ * This is a special scope. In this scope case, Resolver should handle dependencies specially, as they have no POM (so
+ * are always a leaf on graph), are not in any repository, but are actually hosted on host OS file system. On resolution
+ * resolver merely checks is file present or not.
  *
  * @since 2.0.0
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
-public interface SystemScopeHandler {
-    /**
-     * Returns {@code true} only, if passed in scope label represents "system" scope (as consumer project defines it).
-     */
-    boolean isSystemScope(String scope);
-
-    /**
-     * Returns {@code true} if given dependency is in "system" scope.
-     */
-    default boolean isSystemScope(Dependency dependency) {
-        return dependency != null && isSystemScope(dependency.getScope());
-    }
-
-    /**
-     * Returns {@code true} if given dependency node dependency is in "system" scope.
-     */
-    default boolean isSystemScope(DependencyNode dependencyNode) {
-        return dependencyNode != null
-                && dependencyNode.getDependency() != null
-                && isSystemScope(dependencyNode.getDependency());
-    }
-
+public interface SystemDependencyScope extends DependencyScope {
     /**
      * Returns system path string of provided artifact, or {@code null}.
      *
@@ -78,14 +54,9 @@ public interface SystemScopeHandler {
     void setSystemPath(Map<String, String> properties, String systemPath);
 
     /**
-     * The equivalent of Resolver 1.x "system" scope.
+     * The "legacy" system scope, used when there is no {@link ScopeManager} set on session.
      */
-    SystemScopeHandler LEGACY = new SystemScopeHandler() {
-        @Override
-        public boolean isSystemScope(String scope) {
-            return "system".equals(scope);
-        }
-
+    SystemDependencyScope LEGACY = new SystemDependencyScope() {
         @Override
         public String getSystemPath(Artifact artifact) {
             return artifact.getProperty(ArtifactProperties.LOCAL_PATH, null);
@@ -98,6 +69,16 @@ public interface SystemScopeHandler {
             } else {
                 properties.put(ArtifactProperties.LOCAL_PATH, systemPath);
             }
+        }
+
+        @Override
+        public String getId() {
+            return "system";
+        }
+
+        @Override
+        public boolean isTransitive() {
+            return false;
         }
     };
 }

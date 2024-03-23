@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
-import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.artifact.DefaultArtifactType;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
@@ -32,9 +31,6 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.impl.scope.InternalScopeManager;
-import org.eclipse.aether.internal.impl.scope.ManagedDependencyContextRefiner;
-import org.eclipse.aether.internal.impl.scope.ManagedScopeDeriver;
-import org.eclipse.aether.internal.impl.scope.ManagedScopeSelector;
 import org.eclipse.aether.internal.impl.scope.OptionalDependencySelector;
 import org.eclipse.aether.internal.impl.scope.ScopeDependencySelector;
 import org.eclipse.aether.internal.impl.scope.ScopeManagerImpl;
@@ -45,6 +41,9 @@ import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
+import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
+import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.traverser.FatArtifactTraverser;
@@ -58,13 +57,13 @@ import static java.util.Objects.requireNonNull;
  * of sessions, use {@link CloseableSession#close()} method on built instance(s).
  * <p>
  * Extend this class and override methods to customize, if needed.
+ * <p>
+ * Resolver created as this is NOT using {@link org.eclipse.aether.scope.ScopeManager}!
  *
  * @since 2.0.0
  */
 public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected final RepositorySystem repositorySystem;
-    protected final InternalScopeManager scopeManager = getScopeManager();
-    protected final SystemScopeHandler systemScopeHandler = SystemScopeHandler.LEGACY;
 
     public SessionBuilderSupplier(RepositorySystem repositorySystem) {
         this.repositorySystem = requireNonNull(repositorySystem);
@@ -77,8 +76,6 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         session.setDependencyGraphTransformer(getDependencyGraphTransformer());
         session.setArtifactTypeRegistry(getArtifactTypeRegistry());
         session.setArtifactDescriptorPolicy(getArtifactDescriptorPolicy());
-        session.setSystemScopeHandler(systemScopeHandler);
-        session.setScopeManager(scopeManager);
     }
 
     protected DependencyTraverser getDependencyTraverser() {
@@ -86,7 +83,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     }
 
     protected DependencyManager getDependencyManager() {
-        return new ClassicDependencyManager(false, systemScopeHandler);
+        return new ClassicDependencyManager(false, null);
     }
 
     protected DependencySelector getDependencySelector() {
@@ -102,9 +99,9 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected DependencyGraphTransformer getDependencyGraphTransformer() {
         return new ChainedDependencyGraphTransformer(
                 new ConflictResolver(
-                        new NearestVersionSelector(), new ManagedScopeSelector(scopeManager),
-                        new SimpleOptionalitySelector(), new ManagedScopeDeriver(scopeManager)),
-                new ManagedDependencyContextRefiner(scopeManager));
+                        new NearestVersionSelector(), new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(), new JavaScopeDeriver()),
+                new JavaDependencyContextRefiner());
     }
 
     protected ArtifactTypeRegistry getArtifactTypeRegistry() {

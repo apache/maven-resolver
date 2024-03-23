@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether;
 
-import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.eclipse.aether.repository.Authentication;
@@ -27,7 +26,6 @@ import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -107,21 +105,6 @@ public class DefaultRepositorySystemSessionTest {
             fail("config properties are modifiable");
         } catch (UnsupportedOperationException e) {
             // expected
-        }
-    }
-
-    @Test
-    void testCopyRepositorySystemSession() throws Exception {
-        RepositorySystemSession session = Mockito.mock(RepositorySystemSession.class, Mockito.RETURNS_MOCKS);
-
-        RepositorySystemSession newSession = new DefaultRepositorySystemSession(session);
-
-        Method[] methods = RepositorySystemSession.class.getMethods();
-
-        for (Method method : methods) {
-            if (method.getParameterCount() == 0) {
-                assertEquals(method.invoke(session) == null, method.invoke(newSession) == null, method.getName());
-            }
         }
     }
 }

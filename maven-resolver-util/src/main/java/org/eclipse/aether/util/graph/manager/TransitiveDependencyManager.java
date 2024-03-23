@@ -21,9 +21,10 @@ package org.eclipse.aether.util.graph.manager;
 import java.util.Collection;
 import java.util.Map;
 
-import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
+import org.eclipse.aether.scope.ScopeManager;
+import org.eclipse.aether.scope.SystemDependencyScope;
 
 /**
  * A dependency manager managing transitive dependencies supporting transitive dependency management.
@@ -42,11 +43,11 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
      */
     @Deprecated
     public TransitiveDependencyManager() {
-        this(SYSTEM_SCOPE_HANDLER);
+        this(null);
     }
 
-    public TransitiveDependencyManager(SystemScopeHandler systemScopeHandler) {
-        super(Integer.MAX_VALUE, 2, systemScopeHandler);
+    public TransitiveDependencyManager(ScopeManager scopeManager) {
+        super(Integer.MAX_VALUE, 2, scopeManager);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -59,7 +60,7 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemScopeHandler systemScopeHandler) {
+            SystemDependencyScope systemDependencyScope) {
         super(
                 depth,
                 deriveUntil,
@@ -69,7 +70,7 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemScopeHandler);
+                systemDependencyScope);
     }
 
     @Override
@@ -88,6 +89,6 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemScopeHandler);
+                systemDependencyScope);
     }
 }

@@ -33,6 +33,13 @@ public interface DependencyScope {
     String getId();
 
     /**
+     * Shorthand method of {@link #getId()#equals(Object)}.
+     */
+    default boolean is(String label) {
+        return getId().equals(label);
+    }
+
+    /**
      * Is it transitive scope?
      */
     boolean isTransitive();

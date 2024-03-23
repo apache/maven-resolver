@@ -19,7 +19,6 @@
 package org.eclipse.aether.impl.scope;
 
 import java.util.Collection;
-import java.util.Optional;
 
 import org.eclipse.aether.scope.DependencyScope;
 import org.eclipse.aether.scope.ResolutionScope;
@@ -37,8 +36,6 @@ public interface ScopeManagerConfiguration {
     boolean isStrictResolutionScopes();
 
     BuildScopeSource getBuildScopeSource();
-
-    Optional<String> getSystemDependencyScopeLabel();
 
     Collection<DependencyScope> buildDependencyScopes(InternalScopeManager internalScopeManager);
 
