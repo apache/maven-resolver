@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -40,8 +39,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * UT for {@link DependencyManager} implementations.
  */
 public class DependencyManagerTest {
-
-    private static final SystemScopeHandler SYSTEM_SCOPE_HANDLER = SystemScopeHandler.LEGACY;
 
     private final Artifact A1 = new DefaultArtifact("test", "a", "", "1");
 
@@ -76,7 +73,7 @@ public class DependencyManagerTest {
 
     @Test
     void testClassic() {
-        DependencyManager manager = new ClassicDependencyManager(SYSTEM_SCOPE_HANDLER);
+        DependencyManager manager = new ClassicDependencyManager(null);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -135,7 +132,7 @@ public class DependencyManagerTest {
 
     @Test
     void testClassicTransitive() {
-        DependencyManager manager = new ClassicDependencyManager(true, SYSTEM_SCOPE_HANDLER);
+        DependencyManager manager = new ClassicDependencyManager(true, null);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -195,7 +192,7 @@ public class DependencyManagerTest {
 
     @Test
     void testTransitive() {
-        DependencyManager manager = new TransitiveDependencyManager(SYSTEM_SCOPE_HANDLER);
+        DependencyManager manager = new TransitiveDependencyManager(null);
         DependencyManagement mngt;
 
         // depth=1: only exclusion applied, nothing more
@@ -255,7 +252,7 @@ public class DependencyManagerTest {
 
     @Test
     void testDefault() {
-        DependencyManager manager = new DefaultDependencyManager(SYSTEM_SCOPE_HANDLER);
+        DependencyManager manager = new DefaultDependencyManager(null);
         DependencyManagement mngt;
 
         // depth=1: all applied

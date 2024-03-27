@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.supplier;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.RepositorySystem;
@@ -29,13 +30,14 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.internal.impl.scope.OptionalDependencySelector;
+import org.eclipse.aether.internal.impl.scope.ScopeDependencySelector;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.util.artifact.DefaultArtifactTypeRegistry;
+import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
-import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
-import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
@@ -54,15 +56,11 @@ import static java.util.Objects.requireNonNull;
  * of sessions, use {@link CloseableSession#close()} method on built instance(s).
  * <p>
  * Extend this class and override methods to customize, if needed.
+ * <p>
+ * Resolver created as this is NOT using {@link org.eclipse.aether.scope.ScopeManager}!
  *
  * @since 2.0.0
- *
- * @deprecated (To be removed as it was introduced in 2.0.0-alpha-2!) This class is wrong, as it uses Resolver 1.x
- * bits that do interpret dependency scopes. The proper session supplier should be provided by consumer project
- * (Maven) that also defines the dependency scopes and their meaning and semantics, as session need to be equipped
- * with these bits. Session is very much dependent on the consumer project.
  */
-@Deprecated
 public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected final RepositorySystem repositorySystem;
 
@@ -84,13 +82,13 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     }
 
     protected DependencyManager getDependencyManager() {
-        return new ClassicDependencyManager();
+        return new ClassicDependencyManager(false, null);
     }
 
     protected DependencySelector getDependencySelector() {
         return new AndDependencySelector(
-                new ScopeDependencySelector("test", "provided"),
-                new OptionalDependencySelector(),
+                ScopeDependencySelector.legacy(null, Arrays.asList(JavaScopes.TEST, JavaScopes.PROVIDED)),
+                OptionalDependencySelector.fromDirect(),
                 new ExclusionDependencySelector());
     }
 

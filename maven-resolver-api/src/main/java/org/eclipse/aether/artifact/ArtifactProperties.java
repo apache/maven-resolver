@@ -47,8 +47,8 @@ public final class ArtifactProperties {
      *
      * @deprecated since 2.0, the semantic carried by this property and the fact this property is coupled to Resolver
      * 1.x "system" scope (that was delegated to consumer application) implies this property should not be used anymore,
-     * instead, the {@link org.eclipse.aether.SystemScopeHandler} exposed via method
-     * {@link RepositorySystemSession#getSystemScopeHandler()} should be used.
+     * instead, the {@link org.eclipse.aether.scope.ScopeManager} exposed via method
+     * {@link RepositorySystemSession#getScopeManager()} should be used.
      */
     @Deprecated
     public static final String LOCAL_PATH = "localPath";

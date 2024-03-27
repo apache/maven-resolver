@@ -62,7 +62,8 @@
     <module>maven-resolver-transport-apache</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-generator-gnupg</module>
-    <module>maven-resolver-supplier</module>
+    <module>maven-resolver-supplier-mvn3</module>
+    <module>maven-resolver-supplier-mvn4</module>
     <module>maven-resolver-demos</module>
     <module>maven-resolver-tools</module>
   </modules>
@@ -103,7 +104,8 @@
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
     <jettyVersion>10.0.20</jettyVersion>
     <!-- used by supplier and demo only -->
-    <mavenVersion>4.0.0-alpha-12</mavenVersion>
+    <maven3Version>3.9.6</maven3Version>
+    <maven4Version>4.0.0-alpha-13</maven4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
@@ -181,7 +183,12 @@
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
-        <artifactId>maven-resolver-supplier</artifactId>
+        <artifactId>maven-resolver-supplier-mvn3</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-supplier-mvn4</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

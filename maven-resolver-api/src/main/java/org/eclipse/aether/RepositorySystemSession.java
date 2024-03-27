@@ -40,6 +40,8 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.scope.ScopeManager;
+import org.eclipse.aether.scope.SystemDependencyScope;
 import org.eclipse.aether.transfer.TransferListener;
 
 /**
@@ -390,12 +392,12 @@ public interface RepositorySystemSession {
         SessionBuilder setCache(RepositoryCache cache);
 
         /**
-         * Sets the system scope handler for session, may not be {@code null}.
+         * Sets the scope manager for session, may be {@code null}.
          *
-         * @param systemScopeHandler The system scope handler, may not be {@code null}.
+         * @param scopeManager The scope manager, may be {@code null}.
          * @return The session for chaining, never {@code null}.
          */
-        SessionBuilder setSystemScopeHandler(SystemScopeHandler systemScopeHandler);
+        SessionBuilder setScopeManager(ScopeManager scopeManager);
 
         /**
          * Adds on session ended handler to be immediately registered when this builder creates session.
@@ -752,12 +754,27 @@ public interface RepositorySystemSession {
     RepositoryCache getCache();
 
     /**
-     * Returns the system scope handler, never {@code null}.
+     * Returns the scope manager to be used in this session, may be {@code null} if not set.
      *
-     * @return The system scope handler, never {@code null}.
+     * @return The scope manager or {@code null} if not set.
      * @since 2.0.0
      */
-    SystemScopeHandler getSystemScopeHandler();
+    ScopeManager getScopeManager();
+
+    /**
+     * Returns the system dependency scope.
+     * <p>
+     * Shorthand method for {@link #getScopeManager()#getSystemDependencyScope()}.
+     * <p>
+     * If {@link ScopeManager} is set, {@link #getScopeManager()} returns non-null value, the result of
+     * {@link ScopeManager#getSystemScope()} is returned (that may be {@code null}). If no {@link ScopeManager}
+     * if set, then {@link SystemDependencyScope#LEGACY} instance is returned, as lack of scope manager means that
+     * resolver operates in "legacy" mode (Maven3 compatible mode).
+     *
+     * @return The system dependency scope or {@code null} if no such scope.
+     * @since 2.0.0
+     */
+    SystemDependencyScope getSystemDependencyScope();
 
     /**
      * Registers a handler to execute when this session closed.
