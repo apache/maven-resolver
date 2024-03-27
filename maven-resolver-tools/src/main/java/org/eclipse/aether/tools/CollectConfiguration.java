@@ -205,11 +205,14 @@ public class CollectConfiguration {
     private static String getConfigurationType(JavaDocCapable<?> javaDocCapable) {
         String type = getTag(javaDocCapable, "@configurationType");
         if (type != null) {
-            if (type.startsWith("{@link ") && type.endsWith("}")) {
-                type = type.substring(7, type.length() - 1);
+            String linkPrefix = "{@link ";
+            String linkSuffix = "}";
+            if (type.startsWith(linkPrefix) && type.endsWith(linkSuffix)) {
+                type = type.substring(linkPrefix.length(), type.length() - linkSuffix.length());
             }
-            if (type.startsWith("java.lang.")) {
-                type = type.substring(10);
+            String javaLangPackage = "java.lang.";
+            if (type.startsWith(javaLangPackage)) {
+                type = type.substring(javaLangPackage.length());
             }
         }
         return nvl(type, "n/a");
