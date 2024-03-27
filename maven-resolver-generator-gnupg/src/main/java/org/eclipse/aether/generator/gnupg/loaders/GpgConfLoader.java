@@ -52,12 +52,7 @@ public final class GpgConfLoader implements GnupgSignatureArtifactGeneratorFacto
     /**
      * Maximum key size, see <a href="https://wiki.gnupg.org/LargeKeys">Large Keys</a>.
      */
-    private static final long MAX_SIZE = 5 * 1024 + 1L;
-
-    @Override
-    public boolean isInteractive() {
-        return false;
-    }
+    private static final long MAX_SIZE = 16 * 1024 + 1L;
 
     @Override
     public byte[] loadKeyRingMaterial(RepositorySystemSession session) throws IOException {
@@ -66,13 +61,14 @@ public final class GpgConfLoader implements GnupgSignatureArtifactGeneratorFacto
                 GnupgConfigurationKeys.DEFAULT_KEY_FILE_PATH,
                 GnupgConfigurationKeys.CONFIG_PROP_KEY_FILE_PATH));
         if (!keyPath.isAbsolute()) {
-            keyPath = session.getLocalRepository().getBasePath().resolve(keyPath);
+            keyPath =
+                    Paths.get(System.getProperty("user.home")).resolve(keyPath).toAbsolutePath();
         }
         if (Files.isRegularFile(keyPath)) {
             if (Files.size(keyPath) < MAX_SIZE) {
                 return Files.readAllBytes(keyPath);
             } else {
-                logger.warn("Refusing to load key {}; is larger than 5KB", keyPath);
+                logger.warn("Refusing to load key {}; is larger than 16KB", keyPath);
             }
         }
         return null;

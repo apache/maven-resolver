@@ -29,16 +29,23 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Predicate;
 
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
-import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
-import org.eclipse.aether.ConfigurationProperties;
+import org.bouncycastle.util.encoders.Hex;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployRequest;
@@ -53,11 +60,6 @@ import org.eclipse.aether.util.ConfigUtils;
 public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGeneratorFactory {
 
     public interface Loader {
-        /**
-         * Returns {@code true} if this loader requires user interactivity.
-         */
-        boolean isInteractive();
-
         /**
          * Returns the key ring material, or {@code null}.
          */
@@ -75,7 +77,7 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
         /**
          * Returns the key password, or {@code null}.
          */
-        default char[] loadPassword(RepositorySystemSession session, long keyId) throws IOException {
+        default char[] loadPassword(RepositorySystemSession session, byte[] fingerprint) throws IOException {
             return null;
         }
     }
@@ -121,14 +123,9 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
     private GnupgSignatureArtifactGenerator doCreateArtifactGenerator(
             RepositorySystemSession session, Collection<Artifact> artifacts, Predicate<Artifact> artifactPredicate)
             throws IOException {
-        boolean interactive = ConfigUtils.getBoolean(
-                session, ConfigurationProperties.DEFAULT_INTERACTIVE, ConfigurationProperties.INTERACTIVE);
-        List<Loader> loaders = this.loaders.values().stream()
-                .filter(l -> interactive || !l.isInteractive())
-                .toList();
 
         byte[] keyRingMaterial = null;
-        for (Loader loader : loaders) {
+        for (Loader loader : loaders.values()) {
             keyRingMaterial = loader.loadKeyRingMaterial(session);
             if (keyRingMaterial != null) {
                 break;
@@ -139,7 +136,7 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
         }
 
         byte[] fingerprint = null;
-        for (Loader loader : loaders) {
+        for (Loader loader : loaders.values()) {
             fingerprint = loader.loadKeyFingerprint(session);
             if (fingerprint != null) {
                 break;
@@ -186,8 +183,8 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
             char[] keyPassword = null;
             final boolean keyPassNeeded = secretKey.getKeyEncryptionAlgorithm() != SymmetricKeyAlgorithmTags.NULL;
             if (keyPassNeeded) {
-                for (Loader loader : loaders) {
-                    keyPassword = loader.loadPassword(session, secretKey.getKeyID());
+                for (Loader loader : loaders.values()) {
+                    keyPassword = loader.loadPassword(session, secretKey.getFingerprint());
                     if (keyPassword != null) {
                         break;
                     }
@@ -204,9 +201,17 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
             PGPSignatureSubpacketVector hashSubPackets = subPacketGenerator.generate();
 
             return new GnupgSignatureArtifactGenerator(
-                    artifacts, artifactPredicate, secretKey, privateKey, hashSubPackets);
+                    artifacts, artifactPredicate, secretKey, privateKey, hashSubPackets, getKeyInfo(secretKey));
         } catch (PGPException | IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private static String getKeyInfo(PGPSecretKey secretKey) {
+        Iterator<String> userIds = secretKey.getPublicKey().getUserIDs();
+        if (userIds.hasNext()) {
+            return userIds.next();
+        }
+        return Hex.toHexString(secretKey.getPublicKey().getFingerprint());
     }
 }

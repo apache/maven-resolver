@@ -208,6 +208,9 @@ public class CollectConfiguration {
             if (type.startsWith("{@link ") && type.endsWith("}")) {
                 type = type.substring(7, type.length() - 1);
             }
+            if (type.startsWith("java.lang.")) {
+                type = type.substring(10);
+            }
         }
         return nvl(type, "n/a");
     }
