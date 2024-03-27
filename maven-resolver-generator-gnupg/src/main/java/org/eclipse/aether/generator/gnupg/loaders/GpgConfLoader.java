@@ -73,7 +73,7 @@ public final class GpgConfLoader implements GnupgSignatureArtifactGeneratorFacto
             if (Files.size(keyPath) < MAX_SIZE) {
                 return Files.readAllBytes(keyPath);
             } else {
-                logger.warn("Refusing to load key {}; is larger than 64KB", keyPath);
+                logger.warn("Refusing to load file {}; is larger than 64KB", keyPath);
             }
         }
         return null;
