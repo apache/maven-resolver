@@ -57,7 +57,7 @@ public final class GpgConfLoader implements GnupgSignatureArtifactGeneratorFacto
      *
      * @see <a href="https://wiki.gnupg.org/LargeKeys">Large Keys</a>
      */
-    private static final long MAX_SIZE = 64 * 1000 + 1L;
+    private static final long MAX_SIZE = 64 * 1024 + 1L;
 
     @Override
     public byte[] loadKeyRingMaterial(RepositorySystemSession session) throws IOException {
