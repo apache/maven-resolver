@@ -196,6 +196,9 @@ public final class GnupgSignatureArtifactGeneratorFactory implements ArtifactGen
 
             PGPPrivateKey privateKey = secretKey.extractPrivateKey(
                     new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(keyPassword));
+            if (keyPassword != null) {
+                Arrays.fill(keyPassword, ' ');
+            }
             PGPSignatureSubpacketGenerator subPacketGenerator = new PGPSignatureSubpacketGenerator();
             subPacketGenerator.setIssuerFingerprint(false, secretKey);
             PGPSignatureSubpacketVector hashSubPackets = subPacketGenerator.generate();
