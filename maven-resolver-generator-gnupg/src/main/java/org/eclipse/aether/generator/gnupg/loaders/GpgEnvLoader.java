@@ -42,11 +42,6 @@ public final class GpgEnvLoader implements GnupgSignatureArtifactGeneratorFactor
     public static final String NAME = "env";
 
     @Override
-    public boolean isInteractive() {
-        return false;
-    }
-
-    @Override
     public byte[] loadKeyRingMaterial(RepositorySystemSession session) {
         String keyMaterial = ConfigUtils.getString(session, null, "env." + RESOLVER_GPG_KEY);
         if (keyMaterial != null) {
@@ -70,7 +65,7 @@ public final class GpgEnvLoader implements GnupgSignatureArtifactGeneratorFactor
     }
 
     @Override
-    public char[] loadPassword(RepositorySystemSession session, long keyId) {
+    public char[] loadPassword(RepositorySystemSession session, byte[] fingerprint) {
         String keyPassword = ConfigUtils.getString(session, null, "env." + RESOLVER_GPG_KEY_PASS);
         if (keyPassword != null) {
             return keyPassword.toCharArray();

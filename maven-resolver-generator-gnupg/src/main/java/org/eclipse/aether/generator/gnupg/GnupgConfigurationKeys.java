@@ -65,6 +65,17 @@ public final class GnupgConfigurationKeys {
     public static final String DEFAULT_KEY_FILE_PATH = "maven-signing-key.key";
 
     /**
+     * Whether GnuPG agent should be used.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_USE_AGENT}
+     */
+    public static final String CONFIG_PROP_USE_AGENT = CONFIG_PROPS_PREFIX + "useAgent";
+
+    public static final boolean DEFAULT_USE_AGENT = true;
+
+    /**
      * The GnuPG agent socket(s) to try. Comma separated list of socket paths. If relative, will be resolved from
      * user home directory.
      *

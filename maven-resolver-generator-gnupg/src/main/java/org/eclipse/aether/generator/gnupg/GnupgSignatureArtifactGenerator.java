@@ -32,19 +32,28 @@ import java.util.function.Predicate;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
-import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.util.artifact.SubArtifact;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
     private static final String ARTIFACT_EXTENSION = ".asc";
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ArrayList<Artifact> artifacts;
     private final Predicate<Artifact> signableArtifactPredicate;
     private final PGPSecretKey secretKey;
     private final PGPPrivateKey privateKey;
     private final PGPSignatureSubpacketVector hashSubPackets;
+    private final String keyInfo;
     private final ArrayList<Path> signatureTempFiles;
 
     GnupgSignatureArtifactGenerator(
@@ -52,13 +61,16 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
             Predicate<Artifact> signableArtifactPredicate,
             PGPSecretKey secretKey,
             PGPPrivateKey privateKey,
-            PGPSignatureSubpacketVector hashSubPackets) {
+            PGPSignatureSubpacketVector hashSubPackets,
+            String keyInfo) {
         this.artifacts = new ArrayList<>(artifacts);
         this.signableArtifactPredicate = signableArtifactPredicate;
         this.secretKey = secretKey;
         this.privateKey = privateKey;
         this.hashSubPackets = hashSubPackets;
+        this.keyInfo = keyInfo;
         this.signatureTempFiles = new ArrayList<>();
+        logger.debug("Created generator using key {}", keyInfo);
     }
 
     @Override
@@ -73,6 +85,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
 
             // back out if PGP signatures found among artifacts
             if (artifacts.stream().anyMatch(a -> a.getExtension().endsWith(ARTIFACT_EXTENSION))) {
+                logger.debug("GPG signatures are present among artifacts, bailing out");
                 return Collections.emptyList();
             }
 
@@ -93,6 +106,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
                             signatureTempFile.toFile()));
                 }
             }
+            logger.debug("Signed {} artifacts with key {}", result.size(), keyInfo);
             return result;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
