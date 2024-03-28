@@ -145,6 +145,7 @@ public final class GpgAgentPasswordLoader implements GnupgSignatureArtifactGener
             throw new IOException("Expected OK/ERR but got this instead: " + response);
         }
         return new String(Hex.decode(
-                response.substring(Math.min(response.length(), 3)).trim()))
-                .toCharArray();    }
+                        response.substring(Math.min(response.length(), 3)).trim()))
+                .toCharArray();
+    }
 }
