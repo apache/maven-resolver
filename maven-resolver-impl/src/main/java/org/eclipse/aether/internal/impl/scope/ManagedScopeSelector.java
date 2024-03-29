@@ -49,7 +49,7 @@ public final class ManagedScopeSelector extends ScopeSelector {
 
     public ManagedScopeSelector(InternalScopeManager scopeManager) {
         requireNonNull(scopeManager, "scopeManager");
-        this.systemScope = scopeManager.getSystemScope().orElse(null);
+        this.systemScope = scopeManager.getSystemDependencyScope().orElse(null);
         this.dependencyScopesByWidthDescending =
                 Collections.unmodifiableList(scopeManager.getDependencyScopeUniverse().stream()
                         .sorted(Comparator.comparing(scopeManager::getDependencyScopeWidth)

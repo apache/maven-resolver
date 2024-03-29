@@ -827,7 +827,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     @Override
     public SystemDependencyScope getSystemDependencyScope() {
         if (scopeManager != null) {
-            return scopeManager.getSystemScope().orElse(null);
+            return scopeManager.getSystemDependencyScope().orElse(null);
         } else {
             return SystemDependencyScope.LEGACY;
         }

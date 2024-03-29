@@ -33,7 +33,7 @@ public interface DependencyScope {
     String getId();
 
     /**
-     * Shorthand method of {@link #getId()#equals(Object)}.
+     * Shorthand method of {@code getId().equals(String label)}.
      */
     default boolean is(String label) {
         return getId().equals(label);

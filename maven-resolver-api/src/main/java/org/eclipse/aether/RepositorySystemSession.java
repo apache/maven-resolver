@@ -764,10 +764,10 @@ public interface RepositorySystemSession {
     /**
      * Returns the system dependency scope.
      * <p>
-     * Shorthand method for {@link #getScopeManager()#getSystemDependencyScope()}.
+     * Shorthand method for {@link ScopeManager#getSystemDependencyScope()}.
      * <p>
      * If {@link ScopeManager} is set, {@link #getScopeManager()} returns non-null value, the result of
-     * {@link ScopeManager#getSystemScope()} is returned (that may be {@code null}). If no {@link ScopeManager}
+     * {@link ScopeManager#getSystemDependencyScope()} is returned (that may be {@code null}). If no {@link ScopeManager}
      * if set, then {@link SystemDependencyScope#LEGACY} instance is returned, as lack of scope manager means that
      * resolver operates in "legacy" mode (Maven3 compatible mode).
      *

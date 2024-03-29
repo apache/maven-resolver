@@ -68,7 +68,9 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 Collections.emptyMap(),
                 Collections.emptyMap(),
                 Collections.emptyMap(),
-                scopeManager != null ? scopeManager.getSystemScope().orElse(null) : SystemDependencyScope.LEGACY);
+                scopeManager != null
+                        ? scopeManager.getSystemDependencyScope().orElse(null)
+                        : SystemDependencyScope.LEGACY);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")

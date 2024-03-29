@@ -339,7 +339,7 @@ public final class DefaultCloseableSession implements CloseableSession {
     @Override
     public SystemDependencyScope getSystemDependencyScope() {
         if (scopeManager != null) {
-            return scopeManager.getSystemScope().orElse(null);
+            return scopeManager.getSystemDependencyScope().orElse(null);
         } else {
             return SystemDependencyScope.LEGACY;
         }
