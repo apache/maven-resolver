@@ -37,8 +37,7 @@ import static java.util.Objects.requireNonNull;
  * In particular, the filter is not aware of scopes that logically include other scopes.
  *
  * @see Dependency#getScope()
- * @see org.eclipse.aether.internal.impl.scope.ScopeDependencySelector
- * @deprecated This class is deprecated.
+ * @deprecated This class is deprecated. Use same named class from impl module instead.
  */
 @Deprecated
 public final class ScopeDependencySelector implements DependencySelector {

@@ -41,7 +41,7 @@ public final class ManagedScopeDeriver extends ScopeDeriver {
 
     public ManagedScopeDeriver(InternalScopeManager scopeManager) {
         this.scopeManager = requireNonNull(scopeManager, "scopeManager");
-        this.systemScope = scopeManager.getSystemScope().orElse(null);
+        this.systemScope = scopeManager.getSystemDependencyScope().orElse(null);
     }
 
     @Override

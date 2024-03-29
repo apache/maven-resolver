@@ -96,7 +96,7 @@ public final class ScopeManagerImpl implements InternalScopeManager {
     }
 
     @Override
-    public Optional<SystemDependencyScope> getSystemScope() {
+    public Optional<SystemDependencyScope> getSystemDependencyScope() {
         return Optional.ofNullable(systemDependencyScope.get());
     }
 
