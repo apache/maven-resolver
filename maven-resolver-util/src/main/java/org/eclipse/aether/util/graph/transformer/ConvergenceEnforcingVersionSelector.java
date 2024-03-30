@@ -18,22 +18,16 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.util.HashSet;
+
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.graph.DependencyFilter;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ConflictContext;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ConflictItem;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.VersionSelector;
 import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
-import org.eclipse.aether.version.Version;
-import org.eclipse.aether.version.VersionConstraint;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 
 import static java.util.Objects.requireNonNull;
 
@@ -56,12 +50,10 @@ public final class ConvergenceEnforcingVersionSelector extends VersionSelector {
     @Override
     public void selectVersion(ConflictContext context) throws RepositoryException {
         HashSet<String> versions = new HashSet<>();
-        int uniqueVersions = 0;
         for (ConflictItem item : context.getItems()) {
-            uniqueVersions += versions.add(item.getDependency().getArtifact().getVersion()) ? 1 : 0;
-        }
-        if (uniqueVersions != 1) {
-            throw newFailure(context);
+            if (!versions.add(item.getDependency().getArtifact().getVersion())) {
+                throw newFailure(context);
+            }
         }
         delegate.selectVersion(context);
     }

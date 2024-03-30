@@ -57,7 +57,8 @@ public class UnsolvableVersionConflictException extends RepositoryException {
      *
      * @since 2.0.0
      */
-    public UnsolvableVersionConflictException(String strategy, Collection<? extends List<? extends DependencyNode>> paths) {
+    public UnsolvableVersionConflictException(
+            String strategy, Collection<? extends List<? extends DependencyNode>> paths) {
         super("Strategy '" + strategy + "' could not resolve version conflict among " + toPaths(paths));
         if (paths == null) {
             this.paths = Collections.emptyList();

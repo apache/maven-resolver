@@ -50,7 +50,7 @@ public class GetDependencyHierarchy {
             sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
             sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
             try (CloseableSession session = sessionBuilder.build()) {
-                Artifact artifact = new DefaultArtifact("org.apache.maven.shared:maven-dependency-tree:3.0.1");
+                Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
 
                 ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
                 descriptorRequest.setArtifact(artifact);
