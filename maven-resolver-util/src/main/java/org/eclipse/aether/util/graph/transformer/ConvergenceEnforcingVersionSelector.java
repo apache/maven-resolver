@@ -49,10 +49,12 @@ public final class ConvergenceEnforcingVersionSelector extends VersionSelector {
 
     @Override
     public void selectVersion(ConflictContext context) throws RepositoryException {
-        HashSet<String> versions = new HashSet<>();
-        for (ConflictItem item : context.getItems()) {
-            if (!versions.add(item.getDependency().getArtifact().getVersion())) {
-                throw newFailure(context);
+        if (enforce) {
+            HashSet<String> versions = new HashSet<>();
+            for (ConflictItem item : context.getItems()) {
+                if (!versions.add(item.getDependency().getArtifact().getVersion())) {
+                    throw newFailure(context);
+                }
             }
         }
         delegate.selectVersion(context);
