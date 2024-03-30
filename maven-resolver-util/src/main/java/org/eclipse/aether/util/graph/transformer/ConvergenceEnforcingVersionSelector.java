@@ -21,6 +21,7 @@ package org.eclipse.aether.util.graph.transformer;
 import java.util.HashSet;
 
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ConflictContext;
@@ -49,18 +50,25 @@ public final class ConvergenceEnforcingVersionSelector extends VersionSelector {
 
     @Override
     public void selectVersion(ConflictContext context) throws RepositoryException {
-        if (enforce) {
+        delegate.selectVersion(context);
+        if (enforce && context.winner.getNode().getVersionConstraint().getRange() == null) {
             HashSet<String> versions = new HashSet<>();
+            String ga = null;
             for (ConflictItem item : context.getItems()) {
-                if (!versions.add(item.getDependency().getArtifact().getVersion())) {
-                    throw newFailure(context);
+                Artifact artifact = item.getDependency().getArtifact();
+                if (ga == null) {
+                    ga = artifact.getGroupId() + ":" + artifact.getArtifactId();
                 }
+                versions.add(artifact.getVersion());
+            }
+            if (versions.size() != 1) {
+                throw newFailure(context, ga, versions);
             }
         }
-        delegate.selectVersion(context);
     }
 
-    private UnsolvableVersionConflictException newFailure(final ConflictContext context) {
+    private UnsolvableVersionConflictException newFailure(
+            ConflictContext context, String ga, HashSet<String> versions) {
         DependencyFilter filter = (node, parents) -> {
             requireNonNull(node, "node cannot be null");
             requireNonNull(parents, "parents cannot be null");
@@ -68,6 +76,7 @@ public final class ConvergenceEnforcingVersionSelector extends VersionSelector {
         };
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
         context.getRoot().accept(new TreeDependencyVisitor(visitor));
-        return new UnsolvableVersionConflictException("convergence", visitor.getPaths());
+        return new UnsolvableVersionConflictException(
+                "Convergence violated for " + ga + ", versions present:" + versions, visitor.getPaths());
     }
 }

@@ -126,7 +126,7 @@ public final class NearestVersionSelector extends VersionSelector {
         };
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
         context.getRoot().accept(new TreeDependencyVisitor(visitor));
-        return new UnsolvableVersionConflictException("nearest", visitor.getPaths());
+        return new UnsolvableVersionConflictException(null, visitor.getPaths());
     }
 
     static final class ConflictGroup {

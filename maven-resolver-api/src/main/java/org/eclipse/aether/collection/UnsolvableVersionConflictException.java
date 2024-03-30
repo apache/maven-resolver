@@ -46,20 +46,21 @@ public class UnsolvableVersionConflictException extends RepositoryException {
      */
     @Deprecated
     public UnsolvableVersionConflictException(Collection<? extends List<? extends DependencyNode>> paths) {
-        this("default", paths);
+        this(null, paths);
     }
 
     /**
      * Creates a new exception with the specified paths to conflicting nodes in the dependency graph.
      *
-     * @param strategy The strategy that throw the bucket in.
+     * @param message The strategy that throw the bucket in.
      * @param paths The paths to the dependency nodes that participate in the version conflict, may be {@code null}.
      *
      * @since 2.0.0
      */
     public UnsolvableVersionConflictException(
-            String strategy, Collection<? extends List<? extends DependencyNode>> paths) {
-        super("Strategy '" + strategy + "' could not resolve version conflict among " + toPaths(paths));
+            String message, Collection<? extends List<? extends DependencyNode>> paths) {
+        super((message == null || message.trim().isEmpty() ? "" : message + "; ")
+                + "Could not resolve version conflict among " + toPaths(paths));
         if (paths == null) {
             this.paths = Collections.emptyList();
             this.versions = Collections.emptyList();
