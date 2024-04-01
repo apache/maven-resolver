@@ -85,6 +85,7 @@ import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
 import org.eclipse.aether.named.providers.LocalSemaphoreNamedLockFactory;
 import org.eclipse.aether.named.providers.NoopNamedLockFactory;
 import org.eclipse.aether.spi.artifact.ArtifactPredicateFactory;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
@@ -741,10 +742,18 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         HashMap<String, DependencyCollectorDelegate> result = new HashMap<>();
         result.put(
                 DfDependencyCollector.NAME,
-                new DfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
+                new DfDependencyCollector(
+                        remoteRepositoryManager,
+                        artifactDescriptorReader,
+                        versionRangeResolver,
+                        getArtifactDecoratorFactories()));
         result.put(
                 BfDependencyCollector.NAME,
-                new BfDependencyCollector(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver));
+                new BfDependencyCollector(
+                        remoteRepositoryManager,
+                        artifactDescriptorReader,
+                        versionRangeResolver,
+                        getArtifactDecoratorFactories()));
         return result;
     }
 
@@ -852,6 +861,21 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected Map<String, ArtifactGeneratorFactory> createArtifactGeneratorFactories() {
+        // by default none, this is extension point
+        return new HashMap<>();
+    }
+
+    private Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories;
+
+    public final Map<String, ArtifactDecoratorFactory> getArtifactDecoratorFactories() {
+        checkClosed();
+        if (artifactDecoratorFactories == null) {
+            artifactDecoratorFactories = createArtifactDecoratorFactories();
+        }
+        return artifactDecoratorFactories;
+    }
+
+    protected Map<String, ArtifactDecoratorFactory> createArtifactDecoratorFactories() {
         // by default none, this is extension point
         return new HashMap<>();
     }
@@ -984,7 +1008,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 getLocalRepositoryProvider(),
                 getSyncContextFactory(),
                 getRemoteRepositoryManager(),
-                getRepositorySystemLifecycle());
+                getRepositorySystemLifecycle(),
+                getArtifactDecoratorFactories());
     }
 
     @Override

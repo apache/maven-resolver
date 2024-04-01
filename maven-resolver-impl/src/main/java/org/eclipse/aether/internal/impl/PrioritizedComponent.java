@@ -18,7 +18,7 @@
  */
 package org.eclipse.aether.internal.impl;
 
-final class PrioritizedComponent<T> implements Comparable<PrioritizedComponent<?>> {
+public final class PrioritizedComponent<T> implements Comparable<PrioritizedComponent<?>> {
 
     private final T component;
 

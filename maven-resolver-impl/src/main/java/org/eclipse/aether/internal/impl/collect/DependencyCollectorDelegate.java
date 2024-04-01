@@ -45,6 +45,9 @@ import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.impl.scope.InternalScopeManager;
+import org.eclipse.aether.internal.impl.PrioritizedComponent;
+import org.eclipse.aether.internal.impl.PrioritizedComponents;
+import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -55,6 +58,8 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.scope.ResolutionScope;
 import org.eclipse.aether.scope.SystemDependencyScope;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecorator;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
@@ -101,14 +106,19 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
     protected final VersionRangeResolver versionRangeResolver;
 
+    protected final Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories;
+
     protected DependencyCollectorDelegate(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
-            VersionRangeResolver versionRangeResolver) {
+            VersionRangeResolver versionRangeResolver,
+            Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories) {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository manager cannot be null");
         this.descriptorReader = requireNonNull(artifactDescriptorReader, "artifact descriptor reader cannot be null");
         this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
+        this.artifactDecoratorFactories =
+                requireNonNull(artifactDecoratorFactories, "artifact decorator factories cannot be null");
     }
 
     @SuppressWarnings("checkstyle:methodlength")
@@ -165,6 +175,9 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
                     descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
                 } else {
                     descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
+                    for (ArtifactDecorator decorator : getArtifactDecorators(session)) {
+                        descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
+                    }
                 }
             } catch (ArtifactDescriptorException e) {
                 result.addException(e);
@@ -470,6 +483,9 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         if (descriptorResult == null) {
             try {
                 descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
+                for (ArtifactDecorator decorator : getArtifactDecorators(session)) {
+                    descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
+                }
                 pool.putDescriptor(key, descriptorResult);
             } catch (ArtifactDescriptorException e) {
                 results.addException(d, e, nodes);
@@ -480,6 +496,19 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             return null;
         }
         return descriptorResult;
+    }
+
+    private List<? extends ArtifactDecorator> getArtifactDecorators(RepositorySystemSession session) {
+        PrioritizedComponents<ArtifactDecoratorFactory> factories =
+                Utils.sortArtifactDecoratorFactories(session, artifactDecoratorFactories);
+        List<ArtifactDecorator> decorators = new ArrayList<>();
+        for (PrioritizedComponent<ArtifactDecoratorFactory> factory : factories.getEnabled()) {
+            ArtifactDecorator decorator = factory.getComponent().newInstance(session);
+            if (decorator != null) {
+                decorators.add(decorator);
+            }
+        }
+        return decorators;
     }
 
     /**

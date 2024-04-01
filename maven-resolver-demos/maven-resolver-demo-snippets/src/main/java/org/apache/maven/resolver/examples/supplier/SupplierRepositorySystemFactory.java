@@ -18,12 +18,18 @@
  */
 package org.apache.maven.resolver.examples.supplier;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.generator.gnupg.GnupgSignatureArtifactGeneratorFactory;
 import org.eclipse.aether.generator.gnupg.loaders.*;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecorator;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
@@ -54,6 +60,31 @@ public class SupplierRepositorySystemFactory {
                 loaders.put(GpgConfLoader.NAME, new GpgConfLoader());
                 loaders.put(GpgAgentPasswordLoader.NAME, new GpgAgentPasswordLoader());
                 return loaders;
+            }
+
+            @Override
+            protected Map<String, ArtifactDecoratorFactory> createArtifactDecoratorFactories() {
+                Map<String, ArtifactDecoratorFactory> result = super.createArtifactDecoratorFactories();
+                result.put("color", new ArtifactDecoratorFactory() {
+                    @Override
+                    public ArtifactDecorator newInstance(RepositorySystemSession session) {
+                        return new ArtifactDecorator() {
+                            @Override
+                            public Artifact decorateArtifact(ArtifactDescriptorResult artifactDescriptorResult) {
+                                Map<String, String> properties = new HashMap<>(
+                                        artifactDescriptorResult.getArtifact().getProperties());
+                                properties.put("color", "red");
+                                return artifactDescriptorResult.getArtifact().setProperties(properties);
+                            }
+                        };
+                    }
+
+                    @Override
+                    public float getPriority() {
+                        return 0;
+                    }
+                });
+                return result;
             }
 
             @Override
