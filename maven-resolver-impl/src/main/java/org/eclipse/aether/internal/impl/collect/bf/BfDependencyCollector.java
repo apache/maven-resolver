@@ -67,7 +67,6 @@ import org.eclipse.aether.internal.impl.collect.DefaultVersionFilterContext;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.PremanagedDependency;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
@@ -467,32 +466,12 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         return isLackingDescriptor(args.session, newArtifact)
                 ? new ArtifactDescriptorResult(descriptorRequest)
                 : resolveCachedArtifactDescriptor(
-                        args.pool, descriptorRequest, args.session, newContext.withDependency(newDependency), results);
-    }
-
-    private ArtifactDescriptorResult resolveCachedArtifactDescriptor(
-            DataPool pool,
-            ArtifactDescriptorRequest descriptorRequest,
-            RepositorySystemSession session,
-            DependencyProcessingContext context,
-            Results results) {
-        Object key = pool.toKey(descriptorRequest);
-        ArtifactDescriptorResult descriptorResult = pool.getDescriptor(key, descriptorRequest);
-        if (descriptorResult == null) {
-            try {
-                descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
-                pool.putDescriptor(key, descriptorResult);
-            } catch (ArtifactDescriptorException e) {
-                results.addException(context.dependency, e, context.parents);
-                pool.putDescriptor(key, e);
-                return null;
-            }
-
-        } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
-            return null;
-        }
-
-        return descriptorResult;
+                        args.pool,
+                        descriptorRequest,
+                        args.session,
+                        newContext.withDependency(newDependency).dependency,
+                        results,
+                        context.parents);
     }
 
     static class ParallelDescriptorResolver implements Closeable {
