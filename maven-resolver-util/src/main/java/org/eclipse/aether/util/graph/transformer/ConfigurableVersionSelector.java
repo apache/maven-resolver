@@ -175,7 +175,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
             default:
                 throw new IllegalStateException("Unknown strategy");
         }
-        if (result && dependencyCompatibilityCheck) {
+        if (dependencyCompatibilityCheck) {
             checkVersionCompatibility(candidate, winner, context);
         }
         return result;
