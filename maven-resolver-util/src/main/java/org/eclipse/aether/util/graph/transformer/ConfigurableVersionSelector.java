@@ -87,6 +87,14 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
     /**
      * Creates a new instance of this version selector.
+     *
+     * @param enforceVersionConvergence If {@code true} this selector will fail if there is dependency
+     *                                  divergence present in graph. Maven3 used {@code false} here.
+     * @param compatibilityStrategy The strategy to use to detected "incompatible versions", may be {@code null}. If not
+     *                              set, this selector will not detect any incompatible versions. Maven3 used
+     *                              {@code null} here.
+     * @param selectionStrategy The winner selection strategy, must not be {@code null}. Maven3
+     *                          used {@link SelectionStrategy#NEARER} strategy.
      */
     public ConfigurableVersionSelector(
             boolean enforceVersionConvergence,
@@ -94,7 +102,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
             SelectionStrategy selectionStrategy) {
         this.enforceVersionConvergence = enforceVersionConvergence;
         this.compatibilityStrategy = compatibilityStrategy;
-        this.selectionStrategy = requireNonNull(selectionStrategy, "strategy");
+        this.selectionStrategy = requireNonNull(selectionStrategy, "selectionStrategy");
     }
 
     @Override
