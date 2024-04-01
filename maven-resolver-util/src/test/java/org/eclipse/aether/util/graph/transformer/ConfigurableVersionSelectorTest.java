@@ -33,13 +33,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  */
 public class ConfigurableVersionSelectorTest extends AbstractDependencyGraphTransformerTest {
-
     @Override
     protected ConflictResolver newTransformer() {
         return new ConflictResolver(
                 new ConfigurableVersionSelector(false, true, ConfigurableVersionSelector.Strategy.NEARER),
-                        new JavaScopeSelector(),
-                new SimpleOptionalitySelector(), new JavaScopeDeriver());
+                new JavaScopeSelector(),
+                new SimpleOptionalitySelector(),
+                new JavaScopeDeriver());
     }
 
     @Override

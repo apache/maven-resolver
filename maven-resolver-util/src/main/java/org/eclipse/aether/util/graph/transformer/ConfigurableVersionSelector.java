@@ -46,7 +46,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 2.0.0
  */
-public final class ConfigurableVersionSelector extends VersionSelector {
+public class ConfigurableVersionSelector extends VersionSelector {
     /**
      * The strategy how "winner" is being selected.
      */
@@ -63,15 +63,15 @@ public final class ConfigurableVersionSelector extends VersionSelector {
     /**
      * If true, this version selector will fail if detects "dependency version divergence" in graph.
      */
-    private final boolean enforceVersionConvergence;
+    protected final boolean enforceVersionConvergence;
     /**
      * If true, this version selector will check for "version compatibility" as well.
      */
-    private final boolean dependencyCompatibilityCheck;
+    protected final boolean dependencyCompatibilityCheck;
     /**
      * The strategy of winner selection.
      */
-    private final Strategy strategy;
+    protected final Strategy strategy;
 
     /**
      * Creates a new instance of this version selector.
@@ -133,7 +133,7 @@ public final class ConfigurableVersionSelector extends VersionSelector {
         }
     }
 
-    private void backtrack(ConflictGroup group, ConflictContext context) throws UnsolvableVersionConflictException {
+    protected void backtrack(ConflictGroup group, ConflictContext context) throws UnsolvableVersionConflictException {
         group.winner = null;
 
         for (Iterator<ConflictItem> it = group.candidates.iterator(); it.hasNext(); ) {
@@ -151,7 +151,7 @@ public final class ConfigurableVersionSelector extends VersionSelector {
         }
     }
 
-    private boolean isAcceptableByConstraints(ConflictGroup group, Version version) {
+    protected boolean isAcceptableByConstraints(ConflictGroup group, Version version) {
         for (VersionConstraint constraint : group.constraints) {
             if (!constraint.containsVersion(version)) {
                 return false;
@@ -160,7 +160,7 @@ public final class ConfigurableVersionSelector extends VersionSelector {
         return true;
     }
 
-    private boolean isBetter(ConflictItem candidate, ConflictItem winner, ConflictContext context)
+    protected boolean isBetter(ConflictItem candidate, ConflictItem winner, ConflictContext context)
             throws UnsolvableVersionConflictException {
         boolean result;
         switch (strategy) {
@@ -179,7 +179,7 @@ public final class ConfigurableVersionSelector extends VersionSelector {
         return result;
     }
 
-    private void checkVersionCompatibility(ConflictItem candidate, ConflictItem winner, ConflictContext context)
+    protected void checkVersionCompatibility(ConflictItem candidate, ConflictItem winner, ConflictContext context)
             throws UnsolvableVersionConflictException {
         String candidateVersion = candidate.getDependency().getArtifact().getVersion();
         String winnerVersion = winner.getDependency().getArtifact().getVersion();
@@ -198,7 +198,7 @@ public final class ConfigurableVersionSelector extends VersionSelector {
         }
     }
 
-    private boolean isNearer(ConflictItem candidate, ConflictItem winner) {
+    protected boolean isNearer(ConflictItem candidate, ConflictItem winner) {
         if (candidate.isSibling(winner)) {
             return candidate.getNode().getVersion().compareTo(winner.getNode().getVersion()) > 0;
         } else {
@@ -206,11 +206,11 @@ public final class ConfigurableVersionSelector extends VersionSelector {
         }
     }
 
-    private boolean isHigherVersion(ConflictItem candidate, ConflictItem winner) {
+    protected boolean isHigherVersion(ConflictItem candidate, ConflictItem winner) {
         return candidate.getNode().getVersion().compareTo(winner.getNode().getVersion()) > 0;
     }
 
-    private UnsolvableVersionConflictException newFailure(String message, ConflictContext context) {
+    protected UnsolvableVersionConflictException newFailure(String message, ConflictContext context) {
         DependencyFilter filter = (node, parents) -> {
             requireNonNull(node, "node cannot be null");
             requireNonNull(parents, "parents cannot be null");
@@ -221,7 +221,7 @@ public final class ConfigurableVersionSelector extends VersionSelector {
         return new UnsolvableVersionConflictException(message, visitor.getPaths());
     }
 
-    static final class ConflictGroup {
+    protected static class ConflictGroup {
 
         final Collection<VersionConstraint> constraints;
 
