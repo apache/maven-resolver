@@ -458,6 +458,32 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         return versions;
     }
 
+    protected ArtifactDescriptorResult resolveCachedArtifactDescriptor(
+            DataPool pool,
+            ArtifactDescriptorRequest descriptorRequest,
+            RepositorySystemSession session,
+            Dependency d,
+            Results results,
+            List<DependencyNode> nodes) {
+        Object key = pool.toKey(descriptorRequest);
+        ArtifactDescriptorResult descriptorResult = pool.getDescriptor(key, descriptorRequest);
+        if (descriptorResult == null) {
+            try {
+                descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
+                pool.putDescriptor(key, descriptorResult);
+            } catch (ArtifactDescriptorException e) {
+                results.addException(d, e, nodes);
+                pool.putDescriptor(key, e);
+                return null;
+            }
+
+        } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
+            return null;
+        }
+
+        return descriptorResult;
+    }
+
     /**
      * Helper class used during collection.
      */

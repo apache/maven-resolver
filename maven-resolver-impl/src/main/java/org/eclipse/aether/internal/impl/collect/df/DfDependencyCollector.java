@@ -48,7 +48,6 @@ import org.eclipse.aether.internal.impl.collect.DefaultVersionFilterContext;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.PremanagedDependency;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
@@ -368,33 +367,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             ArtifactDescriptorRequest descriptorRequest) {
         return noDescriptor
                 ? new ArtifactDescriptorResult(descriptorRequest)
-                : resolveCachedArtifactDescriptor(args.pool, descriptorRequest, args.session, d, results, args);
-    }
-
-    private ArtifactDescriptorResult resolveCachedArtifactDescriptor(
-            DataPool pool,
-            ArtifactDescriptorRequest descriptorRequest,
-            RepositorySystemSession session,
-            Dependency d,
-            Results results,
-            Args args) {
-        Object key = pool.toKey(descriptorRequest);
-        ArtifactDescriptorResult descriptorResult = pool.getDescriptor(key, descriptorRequest);
-        if (descriptorResult == null) {
-            try {
-                descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
-                pool.putDescriptor(key, descriptorResult);
-            } catch (ArtifactDescriptorException e) {
-                results.addException(d, e, args.nodes.nodes);
-                pool.putDescriptor(key, e);
-                return null;
-            }
-
-        } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
-            return null;
-        }
-
-        return descriptorResult;
+                : resolveCachedArtifactDescriptor(
+                        args.pool, descriptorRequest, args.session, d, results, args.nodes.nodes);
     }
 
     static class Args {
