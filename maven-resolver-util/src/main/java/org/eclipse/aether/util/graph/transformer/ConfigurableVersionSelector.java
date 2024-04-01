@@ -19,6 +19,7 @@
 package org.eclipse.aether.util.graph.transformer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -66,7 +67,8 @@ public class ConfigurableVersionSelector extends VersionSelector {
      */
     public interface CompatibilityStrategy {
         /**
-         * This method should determine are versions of two items "compatible" or not.
+         * This method should determine are versions of two items "compatible" or not. This method is invoked whenever
+         * {@code candidate} is "considered" (does not have to be selected as "winner").
          */
         boolean isIncompatibleVersion(ConflictItem candidate, ConflictItem winner)
                 throws UnsolvableVersionConflictException;
@@ -183,13 +185,15 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
             if (!isAcceptableByConstraints(group, candidate.getNode().getVersion())) {
                 it.remove();
-            } else if (group.winner == null || isBetter(candidate, group.winner)) {
+            } else {
                 if (group.winner != null && compatibilityStrategy != null) {
                     if (compatibilityStrategy.isIncompatibleVersion(candidate, group.winner)) {
                         group.incompatibleCandidates.add(candidate);
                     }
                 }
-                group.winner = candidate;
+                if (group.winner == null || isBetter(candidate, group.winner)) {
+                    group.winner = candidate;
+                }
             }
         }
 
@@ -268,6 +272,64 @@ public class ConfigurableVersionSelector extends VersionSelector {
     }
 
     /**
+     * Creates compatibility strategy out of passed in strategies that returns {@code true} when any of passed in
+     * strategy reports incompatibility.
+     */
+    public static CompatibilityStrategy or(CompatibilityStrategy... strategies) {
+        return or(Arrays.asList(strategies));
+    }
+
+    /**
+     * Creates compatibility strategy out of passed in strategies that returns {@code true} when any of passed in
+     * strategy reports incompatibility.
+     */
+    public static CompatibilityStrategy or(Collection<CompatibilityStrategy> strategies) {
+        ArrayList<CompatibilityStrategy> copy = new ArrayList<>(strategies);
+        return new CompatibilityStrategy() {
+            @Override
+            public boolean isIncompatibleVersion(ConflictItem candidate, ConflictItem winner)
+                    throws UnsolvableVersionConflictException {
+                for (CompatibilityStrategy strategy : copy) {
+                    if (strategy.isIncompatibleVersion(candidate, winner)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
+    }
+
+    /**
+     * Creates compatibility strategy out of passed in strategies that returns {@code true} when all of passed in
+     * strategy reports incompatibility.
+     */
+    public static CompatibilityStrategy and(CompatibilityStrategy... strategies) {
+        return and(Arrays.asList(strategies));
+    }
+
+    /**
+     * Creates compatibility strategy out of passed in strategies that returns {@code true} when all of passed in
+     * strategy reports incompatibility.
+     */
+    public static CompatibilityStrategy and(Collection<CompatibilityStrategy> strategies) {
+        ArrayList<CompatibilityStrategy> copy = new ArrayList<>(strategies);
+        return new CompatibilityStrategy() {
+            @Override
+            public boolean isIncompatibleVersion(ConflictItem candidate, ConflictItem winner)
+                    throws UnsolvableVersionConflictException {
+                for (CompatibilityStrategy strategy : copy) {
+                    if (!strategy.isIncompatibleVersion(candidate, winner)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Example compatibility strategy (used in tests and demos), is not recommended to be used in production.
+     * <p>
      * Compatibility strategy that tries to extract "major version" from artifact version string and if it is possible,
      * makes sure they are same.
      */
