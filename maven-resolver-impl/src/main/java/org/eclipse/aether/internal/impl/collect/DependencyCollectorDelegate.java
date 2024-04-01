@@ -476,11 +476,9 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
                 pool.putDescriptor(key, e);
                 return null;
             }
-
         } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
             return null;
         }
-
         return descriptorResult;
     }
 
