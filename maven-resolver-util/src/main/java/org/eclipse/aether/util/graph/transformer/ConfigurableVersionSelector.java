@@ -127,6 +127,11 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
             if (isAcceptableByConstraints(group, node.getVersion())) {
                 group.candidates.add(item);
+                if (group.winner != null && compatibilityStrategy != null) {
+                    if (compatibilityStrategy.isIncompatibleVersion(item, group.winner)) {
+                        group.incompatibleCandidates.add(item);
+                    }
+                }
 
                 if (backtrack) {
                     backtrack(group, context);
@@ -135,11 +140,6 @@ public class ConfigurableVersionSelector extends VersionSelector {
                 }
             } else if (backtrack) {
                 backtrack(group, context);
-            }
-            if (group.winner != null && compatibilityStrategy != null) {
-                if (compatibilityStrategy.isIncompatibleVersion(item, group.winner)) {
-                    group.incompatibleCandidates.add(item);
-                }
             }
         }
         context.setWinner(group.winner);
@@ -153,7 +153,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
                 throw newFailure(
                         "Convergence violated for "
                                 + group.winner.getDependency().getArtifact().getGroupId() + ":"
-                                + group.winner.getDependency().getArtifact().getArtifactId() + ", versions present:"
+                                + group.winner.getDependency().getArtifact().getArtifactId() + ", versions present: "
                                 + versions,
                         context);
             }
@@ -168,14 +168,15 @@ public class ConfigurableVersionSelector extends VersionSelector {
             throw newFailure(
                     "Incompatible versions for "
                             + group.winner.getDependency().getArtifact().getGroupId() + ":"
-                            + group.winner.getDependency().getArtifact().getArtifactId() + ", incompatible versions:"
-                            + incompatibleVersions + " vs " + allVersions,
+                            + group.winner.getDependency().getArtifact().getArtifactId() + ", incompatible versions: "
+                            + incompatibleVersions + ", all versions " + allVersions,
                     context);
         }
     }
 
     protected void backtrack(ConflictGroup group, ConflictContext context) throws UnsolvableVersionConflictException {
         group.winner = null;
+        group.incompatibleCandidates.clear();
 
         for (Iterator<ConflictItem> it = group.candidates.iterator(); it.hasNext(); ) {
             ConflictItem candidate = it.next();
@@ -183,12 +184,12 @@ public class ConfigurableVersionSelector extends VersionSelector {
             if (!isAcceptableByConstraints(group, candidate.getNode().getVersion())) {
                 it.remove();
             } else if (group.winner == null || isBetter(candidate, group.winner)) {
-                group.winner = candidate;
-            }
-            if (group.winner != null && compatibilityStrategy != null) {
-                if (compatibilityStrategy.isIncompatibleVersion(candidate, group.winner)) {
-                    group.incompatibleCandidates.add(candidate);
+                if (group.winner != null && compatibilityStrategy != null) {
+                    if (compatibilityStrategy.isIncompatibleVersion(candidate, group.winner)) {
+                        group.incompatibleCandidates.add(candidate);
+                    }
                 }
+                group.winner = candidate;
             }
         }
 

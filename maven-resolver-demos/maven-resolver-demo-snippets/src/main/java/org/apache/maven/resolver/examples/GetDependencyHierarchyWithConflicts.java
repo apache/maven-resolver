@@ -90,7 +90,7 @@ public class GetDependencyHierarchyWithConflicts {
             if (e.getCause() instanceof UnsolvableVersionConflictException) {
                 String cause = e.getCause().getMessage();
                 if (!cause.contains(
-                        "Incompatible versions for org.apache.maven:maven-core, incompatible versions:[2.0] vs [2.0, 3.0.4]")) {
+                        "Incompatible versions for org.apache.maven:maven-core, incompatible versions: [2.0], all versions [2.0, 3.0.4]")) {
                     throw new IllegalStateException("should fail due incompatible versions");
                 }
             } else {
@@ -134,7 +134,7 @@ public class GetDependencyHierarchyWithConflicts {
             if (e.getCause() instanceof UnsolvableVersionConflictException) {
                 String cause = e.getCause().getMessage();
                 if (!cause.contains(
-                        "Convergence violated for org.apache.maven:maven-core, versions present:[2.0, 3.0.4]")) {
+                        "Convergence violated for org.apache.maven:maven-core, versions present: [2.0, 3.0.4]")) {
                     throw new IllegalStateException("should fail due convergence violation");
                 }
             } else {
