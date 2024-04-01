@@ -43,6 +43,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A configurable version selector for use with {@link ConflictResolver} that resolves version conflicts using a
  * specified strategy. If there is no single node that satisfies all encountered version ranges, the selector will fail.
+ * Based on configuration, this selector may fail for other reasons as well.
  *
  * @since 2.0.0
  */
@@ -65,7 +66,8 @@ public class ConfigurableVersionSelector extends VersionSelector {
      */
     protected final boolean enforceVersionConvergence;
     /**
-     * If true, this version selector will check for "version compatibility" as well.
+     * If true, this version selector will fail if detects "incompatible versions" among candidates. Currently, this
+     * happens only if versions contains dot character, and "major version" can be easily extracted.
      */
     protected final boolean dependencyCompatibilityCheck;
     /**
@@ -179,6 +181,10 @@ public class ConfigurableVersionSelector extends VersionSelector {
         return result;
     }
 
+    /**
+     * Version compatibility check: current code only works if both versions have dot in them, and contents of version
+     * string before the first dot are considered "major" version. They have to be same for both.
+     */
     protected void checkVersionCompatibility(ConflictItem candidate, ConflictItem winner, ConflictContext context)
             throws UnsolvableVersionConflictException {
         String candidateVersion = candidate.getDependency().getArtifact().getVersion();
