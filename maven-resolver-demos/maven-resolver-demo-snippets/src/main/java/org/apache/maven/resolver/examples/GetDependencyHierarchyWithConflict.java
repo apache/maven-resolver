@@ -68,6 +68,7 @@ public class GetDependencyHierarchyWithConflict {
                 throw new IllegalStateException("should fail");
             }
         } catch (DependencyCollectionException e) {
+            e.printStackTrace();
             if (e.getCause() instanceof UnsolvableVersionConflictException) {
                 String cause = e.getCause().getMessage();
                 if (cause.contains(
