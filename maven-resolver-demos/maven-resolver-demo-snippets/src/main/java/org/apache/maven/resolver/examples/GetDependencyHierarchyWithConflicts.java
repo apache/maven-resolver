@@ -61,7 +61,9 @@ public class GetDependencyHierarchyWithConflicts {
                     .setDependencyGraphTransformer(new ChainedDependencyGraphTransformer(
                             new ConflictResolver(
                                     new ConfigurableVersionSelector(
-                                            false, true, ConfigurableVersionSelector.Strategy.NEARER),
+                                            false,
+                                            new ConfigurableVersionSelector.MajorVersion(),
+                                            ConfigurableVersionSelector.SelectionStrategy.NEARER),
                                     new JavaScopeSelector(),
                                     new SimpleOptionalitySelector(),
                                     new JavaScopeDeriver()),
@@ -87,11 +89,12 @@ public class GetDependencyHierarchyWithConflicts {
             e.printStackTrace();
             if (e.getCause() instanceof UnsolvableVersionConflictException) {
                 String cause = e.getCause().getMessage();
-                if (cause.contains("Incompatible versions for org.apache.maven:maven-core, versions:3.0.4 vs 2.0")) {
-                    // good
+                if (!cause.contains(
+                        "Incompatible versions for org.apache.maven:maven-core, incompatible versions:[2.0] vs [2.0, 3.0.4]")) {
+                    throw new IllegalStateException("should fail due incompatible versions");
                 }
             } else {
-                throw new IllegalStateException("should fail due convergence violation");
+                throw new IllegalStateException("should fail due incompatible versions");
             }
         }
 
@@ -104,7 +107,7 @@ public class GetDependencyHierarchyWithConflicts {
                     .setDependencyGraphTransformer(new ChainedDependencyGraphTransformer(
                             new ConflictResolver(
                                     new ConfigurableVersionSelector(
-                                            true, false, ConfigurableVersionSelector.Strategy.NEARER),
+                                            true, null, ConfigurableVersionSelector.SelectionStrategy.NEARER),
                                     new JavaScopeSelector(),
                                     new SimpleOptionalitySelector(),
                                     new JavaScopeDeriver()),
@@ -130,9 +133,9 @@ public class GetDependencyHierarchyWithConflicts {
             e.printStackTrace();
             if (e.getCause() instanceof UnsolvableVersionConflictException) {
                 String cause = e.getCause().getMessage();
-                if (cause.contains(
+                if (!cause.contains(
                         "Convergence violated for org.apache.maven:maven-core, versions present:[2.0, 3.0.4]")) {
-                    // good
+                    throw new IllegalStateException("should fail due convergence violation");
                 }
             } else {
                 throw new IllegalStateException("should fail due convergence violation");

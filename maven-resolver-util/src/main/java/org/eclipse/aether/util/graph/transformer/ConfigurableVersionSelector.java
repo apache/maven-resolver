@@ -51,7 +51,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
     /**
      * The strategy how "winner" is being selected.
      */
-    public enum Strategy {
+    public enum SelectionStrategy {
         /**
          * This is how Maven3 works, chooses "nearer" dependency for winner.
          */
@@ -62,27 +62,39 @@ public class ConfigurableVersionSelector extends VersionSelector {
         HIGHER_VERSION;
     }
     /**
+     * The compatibility check strategy.
+     */
+    public interface CompatibilityStrategy {
+        /**
+         * This method should determine are versions of two items "compatible" or not.
+         */
+        boolean isIncompatibleVersion(ConflictItem candidate, ConflictItem winner)
+                throws UnsolvableVersionConflictException;
+    }
+    /**
      * If true, this version selector will fail if detects "dependency version divergence" in graph.
      */
     protected final boolean enforceVersionConvergence;
     /**
-     * If true, this version selector will fail if detects "incompatible versions" among candidates. Currently, this
-     * happens only if versions contains dot character, and "major version" can be easily extracted.
+     * If set, this version selector will use it to detect "incompatible versions" among candidates. If incompatible
+     * versions reported, this selector will fail.
      */
-    protected final boolean dependencyCompatibilityCheck;
+    protected final CompatibilityStrategy compatibilityStrategy;
     /**
      * The strategy of winner selection.
      */
-    protected final Strategy strategy;
+    protected final SelectionStrategy selectionStrategy;
 
     /**
      * Creates a new instance of this version selector.
      */
     public ConfigurableVersionSelector(
-            boolean enforceVersionConvergence, boolean dependencyCompatibilityCheck, Strategy strategy) {
+            boolean enforceVersionConvergence,
+            CompatibilityStrategy compatibilityStrategy,
+            SelectionStrategy selectionStrategy) {
         this.enforceVersionConvergence = enforceVersionConvergence;
-        this.dependencyCompatibilityCheck = dependencyCompatibilityCheck;
-        this.strategy = requireNonNull(strategy, "strategy");
+        this.compatibilityStrategy = compatibilityStrategy;
+        this.selectionStrategy = requireNonNull(selectionStrategy, "strategy");
     }
 
     @Override
@@ -110,11 +122,16 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
                 if (backtrack) {
                     backtrack(group, context);
-                } else if (group.winner == null || isBetter(item, group.winner, context)) {
+                } else if (group.winner == null || isBetter(item, group.winner)) {
                     group.winner = item;
                 }
             } else if (backtrack) {
                 backtrack(group, context);
+            }
+            if (group.winner != null && compatibilityStrategy != null) {
+                if (compatibilityStrategy.isIncompatibleVersion(item, group.winner)) {
+                    group.incompatibleCandidates.add(item);
+                }
             }
         }
         context.setWinner(group.winner);
@@ -133,6 +150,20 @@ public class ConfigurableVersionSelector extends VersionSelector {
                         context);
             }
         }
+        if (!group.incompatibleCandidates.isEmpty()) {
+            Set<String> allVersions = group.candidates.stream()
+                    .map(c -> c.getDependency().getArtifact().getVersion())
+                    .collect(Collectors.toSet());
+            Set<String> incompatibleVersions = group.incompatibleCandidates.stream()
+                    .map(c -> c.getDependency().getArtifact().getVersion())
+                    .collect(Collectors.toSet());
+            throw newFailure(
+                    "Incompatible versions for "
+                            + group.winner.getDependency().getArtifact().getGroupId() + ":"
+                            + group.winner.getDependency().getArtifact().getArtifactId() + ", incompatible versions:"
+                            + incompatibleVersions + " vs " + allVersions,
+                    context);
+        }
     }
 
     protected void backtrack(ConflictGroup group, ConflictContext context) throws UnsolvableVersionConflictException {
@@ -143,8 +174,13 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
             if (!isAcceptableByConstraints(group, candidate.getNode().getVersion())) {
                 it.remove();
-            } else if (group.winner == null || isBetter(candidate, group.winner, context)) {
+            } else if (group.winner == null || isBetter(candidate, group.winner)) {
                 group.winner = candidate;
+            }
+            if (group.winner != null && compatibilityStrategy != null) {
+                if (compatibilityStrategy.isIncompatibleVersion(candidate, group.winner)) {
+                    group.incompatibleCandidates.add(candidate);
+                }
             }
         }
 
@@ -162,10 +198,9 @@ public class ConfigurableVersionSelector extends VersionSelector {
         return true;
     }
 
-    protected boolean isBetter(ConflictItem candidate, ConflictItem winner, ConflictContext context)
-            throws UnsolvableVersionConflictException {
+    protected boolean isBetter(ConflictItem candidate, ConflictItem winner) {
         boolean result;
-        switch (strategy) {
+        switch (selectionStrategy) {
             case NEARER:
                 result = isNearer(candidate, winner);
                 break;
@@ -175,33 +210,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
             default:
                 throw new IllegalStateException("Unknown strategy");
         }
-        if (dependencyCompatibilityCheck) {
-            checkVersionCompatibility(candidate, winner, context);
-        }
         return result;
-    }
-
-    /**
-     * Version compatibility check: current code only works if both versions have dot in them, and contents of version
-     * string before the first dot are considered "major" version. They have to be same for both.
-     */
-    protected void checkVersionCompatibility(ConflictItem candidate, ConflictItem winner, ConflictContext context)
-            throws UnsolvableVersionConflictException {
-        String candidateVersion = candidate.getDependency().getArtifact().getVersion();
-        String winnerVersion = winner.getDependency().getArtifact().getVersion();
-        // for now a naive check: major versions should be same
-        if (candidateVersion.contains(".") && winnerVersion.contains(".")) {
-            String candidateMajor = candidateVersion.substring(0, candidateVersion.indexOf('.'));
-            String winnerMajor = winnerVersion.substring(0, winnerVersion.indexOf('.'));
-            if (!Objects.equals(candidateMajor, winnerMajor)) {
-                throw newFailure(
-                        "Incompatible versions for "
-                                + winner.getDependency().getArtifact().getGroupId() + ":"
-                                + winner.getDependency().getArtifact().getArtifactId() + ", versions:"
-                                + winnerVersion + " vs " + candidateVersion,
-                        context);
-            }
-        }
     }
 
     protected boolean isNearer(ConflictItem candidate, ConflictItem winner) {
@@ -216,7 +225,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
         return candidate.getNode().getVersion().compareTo(winner.getNode().getVersion()) > 0;
     }
 
-    protected UnsolvableVersionConflictException newFailure(String message, ConflictContext context) {
+    public static UnsolvableVersionConflictException newFailure(String message, ConflictContext context) {
         DependencyFilter filter = (node, parents) -> {
             requireNonNull(node, "node cannot be null");
             requireNonNull(parents, "parents cannot be null");
@@ -233,16 +242,38 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
         final Collection<ConflictItem> candidates;
 
+        final Collection<ConflictItem> incompatibleCandidates;
+
         ConflictItem winner;
 
         ConflictGroup() {
             constraints = new HashSet<>();
             candidates = new ArrayList<>(64);
+            incompatibleCandidates = new ArrayList<>();
         }
 
         @Override
         public String toString() {
             return String.valueOf(winner);
+        }
+    }
+
+    /**
+     * Compatibility strategy that tries to extract "major version" from artifact version string and if it is possible,
+     * makes sure they are same.
+     */
+    public static class MajorVersion implements CompatibilityStrategy {
+        @Override
+        public boolean isIncompatibleVersion(ConflictItem candidate, ConflictItem winner) {
+            String candidateVersion = candidate.getDependency().getArtifact().getVersion();
+            String winnerVersion = winner.getDependency().getArtifact().getVersion();
+            // for now a naive check: major versions should be same
+            if (candidateVersion.contains(".") && winnerVersion.contains(".")) {
+                String candidateMajor = candidateVersion.substring(0, candidateVersion.indexOf('.'));
+                String winnerMajor = winnerVersion.substring(0, winnerVersion.indexOf('.'));
+                return !Objects.equals(candidateMajor, winnerMajor);
+            }
+            return false; // cannot determine, so just leave it
         }
     }
 }
