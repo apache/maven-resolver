@@ -130,7 +130,8 @@ public class GetDependencyHierarchyWithConflicts {
             e.printStackTrace();
             if (e.getCause() instanceof UnsolvableVersionConflictException) {
                 String cause = e.getCause().getMessage();
-                if (cause.contains("Convergence violated for org.apache.maven:maven-core, versions present:[2.0, 3.0.4]")) {
+                if (cause.contains(
+                        "Convergence violated for org.apache.maven:maven-core, versions present:[2.0, 3.0.4]")) {
                     // good
                 }
             } else {
