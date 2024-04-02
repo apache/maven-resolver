@@ -87,16 +87,16 @@ public final class FileLockNamedLock extends NamedLockSupport {
 
     @Override
     protected boolean doLockShared(final long time, final TimeUnit unit) throws InterruptedException {
-        return retry(time, unit, RETRY_SLEEP_MILLIS, this::doLockShared, null, false);
+        return retry(time, unit, RETRY_SLEEP_MILLIS, () -> doLockSharedPerform(time, unit), null, false);
     }
 
     @Override
     protected boolean doLockExclusively(final long time, final TimeUnit unit) throws InterruptedException {
-        return retry(time, unit, RETRY_SLEEP_MILLIS, this::doLockExclusively, null, false);
+        return retry(time, unit, RETRY_SLEEP_MILLIS, () -> doLockExclusivelyPerform(time, unit), null, false);
     }
 
-    private Boolean doLockShared() {
-        if (criticalRegion.tryLock()) {
+    private Boolean doLockSharedPerform(final long time, final TimeUnit unit) throws InterruptedException {
+        if (criticalRegion.tryLock(time, unit)) {
             try {
                 Deque<Boolean> steps = threadSteps.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>());
                 FileLock obtainedLock = fileLockRef.get();
@@ -130,8 +130,8 @@ public final class FileLockNamedLock extends NamedLockSupport {
         return null;
     }
 
-    private Boolean doLockExclusively() {
-        if (criticalRegion.tryLock()) {
+    private Boolean doLockExclusivelyPerform(final long time, final TimeUnit unit) throws InterruptedException {
+        if (criticalRegion.tryLock(time, unit)) {
             try {
                 Deque<Boolean> steps = threadSteps.computeIfAbsent(Thread.currentThread(), k -> new ArrayDeque<>());
                 FileLock obtainedLock = fileLockRef.get();
