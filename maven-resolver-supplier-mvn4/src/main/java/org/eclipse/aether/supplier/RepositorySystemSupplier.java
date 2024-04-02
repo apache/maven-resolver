@@ -26,7 +26,15 @@ import java.util.function.Supplier;
 
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
-import org.apache.maven.repository.internal.*;
+import org.apache.maven.repository.internal.DefaultArtifactDescriptorReader;
+import org.apache.maven.repository.internal.DefaultModelCacheFactory;
+import org.apache.maven.repository.internal.DefaultVersionRangeResolver;
+import org.apache.maven.repository.internal.DefaultVersionResolver;
+import org.apache.maven.repository.internal.MavenArtifactRelocationSource;
+import org.apache.maven.repository.internal.ModelCacheFactory;
+import org.apache.maven.repository.internal.PluginsMetadataGeneratorFactory;
+import org.apache.maven.repository.internal.SnapshotMetadataGeneratorFactory;
+import org.apache.maven.repository.internal.VersionsMetadataGeneratorFactory;
 import org.apache.maven.repository.internal.relocation.DistributionManagementArtifactRelocationSource;
 import org.apache.maven.repository.internal.relocation.UserPropertiesArtifactRelocationSource;
 import org.eclipse.aether.RepositoryListener;
@@ -50,7 +58,34 @@ import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.impl.VersionResolver;
-import org.eclipse.aether.internal.impl.*;
+import org.eclipse.aether.internal.impl.DefaultArtifactPredicateFactory;
+import org.eclipse.aether.internal.impl.DefaultArtifactResolver;
+import org.eclipse.aether.internal.impl.DefaultChecksumPolicyProvider;
+import org.eclipse.aether.internal.impl.DefaultChecksumProcessor;
+import org.eclipse.aether.internal.impl.DefaultDeployer;
+import org.eclipse.aether.internal.impl.DefaultInstaller;
+import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
+import org.eclipse.aether.internal.impl.DefaultLocalPathPrefixComposerFactory;
+import org.eclipse.aether.internal.impl.DefaultLocalRepositoryProvider;
+import org.eclipse.aether.internal.impl.DefaultMetadataResolver;
+import org.eclipse.aether.internal.impl.DefaultOfflineController;
+import org.eclipse.aether.internal.impl.DefaultPathProcessor;
+import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
+import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
+import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
+import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
+import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
+import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
+import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
+import org.eclipse.aether.internal.impl.DefaultTransporterProvider;
+import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
+import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
+import org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory;
+import org.eclipse.aether.internal.impl.LocalPathComposer;
+import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
+import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
+import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
+import org.eclipse.aether.internal.impl.TrackingFileManager;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
@@ -107,7 +142,7 @@ import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.VersionScheme;
 
 /**
- * A simple memorizing {@link Supplier} of {@link org.eclipse.aether.RepositorySystem} instance, that on first call
+ * A simple memorizing {@link Supplier} of {@link RepositorySystem} instance, that on first call
  * supplies lazily constructed instance, and on each subsequent call same instance. Hence, this instance should be
  * thrown away immediately once repository system was created and there is no need for more instances. If new
  * repository system instance needed, new instance of this class must be created. For proper shut down of returned
@@ -127,7 +162,7 @@ import org.eclipse.aether.version.VersionScheme;
  * their lifecycle is shared as well: once supplied repository system is shut-down, this instance becomes closed as
  * well. Any subsequent {@code getXXX} method invocation attempt will fail with {@link IllegalStateException}.
  *
- * @since 1.9.15
+ * @since 2.0.0
  */
 public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     private final AtomicBoolean closed = new AtomicBoolean(false);
