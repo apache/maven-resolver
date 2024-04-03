@@ -67,16 +67,12 @@ public class ConfigurableVersionSelector extends VersionSelector {
          * This method should determine are candidate version acceptable or not. This method is invoked whenever
          * {@code candidate} is "considered" (does not have to be selected as "winner").
          */
-        boolean isAcceptableVersion(ConflictItem candidate, ConflictItem winner);
+        boolean isBetter(ConflictItem candidate, ConflictItem winner);
         /**
          * Method invoked at version selection end, just before version selector returns. Note: {@code winner} may
          * be {@code null}, while the rest of parameters cannot.
          */
-        void atSelectVersionEnd(
-                ConflictItem winner,
-                Collection<ConflictItem> candidates,
-                Collection<ConflictItem> notAcceptedCandidates,
-                ConflictContext context)
+        ConflictItem selectWinner(ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
                 throws UnsolvableVersionConflictException;
     }
     /**
@@ -113,8 +109,8 @@ public class ConfigurableVersionSelector extends VersionSelector {
     @Override
     public void selectVersion(ConflictContext context) throws RepositoryException {
         ConflictGroup group = new ConflictGroup();
-        for (ConflictItem item : context.getItems()) {
-            DependencyNode node = item.getNode();
+        for (ConflictItem candidate : context.getItems()) {
+            DependencyNode node = candidate.getNode();
             VersionConstraint constraint = node.getVersionConstraint();
 
             boolean backtrack = false;
@@ -131,46 +127,34 @@ public class ConfigurableVersionSelector extends VersionSelector {
             }
 
             if (isAcceptableByConstraints(group, node.getVersion())) {
-                group.candidates.add(item);
-                if (group.winner != null && acceptanceStrategy != null) {
-                    if (!acceptanceStrategy.isAcceptableVersion(item, group.winner)) {
-                        group.notAcceptedCandidates.add(item);
-                    }
-                }
+                group.candidates.add(candidate);
 
                 if (backtrack) {
                     backtrack(group, context);
-                } else if (group.winner == null || selectionStrategy.isBetter(item, group.winner)) {
-                    group.winner = item;
+                } else if (group.winner == null || isBetter(candidate, group.winner)) {
+                    group.winner = candidate;
                 }
             } else if (backtrack) {
                 backtrack(group, context);
             }
         }
-        context.setWinner(group.winner);
         if (acceptanceStrategy != null) {
-            acceptanceStrategy.atSelectVersionEnd(group.winner, group.candidates, group.notAcceptedCandidates, context);
+            context.setWinner(acceptanceStrategy.selectWinner(group.winner, group.candidates, context));
+        } else {
+            context.setWinner(group.winner);
         }
     }
 
     protected void backtrack(ConflictGroup group, ConflictContext context) throws UnsolvableVersionConflictException {
         group.winner = null;
-        group.notAcceptedCandidates.clear();
 
         for (Iterator<ConflictItem> it = group.candidates.iterator(); it.hasNext(); ) {
             ConflictItem candidate = it.next();
 
             if (!isAcceptableByConstraints(group, candidate.getNode().getVersion())) {
                 it.remove();
-            } else {
-                if (group.winner != null && acceptanceStrategy != null) {
-                    if (!acceptanceStrategy.isAcceptableVersion(candidate, group.winner)) {
-                        group.notAcceptedCandidates.add(candidate);
-                    }
-                }
-                if (group.winner == null || selectionStrategy.isBetter(candidate, group.winner)) {
-                    group.winner = candidate;
-                }
+            } else if (group.winner == null || isBetter(candidate, group.winner)) {
+                group.winner = candidate;
             }
         }
 
@@ -186,6 +170,14 @@ public class ConfigurableVersionSelector extends VersionSelector {
             }
         }
         return true;
+    }
+
+    protected boolean isBetter(ConflictItem candidate, ConflictItem winner) {
+        if (acceptanceStrategy != null) {
+            return selectionStrategy.isBetter(candidate, winner) && acceptanceStrategy.isBetter(candidate, winner);
+        } else {
+            return selectionStrategy.isBetter(candidate, winner);
+        }
     }
 
     public static UnsolvableVersionConflictException newFailure(String message, ConflictContext context) {
@@ -205,14 +197,11 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
         final Collection<ConflictItem> candidates;
 
-        final Collection<ConflictItem> notAcceptedCandidates;
-
         ConflictItem winner;
 
         ConflictGroup() {
             constraints = new HashSet<>();
             candidates = new ArrayList<>(64);
-            notAcceptedCandidates = new ArrayList<>();
         }
 
         @Override
@@ -258,21 +247,17 @@ public class ConfigurableVersionSelector extends VersionSelector {
      */
     public static class VersionConvergence implements AcceptanceStrategy {
         @Override
-        public boolean isAcceptableVersion(ConflictItem candidate, ConflictItem winner) {
+        public boolean isBetter(ConflictItem candidate, ConflictItem winner) {
             return Objects.equals(
                     candidate.getDependency().getArtifact().getVersion(),
                     winner.getDependency().getArtifact().getVersion());
         }
 
         @Override
-        public void atSelectVersionEnd(
-                ConflictItem winner,
-                Collection<ConflictItem> candidates,
-                Collection<ConflictItem> notAcceptedCandidates,
-                ConflictContext context)
+        public ConflictItem selectWinner(
+                ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
                 throws UnsolvableVersionConflictException {
-            if (context.winner != null
-                    && context.winner.getNode().getVersionConstraint().getRange() == null) {
+            if (winner != null && winner.getNode().getVersionConstraint().getRange() == null) {
                 Set<String> versions = candidates.stream()
                         .map(c -> c.getDependency().getArtifact().getVersion())
                         .collect(Collectors.toSet());
@@ -285,6 +270,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
                             context);
                 }
             }
+            return winner;
         }
     }
 
@@ -296,7 +282,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
      */
     public static class MajorVersion implements AcceptanceStrategy {
         @Override
-        public boolean isAcceptableVersion(ConflictItem candidate, ConflictItem winner) {
+        public boolean isBetter(ConflictItem candidate, ConflictItem winner) {
             String candidateVersion = candidate.getDependency().getArtifact().getVersion();
             String winnerVersion = winner.getDependency().getArtifact().getVersion();
             // for now a naive check: major versions should be same
@@ -309,26 +295,27 @@ public class ConfigurableVersionSelector extends VersionSelector {
         }
 
         @Override
-        public void atSelectVersionEnd(
-                ConflictItem winner,
-                Collection<ConflictItem> candidates,
-                Collection<ConflictItem> notAcceptedCandidates,
-                ConflictContext context)
+        public ConflictItem selectWinner(
+                ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
                 throws UnsolvableVersionConflictException {
-            if (winner != null && !notAcceptedCandidates.isEmpty()) {
+            if (winner != null && !candidates.isEmpty()) {
                 Set<String> allVersions = candidates.stream()
                         .map(c -> c.getDependency().getArtifact().getVersion())
                         .collect(Collectors.toSet());
-                Set<String> incompatibleVersions = notAcceptedCandidates.stream()
+                Set<String> incompatibleVersions = candidates.stream()
+                        .filter(c -> !isBetter(c, winner))
                         .map(c -> c.getDependency().getArtifact().getVersion())
                         .collect(Collectors.toSet());
-                throw newFailure(
-                        "Incompatible versions for "
-                                + winner.getDependency().getArtifact().getGroupId() + ":"
-                                + winner.getDependency().getArtifact().getArtifactId() + ", incompatible versions: "
-                                + incompatibleVersions + ", all versions " + allVersions,
-                        context);
+                if (!incompatibleVersions.isEmpty()) {
+                    throw newFailure(
+                            "Incompatible versions for "
+                                    + winner.getDependency().getArtifact().getGroupId() + ":"
+                                    + winner.getDependency().getArtifact().getArtifactId() + ", incompatible versions: "
+                                    + incompatibleVersions + ", all versions " + allVersions,
+                            context);
+                }
             }
+            return winner;
         }
     }
 }
