@@ -18,6 +18,8 @@
  */
 package org.apache.maven.resolver.examples;
 
+import java.util.Arrays;
+
 import org.apache.maven.resolver.examples.util.Booter;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
@@ -30,6 +32,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 
 /**
  * Visualizes the transitive dependencies of an artifact similar to m2e's dependency hierarchy view.
@@ -65,7 +68,7 @@ public class GetDependencyHierarchy {
 
                 CollectResult collectResult = system.collectDependencies(session, collectRequest);
 
-                collectResult.getRoot().accept(Booter.DUMPER_SOUT);
+                collectResult.getRoot().accept(new DependencyGraphDumper(System.out::println, Arrays.asList("color")));
             }
         }
     }

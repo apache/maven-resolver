@@ -30,8 +30,10 @@ import org.eclipse.aether.util.ConfigUtils;
 
 /**
  * Helps to sort pluggable components by their priority.
+ *
+ * @param <T> The component type.
  */
-final class PrioritizedComponents<T> {
+public final class PrioritizedComponents<T> {
     /**
      * Reuses or creates and stores (if session data does not contain yet) prioritized components under this key into
      * given session. Same session is used to configure prioritized components.

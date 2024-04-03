@@ -19,12 +19,15 @@
 package org.eclipse.aether.util.graph.visitor;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
@@ -47,10 +50,25 @@ public class DependencyGraphDumper implements DependencyVisitor {
 
     private final Consumer<String> consumer;
 
+    private final Collection<String> properties;
+
     private final Deque<DependencyNode> nodes = new ArrayDeque<>();
 
+    /**
+     * Creates instance with given consumer.
+     */
     public DependencyGraphDumper(Consumer<String> consumer) {
+        this(consumer, Collections.emptyList());
+    }
+
+    /**
+     * Creates instance with given consumer and properties (to print out).
+     *
+     * @since 2.0.0
+     */
+    public DependencyGraphDumper(Consumer<String> consumer, Collection<String> properties) {
         this.consumer = requireNonNull(consumer);
+        this.properties = new ArrayList<>(properties);
     }
 
     @Override
@@ -150,6 +168,15 @@ public class DependencyGraphDumper implements DependencyVisitor {
                     buffer.append(w);
                 }
                 buffer.append(")");
+            }
+        }
+
+        if (!properties.isEmpty() && node.getDependency() != null) {
+            String props = properties.stream()
+                    .map(p -> p + "=" + node.getDependency().getArtifact().getProperty(p, "n/a"))
+                    .collect(Collectors.joining(","));
+            if (!props.isEmpty()) {
+                buffer.append(" (").append(props).append(")");
             }
         }
         return buffer.toString();
