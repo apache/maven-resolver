@@ -45,8 +45,6 @@ import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
 import org.eclipse.aether.impl.scope.InternalScopeManager;
-import org.eclipse.aether.internal.impl.PrioritizedComponent;
-import org.eclipse.aether.internal.impl.PrioritizedComponents;
 import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -175,7 +173,8 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
                     descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
                 } else {
                     descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
-                    for (ArtifactDecorator decorator : getArtifactDecorators(session)) {
+                    for (ArtifactDecorator decorator :
+                            Utils.getArtifactDecorators(session, artifactDecoratorFactories)) {
                         descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
                     }
                 }
@@ -483,7 +482,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         if (descriptorResult == null) {
             try {
                 descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
-                for (ArtifactDecorator decorator : getArtifactDecorators(session)) {
+                for (ArtifactDecorator decorator : Utils.getArtifactDecorators(session, artifactDecoratorFactories)) {
                     descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
                 }
                 pool.putDescriptor(key, descriptorResult);
@@ -496,19 +495,6 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             return null;
         }
         return descriptorResult;
-    }
-
-    private List<? extends ArtifactDecorator> getArtifactDecorators(RepositorySystemSession session) {
-        PrioritizedComponents<ArtifactDecoratorFactory> factories =
-                Utils.sortArtifactDecoratorFactories(session, artifactDecoratorFactories);
-        List<ArtifactDecorator> decorators = new ArrayList<>();
-        for (PrioritizedComponent<ArtifactDecoratorFactory> factory : factories.getEnabled()) {
-            ArtifactDecorator decorator = factory.getComponent().newInstance(session);
-            if (decorator != null) {
-                decorators.add(decorator);
-            }
-        }
-        return decorators;
     }
 
     /**
