@@ -157,9 +157,7 @@ public final class ScopeManagerImpl implements InternalScopeManager {
     public DependencyGraphTransformer getDependencyGraphTransformer(ResolutionScope resolutionScope) {
         return new ChainedDependencyGraphTransformer(
                 new ConflictResolver(
-                        new ConfigurableVersionSelector(
-                                        false, null, ConfigurableVersionSelector.SelectionStrategy.NEARER),
-                                new ManagedScopeSelector(this),
+                        new ConfigurableVersionSelector(), new ManagedScopeSelector(this),
                         new SimpleOptionalitySelector(), new ManagedScopeDeriver(this)),
                 new ManagedDependencyContextRefiner(this));
     }

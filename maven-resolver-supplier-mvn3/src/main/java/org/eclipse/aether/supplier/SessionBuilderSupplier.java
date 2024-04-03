@@ -96,9 +96,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected DependencyGraphTransformer getDependencyGraphTransformer() {
         return new ChainedDependencyGraphTransformer(
                 new ConflictResolver(
-                        new ConfigurableVersionSelector(
-                                        false, null, ConfigurableVersionSelector.SelectionStrategy.NEARER),
-                                new JavaScopeSelector(),
+                        new ConfigurableVersionSelector(), new JavaScopeSelector(),
                         new SimpleOptionalitySelector(), new JavaScopeDeriver()),
                 new JavaDependencyContextRefiner());
     }

@@ -19,7 +19,6 @@
 package org.eclipse.aether.util.graph.transformer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -63,47 +62,53 @@ public class ConfigurableVersionSelector extends VersionSelector {
         HIGHER_VERSION;
     }
     /**
-     * The compatibility check strategy.
+     * The strategy of version acceptance check.
      */
-    public interface CompatibilityStrategy {
+    public interface AcceptanceStrategy {
         /**
-         * This method should determine are versions of two items "compatible" or not. This method is invoked whenever
+         * This method should determine are candidate version acceptable or not. This method is invoked whenever
          * {@code candidate} is "considered" (does not have to be selected as "winner").
          */
-        boolean isIncompatibleVersion(ConflictItem candidate, ConflictItem winner)
+        boolean isAcceptableVersion(ConflictItem candidate, ConflictItem winner);
+        /**
+         * Method invoked at version selection end, just before version selector returns. Note: {@code winner} may
+         * be {@code null}, while the rest of parameters cannot.
+         */
+        void atSelectVersionEnd(
+                ConflictItem winner,
+                Collection<ConflictItem> candidates,
+                Collection<ConflictItem> notAcceptedCandidates,
+                ConflictContext context)
                 throws UnsolvableVersionConflictException;
     }
-    /**
-     * If true, this version selector will fail if detects "dependency version divergence" in graph.
-     */
-    protected final boolean enforceVersionConvergence;
     /**
      * If set, this version selector will use it to detect "incompatible versions" among candidates. If incompatible
      * versions reported, this selector will fail.
      */
-    protected final CompatibilityStrategy compatibilityStrategy;
+    protected final AcceptanceStrategy acceptanceStrategy;
     /**
      * The strategy of winner selection.
      */
     protected final SelectionStrategy selectionStrategy;
 
     /**
+     * Creates a new instance of this version selector that works "as Maven did so far".
+     */
+    public ConfigurableVersionSelector() {
+        this(null, SelectionStrategy.NEARER);
+    }
+
+    /**
      * Creates a new instance of this version selector.
      *
-     * @param enforceVersionConvergence If {@code true} this selector will fail if there is dependency
-     *                                  divergence present in graph. Maven3 used {@code false} here.
-     * @param compatibilityStrategy The strategy to use to detected "incompatible versions", may be {@code null}. If not
-     *                              set, this selector will not detect any incompatible versions. Maven3 used
+     * @param acceptanceStrategy The strategy to use for "version acceptance" checks, may be {@code null}. If not
+     *                              set, this selector will not detect any non-acceptable versions. Maven3 used
      *                              {@code null} here.
      * @param selectionStrategy The winner selection strategy, must not be {@code null}. Maven3
      *                          used {@link SelectionStrategy#NEARER} strategy.
      */
-    public ConfigurableVersionSelector(
-            boolean enforceVersionConvergence,
-            CompatibilityStrategy compatibilityStrategy,
-            SelectionStrategy selectionStrategy) {
-        this.enforceVersionConvergence = enforceVersionConvergence;
-        this.compatibilityStrategy = compatibilityStrategy;
+    public ConfigurableVersionSelector(AcceptanceStrategy acceptanceStrategy, SelectionStrategy selectionStrategy) {
+        this.acceptanceStrategy = acceptanceStrategy;
         this.selectionStrategy = requireNonNull(selectionStrategy, "selectionStrategy");
     }
 
@@ -129,9 +134,9 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
             if (isAcceptableByConstraints(group, node.getVersion())) {
                 group.candidates.add(item);
-                if (group.winner != null && compatibilityStrategy != null) {
-                    if (compatibilityStrategy.isIncompatibleVersion(item, group.winner)) {
-                        group.incompatibleCandidates.add(item);
+                if (group.winner != null && acceptanceStrategy != null) {
+                    if (!acceptanceStrategy.isAcceptableVersion(item, group.winner)) {
+                        group.notAcceptedCandidates.add(item);
                     }
                 }
 
@@ -145,40 +150,14 @@ public class ConfigurableVersionSelector extends VersionSelector {
             }
         }
         context.setWinner(group.winner);
-        if (enforceVersionConvergence
-                && context.winner != null
-                && context.winner.getNode().getVersionConstraint().getRange() == null) {
-            Set<String> versions = group.candidates.stream()
-                    .map(c -> c.getDependency().getArtifact().getVersion())
-                    .collect(Collectors.toSet());
-            if (versions.size() > 1) {
-                throw newFailure(
-                        "Convergence violated for "
-                                + group.winner.getDependency().getArtifact().getGroupId() + ":"
-                                + group.winner.getDependency().getArtifact().getArtifactId() + ", versions present: "
-                                + versions,
-                        context);
-            }
-        }
-        if (!group.incompatibleCandidates.isEmpty()) {
-            Set<String> allVersions = group.candidates.stream()
-                    .map(c -> c.getDependency().getArtifact().getVersion())
-                    .collect(Collectors.toSet());
-            Set<String> incompatibleVersions = group.incompatibleCandidates.stream()
-                    .map(c -> c.getDependency().getArtifact().getVersion())
-                    .collect(Collectors.toSet());
-            throw newFailure(
-                    "Incompatible versions for "
-                            + group.winner.getDependency().getArtifact().getGroupId() + ":"
-                            + group.winner.getDependency().getArtifact().getArtifactId() + ", incompatible versions: "
-                            + incompatibleVersions + ", all versions " + allVersions,
-                    context);
+        if (acceptanceStrategy != null) {
+            acceptanceStrategy.atSelectVersionEnd(group.winner, group.candidates, group.notAcceptedCandidates, context);
         }
     }
 
     protected void backtrack(ConflictGroup group, ConflictContext context) throws UnsolvableVersionConflictException {
         group.winner = null;
-        group.incompatibleCandidates.clear();
+        group.notAcceptedCandidates.clear();
 
         for (Iterator<ConflictItem> it = group.candidates.iterator(); it.hasNext(); ) {
             ConflictItem candidate = it.next();
@@ -186,9 +165,9 @@ public class ConfigurableVersionSelector extends VersionSelector {
             if (!isAcceptableByConstraints(group, candidate.getNode().getVersion())) {
                 it.remove();
             } else {
-                if (group.winner != null && compatibilityStrategy != null) {
-                    if (compatibilityStrategy.isIncompatibleVersion(candidate, group.winner)) {
-                        group.incompatibleCandidates.add(candidate);
+                if (group.winner != null && acceptanceStrategy != null) {
+                    if (!acceptanceStrategy.isAcceptableVersion(candidate, group.winner)) {
+                        group.notAcceptedCandidates.add(candidate);
                     }
                 }
                 if (group.winner == null || isBetter(candidate, group.winner)) {
@@ -255,14 +234,14 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
         final Collection<ConflictItem> candidates;
 
-        final Collection<ConflictItem> incompatibleCandidates;
+        final Collection<ConflictItem> notAcceptedCandidates;
 
         ConflictItem winner;
 
         ConflictGroup() {
             constraints = new HashSet<>();
             candidates = new ArrayList<>(64);
-            incompatibleCandidates = new ArrayList<>();
+            notAcceptedCandidates = new ArrayList<>();
         }
 
         @Override
@@ -272,59 +251,40 @@ public class ConfigurableVersionSelector extends VersionSelector {
     }
 
     /**
-     * Creates compatibility strategy out of passed in strategies that returns {@code true} when any of passed in
-     * strategy reports incompatibility.
+     * Example compatibility strategy (used in tests and demos), is not recommended to be used in production.
+     * <p>
+     * Compatibility strategy that enforces dependency convergence.
      */
-    public static CompatibilityStrategy or(CompatibilityStrategy... strategies) {
-        return or(Arrays.asList(strategies));
-    }
+    public static class VersionConvergence implements AcceptanceStrategy {
+        @Override
+        public boolean isAcceptableVersion(ConflictItem candidate, ConflictItem winner) {
+            return Objects.equals(
+                    candidate.getDependency().getArtifact().getVersion(),
+                    winner.getDependency().getArtifact().getVersion());
+        }
 
-    /**
-     * Creates compatibility strategy out of passed in strategies that returns {@code true} when any of passed in
-     * strategy reports incompatibility.
-     */
-    public static CompatibilityStrategy or(Collection<CompatibilityStrategy> strategies) {
-        ArrayList<CompatibilityStrategy> copy = new ArrayList<>(strategies);
-        return new CompatibilityStrategy() {
-            @Override
-            public boolean isIncompatibleVersion(ConflictItem candidate, ConflictItem winner)
-                    throws UnsolvableVersionConflictException {
-                for (CompatibilityStrategy strategy : copy) {
-                    if (strategy.isIncompatibleVersion(candidate, winner)) {
-                        return true;
-                    }
+        @Override
+        public void atSelectVersionEnd(
+                ConflictItem winner,
+                Collection<ConflictItem> candidates,
+                Collection<ConflictItem> notAcceptedCandidates,
+                ConflictContext context)
+                throws UnsolvableVersionConflictException {
+            if (context.winner != null
+                    && context.winner.getNode().getVersionConstraint().getRange() == null) {
+                Set<String> versions = candidates.stream()
+                        .map(c -> c.getDependency().getArtifact().getVersion())
+                        .collect(Collectors.toSet());
+                if (versions.size() > 1) {
+                    throw newFailure(
+                            "Convergence violated for "
+                                    + winner.getDependency().getArtifact().getGroupId() + ":"
+                                    + winner.getDependency().getArtifact().getArtifactId() + ", versions present: "
+                                    + versions,
+                            context);
                 }
-                return false;
             }
-        };
-    }
-
-    /**
-     * Creates compatibility strategy out of passed in strategies that returns {@code true} when all of passed in
-     * strategy reports incompatibility.
-     */
-    public static CompatibilityStrategy and(CompatibilityStrategy... strategies) {
-        return and(Arrays.asList(strategies));
-    }
-
-    /**
-     * Creates compatibility strategy out of passed in strategies that returns {@code true} when all of passed in
-     * strategy reports incompatibility.
-     */
-    public static CompatibilityStrategy and(Collection<CompatibilityStrategy> strategies) {
-        ArrayList<CompatibilityStrategy> copy = new ArrayList<>(strategies);
-        return new CompatibilityStrategy() {
-            @Override
-            public boolean isIncompatibleVersion(ConflictItem candidate, ConflictItem winner)
-                    throws UnsolvableVersionConflictException {
-                for (CompatibilityStrategy strategy : copy) {
-                    if (!strategy.isIncompatibleVersion(candidate, winner)) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        };
+        }
     }
 
     /**
@@ -333,18 +293,41 @@ public class ConfigurableVersionSelector extends VersionSelector {
      * Compatibility strategy that tries to extract "major version" from artifact version string and if it is possible,
      * makes sure they are same.
      */
-    public static class MajorVersion implements CompatibilityStrategy {
+    public static class MajorVersion implements AcceptanceStrategy {
         @Override
-        public boolean isIncompatibleVersion(ConflictItem candidate, ConflictItem winner) {
+        public boolean isAcceptableVersion(ConflictItem candidate, ConflictItem winner) {
             String candidateVersion = candidate.getDependency().getArtifact().getVersion();
             String winnerVersion = winner.getDependency().getArtifact().getVersion();
             // for now a naive check: major versions should be same
             if (candidateVersion.contains(".") && winnerVersion.contains(".")) {
                 String candidateMajor = candidateVersion.substring(0, candidateVersion.indexOf('.'));
                 String winnerMajor = winnerVersion.substring(0, winnerVersion.indexOf('.'));
-                return !Objects.equals(candidateMajor, winnerMajor);
+                return Objects.equals(candidateMajor, winnerMajor);
             }
-            return false; // cannot determine, so just leave it
+            return true; // cannot determine, so just leave it
+        }
+
+        @Override
+        public void atSelectVersionEnd(
+                ConflictItem winner,
+                Collection<ConflictItem> candidates,
+                Collection<ConflictItem> notAcceptedCandidates,
+                ConflictContext context)
+                throws UnsolvableVersionConflictException {
+            if (winner != null && !notAcceptedCandidates.isEmpty()) {
+                Set<String> allVersions = candidates.stream()
+                        .map(c -> c.getDependency().getArtifact().getVersion())
+                        .collect(Collectors.toSet());
+                Set<String> incompatibleVersions = notAcceptedCandidates.stream()
+                        .map(c -> c.getDependency().getArtifact().getVersion())
+                        .collect(Collectors.toSet());
+                throw newFailure(
+                        "Incompatible versions for "
+                                + winner.getDependency().getArtifact().getGroupId() + ":"
+                                + winner.getDependency().getArtifact().getArtifactId() + ", incompatible versions: "
+                                + incompatibleVersions + ", all versions " + allVersions,
+                        context);
+            }
         }
     }
 }
