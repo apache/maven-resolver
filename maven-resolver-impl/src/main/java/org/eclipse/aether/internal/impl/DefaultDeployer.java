@@ -180,7 +180,7 @@ public class DefaultDeployer implements Deployer {
             }
             artifacts.addAll(generatedArtifacts);
 
-            List<? extends MetadataGenerator> generators =
+            List<? extends MetadataGenerator> metadataGenerators =
                     Utils.getMetadataGenerators(session, metadataFactories, request);
 
             List<ArtifactUpload> artifactUploads = new ArrayList<>();
@@ -189,7 +189,7 @@ public class DefaultDeployer implements Deployer {
 
             EventCatapult catapult = new EventCatapult(session, trace, repository, repositoryEventDispatcher);
 
-            List<Metadata> metadatas = Utils.prepareMetadata(generators, artifacts);
+            List<Metadata> metadatas = Utils.prepareMetadata(metadataGenerators, artifacts);
 
             syncContext.acquire(artifacts, Utils.combine(request.getMetadata(), metadatas));
 
@@ -201,7 +201,7 @@ public class DefaultDeployer implements Deployer {
             for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
                 Artifact artifact = iterator.next();
 
-                for (MetadataGenerator generator : generators) {
+                for (MetadataGenerator generator : metadataGenerators) {
                     artifact = generator.transformArtifact(artifact);
                 }
 
@@ -227,7 +227,7 @@ public class DefaultDeployer implements Deployer {
                 }
             }
 
-            metadatas = Utils.finishMetadata(generators, artifacts);
+            metadatas = Utils.finishMetadata(metadataGenerators, artifacts);
 
             syncContext.acquire(null, metadatas);
 
