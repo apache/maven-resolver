@@ -54,6 +54,12 @@ public class ConfigurableVersionSelector extends VersionSelector {
     public interface SelectionStrategy {
         /**
          * Invoked for every "candidate" when winner is already set (very first candidate is set as winner).
+         * <p>
+         * This method should determine is candidate "better" or not and should replace current winner. This method
+         * is invoked whenever {@code candidate} is "considered" (fits any constraint in effect, if any). If there is
+         * {@link AcceptanceStrategy} strategy present as well, then result is combined with
+         * {@link AcceptanceStrategy#isAccepted(ConflictItem, ConflictItem)}, and both must return {@code true} to
+         * make current candidate a winner.
          */
         boolean isBetter(ConflictItem candidate, ConflictItem winner);
     }
@@ -64,15 +70,16 @@ public class ConfigurableVersionSelector extends VersionSelector {
         /**
          * Invoked for every "candidate" when winner is already set (very first candidate is set as winner).
          * <p>
-         * This method should determine are candidate version acceptable or not. This method is invoked whenever
-         * {@code candidate} is "considered" (does not have to be selected as "winner").
+         * This method should determine is candidate "acceptable" or not and should replace current winner. This method
+         * is invoked whenever {@code candidate} is "considered", and response from is combined with selection strategy
+         * response, where both responses must return {@code true} to make candidate a winner.
          */
         boolean isAccepted(ConflictItem candidate, ConflictItem winner);
         /**
          * Method invoked at version selection end, just before version selector returns. Note: {@code winner} may
          * be {@code null}, while the rest of parameters cannot. The parameter {@code candidates} contains all the
-         * "considered candidates", dependencies that fulfil any constraint, if present. In selection of candidates
-         * the method {@link #isAccepted(ConflictItem, ConflictItem)} is consulted as well.
+         * "considered candidates", dependencies that fulfil all constraints, if present. The {@code context} on the
+         * other hand contains all items participating in conflict.
          */
         ConflictItem selectWinner(ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
                 throws UnsolvableVersionConflictException;
