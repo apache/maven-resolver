@@ -25,7 +25,6 @@ import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
@@ -84,7 +83,7 @@ public class GetDependencyHierarchyWithConflicts {
                 system.collectDependencies(session, collectRequest);
                 throw new IllegalStateException("should fail");
             }
-        } catch (DependencyCollectionException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             if (e.getCause() instanceof UnsolvableVersionConflictException) {
                 String cause = e.getCause().getMessage();
@@ -129,7 +128,7 @@ public class GetDependencyHierarchyWithConflicts {
                 system.collectDependencies(session, collectRequest);
                 throw new IllegalStateException("should fail");
             }
-        } catch (DependencyCollectionException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             if (e.getCause() instanceof UnsolvableVersionConflictException) {
                 String cause = e.getCause().getMessage();
