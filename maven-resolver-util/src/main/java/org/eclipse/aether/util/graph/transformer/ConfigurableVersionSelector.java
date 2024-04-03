@@ -51,15 +51,11 @@ public class ConfigurableVersionSelector extends VersionSelector {
     /**
      * The strategy how "winner" is being selected.
      */
-    public enum SelectionStrategy {
+    public interface SelectionStrategy {
         /**
-         * This is how Maven3 works, chooses "nearer" dependency for winner.
+         * Invoked for every "candidate" when winner is already set (very first candidate is set as winner).
          */
-        NEARER,
-        /**
-         * This is new mode, chooses "higher version" dependency for winner.
-         */
-        HIGHER_VERSION;
+        boolean isBetter(ConflictItem candidate, ConflictItem winner);
     }
     /**
      * The strategy of version acceptance check.
@@ -83,11 +79,11 @@ public class ConfigurableVersionSelector extends VersionSelector {
     }
     /**
      * If set, this version selector will use it to detect "incompatible versions" among candidates. If incompatible
-     * versions reported, this selector will fail.
+     * versions reported, this selector will fail. May be {@code null}.
      */
     protected final AcceptanceStrategy acceptanceStrategy;
     /**
-     * The strategy of winner selection.
+     * The strategy of winner selection, never {@code null}.
      */
     protected final SelectionStrategy selectionStrategy;
 
@@ -95,7 +91,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
      * Creates a new instance of this version selector that works "as Maven did so far".
      */
     public ConfigurableVersionSelector() {
-        this(null, SelectionStrategy.NEARER);
+        this(null, new Nearest());
     }
 
     /**
@@ -105,7 +101,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
      *                              set, this selector will not detect any non-acceptable versions. Maven3 used
      *                              {@code null} here.
      * @param selectionStrategy The winner selection strategy, must not be {@code null}. Maven3
-     *                          used {@link SelectionStrategy#NEARER} strategy.
+     *                          used {@link Nearest} strategy.
      */
     public ConfigurableVersionSelector(AcceptanceStrategy acceptanceStrategy, SelectionStrategy selectionStrategy) {
         this.acceptanceStrategy = acceptanceStrategy;
@@ -142,7 +138,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
                 if (backtrack) {
                     backtrack(group, context);
-                } else if (group.winner == null || isBetter(item, group.winner)) {
+                } else if (group.winner == null || selectionStrategy.isBetter(item, group.winner)) {
                     group.winner = item;
                 }
             } else if (backtrack) {
@@ -170,7 +166,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
                         group.notAcceptedCandidates.add(candidate);
                     }
                 }
-                if (group.winner == null || isBetter(candidate, group.winner)) {
+                if (group.winner == null || selectionStrategy.isBetter(candidate, group.winner)) {
                     group.winner = candidate;
                 }
             }
@@ -188,33 +184,6 @@ public class ConfigurableVersionSelector extends VersionSelector {
             }
         }
         return true;
-    }
-
-    protected boolean isBetter(ConflictItem candidate, ConflictItem winner) {
-        boolean result;
-        switch (selectionStrategy) {
-            case NEARER:
-                result = isNearer(candidate, winner);
-                break;
-            case HIGHER_VERSION:
-                result = isHigherVersion(candidate, winner);
-                break;
-            default:
-                throw new IllegalStateException("Unknown strategy");
-        }
-        return result;
-    }
-
-    protected boolean isNearer(ConflictItem candidate, ConflictItem winner) {
-        if (candidate.isSibling(winner)) {
-            return candidate.getNode().getVersion().compareTo(winner.getNode().getVersion()) > 0;
-        } else {
-            return candidate.getDepth() < winner.getDepth();
-        }
-    }
-
-    protected boolean isHigherVersion(ConflictItem candidate, ConflictItem winner) {
-        return candidate.getNode().getVersion().compareTo(winner.getNode().getVersion()) > 0;
     }
 
     public static UnsolvableVersionConflictException newFailure(String message, ConflictContext context) {
@@ -247,6 +216,36 @@ public class ConfigurableVersionSelector extends VersionSelector {
         @Override
         public String toString() {
             return String.valueOf(winner);
+        }
+    }
+
+    /**
+     * Selection strategy that selects "nearest" (to the root) version.
+     * <p>
+     * This is the "classic" Maven strategy.
+     */
+    public static class Nearest implements SelectionStrategy {
+        @Override
+        public boolean isBetter(ConflictItem candidate, ConflictItem winner) {
+            if (candidate.isSibling(winner)) {
+                return candidate
+                                .getNode()
+                                .getVersion()
+                                .compareTo(winner.getNode().getVersion())
+                        > 0;
+            } else {
+                return candidate.getDepth() < winner.getDepth();
+            }
+        }
+    }
+
+    /**
+     * Selection strategy that selects "highest" version.
+     */
+    public static class Highest implements SelectionStrategy {
+        @Override
+        public boolean isBetter(ConflictItem candidate, ConflictItem winner) {
+            return candidate.getNode().getVersion().compareTo(winner.getNode().getVersion()) > 0;
         }
     }
 

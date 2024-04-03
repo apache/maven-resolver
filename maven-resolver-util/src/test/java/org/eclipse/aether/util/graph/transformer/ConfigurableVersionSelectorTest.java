@@ -37,8 +37,7 @@ public class ConfigurableVersionSelectorTest extends AbstractDependencyGraphTran
     protected ConflictResolver newTransformer() {
         return new ConflictResolver(
                 new ConfigurableVersionSelector(
-                        new ConfigurableVersionSelector.MajorVersion(),
-                        ConfigurableVersionSelector.SelectionStrategy.NEARER),
+                        new ConfigurableVersionSelector.MajorVersion(), new ConfigurableVersionSelector.Nearest()),
                 new JavaScopeSelector(),
                 new SimpleOptionalitySelector(),
                 new JavaScopeDeriver());

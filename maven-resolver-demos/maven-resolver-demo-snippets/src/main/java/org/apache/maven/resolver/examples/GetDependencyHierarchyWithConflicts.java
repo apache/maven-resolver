@@ -62,7 +62,7 @@ public class GetDependencyHierarchyWithConflicts {
                             new ConflictResolver(
                                     new ConfigurableVersionSelector(
                                             new ConfigurableVersionSelector.MajorVersion(),
-                                            ConfigurableVersionSelector.SelectionStrategy.NEARER),
+                                            new ConfigurableVersionSelector.Nearest()),
                                     new JavaScopeSelector(),
                                     new SimpleOptionalitySelector(),
                                     new JavaScopeDeriver()),
@@ -107,7 +107,7 @@ public class GetDependencyHierarchyWithConflicts {
                             new ConflictResolver(
                                     new ConfigurableVersionSelector(
                                             new ConfigurableVersionSelector.VersionConvergence(),
-                                            ConfigurableVersionSelector.SelectionStrategy.NEARER),
+                                            new ConfigurableVersionSelector.Nearest()),
                                     new JavaScopeSelector(),
                                     new SimpleOptionalitySelector(),
                                     new JavaScopeDeriver()),
