@@ -221,9 +221,10 @@ public class ConfigurableVersionSelector extends VersionSelector {
     }
 
     /**
-     * Example acceptance strategy (used in tests and demos), is not recommended to be used in production.
+     * Example selection strategy (used in tests and demos), is not recommended to be used in production.
      * <p>
-     * Acceptance strategy that enforces dependency convergence among candidates.
+     * Selection strategy that delegates to another selection strategy, and at the end enforces dependency convergence
+     * among candidates.
      */
     public static class VersionConvergence implements SelectionStrategy {
         private final SelectionStrategy delegate;
@@ -259,9 +260,10 @@ public class ConfigurableVersionSelector extends VersionSelector {
     }
 
     /**
-     * Example acceptance strategy (used in tests and demos), is not recommended to be used in production.
+     * Example selection strategy (used in tests and demos), is not recommended to be used in production.
      * <p>
-     * Acceptance strategy that enforces aligned "major versions" among candidates.
+     * Selection strategy that delegates to another selection strategy, and at end enforces aligned "major versions"
+     * among candidates.
      */
     public static class MajorVersionConvergence implements SelectionStrategy {
         private final SelectionStrategy delegate;
