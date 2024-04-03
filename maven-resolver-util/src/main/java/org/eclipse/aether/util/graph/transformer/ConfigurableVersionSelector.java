@@ -62,6 +62,8 @@ public class ConfigurableVersionSelector extends VersionSelector {
      */
     public interface AcceptanceStrategy {
         /**
+         * Invoked for every "candidate" when winner is already set (very first candidate is set as winner).
+         * <p>
          * This method should determine are candidate version acceptable or not. This method is invoked whenever
          * {@code candidate} is "considered" (does not have to be selected as "winner").
          */
@@ -173,7 +175,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
         }
 
         if (group.winner == null) {
-            throw newFailure("Unsolvable hard constraint", context);
+            throw newFailure("Unsolvable hard constraint combination", context);
         }
     }
 
