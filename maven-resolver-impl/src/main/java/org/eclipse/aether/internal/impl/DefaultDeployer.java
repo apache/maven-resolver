@@ -163,7 +163,8 @@ public class DefaultDeployer implements Deployer {
         }
 
         List<Artifact> artifacts = new ArrayList<>(request.getArtifacts());
-        List<? extends ArtifactGenerator> artifactGenerators = getArtifactGenerators(session, request);
+        List<? extends ArtifactGenerator> artifactGenerators =
+                Utils.getArtifactGenerators(session, artifactFactories, request);
         try {
             List<Artifact> generatedArtifacts = new ArrayList<>();
             for (ArtifactGenerator artifactGenerator : artifactGenerators) {
@@ -179,7 +180,8 @@ public class DefaultDeployer implements Deployer {
             }
             artifacts.addAll(generatedArtifacts);
 
-            List<? extends MetadataGenerator> generators = getMetadataGenerators(session, request);
+            List<? extends MetadataGenerator> metadataGenerators =
+                    Utils.getMetadataGenerators(session, metadataFactories, request);
 
             List<ArtifactUpload> artifactUploads = new ArrayList<>();
             List<MetadataUpload> metadataUploads = new ArrayList<>();
@@ -187,7 +189,7 @@ public class DefaultDeployer implements Deployer {
 
             EventCatapult catapult = new EventCatapult(session, trace, repository, repositoryEventDispatcher);
 
-            List<Metadata> metadatas = Utils.prepareMetadata(generators, artifacts);
+            List<Metadata> metadatas = Utils.prepareMetadata(metadataGenerators, artifacts);
 
             syncContext.acquire(artifacts, Utils.combine(request.getMetadata(), metadatas));
 
@@ -199,7 +201,7 @@ public class DefaultDeployer implements Deployer {
             for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
                 Artifact artifact = iterator.next();
 
-                for (MetadataGenerator generator : generators) {
+                for (MetadataGenerator generator : metadataGenerators) {
                     artifact = generator.transformArtifact(artifact);
                 }
 
@@ -225,7 +227,7 @@ public class DefaultDeployer implements Deployer {
                 }
             }
 
-            metadatas = Utils.finishMetadata(generators, artifacts);
+            metadatas = Utils.finishMetadata(metadataGenerators, artifacts);
 
             syncContext.acquire(null, metadatas);
 
@@ -264,40 +266,6 @@ public class DefaultDeployer implements Deployer {
         }
 
         return result;
-    }
-
-    private List<? extends ArtifactGenerator> getArtifactGenerators(
-            RepositorySystemSession session, DeployRequest request) {
-        PrioritizedComponents<ArtifactGeneratorFactory> factories =
-                Utils.sortArtifactGeneratorFactories(session, artifactFactories);
-
-        List<ArtifactGenerator> generators = new ArrayList<>();
-
-        for (PrioritizedComponent<ArtifactGeneratorFactory> factory : factories.getEnabled()) {
-            ArtifactGenerator generator = factory.getComponent().newInstance(session, request);
-            if (generator != null) {
-                generators.add(generator);
-            }
-        }
-
-        return generators;
-    }
-
-    private List<? extends MetadataGenerator> getMetadataGenerators(
-            RepositorySystemSession session, DeployRequest request) {
-        PrioritizedComponents<MetadataGeneratorFactory> factories =
-                Utils.sortMetadataGeneratorFactories(session, metadataFactories);
-
-        List<MetadataGenerator> generators = new ArrayList<>();
-
-        for (PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled()) {
-            MetadataGenerator generator = factory.getComponent().newInstance(session, request);
-            if (generator != null) {
-                generators.add(generator);
-            }
-        }
-
-        return generators;
     }
 
     private void upload(

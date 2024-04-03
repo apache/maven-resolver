@@ -198,23 +198,10 @@ public class DefaultRepositorySystem implements RepositorySystem {
         requireNonNull(request, "request cannot be null");
 
         ArtifactDescriptorResult descriptorResult = artifactDescriptorReader.readArtifactDescriptor(session, request);
-        for (ArtifactDecorator decorator : getArtifactDecorators(session)) {
+        for (ArtifactDecorator decorator : Utils.getArtifactDecorators(session, artifactDecoratorFactories)) {
             descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
         }
         return descriptorResult;
-    }
-
-    private List<? extends ArtifactDecorator> getArtifactDecorators(RepositorySystemSession session) {
-        PrioritizedComponents<ArtifactDecoratorFactory> factories =
-                Utils.sortArtifactDecoratorFactories(session, artifactDecoratorFactories);
-        List<ArtifactDecorator> decorators = new ArrayList<>();
-        for (PrioritizedComponent<ArtifactDecoratorFactory> factory : factories.getEnabled()) {
-            ArtifactDecorator decorator = factory.getComponent().newInstance(session);
-            if (decorator != null) {
-                decorators.add(decorator);
-            }
-        }
-        return decorators;
     }
 
     @Override

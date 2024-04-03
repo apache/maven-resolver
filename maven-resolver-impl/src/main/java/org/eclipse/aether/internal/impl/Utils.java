@@ -25,14 +25,18 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.impl.MetadataGenerator;
 import org.eclipse.aether.impl.MetadataGeneratorFactory;
 import org.eclipse.aether.impl.OfflineController;
+import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicyRequest;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecorator;
 import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
+import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 
@@ -41,19 +45,103 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
  */
 public final class Utils {
 
-    public static PrioritizedComponents<ArtifactDecoratorFactory> sortArtifactDecoratorFactories(
+    private static PrioritizedComponents<ArtifactDecoratorFactory> sortArtifactDecoratorFactories(
             RepositorySystemSession session, Map<String, ArtifactDecoratorFactory> factories) {
         return PrioritizedComponents.reuseOrCreate(session, factories, ArtifactDecoratorFactory::getPriority);
     }
 
-    public static PrioritizedComponents<ArtifactGeneratorFactory> sortArtifactGeneratorFactories(
+    public static List<? extends ArtifactDecorator> getArtifactDecorators(
+            RepositorySystemSession session, Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories) {
+        PrioritizedComponents<ArtifactDecoratorFactory> factories =
+                sortArtifactDecoratorFactories(session, artifactDecoratorFactories);
+        List<ArtifactDecorator> decorators = new ArrayList<>();
+        for (PrioritizedComponent<ArtifactDecoratorFactory> factory : factories.getEnabled()) {
+            ArtifactDecorator decorator = factory.getComponent().newInstance(session);
+            if (decorator != null) {
+                decorators.add(decorator);
+            }
+        }
+        return decorators;
+    }
+
+    private static PrioritizedComponents<ArtifactGeneratorFactory> sortArtifactGeneratorFactories(
             RepositorySystemSession session, Map<String, ArtifactGeneratorFactory> factories) {
         return PrioritizedComponents.reuseOrCreate(session, factories, ArtifactGeneratorFactory::getPriority);
     }
 
-    public static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories(
+    private static List<? extends ArtifactGenerator> doGetArtifactGenerators(
+            RepositorySystemSession session, Map<String, ArtifactGeneratorFactory> artifactFactories, Object request) {
+        PrioritizedComponents<ArtifactGeneratorFactory> factories =
+                sortArtifactGeneratorFactories(session, artifactFactories);
+        List<ArtifactGenerator> generators = new ArrayList<>();
+        for (PrioritizedComponent<ArtifactGeneratorFactory> factory : factories.getEnabled()) {
+            ArtifactGenerator generator;
+            if (request instanceof InstallRequest) {
+                generator = factory.getComponent().newInstance(session, (InstallRequest) request);
+            } else if (request instanceof DeployRequest) {
+                generator = factory.getComponent().newInstance(session, (DeployRequest) request);
+            } else {
+                throw new IllegalArgumentException("Unknown request");
+            }
+            if (generator != null) {
+                generators.add(generator);
+            }
+        }
+        return generators;
+    }
+
+    public static List<? extends ArtifactGenerator> getArtifactGenerators(
+            RepositorySystemSession session,
+            Map<String, ArtifactGeneratorFactory> artifactFactories,
+            InstallRequest request) {
+        return doGetArtifactGenerators(session, artifactFactories, request);
+    }
+
+    public static List<? extends ArtifactGenerator> getArtifactGenerators(
+            RepositorySystemSession session,
+            Map<String, ArtifactGeneratorFactory> artifactFactories,
+            DeployRequest request) {
+        return doGetArtifactGenerators(session, artifactFactories, request);
+    }
+
+    private static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories(
             RepositorySystemSession session, Map<String, MetadataGeneratorFactory> factories) {
         return PrioritizedComponents.reuseOrCreate(session, factories, MetadataGeneratorFactory::getPriority);
+    }
+
+    private static List<? extends MetadataGenerator> doGetMetadataGenerators(
+            RepositorySystemSession session, Map<String, MetadataGeneratorFactory> metadataFactories, Object request) {
+        PrioritizedComponents<MetadataGeneratorFactory> factories =
+                sortMetadataGeneratorFactories(session, metadataFactories);
+        List<MetadataGenerator> generators = new ArrayList<>();
+        for (PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled()) {
+            MetadataGenerator generator;
+            if (request instanceof InstallRequest) {
+                generator = factory.getComponent().newInstance(session, (InstallRequest) request);
+            } else if (request instanceof DeployRequest) {
+                generator = factory.getComponent().newInstance(session, (DeployRequest) request);
+            } else {
+                throw new IllegalArgumentException("Unknown request");
+            }
+            if (generator != null) {
+                generators.add(generator);
+            }
+        }
+        return generators;
+    }
+
+    public static List<? extends MetadataGenerator> getMetadataGenerators(
+            RepositorySystemSession session,
+            Map<String, MetadataGeneratorFactory> metadataFactories,
+            InstallRequest request) {
+        return doGetMetadataGenerators(session, metadataFactories, request);
+    }
+
+    public static List<? extends MetadataGenerator> getMetadataGenerators(
+            RepositorySystemSession session,
+            Map<String, MetadataGeneratorFactory> metadataFactories,
+            DeployRequest request) {
+        return doGetMetadataGenerators(session, metadataFactories, request);
     }
 
     public static List<Metadata> prepareMetadata(
