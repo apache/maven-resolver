@@ -67,10 +67,12 @@ public class ConfigurableVersionSelector extends VersionSelector {
          * This method should determine are candidate version acceptable or not. This method is invoked whenever
          * {@code candidate} is "considered" (does not have to be selected as "winner").
          */
-        boolean isBetter(ConflictItem candidate, ConflictItem winner);
+        boolean isAccepted(ConflictItem candidate, ConflictItem winner);
         /**
          * Method invoked at version selection end, just before version selector returns. Note: {@code winner} may
-         * be {@code null}, while the rest of parameters cannot.
+         * be {@code null}, while the rest of parameters cannot. The parameter {@code candidates} contains all the
+         * "considered candidates", dependencies that fulfil any constraint, if present. In selection of candidates
+         * the method {@link #isAccepted(ConflictItem, ConflictItem)} is consulted as well.
          */
         ConflictItem selectWinner(ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
                 throws UnsolvableVersionConflictException;
@@ -174,7 +176,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
     protected boolean isBetter(ConflictItem candidate, ConflictItem winner) {
         if (acceptanceStrategy != null) {
-            return selectionStrategy.isBetter(candidate, winner) && acceptanceStrategy.isBetter(candidate, winner);
+            return selectionStrategy.isBetter(candidate, winner) && acceptanceStrategy.isAccepted(candidate, winner);
         } else {
             return selectionStrategy.isBetter(candidate, winner);
         }
@@ -241,16 +243,14 @@ public class ConfigurableVersionSelector extends VersionSelector {
     }
 
     /**
-     * Example compatibility strategy (used in tests and demos), is not recommended to be used in production.
+     * Example acceptance strategy (used in tests and demos), is not recommended to be used in production.
      * <p>
-     * Compatibility strategy that enforces dependency convergence.
+     * Acceptance strategy that enforces dependency convergence among candidates.
      */
     public static class VersionConvergence implements AcceptanceStrategy {
         @Override
-        public boolean isBetter(ConflictItem candidate, ConflictItem winner) {
-            return Objects.equals(
-                    candidate.getDependency().getArtifact().getVersion(),
-                    winner.getDependency().getArtifact().getVersion());
+        public boolean isAccepted(ConflictItem candidate, ConflictItem winner) {
+            return true;
         }
 
         @Override
@@ -275,23 +275,14 @@ public class ConfigurableVersionSelector extends VersionSelector {
     }
 
     /**
-     * Example compatibility strategy (used in tests and demos), is not recommended to be used in production.
+     * Example acceptance strategy (used in tests and demos), is not recommended to be used in production.
      * <p>
-     * Compatibility strategy that tries to extract "major version" from artifact version string and if it is possible,
-     * makes sure they are same.
+     * Acceptance strategy that enforces aligned "major versions" among candidates.
      */
-    public static class MajorVersion implements AcceptanceStrategy {
+    public static class MajorVersionConvergence implements AcceptanceStrategy {
         @Override
-        public boolean isBetter(ConflictItem candidate, ConflictItem winner) {
-            String candidateVersion = candidate.getDependency().getArtifact().getVersion();
-            String winnerVersion = winner.getDependency().getArtifact().getVersion();
-            // for now a naive check: major versions should be same
-            if (candidateVersion.contains(".") && winnerVersion.contains(".")) {
-                String candidateMajor = candidateVersion.substring(0, candidateVersion.indexOf('.'));
-                String winnerMajor = winnerVersion.substring(0, winnerVersion.indexOf('.'));
-                return Objects.equals(candidateMajor, winnerMajor);
-            }
-            return true; // cannot determine, so just leave it
+        public boolean isAccepted(ConflictItem candidate, ConflictItem winner) {
+            return true;
         }
 
         @Override
@@ -299,14 +290,14 @@ public class ConfigurableVersionSelector extends VersionSelector {
                 ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
                 throws UnsolvableVersionConflictException {
             if (winner != null && !candidates.isEmpty()) {
-                Set<String> allVersions = candidates.stream()
-                        .map(c -> c.getDependency().getArtifact().getVersion())
-                        .collect(Collectors.toSet());
                 Set<String> incompatibleVersions = candidates.stream()
-                        .filter(c -> !isBetter(c, winner))
+                        .filter(c -> !sameMajor(c, winner))
                         .map(c -> c.getDependency().getArtifact().getVersion())
                         .collect(Collectors.toSet());
                 if (!incompatibleVersions.isEmpty()) {
+                    Set<String> allVersions = candidates.stream()
+                            .map(c -> c.getDependency().getArtifact().getVersion())
+                            .collect(Collectors.toSet());
                     throw newFailure(
                             "Incompatible versions for "
                                     + winner.getDependency().getArtifact().getGroupId() + ":"
@@ -316,6 +307,18 @@ public class ConfigurableVersionSelector extends VersionSelector {
                 }
             }
             return winner;
+        }
+
+        private boolean sameMajor(ConflictItem candidate, ConflictItem winner) {
+            String candidateVersion = candidate.getDependency().getArtifact().getVersion();
+            String winnerVersion = winner.getDependency().getArtifact().getVersion();
+            // for now a naive check: major versions should be same
+            if (candidateVersion.contains(".") && winnerVersion.contains(".")) {
+                String candidateMajor = candidateVersion.substring(0, candidateVersion.indexOf('.'));
+                String winnerMajor = winnerVersion.substring(0, winnerVersion.indexOf('.'));
+                return Objects.equals(candidateMajor, winnerMajor);
+            }
+            return true; // cannot determine, so just leave it
         }
     }
 }

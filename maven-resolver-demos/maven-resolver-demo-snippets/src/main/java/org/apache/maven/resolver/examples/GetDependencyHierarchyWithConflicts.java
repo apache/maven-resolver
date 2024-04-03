@@ -61,7 +61,7 @@ public class GetDependencyHierarchyWithConflicts {
                     .setDependencyGraphTransformer(new ChainedDependencyGraphTransformer(
                             new ConflictResolver(
                                     new ConfigurableVersionSelector(
-                                            new ConfigurableVersionSelector.MajorVersion(),
+                                            new ConfigurableVersionSelector.MajorVersionConvergence(),
                                             new ConfigurableVersionSelector.Nearest()),
                                     new JavaScopeSelector(),
                                     new SimpleOptionalitySelector(),
