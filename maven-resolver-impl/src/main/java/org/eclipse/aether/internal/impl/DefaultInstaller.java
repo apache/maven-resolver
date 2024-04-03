@@ -107,7 +107,8 @@ public class DefaultInstaller implements Installer {
         RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
         List<Artifact> artifacts = new ArrayList<>(request.getArtifacts());
-        List<? extends ArtifactGenerator> artifactGenerators = getArtifactGenerators(session, request);
+        List<? extends ArtifactGenerator> artifactGenerators =
+                Utils.getArtifactGenerators(session, artifactFactories, request);
         try {
             List<Artifact> generatedArtifacts = new ArrayList<>();
             for (ArtifactGenerator artifactGenerator : artifactGenerators) {
@@ -123,7 +124,8 @@ public class DefaultInstaller implements Installer {
             }
             artifacts.addAll(generatedArtifacts);
 
-            List<? extends MetadataGenerator> metadataGenerators = getMetadataGenerators(session, request);
+            List<? extends MetadataGenerator> metadataGenerators =
+                    Utils.getMetadataGenerators(session, metadataFactories, request);
 
             IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
 
@@ -179,40 +181,6 @@ public class DefaultInstaller implements Installer {
                 }
             }
         }
-    }
-
-    private List<? extends ArtifactGenerator> getArtifactGenerators(
-            RepositorySystemSession session, InstallRequest request) {
-        PrioritizedComponents<ArtifactGeneratorFactory> factories =
-                Utils.sortArtifactGeneratorFactories(session, artifactFactories);
-
-        List<ArtifactGenerator> generators = new ArrayList<>();
-
-        for (PrioritizedComponent<ArtifactGeneratorFactory> factory : factories.getEnabled()) {
-            ArtifactGenerator generator = factory.getComponent().newInstance(session, request);
-            if (generator != null) {
-                generators.add(generator);
-            }
-        }
-
-        return generators;
-    }
-
-    private List<? extends MetadataGenerator> getMetadataGenerators(
-            RepositorySystemSession session, InstallRequest request) {
-        PrioritizedComponents<MetadataGeneratorFactory> factories =
-                Utils.sortMetadataGeneratorFactories(session, metadataFactories);
-
-        List<MetadataGenerator> generators = new ArrayList<>();
-
-        for (PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled()) {
-            MetadataGenerator generator = factory.getComponent().newInstance(session, request);
-            if (generator != null) {
-                generators.add(generator);
-            }
-        }
-
-        return generators;
     }
 
     private void install(RepositorySystemSession session, RequestTrace trace, Artifact artifact)
