@@ -129,7 +129,7 @@ public final class NearestVersionSelector extends VersionSelector {
         };
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
         context.getRoot().accept(new TreeDependencyVisitor(visitor));
-        return new UnsolvableVersionConflictException(null, visitor.getPaths());
+        return new UnsolvableVersionConflictException(visitor.getPaths());
     }
 
     static final class ConflictGroup {
