@@ -52,7 +52,7 @@ public class GetDependencyHierarchyWithConflicts {
         System.out.println("------------------------------------------------------------");
         System.out.println(GetDependencyHierarchyWithConflicts.class.getSimpleName());
 
-        // incompatible versions
+        // incompatible versions: two incompatible versions present in graph
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
             SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
             sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
@@ -97,7 +97,7 @@ public class GetDependencyHierarchyWithConflicts {
             }
         }
 
-        // dependency divergence
+        // dependency divergence: multiple versions of same GA present in graph
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
             SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
             sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
@@ -113,7 +113,7 @@ public class GetDependencyHierarchyWithConflicts {
                                     new JavaScopeDeriver()),
                             new JavaDependencyContextRefiner()))
                     .build()) {
-                Artifact artifact = new DefaultArtifact("org.apache.maven.shared:maven-dependency-tree:3.0.1");
+                Artifact artifact = new DefaultArtifact("org.apache.maven.shared:maven-dependency-tree:3.1.0");
 
                 ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
                 descriptorRequest.setArtifact(artifact);
@@ -134,7 +134,7 @@ public class GetDependencyHierarchyWithConflicts {
             if (e.getCause() instanceof UnsolvableVersionConflictException) {
                 String cause = e.getCause().getMessage();
                 if (!cause.contains(
-                        "Convergence violated for org.apache.maven:maven-core, versions present: [2.0, 3.0.4]")) {
+                        "Convergence violated for org.codehaus.plexus:plexus-utils, versions present: [2.1, 1.5.5, 2.0.6]")) {
                     throw new IllegalStateException("should fail due convergence violation");
                 }
             } else {
