@@ -56,39 +56,23 @@ public class ConfigurableVersionSelector extends VersionSelector {
          * Invoked for every "candidate" when winner is already set (very first candidate is set as winner).
          * <p>
          * This method should determine is candidate "better" or not and should replace current winner. This method
-         * is invoked whenever {@code candidate} is "considered" (fits any constraint in effect, if any). If there is
-         * {@link AcceptanceStrategy} strategy present as well, then result is combined with
-         * {@link AcceptanceStrategy#isAccepted(ConflictItem, ConflictItem)}, and both must return {@code true} to
-         * make current candidate a winner.
+         * is invoked whenever {@code candidate} is "considered" (fits any constraint in effect, if any).
          */
         boolean isBetter(ConflictItem candidate, ConflictItem winner);
-    }
-    /**
-     * The strategy of version acceptance check.
-     */
-    public interface AcceptanceStrategy {
-        /**
-         * Invoked for every "candidate" when winner is already set (very first candidate is set as winner).
-         * <p>
-         * This method should determine is candidate "acceptable" or not and should replace current winner. This method
-         * is invoked whenever {@code candidate} is "considered", and response from is combined with selection strategy
-         * response, where both responses must return {@code true} to make candidate a winner.
-         */
-        boolean isAccepted(ConflictItem candidate, ConflictItem winner);
         /**
          * Method invoked at version selection end, just before version selector returns. Note: {@code winner} may
          * be {@code null}, while the rest of parameters cannot. The parameter {@code candidates} contains all the
          * "considered candidates", dependencies that fulfil all constraints, if present. The {@code context} on the
          * other hand contains all items participating in conflict.
+         * <p>
+         * This method by default just returns the passed in {@code winner}, but can do much more.
          */
-        ConflictItem selectWinner(ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
-                throws UnsolvableVersionConflictException;
+        default ConflictItem winnerSelected(
+                ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
+                throws UnsolvableVersionConflictException {
+            return winner;
+        }
     }
-    /**
-     * If set, this version selector will use it to detect "incompatible versions" among candidates. If incompatible
-     * versions reported, this selector will fail. May be {@code null}.
-     */
-    protected final AcceptanceStrategy acceptanceStrategy;
     /**
      * The strategy of winner selection, never {@code null}.
      */
@@ -98,20 +82,16 @@ public class ConfigurableVersionSelector extends VersionSelector {
      * Creates a new instance of this version selector that works "as Maven did so far".
      */
     public ConfigurableVersionSelector() {
-        this(null, new Nearest());
+        this(new Nearest());
     }
 
     /**
      * Creates a new instance of this version selector.
      *
-     * @param acceptanceStrategy The strategy to use for "version acceptance" checks, may be {@code null}. If not
-     *                              set, this selector will not detect any non-acceptable versions. Maven3 used
-     *                              {@code null} here.
      * @param selectionStrategy The winner selection strategy, must not be {@code null}. Maven3
      *                          used {@link Nearest} strategy.
      */
-    public ConfigurableVersionSelector(AcceptanceStrategy acceptanceStrategy, SelectionStrategy selectionStrategy) {
-        this.acceptanceStrategy = acceptanceStrategy;
+    public ConfigurableVersionSelector(SelectionStrategy selectionStrategy) {
         this.selectionStrategy = requireNonNull(selectionStrategy, "selectionStrategy");
     }
 
@@ -140,18 +120,14 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
                 if (backtrack) {
                     backtrack(group, context);
-                } else if (group.winner == null || isBetter(candidate, group.winner)) {
+                } else if (group.winner == null || selectionStrategy.isBetter(candidate, group.winner)) {
                     group.winner = candidate;
                 }
             } else if (backtrack) {
                 backtrack(group, context);
             }
         }
-        if (acceptanceStrategy != null) {
-            context.setWinner(acceptanceStrategy.selectWinner(group.winner, group.candidates, context));
-        } else {
-            context.setWinner(group.winner);
-        }
+        context.setWinner(selectionStrategy.winnerSelected(group.winner, group.candidates, context));
     }
 
     protected void backtrack(ConflictGroup group, ConflictContext context) throws UnsolvableVersionConflictException {
@@ -162,7 +138,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
             if (!isAcceptableByConstraints(group, candidate.getNode().getVersion())) {
                 it.remove();
-            } else if (group.winner == null || isBetter(candidate, group.winner)) {
+            } else if (group.winner == null || selectionStrategy.isBetter(candidate, group.winner)) {
                 group.winner = candidate;
             }
         }
@@ -181,14 +157,9 @@ public class ConfigurableVersionSelector extends VersionSelector {
         return true;
     }
 
-    protected boolean isBetter(ConflictItem candidate, ConflictItem winner) {
-        if (acceptanceStrategy != null) {
-            return selectionStrategy.isBetter(candidate, winner) && acceptanceStrategy.isAccepted(candidate, winner);
-        } else {
-            return selectionStrategy.isBetter(candidate, winner);
-        }
-    }
-
+    /**
+     * Helper method to create failure, creates instance of {@link UnsolvableVersionConflictException}.
+     */
     public static UnsolvableVersionConflictException newFailure(String message, ConflictContext context) {
         DependencyFilter filter = (node, parents) -> {
             requireNonNull(node, "node cannot be null");
@@ -254,14 +225,20 @@ public class ConfigurableVersionSelector extends VersionSelector {
      * <p>
      * Acceptance strategy that enforces dependency convergence among candidates.
      */
-    public static class VersionConvergence implements AcceptanceStrategy {
-        @Override
-        public boolean isAccepted(ConflictItem candidate, ConflictItem winner) {
-            return true;
+    public static class VersionConvergence implements SelectionStrategy {
+        private final SelectionStrategy delegate;
+
+        public VersionConvergence(SelectionStrategy delegate) {
+            this.delegate = requireNonNull(delegate, "delegate");
         }
 
         @Override
-        public ConflictItem selectWinner(
+        public boolean isBetter(ConflictItem candidate, ConflictItem winner) {
+            return delegate.isBetter(candidate, winner);
+        }
+
+        @Override
+        public ConflictItem winnerSelected(
                 ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
                 throws UnsolvableVersionConflictException {
             if (winner != null && winner.getNode().getVersionConstraint().getRange() == null) {
@@ -286,14 +263,20 @@ public class ConfigurableVersionSelector extends VersionSelector {
      * <p>
      * Acceptance strategy that enforces aligned "major versions" among candidates.
      */
-    public static class MajorVersionConvergence implements AcceptanceStrategy {
-        @Override
-        public boolean isAccepted(ConflictItem candidate, ConflictItem winner) {
-            return true;
+    public static class MajorVersionConvergence implements SelectionStrategy {
+        private final SelectionStrategy delegate;
+
+        public MajorVersionConvergence(SelectionStrategy delegate) {
+            this.delegate = requireNonNull(delegate, "delegate");
         }
 
         @Override
-        public ConflictItem selectWinner(
+        public boolean isBetter(ConflictItem candidate, ConflictItem winner) {
+            return delegate.isBetter(candidate, winner);
+        }
+
+        @Override
+        public ConflictItem winnerSelected(
                 ConflictItem winner, Collection<ConflictItem> candidates, ConflictContext context)
                 throws UnsolvableVersionConflictException {
             if (winner != null && !candidates.isEmpty()) {

@@ -60,8 +60,8 @@ public class GetDependencyHierarchyWithConflicts {
                     .setDependencyGraphTransformer(new ChainedDependencyGraphTransformer(
                             new ConflictResolver(
                                     new ConfigurableVersionSelector(
-                                            new ConfigurableVersionSelector.MajorVersionConvergence(),
-                                            new ConfigurableVersionSelector.Nearest()),
+                                            new ConfigurableVersionSelector.MajorVersionConvergence(
+                                                    new ConfigurableVersionSelector.Nearest())),
                                     new JavaScopeSelector(),
                                     new SimpleOptionalitySelector(),
                                     new JavaScopeDeriver()),
@@ -104,9 +104,8 @@ public class GetDependencyHierarchyWithConflicts {
             try (CloseableSession session = sessionBuilder
                     .setDependencyGraphTransformer(new ChainedDependencyGraphTransformer(
                             new ConflictResolver(
-                                    new ConfigurableVersionSelector(
-                                            new ConfigurableVersionSelector.VersionConvergence(),
-                                            new ConfigurableVersionSelector.Nearest()),
+                                    new ConfigurableVersionSelector(new ConfigurableVersionSelector.VersionConvergence(
+                                            new ConfigurableVersionSelector.Nearest())),
                                     new JavaScopeSelector(),
                                     new SimpleOptionalitySelector(),
                                     new JavaScopeDeriver()),
