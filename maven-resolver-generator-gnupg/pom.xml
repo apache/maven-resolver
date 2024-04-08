@@ -36,7 +36,7 @@
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
 
     <javaVersion>17</javaVersion>
-    <bouncycastleVersion>1.77</bouncycastleVersion>
+    <bouncycastleVersion>1.78</bouncycastleVersion>
   </properties>
 
   <dependencies>
