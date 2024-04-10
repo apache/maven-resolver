@@ -90,7 +90,7 @@
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.9.0.M2</sisuVersion>
-    <guiceVersion>5.1.0</guiceVersion>
+    <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <!-- used by supplier and demo only -->
     <mavenVersion>3.9.6</mavenVersion>
@@ -226,6 +226,11 @@
         <groupId>com.google.inject</groupId>
         <artifactId>guice</artifactId>
         <version>${guiceVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>33.1.0-jre</version>
       </dependency>
 
       <dependency>
