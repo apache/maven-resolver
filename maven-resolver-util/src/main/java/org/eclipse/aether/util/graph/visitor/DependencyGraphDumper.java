@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -52,6 +53,8 @@ public class DependencyGraphDumper implements DependencyVisitor {
 
     private final Collection<String> properties;
 
+    private final Function<DependencyNode, String> decorator;
+
     private final Deque<DependencyNode> nodes = new ArrayDeque<>();
 
     /**
@@ -67,8 +70,19 @@ public class DependencyGraphDumper implements DependencyVisitor {
      * @since 2.0.0
      */
     public DependencyGraphDumper(Consumer<String> consumer, Collection<String> properties) {
+        this(consumer, properties, null);
+    }
+
+    /**
+     * Creates instance with given consumer and properties (to print out) and decorator that is nullable.
+     *
+     * @since 2.0.0
+     */
+    public DependencyGraphDumper(
+            Consumer<String> consumer, Collection<String> properties, Function<DependencyNode, String> decorator) {
         this.consumer = requireNonNull(consumer);
         this.properties = new ArrayList<>(properties);
+        this.decorator = decorator;
     }
 
     @Override
@@ -177,6 +191,13 @@ public class DependencyGraphDumper implements DependencyVisitor {
                     .collect(Collectors.joining(","));
             if (!props.isEmpty()) {
                 buffer.append(" (").append(props).append(")");
+            }
+        }
+
+        if (decorator != null) {
+            String decoration = decorator.apply(node);
+            if (decoration != null) {
+                buffer.append(" ").append(decoration);
             }
         }
         return buffer.toString();
