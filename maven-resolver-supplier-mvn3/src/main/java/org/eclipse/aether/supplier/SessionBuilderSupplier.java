@@ -39,11 +39,11 @@ import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
+import org.eclipse.aether.util.graph.transformer.ConfigurableVersionSelector;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
-import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.traverser.FatArtifactTraverser;
 import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
@@ -69,6 +69,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     }
 
     protected void configureSessionBuilder(SessionBuilder session) {
+        session.setSystemProperties(System.getProperties());
         session.setDependencyTraverser(getDependencyTraverser());
         session.setDependencyManager(getDependencyManager());
         session.setDependencySelector(getDependencySelector());
@@ -95,7 +96,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected DependencyGraphTransformer getDependencyGraphTransformer() {
         return new ChainedDependencyGraphTransformer(
                 new ConflictResolver(
-                        new NearestVersionSelector(), new JavaScopeSelector(),
+                        new ConfigurableVersionSelector(), new JavaScopeSelector(),
                         new SimpleOptionalitySelector(), new JavaScopeDeriver()),
                 new JavaDependencyContextRefiner());
     }

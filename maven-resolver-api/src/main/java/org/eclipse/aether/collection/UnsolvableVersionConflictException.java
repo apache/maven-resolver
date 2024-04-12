@@ -29,6 +29,8 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.version.VersionConstraint;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Thrown in case of an unsolvable conflict between different version constraints for a dependency.
  */
@@ -42,9 +44,25 @@ public class UnsolvableVersionConflictException extends RepositoryException {
      * Creates a new exception with the specified paths to conflicting nodes in the dependency graph.
      *
      * @param paths The paths to the dependency nodes that participate in the version conflict, may be {@code null}.
+     * @deprecated Use {@link #UnsolvableVersionConflictException(String, Collection)} instead.
      */
+    @Deprecated
     public UnsolvableVersionConflictException(Collection<? extends List<? extends DependencyNode>> paths) {
-        super("Could not resolve version conflict among " + toPaths(paths));
+        this("Unsolvable hard constraint combination", paths);
+    }
+
+    /**
+     * Creates a new exception with the specified paths to conflicting nodes in the dependency graph.
+     *
+     * @param message The strategy that throw the bucket in, must not be {@code null}. Should provide concise message
+     *                why this exception was thrown.
+     * @param paths The paths to the dependency nodes that participate in the version conflict, may be {@code null}.
+     *
+     * @since 2.0.0
+     */
+    public UnsolvableVersionConflictException(
+            String message, Collection<? extends List<? extends DependencyNode>> paths) {
+        super(requireNonNull(message, "message") + "; Could not resolve version conflict among " + toPaths(paths));
         if (paths == null) {
             this.paths = Collections.emptyList();
             this.versions = Collections.emptyList();
