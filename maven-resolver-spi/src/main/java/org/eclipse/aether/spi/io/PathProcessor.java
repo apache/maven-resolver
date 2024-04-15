@@ -53,6 +53,8 @@ public interface PathProcessor {
      *
      * @param path The path, may be {@code null}.
      * @throws UncheckedIOException If an I/O error occurs.
+     * @return {@code true} if timestamp was successfully set, {@code false} otherwise. Reasons of {@code false} may
+     * be multiple, from file not found, to FS not supporting the setting the TS.
      * @since TBD
      */
     default boolean setLastModified(Path path, long value) {
@@ -132,6 +134,7 @@ public interface PathProcessor {
      * @param target The file to copy to, must not be {@code null}.
      * @throws IOException If an I/O error occurs.
      * @return {@code true} if timestamp was successfully set, {@code false} otherwise.
+     * @see #setLastModified(Path, long)
      * @since TBD
      */
     default boolean copyWithTimestamp(Path source, Path target) throws IOException {
