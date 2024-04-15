@@ -29,6 +29,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
@@ -691,8 +692,13 @@ final class HttpTransporter extends AbstractTransporter {
                 if (lastModifiedHeader != null) {
                     Date lastModified = DateUtils.parseDate(lastModifiedHeader.getValue());
                     if (lastModified != null) {
-                        Files.setLastModifiedTime(
-                                task.getDataFile().toPath(), FileTime.fromMillis(lastModified.getTime()));
+                        try {
+                            Files.setLastModifiedTime(
+                                    task.getDataFile().toPath(), FileTime.fromMillis(lastModified.getTime()));
+                        } catch (FileSystemException e) {
+                            LOGGER.debug(
+                                    "Failed to set last modified time; probably the filesystem does not support it", e);
+                        }
                     }
                 }
             }
