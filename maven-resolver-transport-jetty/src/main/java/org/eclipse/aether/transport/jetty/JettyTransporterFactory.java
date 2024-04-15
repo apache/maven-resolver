@@ -26,6 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 import static java.util.Objects.requireNonNull;
@@ -43,9 +44,12 @@ public final class JettyTransporterFactory implements HttpTransporterFactory {
 
     private final ChecksumExtractor checksumExtractor;
 
+    private final PathProcessor pathProcessor;
+
     @Inject
-    public JettyTransporterFactory(ChecksumExtractor checksumExtractor) {
+    public JettyTransporterFactory(ChecksumExtractor checksumExtractor, PathProcessor pathProcessor) {
         this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
+        this.pathProcessor = requireNonNull(pathProcessor, "pathProcessor");
     }
 
     @Override
@@ -68,6 +72,6 @@ public final class JettyTransporterFactory implements HttpTransporterFactory {
             throw new NoTransporterException(repository);
         }
 
-        return new JettyTransporter(session, repository, checksumExtractor);
+        return new JettyTransporter(session, repository, checksumExtractor, pathProcessor);
     }
 }

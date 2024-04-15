@@ -45,10 +45,6 @@ public class TestPathProcessor implements PathProcessor {
         testFileProcessor.write(target.toFile(), source);
     }
 
-    public void copy(Path source, Path target) throws IOException {
-        copy(source, target, null);
-    }
-
     public long copy(Path source, Path target, ProgressListener listener) throws IOException {
         return testFileProcessor.copy(source.toFile(), target.toFile(), null);
     }

@@ -31,7 +31,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.FileTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -95,6 +94,7 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
@@ -120,6 +120,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final ChecksumExtractor checksumExtractor;
 
+    private final PathProcessor pathProcessor;
+
     private final AuthenticationContext repoAuthContext;
 
     private final AuthenticationContext proxyAuthContext;
@@ -143,12 +145,17 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     private final boolean supportWebDav;
 
     @SuppressWarnings("checkstyle:methodlength")
-    ApacheTransporter(RemoteRepository repository, RepositorySystemSession session, ChecksumExtractor checksumExtractor)
+    ApacheTransporter(
+            RemoteRepository repository,
+            RepositorySystemSession session,
+            ChecksumExtractor checksumExtractor,
+            PathProcessor pathProcessor)
             throws NoTransporterException {
         if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
             throw new NoTransporterException(repository);
         }
         this.checksumExtractor = checksumExtractor;
+        this.pathProcessor = pathProcessor;
         try {
             this.baseUri = new URI(repository.getUrl()).parseServerAuthority();
             if (baseUri.isOpaque()) {
@@ -672,7 +679,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 if (lastModifiedHeader != null) {
                     Date lastModified = DateUtils.parseDate(lastModifiedHeader.getValue());
                     if (lastModified != null) {
-                        Files.setLastModifiedTime(task.getDataPath(), FileTime.fromMillis(lastModified.getTime()));
+                        pathProcessor.setLastModified(task.getDataPath(), lastModified.getTime());
                     }
                 }
             }
