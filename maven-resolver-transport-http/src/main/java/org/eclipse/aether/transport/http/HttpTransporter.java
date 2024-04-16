@@ -31,7 +31,6 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.FileTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -691,8 +690,7 @@ final class HttpTransporter extends AbstractTransporter {
                 if (lastModifiedHeader != null) {
                     Date lastModified = DateUtils.parseDate(lastModifiedHeader.getValue());
                     if (lastModified != null) {
-                        Files.setLastModifiedTime(
-                                task.getDataFile().toPath(), FileTime.fromMillis(lastModified.getTime()));
+                        task.getDataFile().setLastModified(lastModified.getTime());
                     }
                 }
             }
