@@ -27,9 +27,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.FileTime;
 import java.security.cert.X509Certificate;
-import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,6 +50,7 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
@@ -85,6 +84,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final ChecksumExtractor checksumExtractor;
 
+    private final PathProcessor pathProcessor;
+
     private final URI baseUri;
 
     private final HttpClient client;
@@ -101,9 +102,14 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final BasicAuthentication.BasicResult basicProxyAuthenticationResult;
 
-    JettyTransporter(RepositorySystemSession session, RemoteRepository repository, ChecksumExtractor checksumExtractor)
+    JettyTransporter(
+            RepositorySystemSession session,
+            RemoteRepository repository,
+            ChecksumExtractor checksumExtractor,
+            PathProcessor pathProcessor)
             throws NoTransporterException {
         this.checksumExtractor = checksumExtractor;
+        this.pathProcessor = pathProcessor;
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
             if (uri.isOpaque()) {
@@ -300,11 +306,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             long lastModified =
                     response.getHeaders().getDateField(LAST_MODIFIED); // note: Wagon also does first not last
             if (lastModified != -1) {
-                try {
-                    Files.setLastModifiedTime(task.getDataPath(), FileTime.fromMillis(lastModified));
-                } catch (DateTimeParseException e) {
-                    // fall through
-                }
+                pathProcessor.setLastModified(task.getDataPath(), lastModified);
             }
         }
         Map<String, String> checksums = checksumExtractor.extractChecksums(headerGetter(response));

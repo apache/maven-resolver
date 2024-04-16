@@ -48,11 +48,6 @@ public class DefaultPathProcessor implements PathProcessor {
     }
 
     @Override
-    public void copy(Path source, Path target) throws IOException {
-        copy(source, target, null);
-    }
-
-    @Override
     public long copy(Path source, Path target, ProgressListener listener) throws IOException {
         try (InputStream in = new BufferedInputStream(Files.newInputStream(source));
                 FileUtils.CollocatedTempFile tempTarget = FileUtils.newTempFile(target);

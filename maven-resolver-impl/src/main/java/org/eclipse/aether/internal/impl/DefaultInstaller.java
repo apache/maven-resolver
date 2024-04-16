@@ -22,7 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.ArrayList;
@@ -197,8 +196,7 @@ public class DefaultInstaller implements Installer {
                 throw new IllegalStateException("cannot install " + dstPath + " to same path");
             }
 
-            pathProcessor.copy(srcPath, dstPath);
-            Files.setLastModifiedTime(dstPath, Files.getLastModifiedTime(srcPath));
+            pathProcessor.copyWithTimestamp(srcPath, dstPath);
             lrm.add(session, new LocalArtifactRegistration(artifact));
         } catch (Exception e) {
             exception = e;

@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -455,8 +454,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 boolean copy = pathProcessor.size(dst, 0L) != pathProcessor.size(path, 0L)
                         || pathProcessor.lastModified(dst, 0L) != pathLastModified;
                 if (copy) {
-                    pathProcessor.copy(path, dst);
-                    Files.setLastModifiedTime(dst, FileTime.fromMillis(pathLastModified));
+                    pathProcessor.copyWithTimestamp(path, dst);
                 }
             } catch (IOException e) {
                 throw new ArtifactTransferException(artifact, null, e);

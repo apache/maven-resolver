@@ -611,7 +611,9 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected Map<String, TransporterFactory> createTransporterFactories() {
         HashMap<String, TransporterFactory> result = new HashMap<>();
         result.put(FileTransporterFactory.NAME, new FileTransporterFactory());
-        result.put(ApacheTransporterFactory.NAME, new ApacheTransporterFactory(getChecksumExtractor()));
+        result.put(
+                ApacheTransporterFactory.NAME,
+                new ApacheTransporterFactory(getChecksumExtractor(), getPathProcessor()));
         return result;
     }
 

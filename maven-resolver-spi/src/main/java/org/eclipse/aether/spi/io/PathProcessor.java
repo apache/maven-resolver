@@ -20,9 +20,11 @@ package org.eclipse.aether.spi.io;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 /**
  * A utility component to perform file-based operations.
@@ -41,6 +43,26 @@ public interface PathProcessor {
             return Files.getLastModifiedTime(path).toMillis();
         } catch (NoSuchFileException e) {
             return defValue;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Sets last modified of path in milliseconds, if exists.
+     *
+     * @param path The path, may be {@code null}.
+     * @throws UncheckedIOException If an I/O error occurs.
+     * @return {@code true} if timestamp was successfully set, {@code false} otherwise. Reasons of {@code false} may
+     * be multiple, from file not found, to FS not supporting the setting the TS.
+     * @since TBD
+     */
+    default boolean setLastModified(Path path, long value) {
+        try {
+            Files.setLastModifiedTime(path, FileTime.fromMillis(value));
+            return true;
+        } catch (FileSystemException e) {
+            return false; // not found Ex belongs here as well
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -101,7 +123,24 @@ public interface PathProcessor {
      * @param target The file to copy to, must not be {@code null}.
      * @throws IOException If an I/O error occurs.
      */
-    void copy(Path source, Path target) throws IOException;
+    default void copy(Path source, Path target) throws IOException {
+        copy(source, target, null);
+    }
+
+    /**
+     * Same as {@link #copy(Path, Path)} but sets source file last modified timestamp on target as well.
+     *
+     * @param source The file to copy from, must not be {@code null}.
+     * @param target The file to copy to, must not be {@code null}.
+     * @throws IOException If an I/O error occurs.
+     * @return {@code true} if timestamp was successfully set, {@code false} otherwise.
+     * @see #setLastModified(Path, long)
+     * @since TBD
+     */
+    default boolean copyWithTimestamp(Path source, Path target) throws IOException {
+        copy(source, target, null);
+        return setLastModified(target, Files.getLastModifiedTime(source).toMillis());
+    }
 
     /**
      * Copies the specified source file to the given target file. Creates the necessary directories for the target file.

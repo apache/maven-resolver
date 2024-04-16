@@ -93,7 +93,9 @@ public class SupplierRepositorySystemFactory {
                 result.put(
                         JdkTransporterFactory.NAME,
                         new JdkTransporterFactory(getChecksumExtractor(), getPathProcessor()));
-                result.put(JettyTransporterFactory.NAME, new JettyTransporterFactory(getChecksumExtractor()));
+                result.put(
+                        JettyTransporterFactory.NAME,
+                        new JettyTransporterFactory(getChecksumExtractor(), getPathProcessor()));
                 return result;
             }
         }.get();
