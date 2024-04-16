@@ -20,11 +20,9 @@ package org.eclipse.aether.spi.io;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileTime;
 
 /**
  * A utility component to perform file-based operations.
@@ -52,21 +50,12 @@ public interface PathProcessor {
      * Sets last modified of path in milliseconds, if exists.
      *
      * @param path The path, may be {@code null}.
-     * @throws UncheckedIOException If an I/O error occurs.
+     * @throws IOException If an I/O error occurs.
      * @return {@code true} if timestamp was successfully set, {@code false} otherwise. Reasons of {@code false} may
-     * be multiple, from file not found, to FS not supporting the setting the TS.
+     * be multiple, ranging from "file not found" to cases when FS does not support the setting the mtime.
      * @since TBD
      */
-    default boolean setLastModified(Path path, long value) {
-        try {
-            Files.setLastModifiedTime(path, FileTime.fromMillis(value));
-            return true;
-        } catch (FileSystemException e) {
-            return false; // not found Ex belongs here as well
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
+    boolean setLastModified(Path path, long value) throws IOException;
 
     /**
      * Returns size of file, if exists.
