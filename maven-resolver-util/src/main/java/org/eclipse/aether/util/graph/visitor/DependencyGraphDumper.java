@@ -303,11 +303,11 @@ public class DependencyGraphDumper implements DependencyVisitor {
         return buffer.toString();
     }
 
-    protected static boolean equals(Collection<Exclusion> c1, Collection<Exclusion> c2) {
+    private static boolean equals(Collection<Exclusion> c1, Collection<Exclusion> c2) {
         return c1 != null && c2 != null && c1.size() == c2.size() && c1.containsAll(c2);
     }
 
-    protected static boolean equals(Map<String, String> m1, Map<String, String> m2) {
+    private static boolean equals(Map<String, String> m1, Map<String, String> m2) {
         return m1 != null
                 && m2 != null
                 && m1.size() == m2.size()
