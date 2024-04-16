@@ -58,7 +58,7 @@ public class DefaultPathProcessor implements PathProcessor {
             if (e instanceof AccessDeniedException) {
                 throw e;
             }
-            logger.debug("Failed to set last-modified: {}", path, e);
+            logger.trace("Failed to set last modified date: {}", path, e);
         }
     }
 
