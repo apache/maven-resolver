@@ -33,9 +33,8 @@ public class TestPathProcessor implements PathProcessor {
     private final TestFileProcessor testFileProcessor = new TestFileProcessor();
 
     @Override
-    public boolean setLastModified(Path path, long value) throws IOException {
+    public void setLastModified(Path path, long value) throws IOException {
         Files.setLastModifiedTime(path, FileTime.fromMillis(value));
-        return true;
     }
 
     public void mkdirs(Path directory) {

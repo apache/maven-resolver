@@ -49,10 +49,9 @@ public class DefaultPathProcessor implements PathProcessor {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Override
-    public boolean setLastModified(Path path, long value) throws IOException {
+    public void setLastModified(Path path, long value) throws IOException {
         try {
             Files.setLastModifiedTime(path, FileTime.fromMillis(value));
-            return true;
         } catch (FileSystemException e) {
             // MRESOLVER-536: Java uses generic FileSystemException for some weird cases,
             // but some subclasses like AccessDeniedEx should be re-thrown
@@ -60,7 +59,6 @@ public class DefaultPathProcessor implements PathProcessor {
                 throw e;
             }
             logger.debug("Failed to set last-modified: {}", path, e);
-            return false;
         }
     }
 
