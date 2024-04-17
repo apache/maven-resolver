@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
-    <version>41</version>
+    <version>42</version>
     <relativePath />
   </parent>
 
@@ -213,13 +213,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.junit</groupId>
-        <artifactId>junit-bom</artifactId>
-        <version>5.10.2</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>5.11.0</version>
@@ -300,7 +293,7 @@
               <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>${project.artifactId}</artifactId>
-                <version>1.9.16</version>
+                <version>1.9.18</version>
                 <type>${project.packaging}</type>
               </dependency>
             </oldVersion>
@@ -440,7 +433,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.6.3</version>
           <configuration>
             <detectOfflineLinks>false</detectOfflineLinks>
             <linksource>true</linksource>
