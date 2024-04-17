@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
-    <version>41</version>
+    <version>42</version>
     <relativePath />
   </parent>
 
@@ -300,7 +300,7 @@
               <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>${project.artifactId}</artifactId>
-                <version>1.9.16</version>
+                <version>1.9.18</version>
                 <type>${project.packaging}</type>
               </dependency>
             </oldVersion>
@@ -440,7 +440,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.6.3</version>
           <configuration>
             <detectOfflineLinks>false</detectOfflineLinks>
             <linksource>true</linksource>
