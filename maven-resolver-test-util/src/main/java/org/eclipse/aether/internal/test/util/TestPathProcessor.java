@@ -19,7 +19,9 @@
 package org.eclipse.aether.internal.test.util;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 import org.eclipse.aether.spi.io.PathProcessor;
 
@@ -29,6 +31,11 @@ import org.eclipse.aether.spi.io.PathProcessor;
 public class TestPathProcessor implements PathProcessor {
 
     private final TestFileProcessor testFileProcessor = new TestFileProcessor();
+
+    @Override
+    public void setLastModified(Path path, long value) throws IOException {
+        Files.setLastModifiedTime(path, FileTime.fromMillis(value));
+    }
 
     public void mkdirs(Path directory) {
         if (directory == null) {
