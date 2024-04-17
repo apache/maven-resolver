@@ -156,7 +156,7 @@ public class DependencyGraphDumper implements DependencyVisitor {
         return dependencyNode -> {
             VersionConstraint constraint = dependencyNode.getVersionConstraint();
             if (constraint != null && constraint.getRange() != null) {
-                return "(in range '" + constraint.getRange() + "'";
+                return "(range '" + constraint.getRange() + "')";
             }
             return null;
         };
