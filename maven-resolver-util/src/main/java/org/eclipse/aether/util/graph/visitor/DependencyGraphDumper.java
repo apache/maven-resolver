@@ -40,6 +40,7 @@ import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import org.eclipse.aether.version.VersionConstraint;
 
 import static java.util.Objects.requireNonNull;
 
@@ -149,6 +150,18 @@ public class DependencyGraphDumper implements DependencyVisitor {
         };
     }
     /**
+     * Decorator of "range member": explains on nodes what range it participates in.
+     */
+    public static Function<DependencyNode, String> rangeMember() {
+        return dependencyNode -> {
+            VersionConstraint constraint = dependencyNode.getVersionConstraint();
+            if (constraint != null && constraint.getRange() != null) {
+                return "(in range '" + constraint.getRange() + "'";
+            }
+            return null;
+        };
+    }
+    /**
      * Decorator of "winner node": explains on losers why lost.
      */
     public static Function<DependencyNode, String> winnerNode() {
@@ -207,6 +220,7 @@ public class DependencyGraphDumper implements DependencyVisitor {
                     premanagedOptional(),
                     premanagedExclusions(),
                     premanagedProperties(),
+                    rangeMember(),
                     winnerNode()));
 
     /**
