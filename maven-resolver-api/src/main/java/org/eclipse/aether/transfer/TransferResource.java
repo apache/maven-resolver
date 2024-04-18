@@ -23,16 +23,40 @@ import java.nio.file.Path;
 
 import org.eclipse.aether.RequestTrace;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Describes a resource being uploaded or downloaded by the repository system.
  */
 public final class TransferResource {
+
+    /**
+     * The type of this resource.
+     */
+    public enum ResourceType {
+        /**
+         * Resource is {@link org.eclipse.aether.artifact.Artifact}.
+         */
+        ARTIFACT,
+        /**
+         * Resource is {@link org.eclipse.aether.metadata.Metadata}.
+         */
+        METADATA,
+        /**
+         * Resource is undefined, probably {@code null}.
+         */
+        UNDEFINED
+    }
 
     private final String repositoryId;
 
     private final String repositoryUrl;
 
     private final String resourceName;
+
+    private final ResourceType resourceType;
+
+    private final Object resource;
 
     private final Path path;
 
@@ -62,7 +86,14 @@ public final class TransferResource {
     @Deprecated
     public TransferResource(
             String repositoryId, String repositoryUrl, String resourceName, File file, RequestTrace trace) {
-        this(repositoryId, repositoryUrl, resourceName, file != null ? file.toPath() : null, trace);
+        this(
+                repositoryId,
+                repositoryUrl,
+                resourceName,
+                file != null ? file.toPath() : null,
+                ResourceType.UNDEFINED,
+                null,
+                trace);
     }
 
     /**
@@ -75,12 +106,20 @@ public final class TransferResource {
      * @param resourceName The relative path to the resource within the repository, may be {@code null}. A leading slash
      *            (if any) will be automatically removed.
      * @param path The source/target file involved in the transfer, may be {@code null}.
+     * @param resourceType The type of this resource, must not be {@code null}.
+     * @param resource The representation of this resource, may be {@code null}.
      * @param trace The trace information, may be {@code null}.
      *
      * @since 2.0.0
      */
     public TransferResource(
-            String repositoryId, String repositoryUrl, String resourceName, Path path, RequestTrace trace) {
+            String repositoryId,
+            String repositoryUrl,
+            String resourceName,
+            Path path,
+            ResourceType resourceType,
+            Object resource,
+            RequestTrace trace) {
         if (repositoryId == null || repositoryId.isEmpty()) {
             this.repositoryId = "";
         } else {
@@ -104,10 +143,10 @@ public final class TransferResource {
         }
 
         this.path = path;
-
+        this.resourceType = requireNonNull(resourceType, "resourceType");
+        this.resource = resource;
         this.trace = trace;
-
-        startTime = System.currentTimeMillis();
+        this.startTime = System.currentTimeMillis();
     }
 
     /**
@@ -138,6 +177,27 @@ public final class TransferResource {
      */
     public String getResourceName() {
         return resourceName;
+    }
+
+    /**
+     * The type of the resource.
+     *
+     * @return The type of the resource, never {@code null}.
+     * @since 2.0.0
+     */
+    public ResourceType getResourceType() {
+        return resourceType;
+    }
+
+    /**
+     * The representation of "resource", if any. The content of this field should be interpreted in function of
+     * returned value of {@link #getResourceType()}.
+     *
+     * @return The representation of this resource, may be {@code null}.
+     * @since 2.0.0
+     */
+    public Object getResource() {
+        return resource;
     }
 
     /**
