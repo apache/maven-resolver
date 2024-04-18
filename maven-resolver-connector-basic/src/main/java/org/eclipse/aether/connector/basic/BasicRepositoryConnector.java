@@ -378,7 +378,6 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     repository.getUrl(),
                     path.toString(),
                     artifactTransfer.getPath(),
-                    TransferResource.ResourceType.ARTIFACT,
                     artifactTransfer.getArtifact(),
                     transfer.getTrace());
         } else if (transfer instanceof MetadataTransfer) {
@@ -388,7 +387,6 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     repository.getUrl(),
                     path.toString(),
                     metadataTransfer.getPath(),
-                    TransferResource.ResourceType.METADATA,
                     metadataTransfer.getMetadata(),
                     transfer.getTrace());
         } else {

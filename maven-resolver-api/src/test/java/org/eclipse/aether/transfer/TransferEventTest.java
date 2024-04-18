@@ -30,8 +30,7 @@ import static org.mockito.Mockito.mock;
  */
 public class TransferEventTest {
 
-    private static final TransferResource res = new TransferResource(
-            "none", "file://nil", "void", null, TransferResource.ResourceType.UNDEFINED, null, null);
+    private static final TransferResource res = new TransferResource("none", "file://nil", "void", null, null, null);
 
     private static final RepositorySystemSession session = mock(RepositorySystemSession.class);
 
