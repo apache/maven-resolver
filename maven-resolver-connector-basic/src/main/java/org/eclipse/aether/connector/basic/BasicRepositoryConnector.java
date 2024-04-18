@@ -31,15 +31,17 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
+import org.eclipse.aether.spi.connector.ArtifactTransfer;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
+import org.eclipse.aether.spi.connector.MetadataTransfer;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
+import org.eclipse.aether.spi.connector.Transfer;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
@@ -191,7 +193,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         for (MetadataDownload transfer : safeMetadataDownloads) {
             URI location = layout.getLocation(transfer.getMetadata(), false);
 
-            TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
+            TransferResource resource = newTransferResource(location, transfer);
             TransferEvent.Builder builder = newEventBuilder(resource, false, false);
             MetadataTransportListener listener = new MetadataTransportListener(transfer, repository, builder);
 
@@ -231,7 +233,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
             URI location = layout.getLocation(transfer.getArtifact(), false);
 
-            TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
+            TransferResource resource = newTransferResource(location, transfer);
             TransferEvent.Builder builder = newEventBuilder(resource, false, transfer.isExistenceCheck());
             ArtifactTransportListener listener = new ArtifactTransportListener(transfer, repository, builder);
 
@@ -282,7 +284,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         for (ArtifactUpload transfer : safeArtifactUploads) {
             URI location = layout.getLocation(transfer.getArtifact(), true);
 
-            TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
+            TransferResource resource = newTransferResource(location, transfer);
             TransferEvent.Builder builder = newEventBuilder(resource, true, false);
             ArtifactTransportListener listener = new ArtifactTransportListener(transfer, repository, builder);
 
@@ -304,7 +306,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
             for (MetadataUpload transfer : transferGroup) {
                 URI location = layout.getLocation(transfer.getMetadata(), true);
 
-                TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
+                TransferResource resource = newTransferResource(location, transfer);
                 TransferEvent.Builder builder = newEventBuilder(resource, true, false);
                 MetadataTransportListener listener = new MetadataTransportListener(transfer, repository, builder);
 
@@ -368,8 +370,28 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         return (items != null) ? items : Collections.emptyList();
     }
 
-    private TransferResource newTransferResource(URI path, Path file, RequestTrace trace) {
-        return new TransferResource(repository.getId(), repository.getUrl(), path.toString(), file, trace);
+    private TransferResource newTransferResource(URI path, Transfer transfer) {
+        if (transfer instanceof ArtifactTransfer) {
+            ArtifactTransfer artifactTransfer = (ArtifactTransfer) transfer;
+            return new TransferResource(
+                    repository.getId(),
+                    repository.getUrl(),
+                    path.toString(),
+                    artifactTransfer.getPath(),
+                    artifactTransfer.getArtifact(),
+                    artifactTransfer.getTrace());
+        } else if (transfer instanceof MetadataTransfer) {
+            MetadataTransfer metadataTransfer = (MetadataTransfer) transfer;
+            return new TransferResource(
+                    repository.getId(),
+                    repository.getUrl(),
+                    path.toString(),
+                    metadataTransfer.getPath(),
+                    metadataTransfer.getMetadata(),
+                    metadataTransfer.getTrace());
+        } else {
+            throw new IllegalArgumentException("Accepting only artifact or metadata transfers");
+        }
     }
 
     private TransferEvent.Builder newEventBuilder(TransferResource resource, boolean upload, boolean peek) {
