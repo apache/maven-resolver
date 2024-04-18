@@ -32,6 +32,8 @@ public final class TransferResource {
 
     /**
      * The type of this resource.
+     *
+     * @since 2.0.0
      */
     public enum ResourceType {
         /**
