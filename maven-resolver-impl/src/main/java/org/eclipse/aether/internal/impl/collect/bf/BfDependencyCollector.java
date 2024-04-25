@@ -46,8 +46,6 @@ import java.util.stream.Stream;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.ArtifactType;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManager;
@@ -451,14 +449,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     private ArtifactDescriptorResult resolveDescriptorForVersion(
             Args args, DependencyProcessingContext context, Results results, Dependency dependency, Version version) {
         Artifact original = dependency.getArtifact();
-        Artifact newArtifact = new DefaultArtifact(
-                original.getGroupId(),
-                original.getArtifactId(),
-                original.getClassifier(),
-                original.getExtension(),
-                version.toString(),
-                original.getProperties(),
-                (ArtifactType) null);
+        Artifact newArtifact = original.setVersion(version.toString());
         Dependency newDependency =
                 new Dependency(newArtifact, dependency.getScope(), dependency.isOptional(), dependency.getExclusions());
         DependencyProcessingContext newContext = context.copy();
