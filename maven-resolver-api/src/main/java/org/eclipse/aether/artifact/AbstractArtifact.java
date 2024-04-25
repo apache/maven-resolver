@@ -82,7 +82,7 @@ public abstract class AbstractArtifact implements Artifact {
      * @param path The resolved file of the artifact, may be {@code null}.
      * @return The new artifact instance, never {@code null}.
      */
-    private Artifact newInstance(String version, Map<String, String> properties, Path path) {
+    protected Artifact newInstance(String version, Map<String, String> properties, Path path) {
         return new DefaultArtifact(
                 getGroupId(), getArtifactId(), getClassifier(), getExtension(), version, path, properties);
     }
@@ -96,30 +96,40 @@ public abstract class AbstractArtifact implements Artifact {
         return newInstance(version, getProperties(), getPath());
     }
 
+    @Deprecated
+    @Override
+    public Artifact setFile(File file) {
+        File current = getFile();
+        if (Objects.equals(current, file)) {
+            return this;
+        }
+        return newInstance(getVersion(), getProperties(), file != null ? file.toPath() : null);
+    }
+
     /**
      * This method should (and in Resolver is) overridden, but is kept just to preserve backward compatibility if
      * this class is extended somewhere.
      */
+    @Override
     public Path getPath() {
         File file = getFile();
         return file != null ? file.toPath() : null;
     }
 
-    @Deprecated
-    @Override
-    public Artifact setFile(File file) {
-        return setPath(file != null ? file.toPath() : null);
-    }
-
+    /**
+     * This method should (and in Resolver is) overridden, but is kept just to preserve backward compatibility if
+     * this class is extended somewhere.
+     */
     @Override
     public Artifact setPath(Path path) {
         Path current = getPath();
         if (Objects.equals(current, path)) {
             return this;
         }
-        return newInstance(getVersion(), getProperties(), path);
+        return setFile(path != null ? path.toFile() : null);
     }
 
+    @Override
     public Artifact setProperties(Map<String, String> properties) {
         Map<String, String> current = getProperties();
         if (current.equals(properties) || (properties == null && current.isEmpty())) {
@@ -128,6 +138,7 @@ public abstract class AbstractArtifact implements Artifact {
         return newInstance(getVersion(), copyProperties(properties), getPath());
     }
 
+    @Override
     public String getProperty(String key, String defaultValue) {
         String value = getProperties().get(key);
         return (value != null) ? value : defaultValue;

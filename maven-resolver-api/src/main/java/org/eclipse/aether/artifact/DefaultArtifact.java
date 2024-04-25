@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -309,33 +310,48 @@ public final class DefaultArtifact extends AbstractArtifact {
         return (str == null) ? "" : str;
     }
 
+    @Override
     public String getGroupId() {
         return groupId;
     }
 
+    @Override
     public String getArtifactId() {
         return artifactId;
     }
 
+    @Override
     public String getVersion() {
         return version;
     }
 
+    @Override
     public String getClassifier() {
         return classifier;
     }
 
+    @Override
     public String getExtension() {
         return extension;
     }
 
     @Deprecated
+    @Override
     public File getFile() {
         return path != null ? path.toFile() : null;
     }
 
+    @Override
     public Path getPath() {
         return path;
+    }
+
+    @Override
+    public Artifact setPath(Path path) {
+        if (Objects.equals(this.path, path)) {
+            return this;
+        }
+        return newInstance(version, getProperties(), path);
     }
 
     public Map<String, String> getProperties() {
