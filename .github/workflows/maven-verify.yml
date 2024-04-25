@@ -28,6 +28,5 @@ jobs:
     with:
       ff-site-run: false
       maven-matrix: '[ "3.9.6" ]'
-      jdk-distribution-matrix: '[ "zulu" ]'
 
 
