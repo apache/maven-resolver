@@ -44,6 +44,7 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
  * Internal utility methods.
  */
 public final class Utils {
+    private Utils() {}
 
     private static PrioritizedComponents<ArtifactDecoratorFactory> sortArtifactDecoratorFactories(
             RepositorySystemSession session, Map<String, ArtifactDecoratorFactory> factories) {

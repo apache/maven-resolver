@@ -63,6 +63,7 @@ public final class ChainedDependencyGraphTransformer implements DependencyGraphT
         return new ChainedDependencyGraphTransformer(transformer1, transformer2);
     }
 
+    @Override
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
         requireNonNull(node, "node cannot be null");

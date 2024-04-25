@@ -23,10 +23,10 @@ import org.eclipse.aether.artifact.ArtifactType;
 /**
  * A simple artifact type registry.
  */
-public final class DefaultArtifactTypeRegistry extends SimpleArtifactTypeRegistry {
+public class DefaultArtifactTypeRegistry extends SimpleArtifactTypeRegistry {
 
     /**
-     * Creates a new artifact type registry with initally no registered artifact types. Use {@link #add(ArtifactType)}
+     * Creates a new artifact type registry with initially no registered artifact types. Use {@link #add(ArtifactType)}
      * to populate the registry.
      */
     public DefaultArtifactTypeRegistry() {}
@@ -37,6 +37,7 @@ public final class DefaultArtifactTypeRegistry extends SimpleArtifactTypeRegistr
      * @param type The artifact type to add, must not be {@code null}.
      * @return This registry for chaining, never {@code null}.
      */
+    @Override
     public DefaultArtifactTypeRegistry add(ArtifactType type) {
         super.add(type);
         return this;

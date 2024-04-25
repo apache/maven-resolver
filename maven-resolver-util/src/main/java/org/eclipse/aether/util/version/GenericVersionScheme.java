@@ -45,7 +45,7 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
  * respectively, until the kind mismatch is resolved, e.g. "1-alpha" = "1.0.0-alpha" &lt; "1.0.1-ga" = "1.0.1".
  * </p>
  */
-public final class GenericVersionScheme extends VersionSchemeSupport {
+public class GenericVersionScheme extends VersionSchemeSupport {
     @Override
     public GenericVersion parseVersion(final String version) throws InvalidVersionSpecificationException {
         return new GenericVersion(version);

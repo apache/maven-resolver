@@ -50,6 +50,7 @@ class SimpleArtifactTypeRegistry implements ArtifactTypeRegistry {
         return this;
     }
 
+    @Override
     public ArtifactType get(String typeId) {
         return types.get(typeId);
     }
