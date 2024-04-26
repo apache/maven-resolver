@@ -52,7 +52,7 @@ public interface PathProcessor {
      * @param path The path, may be {@code null}.
      * @throws IOException If an I/O error occurs. Some exceptions/reasons of failure to set mtime may be swallowed,
      * and can be multiple, ranging from "file not found" to cases when FS does not support the setting the mtime.
-     * @since TBD
+     * @since 2.0.0
      */
     void setLastModified(Path path, long value) throws IOException;
 
@@ -122,7 +122,7 @@ public interface PathProcessor {
      * @param target The file to copy to, must not be {@code null}.
      * @throws IOException If an I/O error occurs.
      * @see #setLastModified(Path, long)
-     * @since TBD
+     * @since 2.0.0
      */
     default void copyWithTimestamp(Path source, Path target) throws IOException {
         copy(source, target, null);
