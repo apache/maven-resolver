@@ -41,6 +41,7 @@ public final class NoopDependencyGraphTransformer implements DependencyGraphTran
      */
     public NoopDependencyGraphTransformer() {}
 
+    @Override
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
         requireNonNull(node, "node cannot be null");

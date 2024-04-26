@@ -40,11 +40,13 @@ public final class StaticDependencyTraverser implements DependencyTraverser {
         this.traverse = traverse;
     }
 
+    @Override
     public boolean traverseDependency(Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
         return traverse;
     }
 
+    @Override
     public DependencyTraverser deriveChildTraverser(DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
         return this;

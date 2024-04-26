@@ -127,14 +127,17 @@ public abstract class DelegatingArtifact extends AbstractArtifact {
         return this;
     }
 
+    @Override
     public String getProperty(String key, String defaultValue) {
         return delegate.getProperty(key, defaultValue);
     }
 
+    @Override
     public Map<String, String> getProperties() {
         return delegate.getProperties();
     }
 
+    @Override
     public Artifact setProperties(Map<String, String> properties) {
         Artifact artifact = delegate.setProperties(properties);
         if (artifact != delegate) {

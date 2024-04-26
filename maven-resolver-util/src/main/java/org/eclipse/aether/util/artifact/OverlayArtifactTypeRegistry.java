@@ -25,7 +25,7 @@ import org.eclipse.aether.artifact.ArtifactTypeRegistry;
  * An artifact type registry which first consults its own mappings and in case of an unknown type falls back to another
  * type registry.
  */
-public final class OverlayArtifactTypeRegistry extends SimpleArtifactTypeRegistry {
+public class OverlayArtifactTypeRegistry extends SimpleArtifactTypeRegistry {
 
     private final ArtifactTypeRegistry delegate;
 
@@ -45,11 +45,13 @@ public final class OverlayArtifactTypeRegistry extends SimpleArtifactTypeRegistr
      * @param type The artifact type to add, must not be {@code null}.
      * @return This registry for chaining, never {@code null}.
      */
+    @Override
     public OverlayArtifactTypeRegistry add(ArtifactType type) {
         super.add(type);
         return this;
     }
 
+    @Override
     public ArtifactType get(String typeId) {
         ArtifactType type = super.get(typeId);
 
