@@ -59,7 +59,7 @@ public final class TransferResource {
      * @param trace The trace information, may be {@code null}.
      *
      * @since 1.1.0
-     * @deprecated Use {@link TransferResource(String, String, String, Path, RequestTrace)} instead.
+     * @deprecated Use {@link TransferResource(String, String, String, Path, Object, RequestTrace)} instead.
      */
     @Deprecated
     public TransferResource(
@@ -150,7 +150,7 @@ public final class TransferResource {
     /**
      * The representation of "resource", if any. The content of this field may be
      * {@link org.eclipse.aether.artifact.Artifact} or {@link org.eclipse.aether.metadata.Metadata} or {@code null}
-     * in case of some legacy flow. Preferred way to handle returned value is with {@link instanceof}.
+     * in case of some legacy flow. Preferred way to handle returned value is with {@code instanceof}.
      *
      * @return The representation of this resource, may be {@code null}.
      * @since 2.0.0
