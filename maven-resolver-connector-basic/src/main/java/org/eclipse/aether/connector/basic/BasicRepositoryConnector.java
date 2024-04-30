@@ -68,14 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PARALLEL_PUT;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PERSISTED_CHECKSUMS;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_SMART_CHECKSUMS;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_THREADS;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PARALLEL_PUT;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PERSISTED_CHECKSUMS;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_SMART_CHECKSUMS;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_THREADS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.*;
 
 /**
  *
@@ -97,7 +90,9 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     private final ChecksumPolicyProvider checksumPolicyProvider;
 
-    private final int maxThreads;
+    private final int maxDownstreamThreads;
+
+    private final int maxUpstreamThreads;
 
     private final boolean smartChecksums;
 
@@ -136,7 +131,18 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         this.providedChecksumsSources = providedChecksumsSources;
         this.closed = new AtomicBoolean(false);
 
-        maxThreads = ExecutorUtils.threadCount(session, DEFAULT_THREADS, CONFIG_PROP_THREADS);
+        maxUpstreamThreads = ExecutorUtils.threadCount(
+                session,
+                DEFAULT_THREADS,
+                CONFIG_PROP_UPSTREAM_THREADS,
+                CONFIG_PROP_UPSTREAM_THREADS + "." + repository.getId(),
+                CONFIG_PROP_THREADS);
+        maxDownstreamThreads = ExecutorUtils.threadCount(
+                session,
+                DEFAULT_THREADS,
+                CONFIG_PROP_DOWNSTREAM_THREADS,
+                CONFIG_PROP_DOWNSTREAM_THREADS + "." + repository.getId(),
+                CONFIG_PROP_THREADS);
         smartChecksums = ConfigUtils.getBoolean(session, DEFAULT_SMART_CHECKSUMS, CONFIG_PROP_SMART_CHECKSUMS);
         parallelPut = ConfigUtils.getBoolean(
                 session,
@@ -147,7 +153,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 ConfigUtils.getBoolean(session, DEFAULT_PERSISTED_CHECKSUMS, CONFIG_PROP_PERSISTED_CHECKSUMS);
     }
 
-    private Executor getExecutor(int tasks) {
+    private Executor getExecutor(boolean downstream, int tasks) {
+        int maxThreads = downstream ? maxDownstreamThreads : maxUpstreamThreads;
         if (maxThreads <= 1) {
             return ExecutorUtils.DIRECT_EXECUTOR;
         }
@@ -184,7 +191,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         Collection<? extends ArtifactDownload> safeArtifactDownloads = safe(artifactDownloads);
         Collection<? extends MetadataDownload> safeMetadataDownloads = safe(metadataDownloads);
 
-        Executor executor = getExecutor(safeArtifactDownloads.size() + safeMetadataDownloads.size());
+        Executor executor = getExecutor(true, safeArtifactDownloads.size() + safeMetadataDownloads.size());
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
@@ -276,7 +283,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         Collection<? extends ArtifactUpload> safeArtifactUploads = safe(artifactUploads);
         Collection<? extends MetadataUpload> safeMetadataUploads = safe(metadataUploads);
 
-        Executor executor = getExecutor(parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1);
+        Executor executor =
+                getExecutor(false, parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1);
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
         boolean first = true;

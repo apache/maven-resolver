@@ -50,15 +50,40 @@ public final class BasicRepositoryConnectorConfigurationKeys {
     public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
 
     /**
-     * Number of threads in basic connector for uploading/downloading.
+     * Number of threads in basic connector for uploading/downloading. Observed only if some of the
+     * upstream or downstream threads are not set. (Deprecated)
      *
      * @since 0.9.0.M4
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Integer}
      * @configurationDefaultValue {@link #DEFAULT_THREADS}
      * @configurationRepoIdSuffix No
+     * @deprecated Use {@link #CONFIG_PROP_UPSTREAM_THREADS} and {@link #CONFIG_PROP_DOWNSTREAM_THREADS} instead.
      */
+    @Deprecated
     public static final String CONFIG_PROP_THREADS = CONFIG_PROPS_PREFIX + "threads";
+
+    /**
+     * Number of threads in basic connector for uploading.
+     *
+     * @since 2.0.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_THREADS}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_UPSTREAM_THREADS = CONFIG_PROPS_PREFIX + "upstreamThreads";
+
+    /**
+     * Number of threads in basic connector for downloading.
+     *
+     * @since 2.0.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_THREADS}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_DOWNSTREAM_THREADS = CONFIG_PROPS_PREFIX + "downstreamThreads";
 
     public static final int DEFAULT_THREADS = 5;
 
