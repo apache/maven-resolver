@@ -134,14 +134,14 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         maxUpstreamThreads = ExecutorUtils.threadCount(
                 session,
                 DEFAULT_THREADS,
-                CONFIG_PROP_UPSTREAM_THREADS,
                 CONFIG_PROP_UPSTREAM_THREADS + "." + repository.getId(),
+                CONFIG_PROP_UPSTREAM_THREADS,
                 CONFIG_PROP_THREADS);
         maxDownstreamThreads = ExecutorUtils.threadCount(
                 session,
                 DEFAULT_THREADS,
-                CONFIG_PROP_DOWNSTREAM_THREADS,
                 CONFIG_PROP_DOWNSTREAM_THREADS + "." + repository.getId(),
+                CONFIG_PROP_DOWNSTREAM_THREADS,
                 CONFIG_PROP_THREADS);
         smartChecksums = ConfigUtils.getBoolean(session, DEFAULT_SMART_CHECKSUMS, CONFIG_PROP_SMART_CHECKSUMS);
         parallelPut = ConfigUtils.getBoolean(
