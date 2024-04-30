@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -100,7 +101,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     private final boolean persistedChecksums;
 
-    private Executor executor;
+    private final ConcurrentHashMap<Boolean, Executor> executors;
 
     private final AtomicBoolean closed;
 
@@ -129,6 +130,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         this.repository = repository;
         this.checksumProcessor = checksumProcessor;
         this.providedChecksumsSources = providedChecksumsSources;
+        this.executors = new ConcurrentHashMap<>();
         this.closed = new AtomicBoolean(false);
 
         maxUpstreamThreads = ExecutorUtils.threadCount(
@@ -161,17 +163,18 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         if (tasks <= 1) {
             return ExecutorUtils.DIRECT_EXECUTOR;
         }
-        if (executor == null) {
-            executor =
-                    ExecutorUtils.threadPool(maxThreads, getClass().getSimpleName() + '-' + repository.getHost() + '-');
-        }
-        return executor;
+        return executors.computeIfAbsent(
+                downstream,
+                k -> ExecutorUtils.threadPool(
+                        maxThreads, getClass().getSimpleName() + '-' + repository.getHost() + '-'));
     }
 
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            ExecutorUtils.shutdown(executor);
+            for (Executor executor : executors.values()) {
+                ExecutorUtils.shutdown(executor);
+            }
             transporter.close();
         }
     }
