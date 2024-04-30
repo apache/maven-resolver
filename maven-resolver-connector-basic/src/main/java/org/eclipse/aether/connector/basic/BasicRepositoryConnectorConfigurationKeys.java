@@ -50,8 +50,7 @@ public final class BasicRepositoryConnectorConfigurationKeys {
     public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
 
     /**
-     * Flag indicating whether checksums which are retrieved during checksum validation should be persisted in the
-     * local repository next to the file they provide the checksum for.
+     * Number of threads in basic connector for uploading/downloading.
      *
      * @since 0.9.0.M4
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
