@@ -41,9 +41,16 @@ under the License.
       <item name="License" href="https://www.apache.org/licenses/"/>
       <item name="Download" href="download.html"/>
     </menu>
+    <menu name="About">
+      <item name="What Is Resolver?" href="what-is-resolver.html"/>
+      <item name="Using Resolver in Maven Plugins" href="using-resolver-in-maven-plugins.html"/>
+      <item name="Transitive Dependency Resolution" href="transitive-dependency-resolution.html"/>
+      <item name="Dependency Graph" href="dependency-graph.html"/>
+      <item name="Creating a RepositorySystemSession" href="creating-a-repository-system-session.html"/>
+      <item name="Resolving Dependencies" href="resolving-dependencies.html"/>
+    </menu>
     <menu name="See Also">
       <item name="Maven Artifact Resolver Ant Tasks" href="https://maven.apache.org/resolver-ant-tasks/"/>
-      <item name="Aether wiki" href="https://wiki.eclipse.org/Aether"/>
     </menu>
 
     <menu ref="modules"/>
