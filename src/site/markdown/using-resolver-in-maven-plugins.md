@@ -37,12 +37,15 @@ POM:
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
       <version>1.9.20</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <!-- optional helpers, might be superfluous depending on your use case -->
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-util</artifactId>
       <version>1.9.20</version>
+      <!-- Scope: use compile to make plugin work in Maven 3.8 and earlier -->
+      <scope>compile</scope>
     </dependency>
     ...
   </dependencies>

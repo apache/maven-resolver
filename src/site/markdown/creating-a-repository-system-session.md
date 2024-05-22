@@ -26,28 +26,32 @@ settings or the path to the local repository. Those settings that tend
 to be the same for an entire usage session of the repository system are
 represented by an instance of
 `org.eclipse.aether.RepositorySystemSession`. Using classes from
-`maven-aether-provider`, creating such a session that mimics Maven's
+`maven-resolver-supplier`, creating such a session that mimics Maven's
 setup can be done like this:
 
 ```java
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.eclipse.aether.supplier.RepositorySystemSupplier;
 
 ...
     private static RepositorySystemSession newSession( RepositorySystem system )
     {
-        DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+        RepositorySystemSession.SessionBuilder sessionBuilder = SessionBuilderSupplier.get();
 
         LocalRepository localRepo = new LocalRepository( "target/local-repo" );
-        session.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepo ) );
+        sessionBuilder.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepo ) );
 
-        return session;
+        return session.build();
     }
 ```
 
 As you see, the only setting that must be specified is the local
 repository, other settings are initialized with default values. Please
-have a look at the API docs for `DefaultRepositorySystemSession` to
+have a look at the API docs for `RepositorySystemSession.SessionBuilder` to
 learn about all the other things you can configure for a session.
+
+In case of Maven plugin, or when code runs embedded in Maven, the session
+is already created for you, but you can still "derive" using copy constructor
+of `DefaultRepositorySystemSession` if some session alteration is needed.
 
 If you seek a closer cooperation with [Apache
 Maven](http://maven.apache.org/) and want to read configuration from the

@@ -20,34 +20,35 @@ under the License.
 -->
 
 <project xmlns="http://maven.apache.org/DECORATION/1.8.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 http://maven.apache.org/xsd/decoration-1.8.0.xsd"
+  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 https://maven.apache.org/xsd/decoration-1.8.0.xsd"
   name="Artifact Resolver">
   <edit>${project.scm.url}</edit>
   <body>
     <menu name="Overview">
       <item name="Introduction" href="index.html"/>
-      <item name="API Compatibility" href="api-compatibility.html"/>
-      <item name="Configuration" href="configuration.html"/>
-      <item name="About Checksums" href="about-checksums.html"/>
+      <item name="What Is Resolver?" href="what-is-resolver.html"/>
+      <item name="Checksums" href="about-checksums.html"/>
       <item name="Expected Checksums" href="expected-checksums.html"/>
-      <item name="About Local Repository" href="local-repository.html"/>
+      <item name="Local Repository" href="local-repository.html"/>
       <item name="Remote Repository Filtering" href="remote-repository-filtering.html"/>
       <item name="Third-party Integrations" href="third-party-integrations.html"/>
-      <item name="Common Misconceptions" href="common-misconceptions.html"/>
-      <item name="Upgrading Resolver" href="upgrading-resolver.html"/>
-      <item name="JavaDocs" href="apidocs/index.html"/>
-      <item name="Source Xref" href="xref/index.html"/>
-      <!--item name="FAQ" href="faq.html"/-->
-      <item name="License" href="https://www.apache.org/licenses/"/>
       <item name="Download" href="download.html"/>
     </menu>
-    <menu name="About">
-      <item name="What Is Resolver?" href="what-is-resolver.html"/>
+    <menu name="Guides">
+      <item name="API Compatibility" href="api-compatibility.html"/>
+      <item name="Upgrading Resolver" href="upgrading-resolver.html"/>
       <item name="Using Resolver in Maven Plugins" href="using-resolver-in-maven-plugins.html"/>
       <item name="Transitive Dependency Resolution" href="transitive-dependency-resolution.html"/>
       <item name="Dependency Graph" href="dependency-graph.html"/>
       <item name="Creating a RepositorySystemSession" href="creating-a-repository-system-session.html"/>
       <item name="Resolving Dependencies" href="resolving-dependencies.html"/>
+      <item name="Common Misconceptions" href="common-misconceptions.html"/>
+    </menu>
+    <menu name="Reference">
+      <item name="Configuration" href="configuration.html"/>
+      <item name="JavaDocs" href="apidocs/index.html"/>
+      <item name="Source Xref" href="xref/index.html"/>
+      <item name="License" href="https://www.apache.org/licenses/"/>
     </menu>
     <menu name="See Also">
       <item name="Maven Artifact Resolver Ant Tasks" href="https://maven.apache.org/resolver-ant-tasks/"/>
