@@ -864,12 +864,13 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     /**
      * Simple "pass through" implementation of {@link ProxySelector} that simply returns what passed in
-     * {@link RemoteRepository} have set already, may be {@code null}.
+     * {@link RemoteRepository} have set already, may return {@code null}.
      */
     static class PassthroughProxySelector implements ProxySelector {
 
         public static final ProxySelector INSTANCE = new PassthroughProxySelector();
 
+        @Override
         public Proxy getProxy(RemoteRepository repository) {
             requireNonNull(repository, "repository cannot be null");
             return repository.getProxy();
@@ -884,6 +885,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
         public static final MirrorSelector INSTANCE = new NullMirrorSelector();
 
+        @Override
         public RemoteRepository getMirror(RemoteRepository repository) {
             requireNonNull(repository, "repository cannot be null");
             return null;
@@ -892,12 +894,13 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     /**
      * Simple "pass through" implementation of {@link AuthenticationSelector} that simply returns what passed in
-     * {@link RemoteRepository} have set already, may be {@code null}.
+     * {@link RemoteRepository} have set already, may return {@code null}.
      */
     static class PassthroughAuthenticationSelector implements AuthenticationSelector {
 
         public static final AuthenticationSelector INSTANCE = new PassthroughAuthenticationSelector();
 
+        @Override
         public Authentication getAuthentication(RemoteRepository repository) {
             requireNonNull(repository, "repository cannot be null");
             return repository.getAuthentication();
@@ -911,6 +914,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
         public static final ArtifactTypeRegistry INSTANCE = new NullArtifactTypeRegistry();
 
+        @Override
         public ArtifactType get(String typeId) {
             return null;
         }
