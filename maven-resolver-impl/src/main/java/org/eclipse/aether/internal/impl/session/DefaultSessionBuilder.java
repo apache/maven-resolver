@@ -58,9 +58,10 @@ import static java.util.stream.Collectors.toList;
 public final class DefaultSessionBuilder implements SessionBuilder {
     private static final MirrorSelector NULL_MIRROR_SELECTOR = r -> null;
 
-    private static final ProxySelector NULL_PROXY_SELECTOR = RemoteRepository::getProxy;
+    private static final ProxySelector PASS_THROUGH_PROXY_SELECTOR = RemoteRepository::getProxy;
 
-    private static final AuthenticationSelector NULL_AUTHENTICATION_SELECTOR = RemoteRepository::getAuthentication;
+    private static final AuthenticationSelector PASS_THROUGH_AUTHENTICATION_SELECTOR =
+            RemoteRepository::getAuthentication;
 
     private static final ArtifactTypeRegistry NULL_ARTIFACT_TYPE_REGISTRY = t -> null;
 
@@ -106,9 +107,9 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private MirrorSelector mirrorSelector = NULL_MIRROR_SELECTOR;
 
-    private ProxySelector proxySelector = NULL_PROXY_SELECTOR;
+    private ProxySelector proxySelector = PASS_THROUGH_PROXY_SELECTOR;
 
-    private AuthenticationSelector authenticationSelector = NULL_AUTHENTICATION_SELECTOR;
+    private AuthenticationSelector authenticationSelector = PASS_THROUGH_AUTHENTICATION_SELECTOR;
 
     private ArtifactTypeRegistry artifactTypeRegistry = NULL_ARTIFACT_TYPE_REGISTRY;
 
@@ -282,7 +283,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     public DefaultSessionBuilder setProxySelector(ProxySelector proxySelector) {
         this.proxySelector = proxySelector;
         if (this.proxySelector == null) {
-            this.proxySelector = NULL_PROXY_SELECTOR;
+            this.proxySelector = PASS_THROUGH_PROXY_SELECTOR;
         }
         return this;
     }
@@ -291,7 +292,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     public DefaultSessionBuilder setAuthenticationSelector(AuthenticationSelector authenticationSelector) {
         this.authenticationSelector = authenticationSelector;
         if (this.authenticationSelector == null) {
-            this.authenticationSelector = NULL_AUTHENTICATION_SELECTOR;
+            this.authenticationSelector = PASS_THROUGH_AUTHENTICATION_SELECTOR;
         }
         return this;
     }

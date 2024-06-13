@@ -162,8 +162,8 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         configProperties = new HashMap<>();
         configPropertiesView = Collections.unmodifiableMap(configProperties);
         mirrorSelector = NullMirrorSelector.INSTANCE;
-        proxySelector = NullProxySelector.INSTANCE;
-        authenticationSelector = NullAuthenticationSelector.INSTANCE;
+        proxySelector = PassthroughProxySelector.INSTANCE;
+        authenticationSelector = PassthroughAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
         data = new DefaultSessionData();
         this.onSessionEndedRegistrar = requireNonNull(onSessionEndedRegistrar, "onSessionEndedRegistrar");
@@ -633,7 +633,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         verifyStateForMutation();
         this.proxySelector = proxySelector;
         if (this.proxySelector == null) {
-            this.proxySelector = NullProxySelector.INSTANCE;
+            this.proxySelector = PassthroughProxySelector.INSTANCE;
         }
         return this;
     }
@@ -656,7 +656,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         verifyStateForMutation();
         this.authenticationSelector = authenticationSelector;
         if (this.authenticationSelector == null) {
-            this.authenticationSelector = NullAuthenticationSelector.INSTANCE;
+            this.authenticationSelector = PassthroughAuthenticationSelector.INSTANCE;
         }
         return this;
     }
@@ -862,40 +862,59 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         }
     }
 
-    static class NullProxySelector implements ProxySelector {
+    /**
+     * Simple "pass through" implementation of {@link ProxySelector} that simply returns what passed in
+     * {@link RemoteRepository} have set already, may return {@code null}.
+     */
+    static class PassthroughProxySelector implements ProxySelector {
 
-        public static final ProxySelector INSTANCE = new NullProxySelector();
+        public static final ProxySelector INSTANCE = new PassthroughProxySelector();
 
+        @Override
         public Proxy getProxy(RemoteRepository repository) {
             requireNonNull(repository, "repository cannot be null");
             return repository.getProxy();
         }
     }
 
+    /**
+     * Simple "null" implementation of {@link MirrorSelector} that returns {@code null} for any passed
+     * in {@link RemoteRepository}.
+     */
     static class NullMirrorSelector implements MirrorSelector {
 
         public static final MirrorSelector INSTANCE = new NullMirrorSelector();
 
+        @Override
         public RemoteRepository getMirror(RemoteRepository repository) {
             requireNonNull(repository, "repository cannot be null");
             return null;
         }
     }
 
-    static class NullAuthenticationSelector implements AuthenticationSelector {
+    /**
+     * Simple "pass through" implementation of {@link AuthenticationSelector} that simply returns what passed in
+     * {@link RemoteRepository} have set already, may return {@code null}.
+     */
+    static class PassthroughAuthenticationSelector implements AuthenticationSelector {
 
-        public static final AuthenticationSelector INSTANCE = new NullAuthenticationSelector();
+        public static final AuthenticationSelector INSTANCE = new PassthroughAuthenticationSelector();
 
+        @Override
         public Authentication getAuthentication(RemoteRepository repository) {
             requireNonNull(repository, "repository cannot be null");
             return repository.getAuthentication();
         }
     }
 
+    /**
+     * Simple "null" implementation of {@link ArtifactTypeRegistry} that returns {@code null} for any type ID.
+     */
     static final class NullArtifactTypeRegistry implements ArtifactTypeRegistry {
 
         public static final ArtifactTypeRegistry INSTANCE = new NullArtifactTypeRegistry();
 
+        @Override
         public ArtifactType get(String typeId) {
             return null;
         }
