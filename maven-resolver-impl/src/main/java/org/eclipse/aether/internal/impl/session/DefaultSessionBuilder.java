@@ -60,7 +60,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private static final ProxySelector PASS_THROUGH_PROXY_SELECTOR = RemoteRepository::getProxy;
 
-    private static final AuthenticationSelector PASS_THROUGH_AUTHENTICATION_SELECTOR = RemoteRepository::getAuthentication;
+    private static final AuthenticationSelector PASS_THROUGH_AUTHENTICATION_SELECTOR =
+            RemoteRepository::getAuthentication;
 
     private static final ArtifactTypeRegistry NULL_ARTIFACT_TYPE_REGISTRY = t -> null;
 
