@@ -24,10 +24,6 @@ import org.apache.maven.repository.internal.MavenSessionBuilderSupplier;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
-import org.eclipse.aether.collection.DependencyManager;
-import org.eclipse.aether.impl.scope.InternalScopeManager;
-import org.eclipse.aether.internal.impl.scope.ScopeManagerImpl;
-import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 
 /**
  * A simple {@link Supplier} of {@link SessionBuilder} instances, that on each call supplies newly
@@ -41,20 +37,5 @@ import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 public class SessionBuilderSupplier extends MavenSessionBuilderSupplier {
     public SessionBuilderSupplier(RepositorySystem repositorySystem) {
         super(repositorySystem);
-    }
-
-    @Override
-    protected void configureSessionBuilder(SessionBuilder session) {
-        super.configureSessionBuilder(session);
-        session.setScopeManager(getScopeManager());
-    }
-
-    @Override
-    protected DependencyManager getDependencyManager() {
-        return new ClassicDependencyManager(true, getScopeManager()); // same default as in Maven4
-    }
-
-    protected InternalScopeManager getScopeManager() {
-        return new ScopeManagerImpl(Maven4ScopeManagerConfiguration.INSTANCE);
     }
 }

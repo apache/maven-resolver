@@ -105,7 +105,7 @@
     <jettyVersion>10.0.21</jettyVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.6</maven3Version>
-    <maven4Version>4.0.0-alpha-13</maven4Version>
+    <maven4Version>4.0.0-beta-3</maven4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
