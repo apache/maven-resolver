@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
-    <version>41</version>
+    <version>42</version>
     <relativePath />
   </parent>
 
@@ -62,7 +62,9 @@
     <module>maven-resolver-transport-jdk-parent</module>
     <module>maven-resolver-transport-apache</module>
     <module>maven-resolver-transport-wagon</module>
-    <module>maven-resolver-supplier</module>
+    <module>maven-resolver-generator-gnupg</module>
+    <module>maven-resolver-supplier-mvn3</module>
+    <module>maven-resolver-supplier-mvn4</module>
     <module>maven-resolver-demos</module>
     <module>maven-resolver-tools</module>
   </modules>
@@ -97,17 +99,18 @@
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
-    <sisuVersion>0.9.0.M2</sisuVersion>
+    <sisuVersion>0.9.0.M3</sisuVersion>
     <guiceVersion>6.0.0</guiceVersion>
-    <slf4jVersion>2.0.11</slf4jVersion>
+    <slf4jVersion>2.0.13</slf4jVersion>
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
-    <jettyVersion>10.0.20</jettyVersion>
+    <jettyVersion>10.0.21</jettyVersion>
     <!-- used by supplier and demo only -->
-    <mavenVersion>4.0.0-alpha-12</mavenVersion>
+    <maven3Version>3.9.6</maven3Version>
+    <maven4Version>4.0.0-beta-3</maven4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
-    <project.build.outputTimestamp>2024-01-25T18:38:04Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2024-04-26T11:50:22Z</project.build.outputTimestamp>
     <!-- site fixes: skip PMD as it does not support Java 21 -->
     <pmd.skip>true</pmd.skip>
   </properties>
@@ -176,7 +179,17 @@
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
-        <artifactId>maven-resolver-supplier</artifactId>
+        <artifactId>maven-resolver-generator-gnupg</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-supplier-mvn3</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-supplier-mvn4</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -201,16 +214,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.junit</groupId>
-        <artifactId>junit-bom</artifactId>
-        <version>5.10.1</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>4.11.0</version>
+        <version>5.12.0</version>
         <scope>test</scope>
       </dependency>
 
@@ -218,12 +224,12 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.1</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-xml</artifactId>
-        <version>4.0.3</version>
+        <version>4.0.4</version>
       </dependency>
 
       <dependency>
@@ -281,14 +287,14 @@
         <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
-          <version>0.18.3</version>
+          <version>0.21.2</version>
           <configuration>
             <oldVersion>
               <!-- We compare same module against 1.8.0 set as "baseline" -->
               <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>${project.artifactId}</artifactId>
-                <version>1.9.16</version>
+                <version>1.9.18</version>
                 <type>${project.packaging}</type>
               </dependency>
             </oldVersion>
@@ -428,7 +434,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.6.3</version>
           <configuration>
             <detectOfflineLinks>false</detectOfflineLinks>
             <linksource>true</linksource>
@@ -578,6 +583,7 @@
           <artifactId>apache-rat-plugin</artifactId>
           <configuration>
             <excludes combine.children="append">
+              <exclude>src/main/resources/**/*.key</exclude>
               <exclude>src/test/resources/**/*.ini</exclude>
               <exclude>src/test/resources/**/*.txt</exclude>
               <exclude>src/test/resources/ssl/*-store</exclude>
@@ -588,7 +594,7 @@
         <plugin>
           <groupId>biz.aQute.bnd</groupId>
           <artifactId>bnd-maven-plugin</artifactId>
-          <version>6.4.0</version>
+          <version>7.0.0</version>
           <executions>
             <execution>
               <id>bnd-process</id>

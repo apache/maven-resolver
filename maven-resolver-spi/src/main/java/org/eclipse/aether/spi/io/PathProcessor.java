@@ -47,6 +47,16 @@ public interface PathProcessor {
     }
 
     /**
+     * Sets last modified of path in milliseconds, if exists.
+     *
+     * @param path The path, may be {@code null}.
+     * @throws IOException If an I/O error occurs. Some exceptions/reasons of failure to set mtime may be swallowed,
+     * and can be multiple, ranging from "file not found" to cases when FS does not support the setting the mtime.
+     * @since 2.0.0
+     */
+    void setLastModified(Path path, long value) throws IOException;
+
+    /**
      * Returns size of file, if exists.
      *
      * @param path The path, may be {@code null}.
@@ -101,7 +111,23 @@ public interface PathProcessor {
      * @param target The file to copy to, must not be {@code null}.
      * @throws IOException If an I/O error occurs.
      */
-    void copy(Path source, Path target) throws IOException;
+    default void copy(Path source, Path target) throws IOException {
+        copy(source, target, null);
+    }
+
+    /**
+     * Same as {@link #copy(Path, Path)} but sets source file last modified timestamp on target as well.
+     *
+     * @param source The file to copy from, must not be {@code null}.
+     * @param target The file to copy to, must not be {@code null}.
+     * @throws IOException If an I/O error occurs.
+     * @see #setLastModified(Path, long)
+     * @since 2.0.0
+     */
+    default void copyWithTimestamp(Path source, Path target) throws IOException {
+        copy(source, target, null);
+        setLastModified(target, Files.getLastModifiedTime(source).toMillis());
+    }
 
     /**
      * Copies the specified source file to the given target file. Creates the necessary directories for the target file.

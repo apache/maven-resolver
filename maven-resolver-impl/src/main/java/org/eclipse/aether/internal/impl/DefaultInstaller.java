@@ -22,8 +22,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -49,8 +49,12 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalMetadataRegistration;
 import org.eclipse.aether.repository.LocalRepositoryManager;
+import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
+import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -59,9 +63,13 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultInstaller implements Installer {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final PathProcessor pathProcessor;
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
+
+    private final Map<String, ArtifactGeneratorFactory> artifactFactories;
 
     private final Map<String, MetadataGeneratorFactory> metadataFactories;
 
@@ -71,11 +79,13 @@ public class DefaultInstaller implements Installer {
     public DefaultInstaller(
             PathProcessor pathProcessor,
             RepositoryEventDispatcher repositoryEventDispatcher,
+            Map<String, ArtifactGeneratorFactory> artifactFactories,
             Map<String, MetadataGeneratorFactory> metadataFactories,
             SyncContextFactory syncContextFactory) {
         this.pathProcessor = requireNonNull(pathProcessor, "path processor cannot be null");
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
+        this.artifactFactories = Collections.unmodifiableMap(artifactFactories);
         this.metadataFactories = Collections.unmodifiableMap(metadataFactories);
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
     }
@@ -95,70 +105,81 @@ public class DefaultInstaller implements Installer {
 
         RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
-        List<? extends MetadataGenerator> generators = getMetadataGenerators(session, request);
-
         List<Artifact> artifacts = new ArrayList<>(request.getArtifacts());
-
-        IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
-
-        List<Metadata> metadatas = Utils.prepareMetadata(generators, artifacts);
-
-        syncContext.acquire(artifacts, Utils.combine(request.getMetadata(), metadatas));
-
-        for (Metadata metadata : metadatas) {
-            install(session, trace, metadata);
-            processedMetadata.put(metadata, null);
-            result.addMetadata(metadata);
-        }
-
-        for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
-            Artifact artifact = iterator.next();
-
-            for (MetadataGenerator generator : generators) {
-                artifact = generator.transformArtifact(artifact);
+        List<? extends ArtifactGenerator> artifactGenerators =
+                Utils.getArtifactGenerators(session, artifactFactories, request);
+        try {
+            List<Artifact> generatedArtifacts = new ArrayList<>();
+            for (ArtifactGenerator artifactGenerator : artifactGenerators) {
+                Collection<? extends Artifact> generated = artifactGenerator.generate(generatedArtifacts);
+                for (Artifact generatedArtifact : generated) {
+                    Map<String, String> properties = new HashMap<>(generatedArtifact.getProperties());
+                    properties.put(
+                            ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID,
+                            requireNonNull(artifactGenerator.generatorId(), "generatorId"));
+                    Artifact ga = generatedArtifact.setProperties(properties);
+                    generatedArtifacts.add(ga);
+                }
             }
+            artifacts.addAll(generatedArtifacts);
 
-            iterator.set(artifact);
+            List<? extends MetadataGenerator> metadataGenerators =
+                    Utils.getMetadataGenerators(session, metadataFactories, request);
 
-            install(session, trace, artifact);
-            result.addArtifact(artifact);
-        }
+            IdentityHashMap<Metadata, Object> processedMetadata = new IdentityHashMap<>();
 
-        metadatas = Utils.finishMetadata(generators, artifacts);
+            List<Metadata> metadatas = Utils.prepareMetadata(metadataGenerators, artifacts);
 
-        syncContext.acquire(null, metadatas);
+            syncContext.acquire(artifacts, Utils.combine(request.getMetadata(), metadatas));
 
-        for (Metadata metadata : metadatas) {
-            install(session, trace, metadata);
-            processedMetadata.put(metadata, null);
-            result.addMetadata(metadata);
-        }
-
-        for (Metadata metadata : request.getMetadata()) {
-            if (!processedMetadata.containsKey(metadata)) {
+            for (Metadata metadata : metadatas) {
                 install(session, trace, metadata);
+                processedMetadata.put(metadata, null);
                 result.addMetadata(metadata);
             }
-        }
 
-        return result;
-    }
+            for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
+                Artifact artifact = iterator.next();
 
-    private List<? extends MetadataGenerator> getMetadataGenerators(
-            RepositorySystemSession session, InstallRequest request) {
-        PrioritizedComponents<MetadataGeneratorFactory> factories =
-                Utils.sortMetadataGeneratorFactories(session, metadataFactories);
+                for (MetadataGenerator generator : metadataGenerators) {
+                    artifact = generator.transformArtifact(artifact);
+                }
 
-        List<MetadataGenerator> generators = new ArrayList<>();
+                iterator.set(artifact);
 
-        for (PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled()) {
-            MetadataGenerator generator = factory.getComponent().newInstance(session, request);
-            if (generator != null) {
-                generators.add(generator);
+                install(session, trace, artifact);
+                if (artifact.getProperty(ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID, null) == null) {
+                    result.addArtifact(artifact);
+                }
+            }
+
+            metadatas = Utils.finishMetadata(metadataGenerators, artifacts);
+
+            syncContext.acquire(null, metadatas);
+
+            for (Metadata metadata : metadatas) {
+                install(session, trace, metadata);
+                processedMetadata.put(metadata, null);
+                result.addMetadata(metadata);
+            }
+
+            for (Metadata metadata : request.getMetadata()) {
+                if (!processedMetadata.containsKey(metadata)) {
+                    install(session, trace, metadata);
+                    result.addMetadata(metadata);
+                }
+            }
+
+            return result;
+        } finally {
+            for (ArtifactGenerator artifactGenerator : artifactGenerators) {
+                try {
+                    artifactGenerator.close();
+                } catch (Exception e) {
+                    logger.warn("ArtifactGenerator close failure: {}", artifactGenerator.generatorId(), e);
+                }
             }
         }
-
-        return generators;
     }
 
     private void install(RepositorySystemSession session, RequestTrace trace, Artifact artifact)
@@ -175,8 +196,7 @@ public class DefaultInstaller implements Installer {
                 throw new IllegalStateException("cannot install " + dstPath + " to same path");
             }
 
-            pathProcessor.copy(srcPath, dstPath);
-            Files.setLastModifiedTime(dstPath, Files.getLastModifiedTime(srcPath));
+            pathProcessor.copyWithTimestamp(srcPath, dstPath);
             lrm.add(session, new LocalArtifactRegistration(artifact));
         } catch (Exception e) {
             exception = e;

@@ -18,6 +18,7 @@
  */
 package org.apache.maven.resolver.examples.util;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,14 +62,21 @@ public class Booter {
     }
 
     public static SessionBuilder newRepositorySystemSession(RepositorySystem system) {
+        Path localRepo = Paths.get("target/local-repo");
         // FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
-        SessionBuilder result = new SessionBuilderSupplier(system)
+        return new SessionBuilderSupplier(system)
                 .get()
                 //        .withLocalRepositoryBaseDirectories(fs.getPath("local-repo"))
-                .withLocalRepositoryBaseDirectories(Paths.get("target/local-repo"))
+                .withLocalRepositoryBaseDirectories(localRepo)
                 .setRepositoryListener(new ConsoleRepositoryListener())
-                .setTransferListener(new ConsoleTransferListener());
-        result.setConfigProperty("aether.syncContext.named.factory", "noop");
+                .setTransferListener(new ConsoleTransferListener())
+                .setConfigProperty("aether.generator.gpg.enabled", Boolean.TRUE.toString())
+                .setConfigProperty(
+                        "aether.generator.gpg.keyFilePath",
+                        Paths.get("src/main/resources/alice.key")
+                                .toAbsolutePath()
+                                .toString())
+                .setConfigProperty("aether.syncContext.named.factory", "noop");
         // result.addOnSessionEndedHandler(() -> {
         //     try {
         //         fs.close();
@@ -76,7 +84,7 @@ public class Booter {
         //         throw new UncheckedIOException(e);
         //     }
         // });
-        return result;
+
         // uncomment to generate dirty trees
         // session.setDependencyGraphTransformer( null );
     }

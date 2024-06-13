@@ -19,6 +19,7 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -64,7 +65,8 @@ public class DefaultRepositorySystemTest {
                 new StubSyncContextFactory(),
                 new DefaultRemoteRepositoryManager(
                         new DefaultUpdatePolicyAnalyzer(), new DefaultChecksumPolicyProvider()),
-                new DefaultRepositorySystemLifecycle());
+                new DefaultRepositorySystemLifecycle(),
+                Collections.emptyMap());
         session = TestUtils.newSession();
     }
 

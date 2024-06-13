@@ -20,13 +20,14 @@ package org.eclipse.aether.util.graph.manager;
 
 import java.util.*;
 
-import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
+import org.eclipse.aether.scope.ScopeManager;
+import org.eclipse.aether.scope.SystemDependencyScope;
 
 import static java.util.Objects.requireNonNull;
 
@@ -36,13 +37,6 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.0
  */
 public abstract class AbstractDependencyManager implements DependencyManager {
-    /**
-     * This predicate is here ONLY to support deprecated constructors.
-     *
-     * @deprecated To be removed when deprecated constructors are removed.
-     */
-    @Deprecated
-    protected static final SystemScopeHandler SYSTEM_SCOPE_HANDLER = SystemScopeHandler.LEGACY;
 
     protected final int depth;
 
@@ -60,11 +54,11 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     protected final Map<Object, Collection<Exclusion>> managedExclusions;
 
-    protected final SystemScopeHandler systemScopeHandler;
+    protected final SystemDependencyScope systemDependencyScope;
 
     private final int hashCode;
 
-    protected AbstractDependencyManager(int deriveUntil, int applyFrom, SystemScopeHandler systemScopeHandler) {
+    protected AbstractDependencyManager(int deriveUntil, int applyFrom, ScopeManager scopeManager) {
         this(
                 0,
                 deriveUntil,
@@ -74,7 +68,9 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 Collections.emptyMap(),
                 Collections.emptyMap(),
                 Collections.emptyMap(),
-                systemScopeHandler);
+                scopeManager != null
+                        ? scopeManager.getSystemDependencyScope().orElse(null)
+                        : SystemDependencyScope.LEGACY);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -87,7 +83,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemScopeHandler systemScopeHandler) {
+            SystemDependencyScope systemDependencyScope) {
         this.depth = depth;
         this.deriveUntil = deriveUntil;
         this.applyFrom = applyFrom;
@@ -96,7 +92,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         this.managedOptionals = requireNonNull(managedOptionals);
         this.managedLocalPaths = requireNonNull(managedLocalPaths);
         this.managedExclusions = requireNonNull(managedExclusions);
-        this.systemScopeHandler = requireNonNull(systemScopeHandler);
+        // nullable: if using scope manager, but there is no system scope defined
+        this.systemDependencyScope = systemDependencyScope;
 
         this.hashCode = Objects.hash(
                 depth,
@@ -157,7 +154,9 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 managedOptionals.put(key, optional);
             }
 
-            String localPath = systemScopeHandler.getSystemPath(managedDependency.getArtifact());
+            String localPath = systemDependencyScope == null
+                    ? null
+                    : systemDependencyScope.getSystemPath(managedDependency.getArtifact());
             if (localPath != null && !managedLocalPaths.containsKey(key)) {
                 if (managedLocalPaths == this.managedLocalPaths) {
                     managedLocalPaths = new HashMap<>(this.managedLocalPaths);
@@ -198,17 +197,19 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 }
                 management.setScope(scope);
 
-                if (!systemScopeHandler.isSystemScope(scope)
-                        && systemScopeHandler.getSystemPath(dependency.getArtifact()) != null) {
+                if (systemDependencyScope != null
+                        && !systemDependencyScope.is(scope)
+                        && systemDependencyScope.getSystemPath(dependency.getArtifact()) != null) {
                     Map<String, String> properties =
                             new HashMap<>(dependency.getArtifact().getProperties());
-                    systemScopeHandler.setSystemPath(properties, null);
+                    systemDependencyScope.setSystemPath(properties, null);
                     management.setProperties(properties);
                 }
             }
 
-            if ((systemScopeHandler.isSystemScope(scope))
-                    || (scope == null && systemScopeHandler.isSystemScope(dependency.getScope()))) {
+            if (systemDependencyScope != null
+                    && (systemDependencyScope.is(scope)
+                            || (scope == null && systemDependencyScope.is(dependency.getScope())))) {
                 String localPath = managedLocalPaths.get(key);
                 if (localPath != null) {
                     if (management == null) {
@@ -216,7 +217,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                     }
                     Map<String, String> properties =
                             new HashMap<>(dependency.getArtifact().getProperties());
-                    systemScopeHandler.setSystemPath(properties, localPath);
+                    systemDependencyScope.setSystemPath(properties, localPath);
                     management.setProperties(properties);
                 }
             }

@@ -46,8 +46,6 @@ import java.util.stream.Stream;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.ArtifactType;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManager;
@@ -67,11 +65,11 @@ import org.eclipse.aether.internal.impl.collect.DefaultVersionFilterContext;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.PremanagedDependency;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.concurrency.ExecutorUtils;
@@ -131,8 +129,9 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     public BfDependencyCollector(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
-            VersionRangeResolver versionRangeResolver) {
-        super(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver);
+            VersionRangeResolver versionRangeResolver,
+            Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories) {
+        super(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver, artifactDecoratorFactories);
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -450,14 +449,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     private ArtifactDescriptorResult resolveDescriptorForVersion(
             Args args, DependencyProcessingContext context, Results results, Dependency dependency, Version version) {
         Artifact original = dependency.getArtifact();
-        Artifact newArtifact = new DefaultArtifact(
-                original.getGroupId(),
-                original.getArtifactId(),
-                original.getClassifier(),
-                original.getExtension(),
-                version.toString(),
-                original.getProperties(),
-                (ArtifactType) null);
+        Artifact newArtifact = original.setVersion(version.toString());
         Dependency newDependency =
                 new Dependency(newArtifact, dependency.getScope(), dependency.isOptional(), dependency.getExclusions());
         DependencyProcessingContext newContext = context.copy();
@@ -467,32 +459,12 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         return isLackingDescriptor(args.session, newArtifact)
                 ? new ArtifactDescriptorResult(descriptorRequest)
                 : resolveCachedArtifactDescriptor(
-                        args.pool, descriptorRequest, args.session, newContext.withDependency(newDependency), results);
-    }
-
-    private ArtifactDescriptorResult resolveCachedArtifactDescriptor(
-            DataPool pool,
-            ArtifactDescriptorRequest descriptorRequest,
-            RepositorySystemSession session,
-            DependencyProcessingContext context,
-            Results results) {
-        Object key = pool.toKey(descriptorRequest);
-        ArtifactDescriptorResult descriptorResult = pool.getDescriptor(key, descriptorRequest);
-        if (descriptorResult == null) {
-            try {
-                descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
-                pool.putDescriptor(key, descriptorResult);
-            } catch (ArtifactDescriptorException e) {
-                results.addException(context.dependency, e, context.parents);
-                pool.putDescriptor(key, e);
-                return null;
-            }
-
-        } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
-            return null;
-        }
-
-        return descriptorResult;
+                        args.pool,
+                        descriptorRequest,
+                        args.session,
+                        newContext.withDependency(newDependency).dependency,
+                        results,
+                        context.parents);
     }
 
     static class ParallelDescriptorResolver implements Closeable {

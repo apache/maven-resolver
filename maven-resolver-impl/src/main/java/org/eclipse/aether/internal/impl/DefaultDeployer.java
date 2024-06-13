@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,6 +58,8 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
+import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
+import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
@@ -70,6 +73,8 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -78,6 +83,8 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultDeployer implements Deployer {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final PathProcessor pathProcessor;
 
     private final RepositoryEventDispatcher repositoryEventDispatcher;
@@ -87,6 +94,8 @@ public class DefaultDeployer implements Deployer {
     private final RemoteRepositoryManager remoteRepositoryManager;
 
     private final UpdateCheckManager updateCheckManager;
+
+    private final Map<String, ArtifactGeneratorFactory> artifactFactories;
 
     private final Map<String, MetadataGeneratorFactory> metadataFactories;
 
@@ -102,6 +111,7 @@ public class DefaultDeployer implements Deployer {
             RepositoryConnectorProvider repositoryConnectorProvider,
             RemoteRepositoryManager remoteRepositoryManager,
             UpdateCheckManager updateCheckManager,
+            Map<String, ArtifactGeneratorFactory> artifactFactories,
             Map<String, MetadataGeneratorFactory> metadataFactories,
             SyncContextFactory syncContextFactory,
             OfflineController offlineController) {
@@ -113,6 +123,7 @@ public class DefaultDeployer implements Deployer {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository provider cannot be null");
         this.updateCheckManager = requireNonNull(updateCheckManager, "update check manager cannot be null");
+        this.artifactFactories = Collections.unmodifiableMap(artifactFactories);
         this.metadataFactories = Collections.unmodifiableMap(metadataFactories);
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
         this.offlineController = requireNonNull(offlineController, "offline controller cannot be null");
@@ -151,8 +162,26 @@ public class DefaultDeployer implements Deployer {
             throw new DeploymentException("Failed to deploy artifacts/metadata: " + e.getMessage(), e);
         }
 
+        List<Artifact> artifacts = new ArrayList<>(request.getArtifacts());
+        List<? extends ArtifactGenerator> artifactGenerators =
+                Utils.getArtifactGenerators(session, artifactFactories, request);
         try {
-            List<? extends MetadataGenerator> generators = getMetadataGenerators(session, request);
+            List<Artifact> generatedArtifacts = new ArrayList<>();
+            for (ArtifactGenerator artifactGenerator : artifactGenerators) {
+                Collection<? extends Artifact> generated = artifactGenerator.generate(generatedArtifacts);
+                for (Artifact generatedArtifact : generated) {
+                    Map<String, String> properties = new HashMap<>(generatedArtifact.getProperties());
+                    properties.put(
+                            ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID,
+                            requireNonNull(artifactGenerator.generatorId(), "generatorId"));
+                    Artifact ga = generatedArtifact.setProperties(properties);
+                    generatedArtifacts.add(ga);
+                }
+            }
+            artifacts.addAll(generatedArtifacts);
+
+            List<? extends MetadataGenerator> metadataGenerators =
+                    Utils.getMetadataGenerators(session, metadataFactories, request);
 
             List<ArtifactUpload> artifactUploads = new ArrayList<>();
             List<MetadataUpload> metadataUploads = new ArrayList<>();
@@ -160,9 +189,7 @@ public class DefaultDeployer implements Deployer {
 
             EventCatapult catapult = new EventCatapult(session, trace, repository, repositoryEventDispatcher);
 
-            List<Artifact> artifacts = new ArrayList<>(request.getArtifacts());
-
-            List<Metadata> metadatas = Utils.prepareMetadata(generators, artifacts);
+            List<Metadata> metadatas = Utils.prepareMetadata(metadataGenerators, artifacts);
 
             syncContext.acquire(artifacts, Utils.combine(request.getMetadata(), metadatas));
 
@@ -174,7 +201,7 @@ public class DefaultDeployer implements Deployer {
             for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
                 Artifact artifact = iterator.next();
 
-                for (MetadataGenerator generator : generators) {
+                for (MetadataGenerator generator : metadataGenerators) {
                     artifact = generator.transformArtifact(artifact);
                 }
 
@@ -195,10 +222,12 @@ public class DefaultDeployer implements Deployer {
                                     + upload.getException().getMessage(),
                             upload.getException());
                 }
-                result.addArtifact(upload.getArtifact());
+                if (upload.getArtifact().getProperty(ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID, null) == null) {
+                    result.addArtifact(upload.getArtifact());
+                }
             }
 
-            metadatas = Utils.finishMetadata(generators, artifacts);
+            metadatas = Utils.finishMetadata(metadataGenerators, artifacts);
 
             syncContext.acquire(null, metadatas);
 
@@ -227,26 +256,16 @@ public class DefaultDeployer implements Deployer {
             }
         } finally {
             connector.close();
-        }
-
-        return result;
-    }
-
-    private List<? extends MetadataGenerator> getMetadataGenerators(
-            RepositorySystemSession session, DeployRequest request) {
-        PrioritizedComponents<MetadataGeneratorFactory> factories =
-                Utils.sortMetadataGeneratorFactories(session, metadataFactories);
-
-        List<MetadataGenerator> generators = new ArrayList<>();
-
-        for (PrioritizedComponent<MetadataGeneratorFactory> factory : factories.getEnabled()) {
-            MetadataGenerator generator = factory.getComponent().newInstance(session, request);
-            if (generator != null) {
-                generators.add(generator);
+            for (ArtifactGenerator artifactGenerator : artifactGenerators) {
+                try {
+                    artifactGenerator.close();
+                } catch (Exception e) {
+                    logger.warn("ArtifactGenerator close failure: {}", artifactGenerator.generatorId(), e);
+                }
             }
         }
 
-        return generators;
+        return result;
     }
 
     private void upload(

@@ -92,6 +92,7 @@ public final class AndDependencyTraverser implements DependencyTraverser {
         return new AndDependencyTraverser(traverser1, traverser2);
     }
 
+    @Override
     public boolean traverseDependency(Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
         for (DependencyTraverser traverser : traversers) {
@@ -102,6 +103,7 @@ public final class AndDependencyTraverser implements DependencyTraverser {
         return true;
     }
 
+    @Override
     public DependencyTraverser deriveChildTraverser(DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
         int seen = 0;

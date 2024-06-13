@@ -38,6 +38,8 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.scope.ScopeManager;
+import org.eclipse.aether.scope.SystemDependencyScope;
 import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.util.listener.ChainedRepositoryListener;
 import org.eclipse.aether.util.listener.ChainedTransferListener;
@@ -102,7 +104,7 @@ public final class DefaultCloseableSession implements CloseableSession {
 
     private final RepositoryCache cache;
 
-    private final SystemScopeHandler systemScopeHandler;
+    private final ScopeManager scopeManager;
 
     private final RepositorySystem repositorySystem;
 
@@ -137,7 +139,7 @@ public final class DefaultCloseableSession implements CloseableSession {
             DependencyGraphTransformer dependencyGraphTransformer,
             SessionData data,
             RepositoryCache cache,
-            SystemScopeHandler systemScopeHandler,
+            ScopeManager scopeManager,
             List<Runnable> onSessionEndedHandlers,
             RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle) {
@@ -167,7 +169,7 @@ public final class DefaultCloseableSession implements CloseableSession {
         this.dependencyGraphTransformer = dependencyGraphTransformer;
         this.data = requireNonNull(data);
         this.cache = cache;
-        this.systemScopeHandler = requireNonNull(systemScopeHandler);
+        this.scopeManager = scopeManager;
 
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
@@ -330,8 +332,17 @@ public final class DefaultCloseableSession implements CloseableSession {
     }
 
     @Override
-    public SystemScopeHandler getSystemScopeHandler() {
-        return systemScopeHandler;
+    public ScopeManager getScopeManager() {
+        return scopeManager;
+    }
+
+    @Override
+    public SystemDependencyScope getSystemDependencyScope() {
+        if (scopeManager != null) {
+            return scopeManager.getSystemDependencyScope().orElse(null);
+        } else {
+            return SystemDependencyScope.LEGACY;
+        }
     }
 
     @Override

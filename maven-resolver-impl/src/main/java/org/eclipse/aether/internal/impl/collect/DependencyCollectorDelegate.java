@@ -44,6 +44,8 @@ import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.impl.scope.InternalScopeManager;
+import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -52,6 +54,10 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.scope.ResolutionScope;
+import org.eclipse.aether.scope.SystemDependencyScope;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecorator;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.transformer.TransformationContextKeys;
 import org.eclipse.aether.version.Version;
@@ -98,14 +104,19 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
     protected final VersionRangeResolver versionRangeResolver;
 
+    protected final Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories;
+
     protected DependencyCollectorDelegate(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
-            VersionRangeResolver versionRangeResolver) {
+            VersionRangeResolver versionRangeResolver,
+            Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories) {
         this.remoteRepositoryManager =
                 requireNonNull(remoteRepositoryManager, "remote repository manager cannot be null");
         this.descriptorReader = requireNonNull(artifactDescriptorReader, "artifact descriptor reader cannot be null");
         this.versionRangeResolver = requireNonNull(versionRangeResolver, "version range resolver cannot be null");
+        this.artifactDecoratorFactories =
+                requireNonNull(artifactDecoratorFactories, "artifact decorator factories cannot be null");
     }
 
     @SuppressWarnings("checkstyle:methodlength")
@@ -114,7 +125,9 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             throws DependencyCollectionException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(request, "request cannot be null");
-        session = optimizeSession(session);
+
+        InternalScopeManager scopeManager = (InternalScopeManager) session.getScopeManager();
+        session = setUpSession(session, request, scopeManager);
 
         RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
@@ -160,6 +173,10 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
                     descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
                 } else {
                     descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
+                    for (ArtifactDecorator decorator :
+                            Utils.getArtifactDecorators(session, artifactDecoratorFactories)) {
+                        descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
+                    }
                 }
             } catch (ArtifactDescriptorException e) {
                 result.addException(e);
@@ -246,7 +263,11 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             throw new DependencyCollectionException(result);
         }
 
-        return result;
+        if (request.getResolutionScope() != null) {
+            return scopeManager.postProcess(request.getResolutionScope(), result);
+        } else {
+            return result;
+        }
     }
 
     /**
@@ -283,9 +304,17 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             Results results)
             throws DependencyCollectionException;
 
-    protected RepositorySystemSession optimizeSession(RepositorySystemSession session) {
+    protected RepositorySystemSession setUpSession(
+            RepositorySystemSession session, CollectRequest collectRequest, InternalScopeManager scopeManager) {
         DefaultRepositorySystemSession optimized = new DefaultRepositorySystemSession(session);
         optimized.setArtifactTypeRegistry(CachingArtifactTypeRegistry.newInstance(session));
+
+        ResolutionScope resolutionScope = collectRequest.getResolutionScope();
+        if (resolutionScope != null) {
+            requireNonNull(scopeManager, "ScopeManager is not set on session");
+            optimized.setDependencySelector(scopeManager.getDependencySelector(resolutionScope));
+            optimized.setDependencyGraphTransformer(scopeManager.getDependencyGraphTransformer(resolutionScope));
+        }
         return optimized;
     }
 
@@ -394,7 +423,8 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
     }
 
     protected static boolean isLackingDescriptor(RepositorySystemSession session, Artifact artifact) {
-        return session.getSystemScopeHandler().getSystemPath(artifact) != null;
+        SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
+        return systemDependencyScope != null && systemDependencyScope.getSystemPath(artifact) != null;
     }
 
     protected static List<RemoteRepository> getRemoteRepositories(
@@ -438,6 +468,33 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             versions = rangeResult.getVersions();
         }
         return versions;
+    }
+
+    protected ArtifactDescriptorResult resolveCachedArtifactDescriptor(
+            DataPool pool,
+            ArtifactDescriptorRequest descriptorRequest,
+            RepositorySystemSession session,
+            Dependency d,
+            Results results,
+            List<DependencyNode> nodes) {
+        Object key = pool.toKey(descriptorRequest);
+        ArtifactDescriptorResult descriptorResult = pool.getDescriptor(key, descriptorRequest);
+        if (descriptorResult == null) {
+            try {
+                descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
+                for (ArtifactDecorator decorator : Utils.getArtifactDecorators(session, artifactDecoratorFactories)) {
+                    descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
+                }
+                pool.putDescriptor(key, descriptorResult);
+            } catch (ArtifactDescriptorException e) {
+                results.addException(d, e, nodes);
+                pool.putDescriptor(key, e);
+                return null;
+            }
+        } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
+            return null;
+        }
+        return descriptorResult;
     }
 
     /**

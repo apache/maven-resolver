@@ -101,7 +101,8 @@ public class Maven2RepositoryLayoutFactoryTest {
     @BeforeEach
     void setUp() throws Exception {
         session = TestUtils.newSession();
-        factory = new Maven2RepositoryLayoutFactory(checksumsSelector());
+        factory = new Maven2RepositoryLayoutFactory(
+                checksumsSelector(), new DefaultArtifactPredicateFactory(checksumsSelector()));
         layout = factory.newInstance(session, newRepo("default"));
     }
 
@@ -289,7 +290,7 @@ public class Maven2RepositoryLayoutFactoryTest {
 
     @Test
     void testSignatureChecksums_Force() throws Exception {
-        session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, "");
+        session.setConfigProperty(DefaultArtifactPredicateFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, "");
         layout = factory.newInstance(session, newRepo("default"));
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "jar.asc", "1.0");
         URI uri = layout.getLocation(artifact, true);
@@ -299,7 +300,8 @@ public class Maven2RepositoryLayoutFactoryTest {
 
     @Test
     void testCustomChecksumsIgnored() throws Exception {
-        session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,.foo");
+        session.setConfigProperty(
+                DefaultArtifactPredicateFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,.foo");
         layout = factory.newInstance(session, newRepo("default"));
         DefaultArtifact artifact = new DefaultArtifact("g.i.d", "a-i.d", "cls", "jar.foo", "1.0");
         URI uri = layout.getLocation(artifact, true);
@@ -318,14 +320,16 @@ public class Maven2RepositoryLayoutFactoryTest {
 
     @Test
     void testCustomChecksumsIgnored_IllegalInout() throws Exception {
-        session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,foo");
+        session.setConfigProperty(
+                DefaultArtifactPredicateFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,foo");
         try {
             layout = factory.newInstance(session, newRepo("default"));
             fail("Should not get here");
         } catch (IllegalArgumentException e) {
             String message = e.getMessage();
             assertTrue(
-                    message.contains(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS), message);
+                    message.contains(DefaultArtifactPredicateFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS),
+                    message);
         }
     }
 }

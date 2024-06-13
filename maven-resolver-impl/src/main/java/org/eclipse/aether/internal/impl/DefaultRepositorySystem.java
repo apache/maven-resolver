@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -85,6 +86,8 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecorator;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
@@ -130,6 +133,8 @@ public class DefaultRepositorySystem implements RepositorySystem {
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
+    protected final Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories;
+
     @SuppressWarnings("checkstyle:parameternumber")
     @Inject
     public DefaultRepositorySystem(
@@ -144,7 +149,8 @@ public class DefaultRepositorySystem implements RepositorySystem {
             LocalRepositoryProvider localRepositoryProvider,
             SyncContextFactory syncContextFactory,
             RemoteRepositoryManager remoteRepositoryManager,
-            RepositorySystemLifecycle repositorySystemLifecycle) {
+            RepositorySystemLifecycle repositorySystemLifecycle,
+            Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories) {
         this.shutdown = new AtomicBoolean(false);
         this.sessionIdCounter = new AtomicInteger(0);
         this.versionResolver = requireNonNull(versionResolver, "version resolver cannot be null");
@@ -163,6 +169,8 @@ public class DefaultRepositorySystem implements RepositorySystem {
                 requireNonNull(remoteRepositoryManager, "remote repository provider cannot be null");
         this.repositorySystemLifecycle =
                 requireNonNull(repositorySystemLifecycle, "repository system lifecycle cannot be null");
+        this.artifactDecoratorFactories =
+                requireNonNull(artifactDecoratorFactories, "artifact decorator factories cannot be null");
     }
 
     @Override
@@ -189,7 +197,11 @@ public class DefaultRepositorySystem implements RepositorySystem {
         validateSession(session);
         requireNonNull(request, "request cannot be null");
 
-        return artifactDescriptorReader.readArtifactDescriptor(session, request);
+        ArtifactDescriptorResult descriptorResult = artifactDescriptorReader.readArtifactDescriptor(session, request);
+        for (ArtifactDecorator decorator : Utils.getArtifactDecorators(session, artifactDecoratorFactories)) {
+            descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
+        }
+        return descriptorResult;
     }
 
     @Override

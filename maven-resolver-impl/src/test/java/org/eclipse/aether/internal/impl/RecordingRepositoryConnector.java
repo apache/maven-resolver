@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -165,7 +164,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
             return;
         }
         TransferEvent.Builder event = new TransferEvent.Builder(
-                session, new TransferResource(null, null, null, (Path) null, transfer.getTrace()));
+                session, new TransferResource(null, null, null, null, null, transfer.getTrace()));
         event.setType(TransferEvent.EventType.INITIATED);
         listener.transferInitiated(event.build());
     }
@@ -176,7 +175,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
             return;
         }
         TransferEvent.Builder event = new TransferEvent.Builder(
-                session, new TransferResource(null, null, null, (Path) null, transfer.getTrace()));
+                session, new TransferResource(null, null, null, null, null, transfer.getTrace()));
         event.setException(transfer.getException());
         if (transfer.getException() != null) {
             listener.transferFailed(

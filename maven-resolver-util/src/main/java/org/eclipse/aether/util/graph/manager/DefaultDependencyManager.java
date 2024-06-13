@@ -21,9 +21,10 @@ package org.eclipse.aether.util.graph.manager;
 import java.util.Collection;
 import java.util.Map;
 
-import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
+import org.eclipse.aether.scope.ScopeManager;
+import org.eclipse.aether.scope.SystemDependencyScope;
 
 /**
  * A dependency manager managing dependencies on all levels supporting transitive dependency management.
@@ -45,11 +46,11 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
      */
     @Deprecated
     public DefaultDependencyManager() {
-        this(SYSTEM_SCOPE_HANDLER);
+        this(null);
     }
 
-    public DefaultDependencyManager(SystemScopeHandler systemScopeHandler) {
-        super(Integer.MAX_VALUE, 0, systemScopeHandler);
+    public DefaultDependencyManager(ScopeManager scopeManager) {
+        super(Integer.MAX_VALUE, 0, scopeManager);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -62,7 +63,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemScopeHandler systemScopeHandler) {
+            SystemDependencyScope systemDependencyScope) {
         super(
                 depth,
                 deriveUntil,
@@ -72,7 +73,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemScopeHandler);
+                systemDependencyScope);
     }
 
     @Override
@@ -91,6 +92,6 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemScopeHandler);
+                systemDependencyScope);
     }
 }

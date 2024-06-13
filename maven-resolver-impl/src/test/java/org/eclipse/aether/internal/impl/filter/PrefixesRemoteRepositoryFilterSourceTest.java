@@ -27,6 +27,7 @@ import java.util.Collections;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.impl.DefaultArtifactPredicateFactory;
 import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -42,7 +43,9 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
     protected RemoteRepositoryFilterSource getRemoteRepositoryFilterSource(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository) {
         DefaultRepositoryLayoutProvider layoutProvider = new DefaultRepositoryLayoutProvider(Collections.singletonMap(
-                Maven2RepositoryLayoutFactory.NAME, new Maven2RepositoryLayoutFactory(checksumsSelector())));
+                Maven2RepositoryLayoutFactory.NAME,
+                new Maven2RepositoryLayoutFactory(
+                        checksumsSelector(), new DefaultArtifactPredicateFactory(checksumsSelector()))));
         return new PrefixesRemoteRepositoryFilterSource(layoutProvider);
     }
 

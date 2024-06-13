@@ -47,7 +47,10 @@ public class BfWithSkipperDependencyCollectorTest extends DependencyCollectorDel
         session.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, true);
 
         return new BfDependencyCollector(
-                new StubRemoteRepositoryManager(), artifactDescriptorReader, new StubVersionRangeResolver());
+                new StubRemoteRepositoryManager(),
+                artifactDescriptorReader,
+                new StubVersionRangeResolver(),
+                Collections.emptyMap());
     }
 
     @Override
@@ -69,7 +72,7 @@ public class BfWithSkipperDependencyCollectorTest extends DependencyCollectorDel
     void testSkipperWithDifferentExclusion() throws DependencyCollectionException {
         collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
-        session.setDependencyManager(new TransitiveDependencyManager(SYSTEM_SCOPE_HANDLER));
+        session.setDependencyManager(new TransitiveDependencyManager(null));
 
         ExclusionDependencySelector exclSel1 = new ExclusionDependencySelector();
         session.setDependencySelector(exclSel1);

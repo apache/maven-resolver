@@ -32,7 +32,6 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.FileTime;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
@@ -304,11 +303,11 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         .orElse(null); // note: Wagon also does first not last
                 if (lastModifiedHeader != null) {
                     try {
-                        Files.setLastModifiedTime(
+                        pathProcessor.setLastModified(
                                 task.getDataPath(),
-                                FileTime.fromMillis(ZonedDateTime.parse(lastModifiedHeader, RFC7231)
+                                ZonedDateTime.parse(lastModifiedHeader, RFC7231)
                                         .toInstant()
-                                        .toEpochMilli()));
+                                        .toEpochMilli());
                     } catch (DateTimeParseException e) {
                         // fall through
                     }

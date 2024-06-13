@@ -24,6 +24,7 @@ import javax.inject.Singleton;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -48,12 +49,12 @@ import org.eclipse.aether.internal.impl.collect.DefaultVersionFilterContext;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.PremanagedDependency;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
@@ -73,8 +74,9 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
     public DfDependencyCollector(
             RemoteRepositoryManager remoteRepositoryManager,
             ArtifactDescriptorReader artifactDescriptorReader,
-            VersionRangeResolver versionRangeResolver) {
-        super(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver);
+            VersionRangeResolver versionRangeResolver,
+            Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories) {
+        super(remoteRepositoryManager, artifactDescriptorReader, versionRangeResolver, artifactDecoratorFactories);
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -368,33 +370,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             ArtifactDescriptorRequest descriptorRequest) {
         return noDescriptor
                 ? new ArtifactDescriptorResult(descriptorRequest)
-                : resolveCachedArtifactDescriptor(args.pool, descriptorRequest, args.session, d, results, args);
-    }
-
-    private ArtifactDescriptorResult resolveCachedArtifactDescriptor(
-            DataPool pool,
-            ArtifactDescriptorRequest descriptorRequest,
-            RepositorySystemSession session,
-            Dependency d,
-            Results results,
-            Args args) {
-        Object key = pool.toKey(descriptorRequest);
-        ArtifactDescriptorResult descriptorResult = pool.getDescriptor(key, descriptorRequest);
-        if (descriptorResult == null) {
-            try {
-                descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
-                pool.putDescriptor(key, descriptorResult);
-            } catch (ArtifactDescriptorException e) {
-                results.addException(d, e, args.nodes.nodes);
-                pool.putDescriptor(key, e);
-                return null;
-            }
-
-        } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
-            return null;
-        }
-
-        return descriptorResult;
+                : resolveCachedArtifactDescriptor(
+                        args.pool, descriptorRequest, args.session, d, results, args.nodes.nodes);
     }
 
     static class Args {

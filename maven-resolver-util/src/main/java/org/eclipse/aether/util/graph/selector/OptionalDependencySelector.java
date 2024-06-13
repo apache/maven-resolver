@@ -28,7 +28,9 @@ import static java.util.Objects.requireNonNull;
  * A dependency selector that excludes optional dependencies which occur beyond level one of the dependency graph.
  *
  * @see Dependency#isOptional()
+ * @deprecated This class is deprecated. Use same named class from impl module instead.
  */
+@Deprecated
 public final class OptionalDependencySelector implements DependencySelector {
 
     private final int depth;

@@ -30,7 +30,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.SessionData;
-import org.eclipse.aether.SystemScopeHandler;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
@@ -47,6 +46,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.WorkspaceReader;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
+import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.transfer.TransferListener;
 
 import static java.util.Objects.requireNonNull;
@@ -58,9 +58,10 @@ import static java.util.stream.Collectors.toList;
 public final class DefaultSessionBuilder implements SessionBuilder {
     private static final MirrorSelector NULL_MIRROR_SELECTOR = r -> null;
 
-    private static final ProxySelector NULL_PROXY_SELECTOR = RemoteRepository::getProxy;
+    private static final ProxySelector PASS_THROUGH_PROXY_SELECTOR = RemoteRepository::getProxy;
 
-    private static final AuthenticationSelector NULL_AUTHENTICATION_SELECTOR = RemoteRepository::getAuthentication;
+    private static final AuthenticationSelector PASS_THROUGH_AUTHENTICATION_SELECTOR =
+            RemoteRepository::getAuthentication;
 
     private static final ArtifactTypeRegistry NULL_ARTIFACT_TYPE_REGISTRY = t -> null;
 
@@ -106,9 +107,9 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private MirrorSelector mirrorSelector = NULL_MIRROR_SELECTOR;
 
-    private ProxySelector proxySelector = NULL_PROXY_SELECTOR;
+    private ProxySelector proxySelector = PASS_THROUGH_PROXY_SELECTOR;
 
-    private AuthenticationSelector authenticationSelector = NULL_AUTHENTICATION_SELECTOR;
+    private AuthenticationSelector authenticationSelector = PASS_THROUGH_AUTHENTICATION_SELECTOR;
 
     private ArtifactTypeRegistry artifactTypeRegistry = NULL_ARTIFACT_TYPE_REGISTRY;
 
@@ -126,7 +127,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private Supplier<RepositoryCache> repositoryCacheSupplier = DEFAULT_REPOSITORY_CACHE_SUPPLIER;
 
-    private SystemScopeHandler systemScopeHandler = SystemScopeHandler.LEGACY;
+    private ScopeManager scopeManager;
 
     private final ArrayList<Runnable> onSessionCloseHandlers = new ArrayList<>();
 
@@ -282,7 +283,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     public DefaultSessionBuilder setProxySelector(ProxySelector proxySelector) {
         this.proxySelector = proxySelector;
         if (this.proxySelector == null) {
-            this.proxySelector = NULL_PROXY_SELECTOR;
+            this.proxySelector = PASS_THROUGH_PROXY_SELECTOR;
         }
         return this;
     }
@@ -291,7 +292,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     public DefaultSessionBuilder setAuthenticationSelector(AuthenticationSelector authenticationSelector) {
         this.authenticationSelector = authenticationSelector;
         if (this.authenticationSelector == null) {
-            this.authenticationSelector = NULL_AUTHENTICATION_SELECTOR;
+            this.authenticationSelector = PASS_THROUGH_AUTHENTICATION_SELECTOR;
         }
         return this;
     }
@@ -353,9 +354,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     }
 
     @Override
-    public DefaultSessionBuilder setSystemScopeHandler(SystemScopeHandler systemScopeHandler) {
-        requireNonNull(systemScopeHandler, "null systemScopeHandler");
-        this.systemScopeHandler = systemScopeHandler;
+    public DefaultSessionBuilder setScopeManager(ScopeManager scopeManager) {
+        this.scopeManager = scopeManager;
         return this;
     }
 
@@ -447,7 +447,6 @@ public final class DefaultSessionBuilder implements SessionBuilder {
         setDependencyGraphTransformer(session.getDependencyGraphTransformer());
         setData(session.getData());
         setCache(session.getCache());
-        setSystemScopeHandler(session.getSystemScopeHandler());
         return this;
     }
 
@@ -481,7 +480,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 dependencyGraphTransformer,
                 sessionDataSupplier.get(),
                 repositoryCacheSupplier.get(),
-                systemScopeHandler,
+                scopeManager,
                 onSessionCloseHandlers,
                 repositorySystem,
                 repositorySystemLifecycle);

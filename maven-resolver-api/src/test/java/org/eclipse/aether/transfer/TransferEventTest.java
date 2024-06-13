@@ -19,7 +19,6 @@
 package org.eclipse.aether.transfer;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.junit.jupiter.api.Test;
@@ -31,7 +30,7 @@ import static org.mockito.Mockito.mock;
  */
 public class TransferEventTest {
 
-    private static final TransferResource res = new TransferResource("none", "file://nil", "void", (Path) null, null);
+    private static final TransferResource res = new TransferResource("none", "file://nil", "void", null, null, null);
 
     private static final RepositorySystemSession session = mock(RepositorySystemSession.class);
 

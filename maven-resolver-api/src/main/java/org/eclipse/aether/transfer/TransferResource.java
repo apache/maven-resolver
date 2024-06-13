@@ -34,6 +34,8 @@ public final class TransferResource {
 
     private final String resourceName;
 
+    private final Object resource;
+
     private final Path path;
 
     private final long startTime;
@@ -57,12 +59,12 @@ public final class TransferResource {
      * @param trace The trace information, may be {@code null}.
      *
      * @since 1.1.0
-     * @deprecated Use {@link TransferResource(String, String, String, Path, RequestTrace)} instead.
+     * @deprecated Use {@link TransferResource(String, String, String, Path, Object, RequestTrace)} instead.
      */
     @Deprecated
     public TransferResource(
             String repositoryId, String repositoryUrl, String resourceName, File file, RequestTrace trace) {
-        this(repositoryId, repositoryUrl, resourceName, file != null ? file.toPath() : null, trace);
+        this(repositoryId, repositoryUrl, resourceName, file != null ? file.toPath() : null, null, trace);
     }
 
     /**
@@ -75,12 +77,18 @@ public final class TransferResource {
      * @param resourceName The relative path to the resource within the repository, may be {@code null}. A leading slash
      *            (if any) will be automatically removed.
      * @param path The source/target file involved in the transfer, may be {@code null}.
+     * @param resource The representation of this resource, may be {@code null}.
      * @param trace The trace information, may be {@code null}.
      *
      * @since 2.0.0
      */
     public TransferResource(
-            String repositoryId, String repositoryUrl, String resourceName, Path path, RequestTrace trace) {
+            String repositoryId,
+            String repositoryUrl,
+            String resourceName,
+            Path path,
+            Object resource,
+            RequestTrace trace) {
         if (repositoryId == null || repositoryId.isEmpty()) {
             this.repositoryId = "";
         } else {
@@ -104,10 +112,9 @@ public final class TransferResource {
         }
 
         this.path = path;
-
+        this.resource = resource;
         this.trace = trace;
-
-        startTime = System.currentTimeMillis();
+        this.startTime = System.currentTimeMillis();
     }
 
     /**
@@ -138,6 +145,18 @@ public final class TransferResource {
      */
     public String getResourceName() {
         return resourceName;
+    }
+
+    /**
+     * The representation of "resource", if any. The content of this field may be
+     * {@link org.eclipse.aether.artifact.Artifact} or {@link org.eclipse.aether.metadata.Metadata} or {@code null}
+     * in case of some legacy flow. Preferred way to handle returned value is with {@code instanceof}.
+     *
+     * @return The representation of this resource, may be {@code null}.
+     * @since 2.0.0
+     */
+    public Object getResource() {
+        return resource;
     }
 
     /**

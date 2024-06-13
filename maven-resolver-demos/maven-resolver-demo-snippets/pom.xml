@@ -34,8 +34,8 @@
 
   <properties>
     <Automatic-Module-Name>org.apache.maven.resolver.demo.snippets</Automatic-Module-Name>
-    <!-- To make Jetty work -->
-    <javaVersion>11</javaVersion>
+    <!-- Jetty 10.x needs Java 11, generator-signer needs 17: we want both to work -->
+    <javaVersion>17</javaVersion>
   </properties>
 
   <dependencies>
@@ -77,17 +77,21 @@
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-supplier</artifactId>
+      <artifactId>maven-resolver-generator-gnupg</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-supplier-mvn3</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-resolver-provider</artifactId>
-      <version>${mavenVersion}</version>
+      <version>${maven3Version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model-builder</artifactId>
-      <version>${mavenVersion}</version>
+      <version>${maven3Version}</version>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>

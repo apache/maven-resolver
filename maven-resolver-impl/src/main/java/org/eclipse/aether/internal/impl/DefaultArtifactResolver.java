@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,6 +58,7 @@ import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
+import org.eclipse.aether.scope.SystemDependencyScope;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
@@ -181,8 +181,10 @@ public class DefaultArtifactResolver implements ArtifactResolver {
         try (SyncContext shared = syncContextFactory.newInstance(session, true);
                 SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
             Collection<Artifact> artifacts = new ArrayList<>(requests.size());
+            SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
             for (ArtifactRequest request : requests) {
-                if (session.getSystemScopeHandler().getSystemPath(request.getArtifact()) != null) {
+                if (systemDependencyScope != null
+                        && systemDependencyScope.getSystemPath(request.getArtifact()) != null) {
                     continue;
                 }
                 artifacts.add(request.getArtifact());
@@ -200,6 +202,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             RepositorySystemSession session,
             Collection<? extends ArtifactRequest> requests)
             throws ArtifactResolutionException {
+        SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
         SyncContext current = shared;
         try {
             while (true) {
@@ -227,7 +230,8 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         artifactResolving(session, trace, artifact);
                     }
 
-                    String localPath = session.getSystemScopeHandler().getSystemPath(artifact);
+                    String localPath =
+                            systemDependencyScope != null ? systemDependencyScope.getSystemPath(artifact) : null;
                     if (localPath != null) {
                         // unhosted artifact, just validate file
                         Path path = Paths.get(localPath);
@@ -450,8 +454,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 boolean copy = pathProcessor.size(dst, 0L) != pathProcessor.size(path, 0L)
                         || pathProcessor.lastModified(dst, 0L) != pathLastModified;
                 if (copy) {
-                    pathProcessor.copy(path, dst);
-                    Files.setLastModifiedTime(dst, FileTime.fromMillis(pathLastModified));
+                    pathProcessor.copyWithTimestamp(path, dst);
                 }
             } catch (IOException e) {
                 throw new ArtifactTransferException(artifact, null, e);

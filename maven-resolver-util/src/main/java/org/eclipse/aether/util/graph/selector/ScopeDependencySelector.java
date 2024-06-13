@@ -37,7 +37,9 @@ import static java.util.Objects.requireNonNull;
  * In particular, the filter is not aware of scopes that logically include other scopes.
  *
  * @see Dependency#getScope()
+ * @deprecated This class is deprecated. Use same named class from impl module instead.
  */
+@Deprecated
 public final class ScopeDependencySelector implements DependencySelector {
 
     private final boolean transitive;

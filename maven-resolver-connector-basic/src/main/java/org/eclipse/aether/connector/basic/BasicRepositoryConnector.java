@@ -27,19 +27,22 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
+import org.eclipse.aether.spi.connector.ArtifactTransfer;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
+import org.eclipse.aether.spi.connector.MetadataTransfer;
 import org.eclipse.aether.spi.connector.MetadataUpload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
+import org.eclipse.aether.spi.connector.Transfer;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
@@ -66,10 +69,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_DOWNSTREAM_THREADS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PARALLEL_PUT;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PERSISTED_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_SMART_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_THREADS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_UPSTREAM_THREADS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PARALLEL_PUT;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PERSISTED_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_SMART_CHECKSUMS;
@@ -95,7 +100,9 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     private final ChecksumPolicyProvider checksumPolicyProvider;
 
-    private final int maxThreads;
+    private final int maxDownstreamThreads;
+
+    private final int maxUpstreamThreads;
 
     private final boolean smartChecksums;
 
@@ -103,7 +110,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     private final boolean persistedChecksums;
 
-    private Executor executor;
+    private final ConcurrentHashMap<Boolean, Executor> executors;
 
     private final AtomicBoolean closed;
 
@@ -132,9 +139,21 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         this.repository = repository;
         this.checksumProcessor = checksumProcessor;
         this.providedChecksumsSources = providedChecksumsSources;
+        this.executors = new ConcurrentHashMap<>();
         this.closed = new AtomicBoolean(false);
 
-        maxThreads = ExecutorUtils.threadCount(session, DEFAULT_THREADS, CONFIG_PROP_THREADS);
+        maxUpstreamThreads = ExecutorUtils.threadCount(
+                session,
+                DEFAULT_THREADS,
+                CONFIG_PROP_UPSTREAM_THREADS + "." + repository.getId(),
+                CONFIG_PROP_UPSTREAM_THREADS,
+                CONFIG_PROP_THREADS);
+        maxDownstreamThreads = ExecutorUtils.threadCount(
+                session,
+                DEFAULT_THREADS,
+                CONFIG_PROP_DOWNSTREAM_THREADS + "." + repository.getId(),
+                CONFIG_PROP_DOWNSTREAM_THREADS,
+                CONFIG_PROP_THREADS);
         smartChecksums = ConfigUtils.getBoolean(session, DEFAULT_SMART_CHECKSUMS, CONFIG_PROP_SMART_CHECKSUMS);
         parallelPut = ConfigUtils.getBoolean(
                 session,
@@ -145,24 +164,26 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 ConfigUtils.getBoolean(session, DEFAULT_PERSISTED_CHECKSUMS, CONFIG_PROP_PERSISTED_CHECKSUMS);
     }
 
-    private Executor getExecutor(int tasks) {
+    private Executor getExecutor(boolean downstream, int tasks) {
+        int maxThreads = downstream ? maxDownstreamThreads : maxUpstreamThreads;
         if (maxThreads <= 1) {
             return ExecutorUtils.DIRECT_EXECUTOR;
         }
         if (tasks <= 1) {
             return ExecutorUtils.DIRECT_EXECUTOR;
         }
-        if (executor == null) {
-            executor =
-                    ExecutorUtils.threadPool(maxThreads, getClass().getSimpleName() + '-' + repository.getHost() + '-');
-        }
-        return executor;
+        return executors.computeIfAbsent(
+                downstream,
+                k -> ExecutorUtils.threadPool(
+                        maxThreads, getClass().getSimpleName() + '-' + repository.getHost() + '-'));
     }
 
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            ExecutorUtils.shutdown(executor);
+            for (Executor executor : executors.values()) {
+                ExecutorUtils.shutdown(executor);
+            }
             transporter.close();
         }
     }
@@ -182,7 +203,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         Collection<? extends ArtifactDownload> safeArtifactDownloads = safe(artifactDownloads);
         Collection<? extends MetadataDownload> safeMetadataDownloads = safe(metadataDownloads);
 
-        Executor executor = getExecutor(safeArtifactDownloads.size() + safeMetadataDownloads.size());
+        Executor executor = getExecutor(true, safeArtifactDownloads.size() + safeMetadataDownloads.size());
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
@@ -191,7 +212,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         for (MetadataDownload transfer : safeMetadataDownloads) {
             URI location = layout.getLocation(transfer.getMetadata(), false);
 
-            TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
+            TransferResource resource = newTransferResource(location, transfer);
             TransferEvent.Builder builder = newEventBuilder(resource, false, false);
             MetadataTransportListener listener = new MetadataTransportListener(transfer, repository, builder);
 
@@ -231,7 +252,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
             URI location = layout.getLocation(transfer.getArtifact(), false);
 
-            TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
+            TransferResource resource = newTransferResource(location, transfer);
             TransferEvent.Builder builder = newEventBuilder(resource, false, transfer.isExistenceCheck());
             ArtifactTransportListener listener = new ArtifactTransportListener(transfer, repository, builder);
 
@@ -274,7 +295,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         Collection<? extends ArtifactUpload> safeArtifactUploads = safe(artifactUploads);
         Collection<? extends MetadataUpload> safeMetadataUploads = safe(metadataUploads);
 
-        Executor executor = getExecutor(parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1);
+        Executor executor =
+                getExecutor(false, parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1);
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
         boolean first = true;
@@ -282,7 +304,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         for (ArtifactUpload transfer : safeArtifactUploads) {
             URI location = layout.getLocation(transfer.getArtifact(), true);
 
-            TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
+            TransferResource resource = newTransferResource(location, transfer);
             TransferEvent.Builder builder = newEventBuilder(resource, true, false);
             ArtifactTransportListener listener = new ArtifactTransportListener(transfer, repository, builder);
 
@@ -304,7 +326,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
             for (MetadataUpload transfer : transferGroup) {
                 URI location = layout.getLocation(transfer.getMetadata(), true);
 
-                TransferResource resource = newTransferResource(location, transfer.getPath(), transfer.getTrace());
+                TransferResource resource = newTransferResource(location, transfer);
                 TransferEvent.Builder builder = newEventBuilder(resource, true, false);
                 MetadataTransportListener listener = new MetadataTransportListener(transfer, repository, builder);
 
@@ -368,8 +390,28 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         return (items != null) ? items : Collections.emptyList();
     }
 
-    private TransferResource newTransferResource(URI path, Path file, RequestTrace trace) {
-        return new TransferResource(repository.getId(), repository.getUrl(), path.toString(), file, trace);
+    private TransferResource newTransferResource(URI path, Transfer transfer) {
+        if (transfer instanceof ArtifactTransfer) {
+            ArtifactTransfer artifactTransfer = (ArtifactTransfer) transfer;
+            return new TransferResource(
+                    repository.getId(),
+                    repository.getUrl(),
+                    path.toString(),
+                    artifactTransfer.getPath(),
+                    artifactTransfer.getArtifact(),
+                    artifactTransfer.getTrace());
+        } else if (transfer instanceof MetadataTransfer) {
+            MetadataTransfer metadataTransfer = (MetadataTransfer) transfer;
+            return new TransferResource(
+                    repository.getId(),
+                    repository.getUrl(),
+                    path.toString(),
+                    metadataTransfer.getPath(),
+                    metadataTransfer.getMetadata(),
+                    metadataTransfer.getTrace());
+        } else {
+            throw new IllegalArgumentException("Accepting only artifact or metadata transfers");
+        }
     }
 
     private TransferEvent.Builder newEventBuilder(TransferResource resource, boolean upload, boolean peek) {

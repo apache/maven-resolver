@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import java.nio.file.Path;
-
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -49,7 +47,7 @@ public class DefaultChecksumPolicyProviderTest {
         session = TestUtils.newSession();
         provider = new DefaultChecksumPolicyProvider();
         repository = new RemoteRepository.Builder("test", "default", "file:/void").build();
-        resource = new TransferResource(repository.getId(), repository.getUrl(), "file.txt", (Path) null, null);
+        resource = new TransferResource(repository.getId(), repository.getUrl(), "file.txt", null, null, null);
     }
 
     @AfterEach

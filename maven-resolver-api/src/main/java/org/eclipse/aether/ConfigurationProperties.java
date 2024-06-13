@@ -61,11 +61,25 @@ public final class ConfigurationProperties {
     public static final String PREFIX_LAYOUT = PREFIX_AETHER + "layout.";
 
     /**
+     * Prefix for checksum related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_CHECKSUMS = PREFIX_AETHER + "checksums.";
+
+    /**
      * Prefix for local repository manager related configurations. <em>For internal use only.</em>
      *
      * @since 2.0.0
      */
     public static final String PREFIX_LRM = PREFIX_AETHER + "lrm.";
+
+    /**
+     * Prefix for generator related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.0
+     */
+    public static final String PREFIX_GENERATOR = PREFIX_AETHER + "generator.";
 
     /**
      * Prefix for transport related configurations. <em>For internal use only.</em>

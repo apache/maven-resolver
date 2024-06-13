@@ -27,6 +27,7 @@ import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.scope.ResolutionScope;
 
 /**
  * A request to collect the transitive dependencies and to build a dependency graph from them. There are three ways to
@@ -38,6 +39,7 @@ import org.eclipse.aether.repository.RemoteRepository;
  * @see RepositorySystem#collectDependencies(org.eclipse.aether.RepositorySystemSession, CollectRequest)
  */
 public final class CollectRequest {
+    private ResolutionScope resolutionScope;
 
     private Artifact rootArtifact;
 
@@ -98,6 +100,27 @@ public final class CollectRequest {
         setDependencies(dependencies);
         setManagedDependencies(managedDependencies);
         setRepositories(repositories);
+    }
+
+    /**
+     * Gets the wanted resolution scope. If set, the {@link org.eclipse.aether.scope.ScopeManager} has to be set on
+     * session as well, otherwise it is considered user error: misconfigured collect request.
+     *
+     * @since 2.0.0
+     * @return The wanted resolution scope.
+     */
+    public ResolutionScope getResolutionScope() {
+        return resolutionScope;
+    }
+
+    /**
+     * Sets the wanted resolution scope. Usable only if {@link org.eclipse.aether.scope.ScopeManager} is used.
+     *
+     * @since 2.0.0
+     * @param resolutionScope The wanted resolution scope, may be {@code null} to "drive by yourself".
+     */
+    public void setResolutionScope(ResolutionScope resolutionScope) {
+        this.resolutionScope = resolutionScope;
     }
 
     /**
