@@ -32,7 +32,7 @@
   <description>A synchronization utility implementation using IPC.</description>
 
   <properties>
-    <javaVersion>9</javaVersion>
+    <javaVersion>17</javaVersion>
     <Automatic-Module-Name>org.apache.maven.resolver.named.ipc</Automatic-Module-Name>
     <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
   </properties>
