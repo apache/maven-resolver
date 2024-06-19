@@ -31,6 +31,18 @@
   <name>Maven Artifact Resolver Implementation</name>
   <description>An implementation of the repository system.</description>
 
+  <properties>
+    <bnd.instructions.additions><![CDATA[
+      # Mark optional Maven dependencies as optional
+      Import-Package: \
+        org.slf4j.spi;version="[1.7,3)", \
+        javax.inject;resolution:=optional,\
+        com.google.inject*;resolution:=optional, \
+        org.eclipse.sisu*;resolution:=optional, \
+        *
+    ]]></bnd.instructions.additions>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
