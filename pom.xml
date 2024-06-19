@@ -611,6 +611,10 @@
               Automatic-Module-Name: ${Bundle-SymbolicName}
               # Export packages not containing the substring 'internal'
               -exportcontents: ${removeall;${packages};${packages;NAMED;*internal*}}
+              # Mark optional Maven dependencies as optional
+              Import-Package: \
+                javax.inject*;resolution:=optional, \
+                *
               # Reproducible build
               -noextraheaders: true
               ${bnd.instructions.additions}
