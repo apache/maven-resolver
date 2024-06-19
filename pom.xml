@@ -614,10 +614,15 @@
                 *.impl.*;x-internal:=true, \
                 *.internal.*;x-internal:=true, \
                 *
-              # Mark optional Maven dependencies as optional
+              # Ensure all maven-resolver packages of exactly the same version are imported
+              # and mark optional Maven dependencies as optional.
+              mavenResolverVersion=${versionmask;===;${version_cleanup;${project.version}}}
               Import-Package: \
+                org.eclipse.aether*;version="${range;[===,===];${mavenResolverVersion}}", \
                 javax.inject*;resolution:=optional, \
                 *
+              # No re-import of exported packages
+              -noimport:=true
               # Reproducible build
               -noextraheaders: true
               ${bnd.instructions.additions}
