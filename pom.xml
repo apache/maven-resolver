@@ -610,7 +610,10 @@
               Bundle-SymbolicName: org.apache.${replacestring;${project.artifactId};-;.}
               Automatic-Module-Name: ${Bundle-SymbolicName}
               # Export packages not containing the substring 'internal'
-              -exportcontents: ${removeall;${packages};${packages;NAMED;*internal*}}
+              -exportcontents: \
+                *.impl.*;x-internal:=true, \
+                *.internal.*;x-internal:=true, \
+                *
               # Mark optional Maven dependencies as optional
               Import-Package: \
                 javax.inject*;resolution:=optional, \
