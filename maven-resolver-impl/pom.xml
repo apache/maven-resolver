@@ -35,6 +35,7 @@
     <bnd.instructions.additions><![CDATA[
       # Mark optional Maven dependencies as optional
       Import-Package: \
+        org.eclipse.aether*;version="${range;[===,===];${mavenResolverVersion}}", \
         org.slf4j.spi;version="[1.7,3)", \
         javax.inject;resolution:=optional,\
         com.google.inject*;resolution:=optional, \
