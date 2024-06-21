@@ -33,7 +33,8 @@
 
   <properties>
     <bnd.instructions.additions><![CDATA[
-      Automatic-Module-Name: org.apache.maven.resolver
+      -jpms-module-info: org.apache.maven.resolver
+      -removeheaders Automatic-Module-Name
     ]]></bnd.instructions.additions>
   </properties>
 

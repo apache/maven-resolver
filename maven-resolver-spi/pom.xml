@@ -31,6 +31,13 @@
   <name>Maven Artifact Resolver SPI</name>
   <description>The service provider interface for repository system implementations and repository connectors.</description>
 
+  <properties>
+    <bnd.instructions.additions><![CDATA[
+      -jpms-module-info
+      -removeheaders Automatic-Module-Name
+    ]]></bnd.instructions.additions>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
