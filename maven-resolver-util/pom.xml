@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Utilities</name>
   <description>A collection of utility classes to ease usage of the repository system.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.util</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

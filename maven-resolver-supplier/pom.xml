@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Instance Supplier</name>
   <description>A helper module to provide RepositorySystem instances.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.supplier</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

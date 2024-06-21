@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Named Locks using Hazelcast</name>
   <description>A synchronization utility implementation using Hazelcast.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.named.hazelcast</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Test Utilities</name>
   <description>A collection of utility classes to ease testing of the repository system.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.testutil</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

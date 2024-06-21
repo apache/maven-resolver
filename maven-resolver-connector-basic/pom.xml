@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Connector Basic</name>
   <description>A repository connector implementation for repositories using URI-based layouts.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.connector.basic</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
