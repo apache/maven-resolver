@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Transport Apache</name>
   <description>A transport implementation for repositories using http:// and https:// URLs.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.transport.apache</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

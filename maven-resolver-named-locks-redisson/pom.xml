@@ -32,9 +32,6 @@
   <description>A synchronization utility implementation using Redisson.</description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.named.redisson</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-
     <testcontainersVersion>1.19.8</testcontainersVersion>
   </properties>
 

@@ -32,8 +32,9 @@
   <description>A helper module to provide RepositorySystem instances.</description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.supplier</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
+    <bnd.instructions.additions><![CDATA[
+      Bundle-SymbolicName: org.apache.maven.resolver.supplier
+    ]]></bnd.instructions.additions>
   </properties>
 
   <dependencies>

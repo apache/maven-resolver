@@ -33,9 +33,6 @@
   <description>Maven Artifact Transport Jetty.</description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.transport.jetty</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-
     <javaVersion>11</javaVersion>
   </properties>
 

@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Implementation</name>
   <description>An implementation of the repository system.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.impl</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
