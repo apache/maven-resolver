@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Transport Wagon</name>
   <description>A transport implementation based on Maven Wagon.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.transport.wagon</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

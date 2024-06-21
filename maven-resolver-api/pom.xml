@@ -32,8 +32,9 @@
   <description>The application programming interface for the repository system.</description>
 
   <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}.api</Bundle-SymbolicName>
+    <bnd.instructions.additions><![CDATA[
+      Automatic-Module-Name: org.apache.maven.resolver
+    ]]></bnd.instructions.additions>
   </properties>
 
   <dependencies>

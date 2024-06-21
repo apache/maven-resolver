@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Named Locks</name>
   <description>A synchronization utility implementation using Named locks.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.named</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>
