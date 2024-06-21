@@ -32,10 +32,6 @@
   <description>A module to demonstrate the usage of Maven Artifact Resolver with Maven repositories
     by means of various runnable code snippets.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.demo.snippets</Automatic-Module-Name>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

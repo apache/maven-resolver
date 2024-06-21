@@ -97,6 +97,7 @@
     <minimalMavenBuildVersion>[3.8.7,)</minimalMavenBuildVersion>
     <minimalJavaBuildVersion>[1.8.0-362,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2024-04-26T10:43:34Z</project.build.outputTimestamp>
+    <bnd.instructions.additions />
   </properties>
 
   <dependencyManagement>
@@ -471,11 +472,13 @@
           <version>6.4.0</version>
           <configuration>
             <bnd><![CDATA[
-              Bundle-SymbolicName: ${Bundle-SymbolicName}
+              Bundle-SymbolicName: org.apache.${replacestring;${project.artifactId};-;.}
+              Automatic-Module-Name: ${Bundle-SymbolicName}
               # Export packages not containing the substring 'internal'
               -exportcontents: ${removeall;${packages};${packages;NAMED;*internal*}}
               # Reproducible build
               -noextraheaders: true
+              ${bnd.instructions.additions}
             ]]></bnd>
           </configuration>
         </plugin>
@@ -485,9 +488,6 @@
           <configuration>
             <archive>
               <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-              <manifestEntries>
-                <Automatic-Module-Name>${Automatic-Module-Name}</Automatic-Module-Name>
-              </manifestEntries>
             </archive>
           </configuration>
         </plugin>

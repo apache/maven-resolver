@@ -31,11 +31,6 @@
   <name>Maven Artifact Resolver Transport File</name>
   <description>A transport implementation for repositories using file:// URLs.</description>
 
-  <properties>
-    <Automatic-Module-Name>org.apache.maven.resolver.transport.file</Automatic-Module-Name>
-    <Bundle-SymbolicName>${Automatic-Module-Name}</Bundle-SymbolicName>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
