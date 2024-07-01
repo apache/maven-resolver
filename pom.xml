@@ -87,7 +87,7 @@
     <javaVersion>8</javaVersion>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
-    <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
+    <maven.site.path>resolver-archives/resolver-LATEST-1.x</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.9.0.M2</sisuVersion>
     <guiceVersion>6.0.0</guiceVersion>
