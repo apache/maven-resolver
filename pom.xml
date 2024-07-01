@@ -609,11 +609,11 @@
             <bnd><![CDATA[
               Bundle-SymbolicName: org.apache.${replacestring;${project.artifactId};-;.}
               Automatic-Module-Name: ${Bundle-SymbolicName}
-              # Export packages not containing the substring 'internal'
+              # Export packages, but don't re-import own packages
               -exportcontents: \
-                *.impl.*;x-internal:=true, \
-                *.internal.*;x-internal:=true, \
-                *
+                *.impl.*;x-internal:=true;-noimport:=true, \
+                *.internal.*;x-internal:=true;-noimport:=true, \
+                *;-noimport:=true
               # Ensure all maven-resolver packages of exactly the same version are imported
               # and mark optional Maven dependencies as optional.
               mavenResolverVersion=${versionmask;===;${version_cleanup;${project.version}}}
@@ -621,8 +621,6 @@
                 org.eclipse.aether*;version="${range;[===,===];${mavenResolverVersion}}", \
                 javax.inject*;resolution:=optional, \
                 *
-              # No re-import of exported packages
-              -noimport:=true
               # Reproducible build
               -noextraheaders: true
               ${bnd.instructions.additions}
