@@ -624,6 +624,10 @@
               # Reproducible build
               -noextraheaders: true
               ${bnd.instructions.additions}
+              # Remove warnings (as we keep things simple)
+              -fixupmessages: \
+                'Unused Import-Package instructions';is:=ignore, \
+                'Unused Export-Package instructions';is:=ignore
             ]]></bnd>
           </configuration>
         </plugin>
