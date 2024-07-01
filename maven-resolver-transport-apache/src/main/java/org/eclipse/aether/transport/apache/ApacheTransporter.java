@@ -54,6 +54,7 @@ import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ServiceUnavailableRetryStrategy;
 import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -277,6 +278,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 .setConnectTimeout(connectTimeout)
                 .setConnectionRequestTimeout(connectTimeout)
                 .setLocalAddress(getHttpLocalAddress(session, repository))
+                .setCookieSpec(CookieSpecs.STANDARD)
                 .setSocketTimeout(requestTimeout)
                 .build();
 
