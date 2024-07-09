@@ -52,7 +52,7 @@ import static org.eclipse.aether.named.ipc.IpcMessages.RESPONSE_STOP;
  * Client side implementation.
  * The client instance is bound to a given maven repository.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 public class IpcClient {
 

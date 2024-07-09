@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Implementation of the server side.
  * The server instance is bound to a given maven repository.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 public class IpcServer {
     /**

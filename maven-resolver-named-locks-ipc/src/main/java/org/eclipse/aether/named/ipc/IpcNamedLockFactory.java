@@ -36,7 +36,7 @@ import org.eclipse.aether.util.StringDigestUtil;
 /**
  * IPC named locks factory.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 @Singleton
 @Named(IpcNamedLockFactory.NAME)

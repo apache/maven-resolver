@@ -26,7 +26,7 @@ import java.nio.channels.ByteChannel;
  * Trivial ByteChannel wrapper to avoid the read/write synchronization which
  * happens when the channel implements SelectableChannel.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 public class ByteChannelWrapper implements ByteChannel {
 

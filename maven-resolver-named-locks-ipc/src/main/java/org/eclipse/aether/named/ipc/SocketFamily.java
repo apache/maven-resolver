@@ -29,7 +29,7 @@ import java.nio.channels.ServerSocketChannel;
 /**
  * Socket factory.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 public enum SocketFamily {
     inet;

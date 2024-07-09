@@ -31,7 +31,7 @@ import org.eclipse.aether.named.support.NamedLockSupport;
 /**
  * IPC named locks.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 class IpcNamedLock extends NamedLockSupport {
 

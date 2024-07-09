@@ -21,7 +21,7 @@ package org.eclipse.aether.named.ipc;
 /**
  * Constants used for the inter-process communication protocol.
  *
- * @since 2.0.0
+ * @since 2.0.1
  */
 public class IpcMessages {
 
