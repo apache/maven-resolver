@@ -106,7 +106,8 @@ public enum SocketFamily {
                 }
                 return "inet:" + formatted + ":" + port;
             case unix:
-                return "unix:" + address;
+                // to keep address string unchanged across all OSes
+                return "unix:" + address.toString().replace('\\', '/');
             default:
                 throw new IllegalArgumentException("Unsupported socket address: '" + address + "'");
         }
