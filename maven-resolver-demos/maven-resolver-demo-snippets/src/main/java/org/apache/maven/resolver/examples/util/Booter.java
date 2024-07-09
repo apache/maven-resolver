@@ -18,12 +18,16 @@
  */
 package org.apache.maven.resolver.examples.util;
 
-import java.nio.file.Path;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
@@ -62,12 +66,10 @@ public class Booter {
     }
 
     public static SessionBuilder newRepositorySystemSession(RepositorySystem system) {
-        Path localRepo = Paths.get("target/local-repo");
-        // FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
-        return new SessionBuilderSupplier(system)
+        FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
+        SessionBuilder result = new SessionBuilderSupplier(system)
                 .get()
-                //        .withLocalRepositoryBaseDirectories(fs.getPath("local-repo"))
-                .withLocalRepositoryBaseDirectories(localRepo)
+                .withLocalRepositoryBaseDirectories(fs.getPath("local-repo"))
                 .setRepositoryListener(new ConsoleRepositoryListener())
                 .setTransferListener(new ConsoleTransferListener())
                 .setConfigProperty("aether.generator.gpg.enabled", Boolean.TRUE.toString())
@@ -77,16 +79,18 @@ public class Booter {
                                 .toAbsolutePath()
                                 .toString())
                 .setConfigProperty("aether.syncContext.named.factory", "noop");
-        // result.addOnSessionEndedHandler(() -> {
-        //     try {
-        //         fs.close();
-        //     } catch (IOException e) {
-        //         throw new UncheckedIOException(e);
-        //     }
-        // });
+        result.addOnSessionEndedHandler(() -> {
+            try {
+                fs.close();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
 
         // uncomment to generate dirty trees
         // session.setDependencyGraphTransformer( null );
+
+        return result;
     }
 
     public static List<RemoteRepository> newRepositories(RepositorySystem system, RepositorySystemSession session) {
