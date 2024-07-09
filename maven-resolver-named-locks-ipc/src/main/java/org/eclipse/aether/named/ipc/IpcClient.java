@@ -57,7 +57,7 @@ import static org.eclipse.aether.named.ipc.IpcMessages.RESPONSE_STOP;
 public class IpcClient {
 
     static final boolean IS_WINDOWS =
-            System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+            System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("win");
 
     volatile boolean initialized;
     Path lockPath;
@@ -99,7 +99,7 @@ public class IpcClient {
 
         Path lockPath = this.lockPath.toAbsolutePath().normalize();
         Path lockFile =
-                lockPath.resolve(".maven-resolver-ipc-lock-" + family.name().toLowerCase());
+                lockPath.resolve(".maven-resolver-ipc-lock-" + family.name().toLowerCase(Locale.ENGLISH));
         if (!Files.isRegularFile(lockFile)) {
             if (!Files.isDirectory(lockFile.getParent())) {
                 Files.createDirectories(lockFile.getParent());
