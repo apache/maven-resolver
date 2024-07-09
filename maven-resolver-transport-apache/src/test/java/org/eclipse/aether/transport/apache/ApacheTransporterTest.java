@@ -32,6 +32,7 @@ import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.internal.test.util.http.RecordingTransportListener;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,6 +46,11 @@ class ApacheTransporterTest extends HttpTransporterTest {
     public ApacheTransporterTest() {
         super(() -> new ApacheTransporterFactory(standardChecksumExtractor(), new TestPathProcessor()));
     }
+
+    @Override
+    @Disabled
+    @Test
+    protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {}
 
     @Test
     void testGet_WebDav() throws Exception {

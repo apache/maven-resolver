@@ -512,11 +512,30 @@ public class HttpTransporterTest {
 
     @Test
     protected void testGet_HTTPS_Insecure_SecurityMode() throws Exception {
-        // here we use alternate server-store-selfigned key (as the key set it static initalizer is probably already
+        // here we use alternate server-store-selfigned key (as the key set it static initializer is probably already
         // used to init SSLContext/SSLSocketFactory/etc
         session.setConfigProperty(
                 ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
         httpServer.addSelfSignedSslConnector();
+        newTransporter(httpServer.getHttpsUrl());
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+        assertEquals(0L, listener.getDataOffset());
+        assertEquals(4L, listener.getDataLength());
+        assertEquals(1, listener.getStartedCount());
+        assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
+        assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {
+        // here we use alternate server-store-selfigned key (as the key set it static initializer is probably already
+        // used to init SSLContext/SSLSocketFactory/etc
+        session.setConfigProperty(
+                ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
+        httpServer.addSelfSignedSslConnectorHttp2Only();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
