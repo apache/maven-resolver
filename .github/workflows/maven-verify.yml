@@ -29,5 +29,5 @@ jobs:
       ff-run: false
       ff-site-run: false
       jdk-matrix: '[ "21" ]'
-      maven-matrix: '[ "3.9.6" ]'
+      maven-matrix: '[ "3.9.8" ]'
 
