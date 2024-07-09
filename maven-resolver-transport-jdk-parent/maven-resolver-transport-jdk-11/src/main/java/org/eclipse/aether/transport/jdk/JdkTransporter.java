@@ -488,7 +488,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                             .sslContext(sslContext);
 
                     if (insecure) {
-                        SSLParameters sslParameters = new SSLParameters();
+                        SSLParameters sslParameters = sslContext.getDefaultSSLParameters();
                         sslParameters.setEndpointIdentificationAlgorithm(null);
                         builder.sslParameters(sslParameters);
                     }
