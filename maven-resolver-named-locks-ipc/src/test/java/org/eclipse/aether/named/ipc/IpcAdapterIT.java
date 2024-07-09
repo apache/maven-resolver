@@ -24,7 +24,6 @@ public class IpcAdapterIT extends NamedLockFactoryAdapterTestSupport {
     @BeforeAll
     static void createNamedLockFactory() {
         System.setProperty(IpcServer.SYSTEM_PROP_DEBUG, Boolean.TRUE.toString());
-        System.setProperty(IpcServer.SYSTEM_PROP_NO_NATIVE, Boolean.TRUE.toString());
         setNamedLockFactory(new IpcNamedLockFactory() {
             @Override
             protected void doShutdown() {

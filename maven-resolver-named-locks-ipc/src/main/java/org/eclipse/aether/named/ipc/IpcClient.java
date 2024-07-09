@@ -121,7 +121,8 @@ public class IpcClient {
                 ServerSocketChannel ss = family.openServerSocket();
                 String tmpaddr = SocketFamily.toString(ss.getLocalAddress());
                 String rand = Long.toHexString(new Random().nextLong());
-                String nativeName = System.getProperty(IpcServer.SYSTEM_PROP_NATIVE_NAME, IpcServer.DEFAULT_NATIVE_NAME);
+                String nativeName =
+                        System.getProperty(IpcServer.SYSTEM_PROP_NATIVE_NAME, IpcServer.DEFAULT_NATIVE_NAME);
                 String syncCmd = IS_WINDOWS ? nativeName + ".exe" : nativeName;
 
                 boolean debug = Boolean.parseBoolean(
