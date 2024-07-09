@@ -33,6 +33,8 @@ import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.eclipse.aether.named.support.NamedLockSupport;
 import org.eclipse.aether.util.StringDigestUtil;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * IPC named locks factory.
  *
@@ -43,22 +45,18 @@ import org.eclipse.aether.util.StringDigestUtil;
 public class IpcNamedLockFactory extends NamedLockFactorySupport {
     public static final String NAME = "ipc";
 
-    private final Path ipcHome;
-
-    private final Path repository;
-
-    private final Path logPath;
-
-    private final Path syncPath;
-
     protected final IpcClient client;
 
     @Inject
     public IpcNamedLockFactory() {
-        this.ipcHome = Paths.get(System.getProperty("user.home")).resolve(".ipc-sync");
-        this.repository = ipcHome.resolve("repository");
-        this.logPath = ipcHome.resolve("log");
-        this.syncPath = null;
+        this(Paths.get(System.getProperty("user.home")).resolve(".ipc-sync"));
+    }
+
+    public IpcNamedLockFactory(Path ipcHome) {
+        requireNonNull(ipcHome);
+        Path repository = ipcHome.resolve("repository");
+        Path logPath = ipcHome.resolve("log");
+        Path syncPath = null;
         this.client = new IpcClient(repository, logPath, syncPath);
     }
 

@@ -86,7 +86,18 @@ public class IpcServer {
      */
     public static final String SYSTEM_PROP_NO_NATIVE = "aether.named.ipc.nonative";
 
-    public static final boolean DEFAULT_NO_NATIVE = false;
+    public static final boolean DEFAULT_NO_NATIVE = true;
+
+    /**
+     * The name if the IPC server native executable (without file extension like ".exe")
+     *
+     * @configurationSource {@link System#getProperty(String, String)}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_NATIVE_NAME}
+     */
+    public static final String SYSTEM_PROP_NATIVE_NAME = "aether.named.ipc.nativeName";
+
+    public static final String DEFAULT_NATIVE_NAME = "ipc-sync";
 
     /**
      * Should the IPC server log debug messages? (i.e. for testing purposes)
