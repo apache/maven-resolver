@@ -75,7 +75,7 @@ public class IpcServer {
      */
     public static final String SYSTEM_PROP_FAMILY = "aether.named.ipc.family";
 
-    public static final String DEFAULT_FAMILY = "inet";
+    public static final String DEFAULT_FAMILY = "unix";
 
     /**
      * Should the IPC server not use native executable?
