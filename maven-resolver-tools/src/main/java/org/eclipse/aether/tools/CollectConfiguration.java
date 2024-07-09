@@ -55,6 +55,7 @@ public class CollectConfiguration {
                 .map(Path::toAbsolutePath)
                 .filter(p -> p.getFileName().toString().endsWith(".java"))
                 .filter(p -> p.toString().contains("/src/main/java/"))
+                .filter(p -> !p.toString().endsWith("/module-info.java"))
                 .forEach(p -> {
                     JavaType<?> type = parse(p);
                     if (type instanceof JavaClassSource javaClassSource) {

@@ -147,14 +147,18 @@ public class HttpServer {
     }
 
     public HttpServer addSslConnector() {
-        return addSslConnector(true);
+        return addSslConnector(true, true);
     }
 
     public HttpServer addSelfSignedSslConnector() {
-        return addSslConnector(false);
+        return addSslConnector(false, true);
     }
 
-    private HttpServer addSslConnector(boolean needClientAuth) {
+    public HttpServer addSelfSignedSslConnectorHttp2Only() {
+        return addSslConnector(false, false);
+    }
+
+    private HttpServer addSslConnector(boolean needClientAuth, boolean needHttp11) {
         if (httpsConnector == null) {
             SslContextFactory.Server ssl = new SslContextFactory.Server();
             ssl.setNeedClientAuth(needClientAuth);
@@ -179,15 +183,22 @@ public class HttpServer {
             customizer.setSniHostCheck(false);
             httpsConfig.addCustomizer(customizer);
 
-            HttpConnectionFactory http1 = new HttpConnectionFactory(httpsConfig);
+            HttpConnectionFactory http1 = null;
+            if (needHttp11) {
+                http1 = new HttpConnectionFactory(httpsConfig);
+            }
 
             HTTP2ServerConnectionFactory http2 = new HTTP2ServerConnectionFactory(httpsConfig);
 
             ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
-            alpn.setDefaultProtocol(http1.getProtocol());
+            alpn.setDefaultProtocol(http1 != null ? http1.getProtocol() : http2.getProtocol());
 
             SslConnectionFactory tls = new SslConnectionFactory(ssl, alpn.getProtocol());
-            httpsConnector = new ServerConnector(server, tls, alpn, http2, http1);
+            if (http1 != null) {
+                httpsConnector = new ServerConnector(server, tls, alpn, http2, http1);
+            } else {
+                httpsConnector = new ServerConnector(server, tls, alpn, http2);
+            }
             server.addConnector(httpsConnector);
             try {
                 httpsConnector.start();

@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver-demos</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>maven-resolver-demo-snippets</artifactId>
@@ -81,17 +81,17 @@
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-supplier-mvn3</artifactId>
+      <artifactId>maven-resolver-supplier-mvn4</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-resolver-provider</artifactId>
-      <version>${maven3Version}</version>
+      <version>${maven4Version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model-builder</artifactId>
-      <version>${maven3Version}</version>
+      <version>${maven4Version}</version>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
