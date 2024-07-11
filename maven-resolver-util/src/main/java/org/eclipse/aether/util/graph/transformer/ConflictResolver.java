@@ -18,7 +18,18 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryException;

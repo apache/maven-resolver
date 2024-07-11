@@ -23,9 +23,10 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.nio.file.Path;
-import java.util.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.ListIterator;

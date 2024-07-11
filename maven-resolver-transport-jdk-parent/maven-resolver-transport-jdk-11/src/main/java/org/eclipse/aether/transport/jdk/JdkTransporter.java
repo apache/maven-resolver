@@ -18,14 +18,27 @@
  */
 package org.eclipse.aether.transport.jdk;
 
-import javax.net.ssl.*;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.X509ExtendedTrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.*;
+import java.net.Authenticator;
+import java.net.ConnectException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
+import java.net.ProxySelector;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -67,8 +80,22 @@ import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.*;
-import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.*;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.ACCEPT_ENCODING;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CACHE_CONTROL;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_LENGTH;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_RANGE;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_RANGE_PATTERN;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.IF_UNMODIFIED_SINCE;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.LAST_MODIFIED;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.MULTIPLE_CHOICES;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.NOT_FOUND;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.PRECONDITION_FAILED;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.RANGE;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.USER_AGENT;
+import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.CONFIG_PROP_HTTP_VERSION;
+import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.CONFIG_PROP_MAX_CONCURRENT_REQUESTS;
+import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.DEFAULT_HTTP_VERSION;
+import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.DEFAULT_MAX_CONCURRENT_REQUESTS;
 
 /**
  * JDK Transport using {@link HttpClient}.

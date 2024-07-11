@@ -19,7 +19,11 @@
 package org.eclipse.aether.internal.impl.session;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.DefaultSessionData;

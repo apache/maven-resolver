@@ -18,7 +18,8 @@
  */
 package org.eclipse.aether.transport.jetty;
 
-import javax.net.ssl.*;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.X509TrustManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,7 +73,17 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.*;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.ACCEPT_ENCODING;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_LENGTH;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_RANGE;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_RANGE_PATTERN;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.IF_UNMODIFIED_SINCE;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.LAST_MODIFIED;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.MULTIPLE_CHOICES;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.NOT_FOUND;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.PRECONDITION_FAILED;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.RANGE;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.USER_AGENT;
 
 /**
  * A transporter for HTTP/HTTPS.

@@ -29,7 +29,9 @@ import org.eclipse.aether.generator.gnupg.GnupgSignatureArtifactGeneratorFactory
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.sisu.Priority;
 
-import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.*;
+import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.RESOLVER_GPG_KEY;
+import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.RESOLVER_GPG_KEY_FINGERPRINT;
+import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.RESOLVER_GPG_KEY_PASS;
 
 /**
  * Loader that looks for environment variables.
