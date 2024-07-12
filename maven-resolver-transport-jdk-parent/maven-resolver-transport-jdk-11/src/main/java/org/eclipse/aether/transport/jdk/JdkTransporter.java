@@ -237,10 +237,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         HttpClient newClient = createClient(session, repository, insecure);
         if (this.clientRef.compareAndSet(oldClient, newClient)) {
             if (oldClient != null) {
-                JdkTransporterCloser.closer(oldClient).run();
+                JdkTransporterCloser.close(oldClient);
             }
         } else {
-            JdkTransporterCloser.closer(newClient).run();
+            JdkTransporterCloser.close(newClient);
         }
     }
 
