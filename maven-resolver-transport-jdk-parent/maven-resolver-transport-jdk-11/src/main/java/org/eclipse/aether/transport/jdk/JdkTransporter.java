@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -112,13 +113,17 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private static final long MODIFICATION_THRESHOLD = 60L * 1000L;
 
+    private final RepositorySystemSession session;
+
+    private final RemoteRepository repository;
+
     private final ChecksumExtractor checksumExtractor;
 
     private final PathProcessor pathProcessor;
 
     private final URI baseUri;
 
-    private final HttpClient client;
+    private final AtomicReference<HttpClient> clientRef;
 
     private final Map<String, String> headers;
 
@@ -128,6 +133,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final Semaphore maxConcurrentRequests;
 
+    private final boolean insecure;
+
     JdkTransporter(
             RepositorySystemSession session,
             RemoteRepository repository,
@@ -135,6 +142,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             ChecksumExtractor checksumExtractor,
             PathProcessor pathProcessor)
             throws NoTransporterException {
+        this.session = session;
+        this.repository = repository;
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
@@ -197,6 +206,17 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         javaVersion);
             }
         }
+        final String httpsSecurityMode = ConfigUtils.getString(
+                session,
+                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
+                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
+                ConfigurationProperties.HTTPS_SECURITY_MODE);
+
+        if (!ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(httpsSecurityMode)
+                && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
+            throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
+        }
+        this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
         this.maxConcurrentRequests = new Semaphore(ConfigUtils.getInteger(
                 session,
@@ -205,7 +225,23 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 CONFIG_PROP_MAX_CONCURRENT_REQUESTS));
 
         this.headers = headers;
-        this.client = getOrCreateClient(session, repository, javaVersion);
+        this.clientRef = new AtomicReference<>();
+        try {
+            swapClient(null);
+        } catch (Exception e) {
+            throw new NoTransporterException(repository, e);
+        }
+    }
+
+    private void swapClient(HttpClient oldClient) throws Exception {
+        HttpClient newClient = createClient(session, repository, insecure);
+        if (this.clientRef.compareAndSet(oldClient, newClient)) {
+            if (oldClient != null) {
+                JdkTransporterCloser.closer(oldClient).run();
+            }
+        } else {
+            JdkTransporterCloser.closer(newClient).run();
+        }
     }
 
     private URI resolve(TransportTask task) {
@@ -235,7 +271,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 .method("HEAD", HttpRequest.BodyPublishers.noBody());
         headers.forEach(request::setHeader);
         try {
-            HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
+            HttpResponse<Void> response = send(true, request.build(), HttpResponse.BodyHandlers.discarding());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 throw new HttpTransporterException(response.statusCode());
             }
@@ -268,7 +304,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 }
 
                 try {
-                    response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+                    response = send(true, request.build(), HttpResponse.BodyHandlers.ofInputStream());
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
                         closeBody(response);
                         if (resume && response.statusCode() == PRECONDITION_FAILED) {
@@ -375,7 +411,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request.method("PUT", HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
 
             try {
-                HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
+                HttpResponse<Void> response = send(true, request.build(), HttpResponse.BodyHandlers.discarding());
                 if (response.statusCode() >= MULTIPLE_CHOICES) {
                     throw new HttpTransporterException(response.statusCode());
                 }
@@ -385,11 +421,22 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
-    private <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
-            throws IOException, InterruptedException {
+    private <T> HttpResponse<T> send(
+            boolean handleGoaway, HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
+            throws Exception {
         maxConcurrentRequests.acquire();
+        HttpClient client = clientRef.get();
         try {
             return client.send(request, responseBodyHandler);
+        } catch (IOException e) {
+            if (handleGoaway) {
+                String message = e.getMessage();
+                if (message != null && message.contains("GOAWAY received")) {
+                    swapClient(client);
+                    return send(false, request, responseBodyHandler);
+                }
+            }
+            throw e;
         } finally {
             maxConcurrentRequests.release();
         }
@@ -397,10 +444,117 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     @Override
     protected void implClose() {
-        // no-op
+        HttpClient client = clientRef.get();
+        if (client != null) {
+            JdkTransporterCloser.closer(client).run();
+        }
     }
 
-    private InetAddress getHttpLocalAddress(RepositorySystemSession session, RemoteRepository repository) {
+    private static HttpClient createClient(
+            RepositorySystemSession session, RemoteRepository repository, boolean insecure) throws Exception {
+
+        HashMap<Authenticator.RequestorType, PasswordAuthentication> authentications = new HashMap<>();
+        SSLContext sslContext = null;
+        try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(session, repository)) {
+            if (repoAuthContext != null) {
+                sslContext = repoAuthContext.get(AuthenticationContext.SSL_CONTEXT, SSLContext.class);
+
+                String username = repoAuthContext.get(AuthenticationContext.USERNAME);
+                String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
+
+                authentications.put(
+                        Authenticator.RequestorType.SERVER,
+                        new PasswordAuthentication(username, password.toCharArray()));
+            }
+        }
+
+        if (sslContext == null) {
+            if (insecure) {
+                sslContext = SSLContext.getInstance("TLS");
+                X509ExtendedTrustManager tm = new X509ExtendedTrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) {}
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) {}
+
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {}
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {}
+
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                };
+                sslContext.init(null, new X509TrustManager[] {tm}, null);
+            } else {
+                sslContext = SSLContext.getDefault();
+            }
+        }
+
+        int connectTimeout = ConfigUtils.getInteger(
+                session,
+                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.CONNECT_TIMEOUT);
+
+        HttpClient.Builder builder = HttpClient.newBuilder()
+                .version(HttpClient.Version.valueOf(ConfigUtils.getString(
+                        session,
+                        DEFAULT_HTTP_VERSION,
+                        CONFIG_PROP_HTTP_VERSION + "." + repository.getId(),
+                        CONFIG_PROP_HTTP_VERSION)))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(Duration.ofMillis(connectTimeout))
+                .sslContext(sslContext);
+
+        if (insecure) {
+            SSLParameters sslParameters = sslContext.getDefaultSSLParameters();
+            sslParameters.setEndpointIdentificationAlgorithm(null);
+            builder.sslParameters(sslParameters);
+        }
+
+        setLocalAddress(builder, () -> getHttpLocalAddress(session, repository));
+
+        if (repository.getProxy() != null) {
+            ProxySelector proxy = ProxySelector.of(new InetSocketAddress(
+                    repository.getProxy().getHost(), repository.getProxy().getPort()));
+
+            builder.proxy(proxy);
+            try (AuthenticationContext proxyAuthContext = AuthenticationContext.forProxy(session, repository)) {
+                if (proxyAuthContext != null) {
+                    String username = proxyAuthContext.get(AuthenticationContext.USERNAME);
+                    String password = proxyAuthContext.get(AuthenticationContext.PASSWORD);
+
+                    authentications.put(
+                            Authenticator.RequestorType.PROXY,
+                            new PasswordAuthentication(username, password.toCharArray()));
+                }
+            }
+        }
+
+        if (!authentications.isEmpty()) {
+            builder.authenticator(new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return authentications.get(getRequestorType());
+                }
+            });
+        }
+
+        return builder.build();
+    }
+
+    private static InetAddress getHttpLocalAddress(RepositorySystemSession session, RemoteRepository repository) {
         String bindAddress = ConfigUtils.getString(
                 session,
                 null,
@@ -418,155 +572,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
-    /**
-     * Visible for testing.
-     */
-    static final String HTTP_INSTANCE_KEY_PREFIX = JdkTransporterFactory.class.getName() + ".http.";
-
-    private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository, int javaVersion)
-            throws NoTransporterException {
-        final String instanceKey = HTTP_INSTANCE_KEY_PREFIX + repository.getId();
-
-        final String httpsSecurityMode = ConfigUtils.getString(
-                session,
-                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
-                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
-                ConfigurationProperties.HTTPS_SECURITY_MODE);
-
-        if (!ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(httpsSecurityMode)
-                && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
-            throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
-        }
-        final boolean insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
-
-        // todo: normally a single client per JVM is sufficient - in particular cause part of the config
-        //       is global and not per instance so we should create a client only when conf changes for a repo
-        //       else fallback on a global client
-        try {
-            return (HttpClient) session.getData().computeIfAbsent(instanceKey, () -> {
-                HashMap<Authenticator.RequestorType, PasswordAuthentication> authentications = new HashMap<>();
-                SSLContext sslContext = null;
-                try {
-                    try (AuthenticationContext repoAuthContext =
-                            AuthenticationContext.forRepository(session, repository)) {
-                        if (repoAuthContext != null) {
-                            sslContext = repoAuthContext.get(AuthenticationContext.SSL_CONTEXT, SSLContext.class);
-
-                            String username = repoAuthContext.get(AuthenticationContext.USERNAME);
-                            String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
-
-                            authentications.put(
-                                    Authenticator.RequestorType.SERVER,
-                                    new PasswordAuthentication(username, password.toCharArray()));
-                        }
-                    }
-
-                    if (sslContext == null) {
-                        if (insecure) {
-                            sslContext = SSLContext.getInstance("TLS");
-                            X509ExtendedTrustManager tm = new X509ExtendedTrustManager() {
-                                @Override
-                                public void checkClientTrusted(X509Certificate[] chain, String authType) {}
-
-                                @Override
-                                public void checkServerTrusted(X509Certificate[] chain, String authType) {}
-
-                                @Override
-                                public void checkClientTrusted(
-                                        X509Certificate[] chain, String authType, Socket socket) {}
-
-                                @Override
-                                public void checkServerTrusted(
-                                        X509Certificate[] chain, String authType, Socket socket) {}
-
-                                @Override
-                                public void checkClientTrusted(
-                                        X509Certificate[] chain, String authType, SSLEngine engine) {}
-
-                                @Override
-                                public void checkServerTrusted(
-                                        X509Certificate[] chain, String authType, SSLEngine engine) {}
-
-                                @Override
-                                public X509Certificate[] getAcceptedIssuers() {
-                                    return null;
-                                }
-                            };
-                            sslContext.init(null, new X509TrustManager[] {tm}, null);
-                        } else {
-                            sslContext = SSLContext.getDefault();
-                        }
-                    }
-
-                    int connectTimeout = ConfigUtils.getInteger(
-                            session,
-                            ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                            ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                            ConfigurationProperties.CONNECT_TIMEOUT);
-
-                    HttpClient.Builder builder = HttpClient.newBuilder()
-                            .version(HttpClient.Version.valueOf(ConfigUtils.getString(
-                                    session,
-                                    DEFAULT_HTTP_VERSION,
-                                    CONFIG_PROP_HTTP_VERSION + "." + repository.getId(),
-                                    CONFIG_PROP_HTTP_VERSION)))
-                            .followRedirects(HttpClient.Redirect.NORMAL)
-                            .connectTimeout(Duration.ofMillis(connectTimeout))
-                            .sslContext(sslContext);
-
-                    if (insecure) {
-                        SSLParameters sslParameters = sslContext.getDefaultSSLParameters();
-                        sslParameters.setEndpointIdentificationAlgorithm(null);
-                        builder.sslParameters(sslParameters);
-                    }
-
-                    setLocalAddress(builder, () -> getHttpLocalAddress(session, repository));
-
-                    if (repository.getProxy() != null) {
-                        ProxySelector proxy = ProxySelector.of(new InetSocketAddress(
-                                repository.getProxy().getHost(),
-                                repository.getProxy().getPort()));
-
-                        builder.proxy(proxy);
-                        try (AuthenticationContext proxyAuthContext =
-                                AuthenticationContext.forProxy(session, repository)) {
-                            if (proxyAuthContext != null) {
-                                String username = proxyAuthContext.get(AuthenticationContext.USERNAME);
-                                String password = proxyAuthContext.get(AuthenticationContext.PASSWORD);
-
-                                authentications.put(
-                                        Authenticator.RequestorType.PROXY,
-                                        new PasswordAuthentication(username, password.toCharArray()));
-                            }
-                        }
-                    }
-
-                    if (!authentications.isEmpty()) {
-                        builder.authenticator(new Authenticator() {
-                            @Override
-                            protected PasswordAuthentication getPasswordAuthentication() {
-                                return authentications.get(getRequestorType());
-                            }
-                        });
-                    }
-
-                    HttpClient result = builder.build();
-                    if (!session.addOnSessionEndedHandler(JdkTransporterCloser.closer(javaVersion, result))) {
-                        LOGGER.warn(
-                                "Using Resolver 2 feature without Resolver 2 session handling, you may leak resources.");
-                    }
-
-                    return result;
-                } catch (Exception e) {
-                    throw new WrapperEx(e);
-                }
-            });
-        } catch (WrapperEx e) {
-            throw new NoTransporterException(repository, e.getCause());
-        }
-    }
-
-    private void setLocalAddress(HttpClient.Builder builder, Supplier<InetAddress> addressSupplier) {
+    private static void setLocalAddress(HttpClient.Builder builder, Supplier<InetAddress> addressSupplier) {
         try {
             final InetAddress address = addressSupplier.get();
             if (address == null) {
@@ -584,12 +590,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             throw new IllegalStateException(e.getTargetException());
         } catch (IllegalAccessException e) {
             throw new IllegalStateException(e);
-        }
-    }
-
-    private static final class WrapperEx extends RuntimeException {
-        private WrapperEx(Throwable cause) {
-            super(cause);
         }
     }
 }
