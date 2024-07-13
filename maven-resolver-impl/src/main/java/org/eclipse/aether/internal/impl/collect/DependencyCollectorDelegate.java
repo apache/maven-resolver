@@ -477,7 +477,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             Dependency d,
             Results results,
             List<DependencyNode> nodes) {
-        Object key = pool.toKey(descriptorRequest);
+        DataPool.DescriptorKey key = pool.toKey(descriptorRequest);
         ArtifactDescriptorResult descriptorResult = pool.getDescriptor(key, descriptorRequest);
         if (descriptorResult == null) {
             try {
