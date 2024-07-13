@@ -51,7 +51,7 @@ public class DataPoolTest {
         result.addAlias(new DefaultArtifact("gid:alias:4"));
 
         DataPool pool = newDataPool();
-        Object key = pool.toKey(request);
+        DataPool.DescriptorKey key = pool.toKey(request);
         pool.putDescriptor(key, result);
         ArtifactDescriptorResult cached = pool.getDescriptor(key, request);
         assertNotNull(cached);

@@ -375,7 +375,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate implement
             Dependency d,
             Results results,
             Args args) {
-        Object key = pool.toKey(descriptorRequest);
+        DataPool.DescriptorKey key = pool.toKey(descriptorRequest);
         ArtifactDescriptorResult descriptorResult = pool.getDescriptor(key, descriptorRequest);
         if (descriptorResult == null) {
             try {
