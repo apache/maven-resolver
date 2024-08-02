@@ -173,21 +173,27 @@ public final class DefaultArtifact extends AbstractArtifact {
         }
         this.version = emptify(version);
         this.file = null;
-        this.properties = merge(properties, (type != null) ? type.getProperties() : null);
+        this.properties = mergeArtifactProperties(properties, (type != null) ? type.getProperties() : null);
     }
 
-    private static Map<String, String> merge(Map<String, String> dominant, Map<String, String> recessive) {
+    private static Map<String, String> mergeArtifactProperties(
+            Map<String, String> artifactProperties, Map<String, String> typeDefaultProperties) {
         Map<String, String> properties;
 
-        if ((dominant == null || dominant.isEmpty()) && (recessive == null || recessive.isEmpty())) {
-            properties = Collections.emptyMap();
+        if (artifactProperties == null || artifactProperties.isEmpty()) {
+            if (typeDefaultProperties == null || typeDefaultProperties.isEmpty()) {
+                properties = Collections.emptyMap();
+            } else {
+                // type default properties are already unmodifiable
+                return typeDefaultProperties;
+            }
         } else {
             properties = new HashMap<>();
-            if (recessive != null) {
-                properties.putAll(recessive);
+            if (typeDefaultProperties != null) {
+                properties.putAll(typeDefaultProperties);
             }
-            if (dominant != null) {
-                properties.putAll(dominant);
+            if (artifactProperties != null) {
+                properties.putAll(artifactProperties);
             }
             properties = Collections.unmodifiableMap(properties);
         }
