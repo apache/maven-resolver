@@ -485,8 +485,14 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
         HttpClient httpClient = new HttpClient(transport);
         httpClient.setConnectTimeout(connectTimeout);
-        httpClient.setFollowRedirects(true);
-        httpClient.setMaxRedirects(2);
+        httpClient.setFollowRedirects(ConfigUtils.getBoolean(
+                session,
+                JettyTransporterConfigurationKeys.DEFAULT_FOLLOW_REDIRECTS,
+                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS));
+        httpClient.setMaxRedirects(ConfigUtils.getInteger(
+                session,
+                JettyTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS,
+                JettyTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS));
 
         httpClient.setUserAgentField(null); // we manage it
 
