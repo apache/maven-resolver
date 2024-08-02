@@ -61,6 +61,12 @@ public final class DataPool {
     private static final String CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY_LISTS =
             "aether.dependencyCollector.pool.dependencyLists";
 
+    private static final String CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_DEPENDENCIES =
+            "aether.dependencyCollector.pool.internArtifactDescriptorDependencies";
+
+    private static final String CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES =
+            "aether.dependencyCollector.pool.internArtifactDescriptorManagedDependencies";
+
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
 
     private static final String DEPENDENCY_POOL = DataPool.class.getName() + "$Dependency";
@@ -102,9 +108,18 @@ public final class DataPool {
      */
     private final ConcurrentHashMap<Object, List<DependencyNode>> nodes;
 
+    private final boolean internArtifactDescriptorDependencies;
+
+    private final boolean internArtifactDescriptorManagedDependencies;
+
     @SuppressWarnings("unchecked")
     public DataPool(RepositorySystemSession session) {
         final RepositoryCache cache = session.getCache();
+
+        internArtifactDescriptorDependencies = ConfigUtils.getBoolean(
+                session, false, CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_DEPENDENCIES);
+        internArtifactDescriptorManagedDependencies = ConfigUtils.getBoolean(
+                session, false, CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES);
 
         InternPool<Artifact, Artifact> artifactsPool = null;
         InternPool<Dependency, Dependency> dependenciesPool = null;
@@ -185,8 +200,12 @@ public final class DataPool {
     }
 
     public void putDescriptor(DescriptorKey key, ArtifactDescriptorResult result) {
-        result.setDependencies(intern(result.getDependencies()));
-        result.setManagedDependencies(intern(result.getManagedDependencies()));
+        if (internArtifactDescriptorDependencies) {
+            result.setDependencies(intern(result.getDependencies()));
+        }
+        if (internArtifactDescriptorManagedDependencies) {
+            result.setManagedDependencies(intern(result.getManagedDependencies()));
+        }
         descriptors.intern(key, new GoodDescriptor(result));
     }
 
