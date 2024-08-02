@@ -194,6 +194,12 @@ public interface RepositorySystemSession {
         /**
          * Sets the local repository manager used during this session. <em>Note:</em> Eventually, a valid session must have
          * a local repository manager set.
+         * <p>
+         * The provisioning of {@link org.eclipse.aether.repository.LocalRepositoryManager} for use with this
+         * method introduces chicken and egg situation. Integrators MUST NOT use this method, but instead, hook into
+         * Local Repository Manager Provider by any means they can (ie by using Provider or Sisu Components) and use
+         * custom string and/or priorities instead. This method existence is not meant for "everyday use" (normal
+         * session creation), but for some more advanced use cases. Do not use it, unless you know what are you doing.
          *
          * @param localRepositoryManager The local repository manager used during this session, may be {@code null}.
          * @return This session for chaining, never {@code null}.
