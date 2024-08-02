@@ -35,7 +35,6 @@
   <modules>
     <module>maven-resolver-transport-jdk-8</module>
     <module>maven-resolver-transport-jdk-11</module>
-    <module>maven-resolver-transport-jdk-21</module>
     <module>maven-resolver-transport-jdk</module>
   </modules>
 </project>

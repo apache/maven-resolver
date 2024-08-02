@@ -53,12 +53,6 @@
       <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-transport-jdk-21</artifactId>
-      <version>${project.version}</version>
-      <optional>true</optional>
-    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -132,18 +126,6 @@
             <configuration>
               <includeArtifactIds>maven-resolver-transport-jdk-11</includeArtifactIds>
               <outputDirectory>${project.build.directory}/generated-resources/META-INF/versions/11</outputDirectory>
-              <includes>**/*.class</includes>
-            </configuration>
-          </execution>
-          <execution>
-            <id>java21</id>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <includeArtifactIds>maven-resolver-transport-jdk-21</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/generated-resources/META-INF/versions/21</outputDirectory>
               <includes>**/*.class</includes>
             </configuration>
           </execution>
