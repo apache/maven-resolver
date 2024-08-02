@@ -119,7 +119,7 @@ public final class DataPool {
         internArtifactDescriptorDependencies = ConfigUtils.getBoolean(
                 session, false, CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_DEPENDENCIES);
         internArtifactDescriptorManagedDependencies = ConfigUtils.getBoolean(
-                session, false, CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES);
+                session, true, CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES);
 
         InternPool<Artifact, Artifact> artifactsPool = null;
         InternPool<Dependency, Dependency> dependenciesPool = null;
@@ -257,7 +257,7 @@ public final class DataPool {
 
         private DescriptorKey(Artifact artifact) {
             this.artifact = artifact;
-            this.hashCode = buildHashCode();
+            this.hashCode = Objects.hashCode(artifact);
         }
 
         @Override
@@ -275,10 +275,6 @@ public final class DataPool {
         @Override
         public int hashCode() {
             return hashCode;
-        }
-
-        private int buildHashCode() {
-            return Objects.hashCode(artifact);
         }
 
         @Override
