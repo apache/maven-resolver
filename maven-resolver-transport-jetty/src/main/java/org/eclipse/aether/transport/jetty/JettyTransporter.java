@@ -70,8 +70,6 @@ import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.ACCEPT_ENCODING;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_LENGTH;
@@ -93,6 +91,10 @@ import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.USER
 final class JettyTransporter extends AbstractTransporter implements HttpTransporter {
     private static final long MODIFICATION_THRESHOLD = 60L * 1000L;
 
+    private final RepositorySystemSession session;
+
+    private final RemoteRepository repository;
+
     private final ChecksumExtractor checksumExtractor;
 
     private final PathProcessor pathProcessor;
@@ -109,9 +111,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final boolean preemptivePutAuth;
 
-    private final BasicAuthentication.BasicResult basicServerAuthenticationResult;
+    private final boolean insecure;
 
-    private final BasicAuthentication.BasicResult basicProxyAuthenticationResult;
+    private final AtomicReference<BasicAuthentication.BasicResult> basicServerAuthenticationResult;
+
+    private final AtomicReference<BasicAuthentication.BasicResult> basicProxyAuthenticationResult;
 
     JettyTransporter(
             RepositorySystemSession session,
@@ -119,6 +123,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             ChecksumExtractor checksumExtractor,
             PathProcessor pathProcessor)
             throws NoTransporterException {
+        this.session = session;
+        this.repository = repository;
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
@@ -177,14 +183,34 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH,
                 ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH + "." + repository.getId(),
                 ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH);
+        final String httpsSecurityMode = ConfigUtils.getString(
+                session,
+                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
+                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
+                ConfigurationProperties.HTTPS_SECURITY_MODE);
 
-        this.client = getOrCreateClient(session, repository);
+        if (!ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(httpsSecurityMode)
+                && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
+            throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
+        }
+        this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
-        final String instanceKey = JETTY_INSTANCE_KEY_PREFIX + repository.getId();
-        this.basicServerAuthenticationResult =
-                (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".serverAuth");
-        this.basicProxyAuthenticationResult =
-                (BasicAuthentication.BasicResult) session.getData().get(instanceKey + ".proxyAuth");
+        this.basicServerAuthenticationResult = new AtomicReference<>(null);
+        this.basicProxyAuthenticationResult = new AtomicReference<>(null);
+        try {
+            this.client = createClient();
+        } catch (Exception e) {
+            throw new NoTransporterException(repository, e);
+        }
+    }
+
+    private void mayApplyPreemptiveAuth(Request request) {
+        if (basicServerAuthenticationResult.get() != null) {
+            basicServerAuthenticationResult.get().apply(request);
+        }
+        if (basicProxyAuthenticationResult.get() != null) {
+            basicProxyAuthenticationResult.get().apply(request);
+        }
     }
 
     private URI resolve(TransportTask task) {
@@ -207,12 +233,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 .method("HEAD");
         request.headers(m -> headers.forEach(m::add));
         if (preemptiveAuth) {
-            if (basicServerAuthenticationResult != null) {
-                basicServerAuthenticationResult.apply(request);
-            }
-            if (basicProxyAuthenticationResult != null) {
-                basicProxyAuthenticationResult.apply(request);
-            }
+            mayApplyPreemptiveAuth(request);
         }
         Response response = request.send();
         if (response.getStatus() >= MULTIPLE_CHOICES) {
@@ -232,12 +253,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     .method("GET");
             request.headers(m -> headers.forEach(m::add));
             if (preemptiveAuth) {
-                if (basicServerAuthenticationResult != null) {
-                    basicServerAuthenticationResult.apply(request);
-                }
-                if (basicProxyAuthenticationResult != null) {
-                    basicProxyAuthenticationResult.apply(request);
-                }
+                mayApplyPreemptiveAuth(request);
             }
 
             if (resume) {
@@ -335,12 +351,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         Request request = client.newRequest(resolve(task)).method("PUT").timeout(requestTimeout, TimeUnit.MILLISECONDS);
         request.headers(m -> headers.forEach(m::add));
         if (preemptiveAuth || preemptivePutAuth) {
-            if (basicServerAuthenticationResult != null) {
-                basicServerAuthenticationResult.apply(request);
-            }
-            if (basicProxyAuthenticationResult != null) {
-                basicProxyAuthenticationResult.apply(request);
-            }
+            mayApplyPreemptiveAuth(request);
         }
         request.body(new PutTaskRequestContent(task));
         AtomicBoolean started = new AtomicBoolean(false);
@@ -395,176 +406,123 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     @Override
     protected void implClose() {
-        // noop
+        try {
+            this.client.stop();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
-
-    /**
-     * Visible for testing.
-     */
-    static final String JETTY_INSTANCE_KEY_PREFIX = JettyTransporterFactory.class.getName() + ".jetty.";
-
-    static final Logger LOGGER = LoggerFactory.getLogger(JettyTransporter.class);
 
     @SuppressWarnings("checkstyle:methodlength")
-    private HttpClient getOrCreateClient(RepositorySystemSession session, RemoteRepository repository)
-            throws NoTransporterException {
+    private HttpClient createClient() throws Exception {
+        BasicAuthentication.BasicResult serverAuth = null;
+        BasicAuthentication.BasicResult proxyAuth = null;
+        SSLContext sslContext = null;
+        BasicAuthentication basicAuthentication = null;
+        try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(session, repository)) {
+            if (repoAuthContext != null) {
+                sslContext = repoAuthContext.get(AuthenticationContext.SSL_CONTEXT, SSLContext.class);
 
-        final String instanceKey = JETTY_INSTANCE_KEY_PREFIX + repository.getId();
+                String username = repoAuthContext.get(AuthenticationContext.USERNAME);
+                String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
 
-        final String httpsSecurityMode = ConfigUtils.getString(
-                session,
-                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
-                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
-                ConfigurationProperties.HTTPS_SECURITY_MODE);
-
-        if (!ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(httpsSecurityMode)
-                && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
-            throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
-        }
-        final boolean insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
-
-        try {
-            AtomicReference<BasicAuthentication.BasicResult> serverAuth = new AtomicReference<>(null);
-            AtomicReference<BasicAuthentication.BasicResult> proxyAuth = new AtomicReference<>(null);
-            HttpClient client = (HttpClient) session.getData().computeIfAbsent(instanceKey, () -> {
-                SSLContext sslContext = null;
-                BasicAuthentication basicAuthentication = null;
-                try {
-                    try (AuthenticationContext repoAuthContext =
-                            AuthenticationContext.forRepository(session, repository)) {
-                        if (repoAuthContext != null) {
-                            sslContext = repoAuthContext.get(AuthenticationContext.SSL_CONTEXT, SSLContext.class);
-
-                            String username = repoAuthContext.get(AuthenticationContext.USERNAME);
-                            String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
-
-                            URI uri = URI.create(repository.getUrl());
-                            basicAuthentication =
-                                    new BasicAuthentication(uri, Authentication.ANY_REALM, username, password);
-                            if (preemptiveAuth || preemptivePutAuth) {
-                                serverAuth.set(new BasicAuthentication.BasicResult(
-                                        uri, HttpHeader.AUTHORIZATION, username, password));
-                            }
-                        }
-                    }
-
-                    if (sslContext == null) {
-                        if (insecure) {
-                            sslContext = SSLContext.getInstance("TLS");
-                            X509TrustManager tm = new X509TrustManager() {
-                                @Override
-                                public void checkClientTrusted(X509Certificate[] chain, String authType) {}
-
-                                @Override
-                                public void checkServerTrusted(X509Certificate[] chain, String authType) {}
-
-                                @Override
-                                public X509Certificate[] getAcceptedIssuers() {
-                                    return new X509Certificate[0];
-                                }
-                            };
-                            sslContext.init(null, new X509TrustManager[] {tm}, null);
-                        } else {
-                            sslContext = SSLContext.getDefault();
-                        }
-                    }
-
-                    int connectTimeout = ConfigUtils.getInteger(
-                            session,
-                            ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                            ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                            ConfigurationProperties.CONNECT_TIMEOUT);
-
-                    SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-                    sslContextFactory.setSslContext(sslContext);
-                    if (insecure) {
-                        sslContextFactory.setEndpointIdentificationAlgorithm(null);
-                        sslContextFactory.setHostnameVerifier((name, context) -> true);
-                    }
-
-                    ClientConnector clientConnector = new ClientConnector();
-                    clientConnector.setSslContextFactory(sslContextFactory);
-
-                    HTTP2Client http2Client = new HTTP2Client(clientConnector);
-                    ClientConnectionFactoryOverHTTP2.HTTP2 http2 =
-                            new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
-
-                    HttpClientTransportDynamic transport;
-                    if ("https".equalsIgnoreCase(repository.getProtocol())) {
-                        transport = new HttpClientTransportDynamic(
-                                clientConnector, http2, HttpClientConnectionFactory.HTTP11); // HTTPS, prefer H2
-                    } else {
-                        transport = new HttpClientTransportDynamic(
-                                clientConnector,
-                                HttpClientConnectionFactory.HTTP11,
-                                http2); // plaintext HTTP, H2 cannot be used
-                    }
-
-                    HttpClient httpClient = new HttpClient(transport);
-                    httpClient.setConnectTimeout(connectTimeout);
-                    httpClient.setFollowRedirects(true);
-                    httpClient.setMaxRedirects(2);
-
-                    httpClient.setUserAgentField(null); // we manage it
-
-                    if (basicAuthentication != null) {
-                        httpClient.getAuthenticationStore().addAuthentication(basicAuthentication);
-                    }
-
-                    if (repository.getProxy() != null) {
-                        HttpProxy proxy = new HttpProxy(
-                                repository.getProxy().getHost(),
-                                repository.getProxy().getPort());
-
-                        httpClient.getProxyConfiguration().addProxy(proxy);
-                        try (AuthenticationContext proxyAuthContext =
-                                AuthenticationContext.forProxy(session, repository)) {
-                            if (proxyAuthContext != null) {
-                                String username = proxyAuthContext.get(AuthenticationContext.USERNAME);
-                                String password = proxyAuthContext.get(AuthenticationContext.PASSWORD);
-
-                                BasicAuthentication proxyAuthentication = new BasicAuthentication(
-                                        proxy.getURI(), Authentication.ANY_REALM, username, password);
-
-                                httpClient.getAuthenticationStore().addAuthentication(proxyAuthentication);
-                                if (preemptiveAuth || preemptivePutAuth) {
-                                    proxyAuth.set(new BasicAuthentication.BasicResult(
-                                            proxy.getURI(), HttpHeader.PROXY_AUTHORIZATION, username, password));
-                                }
-                            }
-                        }
-                    }
-                    if (!session.addOnSessionEndedHandler(() -> {
-                        try {
-                            httpClient.stop();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    })) {
-                        LOGGER.warn(
-                                "Using Resolver 2 feature without Resolver 2 session handling, you may leak resources.");
-                    }
-                    httpClient.start();
-                    return httpClient;
-                } catch (Exception e) {
-                    throw new WrapperEx(e);
+                URI uri = URI.create(repository.getUrl());
+                basicAuthentication = new BasicAuthentication(uri, Authentication.ANY_REALM, username, password);
+                if (preemptiveAuth || preemptivePutAuth) {
+                    serverAuth = new BasicAuthentication.BasicResult(uri, HttpHeader.AUTHORIZATION, username, password);
                 }
-            });
-            if (serverAuth.get() != null) {
-                session.getData().set(instanceKey + ".serverAuth", serverAuth.get());
             }
-            if (proxyAuth.get() != null) {
-                session.getData().set(instanceKey + ".proxyAuth", proxyAuth.get());
-            }
-            return client;
-        } catch (WrapperEx e) {
-            throw new NoTransporterException(repository, e.getCause());
         }
-    }
 
-    private static final class WrapperEx extends RuntimeException {
-        private WrapperEx(Throwable cause) {
-            super(cause);
+        if (sslContext == null) {
+            if (insecure) {
+                sslContext = SSLContext.getInstance("TLS");
+                X509TrustManager tm = new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
+                    }
+                };
+                sslContext.init(null, new X509TrustManager[] {tm}, null);
+            } else {
+                sslContext = SSLContext.getDefault();
+            }
         }
+
+        int connectTimeout = ConfigUtils.getInteger(
+                session,
+                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.CONNECT_TIMEOUT);
+
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        sslContextFactory.setSslContext(sslContext);
+        if (insecure) {
+            sslContextFactory.setEndpointIdentificationAlgorithm(null);
+            sslContextFactory.setHostnameVerifier((name, context) -> true);
+        }
+
+        ClientConnector clientConnector = new ClientConnector();
+        clientConnector.setSslContextFactory(sslContextFactory);
+
+        HTTP2Client http2Client = new HTTP2Client(clientConnector);
+        ClientConnectionFactoryOverHTTP2.HTTP2 http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
+
+        HttpClientTransportDynamic transport;
+        if ("https".equalsIgnoreCase(repository.getProtocol())) {
+            transport = new HttpClientTransportDynamic(
+                    clientConnector, http2, HttpClientConnectionFactory.HTTP11); // HTTPS, prefer H2
+        } else {
+            transport = new HttpClientTransportDynamic(
+                    clientConnector, HttpClientConnectionFactory.HTTP11, http2); // plaintext HTTP, H2 cannot be used
+        }
+
+        HttpClient httpClient = new HttpClient(transport);
+        httpClient.setConnectTimeout(connectTimeout);
+        httpClient.setFollowRedirects(true);
+        httpClient.setMaxRedirects(2);
+
+        httpClient.setUserAgentField(null); // we manage it
+
+        if (basicAuthentication != null) {
+            httpClient.getAuthenticationStore().addAuthentication(basicAuthentication);
+        }
+
+        if (repository.getProxy() != null) {
+            HttpProxy proxy = new HttpProxy(
+                    repository.getProxy().getHost(), repository.getProxy().getPort());
+
+            httpClient.getProxyConfiguration().addProxy(proxy);
+            try (AuthenticationContext proxyAuthContext = AuthenticationContext.forProxy(session, repository)) {
+                if (proxyAuthContext != null) {
+                    String username = proxyAuthContext.get(AuthenticationContext.USERNAME);
+                    String password = proxyAuthContext.get(AuthenticationContext.PASSWORD);
+
+                    BasicAuthentication proxyAuthentication =
+                            new BasicAuthentication(proxy.getURI(), Authentication.ANY_REALM, username, password);
+
+                    httpClient.getAuthenticationStore().addAuthentication(proxyAuthentication);
+                    if (preemptiveAuth || preemptivePutAuth) {
+                        proxyAuth = new BasicAuthentication.BasicResult(
+                                proxy.getURI(), HttpHeader.PROXY_AUTHORIZATION, username, password);
+                    }
+                }
+            }
+        }
+        if (serverAuth != null) {
+            this.basicServerAuthenticationResult.set(serverAuth);
+        }
+        if (proxyAuth != null) {
+            this.basicProxyAuthenticationResult.set(proxyAuth);
+        }
+
+        httpClient.start();
+        return httpClient;
     }
 }
