@@ -58,11 +58,22 @@ public final class DataPool {
 
     private static final String CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR = "aether.dependencyCollector.pool.descriptor";
 
+    private static final String CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY_LISTS =
+            "aether.dependencyCollector.pool.dependencyLists";
+
+    private static final String CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_DEPENDENCIES =
+            "aether.dependencyCollector.pool.internArtifactDescriptorDependencies";
+
+    private static final String CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES =
+            "aether.dependencyCollector.pool.internArtifactDescriptorManagedDependencies";
+
     private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
 
     private static final String DEPENDENCY_POOL = DataPool.class.getName() + "$Dependency";
 
     private static final String DESCRIPTORS = DataPool.class.getName() + "$Descriptors";
+
+    private static final String DEPENDENCY_LISTS_POOL = DataPool.class.getName() + "$DependencyLists";
 
     public static final ArtifactDescriptorResult NO_DESCRIPTOR =
             new ArtifactDescriptorResult(new ArtifactDescriptorRequest());
@@ -80,7 +91,12 @@ public final class DataPool {
     /**
      * Descriptor interning pool, lives across session (if session carries non-null {@link RepositoryCache}).
      */
-    private final InternPool<Object, Descriptor> descriptors;
+    private final InternPool<DescriptorKey, Descriptor> descriptors;
+
+    /**
+     * {@link Dependency} list interning pool, lives across session (if session carries non-null {@link RepositoryCache}).
+     */
+    private final InternPool<List<Dependency>, List<Dependency>> dependencyLists;
 
     /**
      * Constraint cache, lives during single collection invocation (same as this DataPool instance).
@@ -92,17 +108,29 @@ public final class DataPool {
      */
     private final ConcurrentHashMap<Object, List<DependencyNode>> nodes;
 
+    private final boolean internArtifactDescriptorDependencies;
+
+    private final boolean internArtifactDescriptorManagedDependencies;
+
     @SuppressWarnings("unchecked")
     public DataPool(RepositorySystemSession session) {
         final RepositoryCache cache = session.getCache();
 
+        internArtifactDescriptorDependencies = ConfigUtils.getBoolean(
+                session, false, CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_DEPENDENCIES);
+        internArtifactDescriptorManagedDependencies = ConfigUtils.getBoolean(
+                session, true, CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES);
+
         InternPool<Artifact, Artifact> artifactsPool = null;
         InternPool<Dependency, Dependency> dependenciesPool = null;
-        InternPool<Object, Descriptor> descriptorsPool = null;
+        InternPool<DescriptorKey, Descriptor> descriptorsPool = null;
+        InternPool<List<Dependency>, List<Dependency>> dependencyListsPool = null;
         if (cache != null) {
             artifactsPool = (InternPool<Artifact, Artifact>) cache.get(session, ARTIFACT_POOL);
             dependenciesPool = (InternPool<Dependency, Dependency>) cache.get(session, DEPENDENCY_POOL);
-            descriptorsPool = (InternPool<Object, Descriptor>) cache.get(session, DESCRIPTORS);
+            descriptorsPool = (InternPool<DescriptorKey, Descriptor>) cache.get(session, DESCRIPTORS);
+            dependencyListsPool =
+                    (InternPool<List<Dependency>, List<Dependency>>) cache.get(session, DEPENDENCY_LISTS_POOL);
         }
 
         if (artifactsPool == null) {
@@ -132,9 +160,20 @@ public final class DataPool {
             }
         }
 
+        if (dependencyListsPool == null) {
+            String dependencyListsPoolType =
+                    ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY_LISTS);
+
+            dependencyListsPool = createPool(dependencyListsPoolType);
+            if (cache != null) {
+                cache.put(session, DEPENDENCY_LISTS_POOL, dependencyListsPool);
+            }
+        }
+
         this.artifacts = artifactsPool;
         this.dependencies = dependenciesPool;
         this.descriptors = descriptorsPool;
+        this.dependencyLists = dependencyListsPool;
 
         this.constraints = new ConcurrentHashMap<>(256);
         this.nodes = new ConcurrentHashMap<>(256);
@@ -148,11 +187,11 @@ public final class DataPool {
         return dependencies.intern(dependency, dependency);
     }
 
-    public Object toKey(ArtifactDescriptorRequest request) {
-        return request.getArtifact();
+    public DescriptorKey toKey(ArtifactDescriptorRequest request) {
+        return new DescriptorKey(request.getArtifact());
     }
 
-    public ArtifactDescriptorResult getDescriptor(Object key, ArtifactDescriptorRequest request) {
+    public ArtifactDescriptorResult getDescriptor(DescriptorKey key, ArtifactDescriptorRequest request) {
         Descriptor descriptor = descriptors.get(key);
         if (descriptor != null) {
             return descriptor.toResult(request);
@@ -160,12 +199,22 @@ public final class DataPool {
         return null;
     }
 
-    public void putDescriptor(Object key, ArtifactDescriptorResult result) {
+    public void putDescriptor(DescriptorKey key, ArtifactDescriptorResult result) {
+        if (internArtifactDescriptorDependencies) {
+            result.setDependencies(intern(result.getDependencies()));
+        }
+        if (internArtifactDescriptorManagedDependencies) {
+            result.setManagedDependencies(intern(result.getManagedDependencies()));
+        }
         descriptors.intern(key, new GoodDescriptor(result));
     }
 
-    public void putDescriptor(Object key, ArtifactDescriptorException e) {
+    public void putDescriptor(DescriptorKey key, ArtifactDescriptorException e) {
         descriptors.intern(key, BadDescriptor.INSTANCE);
+    }
+
+    private List<Dependency> intern(List<Dependency> dependencies) {
+        return dependencyLists.intern(dependencies, dependencies);
     }
 
     public Object toKey(VersionRangeRequest request) {
@@ -202,8 +251,39 @@ public final class DataPool {
         nodes.put(key, children);
     }
 
-    abstract static class Descriptor {
+    public static final class DescriptorKey {
+        private final Artifact artifact;
+        private final int hashCode;
 
+        private DescriptorKey(Artifact artifact) {
+            this.artifact = artifact;
+            this.hashCode = Objects.hashCode(artifact);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            DescriptorKey that = (DescriptorKey) o;
+            return Objects.equals(artifact, that.artifact);
+        }
+
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + "{" + "artifact='" + artifact + '\'' + '}';
+        }
+    }
+
+    abstract static class Descriptor {
         public abstract ArtifactDescriptorResult toResult(ArtifactDescriptorRequest request);
     }
 

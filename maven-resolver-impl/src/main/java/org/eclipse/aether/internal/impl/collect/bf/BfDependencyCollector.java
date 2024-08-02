@@ -448,7 +448,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
             RepositorySystemSession session,
             DependencyProcessingContext context,
             Results results) {
-        Object key = pool.toKey(descriptorRequest);
+        DataPool.DescriptorKey key = pool.toKey(descriptorRequest);
         ArtifactDescriptorResult descriptorResult = pool.getDescriptor(key, descriptorRequest);
         if (descriptorResult == null) {
             try {
