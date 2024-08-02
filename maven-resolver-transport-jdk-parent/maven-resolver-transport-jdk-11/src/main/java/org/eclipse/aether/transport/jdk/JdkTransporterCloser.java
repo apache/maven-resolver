@@ -38,8 +38,4 @@ public final class JdkTransporterCloser {
             }
         };
     }
-
-    static void close(HttpClient httpClient) {
-        new Thread(closer(httpClient)).start();
-    }
 }
