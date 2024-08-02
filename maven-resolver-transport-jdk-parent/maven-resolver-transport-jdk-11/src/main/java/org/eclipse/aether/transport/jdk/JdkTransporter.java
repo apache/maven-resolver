@@ -57,7 +57,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -113,17 +112,13 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private static final long MODIFICATION_THRESHOLD = 60L * 1000L;
 
-    private final RepositorySystemSession session;
-
-    private final RemoteRepository repository;
-
     private final ChecksumExtractor checksumExtractor;
 
     private final PathProcessor pathProcessor;
 
     private final URI baseUri;
 
-    private final AtomicReference<HttpClient> clientRef;
+    private final HttpClient client;
 
     private final Map<String, String> headers;
 
@@ -133,8 +128,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final Semaphore maxConcurrentRequests;
 
-    private final boolean insecure;
-
     JdkTransporter(
             RepositorySystemSession session,
             RemoteRepository repository,
@@ -142,8 +135,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             ChecksumExtractor checksumExtractor,
             PathProcessor pathProcessor)
             throws NoTransporterException {
-        this.session = session;
-        this.repository = repository;
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
@@ -216,7 +207,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
             throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
         }
-        this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
+        final boolean insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
         this.maxConcurrentRequests = new Semaphore(ConfigUtils.getInteger(
                 session,
@@ -225,22 +216,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 CONFIG_PROP_MAX_CONCURRENT_REQUESTS));
 
         this.headers = headers;
-        this.clientRef = new AtomicReference<>();
         try {
-            swapClient(null);
+            this.client = createClient(session, repository, insecure);
         } catch (Exception e) {
             throw new NoTransporterException(repository, e);
-        }
-    }
-
-    private void swapClient(HttpClient oldClient) throws Exception {
-        HttpClient newClient = createClient(session, repository, insecure);
-        if (this.clientRef.compareAndSet(oldClient, newClient)) {
-            if (oldClient != null) {
-                JdkTransporterCloser.close(oldClient);
-            }
-        } else {
-            JdkTransporterCloser.close(newClient);
         }
     }
 
@@ -271,7 +250,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 .method("HEAD", HttpRequest.BodyPublishers.noBody());
         headers.forEach(request::setHeader);
         try {
-            HttpResponse<Void> response = send(true, request.build(), HttpResponse.BodyHandlers.discarding());
+            HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 throw new HttpTransporterException(response.statusCode());
             }
@@ -304,7 +283,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 }
 
                 try {
-                    response = send(true, request.build(), HttpResponse.BodyHandlers.ofInputStream());
+                    response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
                         closeBody(response);
                         if (resume && response.statusCode() == PRECONDITION_FAILED) {
@@ -411,7 +390,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request.method("PUT", HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
 
             try {
-                HttpResponse<Void> response = send(true, request.build(), HttpResponse.BodyHandlers.discarding());
+                HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
                 if (response.statusCode() >= MULTIPLE_CHOICES) {
                     throw new HttpTransporterException(response.statusCode());
                 }
@@ -421,22 +400,11 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
-    private <T> HttpResponse<T> send(
-            boolean handleGoaway, HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
+    private <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
             throws Exception {
         maxConcurrentRequests.acquire();
-        HttpClient client = clientRef.get();
         try {
             return client.send(request, responseBodyHandler);
-        } catch (IOException e) {
-            if (handleGoaway) {
-                String message = e.getMessage();
-                if (message != null && message.contains("GOAWAY received")) {
-                    swapClient(client);
-                    return send(false, request, responseBodyHandler);
-                }
-            }
-            throw e;
         } finally {
             maxConcurrentRequests.release();
         }
@@ -444,7 +412,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     @Override
     protected void implClose() {
-        HttpClient client = clientRef.get();
         if (client != null) {
             JdkTransporterCloser.closer(client).run();
         }
