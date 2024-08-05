@@ -29,7 +29,7 @@
 
   <groupId>org.apache.maven.resolver</groupId>
   <artifactId>maven-resolver</artifactId>
-  <version>2.0.1-SNAPSHOT</version>
+  <version>2.0.1</version>
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver</name>
@@ -72,7 +72,7 @@
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</developerConnection>
-    <tag>maven-resolver-1.9.14</tag>
+    <tag>maven-resolver-2.0.1</tag>
     <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
   </scm>
   <issueManagement>
@@ -110,7 +110,7 @@
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
-    <project.build.outputTimestamp>2024-07-02T08:52:26Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2024-08-05T13:09:58Z</project.build.outputTimestamp>
     <!-- site fixes: skip PMD as it does not support Java 21 -->
     <pmd.skip>true</pmd.skip>
     <bnd.instructions.additions />
