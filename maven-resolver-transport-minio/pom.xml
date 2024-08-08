@@ -26,79 +26,79 @@
     <version>2.0.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-named-locks-redisson</artifactId>
+  <artifactId>maven-resolver-transport-minio</artifactId>
+  <packaging>jar</packaging>
 
-  <name>Maven Artifact Resolver Named Locks using Redisson</name>
-  <description>A synchronization utility implementation using Redisson.</description>
+  <name>Maven Artifact Resolver Transport S3 MinIO</name>
+  <description>Maven Artifact Transport S3 MinIO (Java).</description>
+
+  <properties>
+    <javaVersion>8</javaVersion>
+  </properties>
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-named-locks</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.redisson</groupId>
-      <artifactId>redisson</artifactId>
-      <version>3.34.1</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.cache</groupId>
-          <artifactId>cache-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>net.bytebuddy</groupId>
-          <artifactId>byte-buddy</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.projectreactor</groupId>
-          <artifactId>reactor-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jodd</groupId>
-          <artifactId>jodd-bean</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.reactivex.rxjava3</groupId>
-          <artifactId>rxjava</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-transport-native-unix-common</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.reactivestreams</groupId>
-          <artifactId>reactive-streams</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-util</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
+
+    <dependency>
+      <groupId>io.minio</groupId>
+      <artifactId>minio</artifactId>
+      <version>8.5.11</version>
+    </dependency>
+
+    <!-- Overrides/Updates for Minio Java -->
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.17.1</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.26.2</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>1.78.1</version>
+      <scope>runtime</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-test-util</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -112,13 +112,6 @@
       <version>${testcontainersVersion}</version>
       <scope>test</scope>
     </dependency>
-    <!-- Remove when testcontainers update it (is not needed by this project) -->
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-compress</artifactId>
-      <version>1.26.2</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -126,9 +119,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.redis</groupId>
-      <artifactId>testcontainers-redis</artifactId>
-      <version>2.2.2</version>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>minio</artifactId>
+      <version>${testcontainersVersion}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -138,24 +131,6 @@
       <plugin>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>sisu-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>bundle</id>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <phase>package</phase>
-            <configuration>
-              <descriptors>
-                <descriptor>src/assembly/bundle.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
