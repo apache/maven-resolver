@@ -70,7 +70,7 @@ import org.eclipse.aether.resolution.VersionResult;
 public interface RepositorySystem extends Closeable {
 
     /**
-     * Expands a version range to a list of matching versions, in ascending order. For example, resolves "[3.8,4.0)" to
+     * Expands an artifact's version range to a list of matching versions, in ascending order. For example, resolves "[3.8,4.0)" to
      * "3.8", "3.8.1", "3.8.2". Note that the returned list of versions is only dependent on the configured repositories
      * and their contents, the list is not processed by the {@link RepositorySystemSession#getVersionFilter() session's
      * version filter}.
@@ -79,11 +79,12 @@ public interface RepositorySystem extends Closeable {
      * though, the result contains simply the (parsed) input version, regardless of the repositories and their contents.
      *
      * @param session The repository session, must not be {@code null}.
-     * @param request The version range request, must not be {@code null}.
+     * @param request The version range request, must not be {@code null}. It holds the {@link Artifact} whose version range to resolve.
      * @return The version range result, never {@code null}.
      * @throws VersionRangeResolutionException If the requested range could not be parsed. Note that an empty range does
      *                                         not raise an exception.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
+     * @see Artifact#getVersion()
      */
     VersionRangeResult resolveVersionRange(RepositorySystemSession session, VersionRangeRequest request)
             throws VersionRangeResolutionException;
@@ -93,10 +94,11 @@ public interface RepositorySystem extends Closeable {
      * "1.0-20090208.132618-23".
      *
      * @param session The repository session, must not be {@code null}.
-     * @param request The version request, must not be {@code null}.
+     * @param request The version request, must not be {@code null}. It holds the {@link Artifact} whose version to resolve.
      * @return The version result, never {@code null}.
      * @throws VersionResolutionException If the metaversion could not be resolved.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
+     * @see Artifact#getVersion()
      */
     VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request)
             throws VersionResolutionException;

@@ -51,6 +51,8 @@ public interface Artifact {
      * Gets the version of this artifact, for example "1.0-20100529-1213". Note that in case of meta versions like
      * "1.0-SNAPSHOT", the artifact's version depends on the state of the artifact. Artifacts that have been resolved or
      * deployed will usually have the meta version expanded.
+     * This may also return version ranges like "[1.0,2.0)". The exact syntax for (meta) versions and version ranges
+     * depends on the underlying provider (encapsulated in {@link RepositorySystem}).
      *
      * @return The version, never {@code null}.
      */
