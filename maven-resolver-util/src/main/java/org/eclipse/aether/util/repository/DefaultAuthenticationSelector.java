@@ -18,11 +18,15 @@
  */
 package org.eclipse.aether.util.repository;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.AuthenticationScope;
 import org.eclipse.aether.repository.AuthenticationSelector;
+import org.eclipse.aether.repository.AuthenticationSelectorV2;
 import org.eclipse.aether.repository.RemoteRepository;
 
 import static java.util.Objects.requireNonNull;
@@ -30,10 +34,11 @@ import static java.util.Objects.requireNonNull;
 /**
  * A simple authentication selector that selects authentication based on repository identifiers.
  */
-public final class DefaultAuthenticationSelector implements AuthenticationSelector {
+public final class DefaultAuthenticationSelector implements AuthenticationSelector, AuthenticationSelectorV2 {
 
-    private final Map<String, Authentication> repos = new HashMap<>();
-
+    private final Map<String, Authentication> reposById = new HashMap<>();
+    private final Map<AuthenticationScope, Authentication> reposByScope = new HashMap<>();
+    
     /**
      * Adds the specified authentication info for the given repository identifier.
      *
@@ -43,9 +48,26 @@ public final class DefaultAuthenticationSelector implements AuthenticationSelect
      */
     public DefaultAuthenticationSelector add(String id, Authentication auth) {
         if (auth != null) {
-            repos.put(id, auth);
+            reposById.put(id, auth);
         } else {
-            repos.remove(id);
+            reposById.remove(id);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the specified authentication info for the given repository identifier.
+     *
+     * @param scope The scope to add the authentication for, must not be {@code null}.
+     * @param auth The authentication to add, may be {@code null}.
+     * @return This selector for chaining, never {@code null}.
+     */
+    public DefaultAuthenticationSelector add(AuthenticationScope scope, Authentication auth) {
+        if (auth != null) {
+            reposByScope.put(scope, auth);
+        } else {
+            reposByScope.remove(scope);
         }
 
         return this;
@@ -53,6 +75,12 @@ public final class DefaultAuthenticationSelector implements AuthenticationSelect
 
     public Authentication getAuthentication(RemoteRepository repository) {
         requireNonNull(repository, "repository cannot be null");
-        return repos.get(repository.getId());
+        return reposById.get(repository.getId());
+    }
+
+    @Override
+    public Authentication getAuthentication(URI uri, String scheme, String realm) {
+        requireNonNull(uri, "uri cannot be null");
+        return reposByScope.entrySet().stream().filter(e -> e.getKey().isMatching(uri, scheme, realm)).map(Entry::getValue).findFirst().orElse(null);
     }
 }
