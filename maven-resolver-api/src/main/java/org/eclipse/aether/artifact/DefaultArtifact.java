@@ -132,7 +132,7 @@ public final class DefaultArtifact extends AbstractArtifact {
      * @param groupId The group identifier of the artifact, may be {@code null}.
      * @param artifactId The artifact identifier of the artifact, may be {@code null}.
      * @param extension The file extension of the artifact, may be {@code null}.
-     * @param version The version of the artifact, may be {@code null}.
+     * @param version The version (may also be a meta version or version range) of the artifact, may be {@code null}.
      */
     public DefaultArtifact(String groupId, String artifactId, String extension, String version) {
         this(groupId, artifactId, "", extension, version);
@@ -146,7 +146,7 @@ public final class DefaultArtifact extends AbstractArtifact {
      * @param artifactId The artifact identifier of the artifact, may be {@code null}.
      * @param classifier The classifier of the artifact, may be {@code null}.
      * @param extension The file extension of the artifact, may be {@code null}.
-     * @param version The version of the artifact, may be {@code null}.
+     * @param version The version (may also be a meta version or version range) of the artifact, may be {@code null}.
      */
     public DefaultArtifact(String groupId, String artifactId, String classifier, String extension, String version) {
         this(groupId, artifactId, classifier, extension, version, null, (File) null);
@@ -162,7 +162,7 @@ public final class DefaultArtifact extends AbstractArtifact {
      * @param artifactId The artifact identifier of the artifact, may be {@code null}.
      * @param classifier The classifier of the artifact, may be {@code null}.
      * @param extension The file extension of the artifact, may be {@code null}.
-     * @param version The version of the artifact, may be {@code null}.
+     * @param version The version (may also be a meta version or version range) of the artifact, may be {@code null}.
      * @param type The artifact type from which to query classifier, file extension and properties, may be {@code null}.
      */
     public DefaultArtifact(
@@ -181,7 +181,7 @@ public final class DefaultArtifact extends AbstractArtifact {
      * @param artifactId The artifact identifier of the artifact, may be {@code null}.
      * @param classifier The classifier of the artifact, may be {@code null}.
      * @param extension The file extension of the artifact, may be {@code null}.
-     * @param version The version of the artifact, may be {@code null}.
+     * @param version The version (may also be a meta version or version range) of the artifact, may be {@code null}.
      * @param properties The properties of the artifact, may be {@code null} if none.
      * @param type The artifact type from which to query classifier, file extension and properties, may be {@code null}.
      */
