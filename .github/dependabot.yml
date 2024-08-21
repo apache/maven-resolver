@@ -17,12 +17,18 @@
 version: 2
 updates:
 
-- package-ecosystem: maven
+- package-ecosystem: "maven"
   directory: "/"
   schedule:
-    interval: daily
-    time: '04:00'
-  open-pull-requests-limit: 10
+    interval: "daily"
+
+- package-ecosystem: "maven"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  target-branch: "maven-resolver-1.9.x"
+  labels:
+    - "resolver1"
 
 - package-ecosystem: "github-actions"
   directory: "/"
