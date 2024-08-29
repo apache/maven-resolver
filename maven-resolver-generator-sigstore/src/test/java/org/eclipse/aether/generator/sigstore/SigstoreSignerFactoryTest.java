@@ -25,8 +25,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.bouncycastle.util.encoders.DecoderException;
-import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -71,8 +69,7 @@ public class SigstoreSignerFactoryTest {
     @Test
     void doNotSignNonRelevantArtifacts() throws Exception {
         SigstoreSignatureArtifactGeneratorFactory factory = createFactory();
-        try (ArtifactGenerator signer =
-                factory.newInstance(createSession(), new DeployRequest())) {
+        try (ArtifactGenerator signer = factory.newInstance(createSession(), new DeployRequest())) {
             assertNotNull(signer);
 
             Collection<? extends Artifact> signatures = signer.generate(Arrays.asList(
@@ -87,8 +84,7 @@ public class SigstoreSignerFactoryTest {
     @Test
     void doSignAllRelevantArtifacts() throws Exception {
         SigstoreSignatureArtifactGeneratorFactory factory = createFactory();
-        try (ArtifactGenerator signer =
-                factory.newInstance(createSession(), new DeployRequest())) {
+        try (ArtifactGenerator signer = factory.newInstance(createSession(), new DeployRequest())) {
             assertNotNull(signer);
             Path irrelevant = Paths.get("src/test/resources/artifact.txt");
 
@@ -113,8 +109,7 @@ public class SigstoreSignerFactoryTest {
     @Test
     void doNotSignIfSignatureAlreadyPresent() throws Exception {
         SigstoreSignatureArtifactGeneratorFactory factory = createFactory();
-        try (ArtifactGenerator signer =
-                factory.newInstance(createSession(), new DeployRequest())) {
+        try (ArtifactGenerator signer = factory.newInstance(createSession(), new DeployRequest())) {
             assertNotNull(signer);
 
             Collection<? extends Artifact> signatures = signer.generate(Arrays.asList(
@@ -129,8 +124,7 @@ public class SigstoreSignerFactoryTest {
     @Test
     void doSign() throws Exception {
         SigstoreSignatureArtifactGeneratorFactory factory = createFactory();
-        try (ArtifactGenerator signer =
-                factory.newInstance(createSession(), new DeployRequest())) {
+        try (ArtifactGenerator signer = factory.newInstance(createSession(), new DeployRequest())) {
             assertNotNull(signer);
             Path artifactPath = Paths.get("src/test/resources/artifact.txt");
             Collection<? extends Artifact> signatures = signer.generate(Collections.singleton(
