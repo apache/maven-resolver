@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.internal.test.util.http;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -284,6 +285,7 @@ public class HttpServer {
         handlers.addHandler(new AuthHandler());
         handlers.addHandler(new RedirectHandler());
         handlers.addHandler(new RepoHandler());
+        handlers.addHandler(new Rfc9457Handler());
 
         server = new Server();
         httpConnector = new ServerConnector(server);
@@ -492,6 +494,29 @@ public class HttpServer {
     private void writeResponseBodyMessage(HttpServletResponse response, String message) throws IOException {
         try (OutputStream outputStream = response.getOutputStream()) {
             outputStream.write(message.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    private class Rfc9457Handler extends AbstractHandler {
+        @Override
+        public void handle(
+                final String target,
+                final Request req,
+                final HttpServletRequest request,
+                final HttpServletResponse response)
+                throws IOException, ServletException {
+            String path = req.getPathInfo().substring(1);
+
+            if (!path.startsWith("rfc9457/")) {
+                return;
+            }
+            req.setHandled(true);
+
+            if (HttpMethod.GET.is(req.getMethod())) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setHeader(HttpHeader.CONTENT_TYPE.asString(), "application/problem+json");
+                writeResponseBodyMessage(response, "{\"error\":\"error message\"}");
+            }
         }
     }
 

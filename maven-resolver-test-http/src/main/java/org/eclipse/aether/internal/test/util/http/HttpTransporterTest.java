@@ -57,6 +57,7 @@ import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.spi.connector.transport.http.RFC9457.HttpRfc9457Exception;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
@@ -475,6 +476,17 @@ public class HttpTransporterTest {
         } catch (HttpTransporterException e) {
             assertEquals(407, e.getStatusCode());
             assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
+        }
+    }
+
+    @Test
+    protected void testGet_rfc9457Response() throws Exception {
+        try {
+            transporter.get(new GetTask(URI.create("rfc9457/file.txt")));
+            fail("Expected error");
+        } catch (HttpRfc9457Exception e) {
+            assertEquals(403, e.getStatusCode());
+            assertTrue(e.getMessage().contains("{\"error\":\"error message\"}"));
         }
     }
 

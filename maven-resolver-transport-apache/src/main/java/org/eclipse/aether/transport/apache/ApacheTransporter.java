@@ -145,16 +145,20 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final boolean supportWebDav;
 
+    private final ApacheRfc9457Reporter rfc9457Reporter;
+
     @SuppressWarnings("checkstyle:methodlength")
     ApacheTransporter(
             RemoteRepository repository,
             RepositorySystemSession session,
             ChecksumExtractor checksumExtractor,
-            PathProcessor pathProcessor)
+            PathProcessor pathProcessor,
+            ApacheRfc9457Reporter rfc9457Reporter)
             throws NoTransporterException {
         if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
             throw new NoTransporterException(repository);
         }
+        this.rfc9457Reporter = rfc9457Reporter;
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
@@ -492,7 +496,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
-    private void prepare(HttpUriRequest request, SharingHttpContext context) throws HttpTransporterException {
+    private void prepare(HttpUriRequest request, SharingHttpContext context) throws Exception {
         final boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
         if (preemptiveAuth || (preemptivePutAuth && put)) {
             context.getAuthCache().put(server, new BasicScheme());
@@ -514,7 +518,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     }
 
     @SuppressWarnings("checkstyle:magicnumber")
-    private void mkdirs(URI uri, SharingHttpContext context) throws HttpTransporterException {
+    private void mkdirs(URI uri, SharingHttpContext context) throws Exception {
         List<URI> dirs = UriUtils.getDirectories(baseUri, uri);
         int index = 0;
         for (; index < dirs.size(); index++) {
@@ -603,10 +607,12 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     }
 
     @SuppressWarnings("checkstyle:magicnumber")
-    private void handleStatus(CloseableHttpResponse response) throws HttpResponseException {
+    private void handleStatus(CloseableHttpResponse response) throws Exception {
         int status = response.getStatusLine().getStatusCode();
         if (status >= 300) {
-            throw new HttpResponseException(status, response.getStatusLine().getReasonPhrase() + " (" + status + ")");
+            rfc9457Reporter.generateException(response, (statusCode, reasonPhrase) -> {
+                throw new HttpResponseException(statusCode, reasonPhrase + " (" + statusCode + ")");
+            });
         }
     }
 

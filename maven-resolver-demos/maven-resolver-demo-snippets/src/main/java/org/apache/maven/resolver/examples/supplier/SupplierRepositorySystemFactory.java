@@ -35,7 +35,9 @@ import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
+import org.eclipse.aether.transport.jdk.JdkRfc9457Reporter;
 import org.eclipse.aether.transport.jdk.JdkTransporterFactory;
+import org.eclipse.aether.transport.jetty.JettyRfc9457Reporter;
 import org.eclipse.aether.transport.jetty.JettyTransporterFactory;
 
 /**
@@ -94,10 +96,12 @@ public class SupplierRepositorySystemFactory {
                 Map<String, TransporterFactory> result = super.createTransporterFactories();
                 result.put(
                         JdkTransporterFactory.NAME,
-                        new JdkTransporterFactory(getChecksumExtractor(), getPathProcessor()));
+                        new JdkTransporterFactory(
+                                getChecksumExtractor(), getPathProcessor(), new JdkRfc9457Reporter()));
                 result.put(
                         JettyTransporterFactory.NAME,
-                        new JettyTransporterFactory(getChecksumExtractor(), getPathProcessor()));
+                        new JettyTransporterFactory(
+                                getChecksumExtractor(), getPathProcessor(), new JettyRfc9457Reporter()));
                 return result;
             }
         }.get();

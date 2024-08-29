@@ -116,6 +116,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final PathProcessor pathProcessor;
 
+    private final JdkRfc9457Reporter rfc9457Reporter;
+
     private final URI baseUri;
 
     private final HttpClient client;
@@ -133,9 +135,11 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             RemoteRepository repository,
             int javaVersion,
             ChecksumExtractor checksumExtractor,
-            PathProcessor pathProcessor)
+            PathProcessor pathProcessor,
+            JdkRfc9457Reporter rfc9457Reporter)
             throws NoTransporterException {
         this.checksumExtractor = checksumExtractor;
+        this.rfc9457Reporter = rfc9457Reporter;
         this.pathProcessor = pathProcessor;
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
@@ -285,12 +289,18 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 try {
                     response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
-                        closeBody(response);
                         if (resume && response.statusCode() == PRECONDITION_FAILED) {
+                            closeBody(response);
                             resume = false;
                             continue;
                         }
-                        throw new HttpTransporterException(response.statusCode());
+                        try {
+                            rfc9457Reporter.generateException(response, (statusCode, reasonPhrase) -> {
+                                throw new HttpTransporterException(statusCode);
+                            });
+                        } finally {
+                            closeBody(response);
+                        }
                     }
                 } catch (ConnectException e) {
                     closeBody(response);
