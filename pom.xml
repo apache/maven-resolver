@@ -63,6 +63,7 @@
     <module>maven-resolver-transport-apache</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-generator-gnupg</module>
+    <module>maven-resolver-generator-sigstore</module>
     <module>maven-resolver-supplier-mvn3</module>
     <module>maven-resolver-supplier-mvn4</module>
     <module>maven-resolver-demos</module>
