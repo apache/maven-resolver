@@ -73,6 +73,7 @@ import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterExtraException;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
@@ -285,16 +286,22 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 try {
                     response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
-                        closeBody(response);
                         if (resume && response.statusCode() == PRECONDITION_FAILED) {
+                            closeBody(response);
                             resume = false;
                             continue;
                         }
-                        throw new HttpTransporterException(response.statusCode());
+                        try (InputStream is = response.body()) {
+                            throw new HttpTransporterExtraException(new String(is.readAllBytes()));
+                        }
+                        catch (IOException e) {
+                            throw new HttpTransporterException(response.statusCode());
+                        }
                     }
                 } catch (ConnectException e) {
-                    closeBody(response);
                     throw enhance(e);
+                } finally {
+                    closeBody(response);
                 }
                 break;
             }
