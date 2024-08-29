@@ -49,6 +49,8 @@ public class CollectConfiguration {
     public static void main(String[] args) throws Exception {
         Path start = Paths.get(args.length > 0 ? args[0] : ".");
         Path output = Paths.get(args.length > 1 ? args[1] : "output");
+        Path props = Paths.get(args.length > 2 ? args[2] : "props");
+        Path yaml = Paths.get(args.length > 3 ? args[3] : "yaml");
 
         TreeMap<String, ConfigurationKey> discoveredKeys = new TreeMap<>();
         Files.walk(start)
@@ -114,6 +116,12 @@ public class CollectConfiguration {
 
         try (BufferedWriter fileWriter = Files.newBufferedWriter(output)) {
             velocityEngine.getTemplate("page.vm").merge(context, fileWriter);
+        }
+        try (BufferedWriter fileWriter = Files.newBufferedWriter(props)) {
+            velocityEngine.getTemplate("props.vm").merge(context, fileWriter);
+        }
+        try (BufferedWriter fileWriter = Files.newBufferedWriter(yaml)) {
+            velocityEngine.getTemplate("yaml.vm").merge(context, fileWriter);
         }
     }
 
