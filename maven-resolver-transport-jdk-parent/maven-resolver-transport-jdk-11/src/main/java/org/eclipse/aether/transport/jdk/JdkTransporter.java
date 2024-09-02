@@ -116,7 +116,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final PathProcessor pathProcessor;
 
-    private final JdkRfc9457Reporter rfc9457Reporter;
+    private final JdkRFC9457Reporter rfc9457Reporter;
 
     private final URI baseUri;
 
@@ -136,7 +136,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             int javaVersion,
             ChecksumExtractor checksumExtractor,
             PathProcessor pathProcessor,
-            JdkRfc9457Reporter rfc9457Reporter)
+            JdkRFC9457Reporter rfc9457Reporter)
             throws NoTransporterException {
         this.checksumExtractor = checksumExtractor;
         this.rfc9457Reporter = rfc9457Reporter;

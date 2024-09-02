@@ -24,13 +24,13 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
-import org.eclipse.aether.spi.connector.transport.http.RFC9457.Rfc9457Reporter;
+import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
-public class JdkRfc9457Reporter extends Rfc9457Reporter<HttpURLConnection, HttpTransporterException> {
+public class JdkRFC9457Reporter extends RFC9457Reporter<HttpURLConnection, HttpTransporterException> {
     @Override
-    protected boolean isRfc9457Message(final HttpURLConnection response) {
+    protected boolean isRFC9457Message(final HttpURLConnection response) {
         String contentType = response.getContentType();
-        return hasRfc9457ContentType(contentType);
+        return hasRFC9457ContentType(contentType);
     }
 
     @Override

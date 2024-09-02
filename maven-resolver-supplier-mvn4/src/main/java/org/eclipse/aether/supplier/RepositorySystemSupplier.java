@@ -136,7 +136,7 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.eclipse.aether.transport.apache.ApacheRfc9457Reporter;
+import org.eclipse.aether.transport.apache.ApacheRFC9457Reporter;
 import org.eclipse.aether.transport.apache.ApacheTransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.util.version.GenericVersionScheme;
@@ -634,17 +634,17 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return new DefaultChecksumExtractor(getChecksumExtractorStrategies());
     }
 
-    private ApacheRfc9457Reporter rfc9457Reporter;
+    private ApacheRFC9457Reporter rfc9457Reporter;
 
-    public final ApacheRfc9457Reporter getRfc9457Reporter() {
+    public final ApacheRFC9457Reporter getRfc9457Reporter() {
         if (rfc9457Reporter == null) {
             rfc9457Reporter = createRfc9457Reporter();
         }
         return rfc9457Reporter;
     }
 
-    protected ApacheRfc9457Reporter createRfc9457Reporter() {
-        return new ApacheRfc9457Reporter();
+    protected ApacheRFC9457Reporter createRfc9457Reporter() {
+        return new ApacheRFC9457Reporter();
     }
 
     private Map<String, TransporterFactory> transporterFactories;

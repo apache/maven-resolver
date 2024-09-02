@@ -57,7 +57,7 @@ import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
-import org.eclipse.aether.spi.connector.transport.http.RFC9457.HttpRfc9457Exception;
+import org.eclipse.aether.spi.connector.transport.http.RFC9457.HttpRFC9457Exception;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
@@ -484,9 +484,28 @@ public class HttpTransporterTest {
         try {
             transporter.get(new GetTask(URI.create("rfc9457/file.txt")));
             fail("Expected error");
-        } catch (HttpRfc9457Exception e) {
+        } catch (HttpRFC9457Exception e) {
             assertEquals(403, e.getStatusCode());
-            assertTrue(e.getMessage().contains("{\"error\":\"error message\"}"));
+            assertEquals(e.getRfc9457().getType(), URI.create("https://example.com/probs/out-of-credit"));
+            assertEquals(e.getRfc9457().getStatus(), 403);
+            assertEquals(e.getRfc9457().getTitle(), "You do not have enough credit.");
+            assertEquals(e.getRfc9457().getDetail(), "Your current balance is 30, but that costs 50.");
+            assertEquals(e.getRfc9457().getInstance(), URI.create("/account/12345/msgs/abc"));
+        }
+    }
+
+    @Test
+    protected void testGet_rfc9457Response_with_missing_fields() throws Exception {
+        try {
+            transporter.get(new GetTask(URI.create("rfc9457/missing_fields.txt")));
+            fail("Expected error");
+        } catch (HttpRFC9457Exception e) {
+            assertEquals(403, e.getStatusCode());
+            assertEquals(e.getRfc9457().getType(), URI.create("https://example.com/probs/out-of-credit"));
+            assertEquals(e.getRfc9457().getStatus(), 403);
+            assertNull(e.getRfc9457().getTitle());
+            assertNull(e.getRfc9457().getDetail());
+            assertNull(e.getRfc9457().getInstance());
         }
     }
 

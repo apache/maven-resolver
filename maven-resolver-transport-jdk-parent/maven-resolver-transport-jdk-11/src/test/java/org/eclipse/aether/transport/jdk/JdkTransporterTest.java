@@ -86,7 +86,7 @@ class JdkTransporterTest extends HttpTransporterTest {
 
     public JdkTransporterTest() {
         super(() -> new JdkTransporterFactory(
-                standardChecksumExtractor(), new DefaultPathProcessor(), new JdkRfc9457Reporter()));
+                standardChecksumExtractor(), new DefaultPathProcessor(), new JdkRFC9457Reporter()));
     }
 
     @Test
@@ -94,7 +94,7 @@ class JdkTransporterTest extends HttpTransporterTest {
         String uri = "https://localhost:12345/";
         RemoteRepository remoteRepository = new RemoteRepository.Builder("central", "default", uri).build();
         JdkTransporterFactory factory =
-                new JdkTransporterFactory(s -> null, new DefaultPathProcessor(), new JdkRfc9457Reporter());
+                new JdkTransporterFactory(s -> null, new DefaultPathProcessor(), new JdkRFC9457Reporter());
 
         try (Transporter transporter = factory.newInstance(TestUtils.newSession(), remoteRepository)) {
             transporter.peek(new PeekTask(URI.create("repo/file.txt")));

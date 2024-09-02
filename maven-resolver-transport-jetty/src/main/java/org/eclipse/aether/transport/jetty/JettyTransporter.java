@@ -99,7 +99,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final PathProcessor pathProcessor;
 
-    private final JettyRfc9457Reporter rfc9457Reporter;
+    private final JettyRFC9457Reporter rfc9457Reporter;
 
     private final URI baseUri;
 
@@ -124,7 +124,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             RemoteRepository repository,
             ChecksumExtractor checksumExtractor,
             PathProcessor pathProcessor,
-            JettyRfc9457Reporter rfc9457Reporter)
+            JettyRFC9457Reporter rfc9457Reporter)
             throws NoTransporterException {
         this.session = session;
         this.repository = repository;

@@ -40,7 +40,7 @@ import static java.util.Objects.requireNonNull;
 public final class JettyTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "jetty";
 
-    private final JettyRfc9457Reporter rfc9457Reporter;
+    private final JettyRFC9457Reporter rfc9457Reporter;
 
     private float priority = 15.0f;
 
@@ -50,7 +50,7 @@ public final class JettyTransporterFactory implements HttpTransporterFactory {
 
     @Inject
     public JettyTransporterFactory(
-            ChecksumExtractor checksumExtractor, PathProcessor pathProcessor, JettyRfc9457Reporter rfc9457Reporter) {
+            ChecksumExtractor checksumExtractor, PathProcessor pathProcessor, JettyRFC9457Reporter rfc9457Reporter) {
         this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
         this.pathProcessor = requireNonNull(pathProcessor, "pathProcessor");
         this.rfc9457Reporter = requireNonNull(rfc9457Reporter, "rfc9457Reporter");

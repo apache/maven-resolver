@@ -25,15 +25,15 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
-import org.eclipse.aether.spi.connector.transport.http.RFC9457.Rfc9457Reporter;
+import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
-public class ApacheRfc9457Reporter extends Rfc9457Reporter<CloseableHttpResponse, HttpResponseException> {
+public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse, HttpResponseException> {
     @Override
-    protected boolean isRfc9457Message(final CloseableHttpResponse response) {
+    protected boolean isRFC9457Message(final CloseableHttpResponse response) {
         Header[] headers = response.getHeaders(HttpHeaders.CONTENT_TYPE);
         if (headers.length > 0) {
             String contentType = headers[0].getValue();
-            return hasRfc9457ContentType(contentType);
+            return hasRFC9457ContentType(contentType);
         }
         return false;
     }

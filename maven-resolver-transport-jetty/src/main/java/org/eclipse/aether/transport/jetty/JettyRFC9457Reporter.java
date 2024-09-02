@@ -25,18 +25,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
-import org.eclipse.aether.spi.connector.transport.http.RFC9457.Rfc9457Reporter;
+import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.http.HttpHeader;
 
-public class JettyRfc9457Reporter extends Rfc9457Reporter<InputStreamResponseListener, HttpTransporterException> {
+public class JettyRFC9457Reporter extends RFC9457Reporter<InputStreamResponseListener, HttpTransporterException> {
     @Override
-    protected boolean isRfc9457Message(final InputStreamResponseListener listener) {
+    protected boolean isRFC9457Message(final InputStreamResponseListener listener) {
         try {
             Response response = listener.get(1, TimeUnit.SECONDS);
             String contentType = response.getHeaders().get(HttpHeader.CONTENT_TYPE);
-            return hasRfc9457ContentType(contentType);
+            return hasRFC9457ContentType(contentType);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             return false;
         }

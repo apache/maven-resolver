@@ -104,6 +104,7 @@
     <slf4jVersion>2.0.13</slf4jVersion>
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
     <jettyVersion>10.0.22</jettyVersion>
+    <gsonVersion>2.10.1</gsonVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.8</maven3Version>
     <maven4Version>4.0.0-beta-3</maven4Version>
@@ -288,6 +289,12 @@
         <groupId>com.google.jimfs</groupId>
         <artifactId>jimfs</artifactId>
         <version>1.3.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>${gsonVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

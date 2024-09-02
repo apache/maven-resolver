@@ -48,7 +48,7 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
 
     @Inject
     public JdkTransporterFactory(
-            ChecksumExtractor checksumExtractor, PathProcessor pathProcessor, JdkRfc9457Reporter rfc9457Reporter) {
+            ChecksumExtractor checksumExtractor, PathProcessor pathProcessor, JdkRFC9457Reporter rfc9457Reporter) {
         // this is to equalize all Java version constructors to be same, so Supplier could work across all versions
     }
 

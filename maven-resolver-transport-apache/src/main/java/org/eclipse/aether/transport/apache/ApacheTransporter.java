@@ -145,7 +145,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final boolean supportWebDav;
 
-    private final ApacheRfc9457Reporter rfc9457Reporter;
+    private final ApacheRFC9457Reporter rfc9457Reporter;
 
     @SuppressWarnings("checkstyle:methodlength")
     ApacheTransporter(
@@ -153,7 +153,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             RepositorySystemSession session,
             ChecksumExtractor checksumExtractor,
             PathProcessor pathProcessor,
-            ApacheRfc9457Reporter rfc9457Reporter)
+            ApacheRFC9457Reporter rfc9457Reporter)
             throws NoTransporterException {
         if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
             throw new NoTransporterException(repository);

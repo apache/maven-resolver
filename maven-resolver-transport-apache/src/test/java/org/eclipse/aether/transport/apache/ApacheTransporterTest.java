@@ -45,7 +45,7 @@ class ApacheTransporterTest extends HttpTransporterTest {
 
     public ApacheTransporterTest() {
         super(() -> new ApacheTransporterFactory(
-                standardChecksumExtractor(), new TestPathProcessor(), new ApacheRfc9457Reporter()));
+                standardChecksumExtractor(), new TestPathProcessor(), new ApacheRFC9457Reporter()));
     }
 
     @Override

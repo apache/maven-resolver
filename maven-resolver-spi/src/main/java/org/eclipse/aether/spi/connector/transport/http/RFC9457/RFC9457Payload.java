@@ -18,29 +18,49 @@
  */
 package org.eclipse.aether.spi.connector.transport.http.RFC9457;
 
-import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
+import java.net.URI;
 
-/**
- * Exception thrown by {@link HttpTransporter} in case of errors.
- *
- * @since 2.0.2
- */
-public class HttpRfc9457Exception extends Exception {
-    private final int statusCode;
+public class RFC9457Payload {
+    private final URI type;
 
-    private final String reasonPhrase;
+    private final int status;
 
-    public HttpRfc9457Exception(int statusCode, String reasonPhrase, String message) {
-        super(message);
-        this.statusCode = statusCode;
-        this.reasonPhrase = reasonPhrase;
+    private final String title;
+
+    private final String detail;
+
+    private final URI instance;
+
+    public RFC9457Payload() {
+        this(null, 0, null, null, null);
     }
 
-    public int getStatusCode() {
-        return statusCode;
+    public RFC9457Payload(
+            final URI type, final int status, final String title, final String detail, final URI instance) {
+        this.type = type;
+        this.status = status;
+        this.title = title;
+        this.detail = detail;
+        this.instance = instance;
     }
 
-    public String getReasonPhrase() {
-        return reasonPhrase;
+    public URI getType() {
+        return type;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+
+    public URI getInstance() {
+        return instance;
     }
 }

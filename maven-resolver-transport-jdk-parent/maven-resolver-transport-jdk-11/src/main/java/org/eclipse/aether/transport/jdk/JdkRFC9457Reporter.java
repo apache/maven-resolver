@@ -24,15 +24,15 @@ import java.net.http.HttpResponse;
 import java.util.Optional;
 
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
-import org.eclipse.aether.spi.connector.transport.http.RFC9457.Rfc9457Reporter;
+import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
-public class JdkRfc9457Reporter extends Rfc9457Reporter<HttpResponse<InputStream>, HttpTransporterException> {
+public class JdkRFC9457Reporter extends RFC9457Reporter<HttpResponse<InputStream>, HttpTransporterException> {
     @Override
-    protected boolean isRfc9457Message(final HttpResponse<InputStream> response) {
+    protected boolean isRFC9457Message(final HttpResponse<InputStream> response) {
         Optional<String> optionalContentType = response.headers().firstValue("Content-Type");
         if (optionalContentType.isPresent()) {
             String contentType = optionalContentType.get();
-            return hasRfc9457ContentType(contentType);
+            return hasRFC9457ContentType(contentType);
         }
         return false;
     }

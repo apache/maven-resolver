@@ -39,7 +39,7 @@ import static java.util.Objects.requireNonNull;
 public final class ApacheTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "apache";
 
-    private final ApacheRfc9457Reporter rfc9457Reporter;
+    private final ApacheRFC9457Reporter rfc9457Reporter;
 
     private float priority = 5.0f;
 
@@ -49,7 +49,7 @@ public final class ApacheTransporterFactory implements HttpTransporterFactory {
 
     @Inject
     public ApacheTransporterFactory(
-            ChecksumExtractor checksumExtractor, PathProcessor pathProcessor, ApacheRfc9457Reporter rfc9457Reporter) {
+            ChecksumExtractor checksumExtractor, PathProcessor pathProcessor, ApacheRFC9457Reporter rfc9457Reporter) {
         this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
         this.rfc9457Reporter = requireNonNull(rfc9457Reporter, "rfc9457Reporter");
         this.pathProcessor = requireNonNull(pathProcessor, "pathProcessor");

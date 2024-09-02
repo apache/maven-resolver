@@ -60,6 +60,6 @@ class JettyTransporterTest extends HttpTransporterTest {
 
     public JettyTransporterTest() {
         super(() -> new JettyTransporterFactory(
-                standardChecksumExtractor(), new TestPathProcessor(), new JettyRfc9457Reporter()));
+                standardChecksumExtractor(), new TestPathProcessor(), new JettyRFC9457Reporter()));
     }
 }
