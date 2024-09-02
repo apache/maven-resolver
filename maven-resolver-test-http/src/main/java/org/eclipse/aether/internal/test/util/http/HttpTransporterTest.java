@@ -501,8 +501,8 @@ public class HttpTransporterTest {
             fail("Expected error");
         } catch (HttpRFC9457Exception e) {
             assertEquals(403, e.getStatusCode());
-            assertEquals(e.getRfc9457().getType(), URI.create("https://example.com/probs/out-of-credit"));
-            assertEquals(e.getRfc9457().getStatus(), 403);
+            assertEquals(e.getRfc9457().getType(), URI.create("about:blank"));
+            assertNull(e.getRfc9457().getStatus());
             assertNull(e.getRfc9457().getTitle());
             assertNull(e.getRfc9457().getDetail());
             assertNull(e.getRfc9457().getInstance());

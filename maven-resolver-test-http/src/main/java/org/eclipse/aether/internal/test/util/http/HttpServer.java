@@ -520,12 +520,7 @@ public class HttpServer {
                 response.setHeader(HttpHeader.CONTENT_TYPE.asString(), "application/problem+json");
                 RFC9457Payload rfc9457Payload;
                 if (path.endsWith("missing_fields.txt")) {
-                    rfc9457Payload = new RFC9457Payload(
-                            URI.create("https://example.com/probs/out-of-credit"),
-                            HttpServletResponse.SC_FORBIDDEN,
-                            null,
-                            null,
-                            null);
+                    rfc9457Payload = new RFC9457Payload(null, null, null, null, null);
                 } else {
                     rfc9457Payload = new RFC9457Payload(
                             URI.create("https://example.com/probs/out-of-credit"),
@@ -534,9 +529,13 @@ public class HttpServer {
                             "Your current balance is 30, but that costs 50.",
                             URI.create("/account/12345/msgs/abc"));
                 }
-                writeResponseBodyMessage(response, new Gson().toJson(rfc9457Payload));
+                writeResponseBodyMessage(response, buildRFC9457Message(rfc9457Payload));
             }
         }
+    }
+
+    private String buildRFC9457Message(RFC9457Payload payload) {
+        return new Gson().toJson(payload, RFC9457Payload.class);
     }
 
     private class RedirectHandler extends AbstractHandler {

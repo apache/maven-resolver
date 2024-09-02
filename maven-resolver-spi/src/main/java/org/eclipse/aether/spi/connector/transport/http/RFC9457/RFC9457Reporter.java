@@ -20,9 +20,6 @@ package org.eclipse.aether.spi.connector.transport.http.RFC9457;
 
 import java.io.IOException;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-
 /**
  * A reporter for RFC 9457 messages.
  * RFC9457 is a standard for reporting problems in HTTP responses as a JSON object.
@@ -36,8 +33,6 @@ import com.google.gson.JsonSyntaxException;
  * @param <E> The base exception type to throw if the response is not a RFC9457 message.
  */
 public abstract class RFC9457Reporter<T, E extends Exception> {
-    private static final Gson GSON = new Gson();
-
     protected abstract boolean isRFC9457Message(T response);
 
     protected abstract int getStatusCode(T response);
@@ -72,11 +67,8 @@ public abstract class RFC9457Reporter<T, E extends Exception> {
             }
 
             if (body != null && !body.isEmpty()) {
-                try {
-                    RFC9457Payload rfc9457Payload = GSON.fromJson(body, RFC9457Payload.class);
-                    throw new HttpRFC9457Exception(statusCode, reasonPhrase, rfc9457Payload);
-                } catch (JsonSyntaxException ignore) {
-                }
+                RFC9457Payload rfc9457Payload = RFC9457Parser.parse(body);
+                throw new HttpRFC9457Exception(statusCode, reasonPhrase, rfc9457Payload);
             }
             throw new HttpRFC9457Exception(statusCode, reasonPhrase, new RFC9457Payload());
         }

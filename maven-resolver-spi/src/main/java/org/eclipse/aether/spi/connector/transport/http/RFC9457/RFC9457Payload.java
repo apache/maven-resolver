@@ -23,7 +23,7 @@ import java.net.URI;
 public class RFC9457Payload {
     private final URI type;
 
-    private final int status;
+    private final Integer status;
 
     private final String title;
 
@@ -32,11 +32,11 @@ public class RFC9457Payload {
     private final URI instance;
 
     public RFC9457Payload() {
-        this(null, 0, null, null, null);
+        this(null, null, null, null, null);
     }
 
     public RFC9457Payload(
-            final URI type, final int status, final String title, final String detail, final URI instance) {
+            final URI type, final Integer status, final String title, final String detail, final URI instance) {
         this.type = type;
         this.status = status;
         this.title = title;
@@ -48,7 +48,7 @@ public class RFC9457Payload {
         return type;
     }
 
-    public int getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
