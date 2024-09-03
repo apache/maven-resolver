@@ -22,7 +22,7 @@ import java.io.IOException;
 
 /**
  * A reporter for RFC 9457 messages.
- * RFC9457 is a standard for reporting problems in HTTP responses as a JSON object.
+ * RFC 9457 is a standard for reporting problems in HTTP responses as a JSON object.
  * There are members specified in the RFC but none of those appear to be required,
  * @see <a href=https://www.rfc-editor.org/rfc/rfc9457#section-3-7>rfc9457 section 3.7</a>
  * Given the JSON fields are not mandatory, this reporter simply extracts the body of the

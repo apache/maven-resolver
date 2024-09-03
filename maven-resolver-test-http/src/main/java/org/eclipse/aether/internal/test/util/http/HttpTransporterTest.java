@@ -480,32 +480,32 @@ public class HttpTransporterTest {
     }
 
     @Test
-    protected void testGet_rfc9457Response() throws Exception {
+    protected void testGet_RFC9457Response() throws Exception {
         try {
             transporter.get(new GetTask(URI.create("rfc9457/file.txt")));
             fail("Expected error");
         } catch (HttpRFC9457Exception e) {
             assertEquals(403, e.getStatusCode());
-            assertEquals(e.getRfc9457().getType(), URI.create("https://example.com/probs/out-of-credit"));
-            assertEquals(e.getRfc9457().getStatus(), 403);
-            assertEquals(e.getRfc9457().getTitle(), "You do not have enough credit.");
-            assertEquals(e.getRfc9457().getDetail(), "Your current balance is 30, but that costs 50.");
-            assertEquals(e.getRfc9457().getInstance(), URI.create("/account/12345/msgs/abc"));
+            assertEquals(e.getRFC9457().getType(), URI.create("https://example.com/probs/out-of-credit"));
+            assertEquals(e.getRFC9457().getStatus(), 403);
+            assertEquals(e.getRFC9457().getTitle(), "You do not have enough credit.");
+            assertEquals(e.getRFC9457().getDetail(), "Your current balance is 30, but that costs 50.");
+            assertEquals(e.getRFC9457().getInstance(), URI.create("/account/12345/msgs/abc"));
         }
     }
 
     @Test
-    protected void testGet_rfc9457Response_with_missing_fields() throws Exception {
+    protected void testGet_RFC9457Response_with_missing_fields() throws Exception {
         try {
             transporter.get(new GetTask(URI.create("rfc9457/missing_fields.txt")));
             fail("Expected error");
         } catch (HttpRFC9457Exception e) {
             assertEquals(403, e.getStatusCode());
-            assertEquals(e.getRfc9457().getType(), URI.create("about:blank"));
-            assertNull(e.getRfc9457().getStatus());
-            assertNull(e.getRfc9457().getTitle());
-            assertNull(e.getRfc9457().getDetail());
-            assertNull(e.getRfc9457().getInstance());
+            assertEquals(e.getRFC9457().getType(), URI.create("about:blank"));
+            assertNull(e.getRFC9457().getStatus());
+            assertNull(e.getRFC9457().getTitle());
+            assertNull(e.getRFC9457().getDetail());
+            assertNull(e.getRFC9457().getInstance());
         }
     }
 

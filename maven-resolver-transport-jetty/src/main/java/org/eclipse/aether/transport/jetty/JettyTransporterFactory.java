@@ -53,7 +53,7 @@ public final class JettyTransporterFactory implements HttpTransporterFactory {
             ChecksumExtractor checksumExtractor, PathProcessor pathProcessor, JettyRFC9457Reporter rfc9457Reporter) {
         this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
         this.pathProcessor = requireNonNull(pathProcessor, "pathProcessor");
-        this.rfc9457Reporter = requireNonNull(rfc9457Reporter, "rfc9457Reporter");
+        this.rfc9457Reporter = requireNonNull(rfc9457Reporter, "RFC9457Reporter");
     }
 
     @Override

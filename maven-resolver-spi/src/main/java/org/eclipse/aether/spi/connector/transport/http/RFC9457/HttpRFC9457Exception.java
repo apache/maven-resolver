@@ -49,7 +49,7 @@ public class HttpRFC9457Exception extends IOException {
         return reasonPhrase;
     }
 
-    public RFC9457Payload getRfc9457() {
+    public RFC9457Payload getRFC9457() {
         return rfc9457;
     }
 }
