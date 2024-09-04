@@ -71,7 +71,7 @@ public class MyMojo extends AbstractMojo
 {
 
     /**
-     * The entry point to Aether, i.e. the component doing all the work.
+     * The entry point to resolver (fka. Aether), i.e. the component doing all the work.
      */
     @Component
     private RepositorySystem repoSystem;
@@ -79,19 +79,19 @@ public class MyMojo extends AbstractMojo
     /**
      * The current repository/network configuration of Maven.
      */
-    @Parameter(defaultValue="${repositorySystemSession}", readOnly = true)
+    @Parameter(defaultValue="${repositorySystemSession}", readonly = true)
     private RepositorySystemSession repoSession;
 
     /**
      * The project's remote repositories to use for the resolution of project dependencies.
      */
-    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readOnly = true)
+    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
     private List<RemoteRepository> projectRepos;
 
     /**
      * The project's remote repositories to use for the resolution of plugins and their dependencies.
      */
-    @Parameter(defaultValue = "${project.remotePluginRepositories}", readOnly = true)
+    @Parameter(defaultValue = "${project.remotePluginRepositories}", readonly = true)
     private List<RemoteRepository> pluginRepos;
 
     // Your other mojo parameters and code here
