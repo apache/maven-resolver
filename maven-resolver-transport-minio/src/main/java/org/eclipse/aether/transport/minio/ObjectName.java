@@ -22,6 +22,11 @@ import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * S3 Object name, bucket + name.
+ *
+ * @since 2.0.2
+ */
 public final class ObjectName {
     private final String bucket;
     private final String name;

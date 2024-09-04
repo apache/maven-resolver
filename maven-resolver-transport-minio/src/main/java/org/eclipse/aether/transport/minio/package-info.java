@@ -24,6 +24,6 @@
  * you are going for HTTPS remote, factory will merely strip "minio+" or "s3+" prefix assuming resulting URL will
  * point to expected S3 endpoint.
  *
- * @since 2.0.0
+ * @since 2.0.2
  */
 package org.eclipse.aether.transport.minio;

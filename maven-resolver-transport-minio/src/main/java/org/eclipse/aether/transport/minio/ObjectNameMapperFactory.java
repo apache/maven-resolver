@@ -23,6 +23,14 @@ import java.util.function.Function;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
+/**
+ * Factory for {@link ObjectName} factories.
+ *
+ * @since 2.0.2
+ */
 public interface ObjectNameMapperFactory {
+    /**
+     * Creates a factory for mapping artifact layout path onto {@link ObjectName}. Should never return {@code null}.
+     */
     Function<String, ObjectName> create(RepositorySystemSession session, RemoteRepository repository);
 }
