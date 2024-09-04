@@ -20,7 +20,7 @@ package org.eclipse.aether.transport.minio;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.transport.minio.internal.RepositoryIdObjectNameMapperFactory;
+import org.eclipse.aether.transport.minio.internal.FixedBucketObjectNameMapperFactory;
 
 /**
  * Configuration for MinIO Transport.
@@ -43,7 +43,7 @@ public final class MinioTransporterConfigurationKeys {
      */
     public static final String CONFIG_PROP_OBJECT_NAME_MAPPER = CONFIG_PROPS_PREFIX + "objectNameMapper";
 
-    public static final String DEFAULT_OBJECT_NAME_MAPPER = RepositoryIdObjectNameMapperFactory.NAME;
+    public static final String DEFAULT_OBJECT_NAME_MAPPER = FixedBucketObjectNameMapperFactory.NAME;
 
     /**
      * The fixed bucket name to use.

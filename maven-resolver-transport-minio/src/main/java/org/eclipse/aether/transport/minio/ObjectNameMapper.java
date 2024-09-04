@@ -18,24 +18,14 @@
  */
 package org.eclipse.aether.transport.minio;
 
-import java.util.Map;
-
-import io.minio.MinioClient;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.RemoteRepository;
-
 /**
- * Factory for {@link ObjectNameMapper}.
+ * Mapping for {@link ObjectName}.
  *
  * @since 2.0.2
  */
-public interface ObjectNameMapperFactory {
+public interface ObjectNameMapper {
     /**
-     * Creates a factory for mapping artifact layout path onto {@link ObjectName}. Should never return {@code null}.
+     * Creates a mapping onto {@link ObjectName}. Should never return {@code null}.
      */
-    ObjectNameMapper create(
-            RepositorySystemSession session,
-            RemoteRepository repository,
-            MinioClient minioClient,
-            Map<String, String> extraHeaders);
+    ObjectName name(String path);
 }

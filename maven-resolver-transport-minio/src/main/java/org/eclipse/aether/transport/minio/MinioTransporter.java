@@ -27,12 +27,13 @@ import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.StatObjectArgs;
 import io.minio.UploadObjectArgs;
+import io.minio.credentials.Provider;
+import io.minio.credentials.StaticProvider;
 import io.minio.errors.ErrorResponseException;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -55,16 +56,17 @@ import org.eclipse.aether.util.FileUtils;
 final class MinioTransporter extends AbstractTransporter implements Transporter {
     private final URI baseUri;
 
-    private final MinioClient client;
-
-    private final Function<String, ObjectName> objectNameMapper;
-
     private final Map<String, String> headers;
 
+    private final MinioClient client;
+
+    private final ObjectNameMapper objectNameMapper;
+
     MinioTransporter(
-            RepositorySystemSession session, RemoteRepository repository, Function<String, ObjectName> objectNameMapper)
+            RepositorySystemSession session,
+            RemoteRepository repository,
+            ObjectNameMapperFactory objectNameMapperFactory)
             throws NoTransporterException {
-        this.objectNameMapper = objectNameMapper;
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
             if (uri.isOpaque()) {
@@ -112,14 +114,16 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
             throw new NoTransporterException(repository, "No accessKey and/or secretKey provided");
         }
 
+        Provider credentialsProvider = new StaticProvider(username, password, null);
         try {
             this.client = MinioClient.builder()
                     .endpoint(repository.getUrl())
-                    .credentials(username, password)
+                    .credentialsProvider(credentialsProvider)
                     .build();
         } catch (Exception e) {
             throw new NoTransporterException(repository, e);
         }
+        this.objectNameMapper = objectNameMapperFactory.create(session, repository, client, headers);
     }
 
     @Override
@@ -136,7 +140,7 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
     @Override
     protected void implPeek(PeekTask task) throws Exception {
         ObjectName objectName =
-                objectNameMapper.apply(baseUri.relativize(task.getLocation()).getPath());
+                objectNameMapper.name(baseUri.relativize(task.getLocation()).getPath());
         StatObjectArgs.Builder builder = StatObjectArgs.builder()
                 .bucket(objectName.getBucket())
                 .object(objectName.getName())
@@ -147,7 +151,7 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
     @Override
     protected void implGet(GetTask task) throws Exception {
         ObjectName objectName =
-                objectNameMapper.apply(baseUri.relativize(task.getLocation()).getPath());
+                objectNameMapper.name(baseUri.relativize(task.getLocation()).getPath());
         try (InputStream stream = client.getObject(GetObjectArgs.builder()
                 .bucket(objectName.getBucket())
                 .object(objectName.getName())
@@ -171,7 +175,7 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
     @Override
     protected void implPut(PutTask task) throws Exception {
         ObjectName objectName =
-                objectNameMapper.apply(baseUri.relativize(task.getLocation()).getPath());
+                objectNameMapper.name(baseUri.relativize(task.getLocation()).getPath());
         task.getListener().transportStarted(0, task.getDataLength());
         final Path dataFile = task.getDataPath();
         if (dataFile == null) {

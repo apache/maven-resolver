@@ -21,24 +21,30 @@ package org.eclipse.aether.transport.minio.internal;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.function.Function;
+import java.util.Map;
 
+import io.minio.MinioClient;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transport.minio.ObjectName;
+import org.eclipse.aether.transport.minio.ObjectNameMapper;
 import org.eclipse.aether.transport.minio.ObjectNameMapperFactory;
 
 /**
- * A simple mapper, uses repository ID as bucket and layout path as
- * object name. Assumes repository ID is a valid bucket name.
+ * A mapper that uses repository ID as bucket name and layout path as object name. Assumes repository ID is a valid
+ * bucket name.
  */
 @Singleton
 @Named(RepositoryIdObjectNameMapperFactory.NAME)
 public class RepositoryIdObjectNameMapperFactory implements ObjectNameMapperFactory {
-    public static final String NAME = "simple";
+    public static final String NAME = "repositoryId";
 
     @Override
-    public Function<String, ObjectName> create(RepositorySystemSession session, RemoteRepository repository) {
+    public ObjectNameMapper create(
+            RepositorySystemSession session,
+            RemoteRepository repository,
+            MinioClient unused,
+            Map<String, String> headers) {
         return path -> new ObjectName(repository.getId(), ObjectName.normalize(path));
     }
 }

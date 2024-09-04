@@ -21,12 +21,14 @@ package org.eclipse.aether.transport.minio.internal;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.function.Function;
+import java.util.Map;
 
+import io.minio.MinioClient;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transport.minio.MinioTransporterConfigurationKeys;
 import org.eclipse.aether.transport.minio.ObjectName;
+import org.eclipse.aether.transport.minio.ObjectNameMapper;
 import org.eclipse.aether.transport.minio.ObjectNameMapperFactory;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -40,7 +42,11 @@ public class FixedBucketObjectNameMapperFactory implements ObjectNameMapperFacto
     public static final String NAME = "fixedBucket";
 
     @Override
-    public Function<String, ObjectName> create(RepositorySystemSession session, RemoteRepository repository) {
+    public ObjectNameMapper create(
+            RepositorySystemSession session,
+            RemoteRepository repository,
+            MinioClient unused,
+            Map<String, String> headers) {
         String bucket = ConfigUtils.getString(
                 session,
                 MinioTransporterConfigurationKeys.CONFIG_PROP_FIXED_BUCKET_NAME,

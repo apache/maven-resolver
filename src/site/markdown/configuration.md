@@ -133,7 +133,7 @@ under the License.
 | 106. | `"aether.transport.jetty.followRedirects"` | `Boolean` | If enabled, Jetty client will follow HTTP redirects. |  `true`  | 2.0.1 |  Yes  | Session Configuration |
 | 107. | `"aether.transport.jetty.maxRedirects"` | `Integer` | The max redirect count to follow. |  `5`  | 2.0.1 |  Yes  | Session Configuration |
 | 108. | `"aether.transport.minio.fixedBucketName"` | `String` | The fixed bucket name to use. |  `"maven"`  | 2.0.2 |  Yes  | Session Configuration |
-| 109. | `"aether.transport.minio.objectNameMapper"` | `String` | Object name mapper to use. |  `"simple"`  | 2.0.2 |  Yes  | Session Configuration |
+| 109. | `"aether.transport.minio.objectNameMapper"` | `String` | Object name mapper to use. |  `"fixedBucket"`  | 2.0.2 |  Yes  | Session Configuration |
 | 110. | `"aether.transport.wagon.config"` | `Object` | The configuration to use for the Wagon provider. |  -  |  |  Yes  | Session Configuration |
 | 111. | `"aether.transport.wagon.perms.dirMode"` | `String` | Octal numerical notation of permissions to set for newly created directories. Only considered by certain Wagon providers. |  -  |  |  Yes  | Session Configuration |
 | 112. | `"aether.transport.wagon.perms.fileMode"` | `String` | Octal numerical notation of permissions to set for newly created files. Only considered by certain Wagon providers. |  -  |  |  Yes  | Session Configuration |

@@ -122,8 +122,7 @@ class MinioTransporterIT {
     @Test
     void peekWithoutAuth() {
         try {
-            new MinioTransporter(
-                    session, newRepo(RepositoryAuth.WITHOUT), objectNameMapperFactory.create(session, repository));
+            new MinioTransporter(session, newRepo(RepositoryAuth.WITHOUT), objectNameMapperFactory);
             fail("Should throw");
         } catch (NoTransporterException e) {
             assertTrue(e.getMessage().contains("No accessKey and/or secretKey provided"));
@@ -132,8 +131,8 @@ class MinioTransporterIT {
 
     @Test
     void peekWithWrongAuth() throws Exception {
-        try (MinioTransporter transporter = new MinioTransporter(
-                session, newRepo(RepositoryAuth.WRONG), objectNameMapperFactory.create(session, repository))) {
+        try (MinioTransporter transporter =
+                new MinioTransporter(session, newRepo(RepositoryAuth.WRONG), objectNameMapperFactory)) {
             try {
                 transporter.peek(new PeekTask(URI.create("test")));
                 fail("Should throw");
@@ -146,8 +145,8 @@ class MinioTransporterIT {
 
     @Test
     void peekNonexistent() throws Exception {
-        try (MinioTransporter transporter = new MinioTransporter(
-                session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory.create(session, repository))) {
+        try (MinioTransporter transporter =
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
             try {
                 transporter.peek(new PeekTask(URI.create("test")));
                 fail("Should throw");
@@ -160,8 +159,8 @@ class MinioTransporterIT {
 
     @Test
     void peekExistent() throws Exception {
-        try (MinioTransporter transporter = new MinioTransporter(
-                session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory.create(session, repository))) {
+        try (MinioTransporter transporter =
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
             try {
                 transporter.peek(new PeekTask(URI.create(OBJECT_NAME)));
             } catch (Exception e) {
@@ -172,8 +171,8 @@ class MinioTransporterIT {
 
     @Test
     void getNonexistent() throws Exception {
-        try (MinioTransporter transporter = new MinioTransporter(
-                session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory.create(session, repository))) {
+        try (MinioTransporter transporter =
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
             try {
                 transporter.get(new GetTask(URI.create("test")));
                 fail("Should throw");
@@ -186,8 +185,8 @@ class MinioTransporterIT {
 
     @Test
     void getExistent() throws Exception {
-        try (MinioTransporter transporter = new MinioTransporter(
-                session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory.create(session, repository))) {
+        try (MinioTransporter transporter =
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
             try {
                 GetTask task = new GetTask(URI.create(OBJECT_NAME));
                 transporter.get(task);
@@ -200,8 +199,8 @@ class MinioTransporterIT {
 
     @Test
     void putNonexistent() throws Exception {
-        try (MinioTransporter transporter = new MinioTransporter(
-                session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory.create(session, repository))) {
+        try (MinioTransporter transporter =
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
             try {
                 URI uri = URI.create("test");
                 transporter.put(new PutTask(uri).setDataBytes(OBJECT_CONTENT.getBytes(StandardCharsets.UTF_8)));
@@ -216,8 +215,8 @@ class MinioTransporterIT {
 
     @Test
     void putExistent() throws Exception {
-        try (MinioTransporter transporter = new MinioTransporter(
-                session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory.create(session, repository))) {
+        try (MinioTransporter transporter =
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
             try {
                 URI uri = URI.create(OBJECT_NAME);
                 GetTask task = new GetTask(uri);

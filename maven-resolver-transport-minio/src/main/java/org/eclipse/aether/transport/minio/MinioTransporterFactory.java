@@ -69,22 +69,20 @@ public final class MinioTransporterFactory implements TransporterFactory {
         requireNonNull(repository, "repository cannot be null");
 
         // this check is here only to support "minio+http" and "s3+http" protocols by default. But also when
-        // raised priorities by uer, allow to "overtake" plain HTTP repositories, if needed.
+        // raised priorities by user, allow to "overtake" plain HTTP repositories, if needed.
         RemoteRepository adjusted = repository;
-        if (DEFAULT_PRIORITY == priority) {
-            if ("minio+http".equalsIgnoreCase(repository.getProtocol())
-                    || "minio+https".equalsIgnoreCase(repository.getProtocol())) {
-                adjusted = new RemoteRepository.Builder(repository)
-                        .setUrl(repository.getUrl().substring("minio+".length()))
-                        .build();
-            } else if ("s3+http".equalsIgnoreCase(repository.getProtocol())
-                    || "s3+https".equalsIgnoreCase(repository.getProtocol())) {
-                adjusted = new RemoteRepository.Builder(repository)
-                        .setUrl(repository.getUrl().substring("s3+".length()))
-                        .build();
-            } else {
-                throw new NoTransporterException(repository);
-            }
+        if ("minio+http".equalsIgnoreCase(repository.getProtocol())
+                || "minio+https".equalsIgnoreCase(repository.getProtocol())) {
+            adjusted = new RemoteRepository.Builder(repository)
+                    .setUrl(repository.getUrl().substring("minio+".length()))
+                    .build();
+        } else if ("s3+http".equalsIgnoreCase(repository.getProtocol())
+                || "s3+https".equalsIgnoreCase(repository.getProtocol())) {
+            adjusted = new RemoteRepository.Builder(repository)
+                    .setUrl(repository.getUrl().substring("s3+".length()))
+                    .build();
+        } else if (priority == DEFAULT_PRIORITY) {
+            throw new NoTransporterException(repository);
         }
         String objectNameMapperConf = ConfigUtils.getString(
                 session,
@@ -94,6 +92,6 @@ public final class MinioTransporterFactory implements TransporterFactory {
         if (objectNameMapperFactory == null) {
             throw new NoTransporterException(repository, "Unknown object name mapper: " + objectNameMapperConf);
         }
-        return new MinioTransporter(session, adjusted, objectNameMapperFactory.create(session, adjusted));
+        return new MinioTransporter(session, adjusted, objectNameMapperFactory);
     }
 }
