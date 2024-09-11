@@ -486,11 +486,11 @@ public class HttpTransporterTest {
             fail("Expected error");
         } catch (HttpRFC9457Exception e) {
             assertEquals(403, e.getStatusCode());
-            assertEquals(e.getRFC9457().getType(), URI.create("https://example.com/probs/out-of-credit"));
-            assertEquals(e.getRFC9457().getStatus(), 403);
-            assertEquals(e.getRFC9457().getTitle(), "You do not have enough credit.");
-            assertEquals(e.getRFC9457().getDetail(), "Your current balance is 30, but that costs 50.");
-            assertEquals(e.getRFC9457().getInstance(), URI.create("/account/12345/msgs/abc"));
+            assertEquals(e.getPayload().getType(), URI.create("https://example.com/probs/out-of-credit"));
+            assertEquals(e.getPayload().getStatus(), 403);
+            assertEquals(e.getPayload().getTitle(), "You do not have enough credit.");
+            assertEquals(e.getPayload().getDetail(), "Your current balance is 30, but that costs 50.");
+            assertEquals(e.getPayload().getInstance(), URI.create("/account/12345/msgs/abc"));
         }
     }
 
@@ -501,11 +501,11 @@ public class HttpTransporterTest {
             fail("Expected error");
         } catch (HttpRFC9457Exception e) {
             assertEquals(403, e.getStatusCode());
-            assertEquals(e.getRFC9457().getType(), URI.create("about:blank"));
-            assertNull(e.getRFC9457().getStatus());
-            assertNull(e.getRFC9457().getTitle());
-            assertNull(e.getRFC9457().getDetail());
-            assertNull(e.getRFC9457().getInstance());
+            assertEquals(e.getPayload().getType(), URI.create("about:blank"));
+            assertNull(e.getPayload().getStatus());
+            assertNull(e.getPayload().getTitle());
+            assertNull(e.getPayload().getDetail());
+            assertNull(e.getPayload().getInstance());
         }
     }
 

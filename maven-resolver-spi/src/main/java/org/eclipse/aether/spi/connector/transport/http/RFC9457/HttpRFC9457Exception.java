@@ -32,13 +32,13 @@ public class HttpRFC9457Exception extends IOException {
 
     private final String reasonPhrase;
 
-    private final RFC9457Payload rfc9457;
+    private final RFC9457Payload payload;
 
-    public HttpRFC9457Exception(int statusCode, String reasonPhrase, RFC9457Payload rfc9457) {
-        super(rfc9457.toString());
+    public HttpRFC9457Exception(int statusCode, String reasonPhrase, RFC9457Payload payload) {
+        super(payload.toString());
         this.statusCode = statusCode;
         this.reasonPhrase = reasonPhrase;
-        this.rfc9457 = rfc9457;
+        this.payload = payload;
     }
 
     public int getStatusCode() {
@@ -49,7 +49,7 @@ public class HttpRFC9457Exception extends IOException {
         return reasonPhrase;
     }
 
-    public RFC9457Payload getRFC9457() {
-        return rfc9457;
+    public RFC9457Payload getPayload() {
+        return payload;
     }
 }
