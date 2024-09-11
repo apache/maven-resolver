@@ -63,4 +63,14 @@ public class RFC9457Payload {
     public URI getInstance() {
         return instance;
     }
+
+    @Override
+    public String toString() {
+        return "RFC9457Payload {" + "type="
+                + type + ", status="
+                + status + ", title='"
+                + title + ", detail='"
+                + detail + ", instance="
+                + instance + '}';
+    }
 }
