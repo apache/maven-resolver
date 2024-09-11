@@ -21,6 +21,7 @@ package org.eclipse.aether.transport.jdk;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
@@ -50,7 +51,7 @@ public class JdkRFC9457Reporter extends RFC9457Reporter<HttpResponse<InputStream
     @Override
     protected String getBody(final HttpResponse<InputStream> response) throws IOException {
         try (InputStream is = response.body()) {
-            return new String(is.readAllBytes());
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
 }

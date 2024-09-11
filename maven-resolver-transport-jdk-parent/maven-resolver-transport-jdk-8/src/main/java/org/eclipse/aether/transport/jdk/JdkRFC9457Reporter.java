@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
@@ -49,7 +50,8 @@ public class JdkRFC9457Reporter extends RFC9457Reporter<HttpURLConnection, HttpT
 
     @Override
     protected String getBody(final HttpURLConnection response) throws IOException {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getInputStream()))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getInputStream(),
+            StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) {

@@ -19,6 +19,7 @@
 package org.eclipse.aether.transport.apache;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
@@ -55,6 +56,6 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
 
     @Override
     protected String getBody(final CloseableHttpResponse response) throws IOException {
-        return EntityUtils.toString(response.getEntity());
+        return EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
     }
 }

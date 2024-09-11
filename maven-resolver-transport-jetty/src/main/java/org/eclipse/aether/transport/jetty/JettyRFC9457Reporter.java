@@ -20,6 +20,7 @@ package org.eclipse.aether.transport.jetty;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -31,6 +32,8 @@ import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.http.HttpHeader;
 
 public class JettyRFC9457Reporter extends RFC9457Reporter<InputStreamResponseListener, HttpTransporterException> {
+    public static final JettyRFC9457Reporter INSTANCE = new JettyRFC9457Reporter();
+
     @Override
     protected boolean isRFC9457Message(final InputStreamResponseListener listener) {
         try {
@@ -65,7 +68,7 @@ public class JettyRFC9457Reporter extends RFC9457Reporter<InputStreamResponseLis
     @Override
     protected String getBody(final InputStreamResponseListener listener) throws IOException {
         try (InputStream is = listener.getInputStream()) {
-            return new String(is.readAllBytes());
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
 }
