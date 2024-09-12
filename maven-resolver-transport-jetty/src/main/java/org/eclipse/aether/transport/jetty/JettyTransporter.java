@@ -99,8 +99,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final PathProcessor pathProcessor;
 
-    private final JettyRFC9457Reporter rfc9457Reporter;
-
     private final URI baseUri;
 
     private final HttpClient client;
@@ -123,14 +121,12 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             RepositorySystemSession session,
             RemoteRepository repository,
             ChecksumExtractor checksumExtractor,
-            PathProcessor pathProcessor,
-            JettyRFC9457Reporter rfc9457Reporter)
+            PathProcessor pathProcessor)
             throws NoTransporterException {
         this.session = session;
         this.repository = repository;
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
-        this.rfc9457Reporter = rfc9457Reporter;
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
             if (uri.isOpaque()) {
@@ -289,7 +285,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     resume = false;
                     continue;
                 }
-                rfc9457Reporter.generateException(listener, (statusCode, reasonPhrase) -> {
+                JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
                     throw new HttpTransporterException(statusCode);
                 });
             }

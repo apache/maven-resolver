@@ -145,20 +145,16 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final boolean supportWebDav;
 
-    private final ApacheRFC9457Reporter rfc9457Reporter;
-
     @SuppressWarnings("checkstyle:methodlength")
     ApacheTransporter(
             RemoteRepository repository,
             RepositorySystemSession session,
             ChecksumExtractor checksumExtractor,
-            PathProcessor pathProcessor,
-            ApacheRFC9457Reporter rfc9457Reporter)
+            PathProcessor pathProcessor)
             throws NoTransporterException {
         if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
             throw new NoTransporterException(repository);
         }
-        this.rfc9457Reporter = rfc9457Reporter;
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
@@ -610,7 +606,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     private void handleStatus(CloseableHttpResponse response) throws Exception {
         int status = response.getStatusLine().getStatusCode();
         if (status >= 300) {
-            rfc9457Reporter.generateException(response, (statusCode, reasonPhrase) -> {
+            ApacheRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
                 throw new HttpResponseException(statusCode, reasonPhrase + " (" + statusCode + ")");
             });
         }

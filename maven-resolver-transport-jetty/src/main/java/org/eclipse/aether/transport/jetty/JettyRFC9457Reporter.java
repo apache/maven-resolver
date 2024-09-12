@@ -34,6 +34,8 @@ import org.eclipse.jetty.http.HttpHeader;
 public class JettyRFC9457Reporter extends RFC9457Reporter<InputStreamResponseListener, HttpTransporterException> {
     public static final JettyRFC9457Reporter INSTANCE = new JettyRFC9457Reporter();
 
+    private JettyRFC9457Reporter() {}
+
     @Override
     protected boolean isRFC9457Message(final InputStreamResponseListener listener) {
         try {

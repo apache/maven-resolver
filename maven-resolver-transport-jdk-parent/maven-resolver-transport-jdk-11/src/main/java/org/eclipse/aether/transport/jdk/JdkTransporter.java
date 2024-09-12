@@ -116,8 +116,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final PathProcessor pathProcessor;
 
-    private final JdkRFC9457Reporter rfc9457Reporter;
-
     private final URI baseUri;
 
     private final HttpClient client;
@@ -135,11 +133,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             RemoteRepository repository,
             int javaVersion,
             ChecksumExtractor checksumExtractor,
-            PathProcessor pathProcessor,
-            JdkRFC9457Reporter rfc9457Reporter)
+            PathProcessor pathProcessor)
             throws NoTransporterException {
         this.checksumExtractor = checksumExtractor;
-        this.rfc9457Reporter = rfc9457Reporter;
         this.pathProcessor = pathProcessor;
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
@@ -295,7 +291,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                             continue;
                         }
                         try {
-                            rfc9457Reporter.generateException(response, (statusCode, reasonPhrase) -> {
+                            JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
                                 throw new HttpTransporterException(statusCode);
                             });
                         } finally {

@@ -44,8 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ApacheTransporterTest extends HttpTransporterTest {
 
     public ApacheTransporterTest() {
-        super(() -> new ApacheTransporterFactory(
-                standardChecksumExtractor(), new TestPathProcessor(), new ApacheRFC9457Reporter()));
+        super(() -> new ApacheTransporterFactory(standardChecksumExtractor(), new TestPathProcessor()));
     }
 
     @Override

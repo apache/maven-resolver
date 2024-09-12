@@ -40,8 +40,6 @@ import static java.util.Objects.requireNonNull;
 public final class JdkTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "jdk";
 
-    private final JdkRFC9457Reporter rfc9457Reporter;
-
     private float priority = 10.0f;
 
     private final ChecksumExtractor checksumExtractor;
@@ -49,11 +47,9 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
     private final PathProcessor pathProcessor;
 
     @Inject
-    public JdkTransporterFactory(
-            ChecksumExtractor checksumExtractor, PathProcessor pathProcessor, JdkRFC9457Reporter rfc9457Reporter) {
+    public JdkTransporterFactory(ChecksumExtractor checksumExtractor, PathProcessor pathProcessor) {
         this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
         this.pathProcessor = requireNonNull(pathProcessor, "pathProcessor");
-        this.rfc9457Reporter = requireNonNull(rfc9457Reporter, "RFC9457Reporter");
     }
 
     @Override
@@ -76,8 +72,7 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
             throw new NoTransporterException(repository, "Only HTTP/HTTPS is supported");
         }
 
-        return new JdkTransporter(
-                session, repository, javaVersion(), checksumExtractor, pathProcessor, rfc9457Reporter);
+        return new JdkTransporter(session, repository, javaVersion(), checksumExtractor, pathProcessor);
     }
 
     private static int javaVersion() {

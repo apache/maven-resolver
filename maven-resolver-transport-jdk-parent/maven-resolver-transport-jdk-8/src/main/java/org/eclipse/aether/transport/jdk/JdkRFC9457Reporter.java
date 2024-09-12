@@ -28,6 +28,10 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
 public class JdkRFC9457Reporter extends RFC9457Reporter<HttpURLConnection, HttpTransporterException> {
+    public static final JdkRFC9457Reporter INSTANCE = new JdkRFC9457Reporter();
+
+    private JdkRFC9457Reporter() {}
+
     @Override
     protected boolean isRFC9457Message(final HttpURLConnection response) {
         String contentType = response.getContentType();
@@ -50,8 +54,8 @@ public class JdkRFC9457Reporter extends RFC9457Reporter<HttpURLConnection, HttpT
 
     @Override
     protected String getBody(final HttpURLConnection response) throws IOException {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getInputStream(),
-            StandardCharsets.UTF_8))) {
+        try (BufferedReader br =
+                new BufferedReader(new InputStreamReader(response.getInputStream(), StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) {

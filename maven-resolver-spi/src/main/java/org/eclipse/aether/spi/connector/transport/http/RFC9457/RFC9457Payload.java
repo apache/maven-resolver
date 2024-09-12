@@ -21,6 +21,8 @@ package org.eclipse.aether.spi.connector.transport.http.RFC9457;
 import java.net.URI;
 
 public class RFC9457Payload {
+    public static final RFC9457Payload INSTANCE = new RFC9457Payload();
+
     private final URI type;
 
     private final Integer status;
@@ -31,7 +33,7 @@ public class RFC9457Payload {
 
     private final URI instance;
 
-    public RFC9457Payload() {
+    private RFC9457Payload() {
         this(null, null, null, null, null);
     }
 

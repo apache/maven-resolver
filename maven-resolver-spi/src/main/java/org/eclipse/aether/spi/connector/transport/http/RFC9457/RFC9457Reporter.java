@@ -63,14 +63,14 @@ public abstract class RFC9457Reporter<T, E extends Exception> {
                 body = getBody(response);
             } catch (IOException ignore) {
                 // No body found but it is representing a RFC 9457 message due to the content type.
-                throw new HttpRFC9457Exception(statusCode, reasonPhrase, new RFC9457Payload());
+                throw new HttpRFC9457Exception(statusCode, reasonPhrase, RFC9457Payload.INSTANCE);
             }
 
             if (body != null && !body.isEmpty()) {
                 RFC9457Payload rfc9457Payload = RFC9457Parser.parse(body);
                 throw new HttpRFC9457Exception(statusCode, reasonPhrase, rfc9457Payload);
             }
-            throw new HttpRFC9457Exception(statusCode, reasonPhrase, new RFC9457Payload());
+            throw new HttpRFC9457Exception(statusCode, reasonPhrase, RFC9457Payload.INSTANCE);
         }
         baseException.accept(statusCode, reasonPhrase);
     }

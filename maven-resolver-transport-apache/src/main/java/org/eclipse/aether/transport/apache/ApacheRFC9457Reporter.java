@@ -29,6 +29,10 @@ import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
 public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse, HttpResponseException> {
+    public static final ApacheRFC9457Reporter INSTANCE = new ApacheRFC9457Reporter();
+
+    private ApacheRFC9457Reporter() {}
+
     @Override
     protected boolean isRFC9457Message(final CloseableHttpResponse response) {
         Header[] headers = response.getHeaders(HttpHeaders.CONTENT_TYPE);

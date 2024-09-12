@@ -59,7 +59,6 @@ class JettyTransporterTest extends HttpTransporterTest {
     protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() {}
 
     public JettyTransporterTest() {
-        super(() -> new JettyTransporterFactory(
-                standardChecksumExtractor(), new TestPathProcessor(), new JettyRFC9457Reporter()));
+        super(() -> new JettyTransporterFactory(standardChecksumExtractor(), new TestPathProcessor()));
     }
 }
