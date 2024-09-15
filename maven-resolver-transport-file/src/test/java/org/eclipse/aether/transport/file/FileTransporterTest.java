@@ -246,7 +246,7 @@ public class FileTransporterTest {
     void testGet_FileHandleLeak(FS fs) throws Exception {
         setUp(fs);
         for (int i = 0; i < 100; i++) {
-            Path file = tempDir.resolve("testGet_FileHandleLeak");
+            Path file = tempDir.resolve("testGet_FileHandleLeak" + i);
             transporter.get(new GetTask(URI.create("file.txt")).setDataPath(file));
             assertTrue(Files.deleteIfExists(file), i + ", " + file.toAbsolutePath());
         }
