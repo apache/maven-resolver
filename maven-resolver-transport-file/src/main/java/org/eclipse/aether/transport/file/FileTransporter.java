@@ -18,13 +18,11 @@
  */
 package org.eclipse.aether.transport.file;
 
-import java.nio.file.FileSystemNotFoundException;
+import java.io.FileInputStream;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.RepositoryUriUtils;
 import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
@@ -38,13 +36,11 @@ import org.eclipse.aether.transfer.NoTransporterException;
 final class FileTransporter extends AbstractTransporter {
 
     private final Path basePath;
+    private final FileOp fileOp;
 
-    FileTransporter(RemoteRepository repository) throws NoTransporterException {
-        try {
-            basePath = Paths.get(RepositoryUriUtils.toUri(repository.getUrl())).toAbsolutePath();
-        } catch (FileSystemNotFoundException | IllegalArgumentException e) {
-            throw new NoTransporterException(repository, e);
-        }
+    FileTransporter(Path basePath, FileOp fileOp) throws NoTransporterException {
+        this.basePath = basePath;
+        this.fileOp = fileOp;
     }
 
     Path getBasePath() {
@@ -59,6 +55,14 @@ final class FileTransporter extends AbstractTransporter {
         return ERROR_OTHER;
     }
 
+    private FileOp effectiveFileOp(FileOp wanted, GetTask task) {
+        if (task.getDataPath() != null) {
+            return wanted;
+        }
+        // task carries no path, caller wants in-memory read, so COPY must be used
+        return FileOp.COPY;
+    }
+
     @Override
     protected void implPeek(PeekTask task) throws Exception {
         getPath(task, true);
@@ -67,7 +71,29 @@ final class FileTransporter extends AbstractTransporter {
     @Override
     protected void implGet(GetTask task) throws Exception {
         Path path = getPath(task, true);
-        utilGet(task, Files.newInputStream(path), true, Files.size(path), false);
+        long size = Files.size(path);
+        FileOp effective = effectiveFileOp(fileOp, task);
+        switch (effective) {
+            case COPY:
+                utilGet(task, Files.newInputStream(path), true, size, false);
+                break;
+            case SYMLINK:
+            case HARDLINK:
+                Files.deleteIfExists(task.getDataPath());
+                task.getListener().transportStarted(0L, size);
+                if (effective == FileOp.HARDLINK) {
+                    Files.createLink(task.getDataPath(), path);
+                } else {
+                    Files.createSymbolicLink(task.getDataPath(), path);
+                }
+                try (FileInputStream fis = new FileInputStream(path.toFile())) {
+                    task.getListener()
+                            .transportProgressed(fis.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, size));
+                }
+                break;
+            default:
+                throw new IllegalStateException("Unknown fileOp" + fileOp);
+        }
     }
 
     @Override
