@@ -62,8 +62,18 @@ public class FileTransporterTest {
     private FileSystem fileSystem;
 
     enum FS {
-        DEFAULT,
-        JIMFS
+        DEFAULT(""),
+        DEFAULT_SL("symlink+"),
+        DEFAULT_HL("hardlink+"),
+        JIMFS(""),
+        JIMFS_SL("symlink+"),
+        JIMFS_HL("hardlink+");
+
+        final String uriPrefix;
+
+        FS(String uriPrefix) {
+            this.uriPrefix = uriPrefix;
+        }
     }
 
     private RemoteRepository newRepo(String url) {
@@ -91,7 +101,7 @@ public class FileTransporterTest {
             Files.write(repoDir.resolve("file.txt"), "test".getBytes(StandardCharsets.UTF_8));
             Files.write(repoDir.resolve("empty.txt"), "".getBytes(StandardCharsets.UTF_8));
             Files.write(repoDir.resolve("some space.txt"), "space".getBytes(StandardCharsets.UTF_8));
-            newTransporter(repoDir.toUri().toASCIIString());
+            newTransporter(fs.uriPrefix + repoDir.toUri().toASCIIString());
         } catch (Exception e) {
             Assertions.fail(e);
         }

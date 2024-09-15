@@ -86,9 +86,11 @@ final class FileTransporter extends AbstractTransporter {
                 } else {
                     Files.createSymbolicLink(task.getDataPath(), path);
                 }
-                try (FileInputStream fis = new FileInputStream(path.toFile())) {
-                    task.getListener()
-                            .transportProgressed(fis.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, size));
+                if (size > 0) {
+                    try (FileInputStream fis = new FileInputStream(path.toFile())) {
+                        task.getListener()
+                                .transportProgressed(fis.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, size));
+                    }
                 }
                 break;
             default:
