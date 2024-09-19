@@ -103,7 +103,7 @@
     <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>2.0.13</slf4jVersion>
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
-    <jettyVersion>10.0.22</jettyVersion>
+    <jettyVersion>12.0.0</jettyVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.8</maven3Version>
     <maven4Version>4.0.0-beta-3</maven4Version>
