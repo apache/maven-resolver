@@ -98,7 +98,7 @@ public class FileTransporterTest {
 
     void setUp(FS fs) {
         try {
-            fileSystem = fs == FS.JIMFS ? Jimfs.newFileSystem() : null;
+            fileSystem = fs.name().startsWith("JIMFS") ? Jimfs.newFileSystem() : null;
             repoDir = fileSystem == null ? TestFileUtils.createTempDir().toPath() : fileSystem.getPath("repo");
             Files.createDirectories(repoDir);
             tempDir = fileSystem == null ? TestFileUtils.createTempDir().toPath() : fileSystem.getPath("tmp");
