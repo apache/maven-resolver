@@ -18,7 +18,7 @@
  */
 package org.eclipse.aether.transport.file;
 
-import java.io.FileInputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -87,9 +87,18 @@ final class FileTransporter extends AbstractTransporter {
                     Files.createSymbolicLink(task.getDataPath(), path);
                 }
                 if (size > 0) {
-                    try (FileInputStream fis = new FileInputStream(path.toFile())) {
-                        task.getListener()
-                                .transportProgressed(fis.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, size));
+                    try (FileChannel fc = FileChannel.open(path)) {
+                        try {
+                            task.getListener().transportProgressed(fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size()));
+                        } catch (UnsupportedOperationException e) {
+                            // not all FS support mmap: fallback to "plain read loop"
+                            ByteBuffer byteBuffer = ByteBuffer.allocate(1024 * 32);
+                            while (fc.read(byteBuffer) != -1) {
+                                byteBuffer.flip();
+                                task.getListener().transportProgressed(byteBuffer);
+                                byteBuffer.clear();
+                            }
+                        }
                     }
                 }
                 break;

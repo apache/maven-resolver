@@ -72,10 +72,10 @@ public final class FileTransporterFactory implements TransporterFactory {
 
         FileOp fileOp = FileOp.COPY;
         String repositoryUrl = repository.getUrl();
-        if (repositoryUrl.startsWith("symlink+file:")) {
+        if (repositoryUrl.startsWith("symlink+")) {
             fileOp = FileOp.SYMLINK;
             repositoryUrl = repositoryUrl.substring("symlink+".length());
-        } else if (repositoryUrl.startsWith("hardlink+file:")) {
+        } else if (repositoryUrl.startsWith("hardlink+")) {
             fileOp = FileOp.HARDLINK;
             repositoryUrl = repositoryUrl.substring("hardlink+".length());
         }
