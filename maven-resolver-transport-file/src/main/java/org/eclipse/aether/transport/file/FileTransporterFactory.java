@@ -70,13 +70,13 @@ public final class FileTransporterFactory implements TransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        FileOp fileOp = FileOp.COPY;
+        FileTransporter.FileOp fileOp = FileTransporter.FileOp.COPY;
         String repositoryUrl = repository.getUrl();
         if (repositoryUrl.startsWith("symlink+")) {
-            fileOp = FileOp.SYMLINK;
+            fileOp = FileTransporter.FileOp.SYMLINK;
             repositoryUrl = repositoryUrl.substring("symlink+".length());
         } else if (repositoryUrl.startsWith("hardlink+")) {
-            fileOp = FileOp.HARDLINK;
+            fileOp = FileTransporter.FileOp.HARDLINK;
             repositoryUrl = repositoryUrl.substring("hardlink+".length());
         }
         try {

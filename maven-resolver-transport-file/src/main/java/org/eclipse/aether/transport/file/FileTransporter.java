@@ -34,6 +34,14 @@ import org.eclipse.aether.transfer.NoTransporterException;
  * A transporter using {@link java.io.File}.
  */
 final class FileTransporter extends AbstractTransporter {
+    /**
+     * The file op transport can use.
+     */
+    enum FileOp {
+        COPY,
+        SYMLINK,
+        HARDLINK;
+    }
 
     private final Path basePath;
     private final FileOp fileOp;
