@@ -33,7 +33,6 @@
 
   <properties>
     <javaVersion>17</javaVersion>
-    <bouncycastleVersion>1.78.1</bouncycastleVersion>
     <sigstoreVersion>1.0.0</sigstoreVersion>
   </properties>
 
@@ -76,17 +75,14 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpg-jdk18on</artifactId>
-      <version>${bouncycastleVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
-      <version>${bouncycastleVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcutil-jdk18on</artifactId>
-      <version>${bouncycastleVersion}</version>
     </dependency>
 
     <dependency>
