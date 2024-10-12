@@ -62,7 +62,9 @@
     <module>maven-resolver-transport-jdk-parent</module>
     <module>maven-resolver-transport-apache</module>
     <module>maven-resolver-transport-wagon</module>
+    <module>maven-resolver-transport-minio</module>
     <module>maven-resolver-generator-gnupg</module>
+    <module>maven-resolver-generator-sigstore</module>
     <module>maven-resolver-supplier-mvn3</module>
     <module>maven-resolver-supplier-mvn4</module>
     <module>maven-resolver-demos</module>
@@ -101,11 +103,17 @@
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>0.9.0.M3</sisuVersion>
     <guiceVersion>6.0.0</guiceVersion>
-    <slf4jVersion>2.0.13</slf4jVersion>
+    <slf4jVersion>2.0.16</slf4jVersion>
+    <testcontainersVersion>1.20.2</testcontainersVersion>
+    <bouncycastleVersion>1.78.1</bouncycastleVersion>
+
+    <!-- Remove when parent updates -->
+    <versions.junit5>5.11.2</versions.junit5>
+
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
     <jettyVersion>10.0.22</jettyVersion>
     <!-- used by supplier and demo only -->
-    <maven3Version>3.9.8</maven3Version>
+    <maven3Version>3.9.9</maven3Version>
     <maven4Version>4.0.0-beta-3</maven4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
@@ -227,7 +235,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.12.0</version>
+        <version>5.14.1</version>
         <scope>test</scope>
       </dependency>
 
@@ -235,12 +243,12 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
-        <version>4.0.1</version>
+        <version>4.0.2</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-xml</artifactId>
-        <version>4.0.4</version>
+        <version>3.0.1</version>
       </dependency>
 
       <dependency>
@@ -289,6 +297,33 @@
         <artifactId>jimfs</artifactId>
         <version>1.3.0</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpg-jdk18on</artifactId>
+        <version>${bouncycastleVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk18on</artifactId>
+        <version>${bouncycastleVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcutil-jdk18on</artifactId>
+        <version>${bouncycastleVersion}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.11.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>1.27.1</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -298,7 +333,7 @@
         <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
-          <version>0.22.0</version>
+          <version>0.23.0</version>
           <configuration>
             <oldVersion>
               <!-- We compare same module against 1.8.0 set as "baseline" -->
