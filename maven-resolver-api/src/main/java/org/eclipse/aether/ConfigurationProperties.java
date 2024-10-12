@@ -143,6 +143,28 @@ public final class ConfigurationProperties {
     public static final String CACHED_PRIORITIES = PREFIX_PRIORITY + "cached";
 
     /**
+     * The priority to use for a certain extension class. {@code &lt;class&gt;} can either be the fully qualified
+     * name or the simple name of a class. If the class name ends with Factory that suffix could optionally be left out.
+     * This configuration is used by {@code org.eclipse.aether.internal.impl.PrioritizedComponents} internal utility
+     * to sort classes by priority. This is reusable utility (so an extension can make use of it), but by default
+     * in "vanilla" Resolver following classes are sorted:
+     * <ul>
+     *     <li>{@code org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory}</li>
+     *     <li>{@code org.eclipse.aether.spi.connector.RepositoryConnectorFactory}</li>
+     *     <li>{@code org.eclipse.aether.spi.connector.layout.RepositoryLayoutFactory}</li>
+     *     <li>{@code org.eclipse.aether.spi.connector.transport.TransporterFactory}</li>
+     *     <li>{@code org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory}</li>
+     *     <li>{@code org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory}</li>
+     *     <li>{@code org.eclipse.aether.impl.MetadataGeneratorFactory}</li>
+     * </ul>
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Float}
+     * @configurationRepoIdSuffix No
+     */
+    public static final String CLASS_PRIORITIES = PREFIX_PRIORITY + "<class>";
+
+    /**
      * The default caching of priority components if {@link #CACHED_PRIORITIES} isn't set. Default value is {@code true}.
      *
      * @since 2.0.0
