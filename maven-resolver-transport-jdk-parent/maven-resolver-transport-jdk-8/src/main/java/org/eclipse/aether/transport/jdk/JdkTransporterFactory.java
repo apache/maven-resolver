@@ -47,7 +47,8 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
     private float priority = 10.0f;
 
     @Inject
-    public JdkTransporterFactory(ChecksumExtractor checksumExtractor, PathProcessor pathProcessor) {
+    public JdkTransporterFactory(
+            ChecksumExtractor checksumExtractor, PathProcessor pathProcessor, JdkRFC9457Reporter rfc9457Reporter) {
         // this is to equalize all Java version constructors to be same, so Supplier could work across all versions
     }
 
