@@ -64,6 +64,7 @@
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-transport-minio</module>
     <module>maven-resolver-generator-gnupg</module>
+    <module>maven-resolver-generator-sigstore</module>
     <module>maven-resolver-supplier-mvn3</module>
     <module>maven-resolver-supplier-mvn4</module>
     <module>maven-resolver-demos</module>
@@ -104,6 +105,7 @@
     <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>2.0.16</slf4jVersion>
     <testcontainersVersion>1.20.2</testcontainersVersion>
+    <bouncycastleVersion>1.78.1</bouncycastleVersion>
 
     <!-- Remove when parent updates -->
     <versions.junit5>5.11.2</versions.junit5>
@@ -294,6 +296,22 @@
         <groupId>com.google.jimfs</groupId>
         <artifactId>jimfs</artifactId>
         <version>1.3.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpg-jdk18on</artifactId>
+        <version>${bouncycastleVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk18on</artifactId>
+        <version>${bouncycastleVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcutil-jdk18on</artifactId>
+        <version>${bouncycastleVersion}</version>
       </dependency>
 
       <dependency>

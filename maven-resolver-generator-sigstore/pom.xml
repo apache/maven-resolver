@@ -26,13 +26,14 @@
     <version>2.0.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-generator-gnupg</artifactId>
+  <artifactId>maven-resolver-generator-sigstore</artifactId>
 
-  <name>Maven Artifact Resolver GnuPG Signer Generator</name>
-  <description>A generator implementation for GnuPG signatures.</description>
+  <name>Maven Artifact Resolver Sigstore Signer Generator</name>
+  <description>A generator implementation for Sigstore signatures.</description>
 
   <properties>
     <javaVersion>17</javaVersion>
+    <sigstoreVersion>1.0.0</sigstoreVersion>
   </properties>
 
   <dependencies>
@@ -63,6 +64,12 @@
       <artifactId>org.eclipse.sisu.inject</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>dev.sigstore</groupId>
+      <artifactId>sigstore-java</artifactId>
+      <version>${sigstoreVersion}</version>
     </dependency>
 
     <dependency>
