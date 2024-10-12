@@ -95,4 +95,30 @@ public final class ApacheTransporterConfigurationKeys {
      * @configurationType {@link java.lang.String}
      */
     public static final String CONFIG_PROP_PROTOCOLS = CONFIG_PROPS_PREFIX + "https.protocols";
+
+    /**
+     * If enabled, Apache HttpClient will follow HTTP redirects.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_FOLLOW_REDIRECTS}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.2
+     */
+    public static final String CONFIG_PROP_FOLLOW_REDIRECTS = CONFIG_PROPS_PREFIX + "followRedirects";
+
+    public static final boolean DEFAULT_FOLLOW_REDIRECTS = true;
+
+    /**
+     * The max redirect count to follow.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_MAX_REDIRECTS}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.2
+     */
+    public static final String CONFIG_PROP_MAX_REDIRECTS = CONFIG_PROPS_PREFIX + "maxRedirects";
+
+    public static final int DEFAULT_MAX_REDIRECTS = 5;
 }
