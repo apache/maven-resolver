@@ -19,8 +19,10 @@
 package org.eclipse.aether.transport.file;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.Buffer;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 
 import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
@@ -56,7 +58,11 @@ class RecordingTransportListener extends TransportListener {
     @Override
     public void transportProgressed(ByteBuffer data) throws TransferCancelledException {
         progressedCount++;
-        baos.write(data.array(), data.arrayOffset() + ((Buffer) data).position(), data.remaining());
+        try {
+            Channels.newChannel(baos).write(data);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         if (cancelProgress) {
             throw new TransferCancelledException();
         }

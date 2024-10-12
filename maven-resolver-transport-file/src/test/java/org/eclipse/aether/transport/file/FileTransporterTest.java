@@ -59,11 +59,23 @@ public class FileTransporterTest {
 
     private Path repoDir;
 
+    private Path tempDir;
+
     private FileSystem fileSystem;
 
     enum FS {
-        DEFAULT,
-        JIMFS
+        DEFAULT(""),
+        DEFAULT_SL("symlink+"),
+        DEFAULT_HL("hardlink+"),
+        JIMFS(""),
+        JIMFS_SL("symlink+"),
+        JIMFS_HL("hardlink+");
+
+        final String uriPrefix;
+
+        FS(String uriPrefix) {
+            this.uriPrefix = uriPrefix;
+        }
     }
 
     private RemoteRepository newRepo(String url) {
@@ -86,12 +98,15 @@ public class FileTransporterTest {
 
     void setUp(FS fs) {
         try {
-            fileSystem = fs == FS.JIMFS ? Jimfs.newFileSystem() : null;
-            repoDir = fileSystem == null ? TestFileUtils.createTempDir().toPath() : fileSystem.getPath(".");
+            fileSystem = fs.name().startsWith("JIMFS") ? Jimfs.newFileSystem() : null;
+            repoDir = fileSystem == null ? TestFileUtils.createTempDir().toPath() : fileSystem.getPath("repo");
+            Files.createDirectories(repoDir);
+            tempDir = fileSystem == null ? TestFileUtils.createTempDir().toPath() : fileSystem.getPath("tmp");
+            Files.createDirectories(tempDir);
             Files.write(repoDir.resolve("file.txt"), "test".getBytes(StandardCharsets.UTF_8));
             Files.write(repoDir.resolve("empty.txt"), "".getBytes(StandardCharsets.UTF_8));
             Files.write(repoDir.resolve("some space.txt"), "space".getBytes(StandardCharsets.UTF_8));
-            newTransporter(repoDir.toUri().toASCIIString());
+            newTransporter(fs.uriPrefix + repoDir.toUri().toASCIIString());
         } catch (Exception e) {
             Assertions.fail(e);
         }
@@ -169,11 +184,12 @@ public class FileTransporterTest {
     @EnumSource(FS.class)
     void testGet_ToFile(FS fs) throws Exception {
         setUp(fs);
-        Path file = TestFileUtils.createTempFile("failure").toPath();
+        Path file = tempDir.resolve("testGet_ToFile");
+        Files.write(file, "whatever".getBytes(StandardCharsets.UTF_8));
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("file.txt")).setDataPath(file).setListener(listener);
         transporter.get(task);
-        assertEquals("test", TestFileUtils.readString(file.toFile()));
+        assertEquals("test", new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
@@ -185,11 +201,12 @@ public class FileTransporterTest {
     @EnumSource(FS.class)
     void testGet_EmptyResource(FS fs) throws Exception {
         setUp(fs);
-        Path file = TestFileUtils.createTempFile("failure").toPath();
+        Path file = tempDir.resolve("testGet_EmptyResource");
+        Files.write(file, "".getBytes(StandardCharsets.UTF_8));
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("empty.txt")).setDataPath(file).setListener(listener);
         transporter.get(task);
-        assertEquals("", TestFileUtils.readString(file.toFile()));
+        assertEquals("", new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
         assertEquals(0L, listener.dataOffset);
         assertEquals(0L, listener.dataLength);
         assertEquals(1, listener.startedCount);
@@ -229,9 +246,22 @@ public class FileTransporterTest {
     void testGet_FileHandleLeak(FS fs) throws Exception {
         setUp(fs);
         for (int i = 0; i < 100; i++) {
-            Path file = TestFileUtils.createTempFile("failure").toPath();
+            Path file = tempDir.resolve("testGet_FileHandleLeak" + i);
             transporter.get(new GetTask(URI.create("file.txt")).setDataPath(file));
-            assertTrue(file.toFile().delete(), i + ", " + file.toFile().getAbsolutePath());
+            if (fs.uriPrefix.startsWith("symlink+")) {
+                assertTrue(Files.isSymbolicLink(file));
+                assertTrue(Files.deleteIfExists(file), i + ", " + file.toAbsolutePath());
+            } else if (fs.uriPrefix.startsWith("hardlink+")) {
+                assertTrue(Files.isRegularFile(file));
+                // Doing this on windows FS is not possible (immediately create then delete link) due windows lock
+                // semantics. While other OS do perform this test OK, it fails on Windows with AccessDeniedEx.
+                // The file becomes deletable on Windows after some arbitrary time, but let's not fiddle with that in
+                // this UT.
+                // assertTrue(Files.deleteIfExists(file), i + ", " + file.toAbsolutePath());
+            } else {
+                assertTrue(Files.isRegularFile(file));
+                assertTrue(Files.deleteIfExists(file), i + ", " + file.toAbsolutePath());
+            }
         }
     }
 
@@ -316,7 +346,8 @@ public class FileTransporterTest {
     @EnumSource(FS.class)
     void testPut_FromFile(FS fs) throws Exception {
         setUp(fs);
-        Path file = TestFileUtils.createTempFile("upload").toPath();
+        Path file = tempDir.resolve("upload");
+        Files.write(file, "upload".getBytes(StandardCharsets.UTF_8));
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataPath(file);
         transporter.put(task);
@@ -380,10 +411,11 @@ public class FileTransporterTest {
     void testPut_FileHandleLeak(FS fs) throws Exception {
         setUp(fs);
         for (int i = 0; i < 100; i++) {
-            Path src = TestFileUtils.createTempFile("upload").toPath();
+            Path src = tempDir.resolve("upload");
+            Files.write(src, "upload".getBytes(StandardCharsets.UTF_8));
             Path dst = repoDir.resolve("file.txt");
             transporter.put(new PutTask(URI.create("file.txt")).setDataPath(src));
-            assertTrue(src.toFile().delete(), i + ", " + src.toFile().getAbsolutePath());
+            assertTrue(Files.deleteIfExists(src), i + ", " + src.toAbsolutePath());
             assertTrue(Files.deleteIfExists(dst), i + ", " + dst.toAbsolutePath());
         }
     }

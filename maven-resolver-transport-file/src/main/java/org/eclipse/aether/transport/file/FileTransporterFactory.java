@@ -20,8 +20,12 @@ package org.eclipse.aether.transport.file;
 
 import javax.inject.Named;
 
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Paths;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryUriUtils;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
@@ -66,6 +70,20 @@ public final class FileTransporterFactory implements TransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        return new FileTransporter(repository);
+        FileTransporter.FileOp fileOp = FileTransporter.FileOp.COPY;
+        String repositoryUrl = repository.getUrl();
+        if (repositoryUrl.startsWith("symlink+")) {
+            fileOp = FileTransporter.FileOp.SYMLINK;
+            repositoryUrl = repositoryUrl.substring("symlink+".length());
+        } else if (repositoryUrl.startsWith("hardlink+")) {
+            fileOp = FileTransporter.FileOp.HARDLINK;
+            repositoryUrl = repositoryUrl.substring("hardlink+".length());
+        }
+        try {
+            return new FileTransporter(
+                    Paths.get(RepositoryUriUtils.toUri(repositoryUrl)).toAbsolutePath(), fileOp);
+        } catch (FileSystemNotFoundException | IllegalArgumentException e) {
+            throw new NoTransporterException(repository, e);
+        }
     }
 }
