@@ -24,8 +24,6 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 
 /**
  * Exception thrown by {@link HttpTransporter} in case of errors.
- *
- * @since 2.0.2
  */
 public class HttpRFC9457Exception extends IOException {
     private final int statusCode;
