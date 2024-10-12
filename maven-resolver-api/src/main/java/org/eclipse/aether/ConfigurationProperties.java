@@ -237,7 +237,7 @@ public final class ConfigurationProperties {
     /**
      * The request headers to use for HTTP-based repository connectors. The headers are specified using a
      * {@code Map<String, String>}, mapping a header name to its value. Besides this general key, clients may also
-     * specify headers for a specific remote repository by appending the suffix {@code .<repoId>} to this key when
+     * specify headers for a specific remote repository by appending the suffix {@code .&lt;repoId&gt;} to this key when
      * storing the headers map. The repository-specific headers map is supposed to be complete, i.e. is not merged with
      * the general headers map.
      *
@@ -249,7 +249,7 @@ public final class ConfigurationProperties {
 
     /**
      * The encoding/charset to use when exchanging credentials with HTTP servers. Besides this general key, clients may
-     * also specify the encoding for a specific remote repository by appending the suffix {@code .<repoId>} to this key
+     * also specify the encoding for a specific remote repository by appending the suffix {@code .&lt;repoId&gt;} to this key
      * when storing the charset name.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
