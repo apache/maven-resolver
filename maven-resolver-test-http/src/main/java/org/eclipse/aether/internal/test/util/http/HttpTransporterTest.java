@@ -57,6 +57,7 @@ import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.spi.connector.transport.http.RFC9457.HttpRFC9457Exception;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
@@ -475,6 +476,36 @@ public class HttpTransporterTest {
         } catch (HttpTransporterException e) {
             assertEquals(407, e.getStatusCode());
             assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
+        }
+    }
+
+    @Test
+    protected void testGet_RFC9457Response() throws Exception {
+        try {
+            transporter.get(new GetTask(URI.create("rfc9457/file.txt")));
+            fail("Expected error");
+        } catch (HttpRFC9457Exception e) {
+            assertEquals(403, e.getStatusCode());
+            assertEquals(e.getPayload().getType(), URI.create("https://example.com/probs/out-of-credit"));
+            assertEquals(e.getPayload().getStatus(), 403);
+            assertEquals(e.getPayload().getTitle(), "You do not have enough credit.");
+            assertEquals(e.getPayload().getDetail(), "Your current balance is 30, but that costs 50.");
+            assertEquals(e.getPayload().getInstance(), URI.create("/account/12345/msgs/abc"));
+        }
+    }
+
+    @Test
+    protected void testGet_RFC9457Response_with_missing_fields() throws Exception {
+        try {
+            transporter.get(new GetTask(URI.create("rfc9457/missing_fields.txt")));
+            fail("Expected error");
+        } catch (HttpRFC9457Exception e) {
+            assertEquals(403, e.getStatusCode());
+            assertEquals(e.getPayload().getType(), URI.create("about:blank"));
+            assertNull(e.getPayload().getStatus());
+            assertNull(e.getPayload().getTitle());
+            assertNull(e.getPayload().getDetail());
+            assertNull(e.getPayload().getInstance());
         }
     }
 

@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.internal.test.util.http;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -26,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -38,8 +40,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.Gson;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
+import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Payload;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
@@ -284,6 +288,7 @@ public class HttpServer {
         handlers.addHandler(new AuthHandler());
         handlers.addHandler(new RedirectHandler());
         handlers.addHandler(new RepoHandler());
+        handlers.addHandler(new RFC9457Handler());
 
         server = new Server();
         httpConnector = new ServerConnector(server);
@@ -493,6 +498,44 @@ public class HttpServer {
         try (OutputStream outputStream = response.getOutputStream()) {
             outputStream.write(message.getBytes(StandardCharsets.UTF_8));
         }
+    }
+
+    private class RFC9457Handler extends AbstractHandler {
+        @Override
+        public void handle(
+                final String target,
+                final Request req,
+                final HttpServletRequest request,
+                final HttpServletResponse response)
+                throws IOException, ServletException {
+            String path = req.getPathInfo().substring(1);
+
+            if (!path.startsWith("rfc9457/")) {
+                return;
+            }
+            req.setHandled(true);
+
+            if (HttpMethod.GET.is(req.getMethod())) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setHeader(HttpHeader.CONTENT_TYPE.asString(), "application/problem+json");
+                RFC9457Payload rfc9457Payload;
+                if (path.endsWith("missing_fields.txt")) {
+                    rfc9457Payload = new RFC9457Payload(null, null, null, null, null);
+                } else {
+                    rfc9457Payload = new RFC9457Payload(
+                            URI.create("https://example.com/probs/out-of-credit"),
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "You do not have enough credit.",
+                            "Your current balance is 30, but that costs 50.",
+                            URI.create("/account/12345/msgs/abc"));
+                }
+                writeResponseBodyMessage(response, buildRFC9457Message(rfc9457Payload));
+            }
+        }
+    }
+
+    private String buildRFC9457Message(RFC9457Payload payload) {
+        return new Gson().toJson(payload, RFC9457Payload.class);
     }
 
     private class RedirectHandler extends AbstractHandler {

@@ -285,12 +285,18 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 try {
                     response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
-                        closeBody(response);
                         if (resume && response.statusCode() == PRECONDITION_FAILED) {
+                            closeBody(response);
                             resume = false;
                             continue;
                         }
-                        throw new HttpTransporterException(response.statusCode());
+                        try {
+                            JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
+                                throw new HttpTransporterException(statusCode);
+                            });
+                        } finally {
+                            closeBody(response);
+                        }
                     }
                 } catch (ConnectException e) {
                     closeBody(response);
