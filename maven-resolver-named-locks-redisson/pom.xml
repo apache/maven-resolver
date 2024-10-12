@@ -45,7 +45,7 @@
     <dependency>
       <groupId>org.redisson</groupId>
       <artifactId>redisson</artifactId>
-      <version>3.34.1</version>
+      <version>3.37.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -116,7 +116,6 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
-      <version>1.27.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
