@@ -24,7 +24,7 @@ import org.eclipse.aether.RepositorySystemSession;
 /**
  * Configuration for Sigstore Signer.
  *
- * @since 2.0.0
+ * @since 2.0.2
  */
 public final class SigstoreConfigurationKeys {
     private SigstoreConfigurationKeys() {}
