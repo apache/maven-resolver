@@ -35,7 +35,7 @@ public final class DependencyManagerUtils {
      * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link Boolean} flag controlling the verbose mode for dependency
      * management. If enabled, the original attributes of a dependency before its update due to dependency management
-     * will be recorded * in the node's {@link DependencyNode#getData() custom data} when building a dependency graph.
+     * will be recorded in the node's {@link DependencyNode#getData() custom data} when building a dependency graph.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}

@@ -79,6 +79,7 @@ import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -105,10 +106,14 @@ import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_RANGE_PATTERN;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_NAME;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_USE_SYSTEM_PROPERTIES;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_FOLLOW_REDIRECTS;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED;
+import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_USE_SYSTEM_PROPERTIES;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_DEFAULT;
 import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_STANDARD;
@@ -261,6 +266,16 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 DEFAULT_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED,
                 CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED + "." + repository.getId(),
                 CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED);
+        int maxRedirects = ConfigUtils.getInteger(
+                session,
+                DEFAULT_MAX_REDIRECTS,
+                CONFIG_PROP_MAX_REDIRECTS + "." + repository.getId(),
+                CONFIG_PROP_MAX_REDIRECTS);
+        boolean followRedirects = ConfigUtils.getBoolean(
+                session,
+                DEFAULT_FOLLOW_REDIRECTS,
+                CONFIG_PROP_FOLLOW_REDIRECTS + "." + repository.getId(),
+                CONFIG_PROP_FOLLOW_REDIRECTS);
         String userAgent = ConfigUtils.getString(
                 session, ConfigurationProperties.DEFAULT_USER_AGENT, ConfigurationProperties.USER_AGENT);
 
@@ -275,6 +290,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         SocketConfig socketConfig =
                 SocketConfig.custom().setSoTimeout(requestTimeout).build();
         RequestConfig requestConfig = RequestConfig.custom()
+                .setMaxRedirects(maxRedirects)
+                .setRedirectsEnabled(followRedirects)
+                .setRelativeRedirectsAllowed(followRedirects)
                 .setConnectTimeout(connectTimeout)
                 .setConnectionRequestTimeout(connectTimeout)
                 .setLocalAddress(getHttpLocalAddress(session, repository))
@@ -306,6 +324,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
+                .setRedirectStrategy(LaxRedirectStrategy.INSTANCE)
                 .setDefaultSocketConfig(socketConfig)
                 .setDefaultRequestConfig(requestConfig)
                 .setServiceUnavailableRetryStrategy(serviceUnavailableRetryStrategy)

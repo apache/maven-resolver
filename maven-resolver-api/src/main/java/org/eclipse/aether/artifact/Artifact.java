@@ -52,7 +52,7 @@ public interface Artifact {
      * "1.0-SNAPSHOT", the artifact's version depends on the state of the artifact. Artifacts that have been resolved or
      * deployed will usually have the meta version expanded.
      * This may also return version ranges like "[1.0,2.0)". The exact syntax for (meta) versions and version ranges
-     * depends on the underlying provider (encapsulated in {@link RepositorySystem}).
+     * depends on the underlying provider (encapsulated in {@link org.eclipse.aether.RepositorySystem}).
      *
      * @return The version, never {@code null}.
      */
