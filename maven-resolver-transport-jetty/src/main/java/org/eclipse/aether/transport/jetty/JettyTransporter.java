@@ -285,7 +285,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     resume = false;
                     continue;
                 }
-                throw new HttpTransporterException(response.getStatus());
+                JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
+                    throw new HttpTransporterException(statusCode);
+                });
             }
             break;
         }

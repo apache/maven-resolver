@@ -128,7 +128,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.15.0</version>
+      <version>3.17.0</version>
       <scope>runtime</scope>
     </dependency>
   </dependencies>
@@ -138,7 +138,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.1</version>
         <executions>
           <execution>
             <id>render-configuration-page</id>
@@ -151,7 +151,35 @@
               <arguments>
                 <argument>${basedir}/..</argument>
                 <argument>${basedir}/../src/site/markdown/configuration.md</argument>
+                <argument>${basedir}/target/maven-resolver.properties</argument>
+                <argument>${basedir}/target/maven-resolver.yaml</argument>
               </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <id>attach</id>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <type>properties</type>
+                  <file>${basedir}/target/maven-resolver.properties</file>
+                </artifact>
+                <artifact>
+                  <type>yaml</type>
+                  <file>${basedir}/target/maven-resolver.yaml</file>
+                </artifact>
+              </artifacts>
             </configuration>
           </execution>
         </executions>
