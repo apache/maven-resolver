@@ -151,7 +151,35 @@
               <arguments>
                 <argument>${basedir}/..</argument>
                 <argument>${basedir}/../src/site/markdown/configuration.md</argument>
+                <argument>${basedir}/target/maven-resolver.properties</argument>
+                <argument>${basedir}/target/maven-resolver.yaml</argument>
               </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <id>attach</id>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <type>properties</type>
+                  <file>${basedir}/target/maven-resolver.properties</file>
+                </artifact>
+                <artifact>
+                  <type>yaml</type>
+                  <file>${basedir}/target/maven-resolver.yaml</file>
+                </artifact>
+              </artifacts>
             </configuration>
           </execution>
         </executions>
