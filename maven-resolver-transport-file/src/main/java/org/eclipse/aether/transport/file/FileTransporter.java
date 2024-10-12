@@ -36,6 +36,8 @@ import org.eclipse.aether.transfer.NoTransporterException;
 final class FileTransporter extends AbstractTransporter {
     /**
      * The file op transport can use.
+     *
+     * @since 2.0.2
      */
     enum FileOp {
         COPY,
