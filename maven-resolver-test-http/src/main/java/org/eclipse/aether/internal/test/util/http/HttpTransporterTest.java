@@ -1173,6 +1173,20 @@ public class HttpTransporterTest {
     }
 
     @Test
+    @Timeout(10)
+    protected void testRequestTimeout100() throws Exception {
+        session.setConfigProperty(ConfigurationProperties.REQUEST_TIMEOUT, 50);
+        newTransporter(httpServer.getHttpUrl());
+        try {
+            transporter.get(new GetTask(URI.create("timeout/100/hello.txt")));
+            fail("Expected error");
+        } catch (Exception e) {
+            // impl specific "timeout" exception
+            assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
+        }
+    }
+
+    @Test
     protected void testUserAgent() throws Exception {
         session.setConfigProperty(ConfigurationProperties.USER_AGENT, "SomeTest/1.0");
         newTransporter(httpServer.getHttpUrl());

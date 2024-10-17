@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -289,6 +290,7 @@ public class HttpServer {
         handlers.addHandler(new RedirectHandler());
         handlers.addHandler(new RepoHandler());
         handlers.addHandler(new RFC9457Handler());
+        handlers.addHandler(new TimeoutHandler());
 
         server = new Server();
         httpConnector = new ServerConnector(server);
@@ -530,6 +532,37 @@ public class HttpServer {
                             URI.create("/account/12345/msgs/abc"));
                 }
                 writeResponseBodyMessage(response, buildRFC9457Message(rfc9457Payload));
+            }
+        }
+    }
+
+    private class TimeoutHandler extends AbstractHandler {
+        @Override
+        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
+                throws IOException, ServletException {
+            String path = req.getPathInfo().substring(1);
+            if (!path.startsWith("timeout/")) {
+                return;
+            }
+            req.setHandled(true);
+
+            try {
+                if (path.startsWith("timeout/100/")) {
+                    Thread.sleep(100);
+                } else if (path.startsWith("timeout/1000/")) {
+                    Thread.sleep(1000);
+                } else {
+                    // kinda "infinite"
+                    Thread.sleep(Duration.ofMinutes(1).toMillis());
+                }
+            } catch (InterruptedException e) {
+                throw new IllegalStateException(e);
+            }
+
+            if (HttpMethod.GET.is(req.getMethod())) {
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.setHeader(HttpHeader.CONTENT_TYPE.asString(), "application/text");
+                writeResponseBodyMessage(response, "Hello world!");
             }
         }
     }
