@@ -52,6 +52,18 @@ class ApacheTransporterTest extends HttpTransporterTest {
     @Test
     protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {}
 
+    @Override
+    protected void testRequestTimeout() throws Exception {
+        session.setConfigProperty(ApacheTransporterConfigurationKeys.CONFIG_PROP_HARD_TIMEOUT, Boolean.TRUE);
+        super.testRequestTimeout();
+    }
+
+    @Override
+    protected void testRequestTimeout100() throws Exception {
+        session.setConfigProperty(ApacheTransporterConfigurationKeys.CONFIG_PROP_HARD_TIMEOUT, Boolean.TRUE);
+        super.testRequestTimeout100();
+    }
+
     @Test
     void testGet_WebDav() throws Exception {
         httpServer.setWebDav(true);

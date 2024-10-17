@@ -121,4 +121,17 @@ public final class ApacheTransporterConfigurationKeys {
     public static final String CONFIG_PROP_MAX_REDIRECTS = CONFIG_PROPS_PREFIX + "maxRedirects";
 
     public static final int DEFAULT_MAX_REDIRECTS = 5;
+
+    /**
+     * Is "hard timeout" enabled on Apache transport.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HARD_TIMEOUT}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.3
+     */
+    public static final String CONFIG_PROP_HARD_TIMEOUT = CONFIG_PROPS_PREFIX + "hardTimeout";
+
+    public static final boolean DEFAULT_HARD_TIMEOUT = false;
 }

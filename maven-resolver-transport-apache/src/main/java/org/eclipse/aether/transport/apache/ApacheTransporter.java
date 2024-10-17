@@ -37,6 +37,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
@@ -150,6 +153,12 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final boolean supportWebDav;
 
+    private final int requestTimeout;
+
+    private final boolean hardTimeoutEnabled;
+
+    private final Timer hardTimeoutTimer;
+
     @SuppressWarnings("checkstyle:methodlength")
     ApacheTransporter(
             RemoteRepository repository,
@@ -178,6 +187,17 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
         this.repoAuthContext = AuthenticationContext.forRepository(session, repository);
         this.proxyAuthContext = AuthenticationContext.forProxy(session, repository);
+
+        this.hardTimeoutEnabled = ConfigUtils.getBoolean(
+                session,
+                ApacheTransporterConfigurationKeys.DEFAULT_HARD_TIMEOUT,
+                ApacheTransporterConfigurationKeys.CONFIG_PROP_HARD_TIMEOUT + "." + repository.getId(),
+                ApacheTransporterConfigurationKeys.CONFIG_PROP_HARD_TIMEOUT);
+        if (hardTimeoutEnabled) {
+            this.hardTimeoutTimer = new Timer();
+        } else {
+            this.hardTimeoutTimer = null;
+        }
 
         String httpsSecurityMode = ConfigUtils.getString(
                 session,
@@ -231,7 +251,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
                 ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
                 ConfigurationProperties.CONNECT_TIMEOUT);
-        int requestTimeout = ConfigUtils.getInteger(
+        this.requestTimeout = ConfigUtils.getInteger(
                 session,
                 ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
                 ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
@@ -288,16 +308,20 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 .register(AuthSchemes.KERBEROS, new KerberosSchemeFactory())
                 .build();
         SocketConfig socketConfig =
-                SocketConfig.custom().setSoTimeout(requestTimeout).build();
+                // time to establish connection
+                SocketConfig.custom().setSoTimeout(connectTimeout).build();
         RequestConfig requestConfig = RequestConfig.custom()
                 .setMaxRedirects(maxRedirects)
                 .setRedirectsEnabled(followRedirects)
                 .setRelativeRedirectsAllowed(followRedirects)
+                // the time waiting for data after connecting; max time between two data packets
+                .setSocketTimeout(connectTimeout)
+                // the time to establish the connection with the remote host
                 .setConnectTimeout(connectTimeout)
-                .setConnectionRequestTimeout(connectTimeout)
+                // the time to wait for a connection from the connection manager/pool
+                .setConnectionRequestTimeout(requestTimeout)
                 .setLocalAddress(getHttpLocalAddress(session, repository))
                 .setCookieSpec(CookieSpecs.STANDARD)
-                .setSocketTimeout(requestTimeout)
                 .build();
 
         HttpRequestRetryHandler retryHandler;
@@ -492,6 +516,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         try {
             SharingHttpContext context = new SharingHttpContext(state);
             prepare(request, context);
+            AtomicReference<HttpUriRequest> requestRef = manageHardTimeout(request);
             try (CloseableHttpResponse response = client.execute(server, request, context)) {
                 try {
                     context.close();
@@ -502,6 +527,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 } finally {
                     EntityUtils.consumeQuietly(response.getEntity());
                 }
+            } finally {
+                unmanageHardTimeout(requestRef);
             }
         } catch (IOException e) {
             if (e.getCause() instanceof TransferCancelledException) {
@@ -509,6 +536,18 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             }
             throw e;
         }
+    }
+
+    private AtomicReference<HttpUriRequest> manageHardTimeout(HttpUriRequest request) {
+        AtomicReference<HttpUriRequest> ref = new AtomicReference<>(request);
+        if (hardTimeoutEnabled) {
+            hardTimeoutTimer.scheduleAtFixedRate(new DrPepe(System.currentTimeMillis() + requestTimeout, ref), 0, 100);
+        }
+        return ref;
+    }
+
+    private void unmanageHardTimeout(AtomicReference<HttpUriRequest> requestRef) {
+        requestRef.set(null);
     }
 
     private void prepare(HttpUriRequest request, SharingHttpContext context) throws Exception {
@@ -634,6 +673,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     @Override
     protected void implClose() {
         try {
+            if (hardTimeoutTimer != null) {
+                hardTimeoutTimer.cancel();
+            }
             client.close();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -853,6 +895,33 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             }
             RETRY_INTERVAL_HOLDER.remove();
             return ri;
+        }
+    }
+
+    private static class DrPepe extends TimerTask {
+        private final long maxTimeToFinish;
+        private final AtomicReference<HttpUriRequest> requestRef;
+
+        private DrPepe(long maxTimeToFinish, AtomicReference<HttpUriRequest> requestRef) {
+            this.maxTimeToFinish = maxTimeToFinish;
+            this.requestRef = requestRef;
+        }
+
+        @Override
+        public void run() {
+            HttpUriRequest request = requestRef.get();
+            if (request != null) {
+                if (System.currentTimeMillis() > maxTimeToFinish) {
+                    try {
+                        request.abort();
+                    } finally {
+                        requestRef.set(null);
+                        cancel();
+                    }
+                }
+            } else {
+                cancel();
+            }
         }
     }
 }
