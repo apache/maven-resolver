@@ -103,6 +103,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final HttpClient client;
 
+    private final int connectTimeout;
+
     private final int requestTimeout;
 
     private final Map<String, String> headers;
@@ -168,6 +170,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
         this.headers = headers;
 
+        this.connectTimeout = ConfigUtils.getInteger(
+                session,
+                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.CONNECT_TIMEOUT);
         this.requestTimeout = ConfigUtils.getInteger(
                 session,
                 ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
@@ -228,9 +235,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     @Override
     protected void implPeek(PeekTask task) throws Exception {
-        Request request = client.newRequest(resolve(task))
-                .timeout(requestTimeout, TimeUnit.MILLISECONDS)
-                .method("HEAD");
+        Request request = client.newRequest(resolve(task)).method("HEAD");
         request.headers(m -> headers.forEach(m::add));
         if (preemptiveAuth) {
             mayApplyPreemptiveAuth(request);
@@ -248,9 +253,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         InputStreamResponseListener listener;
 
         while (true) {
-            Request request = client.newRequest(resolve(task))
-                    .timeout(requestTimeout, TimeUnit.MILLISECONDS)
-                    .method("GET");
+            Request request = client.newRequest(resolve(task)).method("GET");
             request.headers(m -> headers.forEach(m::add));
             if (preemptiveAuth) {
                 mayApplyPreemptiveAuth(request);
@@ -350,7 +353,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     @Override
     protected void implPut(PutTask task) throws Exception {
-        Request request = client.newRequest(resolve(task)).method("PUT").timeout(requestTimeout, TimeUnit.MILLISECONDS);
+        Request request = client.newRequest(resolve(task)).method("PUT");
         request.headers(m -> headers.forEach(m::add));
         if (preemptiveAuth || preemptivePutAuth) {
             mayApplyPreemptiveAuth(request);
@@ -457,12 +460,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             }
         }
 
-        int connectTimeout = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.CONNECT_TIMEOUT);
-
         SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
         sslContextFactory.setSslContext(sslContext);
         if (insecure) {
@@ -487,6 +484,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
         HttpClient httpClient = new HttpClient(transport);
         httpClient.setConnectTimeout(connectTimeout);
+        httpClient.setIdleTimeout(requestTimeout);
         httpClient.setFollowRedirects(ConfigUtils.getBoolean(
                 session,
                 JettyTransporterConfigurationKeys.DEFAULT_FOLLOW_REDIRECTS,

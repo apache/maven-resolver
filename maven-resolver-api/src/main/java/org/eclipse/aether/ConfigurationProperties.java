@@ -215,7 +215,7 @@ public final class ConfigurationProperties {
     /**
      * The default connect timeout to use if {@link #CONNECT_TIMEOUT} isn't set.
      */
-    public static final int DEFAULT_CONNECT_TIMEOUT = 10 * 1000;
+    public static final int DEFAULT_CONNECT_TIMEOUT = 30 * 1000;
 
     /**
      * The maximum amount of time (in milliseconds) to wait for remaining data to arrive from a remote server. Note that
