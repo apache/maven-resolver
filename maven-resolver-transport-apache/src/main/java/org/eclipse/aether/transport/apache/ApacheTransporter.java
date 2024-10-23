@@ -299,7 +299,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 // the time to establish the connection (high level)
                 .setConnectTimeout(connectTimeout)
                 // the time to wait for a connection from the connection manager/pool
-                .setConnectionRequestTimeout(requestTimeout)
+                .setConnectionRequestTimeout(connectTimeout)
                 .setLocalAddress(getHttpLocalAddress(session, repository))
                 .setCookieSpec(CookieSpecs.STANDARD)
                 .build();
