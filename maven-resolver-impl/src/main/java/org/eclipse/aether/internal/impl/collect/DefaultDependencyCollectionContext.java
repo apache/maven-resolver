@@ -82,7 +82,6 @@ public final class DefaultDependencyCollectionContext implements DependencyColle
 
     @Override
     public DependencyCollectionContext copy() {
-        return new DefaultDependencyCollectionContext(
-                session, dependency.getArtifact(), dependency, managedDependencies);
+        return new DefaultDependencyCollectionContext(session, artifact, dependency, managedDependencies);
     }
 }
