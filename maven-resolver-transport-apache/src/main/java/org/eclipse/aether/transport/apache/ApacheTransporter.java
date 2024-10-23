@@ -289,7 +289,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 .build();
         SocketConfig socketConfig =
                 // the time to establish connection (low level)
-                SocketConfig.custom().setSoTimeout(connectTimeout).build();
+                SocketConfig.custom().setSoTimeout(requestTimeout).build();
         RequestConfig requestConfig = RequestConfig.custom()
                 .setMaxRedirects(maxRedirects)
                 .setRedirectsEnabled(followRedirects)
