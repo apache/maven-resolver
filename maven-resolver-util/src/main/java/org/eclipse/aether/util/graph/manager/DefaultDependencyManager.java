@@ -21,6 +21,7 @@ package org.eclipse.aether.util.graph.manager;
 import java.util.Collection;
 import java.util.Map;
 
+import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.scope.ScopeManager;
@@ -63,7 +64,8 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemDependencyScope systemDependencyScope) {
+            SystemDependencyScope systemDependencyScope,
+            DependencyCollectionContext currentContext) {
         super(
                 depth,
                 deriveUntil,
@@ -73,7 +75,8 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemDependencyScope);
+                systemDependencyScope,
+                currentContext);
     }
 
     @Override
@@ -82,7 +85,8 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
             Map<Object, String> managedScopes,
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
-            Map<Object, Collection<Exclusion>> managedExclusions) {
+            Map<Object, Collection<Exclusion>> managedExclusions,
+            DependencyCollectionContext currentContext) {
         return new DefaultDependencyManager(
                 depth + 1,
                 deriveUntil,
@@ -92,6 +96,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemDependencyScope);
+                systemDependencyScope,
+                currentContext);
     }
 }

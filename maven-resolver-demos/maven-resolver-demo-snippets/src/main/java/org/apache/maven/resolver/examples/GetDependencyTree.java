@@ -44,7 +44,7 @@ public class GetDependencyTree {
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
                 CloseableSession session =
                         Booter.newRepositorySystemSession(system).build()) {
-            Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
+            Artifact artifact = new DefaultArtifact("biz.aQute.bnd:bnd-maven-plugin:7.0.0");
 
             CollectRequest collectRequest = new CollectRequest();
             collectRequest.setRoot(new Dependency(artifact, ""));

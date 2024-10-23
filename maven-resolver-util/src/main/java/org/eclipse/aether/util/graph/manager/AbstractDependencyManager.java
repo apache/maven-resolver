@@ -61,6 +61,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     protected final SystemDependencyScope systemDependencyScope;
 
+    protected final DependencyCollectionContext currentContext;
+
     private final int hashCode;
 
     protected AbstractDependencyManager(int deriveUntil, int applyFrom, ScopeManager scopeManager) {
@@ -75,7 +77,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 Collections.emptyMap(),
                 scopeManager != null
                         ? scopeManager.getSystemDependencyScope().orElse(null)
-                        : SystemDependencyScope.LEGACY);
+                        : SystemDependencyScope.LEGACY,
+                null);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -88,7 +91,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemDependencyScope systemDependencyScope) {
+            SystemDependencyScope systemDependencyScope,
+            DependencyCollectionContext currentContext) {
         this.depth = depth;
         this.deriveUntil = deriveUntil;
         this.applyFrom = applyFrom;
@@ -99,6 +103,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         this.managedExclusions = requireNonNull(managedExclusions);
         // nullable: if using scope manager, but there is no system scope defined
         this.systemDependencyScope = systemDependencyScope;
+        // nullable until applicable, then "lock step" below
+        this.currentContext = currentContext;
 
         this.hashCode = Objects.hash(
                 depth,
@@ -116,22 +122,32 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             Map<Object, String> managedScopes,
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
-            Map<Object, Collection<Exclusion>> managedExclusions);
+            Map<Object, Collection<Exclusion>> managedExclusions,
+            DependencyCollectionContext currentContext);
 
     @Override
     public DependencyManager deriveChildManager(DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
-        if (depth >= deriveUntil) {
+        if (!isDerived()) {
             return this;
         }
 
+        if (currentContext == null) {
+            return derive(context, context);
+        } else {
+            return derive(currentContext, context);
+        }
+    }
+
+    protected DependencyManager derive(
+            DependencyCollectionContext currentContext, DependencyCollectionContext nextContext) {
         Map<Object, String> managedVersions = this.managedVersions;
         Map<Object, String> managedScopes = this.managedScopes;
         Map<Object, Boolean> managedOptionals = this.managedOptionals;
         Map<Object, String> managedLocalPaths = this.managedLocalPaths;
         Map<Object, Collection<Exclusion>> managedExclusions = this.managedExclusions;
 
-        for (Dependency managedDependency : context.getManagedDependencies()) {
+        for (Dependency managedDependency : currentContext.getManagedDependencies()) {
             Artifact artifact = managedDependency.getArtifact();
             Object key = new Key(artifact);
 
@@ -179,7 +195,13 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             }
         }
 
-        return newInstance(managedVersions, managedScopes, managedOptionals, managedLocalPaths, managedExclusions);
+        return newInstance(
+                managedVersions,
+                managedScopes,
+                managedOptionals,
+                managedLocalPaths,
+                managedExclusions,
+                nextContext.copy());
     }
 
     @Override
@@ -188,7 +210,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         DependencyManagement management = null;
         Object key = new Key(dependency.getArtifact());
 
-        if (depth >= applyFrom) {
+        if (isApplied()) {
             String version = managedVersions.get(key);
             if (version != null) {
                 management = new DependencyManagement();
@@ -247,6 +269,20 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         }
 
         return management;
+    }
+
+    /**
+     * Returns {@code true} if current context should be factored in (collected/derived).
+     */
+    protected boolean isDerived() {
+        return depth < deriveUntil;
+    }
+
+    /**
+     * Returns {@code true} if current dependency should be managed according to so far collected/derived rules.
+     */
+    protected boolean isApplied() {
+        return depth >= applyFrom;
     }
 
     @Override

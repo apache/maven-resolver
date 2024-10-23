@@ -49,24 +49,28 @@ public final class DefaultDependencyCollectionContext implements DependencyColle
         this.managedDependencies = managedDependencies;
     }
 
+    @Override
     public RepositorySystemSession getSession() {
         return session;
     }
 
+    @Override
     public Artifact getArtifact() {
         return artifact;
     }
 
+    @Override
     public Dependency getDependency() {
         return dependency;
     }
 
+    @Override
     public List<Dependency> getManagedDependencies() {
         return managedDependencies;
     }
 
     public void set(Dependency dependency, List<Dependency> managedDependencies) {
-        artifact = dependency.getArtifact();
+        this.artifact = dependency.getArtifact();
         this.dependency = dependency;
         this.managedDependencies = managedDependencies;
     }
@@ -74,5 +78,11 @@ public final class DefaultDependencyCollectionContext implements DependencyColle
     @Override
     public String toString() {
         return String.valueOf(getDependency());
+    }
+
+    @Override
+    public DependencyCollectionContext copy() {
+        return new DefaultDependencyCollectionContext(
+                session, dependency.getArtifact(), dependency, managedDependencies);
     }
 }

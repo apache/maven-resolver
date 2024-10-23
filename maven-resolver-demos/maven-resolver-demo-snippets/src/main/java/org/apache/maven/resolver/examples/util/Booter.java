@@ -33,6 +33,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.supplier.SessionBuilderSupplier;
+import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 
 /**
@@ -70,6 +71,7 @@ public class Booter {
         SessionBuilder result = new SessionBuilderSupplier(system)
                 .get()
                 .withLocalRepositoryBaseDirectories(fs.getPath("local-repo"))
+                .setDependencyManager(new TransitiveDependencyManager())
                 .setRepositoryListener(new ConsoleRepositoryListener())
                 .setTransferListener(new ConsoleTransferListener())
                 .setConfigProperty("aether.generator.gpg.enabled", Boolean.TRUE.toString())

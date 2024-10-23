@@ -70,7 +70,8 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
             Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemDependencyScope systemDependencyScope) {
+            SystemDependencyScope systemDependencyScope,
+            DependencyCollectionContext currentContext) {
         super(
                 depth,
                 deriveUntil,
@@ -80,7 +81,8 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemDependencyScope);
+                systemDependencyScope,
+                currentContext);
     }
 
     @Override
@@ -89,7 +91,13 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
         // Removing this IF makes one IT fail here (read comment above):
         // https://github.com/apache/maven-integration-testing/blob/b4e8fd52b99a058336f9c7c5ec44fdbc1427759c/core-it-suite/src/test/java/org/apache/maven/it/MavenITmng4720DependencyManagementExclusionMergeTest.java#L67
         if (depth == 1) {
-            return newInstance(managedVersions, managedScopes, managedOptionals, managedLocalPaths, managedExclusions);
+            return newInstance(
+                    managedVersions,
+                    managedScopes,
+                    managedOptionals,
+                    managedLocalPaths,
+                    managedExclusions,
+                    currentContext);
         }
         return super.deriveChildManager(context);
     }
@@ -100,7 +108,8 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
             Map<Object, String> managedScopes,
             Map<Object, Boolean> managedOptionals,
             Map<Object, String> managedLocalPaths,
-            Map<Object, Collection<Exclusion>> managedExclusions) {
+            Map<Object, Collection<Exclusion>> managedExclusions,
+            DependencyCollectionContext currentContext) {
         return new ClassicDependencyManager(
                 depth + 1,
                 deriveUntil,
@@ -110,6 +119,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemDependencyScope);
+                systemDependencyScope,
+                currentContext);
     }
 }
