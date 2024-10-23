@@ -132,10 +132,10 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             return this;
         }
 
-        if (currentContext == null) {
-            return derive(context, context);
+        if (!isApplied() || currentContext == null) {
+            return derive(context, context); // original behaviour
         } else {
-            return derive(currentContext, context);
+            return derive(currentContext, context); // clic-clac: defer application to children; not onto own deps
         }
     }
 
