@@ -323,8 +323,9 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             Dependency d,
             ArtifactDescriptorResult descriptorResult,
             DefaultDependencyNode child) {
-        DefaultDependencyCollectionContext context = args.collectionContext;
-        context.set(d, descriptorResult.getManagedDependencies());
+        DefaultDependencyCollectionContext context = args.collectionContext.get();
+        args.collectionContext.compareAndSet(context, context.set(d, descriptorResult.getManagedDependencies()));
+        context = args.collectionContext.get();
 
         DependencySelector childSelector = depSelector != null ? depSelector.deriveChildSelector(context) : null;
         DependencyManager childManager = depManager != null ? depManager.deriveChildManager(context) : null;
@@ -386,7 +387,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
 
         final NodeStack nodes;
 
-        final DefaultDependencyCollectionContext collectionContext;
+        final AtomicReference<DefaultDependencyCollectionContext> collectionContext;
 
         final DefaultVersionFilterContext versionContext;
 
@@ -407,7 +408,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             this.premanagedState = ConfigUtils.getBoolean(session, false, DependencyManagerUtils.CONFIG_PROP_VERBOSE);
             this.pool = pool;
             this.nodes = nodes;
-            this.collectionContext = collectionContext;
+            this.collectionContext = new AtomicReference<>(collectionContext);
             this.versionContext = versionContext;
             this.interruptedException = new AtomicReference<>(null);
         }

@@ -32,11 +32,11 @@ public final class DefaultDependencyCollectionContext implements DependencyColle
 
     private final RepositorySystemSession session;
 
-    private Artifact artifact;
+    private final Artifact artifact;
 
-    private Dependency dependency;
+    private final Dependency dependency;
 
-    private List<Dependency> managedDependencies;
+    private final List<Dependency> managedDependencies;
 
     public DefaultDependencyCollectionContext(
             RepositorySystemSession session,
@@ -69,19 +69,13 @@ public final class DefaultDependencyCollectionContext implements DependencyColle
         return managedDependencies;
     }
 
-    public void set(Dependency dependency, List<Dependency> managedDependencies) {
-        this.artifact = dependency.getArtifact();
-        this.dependency = dependency;
-        this.managedDependencies = managedDependencies;
+    public DefaultDependencyCollectionContext set(Dependency dependency, List<Dependency> managedDependencies) {
+        return new DefaultDependencyCollectionContext(
+                session, dependency.getArtifact(), dependency, managedDependencies);
     }
 
     @Override
     public String toString() {
         return String.valueOf(getDependency());
-    }
-
-    @Override
-    public DependencyCollectionContext copy() {
-        return new DefaultDependencyCollectionContext(session, artifact, dependency, managedDependencies);
     }
 }

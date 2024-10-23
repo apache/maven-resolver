@@ -69,11 +69,4 @@ public interface DependencyCollectionContext {
      * @return The dependency management information, never {@code null}.
      */
     List<Dependency> getManagedDependencies();
-
-    /**
-     * Creates a copy of itself.
-     *
-     * @since 2.0.3
-     */
-    DependencyCollectionContext copy();
 }

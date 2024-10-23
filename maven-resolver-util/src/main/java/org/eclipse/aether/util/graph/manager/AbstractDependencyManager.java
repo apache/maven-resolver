@@ -196,12 +196,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         }
 
         return newInstance(
-                managedVersions,
-                managedScopes,
-                managedOptionals,
-                managedLocalPaths,
-                managedExclusions,
-                nextContext.copy());
+                managedVersions, managedScopes, managedOptionals, managedLocalPaths, managedExclusions, nextContext);
     }
 
     @Override

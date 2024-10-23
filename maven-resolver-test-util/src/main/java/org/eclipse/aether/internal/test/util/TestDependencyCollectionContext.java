@@ -72,9 +72,4 @@ final class TestDependencyCollectionContext implements DependencyCollectionConte
     public String toString() {
         return String.valueOf(getDependency());
     }
-
-    @Override
-    public DependencyCollectionContext copy() {
-        return new TestDependencyCollectionContext(session, artifact, dependency, managedDependencies);
-    }
 }
