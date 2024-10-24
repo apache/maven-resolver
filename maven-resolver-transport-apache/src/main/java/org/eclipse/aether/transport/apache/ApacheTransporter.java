@@ -288,16 +288,20 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 .register(AuthSchemes.KERBEROS, new KerberosSchemeFactory())
                 .build();
         SocketConfig socketConfig =
+                // the time to establish connection (low level)
                 SocketConfig.custom().setSoTimeout(requestTimeout).build();
         RequestConfig requestConfig = RequestConfig.custom()
                 .setMaxRedirects(maxRedirects)
                 .setRedirectsEnabled(followRedirects)
                 .setRelativeRedirectsAllowed(followRedirects)
+                // the time waiting for data; max time between two data packets
+                .setSocketTimeout(requestTimeout)
+                // the time to establish the connection (high level)
                 .setConnectTimeout(connectTimeout)
+                // the time to wait for a connection from the connection manager/pool
                 .setConnectionRequestTimeout(connectTimeout)
                 .setLocalAddress(getHttpLocalAddress(session, repository))
                 .setCookieSpec(CookieSpecs.STANDARD)
-                .setSocketTimeout(requestTimeout)
                 .build();
 
         HttpRequestRetryHandler retryHandler;
