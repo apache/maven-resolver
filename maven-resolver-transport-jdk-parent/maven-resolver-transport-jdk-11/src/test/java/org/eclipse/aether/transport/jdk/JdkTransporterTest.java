@@ -84,6 +84,11 @@ class JdkTransporterTest extends HttpTransporterTest {
     @Test
     protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() {}
 
+    @Override
+    @Disabled
+    @Test
+    protected void testRequestTimeout() throws Exception {}
+
     public JdkTransporterTest() {
         super(() -> new JdkTransporterFactory(standardChecksumExtractor(), new DefaultPathProcessor()));
     }

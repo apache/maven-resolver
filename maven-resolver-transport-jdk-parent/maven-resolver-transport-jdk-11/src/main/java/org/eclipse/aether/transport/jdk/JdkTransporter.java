@@ -99,6 +99,11 @@ import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.D
 
 /**
  * JDK Transport using {@link HttpClient}.
+ * <p>
+ * Known issues:
+ * <ul>
+ *     <li>Does not support {@link ConfigurationProperties#REQUEST_TIMEOUT}, see <a href="https://bugs.openjdk.org/browse/JDK-8258397">JDK-8258397</a></li>
+ * </ul>
  *
  * @since 2.0.0
  */
@@ -121,6 +126,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     private final HttpClient client;
 
     private final Map<String, String> headers;
+
+    private final int connectTimeout;
 
     private final int requestTimeout;
 
@@ -177,6 +184,11 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
         headers.put(CACHE_CONTROL, "no-cache, no-store");
 
+        this.connectTimeout = ConfigUtils.getInteger(
+                session,
+                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
+                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
+                ConfigurationProperties.CONNECT_TIMEOUT);
         this.requestTimeout = ConfigUtils.getInteger(
                 session,
                 ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
@@ -244,10 +256,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     @Override
     protected void implPeek(PeekTask task) throws Exception {
-        HttpRequest.Builder request = HttpRequest.newBuilder()
-                .uri(resolve(task))
-                .timeout(Duration.ofMillis(requestTimeout))
-                .method("HEAD", HttpRequest.BodyPublishers.noBody());
+        HttpRequest.Builder request =
+                HttpRequest.newBuilder().uri(resolve(task)).method("HEAD", HttpRequest.BodyPublishers.noBody());
         headers.forEach(request::setHeader);
         try {
             HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
@@ -266,10 +276,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
         try {
             while (true) {
-                HttpRequest.Builder request = HttpRequest.newBuilder()
-                        .uri(resolve(task))
-                        .timeout(Duration.ofMillis(requestTimeout))
-                        .method("GET", HttpRequest.BodyPublishers.noBody());
+                HttpRequest.Builder request =
+                        HttpRequest.newBuilder().uri(resolve(task)).method("GET", HttpRequest.BodyPublishers.noBody());
                 headers.forEach(request::setHeader);
 
                 if (resume) {
@@ -385,8 +393,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     @Override
     protected void implPut(PutTask task) throws Exception {
-        HttpRequest.Builder request =
-                HttpRequest.newBuilder().uri(resolve(task)).timeout(Duration.ofMillis(requestTimeout));
+        HttpRequest.Builder request = HttpRequest.newBuilder().uri(resolve(task));
         if (expectContinue != null) {
             request = request.expectContinue(expectContinue);
         }
@@ -423,8 +430,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
-    private static HttpClient createClient(
-            RepositorySystemSession session, RemoteRepository repository, boolean insecure) throws Exception {
+    private HttpClient createClient(RepositorySystemSession session, RemoteRepository repository, boolean insecure)
+            throws Exception {
 
         HashMap<Authenticator.RequestorType, PasswordAuthentication> authentications = new HashMap<>();
         SSLContext sslContext = null;
@@ -473,12 +480,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 sslContext = SSLContext.getDefault();
             }
         }
-
-        int connectTimeout = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.CONNECT_TIMEOUT);
 
         HttpClient.Builder builder = HttpClient.newBuilder()
                 .version(HttpClient.Version.valueOf(ConfigUtils.getString(
