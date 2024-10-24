@@ -72,10 +72,6 @@ public class CollectConfiguration implements Callable<Integer> {
         resolver
     }
 
-    private static final Map<Mode, List<String>> MODE_TEMPLATES = Map.of(
-            Mode.maven, List.of("page-maven.md", "configuration.properties", "configuration.yaml"),
-            Mode.resolver, List.of("page-resolver.md", "configuration.properties", "configuration.yaml"));
-
     @CommandLine.Option(
             names = {"-m", "--mode"},
             arity = "1",
@@ -129,8 +125,7 @@ public class CollectConfiguration implements Callable<Integer> {
             VelocityContext context = new VelocityContext();
             context.put("keys", discoveredKeys);
 
-            for (String template : MODE_TEMPLATES.get(mode)) {
-                // output name: remove ".vm"
+            for (String template : templates) {
                 try (Writer fileWriter = new CachingWriter(outputDirectory.resolve(template), StandardCharsets.UTF_8)) {
                     velocityEngine.getTemplate(template + ".vm").merge(context, fileWriter);
                 }
