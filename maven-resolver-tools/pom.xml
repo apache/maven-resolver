@@ -183,7 +183,7 @@
               <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
               <arguments>
                 <argument>--mode=resolver</argument>
-                <argument>--templates=page-resolver.md,configuration.properties,configuration.yaml</argument>
+                <argument>--templates=configuration.md,configuration.properties,configuration.yaml</argument>
                 <argument>${basedir}/..</argument>
                 <argument>${basedir}/target/</argument>
               </arguments>
