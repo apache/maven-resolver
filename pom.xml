@@ -111,7 +111,7 @@
     <versions.junit5>5.11.2</versions.junit5>
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
-    <jettyVersion>10.0.22</jettyVersion>
+    <jettyVersion>12.0.0</jettyVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.9</maven3Version>
     <maven4Version>4.0.0-beta-3</maven4Version>
