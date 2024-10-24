@@ -203,6 +203,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-generator-sigstore</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-supplier-mvn3</artifactId>
         <version>${project.version}</version>
       </dependency>

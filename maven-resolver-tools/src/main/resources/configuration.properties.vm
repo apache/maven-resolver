@@ -34,15 +34,17 @@
 # specific language governing permissions and limitations
 # under the License.
 #]]#
-props:
-  #foreach($key in $keys)
-    - key: ${key.key}
-      configurationType: ${key.configurationType}
-      description: "${key.description.replaceAll('"', '\\"')}"
-      defaultValue: ${key.defaultValue}
-      #if( !${key.since.empty} )
-      since: ${key.since}
-      #end
-      supportRepoIdSuffix: ${key.supportRepoIdSuffix}
-      configurationSource: ${key.configurationSource}
-  #end
+props.count = ${keys.size()}
+#foreach($key in $keys)
+props.${foreach.count}.key = ${key.key}
+props.${foreach.count}.configurationType = ${key.configurationType}
+props.${foreach.count}.description = ${key.description}
+props.${foreach.count}.defaultValue = ${key.defaultValue}
+#if( !${key.since.empty} )
+props.${foreach.count}.since = ${key.since}
+#end
+#if( !${key.supportRepoIdSuffix.empty} )
+props.${foreach.count}.supportRepoIdSuffix = ${key.supportRepoIdSuffix}
+#end
+props.${foreach.count}.configurationSource = ${key.configurationSource}
+#end
