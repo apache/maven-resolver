@@ -28,6 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +68,8 @@ public class CollectConfiguration implements Callable<Integer> {
     public static void main(String[] args) {
         new CommandLine(new CollectConfiguration()).execute(args);
     }
+
+    protected static final String KEY = "key";
 
     enum Mode {
         maven,
@@ -120,6 +124,8 @@ public class CollectConfiguration implements Callable<Integer> {
                     throw new IllegalStateException("Unsupported mode " + mode);
                 }
             }
+
+            Collections.sort(discoveredKeys, Comparator.comparing(e -> e.get(KEY)));
 
             Properties properties = new Properties();
             properties.setProperty("resource.loaders", "classpath");
@@ -207,7 +213,7 @@ public class CollectConfiguration implements Callable<Integer> {
                                                             default -> throw new IllegalStateException();
                                                         };
                                                 discoveredKeys.add(Map.of(
-                                                        "key",
+                                                        KEY,
                                                         fieldValue.toString(),
                                                         "defaultValue",
                                                         values.get("defaultValue") != null
@@ -270,7 +276,7 @@ public class CollectConfiguration implements Callable<Integer> {
                             }
                         }
                         discoveredKeys.add(Map.of(
-                                "key",
+                                KEY,
                                 key,
                                 "defaultValue",
                                 nvl(defValue, ""),
@@ -285,7 +291,7 @@ public class CollectConfiguration implements Callable<Integer> {
                                 "configurationType",
                                 configurationType,
                                 "supportRepoIdSuffix",
-                                toBoolean(getTag(f, "@configurationRepoIdSuffix"))));
+                                toYesNo(getTag(f, "@configurationRepoIdSuffix"))));
                     });
         }
     }
@@ -337,8 +343,8 @@ public class CollectConfiguration implements Callable<Integer> {
         }
     }
 
-    protected String toBoolean(String value) {
-        return Boolean.toString("yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value));
+    protected String toYesNo(String value) {
+        return "yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value) ? "Yes" : "No";
     }
 
     protected String nvl(String string, String def) {

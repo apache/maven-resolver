@@ -183,7 +183,23 @@
               <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
               <arguments>
                 <argument>--mode=resolver</argument>
-                <argument>--templates=configuration.md,configuration.properties,configuration.yaml</argument>
+                <argument>--templates=configuration.md</argument>
+                <argument>${basedir}/..</argument>
+                <argument>${basedir}/../src/site/markdown/</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>render-configuration-artifacts</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
+              <arguments>
+                <argument>--mode=resolver</argument>
+                <argument>--templates=configuration.properties,configuration.yaml</argument>
                 <argument>${basedir}/..</argument>
                 <argument>${basedir}/target/</argument>
               </arguments>
@@ -197,7 +213,7 @@
         <version>3.6.0</version>
         <executions>
           <execution>
-            <id>attach</id>
+            <id>attach-configuration-artifacts</id>
             <goals>
               <goal>attach-artifact</goal>
             </goals>
