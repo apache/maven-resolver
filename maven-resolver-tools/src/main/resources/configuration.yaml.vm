@@ -43,7 +43,7 @@ props:
       #if( !${key.since.empty} )
       since: ${key.since}
       #end
-      #if( !${key.supportRepoIdSuffix.empty} )
+      #if(${key.supportRepoIdSuffix})
       supportRepoIdSuffix: ${key.supportRepoIdSuffix}
       #end
       configurationSource: ${key.configurationSource}

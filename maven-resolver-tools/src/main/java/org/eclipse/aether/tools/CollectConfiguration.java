@@ -77,7 +77,7 @@ public class CollectConfiguration implements Callable<Integer> {
             arity = "1",
             paramLabel = "mode",
             description = "The mode of generator (what is being scanned?), supported modes are 'maven', 'resolver'")
-    private Mode mode;
+    protected Mode mode;
 
     @CommandLine.Option(
             names = {"-t", "--templates"},
@@ -85,20 +85,24 @@ public class CollectConfiguration implements Callable<Integer> {
             split = ",",
             paramLabel = "template",
             description = "The template names to write content out without '.vm' extension")
-    private List<String> templates;
+    protected List<String> templates;
 
     @CommandLine.Parameters(index = "0", description = "The root directory to process sources from")
-    private Path rootDirectory;
+    protected Path rootDirectory;
 
     @CommandLine.Parameters(index = "1", description = "The directory to generate output(s) to")
-    private Path outputDirectory;
+    protected Path outputDirectory;
 
     @Override
     public Integer call() {
         try {
+            rootDirectory = rootDirectory.toAbsolutePath().normalize();
+            outputDirectory = outputDirectory.toAbsolutePath().normalize();
+
             ArrayList<Map<String, String>> discoveredKeys = new ArrayList<>();
             try (Stream<Path> stream = Files.walk(rootDirectory)) {
                 if (mode == Mode.maven) {
+                    System.out.println("Processing Maven sources from " + rootDirectory);
                     stream.map(Path::toAbsolutePath)
                             .filter(p -> p.getFileName().toString().endsWith(".class"))
                             .filter(p -> p.toString().contains("/target/classes/"))
@@ -106,6 +110,7 @@ public class CollectConfiguration implements Callable<Integer> {
                                 processMavenClass(p, discoveredKeys);
                             });
                 } else if (mode == Mode.resolver) {
+                    System.out.println("Processing Resolver sources from " + rootDirectory);
                     stream.map(Path::toAbsolutePath)
                             .filter(p -> p.getFileName().toString().endsWith(".java"))
                             .filter(p -> p.toString().contains("/src/main/java/"))
@@ -116,17 +121,19 @@ public class CollectConfiguration implements Callable<Integer> {
                 }
             }
 
-            VelocityEngine velocityEngine = new VelocityEngine();
             Properties properties = new Properties();
             properties.setProperty("resource.loaders", "classpath");
             properties.setProperty("resource.loader.classpath.class", ClasspathResourceLoader.class.getName());
+            VelocityEngine velocityEngine = new VelocityEngine();
             velocityEngine.init(properties);
 
             VelocityContext context = new VelocityContext();
             context.put("keys", discoveredKeys);
 
             for (String template : templates) {
-                try (Writer fileWriter = new CachingWriter(outputDirectory.resolve(template), StandardCharsets.UTF_8)) {
+                Path output = outputDirectory.resolve(template);
+                System.out.println("Writing out to " + output);
+                try (Writer fileWriter = new CachingWriter(output, StandardCharsets.UTF_8)) {
                     velocityEngine.getTemplate(template + ".vm").merge(context, fileWriter);
                 }
             }
@@ -137,7 +144,7 @@ public class CollectConfiguration implements Callable<Integer> {
         }
     }
 
-    private void processMavenClass(Path path, List<Map<String, String>> discoveredKeys) {
+    protected void processMavenClass(Path path, List<Map<String, String>> discoveredKeys) {
         try {
             ClassReader classReader = new ClassReader(Files.newInputStream(path));
             classReader.accept(
@@ -206,13 +213,13 @@ public class CollectConfiguration implements Callable<Integer> {
                                                         values.get("defaultValue") != null
                                                                 ? values.get("defaultValue")
                                                                         .toString()
-                                                                : "-",
+                                                                : "",
                                                         "fqName",
-                                                        nvl(fqName, "-"),
+                                                        nvl(fqName, ""),
                                                         "description",
                                                         desc,
                                                         "since",
-                                                        since,
+                                                        nvl(since, ""),
                                                         "configurationSource",
                                                         source,
                                                         "configurationType",
@@ -231,7 +238,7 @@ public class CollectConfiguration implements Callable<Integer> {
         }
     }
 
-    private void processResolverClass(Path path, List<Map<String, String>> discoveredKeys) {
+    protected void processResolverClass(Path path, List<Map<String, String>> discoveredKeys) {
         JavaType<?> type = parse(path);
         if (type instanceof JavaClassSource javaClassSource) {
             javaClassSource.getFields().stream()
@@ -266,7 +273,7 @@ public class CollectConfiguration implements Callable<Integer> {
                                 "key",
                                 key,
                                 "defaultValue",
-                                nvl(defValue, "-"),
+                                nvl(defValue, ""),
                                 "fqName",
                                 fqName,
                                 "description",
@@ -283,13 +290,13 @@ public class CollectConfiguration implements Callable<Integer> {
         }
     }
 
-    private JavaDocSource<Object> cloneJavadoc(JavaDocSource<?> javaDoc) {
+    protected JavaDocSource<Object> cloneJavadoc(JavaDocSource<?> javaDoc) {
         Javadoc jd = (Javadoc) javaDoc.getInternal();
         return new JavaDocImpl<>(javaDoc.getOrigin(), (Javadoc)
                 ASTNode.copySubtree(AST.newAST(jd.getAST().apiLevel(), false), jd));
     }
 
-    private String cleanseJavadoc(FieldSource<JavaClassSource> javaClassSource) {
+    protected String cleanseJavadoc(FieldSource<JavaClassSource> javaClassSource) {
         JavaDoc<FieldSource<JavaClassSource>> javaDoc = javaClassSource.getJavaDoc();
         String[] text = javaDoc.getFullText().split("\n");
         StringBuilder result = new StringBuilder();
@@ -301,7 +308,7 @@ public class CollectConfiguration implements Callable<Integer> {
         return cleanseTags(result.toString());
     }
 
-    private String cleanseTags(String text) {
+    protected String cleanseTags(String text) {
         // {@code XXX} -> <pre>XXX</pre>
         // {@link XXX} -> ??? pre for now
         Pattern pattern = Pattern.compile("(\\{@\\w\\w\\w\\w (.+?)})");
@@ -322,7 +329,7 @@ public class CollectConfiguration implements Callable<Integer> {
         return result.toString();
     }
 
-    private JavaType<?> parse(Path path) {
+    protected JavaType<?> parse(Path path) {
         try {
             return Roaster.parse(path.toFile());
         } catch (IOException e) {
@@ -330,85 +337,19 @@ public class CollectConfiguration implements Callable<Integer> {
         }
     }
 
-    private String toBoolean(String value) {
+    protected String toBoolean(String value) {
         return Boolean.toString("yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value));
     }
 
-    /**
-     * Would be record, but... Velocity have no idea what it is nor how to handle it.
-     */
-    public static class ConfigurationKey {
-        private final String key;
-        private final String defaultValue;
-        private final String fqName;
-        private final String description;
-        private final String since;
-        private final String configurationSource;
-        private final String configurationType;
-        private final boolean supportRepoIdSuffix;
-
-        @SuppressWarnings("checkstyle:parameternumber")
-        public ConfigurationKey(
-                String key,
-                String defaultValue,
-                String fqName,
-                String description,
-                String since,
-                String configurationSource,
-                String configurationType,
-                boolean supportRepoIdSuffix) {
-            this.key = key;
-            this.defaultValue = defaultValue;
-            this.fqName = fqName;
-            this.description = description;
-            this.since = since;
-            this.configurationSource = configurationSource;
-            this.configurationType = configurationType;
-            this.supportRepoIdSuffix = supportRepoIdSuffix;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public String getDefaultValue() {
-            return defaultValue;
-        }
-
-        public String getFqName() {
-            return fqName;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public String getSince() {
-            return since;
-        }
-
-        public String getConfigurationSource() {
-            return configurationSource;
-        }
-
-        public String getConfigurationType() {
-            return configurationType;
-        }
-
-        public boolean isSupportRepoIdSuffix() {
-            return supportRepoIdSuffix;
-        }
-    }
-
-    private String nvl(String string, String def) {
+    protected String nvl(String string, String def) {
         return string == null ? def : string;
     }
 
-    private boolean hasConfigurationSource(JavaDocCapable<?> javaDocCapable) {
+    protected boolean hasConfigurationSource(JavaDocCapable<?> javaDocCapable) {
         return getTag(javaDocCapable, "@configurationSource") != null;
     }
 
-    private String getConfigurationType(JavaDocCapable<?> javaDocCapable) {
+    protected String getConfigurationType(JavaDocCapable<?> javaDocCapable) {
         String type = getTag(javaDocCapable, "@configurationType");
         if (type != null) {
             String linkPrefix = "{@link ";
@@ -424,7 +365,7 @@ public class CollectConfiguration implements Callable<Integer> {
         return nvl(type, "n/a");
     }
 
-    private String getConfigurationSource(JavaDocCapable<?> javaDocCapable) {
+    protected String getConfigurationSource(JavaDocCapable<?> javaDocCapable) {
         String source = getTag(javaDocCapable, "@configurationSource");
         if ("{@link RepositorySystemSession#getConfigProperties()}".equals(source)) {
             return "Session Configuration";
@@ -435,7 +376,7 @@ public class CollectConfiguration implements Callable<Integer> {
         }
     }
 
-    private String getSince(JavaDocCapable<?> javaDocCapable) {
+    protected String getSince(JavaDocCapable<?> javaDocCapable) {
         List<JavaDocTag> tags;
         if (javaDocCapable != null) {
             if (javaDocCapable instanceof FieldSource<?> fieldSource) {
@@ -455,7 +396,7 @@ public class CollectConfiguration implements Callable<Integer> {
         return null;
     }
 
-    private String getTag(JavaDocCapable<?> javaDocCapable, String tagName) {
+    protected String getTag(JavaDocCapable<?> javaDocCapable, String tagName) {
         List<JavaDocTag> tags;
         if (javaDocCapable != null) {
             if (javaDocCapable instanceof FieldSource<?> fieldSource) {
@@ -470,9 +411,9 @@ public class CollectConfiguration implements Callable<Integer> {
         return null;
     }
 
-    private static final Pattern CONSTANT_PATTERN = Pattern.compile(".*static final.* ([A-Z_]+) = (.*);");
+    protected static final Pattern CONSTANT_PATTERN = Pattern.compile(".*static final.* ([A-Z_]+) = (.*);");
 
-    private static final ToolProvider JAVAP = ToolProvider.findFirst("javap").orElseThrow();
+    protected static final ToolProvider JAVAP = ToolProvider.findFirst("javap").orElseThrow();
 
     /**
      * Builds "constant table" for one single class.
@@ -482,7 +423,7 @@ public class CollectConfiguration implements Callable<Integer> {
      * - does not work for fields that are Enum.name()
      * - more to come
      */
-    private static Map<String, String> extractConstants(Path file) {
+    protected static Map<String, String> extractConstants(Path file) {
         StringWriter out = new StringWriter();
         JAVAP.run(new PrintWriter(out), new PrintWriter(System.err), "-constants", file.toString());
         Map<String, String> result = new HashMap<>();
