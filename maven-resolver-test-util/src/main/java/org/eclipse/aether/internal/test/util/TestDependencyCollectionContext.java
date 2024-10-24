@@ -48,18 +48,22 @@ final class TestDependencyCollectionContext implements DependencyCollectionConte
         this.managedDependencies = managedDependencies;
     }
 
+    @Override
     public RepositorySystemSession getSession() {
         return session;
     }
 
+    @Override
     public Artifact getArtifact() {
         return artifact;
     }
 
+    @Override
     public Dependency getDependency() {
         return dependency;
     }
 
+    @Override
     public List<Dependency> getManagedDependencies() {
         return managedDependencies;
     }

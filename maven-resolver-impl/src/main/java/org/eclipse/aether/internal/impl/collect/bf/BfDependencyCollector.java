@@ -350,8 +350,10 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             DefaultDependencyNode child,
             Results results,
             boolean disableVersionManagement) {
-        DefaultDependencyCollectionContext context = args.collectionContext;
-        context.set(parentContext.dependency, descriptorResult.getManagedDependencies());
+        DefaultDependencyCollectionContext context = args.collectionContext.get();
+        args.collectionContext.compareAndSet(
+                context, context.set(parentContext.dependency, descriptorResult.getManagedDependencies()));
+        context = args.collectionContext.get();
 
         DependencySelector childSelector =
                 parentContext.depSelector != null ? parentContext.depSelector.deriveChildSelector(context) : null;
@@ -579,7 +581,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
 
         final Queue<DependencyProcessingContext> dependencyProcessingQueue = new ArrayDeque<>(128);
 
-        final DefaultDependencyCollectionContext collectionContext;
+        final AtomicReference<DefaultDependencyCollectionContext> collectionContext;
 
         final DefaultVersionFilterContext versionContext;
 
@@ -604,7 +606,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             this.ignoreRepos = session.isIgnoreArtifactDescriptorRepositories();
             this.premanagedState = ConfigUtils.getBoolean(session, false, DependencyManagerUtils.CONFIG_PROP_VERBOSE);
             this.pool = pool;
-            this.collectionContext = collectionContext;
+            this.collectionContext = new AtomicReference<>(collectionContext);
             this.versionContext = versionContext;
             this.skipper = skipper;
             this.resolver = resolver;
