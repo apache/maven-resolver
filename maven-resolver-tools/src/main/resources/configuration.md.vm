@@ -39,10 +39,6 @@ under the License.
 
 ]]#
 
-#macro(yesno $val)
-  #if ($val) Yes #else No #end
-#end
-
 #macro(value $val)
 #if ($val) `$val` #else - #end
 #end
@@ -50,7 +46,7 @@ under the License.
 | No | Key | Type | Description | Default Value | Since | Supports Repo ID suffix | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 #foreach($key in $keys)
-| $foreach.count. | `$key.key` | `$key.configurationType` | $key.description | #value( $key.defaultValue ) | $key.since | #yesno( $key.supportRepoIdSuffix ) | $key.configurationSource |
+| $foreach.count. | `$key.key` | `$key.configurationType` | $key.description | #value( $key.defaultValue ) | $key.since |  $key.supportRepoIdSuffix  | $key.configurationSource |
 #end
 
 #[[
