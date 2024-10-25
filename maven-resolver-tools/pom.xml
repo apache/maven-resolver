@@ -178,7 +178,7 @@
             <goals>
               <goal>java</goal>
             </goals>
-            <phase>verify</phase>
+            <phase>package</phase>
             <configuration>
               <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
               <arguments>
@@ -194,7 +194,7 @@
             <goals>
               <goal>java</goal>
             </goals>
-            <phase>verify</phase>
+            <phase>package</phase>
             <configuration>
               <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
               <arguments>
@@ -217,7 +217,7 @@
             <goals>
               <goal>attach-artifact</goal>
             </goals>
-            <phase>verify</phase>
+            <phase>package</phase>
             <configuration>
               <artifacts>
                 <artifact>
