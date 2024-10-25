@@ -43,6 +43,8 @@ props.${foreach.count}.defaultValue = ${key.defaultValue}
 #if( !${key.since.empty} )
 props.${foreach.count}.since = ${key.since}
 #end
+#if(${key.supportRepoIdSuffix})
 props.${foreach.count}.supportRepoIdSuffix = ${key.supportRepoIdSuffix}
+#end
 props.${foreach.count}.configurationSource = ${key.configurationSource}
 #end

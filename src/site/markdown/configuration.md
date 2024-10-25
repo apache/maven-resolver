@@ -22,7 +22,6 @@ under the License.
 
 
 
-
 | No | Key | Type | Description | Default Value | Since | Supports Repo ID suffix | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1. | `"aether.artifactResolver.postProcessor.trustedChecksums"` | `Boolean` | Is post processor enabled. |  `false`  | 1.9.0 |  No  | Session Configuration |

@@ -33,7 +33,6 @@
 
   <properties>
     <javaVersion>17</javaVersion>
-    <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
 
   <dependencies>
@@ -41,68 +40,84 @@
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-spi</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-util</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-impl</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-named-locks</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-named-locks-hazelcast</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-named-locks-redisson</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-connector-basic</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-apache</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-classpath</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-file</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-jdk</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-jetty</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-wagon</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-generator-gnupg</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-generator-sigstore</artifactId>
+      <scope>provided</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.jboss.forge.roaster</groupId>
       <artifactId>roaster-api</artifactId>
@@ -114,21 +129,39 @@
       <version>2.29.0.Final</version>
     </dependency>
     <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>9.7.1</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity-engine-core</artifactId>
       <version>2.4.1</version>
     </dependency>
-
-    <!-- Not needed during compile -->
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli</artifactId>
+      <version>4.7.6</version>
+    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <scope>runtime</scope>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
+
+    <!-- Not needed during compile -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>3.17.0</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
       <scope>runtime</scope>
     </dependency>
   </dependencies>
@@ -149,10 +182,26 @@
             <configuration>
               <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
               <arguments>
+                <argument>--mode=resolver</argument>
+                <argument>--templates=configuration.md</argument>
                 <argument>${basedir}/..</argument>
-                <argument>${basedir}/../src/site/markdown/configuration.md</argument>
-                <argument>${basedir}/target/maven-resolver.properties</argument>
-                <argument>${basedir}/target/maven-resolver.yaml</argument>
+                <argument>${basedir}/../src/site/markdown/</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>render-configuration-artifacts</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
+              <arguments>
+                <argument>--mode=resolver</argument>
+                <argument>--templates=configuration.properties,configuration.yaml</argument>
+                <argument>${basedir}/..</argument>
+                <argument>${basedir}/target/</argument>
               </arguments>
             </configuration>
           </execution>
@@ -164,7 +213,7 @@
         <version>3.6.0</version>
         <executions>
           <execution>
-            <id>attach</id>
+            <id>attach-configuration-artifacts</id>
             <goals>
               <goal>attach-artifact</goal>
             </goals>
@@ -173,11 +222,11 @@
               <artifacts>
                 <artifact>
                   <type>properties</type>
-                  <file>${basedir}/target/maven-resolver.properties</file>
+                  <file>${basedir}/target/configuration.properties</file>
                 </artifact>
                 <artifact>
                   <type>yaml</type>
-                  <file>${basedir}/target/maven-resolver.yaml</file>
+                  <file>${basedir}/target/configuration.yaml</file>
                 </artifact>
               </artifacts>
             </configuration>
