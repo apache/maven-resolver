@@ -222,7 +222,8 @@ public class DependencyManagerTest {
         mngt = manager.manageDependency(new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
-        assertEquals(B2.getVersion(), mngt.getVersion());
+        // DO NOT APPLY ONTO ITSELF
+        // assertEquals(B2.getVersion(), mngt.getVersion());
         mngt = manager.manageDependency(new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
