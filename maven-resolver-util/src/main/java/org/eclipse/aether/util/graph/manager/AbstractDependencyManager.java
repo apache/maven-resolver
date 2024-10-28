@@ -249,7 +249,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             }
 
             // optional is not managed by model builder
-            // if rule exists, apply it
+            // apply only rules coming from "higher" levels
             Holder<Boolean> optional = managedOptionals.get(key);
             if (optional != null && isApplicable(optional)) {
                 if (management == null) {
