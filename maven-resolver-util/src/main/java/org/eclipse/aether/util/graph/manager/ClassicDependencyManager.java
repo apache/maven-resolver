@@ -31,6 +31,8 @@ import org.eclipse.aether.scope.SystemDependencyScope;
  * A dependency manager that mimics the way Maven 2.x works. This manager was used throughout all Maven 3.x versions.
  * <p>
  * This manager has {@code deriveUntil=2} and {@code applyFrom=2}.
+ * <p>
+ * Note regarding transitivity: it is broken, and should not be used.
  */
 public final class ClassicDependencyManager extends AbstractDependencyManager {
     /**
