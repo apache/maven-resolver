@@ -31,6 +31,8 @@ import org.eclipse.aether.scope.SystemDependencyScope;
  * A dependency manager that mimics the way Maven 2.x works. This manager was used throughout all Maven 3.x versions.
  * <p>
  * This manager has {@code deriveUntil=2} and {@code applyFrom=2}.
+ * <p>
+ * Note regarding transitivity: it is broken, and should not be used.
  */
 public final class ClassicDependencyManager extends AbstractDependencyManager {
     /**
@@ -65,13 +67,12 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
             int depth,
             int deriveUntil,
             int applyFrom,
-            Map<Object, String> managedVersions,
-            Map<Object, String> managedScopes,
-            Map<Object, Boolean> managedOptionals,
-            Map<Object, String> managedLocalPaths,
-            Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemDependencyScope systemDependencyScope,
-            DependencyCollectionContext currentContext) {
+            Map<Object, Holder<String>> managedVersions,
+            Map<Object, Holder<String>> managedScopes,
+            Map<Object, Holder<Boolean>> managedOptionals,
+            Map<Object, Holder<String>> managedLocalPaths,
+            Map<Object, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
+            SystemDependencyScope systemDependencyScope) {
         super(
                 depth,
                 deriveUntil,
@@ -81,8 +82,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemDependencyScope,
-                currentContext);
+                systemDependencyScope);
     }
 
     @Override
@@ -91,25 +91,18 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
         // Removing this IF makes one IT fail here (read comment above):
         // https://github.com/apache/maven-integration-testing/blob/b4e8fd52b99a058336f9c7c5ec44fdbc1427759c/core-it-suite/src/test/java/org/apache/maven/it/MavenITmng4720DependencyManagementExclusionMergeTest.java#L67
         if (depth == 1) {
-            return newInstance(
-                    managedVersions,
-                    managedScopes,
-                    managedOptionals,
-                    managedLocalPaths,
-                    managedExclusions,
-                    currentContext);
+            return newInstance(managedVersions, managedScopes, managedOptionals, managedLocalPaths, managedExclusions);
         }
         return super.deriveChildManager(context);
     }
 
     @Override
     protected DependencyManager newInstance(
-            Map<Object, String> managedVersions,
-            Map<Object, String> managedScopes,
-            Map<Object, Boolean> managedOptionals,
-            Map<Object, String> managedLocalPaths,
-            Map<Object, Collection<Exclusion>> managedExclusions,
-            DependencyCollectionContext currentContext) {
+            Map<Object, Holder<String>> managedVersions,
+            Map<Object, Holder<String>> managedScopes,
+            Map<Object, Holder<Boolean>> managedOptionals,
+            Map<Object, Holder<String>> managedLocalPaths,
+            Map<Object, Collection<Holder<Collection<Exclusion>>>> managedExclusions) {
         return new ClassicDependencyManager(
                 depth + 1,
                 deriveUntil,
@@ -119,7 +112,6 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemDependencyScope,
-                currentContext);
+                systemDependencyScope);
     }
 }

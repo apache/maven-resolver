@@ -21,7 +21,6 @@ package org.eclipse.aether.util.graph.manager;
 import java.util.Collection;
 import java.util.Map;
 
-import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.scope.ScopeManager;
@@ -56,13 +55,12 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
             int depth,
             int deriveUntil,
             int applyFrom,
-            Map<Object, String> managedVersions,
-            Map<Object, String> managedScopes,
-            Map<Object, Boolean> managedOptionals,
-            Map<Object, String> managedLocalPaths,
-            Map<Object, Collection<Exclusion>> managedExclusions,
-            SystemDependencyScope systemDependencyScope,
-            DependencyCollectionContext currentContext) {
+            Map<Object, Holder<String>> managedVersions,
+            Map<Object, Holder<String>> managedScopes,
+            Map<Object, Holder<Boolean>> managedOptionals,
+            Map<Object, Holder<String>> managedLocalPaths,
+            Map<Object, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
+            SystemDependencyScope systemDependencyScope) {
         super(
                 depth,
                 deriveUntil,
@@ -72,18 +70,16 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemDependencyScope,
-                currentContext);
+                systemDependencyScope);
     }
 
     @Override
     protected DependencyManager newInstance(
-            Map<Object, String> managedVersions,
-            Map<Object, String> managedScopes,
-            Map<Object, Boolean> managedOptionals,
-            Map<Object, String> managedLocalPaths,
-            Map<Object, Collection<Exclusion>> managedExclusions,
-            DependencyCollectionContext currentContext) {
+            Map<Object, Holder<String>> managedVersions,
+            Map<Object, Holder<String>> managedScopes,
+            Map<Object, Holder<Boolean>> managedOptionals,
+            Map<Object, Holder<String>> managedLocalPaths,
+            Map<Object, Collection<Holder<Collection<Exclusion>>>> managedExclusions) {
         return new TransitiveDependencyManager(
                 depth + 1,
                 deriveUntil,
@@ -93,7 +89,6 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 managedOptionals,
                 managedLocalPaths,
                 managedExclusions,
-                systemDependencyScope,
-                currentContext);
+                systemDependencyScope);
     }
 }
