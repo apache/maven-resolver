@@ -47,11 +47,12 @@ import static java.util.Objects.requireNonNull;
  * en-route collected ones are carefully applied to proper descendants only, to not override work done by model
  * builder already.
  * <p>
- * Details: Model builder handles version and scope from own dependency management (think "effective POM"). On the other
- * hand it does not handle optional, system paths and exclusions (exclusions are additional information not effective
- * or applied in same POM). Hence, this implementation makes sure, that version and scope are not applied onto same
- * node that actually provided the rules. It achieves this goal by tracking "depth" for each collected rule and ignoring
- * rules coming from same depth as processed dependency node is.
+ * Details: Model builder handles version, scope from own dependency management (think "effective POM"). On the other
+ * hand it does not handle optional for example. System paths are aligned across whole graph, making sure there is
+ * same system path used by same dependency. Finally, exclusions (exclusions are additional information not effective
+ * or applied in same POM) are always applied. This implementation makes sure, that version and scope are not applied
+ * onto same node that actually provided the rules, to no override work that ModelBuilder did. It achieves this goal
+ * by tracking "depth" for each collected rule and ignoring rules coming from same depth as processed dependency node is.
  *
  * @since 2.0.0
  */
@@ -232,7 +233,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             }
 
             // system scope paths always applied to have them aligned
-            // (same artifact > same path) in whole graph
+            // (same artifact == same path) in whole graph
             if (systemDependencyScope != null
                     && (scope != null && systemDependencyScope.is(scope.getValue())
                             || (scope == null && systemDependencyScope.is(dependency.getScope())))) {
@@ -262,6 +263,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // exclusions affect only downstream
         // this will not "exclude" own dependency,
         // is just added as additional information
+        // ModelBuilder does not merge exclusions (only applies if dependency does not have exclusion)
+        // so we merge it here even from same level
         Collection<Holder<Collection<Exclusion>>> exclusions = managedExclusions.get(key);
         if (exclusions != null) {
             if (management == null) {
