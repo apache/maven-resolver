@@ -167,4 +167,5 @@ From | To | With
 ## Set Configuration from Apache Maven
 
 To set one of the configuration options from above just use system variables. As system variables only support String values the type conversion mentioned above needs to be leveraged.
-Sometimes Maven uses different default values than the Maven Resolver itself or tries to extract certain values from the `settings.xml`. For details refer to [`DefaultRepositorySystemSessionFactory`](https://github.com/apache/maven/blob/8005826df75c09ed530c31d636206309f5fab13b/impl/maven-core/src/main/java/org/apache/maven/internal/aether/DefaultRepositorySystemSessionFactory.java).
+Sometimes Maven uses different default values than the Maven Resolver itself or tries to extract certain values from the `settings.xml`. For details refer to [`DefaultRepositorySystemSessionFactory`](https://github.com/apache/maven/blob/master/impl/maven-core/src/main/java/org/apache/maven/internal/aether/DefaultRepositorySystemSessionFactory.java).
+
