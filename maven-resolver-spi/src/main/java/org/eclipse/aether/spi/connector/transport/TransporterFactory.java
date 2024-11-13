@@ -40,6 +40,7 @@ public interface TransporterFactory {
      * @param repository The remote repository to create a transporter for, must not be {@code null}.
      * @return The transporter for the given repository, never {@code null}.
      * @throws NoTransporterException If the factory cannot create a transporter for the specified remote repository.
+     * @throws RuntimeException If the factory could create a transporter for the specified remote repository but fails so (ie invalid configuration).
      */
     Transporter newInstance(RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException;
 

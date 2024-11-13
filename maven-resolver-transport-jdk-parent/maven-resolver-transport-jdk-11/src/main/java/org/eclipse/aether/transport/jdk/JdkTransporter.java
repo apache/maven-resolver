@@ -228,11 +228,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 CONFIG_PROP_MAX_CONCURRENT_REQUESTS));
 
         this.headers = headers;
-        try {
-            this.client = createClient(session, repository, insecure);
-        } catch (Exception e) {
-            throw new NoTransporterException(repository, e);
-        }
+        this.client = createClient(session, repository, insecure);
     }
 
     private URI resolve(TransportTask task) {
@@ -431,7 +427,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     }
 
     private HttpClient createClient(RepositorySystemSession session, RemoteRepository repository, boolean insecure)
-            throws Exception {
+            throws RuntimeException {
 
         HashMap<Authenticator.RequestorType, PasswordAuthentication> authentications = new HashMap<>();
         SSLContext sslContext = null;
@@ -449,35 +445,43 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
 
         if (sslContext == null) {
-            if (insecure) {
-                sslContext = SSLContext.getInstance("TLS");
-                X509ExtendedTrustManager tm = new X509ExtendedTrustManager() {
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+            try {
+                if (insecure) {
+                    sslContext = SSLContext.getInstance("TLS");
+                    X509ExtendedTrustManager tm = new X509ExtendedTrustManager() {
+                        @Override
+                        public void checkClientTrusted(X509Certificate[] chain, String authType) {}
 
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] chain, String authType) {}
 
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) {}
+                        @Override
+                        public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) {}
 
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) {}
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) {}
 
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {}
+                        @Override
+                        public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {}
 
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {}
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {}
 
-                    @Override
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                };
-                sslContext.init(null, new X509TrustManager[] {tm}, null);
-            } else {
-                sslContext = SSLContext.getDefault();
+                        @Override
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return null;
+                        }
+                    };
+                    sslContext.init(null, new X509TrustManager[] {tm}, null);
+                } else {
+                    sslContext = SSLContext.getDefault();
+                }
+            } catch (Exception e) {
+                if (e instanceof RuntimeException) {
+                    throw (RuntimeException) e;
+                } else {
+                    throw new IllegalStateException("SSL Context setup failure", e);
+                }
             }
         }
 

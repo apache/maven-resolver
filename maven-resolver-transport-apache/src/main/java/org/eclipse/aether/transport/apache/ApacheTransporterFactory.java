@@ -73,6 +73,10 @@ public final class ApacheTransporterFactory implements HttpTransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
+        if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
+            throw new NoTransporterException(repository);
+        }
+
         return new ApacheTransporter(repository, session, checksumExtractor, pathProcessor);
     }
 }

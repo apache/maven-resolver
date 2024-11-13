@@ -157,9 +157,6 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             ChecksumExtractor checksumExtractor,
             PathProcessor pathProcessor)
             throws NoTransporterException {
-        if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
-            throw new NoTransporterException(repository);
-        }
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
