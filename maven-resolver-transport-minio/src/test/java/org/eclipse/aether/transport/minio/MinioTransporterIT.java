@@ -125,6 +125,8 @@ class MinioTransporterIT {
             new MinioTransporter(session, newRepo(RepositoryAuth.WITHOUT), objectNameMapperFactory);
             fail("Should throw");
         } catch (NoTransporterException e) {
+            fail("Should not throw this");
+        } catch (IllegalStateException e) {
             assertTrue(e.getMessage().contains("No accessKey and/or secretKey provided"));
         }
     }
