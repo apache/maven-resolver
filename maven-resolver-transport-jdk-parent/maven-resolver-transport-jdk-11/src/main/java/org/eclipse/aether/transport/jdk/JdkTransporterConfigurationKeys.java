@@ -42,7 +42,7 @@ public final class JdkTransporterConfigurationKeys {
      */
     public static final String CONFIG_PROP_HTTP_VERSION = CONFIG_PROPS_PREFIX + "httpVersion";
 
-    public static final String DEFAULT_HTTP_VERSION = "HTTP_2";
+    public static final String DEFAULT_HTTP_VERSION = "HTTP_1_1";
 
     /**
      * The hard limit of maximum concurrent requests JDK transport can do. This is a workaround for the fact, that in
