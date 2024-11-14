@@ -50,6 +50,7 @@ public final class FileTransporterFactory implements TransporterFactory {
         // enables default constructor
     }
 
+    @Override
     public float getPriority() {
         return priority;
     }
@@ -65,11 +66,14 @@ public final class FileTransporterFactory implements TransporterFactory {
         return this;
     }
 
+    @Override
     public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
+        // special case in file transport: to support custom FS providers (like JIMFS), we cannot
+        // cover "all possible protocols" to throw NoTransporterEx, but we rely on FS rejecting the URI
         FileTransporter.FileOp fileOp = FileTransporter.FileOp.COPY;
         String repositoryUrl = repository.getUrl();
         if (repositoryUrl.startsWith("symlink+")) {

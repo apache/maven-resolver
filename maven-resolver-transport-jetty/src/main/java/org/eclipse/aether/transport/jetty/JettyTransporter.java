@@ -204,11 +204,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
         this.basicServerAuthenticationResult = new AtomicReference<>(null);
         this.basicProxyAuthenticationResult = new AtomicReference<>(null);
-        try {
-            this.client = createClient();
-        } catch (Exception e) {
-            throw new NoTransporterException(repository, e);
-        }
+        this.client = createClient();
     }
 
     private void mayApplyPreemptiveAuth(Request request) {
@@ -419,7 +415,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
     }
 
     @SuppressWarnings("checkstyle:methodlength")
-    private HttpClient createClient() throws Exception {
+    private HttpClient createClient() throws RuntimeException {
         BasicAuthentication.BasicResult serverAuth = null;
         BasicAuthentication.BasicResult proxyAuth = null;
         SSLContext sslContext = null;
@@ -440,23 +436,31 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
 
         if (sslContext == null) {
-            if (insecure) {
-                sslContext = SSLContext.getInstance("TLS");
-                X509TrustManager tm = new X509TrustManager() {
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+            try {
+                if (insecure) {
+                    sslContext = SSLContext.getInstance("TLS");
+                    X509TrustManager tm = new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(X509Certificate[] chain, String authType) {}
 
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] chain, String authType) {}
 
-                    @Override
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return new X509Certificate[0];
-                    }
-                };
-                sslContext.init(null, new X509TrustManager[] {tm}, null);
-            } else {
-                sslContext = SSLContext.getDefault();
+                        @Override
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[0];
+                        }
+                    };
+                    sslContext.init(null, new X509TrustManager[] {tm}, null);
+                } else {
+                    sslContext = SSLContext.getDefault();
+                }
+            } catch (Exception e) {
+                if (e instanceof RuntimeException) {
+                    throw (RuntimeException) e;
+                } else {
+                    throw new IllegalStateException("SSL Context setup failure", e);
+                }
             }
         }
 
@@ -528,7 +532,15 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             this.basicProxyAuthenticationResult.set(proxyAuth);
         }
 
-        httpClient.start();
-        return httpClient;
+        try {
+            httpClient.start();
+            return httpClient;
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new IllegalStateException("Jetty client start failure", e);
+            }
+        }
     }
 }

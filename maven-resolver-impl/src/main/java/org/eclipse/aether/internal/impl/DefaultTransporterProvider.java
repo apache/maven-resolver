@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
@@ -74,18 +76,33 @@ public final class DefaultTransporterProvider implements TransporterProvider {
                     Utils.appendClassLoader(buffer, transporter);
                     buffer.append(" with priority ").append(factory.getPriority());
                     buffer.append(" for ").append(repository.getUrl());
+
+                    Authentication auth = repository.getAuthentication();
+                    if (auth != null) {
+                        buffer.append(" with ").append(auth);
+                    }
+
+                    Proxy proxy = repository.getProxy();
+                    if (proxy != null) {
+                        buffer.append(" via ")
+                                .append(proxy.getHost())
+                                .append(':')
+                                .append(proxy.getPort());
+
+                        auth = proxy.getAuthentication();
+                        if (auth != null) {
+                            buffer.append(" with ").append(auth);
+                        }
+                    }
+
                     LOGGER.debug(buffer.toString());
                 }
 
                 return transporter;
             } catch (NoTransporterException e) {
                 // continue and try next factory
-                errors.add(e);
-            }
-        }
-        if (LOGGER.isDebugEnabled() && errors.size() > 1) {
-            for (Exception e : errors) {
                 LOGGER.debug("Could not obtain transporter factory for {}", repository, e);
+                errors.add(e);
             }
         }
 
@@ -98,6 +115,13 @@ public final class DefaultTransporterProvider implements TransporterProvider {
             factories.list(buffer);
         }
 
-        throw new NoTransporterException(repository, buffer.toString(), errors.size() == 1 ? errors.get(0) : null);
+        // create exception: if one error, make it cause
+        NoTransporterException ex =
+                new NoTransporterException(repository, buffer.toString(), errors.size() == 1 ? errors.get(0) : null);
+        // if more errors, make them all suppressed
+        if (errors.size() > 1) {
+            errors.forEach(ex::addSuppressed);
+        }
+        throw ex;
     }
 }

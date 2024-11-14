@@ -31,8 +31,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.internal.impl.filter.FilteringRepositoryConnector;
-import org.eclipse.aether.repository.Authentication;
-import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
@@ -93,25 +91,6 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
                     Utils.appendClassLoader(buffer, connector);
                     buffer.append(" with priority ").append(factory.getPriority());
                     buffer.append(" for ").append(repository.getUrl());
-
-                    Authentication auth = repository.getAuthentication();
-                    if (auth != null) {
-                        buffer.append(" with ").append(auth);
-                    }
-
-                    Proxy proxy = repository.getProxy();
-                    if (proxy != null) {
-                        buffer.append(" via ")
-                                .append(proxy.getHost())
-                                .append(':')
-                                .append(proxy.getPort());
-
-                        auth = proxy.getAuthentication();
-                        if (auth != null) {
-                            buffer.append(" with ").append(auth);
-                        }
-                    }
-
                     LOGGER.debug(buffer.toString());
                 }
 
@@ -122,12 +101,8 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
                 }
             } catch (NoRepositoryConnectorException e) {
                 // continue and try next factory
-                errors.add(e);
-            }
-        }
-        if (LOGGER.isDebugEnabled() && errors.size() > 1) {
-            for (Exception e : errors) {
                 LOGGER.debug("Could not obtain connector factory for {}", repository, e);
+                errors.add(e);
             }
         }
 
@@ -141,7 +116,13 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
             factories.list(buffer);
         }
 
-        throw new NoRepositoryConnectorException(
+        // create exception: if one error, make it cause
+        NoRepositoryConnectorException ex = new NoRepositoryConnectorException(
                 repository, buffer.toString(), errors.size() == 1 ? errors.get(0) : null);
+        // if more errors, make them all suppressed
+        if (errors.size() > 1) {
+            errors.forEach(ex::addSuppressed);
+        }
+        throw ex;
     }
 }

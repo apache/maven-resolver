@@ -43,10 +43,6 @@ final class ClasspathTransporter extends AbstractTransporter {
     private final ClassLoader classLoader;
 
     ClasspathTransporter(RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException {
-        if (!"classpath".equalsIgnoreCase(repository.getProtocol())) {
-            throw new NoTransporterException(repository);
-        }
-
         String base;
         try {
             URI uri = new URI(repository.getUrl());

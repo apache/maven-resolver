@@ -69,7 +69,7 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
         requireNonNull(repository, "repository cannot be null");
 
         if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
-            throw new NoTransporterException(repository, "Only HTTP/HTTPS is supported");
+            throw new NoTransporterException(repository);
         }
 
         return new JdkTransporter(session, repository, javaVersion(), checksumExtractor, pathProcessor);

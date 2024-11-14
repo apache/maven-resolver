@@ -82,15 +82,19 @@ public final class MinioTransporterFactory implements TransporterFactory {
                     .setUrl(repository.getUrl().substring("s3+".length()))
                     .build();
         } else if (priority == DEFAULT_PRIORITY) {
-            throw new NoTransporterException(repository);
+            throw new NoTransporterException(
+                    repository,
+                    "To use Minio transport with plain HTTP/HTTPS repositories, increase the Minio transport priority");
         }
         String objectNameMapperConf = ConfigUtils.getString(
                 session,
                 MinioTransporterConfigurationKeys.DEFAULT_OBJECT_NAME_MAPPER,
+                MinioTransporterConfigurationKeys.CONFIG_PROP_OBJECT_NAME_MAPPER + "." + repository.getId(),
                 MinioTransporterConfigurationKeys.CONFIG_PROP_OBJECT_NAME_MAPPER);
         ObjectNameMapperFactory objectNameMapperFactory = objectNameMapperFactories.get(objectNameMapperConf);
         if (objectNameMapperFactory == null) {
-            throw new NoTransporterException(repository, "Unknown object name mapper: " + objectNameMapperConf);
+            throw new IllegalArgumentException("Unknown object name mapper configured '" + objectNameMapperConf
+                    + "' for repository " + repository.getId());
         }
         return new MinioTransporter(session, adjusted, objectNameMapperFactory);
     }

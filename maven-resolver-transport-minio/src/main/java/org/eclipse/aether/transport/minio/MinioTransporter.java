@@ -111,18 +111,15 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
             }
         }
         if (username == null || password == null) {
-            throw new NoTransporterException(repository, "No accessKey and/or secretKey provided");
+            throw new IllegalStateException(
+                    "Minio transport: No accessKey and/or secretKey provided for repository " + repository.getId());
         }
 
         Provider credentialsProvider = new StaticProvider(username, password, null);
-        try {
-            this.client = MinioClient.builder()
-                    .endpoint(repository.getUrl())
-                    .credentialsProvider(credentialsProvider)
-                    .build();
-        } catch (Exception e) {
-            throw new NoTransporterException(repository, e);
-        }
+        this.client = MinioClient.builder()
+                .endpoint(repository.getUrl())
+                .credentialsProvider(credentialsProvider)
+                .build();
         this.objectNameMapper = objectNameMapperFactory.create(session, repository, client, headers);
     }
 

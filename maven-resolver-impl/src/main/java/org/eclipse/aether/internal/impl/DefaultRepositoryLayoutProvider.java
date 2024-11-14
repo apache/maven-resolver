@@ -68,12 +68,8 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
                 return factory.getComponent().newInstance(session, repository);
             } catch (NoRepositoryLayoutException e) {
                 // continue and try next factory
-                errors.add(e);
-            }
-        }
-        if (LOGGER.isDebugEnabled() && errors.size() > 1) {
-            for (Exception e : errors) {
                 LOGGER.debug("Could not obtain layout factory for {}", repository, e);
+                errors.add(e);
             }
         }
 
@@ -87,6 +83,13 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
             factories.list(buffer);
         }
 
-        throw new NoRepositoryLayoutException(repository, buffer.toString(), errors.size() == 1 ? errors.get(0) : null);
+        // create exception: if one error, make it cause
+        NoRepositoryLayoutException ex = new NoRepositoryLayoutException(
+                repository, buffer.toString(), errors.size() == 1 ? errors.get(0) : null);
+        // if more errors, make them all suppressed
+        if (errors.size() > 1) {
+            errors.forEach(ex::addSuppressed);
+        }
+        throw ex;
     }
 }

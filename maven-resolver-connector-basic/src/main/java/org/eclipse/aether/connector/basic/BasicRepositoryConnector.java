@@ -58,7 +58,6 @@ import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
-import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.ConfigUtils;
@@ -130,7 +129,10 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         }
         try {
             transporter = transporterProvider.newTransporter(session, repository);
-        } catch (NoTransporterException e) {
+        } catch (RuntimeException e) {
+            throw new NoRepositoryConnectorException(
+                    repository, "Transporter configuration issue: " + e.getMessage(), e);
+        } catch (Exception e) {
             throw new NoRepositoryConnectorException(repository, e.getMessage(), e);
         }
         this.checksumPolicyProvider = checksumPolicyProvider;
