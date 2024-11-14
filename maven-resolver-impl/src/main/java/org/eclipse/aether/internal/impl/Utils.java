@@ -48,7 +48,8 @@ public final class Utils {
 
     private static PrioritizedComponents<ArtifactDecoratorFactory> sortArtifactDecoratorFactories(
             RepositorySystemSession session, Map<String, ArtifactDecoratorFactory> factories) {
-        return PrioritizedComponents.reuseOrCreate(session, factories, ArtifactDecoratorFactory::getPriority);
+        return PrioritizedComponents.reuseOrCreate(
+                session, ArtifactDecoratorFactory.class, factories, ArtifactDecoratorFactory::getPriority);
     }
 
     public static List<? extends ArtifactDecorator> getArtifactDecorators(
@@ -67,7 +68,8 @@ public final class Utils {
 
     private static PrioritizedComponents<ArtifactGeneratorFactory> sortArtifactGeneratorFactories(
             RepositorySystemSession session, Map<String, ArtifactGeneratorFactory> factories) {
-        return PrioritizedComponents.reuseOrCreate(session, factories, ArtifactGeneratorFactory::getPriority);
+        return PrioritizedComponents.reuseOrCreate(
+                session, ArtifactGeneratorFactory.class, factories, ArtifactGeneratorFactory::getPriority);
     }
 
     private static List<? extends ArtifactGenerator> doGetArtifactGenerators(
@@ -107,7 +109,8 @@ public final class Utils {
 
     private static PrioritizedComponents<MetadataGeneratorFactory> sortMetadataGeneratorFactories(
             RepositorySystemSession session, Map<String, MetadataGeneratorFactory> factories) {
-        return PrioritizedComponents.reuseOrCreate(session, factories, MetadataGeneratorFactory::getPriority);
+        return PrioritizedComponents.reuseOrCreate(
+                session, MetadataGeneratorFactory.class, factories, MetadataGeneratorFactory::getPriority);
     }
 
     private static List<? extends MetadataGenerator> doGetMetadataGenerators(

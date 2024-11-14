@@ -60,7 +60,10 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider {
         requireNonNull(repository, "repository cannot be null");
 
         PrioritizedComponents<LocalRepositoryManagerFactory> factories = PrioritizedComponents.reuseOrCreate(
-                session, localRepositoryManagerFactories, LocalRepositoryManagerFactory::getPriority);
+                session,
+                LocalRepositoryManagerFactory.class,
+                localRepositoryManagerFactories,
+                LocalRepositoryManagerFactory::getPriority);
 
         List<NoLocalRepositoryManagerException> errors = new ArrayList<>();
         for (PrioritizedComponent<LocalRepositoryManagerFactory> factory : factories.getEnabled()) {
