@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
@@ -74,6 +76,25 @@ public final class DefaultTransporterProvider implements TransporterProvider {
                     Utils.appendClassLoader(buffer, transporter);
                     buffer.append(" with priority ").append(factory.getPriority());
                     buffer.append(" for ").append(repository.getUrl());
+
+                    Authentication auth = repository.getAuthentication();
+                    if (auth != null) {
+                        buffer.append(" with ").append(auth);
+                    }
+
+                    Proxy proxy = repository.getProxy();
+                    if (proxy != null) {
+                        buffer.append(" via ")
+                                .append(proxy.getHost())
+                                .append(':')
+                                .append(proxy.getPort());
+
+                        auth = proxy.getAuthentication();
+                        if (auth != null) {
+                            buffer.append(" with ").append(auth);
+                        }
+                    }
+
                     LOGGER.debug(buffer.toString());
                 }
 
