@@ -129,6 +129,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         }
         try {
             transporter = transporterProvider.newTransporter(session, repository);
+        } catch (RuntimeException e) {
+            throw new NoRepositoryConnectorException(repository, "Transporter configuration issue: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new NoRepositoryConnectorException(repository, e.getMessage(), e);
         }
