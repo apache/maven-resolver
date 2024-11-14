@@ -581,6 +581,7 @@ public class HttpTransporterTest {
     protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {
         // here we use alternate server-store-selfigned key (as the key set it static initializer is probably already
         // used to init SSLContext/SSLSocketFactory/etc
+        enableHttp2Protocol();
         session.setConfigProperty(
                 ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
         httpServer.addSelfSignedSslConnectorHttp2Only();
@@ -595,6 +596,8 @@ public class HttpTransporterTest {
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
     }
+
+    protected void enableHttp2Protocol() {}
 
     @Test
     protected void testGet_Redirect() throws Exception {
