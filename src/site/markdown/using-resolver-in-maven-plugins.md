@@ -36,14 +36,14 @@ POM:
       <!-- required in all cases -->
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
-      <version>1.9.20</version>
+      <version>1.9.22</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <!-- optional helpers, might be superfluous depending on your use case -->
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-util</artifactId>
-      <version>1.9.20</version>
+      <version>1.9.22</version>
       <!-- Scope: use compile to make plugin work in Maven 3.8 and earlier -->
       <scope>compile</scope>
     </dependency>
@@ -58,7 +58,7 @@ enforced by the Maven core, just like other Maven APIs. So be sure to
 compile/test your plugin against the version of `maven-resolver-api` that is
 used by the minimum version of Maven that your plugin wants to support.
 
-Next, in your mojo source, you would need to grab the repository related
+Next, in your mojo source, you need to grab the repository related
 components and parameters:
 
 ```java
@@ -71,7 +71,7 @@ public class MyMojo extends AbstractMojo
 {
 
     /**
-     * The entry point to resolver (fka. Aether), i.e. the component doing all the work.
+     * The entry point to resolver (a.k.a. Aether), i.e. the component doing all the work.
      */
     @Component
     private RepositorySystem repoSystem;
