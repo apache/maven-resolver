@@ -52,6 +52,7 @@ import org.eclipse.aether.repository.LocalMetadataRegistration;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
+import org.eclipse.aether.spi.artifact.transformer.ArtifactTransformer;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.slf4j.Logger;
@@ -74,6 +75,8 @@ public class DefaultInstaller implements Installer {
 
     private final Map<String, MetadataGeneratorFactory> metadataFactories;
 
+    private final Map<String, ArtifactTransformer> artifactTransformers;
+
     private final SyncContextFactory syncContextFactory;
 
     @Inject
@@ -82,12 +85,14 @@ public class DefaultInstaller implements Installer {
             RepositoryEventDispatcher repositoryEventDispatcher,
             Map<String, ArtifactGeneratorFactory> artifactFactories,
             Map<String, MetadataGeneratorFactory> metadataFactories,
+            Map<String, ArtifactTransformer> artifactTransformers,
             SyncContextFactory syncContextFactory) {
         this.pathProcessor = requireNonNull(pathProcessor, "path processor cannot be null");
         this.repositoryEventDispatcher =
                 requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
         this.artifactFactories = Collections.unmodifiableMap(artifactFactories);
         this.metadataFactories = Collections.unmodifiableMap(metadataFactories);
+        this.artifactTransformers = Collections.unmodifiableMap(artifactTransformers);
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
     }
 
@@ -95,6 +100,9 @@ public class DefaultInstaller implements Installer {
     public InstallResult install(RepositorySystemSession session, InstallRequest request) throws InstallationException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(request, "request cannot be null");
+        for (ArtifactTransformer transformer : artifactTransformers.values()) {
+            request = transformer.transformInstallArtifacts(session, request);
+        }
         try (SyncContext syncContext = syncContextFactory.newInstance(session, false)) {
             return install(syncContext, session, request);
         }

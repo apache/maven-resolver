@@ -114,6 +114,7 @@ import org.eclipse.aether.named.providers.NoopNamedLockFactory;
 import org.eclipse.aether.spi.artifact.ArtifactPredicateFactory;
 import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
+import org.eclipse.aether.spi.artifact.transformer.ArtifactTransformer;
 import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
@@ -728,6 +729,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 getRepositoryEventDispatcher(),
                 getArtifactGeneratorFactories(),
                 getMetadataGeneratorFactories(),
+                getArtifactTransformers(),
                 getSyncContextFactory());
     }
 
@@ -750,6 +752,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 getUpdateCheckManager(),
                 getArtifactGeneratorFactories(),
                 getMetadataGeneratorFactories(),
+                getArtifactTransformers(),
                 getSyncContextFactory(),
                 getOfflineController());
     }
@@ -910,6 +913,20 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     // Maven provided
+
+    private Map<String, ArtifactTransformer> artifactTransformers;
+
+    public final Map<String, ArtifactTransformer> getArtifactTransformers() {
+        checkClosed();
+        if (artifactTransformers == null) {
+            artifactTransformers = createArtifactTransformers();
+        }
+        return artifactTransformers;
+    }
+
+    protected Map<String, ArtifactTransformer> createArtifactTransformers() {
+        return new HashMap<>();
+    }
 
     private Map<String, MetadataGeneratorFactory> metadataGeneratorFactories;
 

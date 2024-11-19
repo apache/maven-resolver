@@ -60,6 +60,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
+import org.eclipse.aether.spi.artifact.transformer.ArtifactTransformer;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.MetadataUpload;
@@ -99,6 +100,8 @@ public class DefaultDeployer implements Deployer {
 
     private final Map<String, MetadataGeneratorFactory> metadataFactories;
 
+    private final Map<String, ArtifactTransformer> artifactTransformers;
+
     private final SyncContextFactory syncContextFactory;
 
     private final OfflineController offlineController;
@@ -113,6 +116,7 @@ public class DefaultDeployer implements Deployer {
             UpdateCheckManager updateCheckManager,
             Map<String, ArtifactGeneratorFactory> artifactFactories,
             Map<String, MetadataGeneratorFactory> metadataFactories,
+            Map<String, ArtifactTransformer> artifactTransformers,
             SyncContextFactory syncContextFactory,
             OfflineController offlineController) {
         this.pathProcessor = requireNonNull(pathProcessor, "path processor cannot be null");
@@ -125,6 +129,7 @@ public class DefaultDeployer implements Deployer {
         this.updateCheckManager = requireNonNull(updateCheckManager, "update check manager cannot be null");
         this.artifactFactories = Collections.unmodifiableMap(artifactFactories);
         this.metadataFactories = Collections.unmodifiableMap(metadataFactories);
+        this.artifactTransformers = Collections.unmodifiableMap(artifactTransformers);
         this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
         this.offlineController = requireNonNull(offlineController, "offline controller cannot be null");
     }
@@ -142,6 +147,9 @@ public class DefaultDeployer implements Deployer {
                     e);
         }
 
+        for (ArtifactTransformer transformer : artifactTransformers.values()) {
+            request = transformer.transformDeployArtifacts(session, request);
+        }
         try (SyncContext syncContext = syncContextFactory.newInstance(session, true)) {
             return deploy(syncContext, session, request);
         }
