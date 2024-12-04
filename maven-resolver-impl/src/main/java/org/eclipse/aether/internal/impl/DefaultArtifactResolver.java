@@ -519,9 +519,8 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 download.setPath(item.local.getPath());
                 download.setExistenceCheck(true);
             } else {
-                String path =
-                        lrm.getPathForRemoteArtifact(artifact, group.repository, item.request.getRequestContext());
-                download.setPath(lrm.getRepository().getBasePath().resolve(path));
+                download.setPath(lrm.getAbsolutePathForRemoteArtifact(
+                        artifact, group.repository, item.request.getRequestContext()));
             }
 
             boolean snapshot = artifact.isSnapshot();
