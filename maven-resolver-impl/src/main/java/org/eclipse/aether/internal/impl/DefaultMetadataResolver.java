@@ -257,10 +257,8 @@ public class DefaultMetadataResolver implements MetadataResolver {
                         check.setItem(metadata);
 
                         // use 'main' installation file for the check (-> use requested repository)
-                        Path checkPath = session.getLocalRepository()
-                                .getBasePath()
-                                .resolve(session.getLocalRepositoryManager()
-                                        .getPathForRemoteMetadata(metadata, repository, request.getRequestContext()));
+                        Path checkPath = session.getLocalRepositoryManager()
+                                .getAbsolutePathForRemoteMetadata(metadata, repository, request.getRequestContext());
                         check.setPath(checkPath);
                         check.setRepository(repository);
                         check.setAuthoritativeRepository(repo);
@@ -283,11 +281,9 @@ public class DefaultMetadataResolver implements MetadataResolver {
                         RepositoryPolicy policy = getPolicy(session, repository, metadata.getNature());
 
                         // install path may be different from lookup path
-                        Path installPath = session.getLocalRepository()
-                                .getBasePath()
-                                .resolve(session.getLocalRepositoryManager()
-                                        .getPathForRemoteMetadata(
-                                                metadata, request.getRepository(), request.getRequestContext()));
+                        Path installPath = session.getLocalRepositoryManager()
+                                .getAbsolutePathForRemoteMetadata(
+                                        metadata, request.getRepository(), request.getRequestContext());
 
                         ResolveTask task = new ResolveTask(
                                 session, trace, result, installPath, checks, policy.getChecksumPolicy());

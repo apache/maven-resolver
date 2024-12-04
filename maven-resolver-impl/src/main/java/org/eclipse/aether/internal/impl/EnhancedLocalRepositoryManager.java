@@ -119,20 +119,17 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         Artifact artifact = request.getArtifact();
         LocalArtifactResult result = new LocalArtifactResult(request);
 
-        String path;
         Path filePath;
 
         // Local repository CANNOT have timestamped installed, they are created only during deploy
         if (Objects.equals(artifact.getVersion(), artifact.getBaseVersion())) {
-            path = getPathForLocalArtifact(artifact);
-            filePath = getRepository().getBasePath().resolve(path);
+            filePath = getAbsolutePathForLocalArtifact(artifact);
             checkFind(filePath, result);
         }
 
         if (!result.isAvailable()) {
             for (RemoteRepository repository : request.getRepositories()) {
-                path = getPathForRemoteArtifact(artifact, repository, request.getContext());
-                filePath = getRepository().getBasePath().resolve(path);
+                filePath = getAbsolutePathForRemoteArtifact(artifact, repository, request.getContext());
 
                 checkFind(filePath, result);
 
@@ -208,10 +205,9 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     private void addArtifact(
             Artifact artifact, Collection<String> repositories, RemoteRepository repository, String context) {
         requireNonNull(artifact, "artifact cannot be null");
-        String path = repository == null
-                ? getPathForLocalArtifact(artifact)
-                : getPathForRemoteArtifact(artifact, repository, context);
-        Path file = getRepository().getBasePath().resolve(path);
+        Path file = repository == null
+                ? getAbsolutePathForLocalArtifact(artifact)
+                : getAbsolutePathForRemoteArtifact(artifact, repository, context);
         addRepo(file, repositories);
     }
 
