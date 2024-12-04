@@ -48,7 +48,7 @@ public interface LocalRepositoryManager {
      * @since TBD
      */
     default Path getAbsolutePathForLocalArtifact(Artifact artifact) {
-        return getRepository().getBasePath().resolve(artifact.getArtifactId());
+        return getRepository().getBasePath().resolve(getPathForLocalArtifact(artifact));
     }
 
     /**
