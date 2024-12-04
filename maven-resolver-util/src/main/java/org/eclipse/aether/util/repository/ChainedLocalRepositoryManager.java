@@ -90,24 +90,32 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
         return head.getRepository();
     }
 
+    private LocalRepositoryManager getInstallTarget() {
+        return head;
+    }
+
+    private LocalRepositoryManager getCacheTarget() {
+        return head;
+    }
+
     @Override
     public String getPathForLocalArtifact(Artifact artifact) {
-        return head.getPathForLocalArtifact(artifact);
+        return getInstallTarget().getPathForLocalArtifact(artifact);
     }
 
     @Override
     public String getPathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
-        return head.getPathForRemoteArtifact(artifact, repository, context);
+        return getCacheTarget().getPathForRemoteArtifact(artifact, repository, context);
     }
 
     @Override
     public String getPathForLocalMetadata(Metadata metadata) {
-        return head.getPathForLocalMetadata(metadata);
+        return getInstallTarget().getPathForLocalMetadata(metadata);
     }
 
     @Override
     public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
-        return head.getPathForRemoteMetadata(metadata, repository, context);
+        return getCacheTarget().getPathForRemoteMetadata(metadata, repository, context);
     }
 
     @Override
@@ -134,15 +142,17 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
     @Override
     public void add(RepositorySystemSession session, LocalArtifactRegistration request) {
         String artifactPath;
+        LocalRepositoryManager target;
         if (request.getRepository() != null) {
             artifactPath = getPathForRemoteArtifact(request.getArtifact(), request.getRepository(), "check");
+            target = getCacheTarget();
         } else {
             artifactPath = getPathForLocalArtifact(request.getArtifact());
+            target = getInstallTarget();
         }
-
-        Path file = head.getRepository().getBasePath().resolve(artifactPath);
+        Path file = target.getRepository().getBasePath().resolve(artifactPath);
         if (Files.isRegularFile(file)) {
-            head.add(session, request);
+            target.add(session, request);
         }
     }
 
@@ -165,15 +175,18 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
     @Override
     public void add(RepositorySystemSession session, LocalMetadataRegistration request) {
         String metadataPath;
+        LocalRepositoryManager target;
         if (request.getRepository() != null) {
             metadataPath = getPathForRemoteMetadata(request.getMetadata(), request.getRepository(), "check");
+            target = getCacheTarget();
         } else {
             metadataPath = getPathForLocalMetadata(request.getMetadata());
+            target = getInstallTarget();
         }
 
-        Path file = head.getRepository().getBasePath().resolve(metadataPath);
+        Path file = target.getRepository().getBasePath().resolve(metadataPath);
         if (Files.isRegularFile(file)) {
-            head.add(session, request);
+            target.add(session, request);
         }
     }
 
