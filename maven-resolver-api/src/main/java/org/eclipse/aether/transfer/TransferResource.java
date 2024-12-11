@@ -233,7 +233,9 @@ public final class TransferResource {
      * Gets the timestamp when the transfer of this resource was started.
      *
      * @return The timestamp when the transfer of this resource was started.
+     * @deprecated use {@link #getStartTime()}
      */
+    @Deprecated
     public long getTransferStartTime() {
         return startTime.toEpochMilli();
     }
