@@ -20,6 +20,7 @@ package org.eclipse.aether.transfer;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.time.Instant;
 
 import org.eclipse.aether.RequestTrace;
 
@@ -38,7 +39,7 @@ public final class TransferResource {
 
     private final Path path;
 
-    private final long startTime;
+    private final Instant startTime;
 
     private final RequestTrace trace;
 
@@ -114,7 +115,7 @@ public final class TransferResource {
         this.path = path;
         this.resource = resource;
         this.trace = trace;
-        this.startTime = System.currentTimeMillis();
+        this.startTime = Instant.now();
     }
 
     /**
@@ -234,6 +235,15 @@ public final class TransferResource {
      * @return The timestamp when the transfer of this resource was started.
      */
     public long getTransferStartTime() {
+        return startTime.toEpochMilli();
+    }
+
+    /**
+     * Gets the timestamp when the transfer of this resource was started.
+     *
+     * @return The timestamp when the transfer of this resource was started.
+     */
+    public Instant getStartTime() {
         return startTime;
     }
 
