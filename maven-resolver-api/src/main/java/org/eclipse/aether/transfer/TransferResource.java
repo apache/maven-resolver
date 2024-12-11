@@ -21,7 +21,9 @@ package org.eclipse.aether.transfer;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.temporal.Temporal;
 
+import org.apache.maven.api.MonotonicTime;
 import org.eclipse.aether.RequestTrace;
 
 /**
@@ -39,7 +41,7 @@ public final class TransferResource {
 
     private final Path path;
 
-    private final Instant startTime;
+    private final MonotonicTime startTime;
 
     private final RequestTrace trace;
 
@@ -115,7 +117,7 @@ public final class TransferResource {
         this.path = path;
         this.resource = resource;
         this.trace = trace;
-        this.startTime = Instant.now();
+        this.startTime = MonotonicTime.now();
     }
 
     /**
@@ -237,7 +239,7 @@ public final class TransferResource {
      */
     @Deprecated
     public long getTransferStartTime() {
-        return startTime.toEpochMilli();
+        return startTime.getWallTime().toEpochMilli();
     }
 
     /**
@@ -245,7 +247,7 @@ public final class TransferResource {
      *
      * @return The timestamp when the transfer of this resource was started.
      */
-    public Instant getStartTime() {
+    public MonotonicTime getStartTime() {
         return startTime;
     }
 
