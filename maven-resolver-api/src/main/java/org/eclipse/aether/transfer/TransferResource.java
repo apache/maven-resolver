@@ -248,7 +248,7 @@ public final class TransferResource {
      */
     @Deprecated
     public long getTransferStartTime() {
-        return Instant.from(startTime).toEpochMilli();
+        return startTime.toEpochMilli();
     }
 
     /**
