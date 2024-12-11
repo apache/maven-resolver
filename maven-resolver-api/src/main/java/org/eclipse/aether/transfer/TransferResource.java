@@ -22,7 +22,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.temporal.Temporal;
 
 import org.eclipse.aether.RequestTrace;
 
@@ -43,7 +42,7 @@ public final class TransferResource {
 
     private final Path path;
 
-    private final Temporal startTime;
+    private final Instant startTime;
 
     private final RequestTrace trace;
 
@@ -257,7 +256,7 @@ public final class TransferResource {
      *
      * @return The timestamp when the transfer of this resource was started.
      */
-    public Temporal getStartTime() {
+    public Instant getStartTime() {
         return startTime;
     }
 
