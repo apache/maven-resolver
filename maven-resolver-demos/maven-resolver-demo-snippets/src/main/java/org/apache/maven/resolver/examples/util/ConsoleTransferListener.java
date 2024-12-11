@@ -22,6 +22,7 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -117,7 +118,7 @@ public class ConsoleTransferListener extends AbstractTransferListener {
             String len = contentLength >= 1024 ? toKB(contentLength) + " KB" : contentLength + " B";
 
             String throughput = "";
-            Duration duration = MonotonicTime.now().durationSince(resource.getStartTime());
+            Duration duration = Duration.between(resource.getStartTime(), Instant.now());
             if (duration.toMillis() > 0) {
                 long bytes = contentLength - resource.getResumeOffset();
                 DecimalFormat format = new DecimalFormat("0.0", new DecimalFormatSymbols(Locale.ENGLISH));

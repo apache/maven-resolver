@@ -20,16 +20,18 @@ package org.eclipse.aether.transfer;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.Temporal;
 
-import org.apache.maven.api.MonotonicTime;
 import org.eclipse.aether.RequestTrace;
 
 /**
  * Describes a resource being uploaded or downloaded by the repository system.
  */
 public final class TransferResource {
+
+    private static Clock clock = Clock.systemUTC();
 
     private final String repositoryId;
 
@@ -41,13 +43,21 @@ public final class TransferResource {
 
     private final Path path;
 
-    private final MonotonicTime startTime;
+    private final Temporal startTime;
 
     private final RequestTrace trace;
 
     private long contentLength = -1L;
 
     private long resumeOffset;
+
+    public static Clock getClock() {
+        return clock;
+    }
+
+    public static void setClock(Clock clock) {
+        TransferResource.clock = clock;
+    }
 
     /**
      * Creates a new transfer resource with the specified properties.
@@ -117,7 +127,7 @@ public final class TransferResource {
         this.path = path;
         this.resource = resource;
         this.trace = trace;
-        this.startTime = MonotonicTime.now();
+        this.startTime = getClock().instant();
     }
 
     /**
@@ -239,7 +249,7 @@ public final class TransferResource {
      */
     @Deprecated
     public long getTransferStartTime() {
-        return startTime.getWallTime().toEpochMilli();
+        return Instant.from(startTime).toEpochMilli();
     }
 
     /**
@@ -247,7 +257,7 @@ public final class TransferResource {
      *
      * @return The timestamp when the transfer of this resource was started.
      */
-    public MonotonicTime getStartTime() {
+    public Temporal getStartTime() {
         return startTime;
     }
 
