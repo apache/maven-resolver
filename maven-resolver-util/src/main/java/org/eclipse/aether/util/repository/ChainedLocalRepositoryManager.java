@@ -140,6 +140,26 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
     }
 
     @Override
+    public Path getAbsolutePathForLocalArtifact(Artifact artifact) {
+        return getInstallTarget().getAbsolutePathForLocalArtifact(artifact);
+    }
+
+    @Override
+    public Path getAbsolutePathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
+        return getCacheTarget().getAbsolutePathForRemoteArtifact(artifact, repository, context);
+    }
+
+    @Override
+    public Path getAbsolutePathForLocalMetadata(Metadata metadata) {
+        return getInstallTarget().getAbsolutePathForLocalMetadata(metadata);
+    }
+
+    @Override
+    public Path getAbsolutePathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
+        return getCacheTarget().getAbsolutePathForRemoteMetadata(metadata, repository, context);
+    }
+
+    @Override
     public String getPathForLocalArtifact(Artifact artifact) {
         return getInstallTarget().getPathForLocalArtifact(artifact);
     }
