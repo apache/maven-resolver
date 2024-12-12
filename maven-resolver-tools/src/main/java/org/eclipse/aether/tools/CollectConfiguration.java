@@ -194,14 +194,13 @@ public class CollectConfiguration implements Callable<Integer> {
                                                         .replace("*", "\\*");
                                                 String since = getSince(f);
                                                 String source = (values.get("source") != null
-                                                        ? (String) values.get("source")
-                                                        : "USER_PROPERTIES") // TODO: enum
+                                                                ? (String) values.get("source")
+                                                                : "USER_PROPERTIES") // TODO: enum
                                                         .toLowerCase();
                                                 source = switch (source) {
-                                                            case "model" -> "Model properties";
-                                                            case "user_properties" -> "User properties";
-                                                            default -> source;
-                                                        };
+                                                    case "model" -> "Model properties";
+                                                    case "user_properties" -> "User properties";
+                                                    default -> source;};
                                                 String type = (values.get("type") != null
                                                         ? (String) values.get("type")
                                                         : "java.lang.String");
