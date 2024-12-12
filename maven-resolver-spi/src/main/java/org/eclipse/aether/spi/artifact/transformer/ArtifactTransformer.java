@@ -26,7 +26,7 @@ import org.eclipse.aether.installation.InstallRequest;
  * Install and deploy artifact transformer. This component can mangle install and deploy requests, replace artifacts,
  * add new artifacts and so on.
  *
- * @since TBD
+ * @since 2.0.5
  */
 public interface ArtifactTransformer {
     /**
