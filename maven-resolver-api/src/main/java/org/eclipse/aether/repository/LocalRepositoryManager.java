@@ -45,7 +45,7 @@ public interface LocalRepositoryManager {
      *
      * @param artifact The artifact for which to determine the path, must not be {@code null}.
      * @return The path, relative to the local repository's base directory.
-     * @since TBD
+     * @since 2.0.5
      */
     default Path getAbsolutePathForLocalArtifact(Artifact artifact) {
         return getRepository().getBasePath().resolve(getPathForLocalArtifact(artifact));
@@ -71,7 +71,7 @@ public interface LocalRepositoryManager {
      * @param repository The source repository of the artifact, must not be {@code null}.
      * @param context The resolution context in which the artifact is being requested, may be {@code null}.
      * @return The path, relative to the local repository's base directory.
-     * @since TBD
+     * @since 2.0.5
      */
     default Path getAbsolutePathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
         return getRepository().getBasePath().resolve(getPathForRemoteArtifact(artifact, repository, context));
@@ -97,7 +97,7 @@ public interface LocalRepositoryManager {
      *
      * @param metadata The metadata for which to determine the path, must not be {@code null}.
      * @return The path, relative to the local repository's base directory.
-     * @since TBD
+     * @since 2.0.5
      */
     default Path getAbsolutePathForLocalMetadata(Metadata metadata) {
         return getRepository().getBasePath().resolve(getPathForLocalMetadata(metadata));
@@ -123,7 +123,7 @@ public interface LocalRepositoryManager {
      * @param repository The source repository of the metadata, must not be {@code null}.
      * @param context The resolution context in which the metadata is being requested, may be {@code null}.
      * @return The path, relative to the local repository's base directory.
-     * @since TBD
+     * @since 2.0.5
      */
     default Path getAbsolutePathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
         return getRepository().getBasePath().resolve(getPathForRemoteMetadata(metadata, repository, context));
