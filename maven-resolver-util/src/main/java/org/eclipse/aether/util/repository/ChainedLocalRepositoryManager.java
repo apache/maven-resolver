@@ -91,7 +91,7 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
 
     /**
      * Warning: this is experimental feature of chained, is not recommended to be used/integrated into plain Maven.
-     * 
+     *
      * @param head The head LRM
      * @param tail The tail LRMs
      * @param ignoreTailAvailability Whether tail availability should be ignored (usually you do want this)
