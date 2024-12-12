@@ -20,7 +20,7 @@ package org.eclipse.aether.supplier;
 
 import java.util.function.Supplier;
 
-import org.apache.maven.repository.internal.MavenSessionBuilderSupplier;
+import org.apache.maven.internal.impl.resolver.MavenSessionBuilderSupplier;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
