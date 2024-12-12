@@ -195,7 +195,7 @@ public class DefaultInstaller implements Installer {
             throws InstallationException {
         final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         final Path srcPath = artifact.getPath();
-        final Path dstPath = lrm.getRepository().getBasePath().resolve(lrm.getPathForLocalArtifact(artifact));
+        final Path dstPath = lrm.getAbsolutePathForLocalArtifact(artifact);
 
         artifactInstalling(session, trace, artifact, dstPath);
 
@@ -219,7 +219,7 @@ public class DefaultInstaller implements Installer {
             throws InstallationException {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
 
-        Path dstPath = lrm.getRepository().getBasePath().resolve(lrm.getPathForLocalMetadata(metadata));
+        Path dstPath = lrm.getAbsolutePathForLocalMetadata(metadata);
 
         metadataInstalling(session, trace, metadata, dstPath);
 

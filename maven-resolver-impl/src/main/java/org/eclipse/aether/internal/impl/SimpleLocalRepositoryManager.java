@@ -132,13 +132,11 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
         Artifact artifact = request.getArtifact();
         LocalArtifactResult result = new LocalArtifactResult(request);
 
-        String path;
         Path filePath;
 
         // Local repository CANNOT have timestamped installed, they are created only during deploy
         if (Objects.equals(artifact.getVersion(), artifact.getBaseVersion())) {
-            path = getPathForLocalArtifact(artifact);
-            filePath = getRepository().getBasePath().resolve(path);
+            filePath = getAbsolutePathForLocalArtifact(artifact);
             if (Files.isRegularFile(filePath)) {
                 result.setPath(filePath);
                 result.setAvailable(true);
@@ -147,8 +145,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
         if (!result.isAvailable()) {
             for (RemoteRepository repository : request.getRepositories()) {
-                path = getPathForRemoteArtifact(artifact, repository, request.getContext());
-                filePath = getRepository().getBasePath().resolve(path);
+                filePath = getAbsolutePathForRemoteArtifact(artifact, repository, request.getContext());
                 if (Files.isRegularFile(filePath)) {
                     result.setPath(filePath);
                     result.setAvailable(true);

@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.repository;
 
+import java.nio.file.Path;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
@@ -38,14 +40,42 @@ public interface LocalRepositoryManager {
     LocalRepository getRepository();
 
     /**
+     * Gets the absolute path for a locally installed artifact. Note that the artifact need not actually exist yet at
+     * the returned location, the path merely indicates where the artifact would eventually be stored.
+     *
+     * @param artifact The artifact for which to determine the path, must not be {@code null}.
+     * @return The path, relative to the local repository's base directory.
+     * @since 2.0.5
+     */
+    default Path getAbsolutePathForLocalArtifact(Artifact artifact) {
+        return getRepository().getBasePath().resolve(getPathForLocalArtifact(artifact));
+    }
+
+    /**
      * Gets the relative path for a locally installed artifact. Note that the artifact need not actually exist yet at
      * the returned location, the path merely indicates where the artifact would eventually be stored. The path uses the
      * forward slash as directory separator regardless of the underlying file system.
      *
      * @param artifact The artifact for which to determine the path, must not be {@code null}.
      * @return The path, relative to the local repository's base directory.
+     * @deprecated See {@link #getAbsolutePathForLocalArtifact(Artifact)}
      */
+    @Deprecated
     String getPathForLocalArtifact(Artifact artifact);
+
+    /**
+     * Gets the absolute path for an artifact cached from a remote repository. Note that the artifact need not actually
+     * exist yet at the returned location, the path merely indicates where the artifact would eventually be stored.
+     *
+     * @param artifact The artifact for which to determine the path, must not be {@code null}.
+     * @param repository The source repository of the artifact, must not be {@code null}.
+     * @param context The resolution context in which the artifact is being requested, may be {@code null}.
+     * @return The path, relative to the local repository's base directory.
+     * @since 2.0.5
+     */
+    default Path getAbsolutePathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
+        return getRepository().getBasePath().resolve(getPathForRemoteArtifact(artifact, repository, context));
+    }
 
     /**
      * Gets the relative path for an artifact cached from a remote repository. Note that the artifact need not actually
@@ -56,8 +86,22 @@ public interface LocalRepositoryManager {
      * @param repository The source repository of the artifact, must not be {@code null}.
      * @param context The resolution context in which the artifact is being requested, may be {@code null}.
      * @return The path, relative to the local repository's base directory.
+     * @deprecated See {@link #getAbsolutePathForRemoteArtifact(Artifact, RemoteRepository, String)}
      */
+    @Deprecated
     String getPathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context);
+
+    /**
+     * Gets the absolute path for locally installed metadata. Note that the metadata need not actually exist yet at the
+     * returned location, the path merely indicates where the metadata would eventually be stored.
+     *
+     * @param metadata The metadata for which to determine the path, must not be {@code null}.
+     * @return The path, relative to the local repository's base directory.
+     * @since 2.0.5
+     */
+    default Path getAbsolutePathForLocalMetadata(Metadata metadata) {
+        return getRepository().getBasePath().resolve(getPathForLocalMetadata(metadata));
+    }
 
     /**
      * Gets the relative path for locally installed metadata. Note that the metadata need not actually exist yet at the
@@ -66,8 +110,24 @@ public interface LocalRepositoryManager {
      *
      * @param metadata The metadata for which to determine the path, must not be {@code null}.
      * @return The path, relative to the local repository's base directory.
+     * @deprecated See {@link #getAbsolutePathForLocalMetadata(Metadata)}
      */
+    @Deprecated
     String getPathForLocalMetadata(Metadata metadata);
+
+    /**
+     * Gets the absolute path for metadata cached from a remote repository. Note that the metadata need not actually
+     * exist yet at the returned location, the path merely indicates where the metadata would eventually be stored.
+     *
+     * @param metadata The metadata for which to determine the path, must not be {@code null}.
+     * @param repository The source repository of the metadata, must not be {@code null}.
+     * @param context The resolution context in which the metadata is being requested, may be {@code null}.
+     * @return The path, relative to the local repository's base directory.
+     * @since 2.0.5
+     */
+    default Path getAbsolutePathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
+        return getRepository().getBasePath().resolve(getPathForRemoteMetadata(metadata, repository, context));
+    }
 
     /**
      * Gets the relative path for metadata cached from a remote repository. Note that the metadata need not actually
@@ -78,7 +138,9 @@ public interface LocalRepositoryManager {
      * @param repository The source repository of the metadata, must not be {@code null}.
      * @param context The resolution context in which the metadata is being requested, may be {@code null}.
      * @return The path, relative to the local repository's base directory.
+     * @deprecated See {@link #getAbsolutePathForRemoteMetadata(Metadata, RemoteRepository, String)}
      */
+    @Deprecated
     String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context);
 
     /**

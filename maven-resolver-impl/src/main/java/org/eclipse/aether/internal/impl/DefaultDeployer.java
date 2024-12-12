@@ -285,9 +285,7 @@ public class DefaultDeployer implements Deployer {
             EventCatapult catapult)
             throws DeploymentException {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
-        Path basePath = lrm.getRepository().getBasePath();
-
-        Path dstPath = basePath.resolve(lrm.getPathForRemoteMetadata(metadata, repository, ""));
+        Path dstPath = lrm.getAbsolutePathForRemoteMetadata(metadata, repository, "");
 
         if (metadata instanceof MergeableMetadata) {
             if (!((MergeableMetadata) metadata).isMerged()) {

@@ -70,19 +70,52 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
 
     private final boolean ignoreTailAvailability;
 
+    private final int installTarget;
+
+    private final int cacheTarget;
+
     public ChainedLocalRepositoryManager(
             LocalRepositoryManager head, List<LocalRepositoryManager> tail, boolean ignoreTailAvailability) {
-        this.head = requireNonNull(head, "head cannot be null");
-        this.tail = requireNonNull(tail, "tail cannot be null");
-        this.ignoreTailAvailability = ignoreTailAvailability;
+        this(head, tail, ignoreTailAvailability, 0, 0);
     }
 
     public ChainedLocalRepositoryManager(
             LocalRepositoryManager head, List<LocalRepositoryManager> tail, RepositorySystemSession session) {
+        this(
+                head,
+                tail,
+                ConfigUtils.getBoolean(session, DEFAULT_IGNORE_TAIL_AVAILABILITY, CONFIG_PROP_IGNORE_TAIL_AVAILABILITY),
+                0,
+                0);
+    }
+
+    /**
+     * Warning: this is experimental feature of chained, is not recommended to be used/integrated into plain Maven.
+     *
+     * @param head The head LRM
+     * @param tail The tail LRMs
+     * @param ignoreTailAvailability Whether tail availability should be ignored (usually you do want this)
+     * @param installTarget The installation LRM index, integer from 0 to size of tail.
+     * @param cacheTarget The cache LRM index, integer from 0 to size of tail.
+     * @since 2.0.5
+     */
+    public ChainedLocalRepositoryManager(
+            LocalRepositoryManager head,
+            List<LocalRepositoryManager> tail,
+            boolean ignoreTailAvailability,
+            int installTarget,
+            int cacheTarget) {
         this.head = requireNonNull(head, "head cannot be null");
         this.tail = requireNonNull(tail, "tail cannot be null");
-        this.ignoreTailAvailability =
-                ConfigUtils.getBoolean(session, DEFAULT_IGNORE_TAIL_AVAILABILITY, CONFIG_PROP_IGNORE_TAIL_AVAILABILITY);
+        this.ignoreTailAvailability = ignoreTailAvailability;
+        if (installTarget < 0 || installTarget > tail.size()) {
+            throw new IllegalArgumentException("Illegal installTarget value");
+        }
+        this.installTarget = installTarget;
+        if (cacheTarget < 0 || cacheTarget > tail.size()) {
+            throw new IllegalArgumentException("Illegal cacheTarget value");
+        }
+        this.cacheTarget = cacheTarget;
     }
 
     @Override
@@ -90,24 +123,60 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
         return head.getRepository();
     }
 
+    private LocalRepositoryManager getInstallTarget() {
+        if (installTarget == 0) {
+            return head;
+        } else {
+            return tail.get(installTarget - 1);
+        }
+    }
+
+    private LocalRepositoryManager getCacheTarget() {
+        if (cacheTarget == 0) {
+            return head;
+        } else {
+            return tail.get(cacheTarget - 1);
+        }
+    }
+
+    @Override
+    public Path getAbsolutePathForLocalArtifact(Artifact artifact) {
+        return getInstallTarget().getAbsolutePathForLocalArtifact(artifact);
+    }
+
+    @Override
+    public Path getAbsolutePathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
+        return getCacheTarget().getAbsolutePathForRemoteArtifact(artifact, repository, context);
+    }
+
+    @Override
+    public Path getAbsolutePathForLocalMetadata(Metadata metadata) {
+        return getInstallTarget().getAbsolutePathForLocalMetadata(metadata);
+    }
+
+    @Override
+    public Path getAbsolutePathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
+        return getCacheTarget().getAbsolutePathForRemoteMetadata(metadata, repository, context);
+    }
+
     @Override
     public String getPathForLocalArtifact(Artifact artifact) {
-        return head.getPathForLocalArtifact(artifact);
+        return getInstallTarget().getPathForLocalArtifact(artifact);
     }
 
     @Override
     public String getPathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
-        return head.getPathForRemoteArtifact(artifact, repository, context);
+        return getCacheTarget().getPathForRemoteArtifact(artifact, repository, context);
     }
 
     @Override
     public String getPathForLocalMetadata(Metadata metadata) {
-        return head.getPathForLocalMetadata(metadata);
+        return getInstallTarget().getPathForLocalMetadata(metadata);
     }
 
     @Override
     public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
-        return head.getPathForRemoteMetadata(metadata, repository, context);
+        return getCacheTarget().getPathForRemoteMetadata(metadata, repository, context);
     }
 
     @Override
@@ -134,15 +203,17 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
     @Override
     public void add(RepositorySystemSession session, LocalArtifactRegistration request) {
         String artifactPath;
+        LocalRepositoryManager target;
         if (request.getRepository() != null) {
             artifactPath = getPathForRemoteArtifact(request.getArtifact(), request.getRepository(), "check");
+            target = getCacheTarget();
         } else {
             artifactPath = getPathForLocalArtifact(request.getArtifact());
+            target = getInstallTarget();
         }
-
-        Path file = head.getRepository().getBasePath().resolve(artifactPath);
+        Path file = target.getRepository().getBasePath().resolve(artifactPath);
         if (Files.isRegularFile(file)) {
-            head.add(session, request);
+            target.add(session, request);
         }
     }
 
@@ -165,15 +236,18 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
     @Override
     public void add(RepositorySystemSession session, LocalMetadataRegistration request) {
         String metadataPath;
+        LocalRepositoryManager target;
         if (request.getRepository() != null) {
             metadataPath = getPathForRemoteMetadata(request.getMetadata(), request.getRepository(), "check");
+            target = getCacheTarget();
         } else {
             metadataPath = getPathForLocalMetadata(request.getMetadata());
+            target = getInstallTarget();
         }
 
-        Path file = head.getRepository().getBasePath().resolve(metadataPath);
+        Path file = target.getRepository().getBasePath().resolve(metadataPath);
         if (Files.isRegularFile(file)) {
-            head.add(session, request);
+            target.add(session, request);
         }
     }
 
