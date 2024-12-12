@@ -92,6 +92,7 @@ public class DefaultDeployerTest {
                 new StaticUpdateCheckManager(true),
                 Collections.emptyMap(),
                 Collections.emptyMap(),
+                Collections.emptyMap(),
                 new StubSyncContextFactory(),
                 new DefaultOfflineController());
 
