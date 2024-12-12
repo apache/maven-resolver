@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -71,7 +70,7 @@ public class CollectConfiguration implements Callable<Integer> {
 
     protected static final String KEY = "key";
 
-    enum Mode {
+    public enum Mode {
         maven,
         resolver
     }
@@ -125,7 +124,7 @@ public class CollectConfiguration implements Callable<Integer> {
                 }
             }
 
-            Collections.sort(discoveredKeys, Comparator.comparing(e -> e.get(KEY)));
+            discoveredKeys.sort(Comparator.comparing(e -> e.get(KEY)));
 
             Properties properties = new Properties();
             properties.setProperty("resource.loaders", "classpath");
@@ -194,24 +193,23 @@ public class CollectConfiguration implements Callable<Integer> {
                                                         .getFullText()
                                                         .replace("*", "\\*");
                                                 String since = getSince(f);
-                                                String source =
-                                                        switch ((values.get("source") != null
-                                                                        ? (String) values.get("source")
-                                                                        : "USER_PROPERTIES") // TODO: enum
-                                                                .toLowerCase()) {
+                                                String source = (values.get("source") != null
+                                                        ? (String) values.get("source")
+                                                        : "USER_PROPERTIES") // TODO: enum
+                                                        .toLowerCase();
+                                                source = switch (source) {
                                                             case "model" -> "Model properties";
                                                             case "user_properties" -> "User properties";
-                                                            default -> throw new IllegalStateException();
+                                                            default -> source;
                                                         };
-                                                String type =
-                                                        switch ((values.get("type") != null
-                                                                ? (String) values.get("type")
-                                                                : "java.lang.String")) {
-                                                            case "java.lang.String" -> "String";
-                                                            case "java.lang.Integer" -> "Integer";
-                                                            case "java.lang.Boolean" -> "Boolean";
-                                                            default -> throw new IllegalStateException();
-                                                        };
+                                                String type = (values.get("type") != null
+                                                        ? (String) values.get("type")
+                                                        : "java.lang.String");
+                                                if (type.startsWith("java.lang.")) {
+                                                    type = type.substring("java.lang.".length());
+                                                } else if (type.startsWith("java.util.")) {
+                                                    type = type.substring("java.util.".length());
+                                                }
                                                 discoveredKeys.add(Map.of(
                                                         KEY,
                                                         fieldValue.toString(),
