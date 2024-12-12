@@ -70,19 +70,42 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
 
     private final boolean ignoreTailAvailability;
 
+    private final int installTarget;
+
+    private final int cacheTarget;
+
     public ChainedLocalRepositoryManager(
             LocalRepositoryManager head, List<LocalRepositoryManager> tail, boolean ignoreTailAvailability) {
-        this.head = requireNonNull(head, "head cannot be null");
-        this.tail = requireNonNull(tail, "tail cannot be null");
-        this.ignoreTailAvailability = ignoreTailAvailability;
+        this(head, tail, ignoreTailAvailability, 0, 0);
     }
 
     public ChainedLocalRepositoryManager(
             LocalRepositoryManager head, List<LocalRepositoryManager> tail, RepositorySystemSession session) {
+        this(
+                head,
+                tail,
+                ConfigUtils.getBoolean(session, DEFAULT_IGNORE_TAIL_AVAILABILITY, CONFIG_PROP_IGNORE_TAIL_AVAILABILITY),
+                0,
+                0);
+    }
+
+    public ChainedLocalRepositoryManager(
+            LocalRepositoryManager head,
+            List<LocalRepositoryManager> tail,
+            boolean ignoreTailAvailability,
+            int installTarget,
+            int cacheTarget) {
         this.head = requireNonNull(head, "head cannot be null");
         this.tail = requireNonNull(tail, "tail cannot be null");
-        this.ignoreTailAvailability =
-                ConfigUtils.getBoolean(session, DEFAULT_IGNORE_TAIL_AVAILABILITY, CONFIG_PROP_IGNORE_TAIL_AVAILABILITY);
+        this.ignoreTailAvailability = ignoreTailAvailability;
+        if (installTarget < 0 || installTarget > tail.size()) {
+            throw new IllegalArgumentException("Illegal installTarget value");
+        }
+        this.installTarget = installTarget;
+        if (cacheTarget < 0 || cacheTarget > tail.size()) {
+            throw new IllegalArgumentException("Illegal cacheTarget value");
+        }
+        this.cacheTarget = cacheTarget;
     }
 
     @Override
@@ -91,11 +114,19 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
     }
 
     private LocalRepositoryManager getInstallTarget() {
-        return head;
+        if (installTarget == 0) {
+            return head;
+        } else {
+            return tail.get(installTarget - 1);
+        }
     }
 
     private LocalRepositoryManager getCacheTarget() {
-        return head;
+        if (cacheTarget == 0) {
+            return head;
+        } else {
+            return tail.get(cacheTarget - 1);
+        }
     }
 
     @Override
