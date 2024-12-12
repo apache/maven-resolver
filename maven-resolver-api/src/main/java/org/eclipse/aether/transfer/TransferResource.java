@@ -20,6 +20,8 @@ package org.eclipse.aether.transfer;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
 
 import org.eclipse.aether.RequestTrace;
 
@@ -27,6 +29,8 @@ import org.eclipse.aether.RequestTrace;
  * Describes a resource being uploaded or downloaded by the repository system.
  */
 public final class TransferResource {
+
+    private static Clock clock = Clock.systemUTC();
 
     private final String repositoryId;
 
@@ -38,13 +42,21 @@ public final class TransferResource {
 
     private final Path path;
 
-    private final long startTime;
+    private final Instant startTime;
 
     private final RequestTrace trace;
 
     private long contentLength = -1L;
 
     private long resumeOffset;
+
+    public static Clock getClock() {
+        return clock;
+    }
+
+    public static void setClock(Clock clock) {
+        TransferResource.clock = clock;
+    }
 
     /**
      * Creates a new transfer resource with the specified properties.
@@ -114,7 +126,7 @@ public final class TransferResource {
         this.path = path;
         this.resource = resource;
         this.trace = trace;
-        this.startTime = System.currentTimeMillis();
+        this.startTime = getClock().instant();
     }
 
     /**
@@ -232,8 +244,19 @@ public final class TransferResource {
      * Gets the timestamp when the transfer of this resource was started.
      *
      * @return The timestamp when the transfer of this resource was started.
+     * @deprecated use {@link #getStartTime()}
      */
+    @Deprecated
     public long getTransferStartTime() {
+        return startTime.toEpochMilli();
+    }
+
+    /**
+     * Gets the timestamp when the transfer of this resource was started.
+     *
+     * @return The timestamp when the transfer of this resource was started.
+     */
+    public Instant getStartTime() {
         return startTime;
     }
 
