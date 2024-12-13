@@ -8,4 +8,4 @@ target/
 *.iws
 pom.xml.versionsBackup
 .checkstyle
-
+.DS_Store
