@@ -19,24 +19,15 @@
 package org.eclipse.aether.supplier;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
+import org.apache.maven.api.di.Provides;
 import org.apache.maven.api.services.ModelBuilder;
-import org.apache.maven.internal.impl.model.DefaultModelBuilder;
-import org.apache.maven.internal.impl.resolver.DefaultArtifactDescriptorReader;
-import org.apache.maven.internal.impl.resolver.DefaultModelCacheFactory;
-import org.apache.maven.internal.impl.resolver.DefaultVersionRangeResolver;
-import org.apache.maven.internal.impl.resolver.DefaultVersionResolver;
-import org.apache.maven.internal.impl.resolver.MavenArtifactRelocationSource;
-import org.apache.maven.internal.impl.resolver.ModelCacheFactory;
-import org.apache.maven.internal.impl.resolver.PluginsMetadataGeneratorFactory;
-import org.apache.maven.internal.impl.resolver.SnapshotMetadataGeneratorFactory;
-import org.apache.maven.internal.impl.resolver.VersionsMetadataGeneratorFactory;
-import org.apache.maven.internal.impl.resolver.relocation.DistributionManagementArtifactRelocationSource;
-import org.apache.maven.internal.impl.resolver.relocation.UserPropertiesArtifactRelocationSource;
+import org.apache.maven.di.Injector;
+import org.apache.maven.di.Key;
+import org.apache.maven.di.impl.InjectorImpl;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
@@ -176,8 +167,26 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         }
     }
 
+    private Injector injector;
+
+    public final Injector getInjector() {
+        checkClosed();
+        if (injector == null) {
+            injector = createInjector();
+        }
+        return injector;
+    }
+
+    protected Injector createInjector() {
+        Injector injector = new InjectorImpl();
+        injector.discover(getClass().getClassLoader());
+        injector.bindInstance(RepositorySystemSupplier.class, this);
+        return injector;
+    }
+
     private PathProcessor pathProcessor;
 
+    @Provides
     public final PathProcessor getPathProcessor() {
         checkClosed();
         if (pathProcessor == null) {
@@ -192,6 +201,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ChecksumProcessor checksumProcessor;
 
+    @Provides
     public final ChecksumProcessor getChecksumProcessor() {
         checkClosed();
         if (checksumProcessor == null) {
@@ -206,6 +216,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private TrackingFileManager trackingFileManager;
 
+    @Provides
     public final TrackingFileManager getTrackingFileManager() {
         checkClosed();
         if (trackingFileManager == null) {
@@ -373,6 +384,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private SyncContextFactory syncContextFactory;
 
+    @Provides
     public final SyncContextFactory getSyncContextFactory() {
         checkClosed();
         if (syncContextFactory == null) {
@@ -387,6 +399,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ChecksumAlgorithmFactory> checksumAlgorithmFactories;
 
+    @Provides
     public final Map<String, ChecksumAlgorithmFactory> getChecksumAlgorithmFactories() {
         checkClosed();
         if (checksumAlgorithmFactories == null) {
@@ -406,6 +419,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
+    @Provides
     public final ChecksumAlgorithmFactorySelector getChecksumAlgorithmFactorySelector() {
         checkClosed();
         if (checksumAlgorithmFactorySelector == null) {
@@ -420,6 +434,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ArtifactPredicateFactory artifactPredicateFactory;
 
+    @Provides
     public final ArtifactPredicateFactory getArtifactPredicateFactory() {
         checkClosed();
         if (artifactPredicateFactory == null) {
@@ -434,6 +449,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, RepositoryLayoutFactory> repositoryLayoutFactories;
 
+    @Provides
     public final Map<String, RepositoryLayoutFactory> getRepositoryLayoutFactories() {
         checkClosed();
         if (repositoryLayoutFactories == null) {
@@ -453,6 +469,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RepositoryLayoutProvider repositoryLayoutProvider;
 
+    @Provides
     public final RepositoryLayoutProvider getRepositoryLayoutProvider() {
         checkClosed();
         if (repositoryLayoutProvider == null) {
@@ -467,6 +484,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private LocalRepositoryProvider localRepositoryProvider;
 
+    @Provides
     public final LocalRepositoryProvider getLocalRepositoryProvider() {
         checkClosed();
         if (localRepositoryProvider == null) {
@@ -489,6 +507,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RemoteRepositoryManager remoteRepositoryManager;
 
+    @Provides
     public final RemoteRepositoryManager getRemoteRepositoryManager() {
         checkClosed();
         if (remoteRepositoryManager == null) {
@@ -503,6 +522,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, RemoteRepositoryFilterSource> remoteRepositoryFilterSources;
 
+    @Provides
     public final Map<String, RemoteRepositoryFilterSource> getRemoteRepositoryFilterSources() {
         checkClosed();
         if (remoteRepositoryFilterSources == null) {
@@ -524,6 +544,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    @Provides
     public final RemoteRepositoryFilterManager getRemoteRepositoryFilterManager() {
         checkClosed();
         if (remoteRepositoryFilterManager == null) {
@@ -538,6 +559,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, RepositoryListener> repositoryListeners;
 
+    @Provides
     public final Map<String, RepositoryListener> getRepositoryListeners() {
         checkClosed();
         if (repositoryListeners == null) {
@@ -552,6 +574,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
+    @Provides
     public final RepositoryEventDispatcher getRepositoryEventDispatcher() {
         checkClosed();
         if (repositoryEventDispatcher == null) {
@@ -566,6 +589,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, TrustedChecksumsSource> trustedChecksumsSources;
 
+    @Provides
     public final Map<String, TrustedChecksumsSource> getTrustedChecksumsSources() {
         checkClosed();
         if (trustedChecksumsSources == null) {
@@ -587,6 +611,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ProvidedChecksumsSource> providedChecksumsSources;
 
+    @Provides
     public final Map<String, ProvidedChecksumsSource> getProvidedChecksumsSources() {
         checkClosed();
         if (providedChecksumsSources == null) {
@@ -605,6 +630,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ChecksumExtractorStrategy> checksumExtractorStrategies;
 
+    @Provides
     public final Map<String, ChecksumExtractorStrategy> getChecksumExtractorStrategies() {
         checkClosed();
         if (checksumExtractorStrategies == null) {
@@ -622,6 +648,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ChecksumExtractor checksumExtractor;
 
+    @Provides
     public final ChecksumExtractor getChecksumExtractor() {
         checkClosed();
         if (checksumExtractor == null) {
@@ -636,6 +663,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, TransporterFactory> transporterFactories;
 
+    @Provides
     public final Map<String, TransporterFactory> getTransporterFactories() {
         checkClosed();
         if (transporterFactories == null) {
@@ -655,6 +683,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private TransporterProvider transporterProvider;
 
+    @Provides
     public final TransporterProvider getTransporterProvider() {
         checkClosed();
         if (transporterProvider == null) {
@@ -669,6 +698,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private BasicRepositoryConnectorFactory basicRepositoryConnectorFactory;
 
+    @Provides
     public final BasicRepositoryConnectorFactory getBasicRepositoryConnectorFactory() {
         checkClosed();
         if (basicRepositoryConnectorFactory == null) {
@@ -688,6 +718,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, RepositoryConnectorFactory> repositoryConnectorFactories;
 
+    @Provides
     public final Map<String, RepositoryConnectorFactory> getRepositoryConnectorFactories() {
         checkClosed();
         if (repositoryConnectorFactories == null) {
@@ -704,6 +735,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RepositoryConnectorProvider repositoryConnectorProvider;
 
+    @Provides
     public final RepositoryConnectorProvider getRepositoryConnectorProvider() {
         checkClosed();
         if (repositoryConnectorProvider == null) {
@@ -719,6 +751,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Installer installer;
 
+    @Provides
     public final Installer getInstaller() {
         checkClosed();
         if (installer == null) {
@@ -739,6 +772,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Deployer deployer;
 
+    @Provides
     public final Deployer getDeployer() {
         checkClosed();
         if (deployer == null) {
@@ -763,6 +797,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates;
 
+    @Provides
     public final Map<String, DependencyCollectorDelegate> getDependencyCollectorDelegates() {
         checkClosed();
         if (dependencyCollectorDelegates == null) {
@@ -795,6 +830,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private DependencyCollector dependencyCollector;
 
+    @Provides
     public final DependencyCollector getDependencyCollector() {
         checkClosed();
         if (dependencyCollector == null) {
@@ -809,6 +845,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors;
 
+    @Provides
     public final Map<String, ArtifactResolverPostProcessor> getArtifactResolverPostProcessors() {
         checkClosed();
         if (artifactResolverPostProcessors == null) {
@@ -828,6 +865,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ArtifactResolver artifactResolver;
 
+    @Provides
     public final ArtifactResolver getArtifactResolver() {
         checkClosed();
         if (artifactResolver == null) {
@@ -852,6 +890,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private MetadataResolver metadataResolver;
 
+    @Provides
     public final MetadataResolver getMetadataResolver() {
         checkClosed();
         if (metadataResolver == null) {
@@ -874,6 +913,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private VersionScheme versionScheme;
 
+    @Provides
     public final VersionScheme getVersionScheme() {
         checkClosed();
         if (versionScheme == null) {
@@ -888,6 +928,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ArtifactGeneratorFactory> artifactGeneratorFactories;
 
+    @Provides
     public final Map<String, ArtifactGeneratorFactory> getArtifactGeneratorFactories() {
         checkClosed();
         if (artifactGeneratorFactories == null) {
@@ -903,6 +944,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories;
 
+    @Provides
     public final Map<String, ArtifactDecoratorFactory> getArtifactDecoratorFactories() {
         checkClosed();
         if (artifactDecoratorFactories == null) {
@@ -920,6 +962,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ArtifactTransformer> artifactTransformers;
 
+    @Provides
     public final Map<String, ArtifactTransformer> getArtifactTransformers() {
         checkClosed();
         if (artifactTransformers == null) {
@@ -932,132 +975,34 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return new HashMap<>();
     }
 
-    private Map<String, MetadataGeneratorFactory> metadataGeneratorFactories;
-
     public final Map<String, MetadataGeneratorFactory> getMetadataGeneratorFactories() {
         checkClosed();
-        if (metadataGeneratorFactories == null) {
-            metadataGeneratorFactories = createMetadataGeneratorFactories();
-        }
-        return metadataGeneratorFactories;
+        return getInjector().getInstance(new Key<Map<String, MetadataGeneratorFactory>>() {});
     }
-
-    protected Map<String, MetadataGeneratorFactory> createMetadataGeneratorFactories() {
-        // from maven-resolver-provider
-        HashMap<String, MetadataGeneratorFactory> result = new HashMap<>();
-        result.put(PluginsMetadataGeneratorFactory.NAME, new PluginsMetadataGeneratorFactory());
-        result.put(VersionsMetadataGeneratorFactory.NAME, new VersionsMetadataGeneratorFactory());
-        result.put(SnapshotMetadataGeneratorFactory.NAME, new SnapshotMetadataGeneratorFactory());
-        return result;
-    }
-
-    private LinkedHashMap<String, MavenArtifactRelocationSource> artifactRelocationSources;
-
-    public final LinkedHashMap<String, MavenArtifactRelocationSource> getMavenArtifactRelocationSources() {
-        checkClosed();
-        if (artifactRelocationSources == null) {
-            artifactRelocationSources = createMavenArtifactRelocationSources();
-        }
-        return artifactRelocationSources;
-    }
-
-    protected LinkedHashMap<String, MavenArtifactRelocationSource> createMavenArtifactRelocationSources() {
-        // from maven-resolver-provider
-        LinkedHashMap<String, MavenArtifactRelocationSource> result = new LinkedHashMap<>();
-        result.put(UserPropertiesArtifactRelocationSource.NAME, new UserPropertiesArtifactRelocationSource());
-        result.put(
-                DistributionManagementArtifactRelocationSource.NAME,
-                new DistributionManagementArtifactRelocationSource());
-        return result;
-    }
-
-    private ArtifactDescriptorReader artifactDescriptorReader;
 
     public final ArtifactDescriptorReader getArtifactDescriptorReader() {
         checkClosed();
-        if (artifactDescriptorReader == null) {
-            artifactDescriptorReader = createArtifactDescriptorReader();
-        }
-        return artifactDescriptorReader;
+        return getInjector().getInstance(ArtifactDescriptorReader.class);
     }
-
-    protected ArtifactDescriptorReader createArtifactDescriptorReader() {
-        // from maven-resolver-provider
-        return new DefaultArtifactDescriptorReader(
-                getRemoteRepositoryManager(),
-                getVersionResolver(),
-                getVersionRangeResolver(),
-                getArtifactResolver(),
-                getModelBuilder(),
-                getRepositoryEventDispatcher(),
-                getModelCacheFactory(),
-                getMavenArtifactRelocationSources());
-    }
-
-    private VersionResolver versionResolver;
 
     public final VersionResolver getVersionResolver() {
         checkClosed();
-        if (versionResolver == null) {
-            versionResolver = createVersionResolver();
-        }
-        return versionResolver;
+        return getInjector().getInstance(VersionResolver.class);
     }
-
-    protected VersionResolver createVersionResolver() {
-        // from maven-resolver-provider
-        return new DefaultVersionResolver(
-                getMetadataResolver(), getSyncContextFactory(), getRepositoryEventDispatcher());
-    }
-
-    private VersionRangeResolver versionRangeResolver;
 
     public final VersionRangeResolver getVersionRangeResolver() {
         checkClosed();
-        if (versionRangeResolver == null) {
-            versionRangeResolver = createVersionRangeResolver();
-        }
-        return versionRangeResolver;
+        return getInjector().getInstance(VersionRangeResolver.class);
     }
-
-    protected VersionRangeResolver createVersionRangeResolver() {
-        // from maven-resolver-provider
-        return new DefaultVersionRangeResolver(
-                getMetadataResolver(), getSyncContextFactory(), getRepositoryEventDispatcher(), getVersionScheme());
-    }
-
-    private ModelBuilder modelBuilder;
 
     public final ModelBuilder getModelBuilder() {
         checkClosed();
-        if (modelBuilder == null) {
-            modelBuilder = createModelBuilder();
-        }
-        return modelBuilder;
-    }
-
-    protected ModelBuilder createModelBuilder() {
-        // from maven-model-builder
-        return new DefaultModelBuilderFactory().newInstance();
-    }
-
-    private ModelCacheFactory modelCacheFactory;
-
-    public final ModelCacheFactory getModelCacheFactory() {
-        checkClosed();
-        if (modelCacheFactory == null) {
-            modelCacheFactory = createModelCacheFactory();
-        }
-        return modelCacheFactory;
-    }
-
-    protected ModelCacheFactory createModelCacheFactory() {
-        // from maven-resolver-provider
-        return new DefaultModelCacheFactory();
+        return getInjector().getInstance(ModelBuilder.class);
     }
 
     private RepositorySystem repositorySystem;
 
+    @Provides
     public final RepositorySystem getRepositorySystem() {
         checkClosed();
         if (repositorySystem == null) {
