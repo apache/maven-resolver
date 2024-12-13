@@ -71,36 +71,41 @@ public class MyMojo extends AbstractMojo
 {
 
     /**
-     * The entry point to resolver (a.k.a. Aether), i.e. the component doing all the work.
-     */
-    @Component
-    private RepositorySystem repoSystem;
-
-    /**
      * The current repository/network configuration of Maven.
      */
     @Parameter(defaultValue="${repositorySystemSession}", readonly = true)
-    private RepositorySystemSession repoSession;
+    private RepositorySystemSession repositorySystemSession;
 
     /**
      * The project's remote repositories to use for the resolution of project dependencies.
      */
     @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
-    private List<RemoteRepository> projectRepos;
+    private List<RemoteRepository> remoteProjectRepositories;
 
     /**
      * The project's remote repositories to use for the resolution of plugins and their dependencies.
      */
     @Parameter(defaultValue = "${project.remotePluginRepositories}", readonly = true)
-    private List<RemoteRepository> pluginRepos;
+    private List<RemoteRepository> remotePluginRepositories;
 
+
+    /**
+     * The entry point to the resolver (a.k.a. Aether); that is, the component doing all the work.
+     */
+    private final RepositorySystem repositorySystem;
+    
+    @Inject
+    public MyMojo(RepositorySystem repositorySystem) {
+        this.repositorySystem = repositorySystem;
+    }
+    
     // Your other mojo parameters and code here
     ...
 }
 ```
 
-Usually, you need only `projectRepos` or `pluginRepos` depending on the
-nature of artifacts your plugin is dealing with, so the other plugin
+Usually, you need only `remoteProjectRepositories` or `remotePluginRepositories`
+depending on the nature of artifacts your plugin is dealing with. The other plugin
 parameter would be superfluous in that case. But in general, the bits
-shown above should give you all handles that you need to work with
+shown above should give you all the handles that you need to work with
 Aether from within a Maven plugin.
