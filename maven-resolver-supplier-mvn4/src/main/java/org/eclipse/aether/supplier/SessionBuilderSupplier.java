@@ -20,7 +20,8 @@ package org.eclipse.aether.supplier;
 
 import java.util.function.Supplier;
 
-import org.apache.maven.repository.internal.MavenSessionBuilderSupplier;
+import org.apache.maven.api.ProtoSession;
+import org.apache.maven.internal.impl.resolver.MavenSessionBuilderSupplier;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
@@ -37,5 +38,11 @@ import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 public class SessionBuilderSupplier extends MavenSessionBuilderSupplier {
     public SessionBuilderSupplier(RepositorySystem repositorySystem) {
         super(repositorySystem);
+    }
+
+    @Override
+    public SessionBuilder get() {
+
+        return super.get();
     }
 }
