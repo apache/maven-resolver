@@ -18,6 +18,8 @@
  */
 package org.apache.maven.resolver.examples.maven;
 
+import javax.inject.Inject;
+
 import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
