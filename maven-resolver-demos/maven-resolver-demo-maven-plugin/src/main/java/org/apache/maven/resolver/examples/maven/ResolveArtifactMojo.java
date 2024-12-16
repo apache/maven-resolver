@@ -18,12 +18,13 @@
  */
 package org.apache.maven.resolver.examples.maven;
 
+import javax.inject.Inject;
+
 import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.aether.RepositorySystem;
@@ -43,11 +44,6 @@ import org.slf4j.LoggerFactory;
 @Mojo(name = "resolve-artifact", threadSafe = true)
 public class ResolveArtifactMojo extends AbstractMojo {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResolveArtifactMojo.class);
-    /**
-     * The entry point to Maven Artifact Resolver, i.e. the component doing all the work.
-     */
-    @Component
-    private RepositorySystem repoSystem;
 
     /**
      * The current repository/network configuration of Maven.
@@ -66,6 +62,16 @@ public class ResolveArtifactMojo extends AbstractMojo {
      */
     @Parameter(property = "resolver.artifactCoords", readonly = true)
     private String artifactCoords;
+
+    /**
+     * The entry point to Maven Artifact Resolver; that is, the component doing all the work.
+     */
+    private final RepositorySystem repoSystem;
+
+    @Inject
+    public ResolveArtifactMojo(RepositorySystem repoSystem) {
+        this.repoSystem = repoSystem;
+    }
 
     /**
      * The actual execution of the mojo.
