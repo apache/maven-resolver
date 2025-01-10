@@ -344,7 +344,7 @@
         <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
-          <version>0.23.0</version>
+          <version>0.23.1</version>
           <configuration>
             <oldVersion>
               <!-- We compare same module against 1.8.0 set as "baseline" -->
