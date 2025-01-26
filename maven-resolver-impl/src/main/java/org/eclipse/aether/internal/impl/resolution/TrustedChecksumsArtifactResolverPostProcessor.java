@@ -162,7 +162,7 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
         final boolean snapshots = ConfigUtils.getBoolean(session, false, CONFIG_PROP_SNAPSHOTS);
 
         for (ArtifactResult artifactResult : artifactResults) {
-            if (artifactResult.getArtifact().isSnapshot() && !snapshots) {
+            if (artifactResult.getRequest().getArtifact().isSnapshot() && !snapshots) {
                 continue;
             }
             if (artifactResult.isResolved()) {
