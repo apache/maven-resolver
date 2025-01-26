@@ -69,6 +69,7 @@ public class Booter {
         FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
         SessionBuilder result = new SessionBuilderSupplier(system)
                 .get()
+                .setSystemProperties(System.getProperties())
                 .withLocalRepositoryBaseDirectories(fs.getPath("local-repo"))
                 .setRepositoryListener(new ConsoleRepositoryListener())
                 .setTransferListener(new ConsoleTransferListener())
