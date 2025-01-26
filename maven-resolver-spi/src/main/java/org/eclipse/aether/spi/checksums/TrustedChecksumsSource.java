@@ -76,5 +76,7 @@ public interface TrustedChecksumsSource {
      * Some trusted checksums sources may implement this optional method: ability to write/add checksums to them.
      * If source does not support this feature, method should return {@code null}.
      */
-    Writer getTrustedArtifactChecksumsWriter(RepositorySystemSession session);
+    default Writer getTrustedArtifactChecksumsWriter(RepositorySystemSession session) {
+        return null;
+    }
 }
