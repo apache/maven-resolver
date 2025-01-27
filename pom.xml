@@ -105,7 +105,7 @@
     <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>2.0.16</slf4jVersion>
     <testcontainersVersion>1.20.4</testcontainersVersion>
-    <bouncycastleVersion>1.79</bouncycastleVersion>
+    <bouncycastleVersion>1.80</bouncycastleVersion>
 
     <!-- Remove when parent updates -->
     <versions.junit5>5.11.2</versions.junit5>
