@@ -45,7 +45,7 @@
     <dependency>
       <groupId>org.redisson</groupId>
       <artifactId>redisson</artifactId>
-      <version>3.43.0</version>
+      <version>3.44.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -70,10 +70,6 @@
         <exclusion>
           <groupId>io.reactivex.rxjava3</groupId>
           <artifactId>rxjava</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-transport-native-unix-common</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.reactivestreams</groupId>
