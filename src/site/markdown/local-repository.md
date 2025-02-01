@@ -46,6 +46,12 @@ unique in ideal world).
 
 #### Split Local Repository
 
+**Note: Resolver 2.x _renamed related properties_ to clean up configuration
+keys, but 2.0.x will support latest Resolver 1.9.x properties to support
+transitioning. This document uses "legacy" properties (that work in both,
+1.9.x and 2.0.6+ resolver, while current configuration is documented
+on [configuration page](configuration.html).**
+
 Latest addition to the enhanced LRM is *split* feature. By default, split 
 feature is **not enabled**, enhanced LRM behaves as it behaved in all 
 previous versions of Resolver.
@@ -123,7 +129,9 @@ $ mvn ... -Daether.enhancedLocalRepository.split \
 ```
 
 For complete reference of enhanced LRM configuration possibilities, refer to 
-[configuration page](configuration.html).
+[configuration page](configuration.html). That page contains current configuration
+keys for Resolver 2.x, while this page example use "legacy" keys that work in
+both Resolver 1.9.x and Resolver 2.0.6+.
 
 ##### Split Repository Considerations
 
