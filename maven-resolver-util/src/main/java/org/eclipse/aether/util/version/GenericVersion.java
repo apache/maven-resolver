@@ -235,8 +235,8 @@ final class GenericVersion implements Version {
                     index++;
                     break;
                 } else {
-                    int digit = Character.digit(c, 10);
-                    if (digit >= 0) {
+                    if (c >= '0' && c <= '9') { // only ASCII digits
+                        int digit = Character.digit(c, 10);
                         if (state == -1) {
                             end = index;
                             terminatedByNumber = true;
