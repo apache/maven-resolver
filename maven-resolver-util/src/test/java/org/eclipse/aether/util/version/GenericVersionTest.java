@@ -495,6 +495,11 @@ public class GenericVersionTest extends AbstractVersionTest {
         assertOrder(X_LT_Y, "1.max", "2.min");
     }
 
+    @Test
+    void testCompareLettersToNumbers() {
+        assertOrder(X_GT_Y, "1.7", "J");
+    }
+
     /**
      * UT for <a href="https://issues.apache.org/jira/browse/MRESOLVER-314">MRESOLVER-314</a>.
      *
