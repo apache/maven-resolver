@@ -282,7 +282,7 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    void testTransitionFromDigitToLetterAndViceVersaIsEqualivantToDelimiter() {
+    void testTransitionFromDigitToLetterAndViceVersaIsEquivalentToDelimiter() {
         assertOrder(X_EQ_Y, "1alpha10", "1.alpha.10");
         assertOrder(X_EQ_Y, "1alpha10", "1-alpha-10");
 
