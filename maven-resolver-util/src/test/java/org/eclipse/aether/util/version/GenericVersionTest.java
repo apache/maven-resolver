@@ -500,8 +500,27 @@ public class GenericVersionTest extends AbstractVersionTest {
         assertOrder(X_GT_Y, "1.7", "J");
     }
 
+    @Test
+    void testCompareDigitToLetter() {
+        assertOrder(X_GT_Y, "7", "J");
+        assertOrder(X_GT_Y, "7", "c");
+    }
+
+    @Test
+    void testNonAsciiDigits() { // These should not be treated as digits.
+        String arabicEight = "\u0668";
+        assertOrder(X_GT_Y, "1", arabicEight);
+        assertOrder(X_GT_Y, "9", arabicEight);
+    }
+
+    @Test
+    void testLexicographicOrder() {
+        assertOrder(X_GT_Y, "zebra", "aardvark");
+        assertOrder(X_GT_Y, "ζέβρα", "zebra");
+    }
+
     /**
-     * UT for <a href="https://issues.apache.org/jira/browse/MRESOLVER-314">MRESOLVER-314</a>.
+     * Test for <a href="https://issues.apache.org/jira/browse/MRESOLVER-314">MRESOLVER-314</a>.
      *
      * Generates random UUID string based versions and tries to sort them. While this test is not as reliable
      * as {@link #testCompareUuidVersionStringStream()}, it covers broader range and in case it fails it records
