@@ -34,7 +34,7 @@
  *     <li>Segments are explicitly delimited by a single {@code "." (dot)}, {@code "-" (hyphen)}, or {@code "_" (underscore)} character.</li>
  *     <li>Segments are implicitly delimited by a transition between ASCII digits and non-digits.</li>
  *     <li>Segments are classified as numeric, string, qualifiers (special case of string), and min/max.</li>
- *     <li>Numeric segments are composed of the ASCII digits 0-9. Non-ASCII digits are treated as letters. 
+ *     <li>Numeric segments are composed of the ASCII digits 0-9. Non-ASCII digits are treated as letters.
  *     <li>Numeric segments are sorted numerically, ascending.</li>
  *     <li>Non-numeric segments may be qualifiers (predefined) or strings (non-empty letter sequence). All of them are interpreted as being case-insensitive in terms of the ROOT locale.</li>
  *     <li>Qualifier segments (strings listed below) and their sort order (ascending) are:
