@@ -26,6 +26,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.scope.ResolutionScope;
 
@@ -54,6 +55,8 @@ public final class CollectRequest {
     private String context = "";
 
     private RequestTrace trace;
+
+    private List<Exclusion> exclusions = Collections.emptyList();
 
     /**
      * Creates an uninitialized request.
@@ -328,6 +331,46 @@ public final class CollectRequest {
      */
     public CollectRequest setTrace(RequestTrace trace) {
         this.trace = trace;
+        return this;
+    }
+
+    /**
+     * Gets the direct exclusions.
+     *
+     * @return The direct exclusions, never {@code null}.
+     */
+    public List<Exclusion> getExclusions() {
+        return exclusions;
+    }
+
+    /**
+     * Sets the direct exclusions.
+     *
+     * @param exclusions The direct exclusions, may be {@code null}.
+     * @return This request for chaining, never {@code null}.
+     */
+    public CollectRequest setExclusions(List<Exclusion> exclusions) {
+        if (exclusions == null) {
+            this.exclusions = Collections.emptyList();
+        } else {
+            this.exclusions = exclusions;
+        }
+        return this;
+    }
+
+    /**
+     * Adds the specified exclusion.
+     *
+     * @param exclusion The exclusion to add, may be {@code null}.
+     * @return This request for chaining, never {@code null}.
+     */
+    public CollectRequest addExclusion(Exclusion exclusion) {
+        if (exclusion != null) {
+            if (this.exclusions.isEmpty()) {
+                this.exclusions = new ArrayList<>();
+            }
+            this.exclusions.add(exclusion);
+        }
         return this;
     }
 
