@@ -39,6 +39,7 @@ import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
@@ -57,6 +58,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.version.Version;
 
 /**
@@ -92,12 +94,16 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             List<RemoteRepository> repositories,
             List<Dependency> dependencies,
             List<Dependency> managedDependencies,
+            List<Exclusion> exclusions,
             Results results)
             throws DependencyCollectionException {
+        // TODO
         NodeStack nodes = new NodeStack();
         nodes.push(node);
 
         Args args = new Args(session, pool, nodes, context, versionContext, request);
+        ExclusionDependencySelector exclusionDependencySelector =
+                exclusions == null || exclusions.isEmpty() ? null : new ExclusionDependencySelector(exclusions);
 
         process(
                 args,
@@ -114,7 +120,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                 session.getDependencyTraverser() != null
                         ? session.getDependencyTraverser().deriveChildTraverser(context)
                         : null,
-                session.getVersionFilter() != null ? session.getVersionFilter().deriveChildFilter(context) : null);
+                session.getVersionFilter() != null ? session.getVersionFilter().deriveChildFilter(context) : null,
+                exclusionDependencySelector);
 
         if (args.interruptedException.get() != null) {
             throw new DependencyCollectionException(
@@ -132,7 +139,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             DependencySelector depSelector,
             DependencyManager depManager,
             DependencyTraverser depTraverser,
-            VersionFilter verFilter) {
+            VersionFilter verFilter,
+            ExclusionDependencySelector exclusionDependencySelector) {
         if (Thread.interrupted()) {
             args.interruptedException.set(new InterruptedException());
         }
@@ -141,7 +149,16 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
         }
         for (Dependency dependency : dependencies) {
             processDependency(
-                    args, trace, results, repositories, depSelector, depManager, depTraverser, verFilter, dependency);
+                    args,
+                    trace,
+                    results,
+                    repositories,
+                    depSelector,
+                    depManager,
+                    depTraverser,
+                    verFilter,
+                    dependency,
+                    exclusionDependencySelector);
         }
     }
 
@@ -155,7 +172,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             DependencyManager depManager,
             DependencyTraverser depTraverser,
             VersionFilter verFilter,
-            Dependency dependency) {
+            Dependency dependency,
+            ExclusionDependencySelector exclusionDependencySelector) {
 
         List<Artifact> relocations = Collections.emptyList();
         processDependency(
@@ -169,7 +187,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                 verFilter,
                 dependency,
                 relocations,
-                false);
+                false,
+                exclusionDependencySelector);
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -184,7 +203,13 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             VersionFilter verFilter,
             Dependency dependency,
             List<Artifact> relocations,
-            boolean disableVersionManagement) {
+            boolean disableVersionManagement,
+            ExclusionDependencySelector exclusionDependencySelector) {
+        if (exclusionDependencySelector != null) {
+            if (!exclusionDependencySelector.selectDependency(dependency)) {
+                return;
+            }
+        }
         if (depSelector != null && !depSelector.selectDependency(dependency)) {
             return;
         }
@@ -256,7 +281,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                             verFilter,
                             d,
                             descriptorResult.getRelocations(),
-                            disableVersionManagementSubsequently);
+                            disableVersionManagementSubsequently,
+                            exclusionDependencySelector);
                     return;
                 } else {
                     d = args.pool.intern(d.setArtifact(args.pool.intern(d.getArtifact())));
@@ -290,7 +316,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                                 verFilter,
                                 d,
                                 descriptorResult,
-                                child);
+                                child,
+                                exclusionDependencySelector);
                     }
                 }
             } else {
@@ -322,7 +349,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             VersionFilter verFilter,
             Dependency d,
             ArtifactDescriptorResult descriptorResult,
-            DefaultDependencyNode child) {
+            DefaultDependencyNode child,
+            ExclusionDependencySelector exclusionDependencySelector) {
         DefaultDependencyCollectionContext context = args.collectionContext.get();
         args.collectionContext.compareAndSet(context, context.set(d, descriptorResult.getManagedDependencies()));
         context = args.collectionContext.get();
@@ -355,7 +383,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                     childSelector,
                     childManager,
                     childTraverser,
-                    childFilter);
+                    childFilter,
+                    exclusionDependencySelector);
 
             args.nodes.pop();
         } else {
