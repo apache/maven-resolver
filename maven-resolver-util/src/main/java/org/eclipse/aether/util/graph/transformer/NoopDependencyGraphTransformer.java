@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.transformer;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.transformer;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.util.graph.transformer;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.graph.transformer;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
@@ -29,9 +28,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A dependency graph transformer that does not perform any changes on its input.
  */
-public final class NoopDependencyGraphTransformer
-    implements DependencyGraphTransformer
-{
+public final class NoopDependencyGraphTransformer implements DependencyGraphTransformer {
 
     /**
      * A ready-made instance of this dependency graph transformer which can safely be reused throughout an entire
@@ -42,16 +39,13 @@ public final class NoopDependencyGraphTransformer
     /**
      * Creates a new instance of this graph transformer. Usually, {@link #INSTANCE} should be used instead.
      */
-    public NoopDependencyGraphTransformer()
-    {
-    }
+    public NoopDependencyGraphTransformer() {}
 
-    public DependencyNode transformGraph( DependencyNode node, DependencyGraphTransformationContext context )
-        throws RepositoryException
-    {
-        requireNonNull( node, "node cannot be null" );
-        requireNonNull( context, "context cannot be null" );
+    @Override
+    public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
+            throws RepositoryException {
+        requireNonNull(node, "node cannot be null");
+        requireNonNull(context, "context cannot be null");
         return node;
     }
-
 }

@@ -1,5 +1,3 @@
-package org.eclipse.aether.named.hazelcast;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.named.hazelcast;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,26 +16,25 @@ package org.eclipse.aether.named.hazelcast;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.named.hazelcast;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.ISemaphore;
+import org.eclipse.aether.named.NamedLockKey;
 
 /**
  * Direct provider of {@link ISemaphore} instances: it simply uses the passed in lock name to create semaphore name out
  * of it. This implies, that as many lock names are requested from it, this class will create as many semaphores in
  * Hazelcast.
  */
-public class DirectHazelcastSemaphoreProvider extends HazelcastSemaphoreProvider
-{
+public class DirectHazelcastSemaphoreProvider extends HazelcastSemaphoreProvider {
     @Override
-    public ISemaphore acquireSemaphore( HazelcastInstance hazelcastInstance, String name )
-    {
-        return hazelcastInstance.getCPSubsystem().getSemaphore( NAME_PREFIX + name );
+    public ISemaphore acquireSemaphore(HazelcastInstance hazelcastInstance, NamedLockKey key) {
+        return hazelcastInstance.getCPSubsystem().getSemaphore(NAME_PREFIX + key.name());
     }
 
     @Override
-    public void releaseSemaphore( HazelcastInstance hazelcastInstance, String name, ISemaphore semaphore )
-    {
+    public void releaseSemaphore(HazelcastInstance hazelcastInstance, NamedLockKey key, ISemaphore semaphore) {
         // nothing
     }
 }

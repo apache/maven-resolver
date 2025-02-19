@@ -1,5 +1,3 @@
-package org.eclipse.aether.graph;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.graph;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,14 +16,14 @@ package org.eclipse.aether.graph;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.graph;
 
 /**
  * An exclusion of one or more transitive dependencies.
  *
  * @see Dependency#getExclusions()
  */
-public final class Exclusion
-{
+public final class Exclusion {
 
     private final String groupId;
 
@@ -43,12 +41,11 @@ public final class Exclusion
      * @param classifier The classifier, may be {@code null}.
      * @param extension The file extension, may be {@code null}.
      */
-    public Exclusion( String groupId, String artifactId, String classifier, String extension )
-    {
-        this.groupId = ( groupId != null ) ? groupId : "";
-        this.artifactId = ( artifactId != null ) ? artifactId : "";
-        this.classifier = ( classifier != null ) ? classifier : "";
-        this.extension = ( extension != null ) ? extension : "";
+    public Exclusion(String groupId, String artifactId, String classifier, String extension) {
+        this.groupId = (groupId != null) ? groupId : "";
+        this.artifactId = (artifactId != null) ? artifactId : "";
+        this.classifier = (classifier != null) ? classifier : "";
+        this.extension = (extension != null) ? extension : "";
     }
 
     /**
@@ -56,8 +53,7 @@ public final class Exclusion
      *
      * @return The group identifier, never {@code null}.
      */
-    public String getGroupId()
-    {
+    public String getGroupId() {
         return groupId;
     }
 
@@ -66,8 +62,7 @@ public final class Exclusion
      *
      * @return The artifact identifier, never {@code null}.
      */
-    public String getArtifactId()
-    {
+    public String getArtifactId() {
         return artifactId;
     }
 
@@ -76,8 +71,7 @@ public final class Exclusion
      *
      * @return The classifier, never {@code null}.
      */
-    public String getClassifier()
-    {
+    public String getClassifier() {
         return classifier;
     }
 
@@ -86,39 +80,38 @@ public final class Exclusion
      *
      * @return The file extension of artifacts to exclude, never {@code null}.
      */
-    public String getExtension()
-    {
+    public String getExtension() {
         return extension;
     }
 
     @Override
-    public String toString()
-    {
-        return getGroupId() + ':' + getArtifactId() + ':' + getExtension()
-            + ( getClassifier().length() > 0 ? ':' + getClassifier() : "" );
+    public String toString() {
+        return getGroupId()
+                + ':'
+                + getArtifactId()
+                + ':'
+                + getExtension()
+                + (!getClassifier().isEmpty() ? ':' + getClassifier() : "");
     }
 
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( obj == this )
-        {
+    public boolean equals(Object obj) {
+        if (obj == this) {
             return true;
-        }
-        else if ( obj == null || !getClass().equals( obj.getClass() ) )
-        {
+        } else if (obj == null || !getClass().equals(obj.getClass())) {
             return false;
         }
 
         Exclusion that = (Exclusion) obj;
 
-        return artifactId.equals( that.artifactId ) && groupId.equals( that.groupId )
-            && extension.equals( that.extension ) && classifier.equals( that.classifier );
+        return artifactId.equals(that.artifactId)
+                && groupId.equals(that.groupId)
+                && extension.equals(that.extension)
+                && classifier.equals(that.classifier);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         int hash = 17;
         hash = hash * 31 + artifactId.hashCode();
         hash = hash * 31 + groupId.hashCode();
@@ -126,5 +119,4 @@ public final class Exclusion
         hash = hash * 31 + extension.hashCode();
         return hash;
     }
-
 }

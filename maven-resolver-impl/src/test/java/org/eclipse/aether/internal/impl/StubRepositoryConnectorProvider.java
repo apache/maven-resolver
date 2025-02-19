@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
@@ -25,30 +24,23 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
-class StubRepositoryConnectorProvider
-    implements RepositoryConnectorProvider
-{
+class StubRepositoryConnectorProvider implements RepositoryConnectorProvider {
 
-    public StubRepositoryConnectorProvider( RepositoryConnector connector )
-    {
-        setConnector( connector );
+    public StubRepositoryConnectorProvider(RepositoryConnector connector) {
+        setConnector(connector);
     }
 
-    public StubRepositoryConnectorProvider()
-    {
-    }
+    public StubRepositoryConnectorProvider() {}
 
     private RepositoryConnector connector;
 
-    public void setConnector( RepositoryConnector connector )
-    {
+    public void setConnector(RepositoryConnector connector) {
         this.connector = connector;
     }
 
-    public RepositoryConnector newRepositoryConnector( RepositorySystemSession session, RemoteRepository repository )
-        throws NoRepositoryConnectorException
-    {
+    @Override
+    public RepositoryConnector newRepositoryConnector(RepositorySystemSession session, RemoteRepository repository)
+            throws NoRepositoryConnectorException {
         return connector;
     }
-
 }

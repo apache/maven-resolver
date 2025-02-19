@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.filter;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.filter;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.filter;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.filter;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,46 +34,40 @@ import org.eclipse.aether.resolution.ArtifactResult;
 /**
  * UT for {@link GroupIdRemoteRepositoryFilterSource}.
  */
-public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFilterSourceTestSupport
-{
+public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFilterSourceTestSupport {
     private GroupIdRemoteRepositoryFilterSource groupIdRemoteRepositoryFilterSource;
 
     @Override
     protected GroupIdRemoteRepositoryFilterSource getRemoteRepositoryFilterSource(
-            DefaultRepositorySystemSession session, RemoteRepository remoteRepository )
-    {
+            DefaultRepositorySystemSession session, RemoteRepository remoteRepository) {
         return groupIdRemoteRepositoryFilterSource =
-                new GroupIdRemoteRepositoryFilterSource( new DefaultRepositorySystemLifecycle() );
+                new GroupIdRemoteRepositoryFilterSource(new DefaultRepositorySystemLifecycle());
     }
 
     @Override
-    protected void enableSource( DefaultRepositorySystemSession session )
-    {
-        session.setConfigProperty( "aether.remoteRepositoryFilter." + GroupIdRemoteRepositoryFilterSource.NAME,
-                Boolean.TRUE.toString() );
+    protected void enableSource(DefaultRepositorySystemSession session) {
+        session.setConfigProperty(
+                "aether.remoteRepositoryFilter." + GroupIdRemoteRepositoryFilterSource.NAME, Boolean.TRUE.toString());
     }
 
-    protected void allowArtifact( DefaultRepositorySystemSession session, RemoteRepository remoteRepository,
-                                  Artifact artifact )
-    {
-        DefaultRepositorySystemSession newSession = new DefaultRepositorySystemSession( session );
-        try
-        {
-            Artifact resolvedArtifact = artifact.setFile( Files.createTempFile( "test", "tmp" ).toFile() );
-            ArtifactResult artifactResult = new ArtifactResult( new ArtifactRequest( resolvedArtifact,
-                    Collections.singletonList( remoteRepository ), "context" ) );
-            artifactResult.setArtifact( resolvedArtifact );
-            artifactResult.setRepository( remoteRepository );
-            List<ArtifactResult> artifactResults = Collections.singletonList( artifactResult );
-            enableSource( newSession );
-            newSession.setConfigProperty( "aether.remoteRepositoryFilter." + GroupIdRemoteRepositoryFilterSource.NAME
-                    + ".record", Boolean.TRUE.toString() );
-            groupIdRemoteRepositoryFilterSource.postProcess( newSession, artifactResults );
+    protected void allowArtifact(
+            DefaultRepositorySystemSession session, RemoteRepository remoteRepository, Artifact artifact) {
+        DefaultRepositorySystemSession newSession = new DefaultRepositorySystemSession(session);
+        try {
+            Artifact resolvedArtifact =
+                    artifact.setFile(Files.createTempFile("test", "tmp").toFile());
+            ArtifactResult artifactResult = new ArtifactResult(
+                    new ArtifactRequest(resolvedArtifact, Collections.singletonList(remoteRepository), "context"));
+            artifactResult.setArtifact(resolvedArtifact);
+            artifactResult.setRepository(remoteRepository);
+            List<ArtifactResult> artifactResults = Collections.singletonList(artifactResult);
+            enableSource(newSession);
+            newSession.setConfigProperty(
+                    "aether.remoteRepositoryFilter." + GroupIdRemoteRepositoryFilterSource.NAME + ".record",
+                    Boolean.TRUE.toString());
+            groupIdRemoteRepositoryFilterSource.postProcess(newSession, artifactResults);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        catch ( IOException e )
-        {
-            throw new UncheckedIOException( e );
-        }
-
     }
 }

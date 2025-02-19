@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.collect.df;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.collect.df;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,22 +16,36 @@ package org.eclipse.aether.internal.impl.collect.df;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.collect.df;
 
+import java.util.Collections;
+
+import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.internal.impl.StubRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.StubVersionRangeResolver;
+import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegate;
 import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegateTestSupport;
 
 /**
  * UT for {@link DfDependencyCollector}.
  */
-public class DfDependencyCollectorTest extends DependencyCollectorDelegateTestSupport
-{
+public class DfDependencyCollectorTest extends DependencyCollectorDelegateTestSupport {
     @Override
-    protected void setupCollector()
-    {
-        collector = new DfDependencyCollector();
-        collector.setArtifactDescriptorReader( newReader( "" ) );
-        collector.setVersionRangeResolver( new StubVersionRangeResolver() );
-        collector.setRemoteRepositoryManager( new StubRemoteRepositoryManager() );
+    protected DependencyCollectorDelegate setupCollector(ArtifactDescriptorReader artifactDescriptorReader) {
+        return new DfDependencyCollector(
+                new StubRemoteRepositoryManager(),
+                artifactDescriptorReader,
+                new StubVersionRangeResolver(),
+                Collections.emptyMap());
+    }
+
+    @Override
+    protected String getTransitiveDepsUseRangesDirtyTreeResource() {
+        return "transitiveDepsUseRangesDirtyTreeResult_DF.txt";
+    }
+
+    @Override
+    protected String getTransitiveDepsUseRangesAndRelocationDirtyTreeResource() {
+        return "transitiveDepsUseRangesAndRelocationDirtyTreeResult_DF.txt";
     }
 }

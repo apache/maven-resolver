@@ -1,5 +1,3 @@
-package org.eclipse.aether.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,21 +16,18 @@ package org.eclipse.aether.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.impl;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
-public class StubArtifactDescriptorReader
-    implements ArtifactDescriptorReader
-{
+public class StubArtifactDescriptorReader implements ArtifactDescriptorReader {
 
-    public ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
-                                                            ArtifactDescriptorRequest request )
-        throws ArtifactDescriptorException
-    {
-        return new ArtifactDescriptorResult( request );
+    @Override
+    public ArtifactDescriptorResult readArtifactDescriptor(
+            RepositorySystemSession session, ArtifactDescriptorRequest request) throws ArtifactDescriptorException {
+        return new ArtifactDescriptorResult(request);
     }
-
 }

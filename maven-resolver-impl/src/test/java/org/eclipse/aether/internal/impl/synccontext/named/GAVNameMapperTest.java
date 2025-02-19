@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext.named;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -25,71 +24,63 @@ import java.util.Iterator;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
-import org.hamcrest.Matchers;
-import org.junit.Test;
+import org.eclipse.aether.named.NamedLockKey;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class GAVNameMapperTest extends NameMapperTestSupport
-{
+public class GAVNameMapperTest extends NameMapperTestSupport {
     NameMapper mapper = GAVNameMapper.fileGav();
 
     @Test
-    public void nullsAndEmptyInputs()
-    {
-        Collection<String> names;
+    void nullsAndEmptyInputs() {
+        Collection<NamedLockKey> names;
 
-        names = mapper.nameLocks( session, null, null );
-        assertThat( names, Matchers.empty() );
+        names = mapper.nameLocks(session, null, null);
+        assertTrue(names.isEmpty());
 
-        names = mapper.nameLocks( session, null, emptyList() );
-        assertThat( names, Matchers.empty() );
+        names = mapper.nameLocks(session, null, emptyList());
+        assertTrue(names.isEmpty());
 
-        names = mapper.nameLocks( session, emptyList(), null );
-        assertThat( names, Matchers.empty() );
+        names = mapper.nameLocks(session, emptyList(), null);
+        assertTrue(names.isEmpty());
 
-        names = mapper.nameLocks( session, emptyList(), emptyList() );
-        assertThat( names, Matchers.empty() );
+        names = mapper.nameLocks(session, emptyList(), emptyList());
+        assertTrue(names.isEmpty());
     }
 
     @Test
-    public void singleArtifact()
-    {
-        DefaultArtifact artifact = new DefaultArtifact( "group:artifact:1.0" );
-        Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), null );
-
-        assertThat( names, hasSize( 1 ) );
-        assertThat( names.iterator().next(), equalTo( "group~artifact~1.0.lock" ) );
+    void singleArtifact() {
+        DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
+        assertEquals(names.size(), 1);
+        assertEquals(names.iterator().next().name(), "artifact~group~artifact~1.0.lock");
     }
 
     @Test
-    public void singleMetadata()
-    {
+    void singleMetadata() {
         DefaultMetadata metadata =
-                new DefaultMetadata( "group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
-        Collection<String> names = mapper.nameLocks( session, null, singletonList( metadata ) );
-
-        assertThat( names, hasSize( 1 ) );
-        assertThat( names.iterator().next(), equalTo( "group~artifact.lock" ) );
+                new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
+        assertEquals(names.size(), 1);
+        assertEquals(names.iterator().next().name(), "metadata~group~artifact.lock");
     }
 
     @Test
-    public void oneAndOne()
-    {
-        DefaultArtifact artifact = new DefaultArtifact( "agroup:artifact:1.0" );
+    void oneAndOne() {
+        DefaultArtifact artifact = new DefaultArtifact("agroup:artifact:1.0");
         DefaultMetadata metadata =
-                new DefaultMetadata( "bgroup", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT );
-        Collection<String> names = mapper.nameLocks( session, singletonList( artifact ), singletonList( metadata ) );
+                new DefaultMetadata("bgroup", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), singletonList(metadata));
 
-        assertThat( names, hasSize( 2 ) );
-        Iterator<String> namesIterator = names.iterator();
+        assertEquals(names.size(), 2);
+        Iterator<NamedLockKey> namesIterator = names.iterator();
 
         // they are sorted as well
-        assertThat( namesIterator.next(), equalTo( "agroup~artifact~1.0.lock" ) );
-        assertThat( namesIterator.next(), equalTo( "bgroup~artifact.lock" ) );
+        assertEquals(namesIterator.next().name(), "artifact~agroup~artifact~1.0.lock");
+        assertEquals(namesIterator.next().name(), "metadata~bgroup~artifact.lock");
     }
 }

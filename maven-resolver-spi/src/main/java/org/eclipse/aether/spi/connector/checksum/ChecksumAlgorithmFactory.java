@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.connector.checksum;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.spi.connector.checksum;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.spi.connector.checksum;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.connector.checksum;
 
 /**
  * A component representing a checksum factory: provides {@link ChecksumAlgorithm} instances, name and extension to be
@@ -26,8 +25,7 @@ package org.eclipse.aether.spi.connector.checksum;
  *
  * @since 1.8.0
  */
-public interface ChecksumAlgorithmFactory
-{
+public interface ChecksumAlgorithmFactory {
     /**
      * Returns the algorithm name, usually used as key, never {@code null} value. The name is a standard name of
      * algorithm (if applicable) or any other designator that is algorithm commonly referred with. Example: "SHA-1".
@@ -37,6 +35,7 @@ public interface ChecksumAlgorithmFactory
     /**
      * Returns the file extension to be used for given checksum file (without leading dot), never {@code null}. The
      * extension should be file and URL path friendly, and may differ from value returned by {@link #getName()}.
+     * The checksum extension SHOULD NOT contain dot (".") character.
      * Example: "sha1".
      */
     String getFileExtension();

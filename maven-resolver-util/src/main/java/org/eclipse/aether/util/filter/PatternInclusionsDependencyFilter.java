@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.filter;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.filter;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.util.filter;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.filter;
 
 import java.util.Collection;
 
@@ -25,7 +24,7 @@ import org.eclipse.aether.version.VersionScheme;
 
 /**
  * A simple filter to include artifacts from a list of patterns. The artifact pattern syntax is of the form:
- * 
+ *
  * <pre>
  * [groupId]:[artifactId]:[extension]:[version]
  * </pre>
@@ -38,52 +37,45 @@ import org.eclipse.aether.version.VersionScheme;
  * <code>org.eclipse.</code> , and <code>:::*-SNAPSHOT</code> would match all snapshot artifacts.
  * </p>
  */
-public final class PatternInclusionsDependencyFilter
-    extends AbstractPatternDependencyFilter
-{
+public final class PatternInclusionsDependencyFilter extends AbstractPatternDependencyFilter {
 
     /**
      * Creates a new filter using the specified patterns.
-     * 
+     *
      * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
      */
-    public PatternInclusionsDependencyFilter( final String... patterns )
-    {
-        super( patterns );
+    public PatternInclusionsDependencyFilter(final String... patterns) {
+        super(patterns);
     }
 
     /**
      * Creates a new filter using the specified patterns.
-     * 
+     *
      * @param versionScheme To be used for parsing versions/version ranges. If {@code null} and pattern specifies a
      *            range no artifact will be included.
      * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
      */
-    public PatternInclusionsDependencyFilter( final VersionScheme versionScheme, final String... patterns )
-    {
-        super( versionScheme, patterns );
+    public PatternInclusionsDependencyFilter(final VersionScheme versionScheme, final String... patterns) {
+        super(versionScheme, patterns);
     }
 
     /**
      * Creates a new filter using the specified patterns.
-     * 
+     *
      * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
      */
-    public PatternInclusionsDependencyFilter( final Collection<String> patterns )
-    {
-        super( patterns );
+    public PatternInclusionsDependencyFilter(final Collection<String> patterns) {
+        super(patterns);
     }
 
     /**
      * Creates a new filter using the specified patterns and {@link VersionScheme} .
-     * 
+     *
      * @param versionScheme To be used for parsing versions/version ranges. If {@code null} and pattern specifies a
      *            range no artifact will be included.
      * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
      */
-    public PatternInclusionsDependencyFilter( final VersionScheme versionScheme, final Collection<String> patterns )
-    {
-        super( versionScheme, patterns );
+    public PatternInclusionsDependencyFilter(final VersionScheme versionScheme, final Collection<String> patterns) {
+        super(versionScheme, patterns);
     }
-
 }

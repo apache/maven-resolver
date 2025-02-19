@@ -1,5 +1,3 @@
-package org.eclipse.aether.named.providers;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.named.providers;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,13 +16,15 @@ package org.eclipse.aether.named.providers;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+package org.eclipse.aether.named.providers;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
+import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.support.AdaptedSemaphoreNamedLock;
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 
@@ -32,42 +32,34 @@ import org.eclipse.aether.named.support.NamedLockFactorySupport;
  * A JVM-local named lock factory that uses named {@link Semaphore}s.
  */
 @Singleton
-@Named( LocalSemaphoreNamedLockFactory.NAME )
-public class LocalSemaphoreNamedLockFactory
-    extends NamedLockFactorySupport
-{
+@Named(LocalSemaphoreNamedLockFactory.NAME)
+public class LocalSemaphoreNamedLockFactory extends NamedLockFactorySupport {
     public static final String NAME = "semaphore-local";
 
     @Override
-    protected AdaptedSemaphoreNamedLock createLock( final String name )
-    {
-      Semaphore semaphore = new Semaphore( Integer.MAX_VALUE );
-      return new AdaptedSemaphoreNamedLock( name, this, new JVMSemaphore( semaphore ) );
+    protected AdaptedSemaphoreNamedLock createLock(final NamedLockKey key) {
+        Semaphore semaphore = new Semaphore(Integer.MAX_VALUE);
+        return new AdaptedSemaphoreNamedLock(key, this, new JVMSemaphore(semaphore));
     }
 
     /**
      * Adapted JVM {@link java.util.concurrent.Semaphore}.
      */
-    private static final class JVMSemaphore
-        implements AdaptedSemaphoreNamedLock.AdaptedSemaphore
-    {
+    private static final class JVMSemaphore implements AdaptedSemaphoreNamedLock.AdaptedSemaphore {
         private final Semaphore semaphore;
 
-        private JVMSemaphore( final Semaphore semaphore )
-        {
-          this.semaphore = semaphore;
+        private JVMSemaphore(final Semaphore semaphore) {
+            this.semaphore = semaphore;
         }
 
         @Override
-        public boolean tryAcquire( final int perms, final long time, final TimeUnit unit ) throws InterruptedException
-        {
-             return semaphore.tryAcquire( perms, time, unit );
+        public boolean tryAcquire(final int perms, final long time, final TimeUnit unit) throws InterruptedException {
+            return semaphore.tryAcquire(perms, time, unit);
         }
 
         @Override
-        public void release( final int perms )
-        {
-            semaphore.release( perms );
+        public void release(final int perms) {
+            semaphore.release(perms);
         }
     }
 }

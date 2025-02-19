@@ -1,5 +1,3 @@
-package org.eclipse.aether.collection;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.collection;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.collection;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.collection;
 
 import java.util.List;
 
@@ -32,8 +31,7 @@ import org.eclipse.aether.graph.DependencyNode;
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface CollectStepData
-{
+public interface CollectStepData {
     /**
      * Returns the context of collection. Never {@code null}.
      */

@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,25 +16,25 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+package org.eclipse.aether.internal.impl;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.artifact.ArtifactPredicate;
+import org.eclipse.aether.spi.artifact.ArtifactPredicateFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
@@ -50,42 +48,43 @@ import static java.util.Objects.requireNonNull;
  * Provides a Maven-2 repository layout for repositories with content type {@code "default"}.
  */
 @Singleton
-@Named( "maven2" )
-public final class Maven2RepositoryLayoutFactory
-        implements RepositoryLayoutFactory
-{
+@Named(Maven2RepositoryLayoutFactory.NAME)
+public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFactory {
+    public static final String NAME = "maven2";
 
-    public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = "aether.checksums.algorithms";
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_LAYOUT + NAME + ".";
 
-    private static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
+    /**
+     * Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated
+     * (uploaded) with this layout. Resolver by default supports following algorithms: MD5, SHA-1, SHA-256 and
+     * SHA-512. New algorithms can be added by implementing ChecksumAlgorithmFactory component.
+     *
+     * @since 1.8.0
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_CHECKSUMS_ALGORITHMS}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = CONFIG_PROPS_PREFIX + "checksumAlgorithms";
 
-    public static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
-            "aether.checksums.omitChecksumsForExtensions";
-
-    private static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc";
+    public static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
 
     private float priority;
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
-    public float getPriority()
-    {
+    private final ArtifactPredicateFactory artifactPredicateFactory;
+
+    public float getPriority() {
         return priority;
     }
 
-    /**
-     * Service locator ctor.
-     */
-    @Deprecated
-    public Maven2RepositoryLayoutFactory()
-    {
-        this( new DefaultChecksumAlgorithmFactorySelector() );
-    }
-
     @Inject
-    public Maven2RepositoryLayoutFactory( ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector )
-    {
-        this.checksumAlgorithmFactorySelector = requireNonNull( checksumAlgorithmFactorySelector );
+    public Maven2RepositoryLayoutFactory(
+            ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector,
+            ArtifactPredicateFactory artifactPredicateFactory) {
+        this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
+        this.artifactPredicateFactory = requireNonNull(artifactPredicateFactory);
     }
 
     /**
@@ -94,182 +93,120 @@ public final class Maven2RepositoryLayoutFactory
      * @param priority The priority.
      * @return This component for chaining, never {@code null}.
      */
-    public Maven2RepositoryLayoutFactory setPriority( float priority )
-    {
+    public Maven2RepositoryLayoutFactory setPriority(float priority) {
         this.priority = priority;
         return this;
     }
 
-    public RepositoryLayout newInstance( RepositorySystemSession session, RemoteRepository repository )
-            throws NoRepositoryLayoutException
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( repository, "repository cannot be null" );
-        if ( !"default".equals( repository.getContentType() ) )
-        {
-            throw new NoRepositoryLayoutException( repository );
+    public RepositoryLayout newInstance(RepositorySystemSession session, RemoteRepository repository)
+            throws NoRepositoryLayoutException {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(repository, "repository cannot be null");
+        if (!"default".equals(repository.getContentType())) {
+            throw new NoRepositoryLayoutException(repository);
         }
 
         List<ChecksumAlgorithmFactory> checksumsAlgorithms = checksumAlgorithmFactorySelector.selectList(
-                ConfigUtils.parseCommaSeparatedUniqueNames( ConfigUtils.getString(
-                        session, DEFAULT_CHECKSUMS_ALGORITHMS, CONFIG_PROP_CHECKSUMS_ALGORITHMS ) )
-        );
+                ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                        session,
+                        DEFAULT_CHECKSUMS_ALGORITHMS,
+                        CONFIG_PROP_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
+                        CONFIG_PROP_CHECKSUMS_ALGORITHMS)));
 
-        // ensure uniqueness of (potentially user set) extension list
-        Set<String> omitChecksumsForExtensions = Arrays.stream( ConfigUtils.getString(
-                        session, DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS, CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS )
-                .split( "," )
-        ).filter( s -> s != null && !s.trim().isEmpty() ).collect( Collectors.toSet() );
-
-        // validation: enforce that all strings in this set are having leading dot
-        if ( omitChecksumsForExtensions.stream().anyMatch( s -> !s.startsWith( "." ) ) )
-        {
-            throw new IllegalArgumentException(
-                    String.format(
-                            "The configuration %s contains illegal values: %s (all entries must start with '.' (dot))",
-                            CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS,
-                            omitChecksumsForExtensions
-                    )
-            );
-        }
-
-        return new Maven2RepositoryLayout(
-                new ArrayList<>( checksumAlgorithmFactorySelector.getChecksumAlgorithmFactories() ),
-                checksumsAlgorithms,
-                omitChecksumsForExtensions
-        );
+        return new Maven2RepositoryLayout(checksumsAlgorithms, artifactPredicateFactory.newInstance(session));
     }
 
-    private static class Maven2RepositoryLayout
-            implements RepositoryLayout
-    {
-        private final List<ChecksumAlgorithmFactory> allChecksumAlgorithms;
-
+    private static class Maven2RepositoryLayout implements RepositoryLayout {
         private final List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms;
+        private final ArtifactPredicate artifactPredicate;
 
-        private final Set<String> extensionsWithoutChecksums;
-
-        private Maven2RepositoryLayout( List<ChecksumAlgorithmFactory> allChecksumAlgorithms,
-                                        List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms,
-                                        Set<String> extensionsWithoutChecksums )
-        {
-            this.allChecksumAlgorithms = Collections.unmodifiableList( allChecksumAlgorithms );
-            this.configuredChecksumAlgorithms = Collections.unmodifiableList( configuredChecksumAlgorithms );
-            this.extensionsWithoutChecksums = requireNonNull( extensionsWithoutChecksums );
+        private Maven2RepositoryLayout(
+                List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms, ArtifactPredicate artifactPredicate) {
+            this.configuredChecksumAlgorithms = Collections.unmodifiableList(configuredChecksumAlgorithms);
+            this.artifactPredicate = requireNonNull(artifactPredicate);
         }
 
-        private URI toUri( String path )
-        {
-            try
-            {
-                return new URI( null, null, path, null );
-            }
-            catch ( URISyntaxException e )
-            {
-                throw new IllegalStateException( e );
+        private URI toUri(String path) {
+            try {
+                return new URI(null, null, path, null);
+            } catch (URISyntaxException e) {
+                throw new IllegalStateException(e);
             }
         }
 
         @Override
-        public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories()
-        {
+        public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories() {
             return configuredChecksumAlgorithms;
         }
 
         @Override
-        public boolean hasChecksums( Artifact artifact )
-        {
-            String artifactExtension = artifact.getExtension(); // ie. pom.asc
-            for ( String extensionWithoutChecksums : extensionsWithoutChecksums )
-            {
-                if ( artifactExtension.endsWith( extensionWithoutChecksums ) )
-                {
-                    return false;
-                }
-            }
-            return true;
+        public boolean hasChecksums(Artifact artifact) {
+            return !artifactPredicate.isWithoutChecksum(artifact);
         }
 
         @Override
-        public URI getLocation( Artifact artifact, boolean upload )
-        {
-            StringBuilder path = new StringBuilder( 128 );
+        public URI getLocation(Artifact artifact, boolean upload) {
+            StringBuilder path = new StringBuilder(128);
 
-            path.append( artifact.getGroupId().replace( '.', '/' ) ).append( '/' );
+            path.append(artifact.getGroupId().replace('.', '/')).append('/');
 
-            path.append( artifact.getArtifactId() ).append( '/' );
+            path.append(artifact.getArtifactId()).append('/');
 
-            path.append( artifact.getBaseVersion() ).append( '/' );
+            path.append(artifact.getBaseVersion()).append('/');
 
-            path.append( artifact.getArtifactId() ).append( '-' ).append( artifact.getVersion() );
+            path.append(artifact.getArtifactId()).append('-').append(artifact.getVersion());
 
-            if ( artifact.getClassifier().length() > 0 )
-            {
-                path.append( '-' ).append( artifact.getClassifier() );
+            if (!artifact.getClassifier().isEmpty()) {
+                path.append('-').append(artifact.getClassifier());
             }
 
-            if ( artifact.getExtension().length() > 0 )
-            {
-                path.append( '.' ).append( artifact.getExtension() );
+            if (!artifact.getExtension().isEmpty()) {
+                path.append('.').append(artifact.getExtension());
             }
 
-            return toUri( path.toString() );
+            return toUri(path.toString());
         }
 
         @Override
-        public URI getLocation( Metadata metadata, boolean upload )
-        {
-            StringBuilder path = new StringBuilder( 128 );
+        public URI getLocation(Metadata metadata, boolean upload) {
+            StringBuilder path = new StringBuilder(128);
 
-            if ( metadata.getGroupId().length() > 0 )
-            {
-                path.append( metadata.getGroupId().replace( '.', '/' ) ).append( '/' );
+            if (!metadata.getGroupId().isEmpty()) {
+                path.append(metadata.getGroupId().replace('.', '/')).append('/');
 
-                if ( metadata.getArtifactId().length() > 0 )
-                {
-                    path.append( metadata.getArtifactId() ).append( '/' );
+                if (!metadata.getArtifactId().isEmpty()) {
+                    path.append(metadata.getArtifactId()).append('/');
 
-                    if ( metadata.getVersion().length() > 0 )
-                    {
-                        path.append( metadata.getVersion() ).append( '/' );
+                    if (!metadata.getVersion().isEmpty()) {
+                        path.append(metadata.getVersion()).append('/');
                     }
                 }
             }
 
-            path.append( metadata.getType() );
+            path.append(metadata.getType());
 
-            return toUri( path.toString() );
+            return toUri(path.toString());
         }
 
         @Override
-        public List<ChecksumLocation> getChecksumLocations( Artifact artifact, boolean upload, URI location )
-        {
-            if ( !hasChecksums( artifact ) || isChecksum( artifact.getExtension() ) )
-            {
+        public List<ChecksumLocation> getChecksumLocations(Artifact artifact, boolean upload, URI location) {
+            if (artifactPredicate.isWithoutChecksum(artifact) || artifactPredicate.isChecksum(artifact)) {
                 return Collections.emptyList();
             }
-            return getChecksumLocations( location );
+            return getChecksumLocations(location);
         }
 
         @Override
-        public List<ChecksumLocation> getChecksumLocations( Metadata metadata, boolean upload, URI location )
-        {
-            return getChecksumLocations( location );
+        public List<ChecksumLocation> getChecksumLocations(Metadata metadata, boolean upload, URI location) {
+            return getChecksumLocations(location);
         }
 
-        private List<ChecksumLocation> getChecksumLocations( URI location )
-        {
-            List<ChecksumLocation> checksumLocations = new ArrayList<>( configuredChecksumAlgorithms.size() );
-            for ( ChecksumAlgorithmFactory checksumAlgorithmFactory : configuredChecksumAlgorithms )
-            {
-                checksumLocations.add( ChecksumLocation.forLocation( location, checksumAlgorithmFactory ) );
+        private List<ChecksumLocation> getChecksumLocations(URI location) {
+            List<ChecksumLocation> checksumLocations = new ArrayList<>(configuredChecksumAlgorithms.size());
+            for (ChecksumAlgorithmFactory checksumAlgorithmFactory : configuredChecksumAlgorithms) {
+                checksumLocations.add(ChecksumLocation.forLocation(location, checksumAlgorithmFactory));
             }
             return checksumLocations;
-        }
-
-        private boolean isChecksum( String extension )
-        {
-            return allChecksumAlgorithms.stream().anyMatch( a -> extension.endsWith( "." + a.getFileExtension() ) );
         }
     }
 }

@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext.named.providers;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext.named.providers;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,15 +16,14 @@ package org.eclipse.aether.internal.impl.synccontext.named.providers;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext.named.providers;
 
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.eclipse.aether.internal.impl.synccontext.named.BasedirNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.HashingNameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 
 /**
  * The "file-hgav" name mapper provider.
@@ -34,21 +31,16 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
  * @since 1.9.0
  */
 @Singleton
-@Named( FileHashingGAVNameMapperProvider.NAME )
-public class FileHashingGAVNameMapperProvider implements Provider<NameMapper>
-{
-    public static final String NAME = "file-hgav";
-
+@Named(NameMappers.FILE_HGAV_NAME)
+public class FileHashingGAVNameMapperProvider implements Provider<NameMapper> {
     private final NameMapper mapper;
 
-    public FileHashingGAVNameMapperProvider()
-    {
-        this.mapper = new BasedirNameMapper( new HashingNameMapper( GAVNameMapper.gav() ) );
+    public FileHashingGAVNameMapperProvider() {
+        this.mapper = NameMappers.fileHashingGavNameMapper();
     }
 
     @Override
-    public NameMapper get()
-    {
+    public NameMapper get() {
         return mapper;
     }
 }

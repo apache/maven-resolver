@@ -1,5 +1,3 @@
-package org.apache.maven.resolver.examples;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.apache.maven.resolver.examples;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,11 +16,11 @@ package org.apache.maven.resolver.examples;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.apache.maven.resolver.examples.util.ConsoleDependencyGraphDumper;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -32,33 +30,29 @@ import org.eclipse.aether.graph.Dependency;
 /**
  * Collects the transitive dependencies of an artifact.
  */
-public class GetDependencyTree
-{
+public class GetDependencyTree {
 
     /**
      * Main.
      * @param args
      * @throws Exception
      */
-    public static void main( String[] args )
-        throws Exception
-    {
-        System.out.println( "------------------------------------------------------------" );
-        System.out.println( GetDependencyTree.class.getSimpleName() );
+    public static void main(String[] args) throws Exception {
+        System.out.println("------------------------------------------------------------");
+        System.out.println(GetDependencyTree.class.getSimpleName());
 
-        RepositorySystem system = Booter.newRepositorySystem( Booter.selectFactory( args ) );
+        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
+                CloseableSession session =
+                        Booter.newRepositorySystemSession(system).build()) {
+            Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession( system );
+            CollectRequest collectRequest = new CollectRequest();
+            collectRequest.setRoot(new Dependency(artifact, ""));
+            collectRequest.setRepositories(Booter.newRepositories(system, session));
 
-        Artifact artifact = new DefaultArtifact( "org.apache.maven:maven-resolver-provider:3.6.1" );
+            CollectResult collectResult = system.collectDependencies(session, collectRequest);
 
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRoot( new Dependency( artifact, "" ) );
-        collectRequest.setRepositories( Booter.newRepositories( system, session ) );
-
-        CollectResult collectResult = system.collectDependencies( session, collectRequest );
-
-        collectResult.getRoot().accept( new ConsoleDependencyGraphDumper() );
+            collectResult.getRoot().accept(Booter.DUMPER_SOUT);
+        }
     }
-
 }

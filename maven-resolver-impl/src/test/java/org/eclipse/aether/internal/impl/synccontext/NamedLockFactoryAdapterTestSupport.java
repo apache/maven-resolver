@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,50 +16,50 @@ package org.eclipse.aether.internal.impl.synccontext;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.impl.synccontext.named.*;
-import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.spi.synccontext.SyncContextFactory;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+package org.eclipse.aether.internal.impl.synccontext;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.SyncContext;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.internal.impl.synccontext.named.*;
+import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
+import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+
+import static java.util.Objects.requireNonNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
  * UT support for {@link SyncContextFactory}.
  */
-public abstract class NamedLockFactoryAdapterTestSupport
-{
-    private static final long ADAPTER_TIME = 1000L;
+public abstract class NamedLockFactoryAdapterTestSupport {
+    private static final long ADAPTER_TIME = 500L;
 
     private static final TimeUnit ADAPTER_TIME_UNIT = TimeUnit.MILLISECONDS;
 
     /**
      * Subclass MAY populate this field but subclass must take care of proper cleanup as well, if needed!
      */
-    protected static NameMapper nameMapper = new DiscriminatingNameMapper( GAVNameMapper.gav() );
+    protected static NameMapper nameMapper = new DiscriminatingNameMapper(GAVNameMapper.gav());
 
     /**
      * Subclass MUST populate this field but subclass must take care of proper cleanup as well, if needed! Once set,
-     * subclass must MUST call {@link #createAdapter()}.
+     * subclass MUST call {@link #createAdapter()}.
      */
     protected static NamedLockFactory namedLockFactory;
 
@@ -70,45 +68,76 @@ public abstract class NamedLockFactoryAdapterTestSupport
     private RepositorySystemSession session;
 
     public static void createAdapter() {
-        Objects.requireNonNull(namedLockFactory, "NamedLockFactory not set");
+        requireNonNull(namedLockFactory, "NamedLockFactory not set");
         adapter = new NamedLockFactoryAdapter(nameMapper, namedLockFactory);
     }
 
-    @AfterClass
-    public static void cleanupAdapter() {
+    @AfterAll
+    static void cleanupAdapter() {
         if (adapter != null) {
             adapter.getNamedLockFactory().shutdown();
         }
     }
 
-    @Before
-    public void before() throws IOException {
+    @BeforeEach
+    void before() throws IOException {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
-        LocalRepository localRepository = new LocalRepository(Files.createTempDirectory("test").toFile());
+        LocalRepository localRepository =
+                new LocalRepository(Files.createTempDirectory("test").toFile());
         session = mock(RepositorySystemSession.class);
         when(session.getLocalRepository()).thenReturn(localRepository);
         HashMap<String, Object> config = new HashMap<>();
-        config.put(NamedLockFactoryAdapter.TIME_KEY, String.valueOf(ADAPTER_TIME));
-        config.put(NamedLockFactoryAdapter.TIME_UNIT_KEY, ADAPTER_TIME_UNIT.name());
+        config.put(NamedLockFactoryAdapter.CONFIG_PROP_TIME, String.valueOf(ADAPTER_TIME));
+        config.put(NamedLockFactoryAdapter.CONFIG_PROP_TIME_UNIT, ADAPTER_TIME_UNIT.name());
         when(session.getConfigProperties()).thenReturn(config);
     }
 
     @Test
-    public void justCreateAndClose() {
+    void justCreateAndClose() {
         adapter.newInstance(session, false).close();
     }
 
     @Test
-    public void justAcquire() {
+    void justAcquire() {
         try (SyncContext syncContext = adapter.newInstance(session, false)) {
             syncContext.acquire(
-                    Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0"), new DefaultArtifact("groupId:artifactId:1.1")),
-                    null
-            );
+                    Arrays.asList(
+                            new DefaultArtifact("groupId:artifactId:1.0"),
+                            new DefaultArtifact("groupId:artifactId:1.1")),
+                    null);
         }
     }
 
-    @Test(timeout = 5000)
+    @Test
+    void multipleAcquires() {
+        try (SyncContext syncContext = adapter.newInstance(session, false)) {
+            syncContext.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0")), null);
+            syncContext.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.1")), null);
+        }
+    }
+
+    @Test
+    @Timeout(5)
+    void multipleAcquiresWithALoser() throws InterruptedException {
+        try (SyncContext syncContext1 = adapter.newInstance(session, false)) {
+            syncContext1.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0")), null);
+            syncContext1.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.1")), null);
+            CountDownLatch loser = new CountDownLatch(1);
+            Thread t1 = new Thread(() -> {
+                try (SyncContext syncContext2 = adapter.newInstance(session, false)) {
+                    syncContext2.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0")), null);
+                } catch (IllegalStateException e) {
+                    loser.countDown();
+                }
+            });
+            t1.start();
+            t1.join();
+            loser.await();
+        }
+    }
+
+    @Test
+    @Timeout(5)
     public void sharedAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -122,7 +151,8 @@ public abstract class NamedLockFactoryAdapterTestSupport
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void exclusiveAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -136,7 +166,8 @@ public abstract class NamedLockFactoryAdapterTestSupport
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void mixedAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -150,60 +181,13 @@ public abstract class NamedLockFactoryAdapterTestSupport
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(5)
     public void nestedSharedShared() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
-        Thread t1 = new Thread(
-                new Access(true, winners, losers, adapter, session,
-                        new Access(true, winners, losers, adapter, session, null)
-                )
-        );
-        t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
-    }
-
-    @Test(timeout = 5000)
-    public void nestedExclusiveShared() throws InterruptedException {
-        CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
-        CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
-        Thread t1 = new Thread(
-                new Access(false, winners, losers, adapter, session,
-                        new Access(true, winners, losers, adapter, session, null)
-                )
-        );
-        t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
-    }
-
-    @Test(timeout = 5000)
-    public void nestedExclusiveExclusive() throws InterruptedException {
-        CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
-        CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
-        Thread t1 = new Thread(
-                new Access(false, winners, losers, adapter, session,
-                        new Access(false, winners, losers, adapter, session, null)
-                )
-        );
-        t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
-    }
-
-    @Test(timeout = 5000)
-    public void nestedSharedExclusive() throws InterruptedException {
-        CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner (outer)
-        CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser (inner)
-        Thread t1 = new Thread(
-                new Access(true, winners, losers, adapter, session,
-                        new Access(false, winners, losers, adapter, session, null)
-                )
-        );
+        Thread t1 = new Thread(new Access(
+                true, winners, losers, adapter, session, new Access(true, winners, losers, adapter, session, null)));
         t1.start();
         t1.join();
         winners.await();
@@ -211,7 +195,46 @@ public abstract class NamedLockFactoryAdapterTestSupport
     }
 
     @Test
-    public void fullyConsumeLockTime() throws InterruptedException {
+    @Timeout(5)
+    public void nestedExclusiveShared() throws InterruptedException {
+        CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
+        CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
+        Thread t1 = new Thread(new Access(
+                false, winners, losers, adapter, session, new Access(true, winners, losers, adapter, session, null)));
+        t1.start();
+        t1.join();
+        winners.await();
+        losers.await();
+    }
+
+    @Test
+    @Timeout(5)
+    public void nestedExclusiveExclusive() throws InterruptedException {
+        CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
+        CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
+        Thread t1 = new Thread(new Access(
+                false, winners, losers, adapter, session, new Access(false, winners, losers, adapter, session, null)));
+        t1.start();
+        t1.join();
+        winners.await();
+        losers.await();
+    }
+
+    @Test
+    @Timeout(5)
+    public void nestedSharedExclusive() throws InterruptedException {
+        CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner (outer)
+        CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser (inner)
+        Thread t1 = new Thread(new Access(
+                true, winners, losers, adapter, session, new Access(false, winners, losers, adapter, session, null)));
+        t1.start();
+        t1.join();
+        winners.await();
+        losers.await();
+    }
+
+    @Test
+    void fullyConsumeLockTime() throws InterruptedException {
         long start = System.nanoTime();
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -226,11 +249,11 @@ public abstract class NamedLockFactoryAdapterTestSupport
         long end = System.nanoTime();
         long duration = end - start;
         long expectedDuration = ADAPTER_TIME_UNIT.toNanos(ADAPTER_TIME);
-        assertThat(duration, greaterThanOrEqualTo(expectedDuration)); // equal in ideal case
+        assertTrue(duration >= expectedDuration); // equal in ideal case
     }
 
     @Test
-    public void releasedExclusiveAllowAccess() throws InterruptedException {
+    void releasedExclusiveAllowAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(0); // we expect 1 loser
         Thread t1 = new Thread(new Access(false, winners, losers, adapter, session, null));
@@ -249,12 +272,13 @@ public abstract class NamedLockFactoryAdapterTestSupport
         final RepositorySystemSession session;
         final Access chained;
 
-        public Access(boolean shared,
-                      CountDownLatch winner,
-                      CountDownLatch loser,
-                      NamedLockFactoryAdapter adapter,
-                      RepositorySystemSession session,
-                      Access chained) {
+        public Access(
+                boolean shared,
+                CountDownLatch winner,
+                CountDownLatch loser,
+                NamedLockFactoryAdapter adapter,
+                RepositorySystemSession session,
+                Access chained) {
             this.shared = shared;
             this.winner = winner;
             this.loser = loser;
@@ -268,21 +292,21 @@ public abstract class NamedLockFactoryAdapterTestSupport
             try {
                 try (SyncContext syncContext = adapter.newInstance(session, shared)) {
                     syncContext.acquire(
-                            Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0"), new DefaultArtifact("groupId:artifactId:1.1")),
-                            null
-                    );
+                            Arrays.asList(
+                                    new DefaultArtifact("groupId:artifactId:1.0"),
+                                    new DefaultArtifact("groupId:artifactId:1.1")),
+                            null);
                     winner.countDown();
                     if (chained != null) {
                         chained.run();
                     }
                     loser.await();
-                } catch (IllegalStateException e) {
-                    e.printStackTrace(); // for ref purposes
+                } catch (IllegalStateException | LockUpgradeNotSupportedException e) {
                     loser.countDown();
                     winner.await();
                 }
             } catch (InterruptedException e) {
-                Assert.fail("interrupted");
+                fail("interrupted");
             }
         }
     }

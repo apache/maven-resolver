@@ -18,6 +18,8 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+<!--MACRO{toc|fromDepth=1}-->
+
 Maven Resolver implements a "local repository" (that is used by Maven itself
 as well), that since the beginning of time was a "mixed bag of beans", 
 it served twofold purposes: to cache the artifacts downloaded from 
@@ -45,6 +47,12 @@ This is meant to protect users from "bad practice" (artifact coordinates are
 unique in ideal world).
 
 #### Split Local Repository
+
+**Note: Resolver 2.x _renamed related properties_ to clean up configuration
+keys, but 2.0.x will support latest Resolver 1.9.x properties to support
+transitioning. This document uses "legacy" properties (that work in both,
+1.9.x and 2.0.6+ resolver, while current configuration is documented
+on [configuration page](configuration.html).**
 
 Latest addition to the enhanced LRM is *split* feature. By default, split 
 feature is **not enabled**, enhanced LRM behaves as it behaved in all 
@@ -123,7 +131,9 @@ $ mvn ... -Daether.enhancedLocalRepository.split \
 ```
 
 For complete reference of enhanced LRM configuration possibilities, refer to 
-[configuration page](configuration.html).
+[configuration page](configuration.html). That page contains current configuration
+keys for Resolver 2.x, while this page example use "legacy" keys that work in
+both Resolver 1.9.x and Resolver 2.0.6+.
 
 ##### Split Repository Considerations
 
@@ -180,3 +190,19 @@ available, providing out of the box lock implementations for cases like:
 
 For details see [Named Locks module](maven-resolver-named-locks/).
 
+## Error Handling and Caching
+
+Each artifact/metadata which cannot be resolved leads to an error either classified as 
+
+1. *not found* error or
+2. (any) *other* error (for authentication issues, timeouts etc.)
+
+The caching behavior for both error types can be be configured programmatically via `org.eclipse.aether.DefaultRepositorySystemSession.setResolutionErrorPolicy(...)`.
+
+In case caching is enabled for any of the two classifications a Java Properties file is created/updated (with the same filename as the cached artifact in the success case would get but with the additional suffix `.lastUpdated`) in the local repository. Within that file the key `<canonical-remote-url>.error` is updated/added. Its value either contains the error message (for type 2 resolver errors) or is empty (for type 1 resolver errors).
+
+### Configuration in Maven
+
+In Maven 3 resolver errors of **type 1** are **always cached** and the ones of **type 2** are **never cached**.
+
+With [Maven 4](https://issues.apache.org/jira/browse/MNG-7653) the caching of type 1 errors can be disabled with CLI option `-canf false` (still enabled by default). However, the caching of type 2 errors is disabled without any way to override that policy even in Maven 4.

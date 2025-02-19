@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.collect;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl.collect;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.internal.impl.collect;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.collect;
 
 import java.util.List;
 
@@ -29,58 +28,54 @@ import org.eclipse.aether.graph.Dependency;
 /**
  * Internal helper class for collector implementations.
  */
-public final class DefaultDependencyCollectionContext
-    implements DependencyCollectionContext
-{
+public final class DefaultDependencyCollectionContext implements DependencyCollectionContext {
 
     private final RepositorySystemSession session;
 
-    private Artifact artifact;
+    private final Artifact artifact;
 
-    private Dependency dependency;
+    private final Dependency dependency;
 
-    private List<Dependency> managedDependencies;
+    private final List<Dependency> managedDependencies;
 
-    public DefaultDependencyCollectionContext( RepositorySystemSession session, Artifact artifact,
-                                               Dependency dependency, List<Dependency> managedDependencies )
-    {
+    public DefaultDependencyCollectionContext(
+            RepositorySystemSession session,
+            Artifact artifact,
+            Dependency dependency,
+            List<Dependency> managedDependencies) {
         this.session = session;
-        this.artifact = ( dependency != null ) ? dependency.getArtifact() : artifact;
-        this.dependency = dependency;
-        this.managedDependencies = managedDependencies;
-    }
-
-    public RepositorySystemSession getSession()
-    {
-        return session;
-    }
-
-    public Artifact getArtifact()
-    {
-        return artifact;
-    }
-
-    public Dependency getDependency()
-    {
-        return dependency;
-    }
-
-    public List<Dependency> getManagedDependencies()
-    {
-        return managedDependencies;
-    }
-
-    public void set( Dependency dependency, List<Dependency> managedDependencies )
-    {
-        artifact = dependency.getArtifact();
+        this.artifact = (dependency != null) ? dependency.getArtifact() : artifact;
         this.dependency = dependency;
         this.managedDependencies = managedDependencies;
     }
 
     @Override
-    public String toString()
-    {
-        return String.valueOf( getDependency() );
+    public RepositorySystemSession getSession() {
+        return session;
     }
 
+    @Override
+    public Artifact getArtifact() {
+        return artifact;
+    }
+
+    @Override
+    public Dependency getDependency() {
+        return dependency;
+    }
+
+    @Override
+    public List<Dependency> getManagedDependencies() {
+        return managedDependencies;
+    }
+
+    public DefaultDependencyCollectionContext set(Dependency dependency, List<Dependency> managedDependencies) {
+        return new DefaultDependencyCollectionContext(
+                session, dependency.getArtifact(), dependency, managedDependencies);
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(getDependency());
+    }
 }

@@ -1,5 +1,3 @@
-package org.eclipse.aether.collection;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.collection;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.collection;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.collection;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,12 +29,12 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.version.VersionConstraint;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Thrown in case of an unsolvable conflict between different version constraints for a dependency.
  */
-public class UnsolvableVersionConflictException
-    extends RepositoryException
-{
+public class UnsolvableVersionConflictException extends RepositoryException {
 
     private final transient Collection<String> versions;
 
@@ -43,43 +42,50 @@ public class UnsolvableVersionConflictException
 
     /**
      * Creates a new exception with the specified paths to conflicting nodes in the dependency graph.
-     * 
+     *
      * @param paths The paths to the dependency nodes that participate in the version conflict, may be {@code null}.
+     * @deprecated Use {@link #UnsolvableVersionConflictException(String, Collection)} instead.
      */
-    public UnsolvableVersionConflictException( Collection<? extends List<? extends DependencyNode>> paths )
-    {
-        super( "Could not resolve version conflict among " + toPaths( paths ) );
-        if ( paths == null )
-        {
+    @Deprecated
+    public UnsolvableVersionConflictException(Collection<? extends List<? extends DependencyNode>> paths) {
+        this("Unsolvable hard constraint combination", paths);
+    }
+
+    /**
+     * Creates a new exception with the specified paths to conflicting nodes in the dependency graph.
+     *
+     * @param message The strategy that throw the bucket in, must not be {@code null}. Should provide concise message
+     *                why this exception was thrown.
+     * @param paths The paths to the dependency nodes that participate in the version conflict, may be {@code null}.
+     *
+     * @since 2.0.0
+     */
+    public UnsolvableVersionConflictException(
+            String message, Collection<? extends List<? extends DependencyNode>> paths) {
+        super(requireNonNull(message, "message") + "; Could not resolve version conflict among " + toPaths(paths));
+        if (paths == null) {
             this.paths = Collections.emptyList();
             this.versions = Collections.emptyList();
-        }
-        else
-        {
+        } else {
             this.paths = paths;
             this.versions = new LinkedHashSet<>();
-            for ( List<? extends DependencyNode> path : paths )
-            {
-                VersionConstraint constraint = path.get( path.size() - 1 ).getVersionConstraint();
-                if ( constraint != null && constraint.getRange() != null )
-                {
-                    versions.add( constraint.toString() );
+            for (List<? extends DependencyNode> path : paths) {
+                VersionConstraint constraint = path.get(path.size() - 1).getVersionConstraint();
+                if (constraint != null && constraint.getRange() != null) {
+                    versions.add(constraint.toString());
                 }
             }
         }
     }
 
-    private static String toPaths( Collection<? extends List<? extends DependencyNode>> paths )
-    {
+    private static String toPaths(Collection<? extends List<? extends DependencyNode>> paths) {
         String result = "";
 
-        if ( paths != null )
-        {
+        if (paths != null) {
             Collection<String> strings = new LinkedHashSet<>();
 
-            for ( List<? extends DependencyNode> path : paths )
-            {
-                strings.add( toPath( path ) );
+            for (List<? extends DependencyNode> path : paths) {
+                strings.add(toPath(path));
             }
 
             result = strings.toString();
@@ -88,31 +94,26 @@ public class UnsolvableVersionConflictException
         return result;
     }
 
-    private static String toPath( List<? extends DependencyNode> path )
-    {
-        StringBuilder buffer = new StringBuilder( 256 );
+    private static String toPath(List<? extends DependencyNode> path) {
+        StringBuilder buffer = new StringBuilder(256);
 
-        for ( Iterator<? extends DependencyNode> it = path.iterator(); it.hasNext(); )
-        {
+        for (Iterator<? extends DependencyNode> it = path.iterator(); it.hasNext(); ) {
             DependencyNode node = it.next();
-            if ( node.getDependency() == null )
-            {
+            if (node.getDependency() == null) {
                 continue;
             }
 
             Artifact artifact = node.getDependency().getArtifact();
-            buffer.append( artifact.getGroupId() );
-            buffer.append( ':' ).append( artifact.getArtifactId() );
-            buffer.append( ':' ).append( artifact.getExtension() );
-            if ( artifact.getClassifier().length() > 0 )
-            {
-                buffer.append( ':' ).append( artifact.getClassifier() );
+            buffer.append(artifact.getGroupId());
+            buffer.append(':').append(artifact.getArtifactId());
+            buffer.append(':').append(artifact.getExtension());
+            if (!artifact.getClassifier().isEmpty()) {
+                buffer.append(':').append(artifact.getClassifier());
             }
-            buffer.append( ':' ).append( node.getVersionConstraint() );
+            buffer.append(':').append(node.getVersionConstraint());
 
-            if ( it.hasNext() )
-            {
-                buffer.append( " -> " );
+            if (it.hasNext()) {
+                buffer.append(" -> ");
             }
         }
 
@@ -121,22 +122,19 @@ public class UnsolvableVersionConflictException
 
     /**
      * Gets the paths leading to the conflicting dependencies.
-     * 
+     *
      * @return The (read-only) paths leading to the conflicting dependencies, never {@code null}.
      */
-    public Collection<? extends List<? extends DependencyNode>> getPaths()
-    {
+    public Collection<? extends List<? extends DependencyNode>> getPaths() {
         return paths;
     }
 
     /**
      * Gets the conflicting version constraints of the dependency.
-     * 
+     *
      * @return The (read-only) conflicting version constraints, never {@code null}.
      */
-    public Collection<String> getVersions()
-    {
+    public Collection<String> getVersions() {
         return versions;
     }
-
 }

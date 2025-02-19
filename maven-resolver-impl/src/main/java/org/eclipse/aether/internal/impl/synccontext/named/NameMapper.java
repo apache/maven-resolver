@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.synccontext.named;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,21 +16,27 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.Collection;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
 
 /**
  * Component mapping lock names to passed in artifacts and metadata as required.
  */
-public interface NameMapper
-{
+public interface NameMapper {
     /**
      * Returns {@code true} if lock names returned by this lock name mapper are file system friendly, can be used
      * as file names and paths.
+     * <p>
+     * <em>Note:</em> The fact that name mapper is "file system friendly" means ONLY that names it produces CAN be
+     * used as file names and paths. Still, it does not mean they will work with ANY file based locking, as for example
+     * {@link org.eclipse.aether.named.providers.FileLockNamedLockFactory} expects names as string encoded
+     * {@link java.net.URI}s. The only name mapper doing it is {@link BasedirNameMapper}.
      *
      * @since 1.9.0
      */
@@ -49,8 +53,12 @@ public interface NameMapper
      * and output collection size, just the returned upper size limit is defined (sum of the passed in two collections
      * size). If returned collection is empty, no locking will happen, if single element, one lock will be used, if two
      * then two named locks will be used etc.
+     * <p>
+     * Note: name mapper must not use same string for artifacts and metadata, so even the simplest possible
+     * implementation like {@link StaticNameMapper} uses two different static strings.
      */
-    Collection<String> nameLocks( RepositorySystemSession session,
-                                  Collection<? extends Artifact> artifacts,
-                                  Collection<? extends Metadata> metadatas );
+    Collection<NamedLockKey> nameLocks(
+            RepositorySystemSession session,
+            Collection<? extends Artifact> artifacts,
+            Collection<? extends Metadata> metadatas);
 }

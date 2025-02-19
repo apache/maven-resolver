@@ -25,53 +25,27 @@ Redisson distributed objects feature.
 Out of the box "redisson" (distributed) named lock implementations are the following:
 
 - `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`
-  that uses Redisson backed `org.redisson.api.RReadWriteLock`.
+  that uses Redisson-backed `org.redisson.api.RReadWriteLock`.
 - `semaphore-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonSemaphoreNamedLockFactory`
-  that uses Redisson backed `org.redisson.api.RSemaphore`.
+  that uses Redisson-backed `org.redisson.api.RSemaphore`.
 
 ${esc.hash}${esc.hash} Open Issues/Notes
 
-- Usage from plugins has not been tested yet.
-- The `furnace-maven-plugin` does not work this implementation because it uses `ServiceLocator` instead
-  of dependency injection.
+- Usage from plugins and extensions hasn't been fully tested yet.
 
 ${esc.hash}${esc.hash} Open Issues/Notes for Maven Resolver integrators
 
 To use this implementation within your project, depending on how you integrate, you have following options:
 - If you use Sisu DI, then all you need is to provide this module (and its dependencies) on classpath and you are done.
 - If you use Guice, you need to add this module (and its dependencies) upfront, and bind them explicitly.
-- If you use ServiceLocator, be aware it is deprecated, and you should move away from it. In this case, simplest is
-  to roll your own "bootstrap" class that does pretty much same thing as ServiceLocator was, and extend it to
-  instantiate these components as well.
+- If you use ServiceLocator, this module will not work.
 
 ${esc.hash}${esc.hash} Installation/Testing
 
-#set( $jacksonVersion = "2.13.4" )
-#set( $jbossMarshallingVersion = "2.0.11.Final" )
-#set( $nettyVersion = "4.1.82.Final" )
-#set( $snakeyamlVersion = "1.31" )
-
-- Create the directory `${maven.home}/lib/ext/redisson/`.
-- Modify `${maven.home}/bin/m2.conf` by adding `load ${maven.home}/lib/ext/redisson/*.jar`
-  right after the `${maven.conf}/logging` line.
-- Copy the following dependencies from Maven Central to `${maven.home}/lib/ext/redisson/`:
+- Create the directory `${maven.home}/lib/ext/redisson/` (if it does not exist).
+- Unzip the following bundle from Maven Central to `${maven.home}/lib/ext/redisson/`:
   <pre class="source">
-  ├── <a href="https://repo1.maven.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}.jar">${project.artifactId}-${project.version}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/redisson/redisson/${redissonVersion}/redisson-${redissonVersion}.jar">redisson-${redissonVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/${jacksonVersion}/jackson-annotations-${jacksonVersion}.jar">jackson-annotations-${jacksonVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/${jacksonVersion}/jackson-core-${jacksonVersion}.jar">jackson-core-${jacksonVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/${jacksonVersion}/jackson-databind-${jacksonVersion}.jar">jackson-databind-${jacksonVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/${jacksonVersion}/jackson-dataformat-yaml-${jacksonVersion}.jar">jackson-dataformat-yaml-${jacksonVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling/${jbossMarshallingVersion}/jboss-marshalling-${jbossMarshallingVersion}.jar">jboss-marshalling-${jbossMarshallingVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/org/jboss/marshalling/jboss-marshalling-river/${jbossMarshallingVersion}/jboss-marshalling-river-${jbossMarshallingVersion}.jar">jboss-marshalling-river-${jbossMarshallingVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-buffer/${nettyVersion}/netty-buffer-${nettyVersion}.jar">netty-buffer-${nettyVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec/${nettyVersion}/netty-codec-${nettyVersion}.jar">netty-codec-${nettyVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-codec-dns/${nettyVersion}/netty-codec-dns-${nettyVersion}.jar">netty-codec-dns-${nettyVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-common/${nettyVersion}/netty-common-${nettyVersion}.jar">netty-common-${nettyVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-handler/${nettyVersion}/netty-handler-${nettyVersion}.jar">netty-handler-${nettyVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver/${nettyVersion}/netty-resolver-${nettyVersion}.jar">netty-resolver-${nettyVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/${nettyVersion}/netty-resolver-dns-${nettyVersion}.jar">netty-resolver-dns-${nettyVersion}.jar</a>
-  ├── <a href="https://repo1.maven.org/maven2/io/netty/netty-transport/${nettyVersion}/netty-transport-${nettyVersion}.jar">netty-transport-${nettyVersion}.jar</a>
-  └── <a href="https://repo1.maven.org/maven2/org/yaml/snakeyaml/${snakeyamlVersion}/snakeyaml-${snakeyamlVersion}.jar">snakeyaml-${snakeyamlVersion}.jar</a></pre>
+  └── <a href="https://repo.maven.apache.org/maven2/org/apache/maven/resolver/${project.artifactId}/${project.version}/${project.artifactId}-${project.version}-bundle.zip">${project.artifactId}-${project.version}-bundle.zip</a></pre>
 - Start your Redis instance on `localhost` or configure a remote instance with `${maven.conf}/maven-resolver-redisson.yaml`.
-- Now start a multithreaded Maven build on your project.
+- Now start a multithreaded Maven build or multiple builds (e.g., CI server) on your project.
+

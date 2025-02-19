@@ -1,5 +1,3 @@
-package org.eclipse.aether.transfer;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.transfer;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,16 +16,21 @@ package org.eclipse.aether.transfer;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transfer;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
 
 import org.eclipse.aether.RequestTrace;
 
 /**
  * Describes a resource being uploaded or downloaded by the repository system.
  */
-public final class TransferResource
-{
+public final class TransferResource {
+
+    private static Clock clock = Clock.systemUTC();
 
     private final String repositoryId;
 
@@ -35,9 +38,11 @@ public final class TransferResource
 
     private final String resourceName;
 
-    private final File file;
+    private final Object resource;
 
-    private final long startTime;
+    private final Path path;
+
+    private final Instant startTime;
 
     private final RequestTrace trace;
 
@@ -45,23 +50,12 @@ public final class TransferResource
 
     private long resumeOffset;
 
-    /**
-     * Creates a new transfer resource with the specified properties.
-     *
-     * @param repositoryUrl The base URL of the repository, may be {@code null} or empty if unknown. If not empty, a
-     * trailing slash will automatically be added if missing.
-     * @param resourceName The relative path to the resource within the repository, may be {@code null}. A leading slash
-     * (if any) will be automatically removed.
-     * @param file The source/target file involved in the transfer, may be {@code null}.
-     * @param trace The trace information, may be {@code null}.
-     *
-     * @deprecated As of 1.1.0, replaced by {@link #TransferResource(java.lang.String, java.lang.String,
-     * java.lang.String, java.io.File, org.eclipse.aether.RequestTrace)}
-     */
-    @Deprecated
-    public TransferResource( String repositoryUrl, String resourceName, File file, RequestTrace trace )
-    {
-        this( null, repositoryUrl, resourceName, file, trace );
+    public static Clock getClock() {
+        return clock;
+    }
+
+    public static void setClock(Clock clock) {
+        TransferResource.clock = clock;
     }
 
     /**
@@ -77,50 +71,62 @@ public final class TransferResource
      * @param trace The trace information, may be {@code null}.
      *
      * @since 1.1.0
+     * @deprecated Use {@link TransferResource(String, String, String, Path, Object, RequestTrace)} instead.
      */
-    public TransferResource( String repositoryId, String repositoryUrl, String resourceName,
-        File file, RequestTrace trace )
-    {
-        if ( repositoryId == null || repositoryId.isEmpty() )
-        {
+    @Deprecated
+    public TransferResource(
+            String repositoryId, String repositoryUrl, String resourceName, File file, RequestTrace trace) {
+        this(repositoryId, repositoryUrl, resourceName, file != null ? file.toPath() : null, null, trace);
+    }
+
+    /**
+     * Creates a new transfer resource with the specified properties.
+     *
+     * @param repositoryId The ID of the repository used to transfer the resource, may be {@code null} or
+     *                     empty if unknown.
+     * @param repositoryUrl The base URL of the repository, may be {@code null} or empty if unknown. If not empty, a
+     *            trailing slash will automatically be added if missing.
+     * @param resourceName The relative path to the resource within the repository, may be {@code null}. A leading slash
+     *            (if any) will be automatically removed.
+     * @param path The source/target file involved in the transfer, may be {@code null}.
+     * @param resource The representation of this resource, may be {@code null}.
+     * @param trace The trace information, may be {@code null}.
+     *
+     * @since 2.0.0
+     */
+    public TransferResource(
+            String repositoryId,
+            String repositoryUrl,
+            String resourceName,
+            Path path,
+            Object resource,
+            RequestTrace trace) {
+        if (repositoryId == null || repositoryId.isEmpty()) {
             this.repositoryId = "";
-        }
-        else
-        {
+        } else {
             this.repositoryId = repositoryId;
         }
 
-        if ( repositoryUrl == null || repositoryUrl.isEmpty() )
-        {
+        if (repositoryUrl == null || repositoryUrl.isEmpty()) {
             this.repositoryUrl = "";
-        }
-        else if ( repositoryUrl.endsWith( "/" ) )
-        {
+        } else if (repositoryUrl.endsWith("/")) {
             this.repositoryUrl = repositoryUrl;
-        }
-        else
-        {
+        } else {
             this.repositoryUrl = repositoryUrl + '/';
         }
 
-        if ( resourceName == null || resourceName.isEmpty() )
-        {
+        if (resourceName == null || resourceName.isEmpty()) {
             this.resourceName = "";
-        }
-        else if ( resourceName.startsWith( "/" ) )
-        {
-            this.resourceName = resourceName.substring( 1 );
-        }
-        else
-        {
+        } else if (resourceName.startsWith("/")) {
+            this.resourceName = resourceName.substring(1);
+        } else {
             this.resourceName = resourceName;
         }
 
-        this.file = file;
-
+        this.path = path;
+        this.resource = resource;
         this.trace = trace;
-
-        startTime = System.currentTimeMillis();
+        this.startTime = getClock().instant();
     }
 
     /**
@@ -130,19 +136,17 @@ public final class TransferResource
      *
      * @since 1.1.0
      */
-    public String getRepositoryId()
-    {
+    public String getRepositoryId() {
         return repositoryId;
     }
 
     /**
-     * The base URL of the repository, e.g. "http://repo1.maven.org/maven2/". Unless the URL is unknown, it will be
+     * The base URL of the repository, e.g. "https://repo1.maven.org/maven2/". Unless the URL is unknown, it will be
      * terminated by a trailing slash.
      *
      * @return The base URL of the repository or an empty string if unknown, never {@code null}.
      */
-    public String getRepositoryUrl()
-    {
+    public String getRepositoryUrl() {
         return repositoryUrl;
     }
 
@@ -151,9 +155,20 @@ public final class TransferResource
      *
      * @return The path of the resource, never {@code null}.
      */
-    public String getResourceName()
-    {
+    public String getResourceName() {
         return resourceName;
+    }
+
+    /**
+     * The representation of "resource", if any. The content of this field may be
+     * {@link org.eclipse.aether.artifact.Artifact} or {@link org.eclipse.aether.metadata.Metadata} or {@code null}
+     * in case of some legacy flow. Preferred way to handle returned value is with {@code instanceof}.
+     *
+     * @return The representation of this resource, may be {@code null}.
+     * @since 2.0.0
+     */
+    public Object getResource() {
+        return resource;
     }
 
     /**
@@ -161,10 +176,22 @@ public final class TransferResource
      * remote resource, no local file will be involved in the transfer.
      *
      * @return The source/target file involved in the transfer or {@code null} if none.
+     * @deprecated Use {@link #getPath()} instead.
      */
-    public File getFile()
-    {
-        return file;
+    @Deprecated
+    public File getFile() {
+        return path != null ? path.toFile() : null;
+    }
+
+    /**
+     * Gets the local file being uploaded or downloaded. When the repository system merely checks for the existence of a
+     * remote resource, no local file will be involved in the transfer.
+     *
+     * @return The source/target file involved in the transfer or {@code null} if none.
+     * @since 2.0.0
+     */
+    public Path getPath() {
+        return path;
     }
 
     /**
@@ -174,8 +201,7 @@ public final class TransferResource
      *
      * @return The size of the resource in bytes or a negative value if unknown.
      */
-    public long getContentLength()
-    {
+    public long getContentLength() {
         return contentLength;
     }
 
@@ -185,8 +211,7 @@ public final class TransferResource
      * @param contentLength The size of the resource in bytes or a negative value if unknown.
      * @return This resource for chaining, never {@code null}.
      */
-    public TransferResource setContentLength( long contentLength )
-    {
+    public TransferResource setContentLength(long contentLength) {
         this.contentLength = contentLength;
         return this;
     }
@@ -197,8 +222,7 @@ public final class TransferResource
      *
      * @return The zero-based index of the first byte being transferred, never negative.
      */
-    public long getResumeOffset()
-    {
+    public long getResumeOffset() {
         return resumeOffset;
     }
 
@@ -208,11 +232,9 @@ public final class TransferResource
      * @param resumeOffset The zero-based index of the first byte being transferred, must not be negative.
      * @return This resource for chaining, never {@code null}.
      */
-    public TransferResource setResumeOffset( long resumeOffset )
-    {
-        if ( resumeOffset < 0L )
-        {
-            throw new IllegalArgumentException( "resume offset cannot be negative" );
+    public TransferResource setResumeOffset(long resumeOffset) {
+        if (resumeOffset < 0L) {
+            throw new IllegalArgumentException("resume offset cannot be negative");
         }
         this.resumeOffset = resumeOffset;
         return this;
@@ -222,9 +244,19 @@ public final class TransferResource
      * Gets the timestamp when the transfer of this resource was started.
      *
      * @return The timestamp when the transfer of this resource was started.
+     * @deprecated use {@link #getStartTime()}
      */
-    public long getTransferStartTime()
-    {
+    @Deprecated
+    public long getTransferStartTime() {
+        return startTime.toEpochMilli();
+    }
+
+    /**
+     * Gets the timestamp when the transfer of this resource was started.
+     *
+     * @return The timestamp when the transfer of this resource was started.
+     */
+    public Instant getStartTime() {
         return startTime;
     }
 
@@ -234,15 +266,12 @@ public final class TransferResource
      *
      * @return The trace information about the higher level operation or {@code null} if none.
      */
-    public RequestTrace getTrace()
-    {
+    public RequestTrace getTrace() {
         return trace;
     }
 
     @Override
-    public String toString()
-    {
-        return getRepositoryUrl() + getResourceName() + " <> " + getFile();
+    public String toString() {
+        return getRepositoryUrl() + getResourceName() + " <> " + getPath();
     }
-
 }

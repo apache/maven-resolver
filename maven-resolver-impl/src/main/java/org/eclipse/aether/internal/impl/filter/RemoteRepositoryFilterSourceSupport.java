@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.filter;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.filter;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,15 +16,16 @@ package org.eclipse.aether.internal.impl.filter;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.filter;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
-import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.DirectoryUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -48,39 +47,16 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 1.9.0
  */
-public abstract class RemoteRepositoryFilterSourceSupport
-        implements RemoteRepositoryFilterSource
-{
-    private static final String CONFIG_PROP_PREFIX = "aether.remoteRepositoryFilter.";
-
-    private static final String CONF_NAME_BASEDIR = "basedir";
-
-    static final String LOCAL_REPO_PREFIX_DIR = ".remoteRepositoryFilters";
-
-    private final String name;
-
-    protected RemoteRepositoryFilterSourceSupport( String name )
-    {
-        this.name = requireNonNull( name );
-    }
-
-    /**
-     * Utility method to create scoped configuration property key of given name.
-     */
-    protected String configPropKey( String name )
-    {
-        return CONFIG_PROP_PREFIX + this.name + "." + name;
-    }
+public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepositoryFilterSource {
+    protected static final String CONFIG_PROPS_PREFIX =
+            ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryFilter.";
 
     /**
      * Returns {@code true} if session configuration contains this name set to {@code true}.
      * <p>
      * Default is {@code false}.
      */
-    protected boolean isEnabled( RepositorySystemSession session )
-    {
-        return ConfigUtils.getBoolean( session, false, CONFIG_PROP_PREFIX + this.name );
-    }
+    protected abstract boolean isEnabled(RepositorySystemSession session);
 
     /**
      * Uses common {@link DirectoryUtils#resolveDirectory(RepositorySystemSession, String, String, boolean)} to
@@ -91,43 +67,35 @@ public abstract class RemoteRepositoryFilterSourceSupport
      *
      * @return The {@link Path} of basedir, never {@code null}.
      */
-    protected Path getBasedir( RepositorySystemSession session, boolean mayCreate )
-    {
-        try
-        {
-            return DirectoryUtils.resolveDirectory(
-                    session, LOCAL_REPO_PREFIX_DIR, configPropKey( CONF_NAME_BASEDIR ), mayCreate );
-        }
-        catch ( IOException e )
-        {
-            throw new UncheckedIOException( e );
+    protected Path getBasedir(
+            RepositorySystemSession session, String defaultValue, String configPropKey, boolean mayCreate) {
+        try {
+            return DirectoryUtils.resolveDirectory(session, defaultValue, configPropKey, mayCreate);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
     /**
      * Simple {@link RemoteRepositoryFilter.Result} immutable implementation.
      */
-    protected static class SimpleResult implements RemoteRepositoryFilter.Result
-    {
+    protected static class SimpleResult implements RemoteRepositoryFilter.Result {
         private final boolean accepted;
 
         private final String reasoning;
 
-        public SimpleResult( boolean accepted, String reasoning )
-        {
+        public SimpleResult(boolean accepted, String reasoning) {
             this.accepted = accepted;
-            this.reasoning = requireNonNull( reasoning );
+            this.reasoning = requireNonNull(reasoning);
         }
 
         @Override
-        public boolean isAccepted()
-        {
+        public boolean isAccepted() {
             return accepted;
         }
 
         @Override
-        public String reasoning()
-        {
+        public String reasoning() {
             return reasoning;
         }
     }

@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,11 +16,12 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import java.util.Calendar;
+package org.eclipse.aether.internal.impl;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import java.util.Calendar;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
@@ -36,110 +35,85 @@ import static java.util.Objects.requireNonNull;
  */
 @Singleton
 @Named
-public class DefaultUpdatePolicyAnalyzer
-    implements UpdatePolicyAnalyzer
-{
+public class DefaultUpdatePolicyAnalyzer implements UpdatePolicyAnalyzer {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultUpdatePolicyAnalyzer.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultUpdatePolicyAnalyzer.class);
 
-    public DefaultUpdatePolicyAnalyzer()
-    {
-        // enables default constructor
+    @Override
+    public String getEffectiveUpdatePolicy(RepositorySystemSession session, String policy1, String policy2) {
+        requireNonNull(session, "session cannot be null");
+        return ordinalOfUpdatePolicy(policy1) < ordinalOfUpdatePolicy(policy2) ? policy1 : policy2;
     }
 
-    public String getEffectiveUpdatePolicy( RepositorySystemSession session, String policy1, String policy2 )
-    {
-        requireNonNull( session, "session cannot be null" );
-        return ordinalOfUpdatePolicy( policy1 ) < ordinalOfUpdatePolicy( policy2 ) ? policy1 : policy2;
-    }
-
-    @SuppressWarnings( { "checkstyle:magicnumber" } )
-    private int ordinalOfUpdatePolicy( String policy )
-    {
-        if ( RepositoryPolicy.UPDATE_POLICY_DAILY.equals( policy ) )
-        {
+    @SuppressWarnings({"checkstyle:magicnumber"})
+    private int ordinalOfUpdatePolicy(String policy) {
+        if (RepositoryPolicy.UPDATE_POLICY_DAILY.equals(policy)) {
             return 1440;
-        }
-        else if ( RepositoryPolicy.UPDATE_POLICY_ALWAYS.equals( policy ) )
-        {
+        } else if (RepositoryPolicy.UPDATE_POLICY_ALWAYS.equals(policy)) {
             return 0;
-        }
-        else if ( policy != null && policy.startsWith( RepositoryPolicy.UPDATE_POLICY_INTERVAL ) )
-        {
-            return getMinutes( policy );
-        }
-        else
-        {
+        } else if (policy != null && policy.startsWith(RepositoryPolicy.UPDATE_POLICY_INTERVAL)) {
+            return getMinutes(policy);
+        } else {
             // assume "never"
             return Integer.MAX_VALUE;
         }
     }
 
-    public boolean isUpdatedRequired( RepositorySystemSession session, long lastModified, String policy )
-    {
-        requireNonNull( session, "session cannot be null" );
+    @Override
+    public boolean isUpdatedRequired(RepositorySystemSession session, long lastModified, String policy) {
+        requireNonNull(session, "session cannot be null");
         boolean checkForUpdates;
 
-        if ( policy == null )
-        {
+        if (policy == null) {
             policy = "";
         }
 
-        if ( RepositoryPolicy.UPDATE_POLICY_ALWAYS.equals( policy ) )
-        {
+        if (RepositoryPolicy.UPDATE_POLICY_ALWAYS.equals(policy)) {
             checkForUpdates = true;
-        }
-        else if ( RepositoryPolicy.UPDATE_POLICY_DAILY.equals( policy ) )
-        {
+        } else if (RepositoryPolicy.UPDATE_POLICY_DAILY.equals(policy)) {
             Calendar cal = Calendar.getInstance();
-            cal.set( Calendar.HOUR_OF_DAY, 0 );
-            cal.set( Calendar.MINUTE, 0 );
-            cal.set( Calendar.SECOND, 0 );
-            cal.set( Calendar.MILLISECOND, 0 );
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
 
             checkForUpdates = cal.getTimeInMillis() > lastModified;
-        }
-        else if ( policy.startsWith( RepositoryPolicy.UPDATE_POLICY_INTERVAL ) )
-        {
-            int minutes = getMinutes( policy );
+        } else if (policy.startsWith(RepositoryPolicy.UPDATE_POLICY_INTERVAL)) {
+            int minutes = getMinutes(policy);
 
             Calendar cal = Calendar.getInstance();
-            cal.add( Calendar.MINUTE, -minutes );
+            cal.add(Calendar.MINUTE, -minutes);
 
             checkForUpdates = cal.getTimeInMillis() > lastModified;
-        }
-        else
-        {
+        } else {
             // assume "never"
             checkForUpdates = false;
 
-            if ( !RepositoryPolicy.UPDATE_POLICY_NEVER.equals( policy ) )
-            {
-                LOGGER.warn( "Unknown repository update policy '{}', assuming '{}'",
-                        policy, RepositoryPolicy.UPDATE_POLICY_NEVER );
+            if (!RepositoryPolicy.UPDATE_POLICY_NEVER.equals(policy)) {
+                LOGGER.warn(
+                        "Unknown repository update policy '{}', assuming '{}'",
+                        policy,
+                        RepositoryPolicy.UPDATE_POLICY_NEVER);
             }
         }
 
         return checkForUpdates;
     }
 
-    @SuppressWarnings( { "checkstyle:magicnumber" } )
-    private int getMinutes( String policy )
-    {
+    @SuppressWarnings({"checkstyle:magicnumber"})
+    private int getMinutes(String policy) {
         int minutes;
-        try
-        {
-            String s = policy.substring( RepositoryPolicy.UPDATE_POLICY_INTERVAL.length() + 1 );
-            minutes = Integer.parseInt( s );
-        }
-        catch ( RuntimeException e )
-        {
+        try {
+            String s = policy.substring(RepositoryPolicy.UPDATE_POLICY_INTERVAL.length() + 1);
+            minutes = Integer.parseInt(s);
+        } catch (RuntimeException e) {
             minutes = 24 * 60;
 
-            LOGGER.warn( "Non-parseable repository update policy '{}', assuming '{}:1440'",
-                    policy, RepositoryPolicy.UPDATE_POLICY_INTERVAL );
+            LOGGER.warn(
+                    "Non-parseable repository update policy '{}', assuming '{}:1440'",
+                    policy,
+                    RepositoryPolicy.UPDATE_POLICY_INTERVAL);
         }
         return minutes;
     }
-
 }

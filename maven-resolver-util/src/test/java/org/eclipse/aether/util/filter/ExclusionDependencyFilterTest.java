@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.filter;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.filter;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,8 +16,7 @@ package org.eclipse.aether.util.filter;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import static org.junit.Assert.*;
+package org.eclipse.aether.util.filter;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -27,33 +24,32 @@ import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.NodeBuilder;
-import org.eclipse.aether.util.filter.ExclusionsDependencyFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ExclusionDependencyFilterTest
-{
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ExclusionDependencyFilterTest {
 
     @Test
-    public void acceptTest()
-    {
+    void acceptTest() {
 
         NodeBuilder builder = new NodeBuilder();
-        builder.groupId( "com.example.test" ).artifactId( "testArtifact" );
+        builder.groupId("com.example.test").artifactId("testArtifact");
         List<DependencyNode> parents = new LinkedList<>();
         String[] excludes;
 
-        excludes = new String[] { "com.example.test:testArtifact" };
-        assertFalse( new ExclusionsDependencyFilter( Arrays.asList( excludes ) ).accept( builder.build(), parents ) );
+        excludes = new String[] {"com.example.test:testArtifact"};
+        assertFalse(new ExclusionsDependencyFilter(Arrays.asList(excludes)).accept(builder.build(), parents));
 
-        excludes = new String[] { "com.example.test:testArtifact", "com.foo:otherArtifact" };
-        assertFalse( new ExclusionsDependencyFilter( Arrays.asList( excludes ) ).accept( builder.build(), parents ) );
+        excludes = new String[] {"com.example.test:testArtifact", "com.foo:otherArtifact"};
+        assertFalse(new ExclusionsDependencyFilter(Arrays.asList(excludes)).accept(builder.build(), parents));
 
-        excludes = new String[] { "testArtifact" };
-        assertFalse( new ExclusionsDependencyFilter( Arrays.asList( excludes ) ).accept( builder.build(), parents ) );
+        excludes = new String[] {"testArtifact"};
+        assertFalse(new ExclusionsDependencyFilter(Arrays.asList(excludes)).accept(builder.build(), parents));
 
-        excludes = new String[] { "otherArtifact" };
-        assertTrue( new ExclusionsDependencyFilter( Arrays.asList( excludes ) ).accept( builder.build(), parents ) );
+        excludes = new String[] {"otherArtifact"};
+        assertTrue(new ExclusionsDependencyFilter(Arrays.asList(excludes)).accept(builder.build(), parents));
 
-        assertTrue( new ExclusionsDependencyFilter( null ).accept( builder.build(), parents ) );
+        assertTrue(new ExclusionsDependencyFilter(null).accept(builder.build(), parents));
     }
 }

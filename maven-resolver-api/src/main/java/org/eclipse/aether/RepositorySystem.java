@@ -1,5 +1,3 @@
-package org.eclipse.aether;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,7 +16,9 @@ package org.eclipse.aether;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether;
 
+import java.io.Closeable;
 import java.util.Collection;
 import java.util.List;
 
@@ -29,6 +29,8 @@ import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.deployment.DeployRequest;
 import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
+import org.eclipse.aether.graph.DependencyFilter;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
@@ -65,11 +67,10 @@ import org.eclipse.aether.resolution.VersionResult;
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RepositorySystem
-{
+public interface RepositorySystem extends Closeable {
 
     /**
-     * Expands a version range to a list of matching versions, in ascending order. For example, resolves "[3.8,4.0)" to
+     * Expands an artifact's version range to a list of matching versions, in ascending order. For example, resolves "[3.8,4.0)" to
      * "3.8", "3.8.1", "3.8.2". Note that the returned list of versions is only dependent on the configured repositories
      * and their contents, the list is not processed by the {@link RepositorySystemSession#getVersionFilter() session's
      * version filter}.
@@ -78,13 +79,14 @@ public interface RepositorySystem
      * though, the result contains simply the (parsed) input version, regardless of the repositories and their contents.
      *
      * @param session The repository session, must not be {@code null}.
-     * @param request The version range request, must not be {@code null}.
+     * @param request The version range request, must not be {@code null}. It holds the {@link Artifact} whose version range to resolve.
      * @return The version range result, never {@code null}.
      * @throws VersionRangeResolutionException If the requested range could not be parsed. Note that an empty range does
      *                                         not raise an exception.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
+     * @see Artifact#getVersion()
      */
-    VersionRangeResult resolveVersionRange( RepositorySystemSession session, VersionRangeRequest request )
+    VersionRangeResult resolveVersionRange(RepositorySystemSession session, VersionRangeRequest request)
             throws VersionRangeResolutionException;
 
     /**
@@ -92,12 +94,13 @@ public interface RepositorySystem
      * "1.0-20090208.132618-23".
      *
      * @param session The repository session, must not be {@code null}.
-     * @param request The version request, must not be {@code null}.
+     * @param request The version request, must not be {@code null}. It holds the {@link Artifact} whose version to resolve.
      * @return The version result, never {@code null}.
      * @throws VersionResolutionException If the metaversion could not be resolved.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
+     * @see Artifact#getVersion()
      */
-    VersionResult resolveVersion( RepositorySystemSession session, VersionRequest request )
+    VersionResult resolveVersion(RepositorySystemSession session, VersionRequest request)
             throws VersionResolutionException;
 
     /**
@@ -110,8 +113,7 @@ public interface RepositorySystem
      * @see RepositorySystemSession#getArtifactDescriptorPolicy()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    ArtifactDescriptorResult readArtifactDescriptor( RepositorySystemSession session,
-                                                     ArtifactDescriptorRequest request )
+    ArtifactDescriptorResult readArtifactDescriptor(RepositorySystemSession session, ArtifactDescriptorRequest request)
             throws ArtifactDescriptorException;
 
     /**
@@ -130,7 +132,7 @@ public interface RepositorySystem
      * @see RepositorySystemSession#getDependencyGraphTransformer()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    CollectResult collectDependencies( RepositorySystemSession session, CollectRequest request )
+    CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)
             throws DependencyCollectionException;
 
     /**
@@ -145,8 +147,21 @@ public interface RepositorySystem
      *                                       not be resolved.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    DependencyResult resolveDependencies( RepositorySystemSession session, DependencyRequest request )
+    DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)
             throws DependencyResolutionException;
+
+    /**
+     * Flattens the provided graph as {@link DependencyNode} into a {@link List}{@code <DependencyNode>} according to session
+     * configuration.
+     *
+     * @param session The repository session, must not be {@code null}.
+     * @param root The dependency node root of the graph, must not be {@code null}.
+     * @param filter The filter to apply, may be {@code null}.
+     * @return The flattened list of dependency nodes, never {@code null}.
+     * @since 2.0.0
+     */
+    List<DependencyNode> flattenDependencyNodes(
+            RepositorySystemSession session, DependencyNode root, DependencyFilter filter);
 
     /**
      * Resolves the path for an artifact. The artifact will be downloaded to the local repository if necessary. An
@@ -161,7 +176,7 @@ public interface RepositorySystem
      * @see Artifact#getFile()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    ArtifactResult resolveArtifact( RepositorySystemSession session, ArtifactRequest request )
+    ArtifactResult resolveArtifact(RepositorySystemSession session, ArtifactRequest request)
             throws ArtifactResolutionException;
 
     /**
@@ -177,8 +192,8 @@ public interface RepositorySystem
      * @see Artifact#getFile()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    List<ArtifactResult> resolveArtifacts( RepositorySystemSession session,
-                                           Collection<? extends ArtifactRequest> requests )
+    List<ArtifactResult> resolveArtifacts(
+            RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)
             throws ArtifactResolutionException;
 
     /**
@@ -191,8 +206,8 @@ public interface RepositorySystem
      * @see Metadata#getFile()
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    List<MetadataResult> resolveMetadata( RepositorySystemSession session,
-                                          Collection<? extends MetadataRequest> requests );
+    List<MetadataResult> resolveMetadata(
+            RepositorySystemSession session, Collection<? extends MetadataRequest> requests);
 
     /**
      * Installs a collection of artifacts and their accompanying metadata to the local repository.
@@ -202,8 +217,7 @@ public interface RepositorySystem
      * @return The installation result, never {@code null}.
      * @throws InstallationException If any artifact/metadata from the request could not be installed.
      */
-    InstallResult install( RepositorySystemSession session, InstallRequest request )
-            throws InstallationException;
+    InstallResult install(RepositorySystemSession session, InstallRequest request) throws InstallationException;
 
     /**
      * Uploads a collection of artifacts and their accompanying metadata to a remote repository.
@@ -214,8 +228,7 @@ public interface RepositorySystem
      * @throws DeploymentException If any artifact/metadata from the request could not be deployed.
      * @see #newDeploymentRepository(RepositorySystemSession, RemoteRepository)
      */
-    DeployResult deploy( RepositorySystemSession session, DeployRequest request )
-            throws DeploymentException;
+    DeployResult deploy(RepositorySystemSession session, DeployRequest request) throws DeploymentException;
 
     /**
      * Creates a new manager for the specified local repository. If the specified local repository has no type, the
@@ -230,8 +243,43 @@ public interface RepositorySystem
      * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
      *                                  given.
      */
-    LocalRepositoryManager newLocalRepositoryManager( RepositorySystemSession session,
-                                                      LocalRepository localRepository );
+    LocalRepositoryManager newLocalRepositoryManager(RepositorySystemSession session, LocalRepository localRepository);
+
+    /**
+     * Creates a new manager for the specified local repositories. If the specified local repository has no type, the
+     * default local repository type of the system will be used. <em>Note:</em> It is expected that this method
+     * invocation is one of the last steps of setting up a new session, in particular any configuration properties
+     * should have been set already. <em>Note:</em> this method accepts multiple local repositories, in which case
+     * it creates chained local repository.
+     *
+     * @param session         The repository system session from which to configure the manager, must not be
+     *                        {@code null}.
+     * @param localRepositories The local repositories to create a manager for, must not be {@code null} nor empty array.
+     * @return The local repository manager, never {@code null}.
+     * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
+     *                                  given.
+     * @since 2.0.0
+     */
+    LocalRepositoryManager newLocalRepositoryManager(
+            RepositorySystemSession session, LocalRepository... localRepositories);
+
+    /**
+     * Creates a new manager for the specified local repositories. If the specified local repository has no type, the
+     * default local repository type of the system will be used. <em>Note:</em> It is expected that this method
+     * invocation is one of the last steps of setting up a new session, in particular any configuration properties
+     * should have been set already. <em>Note:</em> this method accepts multiple local repositories, in which case
+     * it creates chained local repository.
+     *
+     * @param session         The repository system session from which to configure the manager, must not be
+     *                        {@code null}.
+     * @param localRepositories The local repositories to create a manager for, must not be {@code null} nor empty.
+     * @return The local repository manager, never {@code null}.
+     * @throws IllegalArgumentException If the specified repository type is not recognized or no base directory is
+     *                                  given.
+     * @since 2.0.0
+     */
+    LocalRepositoryManager newLocalRepositoryManager(
+            RepositorySystemSession session, List<LocalRepository> localRepositories);
 
     /**
      * Creates a new synchronization context.
@@ -241,7 +289,7 @@ public interface RepositorySystem
      *                shared among concurrent readers or whether access needs to be exclusive to the calling thread.
      * @return The synchronization context, never {@code null}.
      */
-    SyncContext newSyncContext( RepositorySystemSession session, boolean shared );
+    SyncContext newSyncContext(RepositorySystemSession session, boolean shared);
 
     /**
      * Forms remote repositories suitable for artifact resolution by applying the session's authentication selector and
@@ -261,8 +309,8 @@ public interface RepositorySystem
      * repositories.
      * @see #newDeploymentRepository(RepositorySystemSession, RemoteRepository)
      */
-    List<RemoteRepository> newResolutionRepositories( RepositorySystemSession session,
-                                                      List<RemoteRepository> repositories );
+    List<RemoteRepository> newResolutionRepositories(
+            RepositorySystemSession session, List<RemoteRepository> repositories);
 
     /**
      * Forms a remote repository suitable for artifact deployment by applying the session's authentication selector and
@@ -271,7 +319,7 @@ public interface RepositorySystem
      * {@link #deploy(RepositorySystemSession, DeployRequest) deploy()} is used as is and expected to already carry any
      * required authentication or proxy configuration. This method can be used to apply the authentication/proxy
      * configuration from a session to a bare repository definition to obtain the complete repository definition for use
-     * in the deploy request.
+     * in the deployment request.
      *
      * @param session    The repository system session from which to configure the repository, must not be {@code null}.
      * @param repository The repository prototype from which to derive the deployment repository, must not be
@@ -279,7 +327,7 @@ public interface RepositorySystem
      * @return The deployment repository, never {@code null}.
      * @see #newResolutionRepositories(RepositorySystemSession, List)
      */
-    RemoteRepository newDeploymentRepository( RepositorySystemSession session, RemoteRepository repository );
+    RemoteRepository newDeploymentRepository(RepositorySystemSession session, RemoteRepository repository);
 
     /**
      * Registers an "on repository system end" handler, executed after repository system is shut down.
@@ -287,7 +335,16 @@ public interface RepositorySystem
      * @param handler The handler, must not be {@code null}.
      * @since 1.9.0
      */
-    void addOnSystemEndedHandler( Runnable handler );
+    void addOnSystemEndedHandler(Runnable handler);
+
+    /**
+     * Creates a brand-new session builder instance that produces "top level" (root) session. Top level sessions are
+     * associated with its creator {@link RepositorySystem} instance, and may be used only with that given instance and
+     * only within the lifespan of it, and after use should be closed.
+     *
+     * @since 2.0.0
+     */
+    RepositorySystemSession.SessionBuilder createSessionBuilder();
 
     /**
      * Signals to repository system to shut down. Shut down instance is not usable anymore.
@@ -302,4 +359,14 @@ public interface RepositorySystem
      * @since 1.9.0
      */
     void shutdown();
+
+    /**
+     * Closes this instance, invokes {@link #shutdown()}.
+     *
+     * @since 2.0.0
+     */
+    @Override
+    default void close() {
+        shutdown();
+    }
 }

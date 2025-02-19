@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.test.util;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.test.util;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,57 +16,48 @@ package org.eclipse.aether.internal.test.util;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.test.util;
 
 import java.util.HashMap;
 import java.util.Map;
-import static java.util.Objects.requireNonNull;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  */
-class TestDependencyGraphTransformationContext
-    implements DependencyGraphTransformationContext
-{
+class TestDependencyGraphTransformationContext implements DependencyGraphTransformationContext {
 
     private final RepositorySystemSession session;
 
     private final Map<Object, Object> map;
 
-    TestDependencyGraphTransformationContext( RepositorySystemSession session )
-    {
+    TestDependencyGraphTransformationContext(RepositorySystemSession session) {
         this.session = session;
         this.map = new HashMap<>();
     }
 
-    public RepositorySystemSession getSession()
-    {
+    public RepositorySystemSession getSession() {
         return session;
     }
 
-    public Object get( Object key )
-    {
-        return map.get( requireNonNull( key, "key cannot be null" ) );
+    public Object get(Object key) {
+        return map.get(requireNonNull(key, "key cannot be null"));
     }
 
-    public Object put( Object key, Object value )
-    {
-        requireNonNull( key, "key cannot be null" );
-        if ( value != null )
-        {
-            return map.put( key, value );
-        }
-        else
-        {
-            return map.remove( key );
+    public Object put(Object key, Object value) {
+        requireNonNull(key, "key cannot be null");
+        if (value != null) {
+            return map.put(key, value);
+        } else {
+            return map.remove(key);
         }
     }
 
     @Override
-    public String toString()
-    {
-        return String.valueOf( map );
+    public String toString() {
+        return String.valueOf(map);
     }
-
 }

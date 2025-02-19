@@ -1,5 +1,3 @@
-package org.eclipse.aether.transport.wagon;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.transport.wagon;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.transport.wagon;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transport.wagon;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,10 +39,7 @@ import org.apache.maven.wagon.resource.Resource;
 
 /**
  */
-public class MemStreamWagon
-    extends StreamWagon
-    implements Configurable
-{
+public class MemStreamWagon extends StreamWagon implements Configurable {
 
     private Map<String, String> fs;
 
@@ -51,77 +47,64 @@ public class MemStreamWagon
 
     private Object config;
 
-    public void setConfiguration( Object config )
-    {
+    public void setConfiguration(Object config) {
         this.config = config;
     }
 
-    public Object getConfiguration()
-    {
+    public Object getConfiguration() {
         return config;
     }
 
-    public void setHttpHeaders( Properties httpHeaders )
-    {
+    public void setHttpHeaders(Properties httpHeaders) {
         headers = httpHeaders;
     }
 
     @Override
-    protected void openConnectionInternal()
-        throws ConnectionException, AuthenticationException
-    {
-        fs =
-            MemWagonUtils.openConnection( this, getAuthenticationInfo(),
-                                          getProxyInfo( "mem", getRepository().getHost() ), headers );
+    protected void openConnectionInternal() throws ConnectionException, AuthenticationException {
+        fs = MemWagonUtils.openConnection(
+                this,
+                getAuthenticationInfo(),
+                getProxyInfo("mem", getRepository().getHost()),
+                headers);
     }
 
     @Override
-    public void closeConnection()
-        throws ConnectionException
-    {
+    public void closeConnection() throws ConnectionException {
         fs = null;
     }
 
-    private String getData( String resource )
-    {
-        return fs.get( URI.create( resource ).getSchemeSpecificPart() );
+    private String getData(String resource) {
+        return fs.get(URI.create(resource).getSchemeSpecificPart());
     }
 
     @Override
-    public boolean resourceExists( String resourceName )
-        throws TransferFailedException, AuthorizationException
-    {
-        String data = getData( resourceName );
+    public boolean resourceExists(String resourceName) throws TransferFailedException, AuthorizationException {
+        String data = getData(resourceName);
         return data != null;
     }
 
     @Override
-    public void fillInputData( InputData inputData )
-        throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException
-    {
-        String data = getData( inputData.getResource().getName() );
-        if ( data == null )
-        {
-            throw new ResourceDoesNotExistException( "Missing resource: " + inputData.getResource().getName() );
+    public void fillInputData(InputData inputData)
+            throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+        String data = getData(inputData.getResource().getName());
+        if (data == null) {
+            throw new ResourceDoesNotExistException(
+                    "Missing resource: " + inputData.getResource().getName());
         }
-        byte[] bytes = data.getBytes( StandardCharsets.UTF_8 );
-        inputData.getResource().setContentLength( bytes.length );
-        inputData.setInputStream( new ByteArrayInputStream( bytes ) );
+        byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+        inputData.getResource().setContentLength(bytes.length);
+        inputData.setInputStream(new ByteArrayInputStream(bytes));
     }
 
     @Override
-    public void fillOutputData( OutputData outputData )
-        throws TransferFailedException
-    {
-        outputData.setOutputStream( new ByteArrayOutputStream() );
+    public void fillOutputData(OutputData outputData) throws TransferFailedException {
+        outputData.setOutputStream(new ByteArrayOutputStream());
     }
 
     @Override
-    protected void finishPutTransfer( Resource resource, InputStream input, OutputStream output )
-        throws TransferFailedException, AuthorizationException, ResourceDoesNotExistException
-    {
-        String data = new String( ( (ByteArrayOutputStream) output ).toByteArray(), StandardCharsets.UTF_8 );
-        fs.put( URI.create( resource.getName() ).getSchemeSpecificPart(), data );
+    protected void finishPutTransfer(Resource resource, InputStream input, OutputStream output)
+            throws TransferFailedException, AuthorizationException, ResourceDoesNotExistException {
+        String data = new String(((ByteArrayOutputStream) output).toByteArray(), StandardCharsets.UTF_8);
+        fs.put(URI.create(resource.getName()).getSchemeSpecificPart(), data);
     }
-
 }

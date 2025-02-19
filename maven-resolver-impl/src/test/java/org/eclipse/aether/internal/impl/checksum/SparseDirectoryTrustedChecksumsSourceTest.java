@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl.checksum;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl.checksum;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,24 +16,23 @@ package org.eclipse.aether.internal.impl.checksum;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl.checksum;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
-import org.eclipse.aether.internal.impl.DefaultFileProcessor;
+import org.eclipse.aether.internal.impl.DefaultChecksumProcessor;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
+import org.eclipse.aether.internal.impl.DefaultPathProcessor;
 
-public class SparseDirectoryTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport
-{
+public class SparseDirectoryTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport {
     @Override
-    protected FileTrustedChecksumsSourceSupport prepareSubject( RepositorySystemLifecycle lifecycle )
-    {
-        return new SparseDirectoryTrustedChecksumsSource( new DefaultFileProcessor(), new DefaultLocalPathComposer() );
+    protected FileTrustedChecksumsSourceSupport prepareSubject(RepositorySystemLifecycle lifecycle) {
+        return new SparseDirectoryTrustedChecksumsSource(
+                new DefaultChecksumProcessor(new DefaultPathProcessor()), new DefaultLocalPathComposer());
     }
 
     @Override
-    protected void enableSource( DefaultRepositorySystemSession session )
-    {
-        session.setConfigProperty( "aether.trustedChecksumsSource.sparseDirectory", Boolean.TRUE.toString() );
+    protected void enableSource(DefaultRepositorySystemSession session) {
+        session.setConfigProperty("aether.trustedChecksumsSource.sparseDirectory", Boolean.TRUE.toString());
     }
 }

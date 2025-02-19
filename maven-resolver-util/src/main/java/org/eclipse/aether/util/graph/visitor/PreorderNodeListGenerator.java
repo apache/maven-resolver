@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.visitor;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.visitor;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,45 +16,47 @@ package org.eclipse.aether.util.graph.visitor;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.graph.visitor;
 
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * Generates a sequence of dependency nodes from a dependeny graph by traversing the graph in preorder. This visitor
+ * Generates a sequence of dependency nodes from a dependency graph by traversing the graph in preorder. This visitor
  * visits each node exactly once regardless how many paths within the dependency graph lead to the node such that the
  * resulting node sequence is free of duplicates.
+ * <p>
+ * The newer classes {@link AbstractDependencyNodeConsumerVisitor} and {@link NodeListGenerator} offer
+ * similar capabilities but are pluggable. Use of this class, while not deprecated, is discouraged. This class
+ * is not used in Resolver and is kept only for backward compatibility reasons.
+ *
+ * @see PreorderDependencyNodeConsumerVisitor
+ * @see NodeListGenerator
+ *
+ * @deprecated See {@link PreorderDependencyNodeConsumerVisitor} that is more versatile.
  */
-public final class PreorderNodeListGenerator
-    extends AbstractDepthFirstNodeListGenerator
-{
+@Deprecated
+public final class PreorderNodeListGenerator extends AbstractDepthFirstNodeListGenerator {
 
     /**
      * Creates a new preorder list generator.
      */
-    public PreorderNodeListGenerator()
-    {
-    }
+    public PreorderNodeListGenerator() {}
 
     @Override
-    public boolean visitEnter( DependencyNode node )
-    {
-        if ( !setVisited( node ) )
-        {
+    public boolean visitEnter(DependencyNode node) {
+        if (!setVisited(node)) {
             return false;
         }
 
-        if ( node.getDependency() != null )
-        {
-            nodes.add( node );
+        if (node.getDependency() != null) {
+            nodes.add(node);
         }
 
         return true;
     }
 
     @Override
-    public boolean visitLeave( DependencyNode node )
-    {
+    public boolean visitLeave(DependencyNode node) {
         return true;
     }
-
 }

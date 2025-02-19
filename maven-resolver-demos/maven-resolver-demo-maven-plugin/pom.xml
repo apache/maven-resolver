@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -18,33 +17,30 @@
   specific language governing permissions and limitations
   under the License.
 -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver-demos</artifactId>
-    <version>1.9.2-SNAPSHOT</version>
+    <version>2.0.7-SNAPSHOT</version>
   </parent>
 
   <artifactId>resolver-demo-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
 
   <name>Maven Artifact Resolver Demo Maven Plugin</name>
-  <description>
-    A simple Maven plugin using Maven Artifact Resolver with Maven repositories.
-  </description>
+  <description>A simple Maven plugin using Maven Artifact Resolver with Maven repositories.</description>
 
   <prerequisites>
-    <maven>${mavenVersion}</maven>
+    <maven>${minimalMavenBuildVersion}</maven>
   </prerequisites>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
-      <version>${mavenVersion}</version>
+      <version>${maven3Version}</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -76,20 +72,13 @@
       <artifactId>slf4j-api</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <!-- This is needed to prevent jar plugin to fail based on wrong automatic module name. -->
-          <archive combine.self="override" />
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
   <profiles>
     <profile>
       <id>run-its</id>

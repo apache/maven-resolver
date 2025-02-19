@@ -1,4 +1,4 @@
-# About Checksums
+# Checksums
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -39,7 +39,7 @@ of Maven Resolver: there is nothing secure being involved with checksums. Moreov
 algorithm, but even for its "elder brother" MD5. Both algorithms are still widely used today as "transport integrity
 validation" or "error detection" (aka "bit-rot detection").
 
-## Checksum Changes
+## Checksum Algorithms SPI
 
 From a technical perspective, the above written facts infer following consequences: as checksum algorithms are exposed
 to the user, so one can set them via configuration, users are not prevented to ask for SHA-256 or even SHA-512, even if
@@ -49,22 +49,30 @@ of message digests for checksums. While this is not wrong or even mistake in any
 wrong use case. The notion of transport validation and secure hashes are being constantly mixed up due historical
 reasons explained above.
 
-Hence, Maven Resolver team decided to make supported set of checksums limited. Instead of directly exposing
-`MessageDigest` algorithms, we introduced an API around checksums. This not only prevents wrong use cases (not
+Hence, Maven Resolver team decided to make supported set of checksums more controlled. Instead of directly exposing
+`MessageDigest` algorithms, we introduced an SPI around checksums. This not only prevents wrong use cases (not
 exposing all supported algorithms of `MessageDigest` to users), but also makes possible to introduce real checksum
 algorithms. Finally, the set of supported checksum algorithms remains extensible: if some required algorithm is
 not provided by Resolver, it can be easily added by creating a factory component for it.
 
-Resolver out of the box supports the following checksum algorithms:
+We are aware that users started using "better SHA" algorithms, and we do not want to break them. Nothing for them
+changes (configuration and everything basically remains the same). But, we do want to prevent any possible further
+proliferation of non-standard checksums.
+
+## Implemented Checksum Algorithms
+
+Resolver out of the box provides the following checksum algorithms (important: algorithm names are case sensitive):
 
 * MD5
 * SHA-1
 * SHA-256
 * SHA-512
 
-We are aware that users started using "better SHA" algorithms, and we do not want to break them. Nothing for them
-changes (configuration and everything basically remains the same). But, we do want to prevent any possible further
-proliferation of non-standard checksums.
+The algorithms above are provided by Resolver, by default. Still, using the SPI, anyone can extend
+Resolver with new types of Checksum Algorithms.
+
+To see how and when checksums are used in Resolver, continue on [Expected Checksums](expected-checksums.html)
+page.
 
 Links:
 

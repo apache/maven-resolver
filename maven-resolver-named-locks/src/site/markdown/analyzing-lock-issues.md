@@ -25,10 +25,10 @@ This guide will show you how to collect and analyze lock issues to report with u
 
 Make sure that the following applies:
 
-- Bash or Bash-compatible installed
+- Bash or Bash-compatible shell installed
 - BSD or GNU userland installed
 - SQLite installed
-- At least Maven 4.0.0-alpha-1 and Maven Resolver 1.7.1 installed
+- At least Maven 3.9.0
 
 Prepare your environment:
 
@@ -43,6 +43,8 @@ Prepare your environment:
 - Download [`schema.sql`](./sql/schema.sql), [`create_lock_events.sql`](./sql/create_lock_events.sql),
   [`create_lock_workflows.sql`](./sql/create_lock_workflows.sql) and set `SCHEMA_FILE`,
   `CREATE_LOCK_EVENTS_FILE`, `CREATE_LOCK_WORKFLOWS_FILE` to their respective locations
+
+TIP: See [overview](./index.html) of possible values for `LOCK_FACTORY` and `NAME_MAPPER`.
 
 ## Running Builds
 
@@ -64,6 +66,8 @@ $ for build in $(eval echo {1..$BUILD_COUNT}); do \
 ```
 
 Wait for all jobs to complete.
+
+TIP: If you don't need parallel (multiprocess) builds, you can set `JOB_COUNT` to 1.
 
 ## Analyzing Builds
 

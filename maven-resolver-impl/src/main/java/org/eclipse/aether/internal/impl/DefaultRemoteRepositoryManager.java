@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,18 +16,17 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ListIterator;
-import static java.util.Objects.requireNonNull;
+package org.eclipse.aether.internal.impl;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ListIterator;
+
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -42,100 +39,65 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  */
 @Singleton
 @Named
-public class DefaultRemoteRepositoryManager
-    implements RemoteRepositoryManager, Service
-{
+public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
 
-    private static final class LoggedMirror
-    {
+    private static final class LoggedMirror {
 
         private final Object[] keys;
 
-        LoggedMirror( RemoteRepository original, RemoteRepository mirror )
-        {
-            keys = new Object[] { mirror.getId(), mirror.getUrl(), original.getId(), original.getUrl() };
+        LoggedMirror(RemoteRepository original, RemoteRepository mirror) {
+            keys = new Object[] {mirror.getId(), mirror.getUrl(), original.getId(), original.getUrl()};
         }
 
         @Override
-        public boolean equals( Object obj )
-        {
-            if ( this == obj )
-            {
+        public boolean equals(Object obj) {
+            if (this == obj) {
                 return true;
-            }
-            else if ( !( obj instanceof LoggedMirror ) )
-            {
+            } else if (!(obj instanceof LoggedMirror)) {
                 return false;
             }
             LoggedMirror that = (LoggedMirror) obj;
-            return Arrays.equals( keys, that.keys );
+            return Arrays.equals(keys, that.keys);
         }
 
         @Override
-        public int hashCode()
-        {
-            return Arrays.hashCode( keys );
+        public int hashCode() {
+            return Arrays.hashCode(keys);
         }
-
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultRemoteRepositoryManager.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRemoteRepositoryManager.class);
 
-    private UpdatePolicyAnalyzer updatePolicyAnalyzer;
+    private final UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
-    private ChecksumPolicyProvider checksumPolicyProvider;
-
-    public DefaultRemoteRepositoryManager()
-    {
-        // enables default constructor
-    }
+    private final ChecksumPolicyProvider checksumPolicyProvider;
 
     @Inject
-    DefaultRemoteRepositoryManager( UpdatePolicyAnalyzer updatePolicyAnalyzer,
-                                    ChecksumPolicyProvider checksumPolicyProvider )
-    {
-        setUpdatePolicyAnalyzer( updatePolicyAnalyzer );
-        setChecksumPolicyProvider( checksumPolicyProvider );
+    public DefaultRemoteRepositoryManager(
+            UpdatePolicyAnalyzer updatePolicyAnalyzer, ChecksumPolicyProvider checksumPolicyProvider) {
+        this.updatePolicyAnalyzer = requireNonNull(updatePolicyAnalyzer, "update policy analyzer cannot be null");
+        this.checksumPolicyProvider = requireNonNull(checksumPolicyProvider, "checksum policy provider cannot be null");
     }
 
-    public void initService( ServiceLocator locator )
-    {
-        setUpdatePolicyAnalyzer( locator.getService( UpdatePolicyAnalyzer.class ) );
-        setChecksumPolicyProvider( locator.getService( ChecksumPolicyProvider.class ) );
-    }
-
-    public DefaultRemoteRepositoryManager setUpdatePolicyAnalyzer( UpdatePolicyAnalyzer updatePolicyAnalyzer )
-    {
-        this.updatePolicyAnalyzer = requireNonNull( updatePolicyAnalyzer, "update policy analyzer cannot be null" );
-        return this;
-    }
-
-    public DefaultRemoteRepositoryManager setChecksumPolicyProvider( ChecksumPolicyProvider checksumPolicyProvider )
-    {
-        this.checksumPolicyProvider = requireNonNull(
-                checksumPolicyProvider, "checksum policy provider cannot be null" );
-        return this;
-    }
-
-    public List<RemoteRepository> aggregateRepositories( RepositorySystemSession session,
-                                                         List<RemoteRepository> dominantRepositories,
-                                                         List<RemoteRepository> recessiveRepositories,
-                                                         boolean recessiveIsRaw )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( dominantRepositories, "dominantRepositories cannot be null" );
-        requireNonNull( recessiveRepositories, "recessiveRepositories cannot be null" );
-        if ( recessiveRepositories.isEmpty() )
-        {
+    @Override
+    public List<RemoteRepository> aggregateRepositories(
+            RepositorySystemSession session,
+            List<RemoteRepository> dominantRepositories,
+            List<RemoteRepository> recessiveRepositories,
+            boolean recessiveIsRaw) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(dominantRepositories, "dominantRepositories cannot be null");
+        requireNonNull(recessiveRepositories, "recessiveRepositories cannot be null");
+        if (recessiveRepositories.isEmpty()) {
             return dominantRepositories;
         }
 
@@ -143,38 +105,32 @@ public class DefaultRemoteRepositoryManager
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();
 
-        List<RemoteRepository> result = new ArrayList<>( dominantRepositories );
+        List<RemoteRepository> result = new ArrayList<>(dominantRepositories);
 
-        next: for ( RemoteRepository recessiveRepository : recessiveRepositories )
-        {
+        next:
+        for (RemoteRepository recessiveRepository : recessiveRepositories) {
             RemoteRepository repository = recessiveRepository;
 
-            if ( recessiveIsRaw )
-            {
-                RemoteRepository mirrorRepository = mirrorSelector.getMirror( recessiveRepository );
+            if (recessiveIsRaw) {
+                RemoteRepository mirrorRepository = mirrorSelector.getMirror(recessiveRepository);
 
-                if ( mirrorRepository != null )
-                {
-                    logMirror( session, recessiveRepository, mirrorRepository );
+                if (mirrorRepository != null) {
+                    logMirror(session, recessiveRepository, mirrorRepository);
                     repository = mirrorRepository;
                 }
             }
 
-            String key = getKey( repository );
+            String key = getKey(repository);
 
-            for ( ListIterator<RemoteRepository> it = result.listIterator(); it.hasNext(); )
-            {
+            for (ListIterator<RemoteRepository> it = result.listIterator(); it.hasNext(); ) {
                 RemoteRepository dominantRepository = it.next();
 
-                if ( key.equals( getKey( dominantRepository ) ) )
-                {
-                    if ( !dominantRepository.getMirroredRepositories().isEmpty()
-                        && !repository.getMirroredRepositories().isEmpty() )
-                    {
-                        RemoteRepository mergedRepository = mergeMirrors( session, dominantRepository, repository );
-                        if ( mergedRepository != dominantRepository )
-                        {
-                            it.set( mergedRepository );
+                if (key.equals(getKey(dominantRepository))) {
+                    if (!dominantRepository.getMirroredRepositories().isEmpty()
+                            && !repository.getMirroredRepositories().isEmpty()) {
+                        RemoteRepository mergedRepository = mergeMirrors(session, dominantRepository, repository);
+                        if (mergedRepository != dominantRepository) {
+                            it.set(mergedRepository);
                         }
                     }
 
@@ -182,210 +138,192 @@ public class DefaultRemoteRepositoryManager
                 }
             }
 
-            if ( recessiveIsRaw )
-            {
+            if (recessiveIsRaw) {
                 RemoteRepository.Builder builder = null;
-                Authentication auth = authSelector.getAuthentication( repository );
-                if ( auth != null )
-                {
-                    builder = new RemoteRepository.Builder( repository );
-                    builder.setAuthentication( auth );
+                Authentication auth = authSelector.getAuthentication(repository);
+                if (auth != null) {
+                    builder = new RemoteRepository.Builder(repository);
+                    builder.setAuthentication(auth);
                 }
-                Proxy proxy = proxySelector.getProxy( repository );
-                if ( proxy != null )
-                {
-                    if ( builder == null )
-                    {
-                        builder = new RemoteRepository.Builder( repository );
+                Proxy proxy = proxySelector.getProxy(repository);
+                if (proxy != null) {
+                    if (builder == null) {
+                        builder = new RemoteRepository.Builder(repository);
                     }
-                    builder.setProxy( proxy );
+                    builder.setProxy(proxy);
                 }
-                if ( builder != null )
-                {
+                if (builder != null) {
                     repository = builder.build();
                 }
             }
 
-            result.add( repository );
+            result.add(repository);
         }
 
         return result;
     }
 
-    private void logMirror( RepositorySystemSession session, RemoteRepository original, RemoteRepository mirror )
-    {
-        if ( !LOGGER.isDebugEnabled() )
-        {
+    private void logMirror(RepositorySystemSession session, RemoteRepository original, RemoteRepository mirror) {
+        if (!LOGGER.isDebugEnabled()) {
             return;
         }
         RepositoryCache cache = session.getCache();
-        if ( cache != null )
-        {
-            Object key = new LoggedMirror( original, mirror );
-            if ( cache.get( session, key ) != null )
-            {
+        if (cache != null) {
+            Object key = new LoggedMirror(original, mirror);
+            if (cache.get(session, key) != null) {
                 return;
             }
-            cache.put( session, key, Boolean.TRUE );
+            cache.put(session, key, Boolean.TRUE);
         }
-        LOGGER.debug( "Using mirror {} ({}) for {} ({}).",
-                mirror.getId(), mirror.getUrl(), original.getId(), original.getUrl() );
+        LOGGER.debug(
+                "Using mirror {} ({}) for {} ({}).",
+                mirror.getId(),
+                mirror.getUrl(),
+                original.getId(),
+                original.getUrl());
     }
 
-    private String getKey( RemoteRepository repository )
-    {
+    private String getKey(RemoteRepository repository) {
         return repository.getId();
     }
 
-    private RemoteRepository mergeMirrors( RepositorySystemSession session, RemoteRepository dominant,
-                                           RemoteRepository recessive )
-    {
+    private RemoteRepository mergeMirrors(
+            RepositorySystemSession session, RemoteRepository dominant, RemoteRepository recessive) {
         RemoteRepository.Builder merged = null;
         RepositoryPolicy releases = null, snapshots = null;
 
-        next: for ( RemoteRepository rec : recessive.getMirroredRepositories() )
-        {
-            String recKey = getKey( rec );
+        next:
+        for (RemoteRepository rec : recessive.getMirroredRepositories()) {
+            String recKey = getKey(rec);
 
-            for ( RemoteRepository dom : dominant.getMirroredRepositories() )
-            {
-                if ( recKey.equals( getKey( dom ) ) )
-                {
+            for (RemoteRepository dom : dominant.getMirroredRepositories()) {
+                if (recKey.equals(getKey(dom))) {
                     continue next;
                 }
             }
 
-            if ( merged == null )
-            {
-                merged = new RemoteRepository.Builder( dominant );
-                releases = dominant.getPolicy( false );
-                snapshots = dominant.getPolicy( true );
+            if (merged == null) {
+                merged = new RemoteRepository.Builder(dominant);
+                releases = dominant.getPolicy(false);
+                snapshots = dominant.getPolicy(true);
             }
 
-            releases = merge( session, releases, rec.getPolicy( false ), false );
-            snapshots = merge( session, snapshots, rec.getPolicy( true ), false );
+            releases = merge(session, releases, rec.getPolicy(false), false);
+            snapshots = merge(session, snapshots, rec.getPolicy(true), false);
 
-            merged.addMirroredRepository( rec );
+            merged.addMirroredRepository(rec);
         }
 
-        if ( merged == null )
-        {
+        if (merged == null) {
             return dominant;
         }
-        return merged.setReleasePolicy( releases ).setSnapshotPolicy( snapshots ).build();
+        return merged.setReleasePolicy(releases).setSnapshotPolicy(snapshots).build();
     }
 
-    public RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository, boolean releases,
-                                       boolean snapshots )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( repository, "repository cannot be null" );
-        RepositoryPolicy policy1 = releases ? repository.getPolicy( false ) : null;
-        RepositoryPolicy policy2 = snapshots ? repository.getPolicy( true ) : null;
-        return merge( session, policy1, policy2, true );
+    @Override
+    public RepositoryPolicy getPolicy(
+            RepositorySystemSession session, RemoteRepository repository, boolean releases, boolean snapshots) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(repository, "repository cannot be null");
+        RepositoryPolicy policy1 = releases ? repository.getPolicy(false) : null;
+        RepositoryPolicy policy2 = snapshots ? repository.getPolicy(true) : null;
+        return merge(session, policy1, policy2, true);
     }
 
-    private RepositoryPolicy merge( RepositorySystemSession session, RepositoryPolicy policy1,
-                                    RepositoryPolicy policy2, boolean globalPolicy )
-    {
+    private RepositoryPolicy merge(
+            RepositorySystemSession session, RepositoryPolicy policy1, RepositoryPolicy policy2, boolean globalPolicy) {
         RepositoryPolicy policy;
 
-        if ( policy2 == null )
-        {
-            if ( globalPolicy )
-            {
-                policy = merge( policy1, session.getUpdatePolicy(), session.getChecksumPolicy() );
-            }
-            else
-            {
+        if (policy2 == null) {
+            if (globalPolicy) {
+                policy = merge(
+                        policy1,
+                        session.getArtifactUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
+            } else {
                 policy = policy1;
             }
-        }
-        else if ( policy1 == null )
-        {
-            if ( globalPolicy )
-            {
-                policy = merge( policy2, session.getUpdatePolicy(), session.getChecksumPolicy() );
-            }
-            else
-            {
+        } else if (policy1 == null) {
+            if (globalPolicy) {
+                policy = merge(
+                        policy2,
+                        session.getArtifactUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
+            } else {
                 policy = policy2;
             }
-        }
-        else if ( !policy2.isEnabled() )
-        {
-            if ( globalPolicy )
-            {
-                policy = merge( policy1, session.getUpdatePolicy(), session.getChecksumPolicy() );
-            }
-            else
-            {
+        } else if (!policy2.isEnabled()) {
+            if (globalPolicy) {
+                policy = merge(
+                        policy1,
+                        session.getArtifactUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
+            } else {
                 policy = policy1;
             }
-        }
-        else if ( !policy1.isEnabled() )
-        {
-            if ( globalPolicy )
-            {
-                policy = merge( policy2, session.getUpdatePolicy(), session.getChecksumPolicy() );
-            }
-            else
-            {
+        } else if (!policy1.isEnabled()) {
+            if (globalPolicy) {
+                policy = merge(
+                        policy2,
+                        session.getArtifactUpdatePolicy(),
+                        session.getMetadataUpdatePolicy(),
+                        session.getChecksumPolicy());
+            } else {
                 policy = policy2;
             }
-        }
-        else
-        {
+        } else {
             String checksums = session.getChecksumPolicy();
             //noinspection StatementWithEmptyBody
-            if ( globalPolicy && !StringUtils.isEmpty( checksums ) )
-            {
+            if (globalPolicy && checksums != null && !checksums.isEmpty()) {
                 // use global override
-            }
-            else
-            {
-                checksums =
-                    checksumPolicyProvider.getEffectiveChecksumPolicy( session, policy1.getChecksumPolicy(),
-                                                                       policy2.getChecksumPolicy() );
+            } else {
+                checksums = checksumPolicyProvider.getEffectiveChecksumPolicy(
+                        session, policy1.getChecksumPolicy(), policy2.getChecksumPolicy());
             }
 
-            String updates = session.getUpdatePolicy();
+            String artifactUpdates = session.getArtifactUpdatePolicy();
             //noinspection StatementWithEmptyBody
-            if ( globalPolicy && !StringUtils.isEmpty( updates ) )
-            {
+            if (globalPolicy && artifactUpdates != null && !artifactUpdates.isEmpty()) {
                 // use global override
+            } else {
+                artifactUpdates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
+                        session, policy1.getArtifactUpdatePolicy(), policy2.getArtifactUpdatePolicy());
             }
-            else
-            {
-                updates =
-                    updatePolicyAnalyzer.getEffectiveUpdatePolicy( session, policy1.getUpdatePolicy(),
-                                                                   policy2.getUpdatePolicy() );
+            String metadataUpdates = session.getMetadataUpdatePolicy();
+            if (globalPolicy && metadataUpdates != null && !metadataUpdates.isEmpty()) {
+                // use global override
+            } else {
+                metadataUpdates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
+                        session, policy1.getMetadataUpdatePolicy(), policy2.getMetadataUpdatePolicy());
             }
 
-            policy = new RepositoryPolicy( true, updates, checksums );
+            policy = new RepositoryPolicy(true, artifactUpdates, metadataUpdates, checksums);
         }
 
         return policy;
     }
 
-    private RepositoryPolicy merge( RepositoryPolicy policy, String updates, String checksums )
-    {
-        if ( policy != null )
-        {
-            if ( StringUtils.isEmpty( updates ) )
-            {
-                updates = policy.getUpdatePolicy();
+    private RepositoryPolicy merge(
+            RepositoryPolicy policy, String artifactUpdates, String metadataUpdates, String checksums) {
+        if (policy != null) {
+            if (artifactUpdates == null || artifactUpdates.isEmpty()) {
+                artifactUpdates = policy.getArtifactUpdatePolicy();
             }
-            if ( StringUtils.isEmpty( checksums ) )
-            {
+            if (metadataUpdates == null || metadataUpdates.isEmpty()) {
+                metadataUpdates = policy.getMetadataUpdatePolicy();
+            }
+            if (checksums == null || checksums.isEmpty()) {
                 checksums = policy.getChecksumPolicy();
             }
-            if ( !policy.getUpdatePolicy().equals( updates ) || !policy.getChecksumPolicy().equals( checksums ) )
-            {
-                policy = new RepositoryPolicy( policy.isEnabled(), updates, checksums );
+            if (!policy.getArtifactUpdatePolicy().equals(artifactUpdates)
+                    || !policy.getMetadataUpdatePolicy().equals(metadataUpdates)
+                    || !policy.getChecksumPolicy().equals(checksums)) {
+                policy = new RepositoryPolicy(policy.isEnabled(), artifactUpdates, metadataUpdates, checksums);
             }
         }
         return policy;
     }
-
 }

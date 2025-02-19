@@ -66,7 +66,8 @@ For the `aether.syncContext.named.nameMapper` property following values are allo
 - `file-gav` uses GAV and session to create absolute file paths (to be used with `file-lock` factory)
 - `file-hgav` uses more compact layout than `file-gav` by SHA-1 digest, similar to git (to be used with `file-lock` factory)
 - `static` uses static (same) string as lock name for any input. Effectively providing functionality same as old
-  "global" locking SyncContextFactory.
+  "global" locking SyncContextFactory. Mostly for testing/experimental purposes.
+- `file-static` same as `static` but to be used with `file-lock` factory. Mostly for testing/experimental purposes.
 
 Extra values for factory (these need extra setup and will work with Sisu DI only):
 

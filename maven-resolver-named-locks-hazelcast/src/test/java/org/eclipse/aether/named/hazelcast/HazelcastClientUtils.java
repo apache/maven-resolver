@@ -1,5 +1,3 @@
-package org.eclipse.aether.named.hazelcast;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.named.hazelcast;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,6 +16,7 @@ package org.eclipse.aether.named.hazelcast;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.named.hazelcast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,60 +32,53 @@ import com.hazelcast.core.HazelcastInstance;
 /**
  * Hazelcast test utilities.
  */
-public final class HazelcastClientUtils
-{
+public final class HazelcastClientUtils {
     private final List<HazelcastInstance> servers = new ArrayList<>();
 
     /**
      * Creates similar but still randomized name.
      */
-    public String clusterName( Class<?> klazz )
-    {
-        return String.format( "%s-%s", klazz.getSimpleName(), UUID.randomUUID() );
+    public String clusterName(Class<?> klazz) {
+        return String.format("%s-%s", klazz.getSimpleName(), UUID.randomUUID());
     }
 
     /**
      * Creates single Hazelcast client instance.
      */
-    public synchronized HazelcastInstance createClient( String clusterName )
-    {
+    public synchronized HazelcastInstance createClient(String clusterName) {
         ClientConfig config = ClientConfig.load();
-        config.setClusterName( clusterName );
-        return HazelcastClient.newHazelcastClient( config );
+        config.setClusterName(clusterName);
+        return HazelcastClient.newHazelcastClient(config);
     }
 
     /**
      * Creates single Hazelcast member instance.
      */
-    public synchronized HazelcastInstance createMember( String clusterName )
-    {
-        return createMembers( 1, clusterName ).get( 0 );
+    public synchronized HazelcastInstance createMember(String clusterName) {
+        return createMembers(1, clusterName).get(0);
     }
 
     /**
      * Creates given count of Hazelcast member instances.
      */
-    public synchronized List<HazelcastInstance> createMembers( int memberCount, String clusterName )
-    {
+    public synchronized List<HazelcastInstance> createMembers(int memberCount, String clusterName) {
         Config config = Config.load();
-        config.setClusterName( clusterName );
-        ArrayList<HazelcastInstance> result = new ArrayList<>( memberCount );
-        IntStream.range( 0, memberCount ).forEach( i -> {
-                    config.setInstanceName( "node-" + i );
-                    HazelcastInstance instance = Hazelcast.newHazelcastInstance( config );
-                    result.add( instance );
-                    servers.add( instance );
-                }
-        );
+        config.setClusterName(clusterName);
+        ArrayList<HazelcastInstance> result = new ArrayList<>(memberCount);
+        IntStream.range(0, memberCount).forEach(i -> {
+            config.setInstanceName("node-" + i);
+            HazelcastInstance instance = Hazelcast.newHazelcastInstance(config);
+            result.add(instance);
+            servers.add(instance);
+        });
         return result;
     }
 
     /**
      * Shuts down the created instances.
      */
-    public synchronized void cleanup()
-    {
-        servers.forEach( HazelcastInstance::shutdown );
+    public synchronized void cleanup() {
+        servers.forEach(HazelcastInstance::shutdown);
         servers.clear();
     }
 }

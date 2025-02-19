@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.internal.impl;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,25 +16,25 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.internal.impl;
 
-import java.io.File;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import static java.util.Objects.requireNonNull;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -48,8 +46,6 @@ import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
-import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
-import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.metadata.Metadata;
@@ -65,496 +61,411 @@ import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
+import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
-import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.concurrency.ExecutorUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
-import org.eclipse.aether.util.concurrency.WorkerThreadFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  */
 @Singleton
 @Named
-public class DefaultMetadataResolver
-    implements MetadataResolver, Service
-{
+public class DefaultMetadataResolver implements MetadataResolver {
+    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "metadataResolver.";
 
-    private static final String CONFIG_PROP_THREADS = "aether.metadataResolver.threads";
+    /**
+     * Number of threads to use in parallel for resolving metadata.
+     *
+     * @since 0.9.0.M4
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_THREADS}
+     */
+    public static final String CONFIG_PROP_THREADS = CONFIG_PROPS_PREFIX + "threads";
 
-    private RepositoryEventDispatcher repositoryEventDispatcher;
+    public static final int DEFAULT_THREADS = 4;
 
-    private UpdateCheckManager updateCheckManager;
+    private final RepositoryEventDispatcher repositoryEventDispatcher;
 
-    private RepositoryConnectorProvider repositoryConnectorProvider;
+    private final UpdateCheckManager updateCheckManager;
 
-    private RemoteRepositoryManager remoteRepositoryManager;
+    private final RepositoryConnectorProvider repositoryConnectorProvider;
 
-    private SyncContextFactory syncContextFactory;
+    private final RemoteRepositoryManager remoteRepositoryManager;
 
-    private OfflineController offlineController;
+    private final SyncContextFactory syncContextFactory;
 
-    private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
+    private final OfflineController offlineController;
 
-    public DefaultMetadataResolver()
-    {
-        // enables default constructor
-    }
+    private final RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    private final PathProcessor pathProcessor;
+
+    @SuppressWarnings("checkstyle:parameternumber")
     @Inject
-    DefaultMetadataResolver( RepositoryEventDispatcher repositoryEventDispatcher,
-                             UpdateCheckManager updateCheckManager,
-                             RepositoryConnectorProvider repositoryConnectorProvider,
-                             RemoteRepositoryManager remoteRepositoryManager, SyncContextFactory syncContextFactory,
-                             OfflineController offlineController,
-                             RemoteRepositoryFilterManager remoteRepositoryFilterManager )
-    {
-        setRepositoryEventDispatcher( repositoryEventDispatcher );
-        setUpdateCheckManager( updateCheckManager );
-        setRepositoryConnectorProvider( repositoryConnectorProvider );
-        setRemoteRepositoryManager( remoteRepositoryManager );
-        setSyncContextFactory( syncContextFactory );
-        setOfflineController( offlineController );
-        setRemoteRepositoryFilterManager( remoteRepositoryFilterManager );
+    public DefaultMetadataResolver(
+            RepositoryEventDispatcher repositoryEventDispatcher,
+            UpdateCheckManager updateCheckManager,
+            RepositoryConnectorProvider repositoryConnectorProvider,
+            RemoteRepositoryManager remoteRepositoryManager,
+            SyncContextFactory syncContextFactory,
+            OfflineController offlineController,
+            RemoteRepositoryFilterManager remoteRepositoryFilterManager,
+            PathProcessor pathProcessor) {
+        this.repositoryEventDispatcher =
+                requireNonNull(repositoryEventDispatcher, "repository event dispatcher cannot be null");
+        this.updateCheckManager = requireNonNull(updateCheckManager, "update check manager cannot be null");
+        this.repositoryConnectorProvider =
+                requireNonNull(repositoryConnectorProvider, "repository connector provider cannot be null");
+        this.remoteRepositoryManager =
+                requireNonNull(remoteRepositoryManager, "remote repository provider cannot be null");
+        this.syncContextFactory = requireNonNull(syncContextFactory, "sync context factory cannot be null");
+        this.offlineController = requireNonNull(offlineController, "offline controller cannot be null");
+        this.remoteRepositoryFilterManager =
+                requireNonNull(remoteRepositoryFilterManager, "remote repository filter manager cannot be null");
+        this.pathProcessor = requireNonNull(pathProcessor, "path processor cannot be null");
     }
 
-    public void initService( ServiceLocator locator )
-    {
-        setRepositoryEventDispatcher( locator.getService( RepositoryEventDispatcher.class ) );
-        setUpdateCheckManager( locator.getService( UpdateCheckManager.class ) );
-        setRepositoryConnectorProvider( locator.getService( RepositoryConnectorProvider.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setSyncContextFactory( locator.getService( SyncContextFactory.class ) );
-        setOfflineController( locator.getService( OfflineController.class ) );
-        setRemoteRepositoryFilterManager( locator.getService( RemoteRepositoryFilterManager.class ) );
-    }
-
-    public DefaultMetadataResolver setRepositoryEventDispatcher( RepositoryEventDispatcher repositoryEventDispatcher )
-    {
-        this.repositoryEventDispatcher = requireNonNull(
-                repositoryEventDispatcher, "repository event dispatcher cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setUpdateCheckManager( UpdateCheckManager updateCheckManager )
-    {
-        this.updateCheckManager = requireNonNull( updateCheckManager, "update check manager cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setRepositoryConnectorProvider(
-            RepositoryConnectorProvider repositoryConnectorProvider )
-    {
-        this.repositoryConnectorProvider = requireNonNull(
-                repositoryConnectorProvider, "repository connector provider cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setRemoteRepositoryManager( RemoteRepositoryManager remoteRepositoryManager )
-    {
-        this.remoteRepositoryManager = requireNonNull(
-                remoteRepositoryManager, "remote repository provider cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setSyncContextFactory( SyncContextFactory syncContextFactory )
-    {
-        this.syncContextFactory = requireNonNull( syncContextFactory, "sync context factory cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setOfflineController( OfflineController offlineController )
-    {
-        this.offlineController = requireNonNull( offlineController, "offline controller cannot be null" );
-        return this;
-    }
-
-    public DefaultMetadataResolver setRemoteRepositoryFilterManager(
-            RemoteRepositoryFilterManager remoteRepositoryFilterManager )
-    {
-        this.remoteRepositoryFilterManager = requireNonNull( remoteRepositoryFilterManager,
-                "remote repository filter manager cannot be null" );
-        return this;
-    }
-
-    public List<MetadataResult> resolveMetadata( RepositorySystemSession session,
-                                                 Collection<? extends MetadataRequest> requests )
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( requests, "requests cannot be null" );
-        try ( SyncContext syncContext = syncContextFactory.newInstance( session, false ) )
-        {
-            Collection<Metadata> metadata = new ArrayList<>( requests.size() );
-            for ( MetadataRequest request : requests )
-            {
-                metadata.add( request.getMetadata() );
+    @Override
+    public List<MetadataResult> resolveMetadata(
+            RepositorySystemSession session, Collection<? extends MetadataRequest> requests) {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(requests, "requests cannot be null");
+        try (SyncContext shared = syncContextFactory.newInstance(session, true);
+                SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
+            Collection<Metadata> metadata = new ArrayList<>(requests.size());
+            for (MetadataRequest request : requests) {
+                metadata.add(request.getMetadata());
             }
 
-            syncContext.acquire( null, metadata );
-
-            return resolve( session, requests );
+            return resolve(shared, exclusive, metadata, session, requests);
         }
     }
 
-    @SuppressWarnings( "checkstyle:methodlength" )
-    private List<MetadataResult> resolve( RepositorySystemSession session,
-                                          Collection<? extends MetadataRequest> requests )
-    {
-        List<MetadataResult> results = new ArrayList<>( requests.size() );
+    @SuppressWarnings("checkstyle:methodlength")
+    private List<MetadataResult> resolve(
+            SyncContext shared,
+            SyncContext exclusive,
+            Collection<Metadata> subjects,
+            RepositorySystemSession session,
+            Collection<? extends MetadataRequest> requests) {
+        SyncContext current = shared;
+        try {
+            while (true) {
+                current.acquire(null, subjects);
 
-        List<ResolveTask> tasks = new ArrayList<>( requests.size() );
+                final List<MetadataResult> results = new ArrayList<>(requests.size());
+                final List<ResolveTask> tasks = new ArrayList<>(requests.size());
+                final Map<Path, Long> localLastUpdates = new HashMap<>();
+                final RemoteRepositoryFilter remoteRepositoryFilter =
+                        remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
 
-        Map<File, Long> localLastUpdates = new HashMap<>();
+                for (MetadataRequest request : requests) {
+                    RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
-        RemoteRepositoryFilter remoteRepositoryFilter = remoteRepositoryFilterManager
-                .getRemoteRepositoryFilter( session );
+                    MetadataResult result = new MetadataResult(request);
+                    results.add(result);
 
-        for ( MetadataRequest request : requests )
-        {
-            RequestTrace trace = RequestTrace.newChild( request.getTrace(), request );
+                    Metadata metadata = request.getMetadata();
+                    RemoteRepository repository = request.getRepository();
 
-            MetadataResult result = new MetadataResult( request );
-            results.add( result );
+                    if (repository == null) {
+                        LocalRepository localRepo =
+                                session.getLocalRepositoryManager().getRepository();
 
-            Metadata metadata = request.getMetadata();
-            RemoteRepository repository = request.getRepository();
+                        metadataResolving(session, trace, metadata, localRepo);
 
-            if ( repository == null )
-            {
-                LocalRepository localRepo = session.getLocalRepositoryManager().getRepository();
+                        Path localFile = getLocalFile(session, metadata);
 
-                metadataResolving( session, trace, metadata, localRepo );
+                        if (localFile != null) {
+                            metadata = metadata.setPath(localFile);
+                            result.setMetadata(metadata);
+                        } else {
+                            result.setException(new MetadataNotFoundException(metadata, localRepo));
+                        }
 
-                File localFile = getLocalFile( session, metadata );
+                        metadataResolved(session, trace, metadata, localRepo, result.getException());
+                        continue;
+                    }
 
-                if ( localFile != null )
-                {
-                    metadata = metadata.setFile( localFile );
-                    result.setMetadata( metadata );
+                    if (remoteRepositoryFilter != null) {
+                        RemoteRepositoryFilter.Result filterResult =
+                                remoteRepositoryFilter.acceptMetadata(repository, metadata);
+                        if (!filterResult.isAccepted()) {
+                            result.setException(
+                                    new MetadataNotFoundException(metadata, repository, filterResult.reasoning()));
+                            continue;
+                        }
+                    }
+
+                    List<RemoteRepository> repositories =
+                            getEnabledSourceRepositories(repository, metadata.getNature());
+
+                    if (repositories.isEmpty()) {
+                        continue;
+                    }
+
+                    metadataResolving(session, trace, metadata, repository);
+                    LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+                    LocalMetadataRequest localRequest =
+                            new LocalMetadataRequest(metadata, repository, request.getRequestContext());
+                    LocalMetadataResult lrmResult = lrm.find(session, localRequest);
+
+                    Path metadataPath = lrmResult.getPath();
+
+                    try {
+                        Utils.checkOffline(session, offlineController, repository);
+                    } catch (RepositoryOfflineException e) {
+                        if (metadataPath != null) {
+                            metadata = metadata.setPath(metadataPath);
+                            result.setMetadata(metadata);
+                        } else {
+                            String msg = "Cannot access " + repository.getId() + " (" + repository.getUrl()
+                                    + ") in offline mode and the metadata " + metadata
+                                    + " has not been downloaded from it before";
+                            result.setException(new MetadataNotFoundException(metadata, repository, msg, e));
+                        }
+
+                        metadataResolved(session, trace, metadata, repository, result.getException());
+                        continue;
+                    }
+
+                    Long localLastUpdate = null;
+                    if (request.isFavorLocalRepository()) {
+                        Path localPath = getLocalFile(session, metadata);
+                        localLastUpdate = localLastUpdates.get(localPath);
+                        if (localLastUpdate == null) {
+                            localLastUpdate = localPath != null ? pathProcessor.lastModified(localPath, 0L) : 0L;
+                            localLastUpdates.put(localPath, localLastUpdate);
+                        }
+                    }
+
+                    List<UpdateCheck<Metadata, MetadataTransferException>> checks = new ArrayList<>();
+                    Exception exception = null;
+                    for (RemoteRepository repo : repositories) {
+                        RepositoryPolicy policy = getPolicy(session, repo, metadata.getNature());
+
+                        UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
+                        check.setLocalLastUpdated((localLastUpdate != null) ? localLastUpdate : 0);
+                        check.setItem(metadata);
+
+                        // use 'main' installation file for the check (-> use requested repository)
+                        Path checkPath = session.getLocalRepositoryManager()
+                                .getAbsolutePathForRemoteMetadata(metadata, repository, request.getRequestContext());
+                        check.setPath(checkPath);
+                        check.setRepository(repository);
+                        check.setAuthoritativeRepository(repo);
+                        check.setArtifactPolicy(policy.getArtifactUpdatePolicy());
+                        check.setMetadataPolicy(policy.getMetadataUpdatePolicy());
+
+                        if (lrmResult.isStale()) {
+                            checks.add(check);
+                        } else {
+                            updateCheckManager.checkMetadata(session, check);
+                            if (check.isRequired()) {
+                                checks.add(check);
+                            } else if (exception == null) {
+                                exception = check.getException();
+                            }
+                        }
+                    }
+
+                    if (!checks.isEmpty()) {
+                        RepositoryPolicy policy = getPolicy(session, repository, metadata.getNature());
+
+                        // install path may be different from lookup path
+                        Path installPath = session.getLocalRepositoryManager()
+                                .getAbsolutePathForRemoteMetadata(
+                                        metadata, request.getRepository(), request.getRequestContext());
+
+                        ResolveTask task = new ResolveTask(
+                                session, trace, result, installPath, checks, policy.getChecksumPolicy());
+                        tasks.add(task);
+                    } else {
+                        result.setException(exception);
+                        if (metadataPath != null) {
+                            metadata = metadata.setPath(metadataPath);
+                            result.setMetadata(metadata);
+                        }
+                        metadataResolved(session, trace, metadata, repository, result.getException());
+                    }
                 }
-                else
-                {
-                    result.setException( new MetadataNotFoundException( metadata, localRepo ) );
-                }
 
-                metadataResolved( session, trace, metadata, localRepo, result.getException() );
-                continue;
-            }
-
-            if ( remoteRepositoryFilter != null )
-            {
-                RemoteRepositoryFilter.Result filterResult = remoteRepositoryFilter.acceptMetadata(
-                        repository, metadata );
-                if ( !filterResult.isAccepted() )
-                {
-                    result.setException(
-                            new MetadataNotFoundException( metadata, repository, filterResult.reasoning() ) );
+                if (!tasks.isEmpty() && current == shared) {
+                    current.close();
+                    current = exclusive;
                     continue;
                 }
-            }
 
-            List<RemoteRepository> repositories = getEnabledSourceRepositories( repository, metadata.getNature() );
+                if (!tasks.isEmpty()) {
+                    int threads = ExecutorUtils.threadCount(session, DEFAULT_THREADS, CONFIG_PROP_THREADS);
+                    Executor executor = ExecutorUtils.executor(
+                            Math.min(tasks.size(), threads), getClass().getSimpleName() + '-');
+                    try {
+                        RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
-            if ( repositories.isEmpty() )
-            {
-                continue;
-            }
+                        for (ResolveTask task : tasks) {
+                            metadataDownloading(
+                                    task.session, task.trace, task.request.getMetadata(), task.request.getRepository());
 
-            metadataResolving( session, trace, metadata, repository );
-            LocalRepositoryManager lrm = session.getLocalRepositoryManager();
-            LocalMetadataRequest localRequest =
-                new LocalMetadataRequest( metadata, repository, request.getRequestContext() );
-            LocalMetadataResult lrmResult = lrm.find( session, localRequest );
+                            executor.execute(errorForwarder.wrap(task));
+                        }
 
-            File metadataFile = lrmResult.getFile();
+                        errorForwarder.await();
 
-            try
-            {
-                Utils.checkOffline( session, offlineController, repository );
-            }
-            catch ( RepositoryOfflineException e )
-            {
-                if ( metadataFile != null )
-                {
-                    metadata = metadata.setFile( metadataFile );
-                    result.setMetadata( metadata );
-                }
-                else
-                {
-                    String msg =
-                        "Cannot access " + repository.getId() + " (" + repository.getUrl()
-                            + ") in offline mode and the metadata " + metadata
-                            + " has not been downloaded from it before";
-                    result.setException( new MetadataNotFoundException( metadata, repository, msg, e ) );
-                }
+                        for (ResolveTask task : tasks) {
+                            /*
+                             * NOTE: Touch after registration with local repo to ensure concurrent resolution is not
+                             * rejected with "already updated" via session data when actual update to local repo is
+                             * still pending.
+                             */
+                            for (UpdateCheck<Metadata, MetadataTransferException> check : task.checks) {
+                                updateCheckManager.touchMetadata(task.session, check.setException(task.exception));
+                            }
 
-                metadataResolved( session, trace, metadata, repository, result.getException() );
-                continue;
-            }
+                            metadataDownloaded(
+                                    session,
+                                    task.trace,
+                                    task.request.getMetadata(),
+                                    task.request.getRepository(),
+                                    task.metadataPath,
+                                    task.exception);
 
-            Long localLastUpdate = null;
-            if ( request.isFavorLocalRepository() )
-            {
-                File localFile = getLocalFile( session, metadata );
-                localLastUpdate = localLastUpdates.get( localFile );
-                if ( localLastUpdate == null )
-                {
-                    localLastUpdate = localFile != null ? localFile.lastModified() : 0;
-                    localLastUpdates.put( localFile, localLastUpdate );
-                }
-            }
-
-            List<UpdateCheck<Metadata, MetadataTransferException>> checks = new ArrayList<>();
-            Exception exception = null;
-            for ( RemoteRepository repo : repositories )
-            {
-                UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
-                check.setLocalLastUpdated( ( localLastUpdate != null ) ? localLastUpdate : 0 );
-                check.setItem( metadata );
-
-                // use 'main' installation file for the check (-> use requested repository)
-                File checkFile = new File(
-                        session.getLocalRepository().getBasedir(),
-                        session.getLocalRepositoryManager()
-                                .getPathForRemoteMetadata( metadata, repository, request.getRequestContext() ) );
-                check.setFile( checkFile );
-                check.setRepository( repository );
-                check.setAuthoritativeRepository( repo );
-                check.setPolicy( getPolicy( session, repo, metadata.getNature() ).getUpdatePolicy() );
-
-                if ( lrmResult.isStale() )
-                {
-                    checks.add( check );
-                }
-                else
-                {
-                    updateCheckManager.checkMetadata( session, check );
-                    if ( check.isRequired() )
-                    {
-                        checks.add( check );
+                            task.result.setException(task.exception);
+                        }
+                    } finally {
+                        ExecutorUtils.shutdown(executor);
                     }
-                    else if ( exception == null )
-                    {
-                        exception = check.getException();
+                    for (ResolveTask task : tasks) {
+                        Metadata metadata = task.request.getMetadata();
+                        // re-lookup metadata for resolve
+                        LocalMetadataRequest localRequest = new LocalMetadataRequest(
+                                metadata, task.request.getRepository(), task.request.getRequestContext());
+                        Path metadataPath = session.getLocalRepositoryManager()
+                                .find(session, localRequest)
+                                .getPath();
+                        if (metadataPath != null) {
+                            metadata = metadata.setPath(metadataPath);
+                            task.result.setMetadata(metadata);
+                        }
+                        if (task.result.getException() == null) {
+                            task.result.setUpdated(true);
+                        }
+                        metadataResolved(
+                                session,
+                                task.trace,
+                                metadata,
+                                task.request.getRepository(),
+                                task.result.getException());
                     }
                 }
+
+                return results;
             }
-
-            if ( !checks.isEmpty() )
-            {
-                RepositoryPolicy policy = getPolicy( session, repository, metadata.getNature() );
-
-                // install path may be different from lookup path
-                File installFile = new File(
-                        session.getLocalRepository().getBasedir(),
-                        session.getLocalRepositoryManager().getPathForRemoteMetadata(
-                                metadata, request.getRepository(), request.getRequestContext() ) );
-
-                metadataDownloading(
-                        session, trace, result.getRequest().getMetadata(), result.getRequest().getRepository() );
-
-                ResolveTask task =
-                    new ResolveTask( session, trace, result, installFile, checks, policy.getChecksumPolicy() );
-                tasks.add( task );
-            }
-            else
-            {
-                result.setException( exception );
-                if ( metadataFile != null )
-                {
-                    metadata = metadata.setFile( metadataFile );
-                    result.setMetadata( metadata );
-                }
-                metadataResolved( session, trace, metadata, repository, result.getException() );
-            }
+        } finally {
+            current.close();
         }
-
-        if ( !tasks.isEmpty() )
-        {
-            int threads = ConfigUtils.getInteger( session, 4, CONFIG_PROP_THREADS );
-            Executor executor = getExecutor( Math.min( tasks.size(), threads ) );
-            try
-            {
-                RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
-
-                for ( ResolveTask task : tasks )
-                {
-                    executor.execute( errorForwarder.wrap( task ) );
-                }
-
-                errorForwarder.await();
-
-                for ( ResolveTask task : tasks )
-                {
-                    /*
-                     * NOTE: Touch after registration with local repo to ensure concurrent resolution is not
-                     * rejected with "already updated" via session data when actual update to local repo is
-                     * still pending.
-                     */
-                    for ( UpdateCheck<Metadata, MetadataTransferException> check : task.checks )
-                    {
-                        updateCheckManager.touchMetadata( task.session, check.setException( task.exception ) );
-                    }
-
-                    metadataDownloaded( session, task.trace, task.request.getMetadata(), task.request.getRepository(),
-                            task.metadataFile, task.exception );
-
-                    task.result.setException( task.exception );
-                }
-            }
-            finally
-            {
-                shutdown( executor );
-            }
-            for ( ResolveTask task : tasks )
-            {
-                Metadata metadata = task.request.getMetadata();
-                // re-lookup metadata for resolve
-                LocalMetadataRequest localRequest = new LocalMetadataRequest(
-                        metadata, task.request.getRepository(), task.request.getRequestContext() );
-                File metadataFile = session.getLocalRepositoryManager().find( session, localRequest ).getFile();
-                if ( metadataFile != null )
-                {
-                    metadata = metadata.setFile( metadataFile );
-                    task.result.setMetadata( metadata );
-                }
-                if ( task.result.getException() == null )
-                {
-                    task.result.setUpdated( true );
-                }
-                metadataResolved( session, task.trace, metadata, task.request.getRepository(),
-                                  task.result.getException() );
-            }
-        }
-
-        return results;
     }
 
-    private File getLocalFile( RepositorySystemSession session, Metadata metadata )
-    {
+    private Path getLocalFile(RepositorySystemSession session, Metadata metadata) {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
-        LocalMetadataResult localResult = lrm.find( session, new LocalMetadataRequest( metadata, null, null ) );
-        return localResult.getFile();
+        LocalMetadataResult localResult = lrm.find(session, new LocalMetadataRequest(metadata, null, null));
+        return localResult.getPath();
     }
 
-    private List<RemoteRepository> getEnabledSourceRepositories( RemoteRepository repository, Metadata.Nature nature )
-    {
+    private List<RemoteRepository> getEnabledSourceRepositories(RemoteRepository repository, Metadata.Nature nature) {
         List<RemoteRepository> repositories = new ArrayList<>();
 
-        if ( repository.isRepositoryManager() )
-        {
-            for ( RemoteRepository repo : repository.getMirroredRepositories() )
-            {
-                if ( isEnabled( repo, nature ) )
-                {
-                    repositories.add( repo );
+        if (repository.isRepositoryManager()) {
+            for (RemoteRepository repo : repository.getMirroredRepositories()) {
+                if (isEnabled(repo, nature)) {
+                    repositories.add(repo);
                 }
             }
-        }
-        else if ( isEnabled( repository, nature ) )
-        {
-            repositories.add( repository );
+        } else if (isEnabled(repository, nature)) {
+            repositories.add(repository);
         }
 
         return repositories;
     }
 
-    private boolean isEnabled( RemoteRepository repository, Metadata.Nature nature )
-    {
-        if ( !Metadata.Nature.SNAPSHOT.equals( nature ) && repository.getPolicy( false ).isEnabled() )
-        {
+    private boolean isEnabled(RemoteRepository repository, Metadata.Nature nature) {
+        if (!Metadata.Nature.SNAPSHOT.equals(nature)
+                && repository.getPolicy(false).isEnabled()) {
             return true;
         }
-        if ( !Metadata.Nature.RELEASE.equals( nature ) && repository.getPolicy( true ).isEnabled() )
-        {
-            return true;
-        }
-        return false;
+        return !Metadata.Nature.RELEASE.equals(nature)
+                && repository.getPolicy(true).isEnabled();
     }
 
-    private RepositoryPolicy getPolicy( RepositorySystemSession session, RemoteRepository repository,
-                                        Metadata.Nature nature )
-    {
-        boolean releases = !Metadata.Nature.SNAPSHOT.equals( nature );
-        boolean snapshots = !Metadata.Nature.RELEASE.equals( nature );
-        return remoteRepositoryManager.getPolicy( session, repository, releases, snapshots );
+    private RepositoryPolicy getPolicy(
+            RepositorySystemSession session, RemoteRepository repository, Metadata.Nature nature) {
+        boolean releases = !Metadata.Nature.SNAPSHOT.equals(nature);
+        boolean snapshots = !Metadata.Nature.RELEASE.equals(nature);
+        return remoteRepositoryManager.getPolicy(session, repository, releases, snapshots);
     }
 
-    private void metadataResolving( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
-                                    ArtifactRepository repository )
-    {
-        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVING );
-        event.setTrace( trace );
-        event.setMetadata( metadata );
-        event.setRepository( repository );
+    private void metadataResolving(
+            RepositorySystemSession session, RequestTrace trace, Metadata metadata, ArtifactRepository repository) {
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.METADATA_RESOLVING);
+        event.setTrace(trace);
+        event.setMetadata(metadata);
+        event.setRepository(repository);
 
-        repositoryEventDispatcher.dispatch( event.build() );
+        repositoryEventDispatcher.dispatch(event.build());
     }
 
-    private void metadataResolved( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
-                                   ArtifactRepository repository, Exception exception )
-    {
-        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_RESOLVED );
-        event.setTrace( trace );
-        event.setMetadata( metadata );
-        event.setRepository( repository );
-        event.setException( exception );
-        event.setFile( metadata.getFile() );
+    private void metadataResolved(
+            RepositorySystemSession session,
+            RequestTrace trace,
+            Metadata metadata,
+            ArtifactRepository repository,
+            Exception exception) {
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.METADATA_RESOLVED);
+        event.setTrace(trace);
+        event.setMetadata(metadata);
+        event.setRepository(repository);
+        event.setException(exception);
+        event.setPath(metadata.getPath());
 
-        repositoryEventDispatcher.dispatch( event.build() );
+        repositoryEventDispatcher.dispatch(event.build());
     }
 
-    private void metadataDownloading( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
-                                      ArtifactRepository repository )
-    {
-        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADING );
-        event.setTrace( trace );
-        event.setMetadata( metadata );
-        event.setRepository( repository );
+    private void metadataDownloading(
+            RepositorySystemSession session, RequestTrace trace, Metadata metadata, ArtifactRepository repository) {
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.METADATA_DOWNLOADING);
+        event.setTrace(trace);
+        event.setMetadata(metadata);
+        event.setRepository(repository);
 
-        repositoryEventDispatcher.dispatch( event.build() );
+        repositoryEventDispatcher.dispatch(event.build());
     }
 
-    private void metadataDownloaded( RepositorySystemSession session, RequestTrace trace, Metadata metadata,
-                                     ArtifactRepository repository, File file, Exception exception )
-    {
-        RepositoryEvent.Builder event = new RepositoryEvent.Builder( session, EventType.METADATA_DOWNLOADED );
-        event.setTrace( trace );
-        event.setMetadata( metadata );
-        event.setRepository( repository );
-        event.setException( exception );
-        event.setFile( file );
+    private void metadataDownloaded(
+            RepositorySystemSession session,
+            RequestTrace trace,
+            Metadata metadata,
+            ArtifactRepository repository,
+            Path path,
+            Exception exception) {
+        RepositoryEvent.Builder event = new RepositoryEvent.Builder(session, EventType.METADATA_DOWNLOADED);
+        event.setTrace(trace);
+        event.setMetadata(metadata);
+        event.setRepository(repository);
+        event.setException(exception);
+        event.setPath(path);
 
-        repositoryEventDispatcher.dispatch( event.build() );
+        repositoryEventDispatcher.dispatch(event.build());
     }
 
-    private Executor getExecutor( int threads )
-    {
-        if ( threads <= 1 )
-        {
-            return command -> command.run();
-        }
-        else
-        {
-            return new ThreadPoolExecutor( threads, threads, 3, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-                                           new WorkerThreadFactory( null ) );
-        }
-    }
-
-    private void shutdown( Executor executor )
-    {
-        if ( executor instanceof ExecutorService )
-        {
-            ( (ExecutorService) executor ).shutdown();
-        }
-    }
-
-    class ResolveTask
-        implements Runnable
-    {
+    class ResolveTask implements Runnable {
         final RepositorySystemSession session;
 
         final RequestTrace trace;
@@ -563,7 +474,7 @@ public class DefaultMetadataResolver
 
         final MetadataRequest request;
 
-        final File metadataFile;
+        final Path metadataPath;
 
         final String policy;
 
@@ -571,66 +482,64 @@ public class DefaultMetadataResolver
 
         volatile MetadataTransferException exception;
 
-        ResolveTask( RepositorySystemSession session, RequestTrace trace, MetadataResult result,
-                            File metadataFile, List<UpdateCheck<Metadata, MetadataTransferException>> checks,
-                            String policy )
-        {
+        ResolveTask(
+                RepositorySystemSession session,
+                RequestTrace trace,
+                MetadataResult result,
+                Path metadataPath,
+                List<UpdateCheck<Metadata, MetadataTransferException>> checks,
+                String policy) {
             this.session = session;
             this.trace = trace;
             this.result = result;
             this.request = result.getRequest();
-            this.metadataFile = metadataFile;
+            this.metadataPath = metadataPath;
             this.policy = policy;
             this.checks = checks;
         }
 
-        public void run()
-        {
+        public void run() {
             Metadata metadata = request.getMetadata();
             RemoteRepository requestRepository = request.getRepository();
 
-            try
-            {
+            try {
                 List<RemoteRepository> repositories = new ArrayList<>();
-                for ( UpdateCheck<Metadata, MetadataTransferException> check : checks )
-                {
-                    repositories.add( check.getAuthoritativeRepository() );
+                for (UpdateCheck<Metadata, MetadataTransferException> check : checks) {
+                    repositories.add(check.getAuthoritativeRepository());
                 }
 
                 MetadataDownload download = new MetadataDownload();
-                download.setMetadata( metadata );
-                download.setRequestContext( request.getRequestContext() );
-                download.setFile( metadataFile );
-                download.setChecksumPolicy( policy );
-                download.setRepositories( repositories );
-                download.setListener( SafeTransferListener.wrap( session ) );
-                download.setTrace( trace );
+                download.setMetadata(metadata);
+                download.setRequestContext(request.getRequestContext());
+                download.setPath(metadataPath);
+                download.setChecksumPolicy(policy);
+                download.setRepositories(repositories);
+                download.setListener(SafeTransferListener.wrap(session));
+                download.setTrace(trace);
 
-                try ( RepositoryConnector connector =
-                              repositoryConnectorProvider.newRepositoryConnector( session, requestRepository ) )
-                {
-                    connector.get( null, Collections.singletonList( download ) );
+                try (RepositoryConnector connector =
+                        repositoryConnectorProvider.newRepositoryConnector(session, requestRepository)) {
+                    connector.get(null, Collections.singletonList(download));
                 }
 
                 exception = download.getException();
 
-                if ( exception == null )
-                {
+                if (exception == null) {
 
-                    List<String> contexts = Collections.singletonList( request.getRequestContext() );
+                    List<String> contexts = Collections.singletonList(request.getRequestContext());
                     LocalMetadataRegistration registration =
-                        new LocalMetadataRegistration( metadata, requestRepository, contexts );
+                            new LocalMetadataRegistration(metadata, requestRepository, contexts);
 
-                    session.getLocalRepositoryManager().add( session, registration );
+                    session.getLocalRepositoryManager().add(session, registration);
+                } else if (request.isDeleteLocalCopyIfMissing() && exception instanceof MetadataNotFoundException) {
+                    try {
+                        Files.deleteIfExists(download.getPath());
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
                 }
-                else if ( request.isDeleteLocalCopyIfMissing() && exception instanceof MetadataNotFoundException )
-                {
-                    download.getFile().delete();
-                }
-            }
-            catch ( NoRepositoryConnectorException e )
-            {
-                exception = new MetadataTransferException( metadata, requestRepository, e );
+            } catch (NoRepositoryConnectorException e) {
+                exception = new MetadataTransferException(metadata, requestRepository, e);
             }
         }
     }

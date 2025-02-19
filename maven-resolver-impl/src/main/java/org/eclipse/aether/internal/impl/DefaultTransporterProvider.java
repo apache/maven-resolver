@@ -1,5 +1,3 @@
-package org.eclipse.aether.internal.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.internal.impl;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,133 +16,112 @@ package org.eclipse.aether.internal.impl;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import static java.util.Objects.requireNonNull;
-import java.util.Set;
+package org.eclipse.aether.internal.impl;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  */
 @Singleton
 @Named
-public final class DefaultTransporterProvider
-    implements TransporterProvider, Service
-{
+public final class DefaultTransporterProvider implements TransporterProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( DefaultTransporterProvider.class );
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTransporterProvider.class);
 
-    private Collection<TransporterFactory> factories = new ArrayList<>();
-
-    public DefaultTransporterProvider()
-    {
-        // enables default constructor
-    }
+    private final Map<String, TransporterFactory> transporterFactories;
 
     @Inject
-    DefaultTransporterProvider( Set<TransporterFactory> transporterFactories )
-    {
-        setTransporterFactories( transporterFactories );
+    public DefaultTransporterProvider(Map<String, TransporterFactory> transporterFactories) {
+        this.transporterFactories = Collections.unmodifiableMap(transporterFactories);
     }
 
-    public void initService( ServiceLocator locator )
-    {
-        setTransporterFactories( locator.getServices( TransporterFactory.class ) );
-    }
+    @Override
+    public Transporter newTransporter(RepositorySystemSession session, RemoteRepository repository)
+            throws NoTransporterException {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(repository, "repository cannot be null");
 
-    public DefaultTransporterProvider addTransporterFactory( TransporterFactory factory )
-    {
-        factories.add( requireNonNull( factory, "transporter factory cannot be null" ) );
-        return this;
-    }
-
-    public DefaultTransporterProvider setTransporterFactories( Collection<TransporterFactory> factories )
-    {
-        if ( factories == null )
-        {
-            this.factories = new ArrayList<>();
-        }
-        else
-        {
-            this.factories = factories;
-        }
-        return this;
-    }
-
-    public Transporter newTransporter( RepositorySystemSession session, RemoteRepository repository )
-        throws NoTransporterException
-    {
-        requireNonNull( session, "session cannot be null" );
-        requireNonNull( repository, "repository cannot be null" );
-
-        PrioritizedComponents<TransporterFactory> factories = new PrioritizedComponents<>( session );
-        for ( TransporterFactory factory : this.factories )
-        {
-            factories.add( factory, factory.getPriority() );
-        }
+        PrioritizedComponents<TransporterFactory> factories = PrioritizedComponents.reuseOrCreate(
+                session, TransporterFactory.class, transporterFactories, TransporterFactory::getPriority);
 
         List<NoTransporterException> errors = new ArrayList<>();
-        for ( PrioritizedComponent<TransporterFactory> factory : factories.getEnabled() )
-        {
-            try
-            {
-                Transporter transporter = factory.getComponent().newInstance( session, repository );
+        for (PrioritizedComponent<TransporterFactory> factory : factories.getEnabled()) {
+            try {
+                Transporter transporter = factory.getComponent().newInstance(session, repository);
 
-                if ( LOGGER.isDebugEnabled() )
-                {
-                    StringBuilder buffer = new StringBuilder( 256 );
-                    buffer.append( "Using transporter " ).append( transporter.getClass().getSimpleName() );
-                    Utils.appendClassLoader( buffer, transporter );
-                    buffer.append( " with priority " ).append( factory.getPriority() );
-                    buffer.append( " for " ).append( repository.getUrl() );
-                    LOGGER.debug( buffer.toString() );
+                if (LOGGER.isDebugEnabled()) {
+                    StringBuilder buffer = new StringBuilder(256);
+                    buffer.append("Using transporter ")
+                            .append(transporter.getClass().getSimpleName());
+                    Utils.appendClassLoader(buffer, transporter);
+                    buffer.append(" with priority ").append(factory.getPriority());
+                    buffer.append(" for ").append(repository.getUrl());
+
+                    Authentication auth = repository.getAuthentication();
+                    if (auth != null) {
+                        buffer.append(" with ").append(auth);
+                    }
+
+                    Proxy proxy = repository.getProxy();
+                    if (proxy != null) {
+                        buffer.append(" via ")
+                                .append(proxy.getHost())
+                                .append(':')
+                                .append(proxy.getPort());
+
+                        auth = proxy.getAuthentication();
+                        if (auth != null) {
+                            buffer.append(" with ").append(auth);
+                        }
+                    }
+
+                    LOGGER.debug(buffer.toString());
                 }
 
                 return transporter;
-            }
-            catch ( NoTransporterException e )
-            {
+            } catch (NoTransporterException e) {
                 // continue and try next factory
-                errors.add( e );
-            }
-        }
-        if ( LOGGER.isDebugEnabled() && errors.size() > 1 )
-        {
-            for ( Exception e : errors )
-            {
-                LOGGER.debug( "Could not obtain transporter factory for {}", repository, e );
+                LOGGER.debug("Could not obtain transporter factory for {}", repository, e);
+                errors.add(e);
             }
         }
 
-        StringBuilder buffer = new StringBuilder( 256 );
-        if ( factories.isEmpty() )
-        {
-            buffer.append( "No transporter factories registered" );
-        }
-        else
-        {
-            buffer.append( "Cannot access " ).append( repository.getUrl() );
-            buffer.append( " using the registered transporter factories: " );
-            factories.list( buffer );
+        StringBuilder buffer = new StringBuilder(256);
+        if (factories.isEmpty()) {
+            buffer.append("No transporter factories registered");
+        } else {
+            buffer.append("Cannot access ").append(repository.getUrl());
+            buffer.append(" using the registered transporter factories: ");
+            factories.list(buffer);
         }
 
-        throw new NoTransporterException( repository, buffer.toString(), errors.size() == 1 ? errors.get( 0 ) : null );
+        // create exception: if one error, make it cause
+        NoTransporterException ex =
+                new NoTransporterException(repository, buffer.toString(), errors.size() == 1 ? errors.get(0) : null);
+        // if more errors, make them all suppressed
+        if (errors.size() > 1) {
+            errors.forEach(ex::addSuppressed);
+        }
+        throw ex;
     }
-
 }

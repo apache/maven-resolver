@@ -1,5 +1,3 @@
-package org.eclipse.aether.util.graph.version;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.util.graph.version;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +16,9 @@ package org.eclipse.aether.util.graph.version;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.util.graph.version;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -32,52 +32,47 @@ import org.eclipse.aether.util.ConfigUtils;
  * {@link RepositorySystemSession#getConfigProperties() configuration property} {@link #CONFIG_PROP_ENABLE} to
  * {@code true}.
  */
-public final class ContextualSnapshotVersionFilter
-    implements VersionFilter
-{
-
+public final class ContextualSnapshotVersionFilter implements VersionFilter {
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
      * properties} used to store a {@link Boolean} flag whether this filter should be forced to ban snapshots. By
      * default, snapshots are only filtered if the root artifact is not a snapshot.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue false
      */
-    public static final String CONFIG_PROP_ENABLE = "aether.snapshotFilter";
+    public static final String CONFIG_PROP_ENABLE = ConfigurationProperties.PREFIX_AETHER + "snapshotFilter";
 
     private final SnapshotVersionFilter filter;
 
     /**
      * Creates a new instance of this version filter.
      */
-    public ContextualSnapshotVersionFilter()
-    {
+    public ContextualSnapshotVersionFilter() {
         filter = new SnapshotVersionFilter();
     }
 
-    private boolean isEnabled( RepositorySystemSession session )
-    {
-        return ConfigUtils.getBoolean( session, false, CONFIG_PROP_ENABLE );
+    private boolean isEnabled(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLE);
     }
 
-    public void filterVersions( VersionFilterContext context )
-    {
-        if ( isEnabled( context.getSession() ) )
-        {
-            filter.filterVersions( context );
+    @Override
+    public void filterVersions(VersionFilterContext context) {
+        if (isEnabled(context.getSession())) {
+            filter.filterVersions(context);
         }
     }
 
-    public VersionFilter deriveChildFilter( DependencyCollectionContext context )
-    {
-        if ( !isEnabled( context.getSession() ) )
-        {
+    @Override
+    public VersionFilter deriveChildFilter(DependencyCollectionContext context) {
+        if (!isEnabled(context.getSession())) {
             Artifact artifact = context.getArtifact();
-            if ( artifact == null )
-            {
+            if (artifact == null) {
                 // no root artifact to test, allow snapshots and recheck once we reach the direct dependencies
                 return this;
             }
-            if ( artifact.isSnapshot() )
-            {
+            if (artifact.isSnapshot()) {
                 // root is a snapshot, allow snapshots all the way down
                 return null;
             }
@@ -87,23 +82,17 @@ public final class ContextualSnapshotVersionFilter
     }
 
     @Override
-    public boolean equals( Object obj )
-    {
-        if ( this == obj )
-        {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
-        }
-        else if ( null == obj || !getClass().equals( obj.getClass() ) )
-        {
+        } else if (null == obj || !getClass().equals(obj.getClass())) {
             return false;
         }
         return true;
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return getClass().hashCode();
     }
-
 }

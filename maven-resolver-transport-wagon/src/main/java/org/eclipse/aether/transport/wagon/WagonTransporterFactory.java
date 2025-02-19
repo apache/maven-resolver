@@ -1,5 +1,3 @@
-package org.eclipse.aether.transport.wagon;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +7,7 @@ package org.eclipse.aether.transport.wagon;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,87 +16,42 @@ package org.eclipse.aether.transport.wagon;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transport.wagon;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-
-import java.util.Objects;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.spi.locator.Service;
-import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transfer.NoTransporterException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A transporter factory using <a href="http://maven.apache.org/wagon/" target="_blank">Apache Maven Wagon</a>. Note
  * that this factory merely serves as an adapter to the Wagon API and by itself does not provide any transport services
  * unless one or more wagon implementations are registered with the {@link WagonProvider}.
  */
-@Named( "wagon" )
-public final class WagonTransporterFactory
-    implements TransporterFactory, Service
-{
+@Named(WagonTransporterFactory.NAME)
+public final class WagonTransporterFactory implements TransporterFactory {
+    public static final String NAME = "wagon";
 
-    private WagonProvider wagonProvider;
+    private final WagonProvider wagonProvider;
 
-    private WagonConfigurator wagonConfigurator;
+    private final WagonConfigurator wagonConfigurator;
 
     private float priority = -1.0f;
 
-    /**
-     * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation
-     * by clients, the new factory needs to be configured via its various mutators before first use or runtime errors
-     * will occur.
-     */
-    public WagonTransporterFactory()
-    {
-        // enables default constructor
-    }
-
     @Inject
-    WagonTransporterFactory( WagonProvider wagonProvider, WagonConfigurator wagonConfigurator )
-    {
-        setWagonProvider( wagonProvider );
-        setWagonConfigurator( wagonConfigurator );
-    }
-
-    @Override
-    public void initService( ServiceLocator locator )
-    {
-        setWagonProvider( locator.getService( WagonProvider.class ) );
-        setWagonConfigurator( locator.getService( WagonConfigurator.class ) );
-    }
-
-    /**
-     * Sets the wagon provider to use to acquire and release wagon instances.
-     *
-     * @param wagonProvider The wagon provider to use, may be {@code null}.
-     * @return This factory for chaining, never {@code null}.
-     */
-    public WagonTransporterFactory setWagonProvider( WagonProvider wagonProvider )
-    {
+    public WagonTransporterFactory(WagonProvider wagonProvider, WagonConfigurator wagonConfigurator) {
         this.wagonProvider = wagonProvider;
-        return this;
-    }
-
-    /**
-     * Sets the wagon configurator to use to apply provider-specific configuration to wagon instances.
-     *
-     * @param wagonConfigurator The wagon configurator to use, may be {@code null}.
-     * @return This factory for chaining, never {@code null}.
-     */
-    public WagonTransporterFactory setWagonConfigurator( WagonConfigurator wagonConfigurator )
-    {
         this.wagonConfigurator = wagonConfigurator;
-        return this;
     }
 
     @Override
-    public float getPriority()
-    {
+    public float getPriority() {
         return priority;
     }
 
@@ -108,20 +61,17 @@ public final class WagonTransporterFactory
      * @param priority The priority.
      * @return This component for chaining, never {@code null}.
      */
-    public WagonTransporterFactory setPriority( float priority )
-    {
+    public WagonTransporterFactory setPriority(float priority) {
         this.priority = priority;
         return this;
     }
 
     @Override
-    public Transporter newInstance( RepositorySystemSession session, RemoteRepository repository )
-        throws NoTransporterException
-    {
-        Objects.requireNonNull( session, "session cannot be null" );
-        Objects.requireNonNull( repository, "repository cannot be null" );
+    public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
+            throws NoTransporterException {
+        requireNonNull(session, "session cannot be null");
+        requireNonNull(repository, "repository cannot be null");
 
-        return new WagonTransporter( wagonProvider, wagonConfigurator, repository, session );
+        return new WagonTransporter(wagonProvider, wagonConfigurator, repository, session);
     }
-
 }

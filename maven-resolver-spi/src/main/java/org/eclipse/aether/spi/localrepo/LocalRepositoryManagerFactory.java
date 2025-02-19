@@ -1,5 +1,3 @@
-package org.eclipse.aether.spi.localrepo;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,9 +6,9 @@ package org.eclipse.aether.spi.localrepo;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
- *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,6 +16,7 @@ package org.eclipse.aether.spi.localrepo;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.spi.localrepo;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
@@ -31,28 +30,26 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
  * {@link #newInstance(RepositorySystemSession, LocalRepository)} on them. The first manager returned by a factory will
  * then be used for the local repository.
  */
-public interface LocalRepositoryManagerFactory
-{
+public interface LocalRepositoryManagerFactory {
 
     /**
      * Tries to create a repository manager for the specified local repository. The distinguishing property of a local
      * repository is its {@link LocalRepository#getContentType() type}, which may for example denote the used directory
      * structure.
-     * 
+     *
      * @param session The repository system session from which to configure the manager, must not be {@code null}.
      * @param repository The local repository to create a manager for, must not be {@code null}.
      * @return The manager for the given repository, never {@code null}.
      * @throws NoLocalRepositoryManagerException If the factory cannot create a manager for the specified local
      *             repository.
      */
-    LocalRepositoryManager newInstance( RepositorySystemSession session, LocalRepository repository )
-        throws NoLocalRepositoryManagerException;
+    LocalRepositoryManager newInstance(RepositorySystemSession session, LocalRepository repository)
+            throws NoLocalRepositoryManagerException;
 
     /**
      * The priority of this factory. Factories with higher priority are preferred over those with lower priority.
-     * 
+     *
      * @return The priority of this factory.
      */
     float getPriority();
-
 }
