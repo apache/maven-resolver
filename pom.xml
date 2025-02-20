@@ -104,7 +104,7 @@
     <sisuVersion>0.9.0.M3</sisuVersion>
     <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>2.0.16</slf4jVersion>
-    <testcontainersVersion>1.20.4</testcontainersVersion>
+    <testcontainersVersion>1.20.5</testcontainersVersion>
     <bouncycastleVersion>1.80</bouncycastleVersion>
 
     <!-- Remove when parent updates -->
