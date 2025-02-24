@@ -51,7 +51,7 @@ public final class DefaultArtifactPredicateFactory implements ArtifactPredicateF
     public static final String CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS =
             CONFIG_PROPS_PREFIX + "omitChecksumsForExtensions";
 
-    public static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore";
+    public static final String DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS = ".asc,.sigstore.json";
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
