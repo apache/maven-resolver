@@ -138,12 +138,6 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
         }
     }
 
-    private KeylessSigner getKeylessSigner() throws Exception {
-        return publicStaging
-                ? KeylessSigner.builder().sigstoreStagingDefaults().build()
-                : KeylessSigner.builder().sigstorePublicDefaults().build();
-    }
-
     @Override
     public void close() {
         signatureTempFiles.forEach(p -> {
