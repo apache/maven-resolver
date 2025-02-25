@@ -77,6 +77,8 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
 
             // sign relevant artifacts
             ArrayList<Artifact> result = new ArrayList<>();
+            ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(KeylessSigner.class.getClassLoader());
             try (KeylessSigner signer = publicStaging
                     ? KeylessSigner.builder().sigstoreStagingDefaults().build()
                     : KeylessSigner.builder().sigstorePublicDefaults().build()) {
@@ -122,6 +124,8 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
                                 signatureTempFile.toFile()));
                     }
                 }
+            } finally {
+                Thread.currentThread().setContextClassLoader(originalClassLoader);
             }
             logger.info("Signed {} artifacts with Sigstore", result.size());
             return result;
