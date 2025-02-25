@@ -29,6 +29,6 @@ jobs:
       ff-run: false
       ff-site-run: false
       jdk-matrix: '[ "21" ]'
-      maven-matrix: '[ "3.9.9", "4.0.0-rc-1" ]'
+      maven-matrix: '[ "3.9.9", "4.0.0-rc-2" ]'
       verify-fail-fast: false
 
