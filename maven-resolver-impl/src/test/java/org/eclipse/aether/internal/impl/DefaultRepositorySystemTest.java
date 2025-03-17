@@ -66,7 +66,8 @@ public class DefaultRepositorySystemTest {
                 new DefaultRemoteRepositoryManager(
                         new DefaultUpdatePolicyAnalyzer(), new DefaultChecksumPolicyProvider()),
                 new DefaultRepositorySystemLifecycle(),
-                Collections.emptyMap());
+                Collections.emptyMap(),
+                new DefaultRepositorySystemValidator(Collections.emptyMap()));
         session = TestUtils.newSession();
     }
 
