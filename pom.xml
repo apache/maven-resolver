@@ -108,7 +108,7 @@
     <bouncycastleVersion>1.80</bouncycastleVersion>
 
     <!-- Remove when parent updates -->
-    <versions.junit5>5.11.2</versions.junit5>
+    <versions.junit5>5.12.1</versions.junit5>
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
     <jettyVersion>10.0.24</jettyVersion>
