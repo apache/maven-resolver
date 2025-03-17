@@ -45,7 +45,6 @@ public interface Validator {
      * @throws IllegalArgumentException if artifact is invalid.
      */
     default void isValidMetadata(Metadata metadata) throws IllegalArgumentException {}
-    ;
 
     /**
      * Validates dependency.
@@ -62,7 +61,6 @@ public interface Validator {
      * @throws IllegalArgumentException if local repository is invalid.
      */
     default void isValidLocalRepository(LocalRepository localRepository) throws IllegalArgumentException {}
-    ;
 
     /**
      * Validates remote repository.
