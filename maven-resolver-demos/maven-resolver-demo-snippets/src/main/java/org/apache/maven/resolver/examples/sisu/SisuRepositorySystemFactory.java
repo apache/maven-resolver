@@ -24,8 +24,6 @@ import javax.inject.Provider;
 
 import com.google.inject.Guice;
 import com.google.inject.Module;
-import org.apache.maven.model.building.DefaultModelBuilderFactory;
-import org.apache.maven.model.building.ModelBuilder;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.VersionScheme;
@@ -43,13 +41,6 @@ public class SisuRepositorySystemFactory {
     public static RepositorySystem newRepositorySystem() {
         final Module app = Main.wire(BeanScanning.INDEX, new SisuRepositorySystemDemoModule());
         return Guice.createInjector(app).getInstance(SisuRepositorySystemFactory.class).repositorySystem;
-    }
-
-    @Named
-    private static class ModelBuilderProvider implements Provider<ModelBuilder> {
-        public ModelBuilder get() {
-            return new DefaultModelBuilderFactory().newInstance();
-        }
     }
 
     @Named

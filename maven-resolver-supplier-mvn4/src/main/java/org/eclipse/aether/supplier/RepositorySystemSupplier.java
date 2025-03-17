@@ -20,12 +20,40 @@ package org.eclipse.aether.supplier;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
+import org.apache.maven.api.services.Interpolator;
 import org.apache.maven.api.services.ModelBuilder;
+import org.apache.maven.api.services.model.ModelProcessor;
+import org.apache.maven.api.services.model.PathTranslator;
+import org.apache.maven.api.services.model.RootLocator;
+import org.apache.maven.api.services.model.UrlNormalizer;
+import org.apache.maven.impl.DefaultModelUrlNormalizer;
+import org.apache.maven.impl.DefaultModelVersionParser;
+import org.apache.maven.impl.DefaultModelXmlFactory;
+import org.apache.maven.impl.DefaultPluginConfigurationExpander;
+import org.apache.maven.impl.DefaultSuperPomProvider;
+import org.apache.maven.impl.DefaultUrlNormalizer;
+import org.apache.maven.impl.model.DefaultDependencyManagementImporter;
+import org.apache.maven.impl.model.DefaultDependencyManagementInjector;
+import org.apache.maven.impl.model.DefaultInheritanceAssembler;
+import org.apache.maven.impl.model.DefaultInterpolator;
+import org.apache.maven.impl.model.DefaultModelBuilder;
+import org.apache.maven.impl.model.DefaultModelInterpolator;
+import org.apache.maven.impl.model.DefaultModelNormalizer;
+import org.apache.maven.impl.model.DefaultModelPathTranslator;
+import org.apache.maven.impl.model.DefaultModelProcessor;
+import org.apache.maven.impl.model.DefaultModelValidator;
+import org.apache.maven.impl.model.DefaultPathTranslator;
+import org.apache.maven.impl.model.DefaultPluginManagementInjector;
+import org.apache.maven.impl.model.DefaultProfileInjector;
+import org.apache.maven.impl.model.DefaultProfileSelector;
+import org.apache.maven.impl.model.rootlocator.DefaultRootLocator;
 import org.apache.maven.impl.resolver.DefaultArtifactDescriptorReader;
+import org.apache.maven.impl.resolver.DefaultModelResolver;
 import org.apache.maven.impl.resolver.DefaultVersionRangeResolver;
 import org.apache.maven.impl.resolver.DefaultVersionResolver;
 import org.apache.maven.impl.resolver.MavenArtifactRelocationSource;
@@ -1031,8 +1059,32 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected ModelBuilder createModelBuilder() {
-        // from maven-model-builder
-        return new DefaultModelBuilderFactory().newInstance();
+        ModelProcessor modelProcessor = new DefaultModelProcessor(new DefaultModelXmlFactory(), List.of());
+        PathTranslator pathTranslator = new DefaultPathTranslator();
+        UrlNormalizer urlNormalizer = new DefaultUrlNormalizer();
+        RootLocator rootLocator = new DefaultRootLocator();
+        Interpolator interpolator = new DefaultInterpolator();
+        return new DefaultModelBuilder(
+                modelProcessor,
+                new DefaultModelValidator(),
+                new DefaultModelNormalizer(),
+                new DefaultModelInterpolator(pathTranslator, urlNormalizer, rootLocator, interpolator),
+                new DefaultModelPathTranslator(pathTranslator),
+                new DefaultModelUrlNormalizer(urlNormalizer),
+                new DefaultSuperPomProvider(modelProcessor),
+                new DefaultInheritanceAssembler(),
+                new DefaultProfileSelector(),
+                new DefaultProfileInjector(),
+                new DefaultPluginManagementInjector(),
+                new DefaultDependencyManagementInjector(),
+                new DefaultDependencyManagementImporter(),
+                new DefaultPluginConfigurationExpander(),
+                new DefaultModelVersionParser(getVersionScheme()),
+                List.of(),
+                new DefaultModelResolver(),
+                new DefaultInterpolator(),
+                new DefaultPathTranslator(),
+                new DefaultRootLocator());
     }
 
     private RepositorySystem repositorySystem;
