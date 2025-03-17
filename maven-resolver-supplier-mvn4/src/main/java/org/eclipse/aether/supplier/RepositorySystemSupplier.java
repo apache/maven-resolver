@@ -24,19 +24,16 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import org.apache.maven.model.building.DefaultModelBuilderFactory;
-import org.apache.maven.model.building.ModelBuilder;
-import org.apache.maven.repository.internal.DefaultArtifactDescriptorReader;
-import org.apache.maven.repository.internal.DefaultModelCacheFactory;
-import org.apache.maven.repository.internal.DefaultVersionRangeResolver;
-import org.apache.maven.repository.internal.DefaultVersionResolver;
-import org.apache.maven.repository.internal.MavenArtifactRelocationSource;
-import org.apache.maven.repository.internal.ModelCacheFactory;
-import org.apache.maven.repository.internal.PluginsMetadataGeneratorFactory;
-import org.apache.maven.repository.internal.SnapshotMetadataGeneratorFactory;
-import org.apache.maven.repository.internal.VersionsMetadataGeneratorFactory;
-import org.apache.maven.repository.internal.relocation.DistributionManagementArtifactRelocationSource;
-import org.apache.maven.repository.internal.relocation.UserPropertiesArtifactRelocationSource;
+import org.apache.maven.api.services.ModelBuilder;
+import org.apache.maven.impl.resolver.DefaultArtifactDescriptorReader;
+import org.apache.maven.impl.resolver.DefaultVersionRangeResolver;
+import org.apache.maven.impl.resolver.DefaultVersionResolver;
+import org.apache.maven.impl.resolver.MavenArtifactRelocationSource;
+import org.apache.maven.impl.resolver.PluginsMetadataGeneratorFactory;
+import org.apache.maven.impl.resolver.SnapshotMetadataGeneratorFactory;
+import org.apache.maven.impl.resolver.VersionsMetadataGeneratorFactory;
+import org.apache.maven.impl.resolver.relocation.DistributionManagementArtifactRelocationSource;
+import org.apache.maven.impl.resolver.relocation.UserPropertiesArtifactRelocationSource;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
@@ -984,13 +981,10 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected ArtifactDescriptorReader createArtifactDescriptorReader() {
         // from maven-resolver-provider
         return new DefaultArtifactDescriptorReader(
-                getRemoteRepositoryManager(),
                 getVersionResolver(),
-                getVersionRangeResolver(),
                 getArtifactResolver(),
                 getModelBuilder(),
                 getRepositoryEventDispatcher(),
-                getModelCacheFactory(),
                 getMavenArtifactRelocationSources());
     }
 
@@ -1039,21 +1033,6 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     protected ModelBuilder createModelBuilder() {
         // from maven-model-builder
         return new DefaultModelBuilderFactory().newInstance();
-    }
-
-    private ModelCacheFactory modelCacheFactory;
-
-    public final ModelCacheFactory getModelCacheFactory() {
-        checkClosed();
-        if (modelCacheFactory == null) {
-            modelCacheFactory = createModelCacheFactory();
-        }
-        return modelCacheFactory;
-    }
-
-    protected ModelCacheFactory createModelCacheFactory() {
-        // from maven-resolver-provider
-        return new DefaultModelCacheFactory();
     }
 
     private RepositorySystem repositorySystem;
