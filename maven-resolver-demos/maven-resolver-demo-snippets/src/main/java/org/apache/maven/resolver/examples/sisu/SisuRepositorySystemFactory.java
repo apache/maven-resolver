@@ -24,9 +24,9 @@ import javax.inject.Provider;
 
 import com.google.inject.Guice;
 import com.google.inject.Module;
+import org.apache.maven.api.services.ModelBuilder;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.util.version.GenericVersionScheme;
-import org.eclipse.aether.version.VersionScheme;
+import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.eclipse.sisu.launch.Main;
 import org.eclipse.sisu.space.BeanScanning;
 
@@ -44,9 +44,9 @@ public class SisuRepositorySystemFactory {
     }
 
     @Named
-    private static class VersionSchemeProvider implements Provider<VersionScheme> {
-        public VersionScheme get() {
-            return new GenericVersionScheme();
+    private static class ModelBuilderProvider implements Provider<ModelBuilder> {
+        public ModelBuilder get() {
+            return new RepositorySystemSupplier().getModelBuilder();
         }
     }
 }

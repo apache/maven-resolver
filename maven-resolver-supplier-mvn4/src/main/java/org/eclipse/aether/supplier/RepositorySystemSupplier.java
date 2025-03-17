@@ -20,40 +20,15 @@ package org.eclipse.aether.supplier;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import org.apache.maven.api.services.Interpolator;
+import org.apache.maven.api.di.Provides;
 import org.apache.maven.api.services.ModelBuilder;
-import org.apache.maven.api.services.model.ModelProcessor;
-import org.apache.maven.api.services.model.PathTranslator;
-import org.apache.maven.api.services.model.RootLocator;
-import org.apache.maven.api.services.model.UrlNormalizer;
-import org.apache.maven.impl.DefaultModelUrlNormalizer;
-import org.apache.maven.impl.DefaultModelVersionParser;
-import org.apache.maven.impl.DefaultModelXmlFactory;
-import org.apache.maven.impl.DefaultPluginConfigurationExpander;
-import org.apache.maven.impl.DefaultSuperPomProvider;
-import org.apache.maven.impl.DefaultUrlNormalizer;
-import org.apache.maven.impl.model.DefaultDependencyManagementImporter;
-import org.apache.maven.impl.model.DefaultDependencyManagementInjector;
-import org.apache.maven.impl.model.DefaultInheritanceAssembler;
-import org.apache.maven.impl.model.DefaultInterpolator;
-import org.apache.maven.impl.model.DefaultModelBuilder;
-import org.apache.maven.impl.model.DefaultModelInterpolator;
-import org.apache.maven.impl.model.DefaultModelNormalizer;
-import org.apache.maven.impl.model.DefaultModelPathTranslator;
-import org.apache.maven.impl.model.DefaultModelProcessor;
-import org.apache.maven.impl.model.DefaultModelValidator;
-import org.apache.maven.impl.model.DefaultPathTranslator;
-import org.apache.maven.impl.model.DefaultPluginManagementInjector;
-import org.apache.maven.impl.model.DefaultProfileInjector;
-import org.apache.maven.impl.model.DefaultProfileSelector;
-import org.apache.maven.impl.model.rootlocator.DefaultRootLocator;
+import org.apache.maven.di.Injector;
+import org.apache.maven.di.impl.InjectorImpl;
 import org.apache.maven.impl.resolver.DefaultArtifactDescriptorReader;
-import org.apache.maven.impl.resolver.DefaultModelResolver;
 import org.apache.maven.impl.resolver.DefaultVersionRangeResolver;
 import org.apache.maven.impl.resolver.DefaultVersionResolver;
 import org.apache.maven.impl.resolver.MavenArtifactRelocationSource;
@@ -193,7 +168,23 @@ import org.eclipse.aether.version.VersionScheme;
 public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    public RepositorySystemSupplier() {}
+    private final Injector injector;
+
+    public RepositorySystemSupplier() {
+        this.injector = createInjector();
+    }
+
+    public final Injector getInjector() {
+        checkClosed();
+        return injector;
+    }
+
+    protected Injector createInjector() {
+        Injector injector = new InjectorImpl();
+        injector.discover(getClass().getClassLoader());
+        injector.bindInstance(RepositorySystemSupplier.class, this);
+        return injector;
+    }
 
     private void checkClosed() {
         if (closed.get()) {
@@ -203,6 +194,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private PathProcessor pathProcessor;
 
+    @Provides
     public final PathProcessor getPathProcessor() {
         checkClosed();
         if (pathProcessor == null) {
@@ -217,6 +209,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ChecksumProcessor checksumProcessor;
 
+    @Provides
     public final ChecksumProcessor getChecksumProcessor() {
         checkClosed();
         if (checksumProcessor == null) {
@@ -231,6 +224,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private TrackingFileManager trackingFileManager;
 
+    @Provides
     public final TrackingFileManager getTrackingFileManager() {
         checkClosed();
         if (trackingFileManager == null) {
@@ -245,6 +239,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private LocalPathComposer localPathComposer;
 
+    @Provides
     public final LocalPathComposer getLocalPathComposer() {
         checkClosed();
         if (localPathComposer == null) {
@@ -259,6 +254,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
 
+    @Provides
     public final LocalPathPrefixComposerFactory getLocalPathPrefixComposerFactory() {
         checkClosed();
         if (localPathPrefixComposerFactory == null) {
@@ -273,6 +269,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RepositorySystemLifecycle repositorySystemLifecycle;
 
+    @Provides
     public final RepositorySystemLifecycle getRepositorySystemLifecycle() {
         checkClosed();
         if (repositorySystemLifecycle == null) {
@@ -288,6 +285,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private OfflineController offlineController;
 
+    @Provides
     public final OfflineController getOfflineController() {
         checkClosed();
         if (offlineController == null) {
@@ -302,6 +300,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
+    @Provides
     public final UpdatePolicyAnalyzer getUpdatePolicyAnalyzer() {
         checkClosed();
         if (updatePolicyAnalyzer == null) {
@@ -316,6 +315,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ChecksumPolicyProvider checksumPolicyProvider;
 
+    @Provides
     public final ChecksumPolicyProvider getChecksumPolicyProvider() {
         checkClosed();
         if (checksumPolicyProvider == null) {
@@ -330,6 +330,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private UpdateCheckManager updateCheckManager;
 
+    @Provides
     public final UpdateCheckManager getUpdateCheckManager() {
         checkClosed();
         if (updateCheckManager == null) {
@@ -344,6 +345,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, NamedLockFactory> namedLockFactories;
 
+    @Provides
     public final Map<String, NamedLockFactory> getNamedLockFactories() {
         checkClosed();
         if (namedLockFactories == null) {
@@ -363,6 +365,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, NameMapper> nameMappers;
 
+    @Provides
     public final Map<String, NameMapper> getNameMappers() {
         checkClosed();
         if (nameMappers == null) {
@@ -383,6 +386,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private NamedLockFactoryAdapterFactory namedLockFactoryAdapterFactory;
 
+    @Provides
     public final NamedLockFactoryAdapterFactory getNamedLockFactoryAdapterFactory() {
         checkClosed();
         if (namedLockFactoryAdapterFactory == null) {
@@ -398,6 +402,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private SyncContextFactory syncContextFactory;
 
+    @Provides
     public final SyncContextFactory getSyncContextFactory() {
         checkClosed();
         if (syncContextFactory == null) {
@@ -412,6 +417,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ChecksumAlgorithmFactory> checksumAlgorithmFactories;
 
+    @Provides
     public final Map<String, ChecksumAlgorithmFactory> getChecksumAlgorithmFactories() {
         checkClosed();
         if (checksumAlgorithmFactories == null) {
@@ -431,6 +437,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
+    @Provides
     public final ChecksumAlgorithmFactorySelector getChecksumAlgorithmFactorySelector() {
         checkClosed();
         if (checksumAlgorithmFactorySelector == null) {
@@ -445,6 +452,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ArtifactPredicateFactory artifactPredicateFactory;
 
+    @Provides
     public final ArtifactPredicateFactory getArtifactPredicateFactory() {
         checkClosed();
         if (artifactPredicateFactory == null) {
@@ -459,6 +467,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, RepositoryLayoutFactory> repositoryLayoutFactories;
 
+    @Provides
     public final Map<String, RepositoryLayoutFactory> getRepositoryLayoutFactories() {
         checkClosed();
         if (repositoryLayoutFactories == null) {
@@ -478,6 +487,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RepositoryLayoutProvider repositoryLayoutProvider;
 
+    @Provides
     public final RepositoryLayoutProvider getRepositoryLayoutProvider() {
         checkClosed();
         if (repositoryLayoutProvider == null) {
@@ -492,6 +502,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private LocalRepositoryProvider localRepositoryProvider;
 
+    @Provides
     public final LocalRepositoryProvider getLocalRepositoryProvider() {
         checkClosed();
         if (localRepositoryProvider == null) {
@@ -514,6 +525,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RemoteRepositoryManager remoteRepositoryManager;
 
+    @Provides
     public final RemoteRepositoryManager getRemoteRepositoryManager() {
         checkClosed();
         if (remoteRepositoryManager == null) {
@@ -528,6 +540,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, RemoteRepositoryFilterSource> remoteRepositoryFilterSources;
 
+    @Provides
     public final Map<String, RemoteRepositoryFilterSource> getRemoteRepositoryFilterSources() {
         checkClosed();
         if (remoteRepositoryFilterSources == null) {
@@ -549,6 +562,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
+    @Provides
     public final RemoteRepositoryFilterManager getRemoteRepositoryFilterManager() {
         checkClosed();
         if (remoteRepositoryFilterManager == null) {
@@ -563,6 +577,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, RepositoryListener> repositoryListeners;
 
+    @Provides
     public final Map<String, RepositoryListener> getRepositoryListeners() {
         checkClosed();
         if (repositoryListeners == null) {
@@ -577,6 +592,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RepositoryEventDispatcher repositoryEventDispatcher;
 
+    @Provides
     public final RepositoryEventDispatcher getRepositoryEventDispatcher() {
         checkClosed();
         if (repositoryEventDispatcher == null) {
@@ -591,6 +607,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, TrustedChecksumsSource> trustedChecksumsSources;
 
+    @Provides
     public final Map<String, TrustedChecksumsSource> getTrustedChecksumsSources() {
         checkClosed();
         if (trustedChecksumsSources == null) {
@@ -612,6 +629,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ProvidedChecksumsSource> providedChecksumsSources;
 
+    @Provides
     public final Map<String, ProvidedChecksumsSource> getProvidedChecksumsSources() {
         checkClosed();
         if (providedChecksumsSources == null) {
@@ -630,6 +648,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ChecksumExtractorStrategy> checksumExtractorStrategies;
 
+    @Provides
     public final Map<String, ChecksumExtractorStrategy> getChecksumExtractorStrategies() {
         checkClosed();
         if (checksumExtractorStrategies == null) {
@@ -647,6 +666,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ChecksumExtractor checksumExtractor;
 
+    @Provides
     public final ChecksumExtractor getChecksumExtractor() {
         checkClosed();
         if (checksumExtractor == null) {
@@ -661,6 +681,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, TransporterFactory> transporterFactories;
 
+    @Provides
     public final Map<String, TransporterFactory> getTransporterFactories() {
         checkClosed();
         if (transporterFactories == null) {
@@ -680,6 +701,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private TransporterProvider transporterProvider;
 
+    @Provides
     public final TransporterProvider getTransporterProvider() {
         checkClosed();
         if (transporterProvider == null) {
@@ -694,6 +716,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private BasicRepositoryConnectorFactory basicRepositoryConnectorFactory;
 
+    @Provides
     public final BasicRepositoryConnectorFactory getBasicRepositoryConnectorFactory() {
         checkClosed();
         if (basicRepositoryConnectorFactory == null) {
@@ -713,6 +736,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, RepositoryConnectorFactory> repositoryConnectorFactories;
 
+    @Provides
     public final Map<String, RepositoryConnectorFactory> getRepositoryConnectorFactories() {
         checkClosed();
         if (repositoryConnectorFactories == null) {
@@ -729,6 +753,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private RepositoryConnectorProvider repositoryConnectorProvider;
 
+    @Provides
     public final RepositoryConnectorProvider getRepositoryConnectorProvider() {
         checkClosed();
         if (repositoryConnectorProvider == null) {
@@ -744,6 +769,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Installer installer;
 
+    @Provides
     public final Installer getInstaller() {
         checkClosed();
         if (installer == null) {
@@ -764,6 +790,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Deployer deployer;
 
+    @Provides
     public final Deployer getDeployer() {
         checkClosed();
         if (deployer == null) {
@@ -788,6 +815,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, DependencyCollectorDelegate> dependencyCollectorDelegates;
 
+    @Provides
     public final Map<String, DependencyCollectorDelegate> getDependencyCollectorDelegates() {
         checkClosed();
         if (dependencyCollectorDelegates == null) {
@@ -820,6 +848,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private DependencyCollector dependencyCollector;
 
+    @Provides
     public final DependencyCollector getDependencyCollector() {
         checkClosed();
         if (dependencyCollector == null) {
@@ -834,6 +863,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ArtifactResolverPostProcessor> artifactResolverPostProcessors;
 
+    @Provides
     public final Map<String, ArtifactResolverPostProcessor> getArtifactResolverPostProcessors() {
         checkClosed();
         if (artifactResolverPostProcessors == null) {
@@ -853,6 +883,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private ArtifactResolver artifactResolver;
 
+    @Provides
     public final ArtifactResolver getArtifactResolver() {
         checkClosed();
         if (artifactResolver == null) {
@@ -877,6 +908,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private MetadataResolver metadataResolver;
 
+    @Provides
     public final MetadataResolver getMetadataResolver() {
         checkClosed();
         if (metadataResolver == null) {
@@ -899,6 +931,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private VersionScheme versionScheme;
 
+    @Provides
     public final VersionScheme getVersionScheme() {
         checkClosed();
         if (versionScheme == null) {
@@ -913,6 +946,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ArtifactGeneratorFactory> artifactGeneratorFactories;
 
+    @Provides
     public final Map<String, ArtifactGeneratorFactory> getArtifactGeneratorFactories() {
         checkClosed();
         if (artifactGeneratorFactories == null) {
@@ -928,6 +962,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     private Map<String, ArtifactDecoratorFactory> artifactDecoratorFactories;
 
+    @Provides
     public final Map<String, ArtifactDecoratorFactory> getArtifactDecoratorFactories() {
         checkClosed();
         if (artifactDecoratorFactories == null) {
@@ -941,7 +976,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return new HashMap<>();
     }
 
-    // Maven provided
+    // Maven provided (all provided as Maven DI component; here we just memoize)
 
     private Map<String, ArtifactTransformer> artifactTransformers;
 
@@ -1059,32 +1094,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected ModelBuilder createModelBuilder() {
-        ModelProcessor modelProcessor = new DefaultModelProcessor(new DefaultModelXmlFactory(), List.of());
-        PathTranslator pathTranslator = new DefaultPathTranslator();
-        UrlNormalizer urlNormalizer = new DefaultUrlNormalizer();
-        RootLocator rootLocator = new DefaultRootLocator();
-        Interpolator interpolator = new DefaultInterpolator();
-        return new DefaultModelBuilder(
-                modelProcessor,
-                new DefaultModelValidator(),
-                new DefaultModelNormalizer(),
-                new DefaultModelInterpolator(pathTranslator, urlNormalizer, rootLocator, interpolator),
-                new DefaultModelPathTranslator(pathTranslator),
-                new DefaultModelUrlNormalizer(urlNormalizer),
-                new DefaultSuperPomProvider(modelProcessor),
-                new DefaultInheritanceAssembler(),
-                new DefaultProfileSelector(),
-                new DefaultProfileInjector(),
-                new DefaultPluginManagementInjector(),
-                new DefaultDependencyManagementInjector(),
-                new DefaultDependencyManagementImporter(),
-                new DefaultPluginConfigurationExpander(),
-                new DefaultModelVersionParser(getVersionScheme()),
-                List.of(),
-                new DefaultModelResolver(),
-                new DefaultInterpolator(),
-                new DefaultPathTranslator(),
-                new DefaultRootLocator());
+        return getInjector().getInstance(ModelBuilder.class);
     }
 
     private RepositorySystem repositorySystem;
