@@ -33,6 +33,10 @@
  * un-interpolated value will result in "no artifact found" error
  * in case of resolution, but it may be and usually is due user
  * error like having a typo in some property in POM for example.
+ * <p>
+ * Resolver does NOT provide this component, and is fully operable
+ * without it. It is left to integrating apps to decide do they
+ * want to provide components like this or not.
  *
  * @since 2.0.8
  */

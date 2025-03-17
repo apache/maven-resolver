@@ -18,8 +18,9 @@
  */
 package org.eclipse.aether.supplier;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -1035,9 +1036,9 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return new DefaultModelCacheFactory();
     }
 
-    private Map<String, ValidatorFactory> validatorFactories;
+    private List<ValidatorFactory> validatorFactories;
 
-    public final Map<String, ValidatorFactory> getValidatorFactories() {
+    public final List<ValidatorFactory> getValidatorFactories() {
         checkClosed();
         if (validatorFactories == null) {
             validatorFactories = createValidatorFactories();
@@ -1045,8 +1046,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return validatorFactories;
     }
 
-    protected Map<String, ValidatorFactory> createValidatorFactories() {
-        return Collections.emptyMap();
+    protected List<ValidatorFactory> createValidatorFactories() {
+        return new ArrayList<>();
     }
 
     private RepositorySystemValidator repositorySystemValidator;
