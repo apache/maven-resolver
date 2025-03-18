@@ -165,7 +165,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
                     exceptions.add(e);
                 }
                 try {
-                    validator.isValidRemoteRepository(request.getRepository());
+                    if (request.getRepository() != null) {
+                        validator.isValidRemoteRepository(request.getRepository());
+                    }
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
@@ -272,7 +274,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
                 }
             }
             try {
-                validator.isValidRemoteRepository(request.getRepository());
+                if (request.getRepository() != null) {
+                    validator.isValidRemoteRepository(request.getRepository());
+                }
             } catch (Exception e) {
                 exceptions.add(e);
             }
