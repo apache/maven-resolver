@@ -36,7 +36,7 @@ public interface Validator {
      * @param artifact The artifact to validate, never {@code null}.
      * @throws IllegalArgumentException if artifact is invalid.
      */
-    default void isValidArtifact(Artifact artifact) throws IllegalArgumentException {}
+    default void validateArtifact(Artifact artifact) throws IllegalArgumentException {}
 
     /**
      * Validates metadata.
@@ -44,7 +44,7 @@ public interface Validator {
      * @param metadata The metadata to validate, never {@code null}.
      * @throws IllegalArgumentException if artifact is invalid.
      */
-    default void isValidMetadata(Metadata metadata) throws IllegalArgumentException {}
+    default void validateMetadata(Metadata metadata) throws IllegalArgumentException {}
 
     /**
      * Validates dependency.
@@ -52,7 +52,7 @@ public interface Validator {
      * @param dependency The dependency to validate, never {@code null}.
      * @throws IllegalArgumentException if dependency is invalid.
      */
-    default void isValidDependency(Dependency dependency) throws IllegalArgumentException {}
+    default void validateDependency(Dependency dependency) throws IllegalArgumentException {}
 
     /**
      * Validates local repository.
@@ -60,7 +60,7 @@ public interface Validator {
      * @param localRepository The local repository to validate, never {@code null}.
      * @throws IllegalArgumentException if local repository is invalid.
      */
-    default void isValidLocalRepository(LocalRepository localRepository) throws IllegalArgumentException {}
+    default void validateLocalRepository(LocalRepository localRepository) throws IllegalArgumentException {}
 
     /**
      * Validates remote repository.
@@ -68,5 +68,5 @@ public interface Validator {
      * @param remoteRepository The remote repository to validate, never {@code null}.
      * @throws IllegalArgumentException if remote repository is invalid.
      */
-    default void isValidRemoteRepository(RemoteRepository remoteRepository) throws IllegalArgumentException {}
+    default void validateRemoteRepository(RemoteRepository remoteRepository) throws IllegalArgumentException {}
 }

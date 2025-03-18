@@ -71,13 +71,13 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
         for (ValidatorFactory factory : validatorFactories) {
             Validator validator = factory.newInstance(session);
             try {
-                validator.isValidArtifact(request.getArtifact());
+                validator.validateArtifact(request.getArtifact());
             } catch (Exception e) {
                 exceptions.add(e);
             }
             for (RemoteRepository repository : request.getRepositories()) {
                 try {
-                    validator.isValidRemoteRepository(repository);
+                    validator.validateRemoteRepository(repository);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
@@ -92,13 +92,13 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
         for (ValidatorFactory factory : validatorFactories) {
             Validator validator = factory.newInstance(session);
             try {
-                validator.isValidArtifact(request.getArtifact());
+                validator.validateArtifact(request.getArtifact());
             } catch (Exception e) {
                 exceptions.add(e);
             }
             for (RemoteRepository repository : request.getRepositories()) {
                 try {
-                    validator.isValidRemoteRepository(repository);
+                    validator.validateRemoteRepository(repository);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
@@ -113,13 +113,13 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
         for (ValidatorFactory factory : validatorFactories) {
             Validator validator = factory.newInstance(session);
             try {
-                validator.isValidArtifact(request.getArtifact());
+                validator.validateArtifact(request.getArtifact());
             } catch (Exception e) {
                 exceptions.add(e);
             }
             for (RemoteRepository repository : request.getRepositories()) {
                 try {
-                    validator.isValidRemoteRepository(repository);
+                    validator.validateRemoteRepository(repository);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
@@ -136,13 +136,13 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
             Validator validator = factory.newInstance(session);
             for (ArtifactRequest request : requests) {
                 try {
-                    validator.isValidArtifact(request.getArtifact());
+                    validator.validateArtifact(request.getArtifact());
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
                 for (RemoteRepository repository : request.getRepositories()) {
                     try {
-                        validator.isValidRemoteRepository(repository);
+                        validator.validateRemoteRepository(repository);
                     } catch (Exception e) {
                         exceptions.add(e);
                     }
@@ -160,13 +160,13 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
             Validator validator = factory.newInstance(session);
             for (MetadataRequest request : requests) {
                 try {
-                    validator.isValidMetadata(request.getMetadata());
+                    validator.validateMetadata(request.getMetadata());
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
                 try {
                     if (request.getRepository() != null) {
-                        validator.isValidRemoteRepository(request.getRepository());
+                        validator.validateRemoteRepository(request.getRepository());
                     }
                 } catch (Exception e) {
                     exceptions.add(e);
@@ -183,35 +183,35 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
             Validator validator = factory.newInstance(session);
             if (request.getRootArtifact() != null) {
                 try {
-                    validator.isValidArtifact(request.getRootArtifact());
+                    validator.validateArtifact(request.getRootArtifact());
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
             }
             if (request.getRoot() != null) {
                 try {
-                    validator.isValidDependency(request.getRoot());
+                    validator.validateDependency(request.getRoot());
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
             }
             for (Dependency dependency : request.getDependencies()) {
                 try {
-                    validator.isValidDependency(dependency);
+                    validator.validateDependency(dependency);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
             }
             for (Dependency managedDependency : request.getManagedDependencies()) {
                 try {
-                    validator.isValidDependency(managedDependency);
+                    validator.validateDependency(managedDependency);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
             }
             for (RemoteRepository repository : request.getRepositories()) {
                 try {
-                    validator.isValidRemoteRepository(repository);
+                    validator.validateRemoteRepository(repository);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
@@ -238,14 +238,14 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
             Validator validator = factory.newInstance(session);
             for (Artifact artifact : request.getArtifacts()) {
                 try {
-                    validator.isValidArtifact(artifact);
+                    validator.validateArtifact(artifact);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
             }
             for (Metadata metadata : request.getMetadata()) {
                 try {
-                    validator.isValidMetadata(metadata);
+                    validator.validateMetadata(metadata);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
@@ -261,21 +261,21 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
             Validator validator = factory.newInstance(session);
             for (Artifact artifact : request.getArtifacts()) {
                 try {
-                    validator.isValidArtifact(artifact);
+                    validator.validateArtifact(artifact);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
             }
             for (Metadata metadata : request.getMetadata()) {
                 try {
-                    validator.isValidMetadata(metadata);
+                    validator.validateMetadata(metadata);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
             }
             try {
                 if (request.getRepository() != null) {
-                    validator.isValidRemoteRepository(request.getRepository());
+                    validator.validateRemoteRepository(request.getRepository());
                 }
             } catch (Exception e) {
                 exceptions.add(e);
@@ -291,7 +291,7 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
             Validator validator = factory.newInstance(session);
             for (LocalRepository repository : repositories) {
                 try {
-                    validator.isValidLocalRepository(repository);
+                    validator.validateLocalRepository(repository);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
@@ -307,7 +307,7 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
             Validator validator = factory.newInstance(session);
             for (RemoteRepository repository : repositories) {
                 try {
-                    validator.isValidRemoteRepository(repository);
+                    validator.validateRemoteRepository(repository);
                 } catch (Exception e) {
                     exceptions.add(e);
                 }
