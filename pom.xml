@@ -93,6 +93,8 @@
   </distributionManagement>
 
   <properties>
+    <checkstyle.includeTestSourceDirectory>false</checkstyle.includeTestSourceDirectory>
+
     <javaVersion>8</javaVersion>
     <maven.compiler.release>${javaVersion}</maven.compiler.release>
     <maven.compiler.target>${javaVersion}</maven.compiler.target>
