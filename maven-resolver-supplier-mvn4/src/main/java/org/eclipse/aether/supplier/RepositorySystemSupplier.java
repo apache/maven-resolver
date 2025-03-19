@@ -18,8 +18,10 @@
  */
 package org.eclipse.aether.supplier;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -54,6 +56,7 @@ import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
+import org.eclipse.aether.impl.RepositorySystemValidator;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.impl.VersionRangeResolver;
@@ -76,6 +79,7 @@ import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
 import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
+import org.eclipse.aether.internal.impl.DefaultRepositorySystemValidator;
 import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.DefaultTransporterProvider;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
@@ -137,6 +141,7 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import org.eclipse.aether.spi.validator.ValidatorFactory;
 import org.eclipse.aether.transport.apache.ApacheTransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.util.version.GenericVersionScheme;
@@ -1097,6 +1102,34 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return getInjector().getInstance(ModelBuilder.class);
     }
 
+    private List<ValidatorFactory> validatorFactories;
+
+    public final List<ValidatorFactory> getValidatorFactories() {
+        checkClosed();
+        if (validatorFactories == null) {
+            validatorFactories = createValidatorFactories();
+        }
+        return validatorFactories;
+    }
+
+    protected List<ValidatorFactory> createValidatorFactories() {
+        return new ArrayList<>();
+    }
+
+    private RepositorySystemValidator repositorySystemValidator;
+
+    public final RepositorySystemValidator getRepositorySystemValidator() {
+        checkClosed();
+        if (repositorySystemValidator == null) {
+            repositorySystemValidator = createRepositorySystemValidator();
+        }
+        return repositorySystemValidator;
+    }
+
+    protected RepositorySystemValidator createRepositorySystemValidator() {
+        return new DefaultRepositorySystemValidator(getValidatorFactories());
+    }
+
     private RepositorySystem repositorySystem;
 
     public final RepositorySystem getRepositorySystem() {
@@ -1121,7 +1154,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 getSyncContextFactory(),
                 getRemoteRepositoryManager(),
                 getRepositorySystemLifecycle(),
-                getArtifactDecoratorFactories());
+                getArtifactDecoratorFactories(),
+                getRepositorySystemValidator());
     }
 
     @Override
