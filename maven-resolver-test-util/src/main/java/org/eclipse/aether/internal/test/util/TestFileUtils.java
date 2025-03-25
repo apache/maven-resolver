@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -121,10 +122,10 @@ public class TestFileUtils {
         return createTempFile(contents.getBytes(StandardCharsets.UTF_8), 1);
     }
 
-    public static File createTempFile(byte[] pattern, int repeat) throws IOException {
-        mkdirs(TMP);
-        File tmpFile = File.createTempFile("tmpfile-", ".data", TMP);
-        writeBytes(tmpFile, pattern, repeat);
+    public static File createTempFile( byte[] pattern, int repeat ) throws IOException{
+        mkdirs( TMP );
+        File tmpFile = Files.createTempFile( TMP.toPath(), "tmpfile-", ".data" ).toFile();
+        writeBytes( tmpFile, pattern, repeat );
         return tmpFile;
     }
 
@@ -132,11 +133,11 @@ public class TestFileUtils {
         return createTempDir("");
     }
 
-    public static File createTempDir(String suffix) throws IOException {
-        mkdirs(TMP);
-        File tmpFile = File.createTempFile("tmpdir-", suffix, TMP);
-        deleteFile(tmpFile);
-        mkdirs(tmpFile);
+    public static File createTempDir( String suffix ) throws IOException {
+        mkdirs( TMP );
+        File tmpFile = Files.createTempFile( TMP.toPath(), "tmpdir-", suffix ).toFile();
+        deleteFile( tmpFile );
+        mkdirs( tmpFile );
         return tmpFile;
     }
 
