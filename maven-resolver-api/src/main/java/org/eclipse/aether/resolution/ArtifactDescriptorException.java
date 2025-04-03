@@ -29,6 +29,7 @@ public class ArtifactDescriptorException extends RepositoryException {
 
     /**
      * Creates a new exception with the specified result.
+     * Cause will be first selected exception from result, if applicable. All exceptions are added as suppressed as well.
      *
      * @param result The descriptor result at the point the exception occurred, may be {@code null}.
      */
@@ -36,23 +37,31 @@ public class ArtifactDescriptorException extends RepositoryException {
         super(
                 "Failed to read artifact descriptor"
                         + (result != null ? " for " + result.getRequest().getArtifact() : ""),
-                getCause(result));
+                getFirstCause(result));
+        if (result != null) {
+            result.getExceptions().forEach(this::addSuppressed);
+        }
         this.result = result;
     }
 
     /**
      * Creates a new exception with the specified result and detail message.
+     * Cause will be first selected exception from result, if applicable. All exceptions are added as suppressed as well.
      *
      * @param result The descriptor result at the point the exception occurred, may be {@code null}.
      * @param message The detail message, may be {@code null}.
      */
     public ArtifactDescriptorException(ArtifactDescriptorResult result, String message) {
-        super(message, getCause(result));
+        super(message, getFirstCause(result));
+        if (result != null) {
+            result.getExceptions().forEach(this::addSuppressed);
+        }
         this.result = result;
     }
 
     /**
      * Creates a new exception with the specified result, detail message and cause.
+     * All exceptions are added as suppressed as well.
      *
      * @param result The descriptor result at the point the exception occurred, may be {@code null}.
      * @param message The detail message, may be {@code null}.
@@ -60,6 +69,9 @@ public class ArtifactDescriptorException extends RepositoryException {
      */
     public ArtifactDescriptorException(ArtifactDescriptorResult result, String message, Throwable cause) {
         super(message, cause);
+        if (result != null) {
+            result.getExceptions().forEach(this::addSuppressed);
+        }
         this.result = result;
     }
 
@@ -73,7 +85,7 @@ public class ArtifactDescriptorException extends RepositoryException {
         return result;
     }
 
-    private static Throwable getCause(ArtifactDescriptorResult result) {
+    private static Throwable getFirstCause(ArtifactDescriptorResult result) {
         Throwable cause = null;
         if (result != null && !result.getExceptions().isEmpty()) {
             cause = result.getExceptions().get(0);

@@ -18,10 +18,13 @@
  */
 package org.eclipse.aether.resolution;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.transfer.ArtifactFilteredOutException;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
@@ -39,7 +42,10 @@ public class ArtifactResolutionException extends RepositoryException {
      * @param results The resolution results at the point the exception occurred, may be {@code null}.
      */
     public ArtifactResolutionException(List<ArtifactResult> results) {
-        super(getMessage(results), getCause(results));
+        super(getSmartMessage(results), getSmartCause(results));
+        if (results != null) {
+            getSuppressed(results).forEach(this::addSuppressed);
+        }
         this.results = results != null ? results : Collections.emptyList();
     }
 
@@ -50,7 +56,10 @@ public class ArtifactResolutionException extends RepositoryException {
      * @param message The detail message, may be {@code null}.
      */
     public ArtifactResolutionException(List<ArtifactResult> results, String message) {
-        super(message, getCause(results));
+        super(message, getSmartCause(results));
+        if (results != null) {
+            getSuppressed(results).forEach(this::addSuppressed);
+        }
         this.results = results != null ? results : Collections.emptyList();
     }
 
@@ -63,6 +72,9 @@ public class ArtifactResolutionException extends RepositoryException {
      */
     public ArtifactResolutionException(List<ArtifactResult> results, String message, Throwable cause) {
         super(message, cause);
+        if (results != null) {
+            getSuppressed(results).forEach(this::addSuppressed);
+        }
         this.results = results != null ? results : Collections.emptyList();
     }
 
@@ -86,7 +98,7 @@ public class ArtifactResolutionException extends RepositoryException {
         return (results != null && !results.isEmpty()) ? results.get(0) : null;
     }
 
-    private static String getMessage(List<? extends ArtifactResult> results) {
+    private static String getSmartMessage(List<? extends ArtifactResult> results) {
         if (results == null) {
             return null;
         }
@@ -116,7 +128,7 @@ public class ArtifactResolutionException extends RepositoryException {
             }
         }
 
-        Throwable cause = getCause(results);
+        Throwable cause = getSmartCause(results);
         if (cause != null) {
             buffer.append(": ").append(cause.getMessage());
         }
@@ -129,7 +141,7 @@ public class ArtifactResolutionException extends RepositoryException {
      * and probably many other code relies on it, so is left in place, but client code should use {@link #getResults()}
      * and {@link ArtifactResult#getMappedExceptions()} methods to build more appropriate error messages.
      */
-    private static Throwable getCause(List<? extends ArtifactResult> results) {
+    private static Throwable getSmartCause(List<? extends ArtifactResult> results) {
         if (results == null) {
             return null;
         }
@@ -157,5 +169,30 @@ public class ArtifactResolutionException extends RepositoryException {
             }
         }
         return null;
+    }
+
+    /**
+     * Builds a tree of exceptions to be used as suppressed, and it will contain the whole tree.
+     */
+    private static List<Throwable> getSuppressed(List<? extends ArtifactResult> results) {
+        ArrayList<Throwable> result = new ArrayList<>(results.size());
+        for (ArtifactResult artifactResult : results) {
+            if (!artifactResult.isResolved()) {
+                ArtifactResolutionException root = new ArtifactResolutionException(
+                        null,
+                        "Failed to resolve artifact "
+                                + artifactResult.getRequest().getArtifact());
+                for (Map.Entry<ArtifactRepository, List<Exception>> entry :
+                        artifactResult.getMappedExceptions().entrySet()) {
+                    ArtifactResolutionException repo =
+                            new ArtifactResolutionException(null, "from repository " + entry.getKey());
+                    for (Exception e : entry.getValue()) {
+                        repo.addSuppressed(e);
+                    }
+                }
+                result.add(root);
+            }
+        }
+        return result;
     }
 }

@@ -155,7 +155,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
                 rangeResult = versionRangeResolver.resolveVersionRange(session, rangeRequest);
                 versions = filterVersions(root, rangeResult, verFilter, new DefaultVersionFilterContext(session));
             } catch (VersionRangeResolutionException e) {
-                e.getResult().getExceptions().forEach(result::addException);
+                result.addException(e);
                 throw new DependencyCollectionException(result, e.getMessage());
             }
 
@@ -179,7 +179,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
                     }
                 }
             } catch (ArtifactDescriptorException e) {
-                e.getResult().getExceptions().forEach(result::addException);
+                result.addException(e);
                 throw new DependencyCollectionException(result, e.getMessage());
             }
 
