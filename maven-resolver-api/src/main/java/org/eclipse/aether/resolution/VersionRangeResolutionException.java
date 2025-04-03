@@ -29,11 +29,15 @@ public class VersionRangeResolutionException extends RepositoryException {
 
     /**
      * Creates a new exception with the specified result.
+     * Cause will be first selected exception from result, if applicable. All exceptions are added as suppressed as well.
      *
      * @param result The version range result at the point the exception occurred, may be {@code null}.
      */
     public VersionRangeResolutionException(VersionRangeResult result) {
-        super(getMessage(result), getCause(result));
+        super(getMessage(result), getFirstCause(result));
+        if (result != null) {
+            result.getExceptions().forEach(this::addSuppressed);
+        }
         this.result = result;
     }
 
@@ -50,7 +54,7 @@ public class VersionRangeResolutionException extends RepositoryException {
         return buffer.toString();
     }
 
-    private static Throwable getCause(VersionRangeResult result) {
+    private static Throwable getFirstCause(VersionRangeResult result) {
         Throwable cause = null;
         if (result != null && !result.getExceptions().isEmpty()) {
             cause = result.getExceptions().get(0);
@@ -60,17 +64,22 @@ public class VersionRangeResolutionException extends RepositoryException {
 
     /**
      * Creates a new exception with the specified result and detail message.
+     * All exceptions are added as suppressed as well.
      *
      * @param result The version range result at the point the exception occurred, may be {@code null}.
      * @param message The detail message, may be {@code null}.
      */
     public VersionRangeResolutionException(VersionRangeResult result, String message) {
         super(message);
+        if (result != null) {
+            result.getExceptions().forEach(this::addSuppressed);
+        }
         this.result = result;
     }
 
     /**
      * Creates a new exception with the specified result, detail message and cause.
+     * All exceptions are added as suppressed as well.
      *
      * @param result The version range result at the point the exception occurred, may be {@code null}.
      * @param message The detail message, may be {@code null}.
@@ -78,6 +87,9 @@ public class VersionRangeResolutionException extends RepositoryException {
      */
     public VersionRangeResolutionException(VersionRangeResult result, String message, Throwable cause) {
         super(message, cause);
+        if (result != null) {
+            result.getExceptions().forEach(this::addSuppressed);
+        }
         this.result = result;
     }
 

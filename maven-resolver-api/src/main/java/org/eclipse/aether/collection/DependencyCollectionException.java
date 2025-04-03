@@ -30,27 +30,36 @@ public class DependencyCollectionException extends RepositoryException {
 
     /**
      * Creates a new exception with the specified result.
+     * Cause will be first selected exception from result, if applicable. All exceptions are added as suppressed as well.
      *
      * @param result The collection result at the point the exception occurred, may be {@code null}.
      */
     public DependencyCollectionException(CollectResult result) {
-        super("Failed to collect dependencies for " + getSource(result), getCause(result));
+        super("Failed to collect dependencies for " + getSource(result), getFirstCause(result));
+        if (result != null) {
+            result.getExceptions().forEach(this::addSuppressed);
+        }
         this.result = result;
     }
 
     /**
      * Creates a new exception with the specified result and detail message.
+     * Cause will be first selected exception from result, if applicable. All exceptions are added as suppressed as well.
      *
      * @param result The collection result at the point the exception occurred, may be {@code null}.
      * @param message The detail message, may be {@code null}.
      */
     public DependencyCollectionException(CollectResult result, String message) {
-        super(message, getCause(result));
+        super(message, getFirstCause(result));
+        if (result != null) {
+            result.getExceptions().forEach(this::addSuppressed);
+        }
         this.result = result;
     }
 
     /**
      * Creates a new exception with the specified result, detail message and cause.
+     * All exceptions are added as suppressed as well.
      *
      * @param result The collection result at the point the exception occurred, may be {@code null}.
      * @param message The detail message, may be {@code null}.
@@ -58,6 +67,9 @@ public class DependencyCollectionException extends RepositoryException {
      */
     public DependencyCollectionException(CollectResult result, String message, Throwable cause) {
         super(message, cause);
+        if (result != null) {
+            result.getExceptions().forEach(this::addSuppressed);
+        }
         this.result = result;
     }
 
@@ -87,7 +99,7 @@ public class DependencyCollectionException extends RepositoryException {
         return request.getDependencies().toString();
     }
 
-    private static Throwable getCause(CollectResult result) {
+    private static Throwable getFirstCause(CollectResult result) {
         Throwable cause = null;
         if (result != null && !result.getExceptions().isEmpty()) {
             cause = result.getExceptions().get(0);
