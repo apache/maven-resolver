@@ -185,11 +185,8 @@ public class ArtifactResolutionException extends RepositoryException {
                                 + artifactResult.getRequest().getArtifact());
                 for (Map.Entry<ArtifactRepository, List<Exception>> entry :
                         artifactResult.getMappedExceptions().entrySet()) {
-                    ArtifactResolutionException repo =
-                            new ArtifactResolutionException(null, "from repository " + entry.getKey());
-                    root.addSuppressed(repo);
                     for (Exception e : entry.getValue()) {
-                        repo.addSuppressed(e);
+                        root.addSuppressed(e);
                     }
                 }
                 result.add(root);
