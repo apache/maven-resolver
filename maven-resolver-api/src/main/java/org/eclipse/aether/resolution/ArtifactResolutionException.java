@@ -187,6 +187,7 @@ public class ArtifactResolutionException extends RepositoryException {
                         artifactResult.getMappedExceptions().entrySet()) {
                     ArtifactResolutionException repo =
                             new ArtifactResolutionException(null, "from repository " + entry.getKey());
+                    root.addSuppressed(repo);
                     for (Exception e : entry.getValue()) {
                         repo.addSuppressed(e);
                     }
