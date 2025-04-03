@@ -172,7 +172,8 @@ public class ArtifactResolutionException extends RepositoryException {
     }
 
     /**
-     * Builds a tree of exceptions to be used as suppressed, and it will contain the whole tree.
+     * Builds a forest of exceptions to be used as suppressed, and it will contain the whole forest of exceptions per
+     * repository.
      */
     private static List<Throwable> getSuppressed(List<? extends ArtifactResult> results) {
         ArrayList<Throwable> result = new ArrayList<>(results.size());
