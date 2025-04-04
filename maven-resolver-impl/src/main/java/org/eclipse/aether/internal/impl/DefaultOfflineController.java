@@ -41,7 +41,8 @@ public class DefaultOfflineController implements OfflineController {
     private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "offline.";
 
     /**
-     * Comma-separated list of protocols which are supposed to be resolved offline.
+     * Comma-separated list of protocols which are supposed to be accessed when session is offline, or be unreachable
+     * when session is online.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
@@ -49,12 +50,23 @@ public class DefaultOfflineController implements OfflineController {
     public static final String CONFIG_PROP_OFFLINE_PROTOCOLS = CONFIG_PROPS_PREFIX + "protocols";
 
     /**
-     * Comma-separated list of hosts which are supposed to be resolved offline.
+     * Comma-separated list of hosts which are supposed to be resolved when session is offline, or be unreachable
+     * when session is online.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      */
     public static final String CONFIG_PROP_OFFLINE_HOSTS = CONFIG_PROPS_PREFIX + "hosts";
+
+    /**
+     * Comma-separated list of repository IDs which are supposed to be resolved when session is offline, or be
+     * unreachable when session is online.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @since TBD
+     */
+    public static final String CONFIG_PROP_OFFLINE_REPOSITORIES = CONFIG_PROPS_PREFIX + "repositories";
 
     private static final Pattern SEP = Pattern.compile("\\s*,\\s*");
 
@@ -63,7 +75,9 @@ public class DefaultOfflineController implements OfflineController {
             throws RepositoryOfflineException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
-        if (isOfflineProtocol(session, repository) || isOfflineHost(session, repository)) {
+        if (isOfflineProtocol(session, repository)
+                || isOfflineHost(session, repository)
+                || isOfflineRepository(session, repository)) {
             return;
         }
 
@@ -92,6 +106,21 @@ public class DefaultOfflineController implements OfflineController {
             if (!host.isEmpty()) {
                 for (String h : hosts) {
                     if (h.equalsIgnoreCase(host)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isOfflineRepository(RepositorySystemSession session, RemoteRepository repository) {
+        String[] repositories = getConfig(session, CONFIG_PROP_OFFLINE_REPOSITORIES);
+        if (repositories != null) {
+            String repositoryId = repository.getId();
+            if (!repositoryId.isEmpty()) {
+                for (String r : repositories) {
+                    if (r.equals(repositoryId)) {
                         return true;
                     }
                 }
