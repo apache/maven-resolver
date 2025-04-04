@@ -41,8 +41,7 @@ public class DefaultOfflineController implements OfflineController {
     private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "offline.";
 
     /**
-     * Comma-separated list of protocols which are supposed to be accessed when session is offline, or be unreachable
-     * when session is online.
+     * Comma-separated list of protocols which are supposed to be accessed when session is offline.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
@@ -50,8 +49,7 @@ public class DefaultOfflineController implements OfflineController {
     public static final String CONFIG_PROP_OFFLINE_PROTOCOLS = CONFIG_PROPS_PREFIX + "protocols";
 
     /**
-     * Comma-separated list of hosts which are supposed to be resolved when session is offline, or be unreachable
-     * when session is online.
+     * Comma-separated list of hosts which are supposed to be resolved when session is offline.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
@@ -59,8 +57,7 @@ public class DefaultOfflineController implements OfflineController {
     public static final String CONFIG_PROP_OFFLINE_HOSTS = CONFIG_PROPS_PREFIX + "hosts";
 
     /**
-     * Comma-separated list of repository IDs which are supposed to be resolved when session is offline, or be
-     * unreachable when session is online.
+     * Comma-separated list of repository IDs which are supposed to be resolved when session is offline.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}

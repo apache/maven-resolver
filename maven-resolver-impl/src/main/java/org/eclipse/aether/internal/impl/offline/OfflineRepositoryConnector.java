@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.OfflineController;
+import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
@@ -66,7 +67,7 @@ public final class OfflineRepositoryConnector implements RepositoryConnector {
             Collection<? extends ArtifactDownload> artifactDownloads,
             Collection<? extends MetadataDownload> metadataDownloads) {
         try {
-            offlineController.checkOfflineOnline(session, remoteRepository);
+            Utils.checkOffline(session, offlineController, remoteRepository);
         } catch (RepositoryOfflineException e) {
             if (artifactDownloads != null && !artifactDownloads.isEmpty()) {
                 artifactDownloads.forEach(
@@ -86,7 +87,7 @@ public final class OfflineRepositoryConnector implements RepositoryConnector {
             Collection<? extends ArtifactUpload> artifactUploads,
             Collection<? extends MetadataUpload> metadataUploads) {
         try {
-            offlineController.checkOfflineOnline(session, remoteRepository);
+            Utils.checkOffline(session, offlineController, remoteRepository);
         } catch (RepositoryOfflineException e) {
             if (artifactUploads != null && !artifactUploads.isEmpty()) {
                 artifactUploads.forEach(

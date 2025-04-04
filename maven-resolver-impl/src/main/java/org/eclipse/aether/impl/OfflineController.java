@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.impl;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
@@ -48,32 +46,4 @@ public interface OfflineController {
      * @see RepositorySystemSession#isOffline()
      */
     void checkOffline(RepositorySystemSession session, RemoteRepository repository) throws RepositoryOfflineException;
-
-    /**
-     * If session is offline, behaves as original contract:
-     * <pre>
-     *     if (session.isOffline()) {
-     *         offlineController.checkOffline(session, repository);
-     *     }
-     * </pre>
-     * If session is online, inverts the logic. This allows that related configuration properties gain meaning when
-     * the session is not offline, to selectively place repositories offline.
-     */
-    default void checkOfflineOnline(RepositorySystemSession session, RemoteRepository repository)
-            throws RepositoryOfflineException {
-        if (session.isOffline()) {
-            checkOffline(session, repository);
-        } else {
-            AtomicBoolean pass = new AtomicBoolean(false);
-            try {
-                checkOffline(session, repository);
-                pass.set(true);
-                throw new RepositoryOfflineException(repository);
-            } catch (RepositoryOfflineException e) {
-                if (pass.get()) {
-                    throw e;
-                }
-            }
-        }
-    }
 }
