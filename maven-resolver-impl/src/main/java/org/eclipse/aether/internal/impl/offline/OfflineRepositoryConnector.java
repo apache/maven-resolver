@@ -104,6 +104,6 @@ public final class OfflineRepositoryConnector implements RepositoryConnector {
 
     @Override
     public String toString() {
-        return OfflinePipelineRepositoryConnectorFactory.NAME + "(" + delegate.toString() + ")";
+        return OfflinePipelineRepositoryConnectorFactory.NAME + "( " + delegate.toString() + " )";
     }
 }

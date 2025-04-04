@@ -434,7 +434,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     @Override
     public String toString() {
-        return BasicRepositoryConnectorFactory.NAME + "(" + repository + ")";
+        return BasicRepositoryConnectorFactory.NAME + "( " + repository + " )";
     }
 
     abstract class TaskRunner implements Runnable {
