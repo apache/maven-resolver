@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.impl;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
@@ -62,11 +64,15 @@ public interface OfflineController {
         if (session.isOffline()) {
             checkOffline(session, repository);
         } else {
+            AtomicBoolean pass = new AtomicBoolean(false);
             try {
                 checkOffline(session, repository);
+                pass.set(true);
                 throw new RepositoryOfflineException(repository);
-            } catch (RepositoryOfflineException ignore) {
-                // ignore
+            } catch (RepositoryOfflineException e) {
+                if (pass.get()) {
+                    throw e;
+                }
             }
         }
     }
