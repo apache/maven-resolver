@@ -104,6 +104,6 @@ public final class FilteringRepositoryConnector implements RepositoryConnector {
 
     @Override
     public String toString() {
-        return "filtered(" + delegate.toString() + ")";
+        return FilteringPipelineRepositoryConnectorFactory.NAME + "(" + delegate.toString() + ")";
     }
 }

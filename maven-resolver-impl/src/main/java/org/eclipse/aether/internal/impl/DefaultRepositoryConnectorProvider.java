@@ -28,13 +28,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
-import org.eclipse.aether.internal.impl.filter.FilteringRepositoryConnector;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.PipelineRepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.RepositoryConnector;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,14 +49,14 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
 
     private final Map<String, RepositoryConnectorFactory> connectorFactories;
 
-    private final RemoteRepositoryFilterManager remoteRepositoryFilterManager;
+    private final Map<String, PipelineRepositoryConnectorFactory> pipelineConnectorFactories;
 
     @Inject
     public DefaultRepositoryConnectorProvider(
             Map<String, RepositoryConnectorFactory> connectorFactories,
-            RemoteRepositoryFilterManager remoteRepositoryFilterManager) {
+            Map<String, PipelineRepositoryConnectorFactory> pipelineConnectorFactories) {
         this.connectorFactories = Collections.unmodifiableMap(connectorFactories);
-        this.remoteRepositoryFilterManager = requireNonNull(remoteRepositoryFilterManager);
+        this.pipelineConnectorFactories = Collections.unmodifiableMap(pipelineConnectorFactories);
     }
 
     @Override
@@ -78,7 +76,6 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
         PrioritizedComponents<RepositoryConnectorFactory> factories = PrioritizedComponents.reuseOrCreate(
                 session, RepositoryConnectorFactory.class, connectorFactories, RepositoryConnectorFactory::getPriority);
 
-        RemoteRepositoryFilter filter = remoteRepositoryFilterManager.getRemoteRepositoryFilter(session);
         List<NoRepositoryConnectorException> errors = new ArrayList<>();
         for (PrioritizedComponent<RepositoryConnectorFactory> factory : factories.getEnabled()) {
             try {
@@ -94,11 +91,7 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
                     LOGGER.debug(buffer.toString());
                 }
 
-                if (filter != null) {
-                    return new FilteringRepositoryConnector(repository, connector, filter);
-                } else {
-                    return connector;
-                }
+                return pipelineConnector(session, repository, connector);
             } catch (NoRepositoryConnectorException e) {
                 // continue and try next factory
                 LOGGER.debug("Could not obtain connector factory for {}", repository, e);
@@ -124,5 +117,18 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
             errors.forEach(ex::addSuppressed);
         }
         throw ex;
+    }
+
+    protected RepositoryConnector pipelineConnector(
+            RepositorySystemSession session, RemoteRepository repository, RepositoryConnector delegate) {
+        PrioritizedComponents<PipelineRepositoryConnectorFactory> factories = PrioritizedComponents.reuseOrCreate(
+                session,
+                PipelineRepositoryConnectorFactory.class,
+                pipelineConnectorFactories,
+                PipelineRepositoryConnectorFactory::getPriority);
+        for (PrioritizedComponent<PipelineRepositoryConnectorFactory> factory : factories.getEnabled()) {
+            delegate = factory.getComponent().newInstance(session, repository, delegate);
+        }
+        return delegate;
     }
 }
