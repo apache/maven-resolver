@@ -91,7 +91,13 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
                     LOGGER.debug(buffer.toString());
                 }
 
-                return pipelineConnector(session, repository, connector);
+                connector = pipelineConnector(session, repository, connector);
+
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Final pipeline: {}", connector);
+                }
+
+                return connector;
             } catch (NoRepositoryConnectorException e) {
                 // continue and try next factory
                 LOGGER.debug("Could not obtain connector factory for {}", repository, e);
