@@ -43,7 +43,10 @@ public final class FilteringPipelineRepositoryConnectorFactory implements Pipeli
 
     private final RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
-    private float priority;
+    /**
+     * This connector should be usually the right-most in pipeline.
+     */
+    private float priority = 10000;
 
     @Inject
     public FilteringPipelineRepositoryConnectorFactory(RemoteRepositoryFilterManager remoteRepositoryFilterManager) {

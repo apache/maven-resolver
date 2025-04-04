@@ -47,7 +47,8 @@ public interface PipelineRepositoryConnectorFactory {
             RepositorySystemSession session, RemoteRepository repository, RepositoryConnector delegate);
 
     /**
-     * The priority of this pipeline factory.
+     * The priority of this pipeline factory. The highest the priority makes it closest is to right hand connector,
+     * while lower priority, makes it closes to left hand of the pipeline.
      */
     float getPriority();
 }

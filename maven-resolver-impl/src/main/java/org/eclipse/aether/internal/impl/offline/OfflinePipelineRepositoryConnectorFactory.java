@@ -42,7 +42,10 @@ public final class OfflinePipelineRepositoryConnectorFactory implements Pipeline
 
     private final OfflineController offlineController;
 
-    private float priority;
+    /**
+     * This connector should be usually the left-most in pipeline.
+     */
+    private float priority = 0;
 
     @Inject
     public OfflinePipelineRepositoryConnectorFactory(OfflineController offlineController) {
