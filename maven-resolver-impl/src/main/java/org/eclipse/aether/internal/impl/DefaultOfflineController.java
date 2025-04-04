@@ -41,7 +41,7 @@ public class DefaultOfflineController implements OfflineController {
     private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_AETHER + "offline.";
 
     /**
-     * Comma-separated list of protocols which are supposed to be accessed when session is offline.
+     * Comma-separated list of protocols which are supposed to be resolved when session is offline.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
