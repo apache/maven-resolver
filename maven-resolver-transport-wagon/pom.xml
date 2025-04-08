@@ -50,6 +50,10 @@
       <version>3.5.3</version>
     </dependency>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <scope>provided</scope>
@@ -64,11 +68,13 @@
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
+      <version>4.0.2</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-xml</artifactId>
+      <version>3.0.1</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -92,10 +98,6 @@
       <artifactId>plexus-testing</artifactId>
       <version>1.5.0</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
