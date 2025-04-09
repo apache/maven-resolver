@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A filtering connector factory.
  *
- * @since TBD
+ * @since 2.0.8
  */
 @Singleton
 @Named(FilteringPipelineRepositoryConnectorFactory.NAME)

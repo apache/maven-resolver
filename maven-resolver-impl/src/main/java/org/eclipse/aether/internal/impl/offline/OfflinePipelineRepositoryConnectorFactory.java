@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Offline connector factory.
  *
- * @since TBD
+ * @since 2.0.8
  */
 @Singleton
 @Named(OfflinePipelineRepositoryConnectorFactory.NAME)

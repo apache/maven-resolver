@@ -61,7 +61,7 @@ public class DefaultOfflineController implements OfflineController {
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
-     * @since TBD
+     * @since 2.0.8
      */
     public static final String CONFIG_PROP_OFFLINE_REPOSITORIES = CONFIG_PROPS_PREFIX + "repositories";
 

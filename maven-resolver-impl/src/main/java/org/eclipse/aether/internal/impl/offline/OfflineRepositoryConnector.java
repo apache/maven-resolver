@@ -38,7 +38,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Offline connector, that prevents ANY remote access in case session is offline.
  *
- * @since TBD
+ * @since 2.0.8
  */
 public final class OfflineRepositoryConnector implements RepositoryConnector {
     private final RepositorySystemSession session;

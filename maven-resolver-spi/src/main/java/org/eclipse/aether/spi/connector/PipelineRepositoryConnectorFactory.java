@@ -24,7 +24,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * A pipeline factory to create piped repository connectors.
  *
- * @since TBD
+ * @since 2.0.8
  */
 public interface PipelineRepositoryConnectorFactory {
 
