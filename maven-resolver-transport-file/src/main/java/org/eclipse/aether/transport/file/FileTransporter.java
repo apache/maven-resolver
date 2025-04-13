@@ -40,7 +40,13 @@ import static java.util.Objects.requireNonNull;
  */
 final class FileTransporter extends AbstractTransporter {
     /**
-     * The write operation transport can use.
+     * The write operation transport can use to write contents to the target (usually in local repository) of the
+     * file in remote repository reached by this transporter. Historically, and in some special cases (ZIP file system),
+     * it is only {@link #COPY} that can be used.
+     * <p>
+     * In case when contents of remote repository reached by this transport and target (usually Maven local repository)
+     * are on same {@link FileSystem}, then {@link #SYMLINK} and {@link #HARDLINK} can be used as well, to reduce
+     * redundancy somewhat.
      *
      * @since 2.0.2
      */
@@ -86,7 +92,7 @@ final class FileTransporter extends AbstractTransporter {
         return ERROR_OTHER;
     }
 
-    private WriteOp effectiveFileOp(WriteOp wanted, Path source, GetTask task) {
+    private WriteOp effectiveFileOp(WriteOp wanted, GetTask task) {
         if (task.getDataPath() != null && task.getDataPath().getFileSystem() == fileSystem) {
             return wanted;
         }
@@ -101,24 +107,24 @@ final class FileTransporter extends AbstractTransporter {
 
     @Override
     protected void implGet(GetTask task) throws Exception {
-        Path source = getPath(task, true);
-        long size = Files.size(source);
-        WriteOp effective = effectiveFileOp(writeOp, source, task);
+        Path path = getPath(task, true);
+        long size = Files.size(path);
+        WriteOp effective = effectiveFileOp(writeOp, task);
         switch (effective) {
             case COPY:
-                utilGet(task, Files.newInputStream(source), true, size, false);
+                utilGet(task, Files.newInputStream(path), true, size, false);
                 break;
             case SYMLINK:
             case HARDLINK:
                 Files.deleteIfExists(task.getDataPath());
                 task.getListener().transportStarted(0L, size);
                 if (effective == WriteOp.HARDLINK) {
-                    Files.createLink(task.getDataPath(), source);
+                    Files.createLink(task.getDataPath(), path);
                 } else {
-                    Files.createSymbolicLink(task.getDataPath(), source);
+                    Files.createSymbolicLink(task.getDataPath(), path);
                 }
                 if (size > 0) {
-                    try (FileChannel fc = FileChannel.open(source)) {
+                    try (FileChannel fc = FileChannel.open(path)) {
                         try {
                             task.getListener().transportProgressed(fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size()));
                         } catch (UnsupportedOperationException e) {

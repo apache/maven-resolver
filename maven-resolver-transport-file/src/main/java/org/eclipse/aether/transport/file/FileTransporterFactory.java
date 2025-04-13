@@ -41,7 +41,7 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A transporter factory for repositories using the {@code file:} protocol.
+ * A transporter factory for repositories using the {@code file:} or {@code bundle:} protocol.
  */
 @Named(FileTransporterFactory.NAME)
 public final class FileTransporterFactory implements TransporterFactory {
@@ -65,6 +65,12 @@ public final class FileTransporterFactory implements TransporterFactory {
         return this;
     }
 
+    /**
+     * Creates new instance of {@link FileTransporter}.
+     *
+     * @param session The session.
+     * @param repository The remote repository.
+     */
     @Override
     public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
