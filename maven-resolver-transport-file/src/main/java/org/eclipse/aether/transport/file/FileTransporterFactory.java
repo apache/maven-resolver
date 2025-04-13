@@ -76,7 +76,10 @@ public final class FileTransporterFactory implements TransporterFactory {
             try {
                 repositoryUrl = repositoryUrl.substring("bundle:".length());
                 URI bundlePath = URI.create("jar:file:"
-                        + Paths.get(RepositoryUriUtils.toUri(repositoryUrl)).toAbsolutePath());
+                        + Paths.get(RepositoryUriUtils.toUri(repositoryUrl))
+                                .toAbsolutePath()
+                                .toString()
+                                .replace('\\', '/'));
                 Map<String, String> env = new HashMap<>();
                 FileSystem fileSystem = FileSystems.newFileSystem(bundlePath, env);
                 return new FileTransporter(
