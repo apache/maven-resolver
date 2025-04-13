@@ -22,9 +22,11 @@ import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -46,6 +48,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  */
@@ -64,16 +67,19 @@ public class FileTransporterTest {
     private FileSystem fileSystem;
 
     enum FS {
-        DEFAULT(""),
-        DEFAULT_SL("symlink+"),
-        DEFAULT_HL("hardlink+"),
-        JIMFS(""),
-        JIMFS_SL("symlink+"),
-        JIMFS_HL("hardlink+");
+        DEFAULT(true, ""),
+        DEFAULT_SL(true, "symlink+"),
+        DEFAULT_HL(true, "hardlink+"),
+        JIMFS(true, ""),
+        JIMFS_SL(true, "symlink+"),
+        JIMFS_HL(true, "hardlink+"),
+        BUNDLE(false, "bundle:");
 
+        final boolean writable;
         final String uriPrefix;
 
-        FS(String uriPrefix) {
+        FS(boolean writable, String uriPrefix) {
+            this.writable = writable;
             this.uriPrefix = uriPrefix;
         }
     }
@@ -106,6 +112,19 @@ public class FileTransporterTest {
             Files.write(repoDir.resolve("file.txt"), "test".getBytes(StandardCharsets.UTF_8));
             Files.write(repoDir.resolve("empty.txt"), "".getBytes(StandardCharsets.UTF_8));
             Files.write(repoDir.resolve("some space.txt"), "space".getBytes(StandardCharsets.UTF_8));
+            if (fs == FS.BUNDLE) {
+                URI bundle =
+                        URI.create("jar:file:" + repoDir.resolve("bundle.zip").toAbsolutePath());
+                // zip it up and change uri to zip file path
+                HashMap<String, String> env = new HashMap<>();
+                env.put("create", "true");
+                try (FileSystem zfs = FileSystems.newFileSystem(bundle, env)) {
+                    Files.copy(repoDir.resolve("file.txt"), zfs.getPath("file.txt"));
+                    Files.copy(repoDir.resolve("empty.txt"), zfs.getPath("empty.txt"));
+                    Files.copy(repoDir.resolve("some space.txt"), zfs.getPath("some space.txt"));
+                }
+                repoDir = repoDir.resolve("bundle.zip");
+            }
             newTransporter(fs.uriPrefix + repoDir.toUri().toASCIIString());
         } catch (Exception e) {
             Assertions.fail(e);
@@ -331,6 +350,7 @@ public class FileTransporterTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testPut_FromMemory(FS fs) throws Exception {
+        assumeTrue(fs.writable);
         setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataString("upload");
@@ -345,6 +365,7 @@ public class FileTransporterTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testPut_FromFile(FS fs) throws Exception {
+        assumeTrue(fs.writable);
         setUp(fs);
         Path file = tempDir.resolve("upload");
         Files.write(file, "upload".getBytes(StandardCharsets.UTF_8));
@@ -361,6 +382,7 @@ public class FileTransporterTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testPut_EmptyResource(FS fs) throws Exception {
+        assumeTrue(fs.writable);
         setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener);
@@ -375,6 +397,7 @@ public class FileTransporterTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testPut_NonExistentParentDir(FS fs) throws Exception {
+        assumeTrue(fs.writable);
         setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("dir/sub/dir/file.txt"))
@@ -393,6 +416,7 @@ public class FileTransporterTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testPut_EncodedResourcePath(FS fs) throws Exception {
+        assumeTrue(fs.writable);
         setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("some%20space.txt"))
@@ -409,6 +433,7 @@ public class FileTransporterTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testPut_FileHandleLeak(FS fs) throws Exception {
+        assumeTrue(fs.writable);
         setUp(fs);
         for (int i = 0; i < 100; i++) {
             Path src = tempDir.resolve("upload");
@@ -423,6 +448,7 @@ public class FileTransporterTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testPut_Closed(FS fs) throws Exception {
+        assumeTrue(fs.writable);
         setUp(fs);
         transporter.close();
         try {
@@ -436,6 +462,7 @@ public class FileTransporterTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testPut_StartCancelled(FS fs) throws Exception {
+        assumeTrue(fs.writable);
         setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelStart = true;
@@ -456,6 +483,7 @@ public class FileTransporterTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testPut_ProgressCancelled(FS fs) throws Exception {
+        assumeTrue(fs.writable);
         setUp(fs);
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelProgress = true;

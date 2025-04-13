@@ -52,12 +52,19 @@ final class FileTransporter extends AbstractTransporter {
 
     private final FileSystem fileSystem;
     private final boolean closeFileSystem;
+    private final boolean writableFileSystem;
     private final Path basePath;
     private final WriteOp writeOp;
 
-    FileTransporter(FileSystem fileSystem, boolean closeFileSystem, Path basePath, WriteOp writeOp) {
+    FileTransporter(
+            FileSystem fileSystem,
+            boolean closeFileSystem,
+            boolean writableFileSystem,
+            Path basePath,
+            WriteOp writeOp) {
         this.fileSystem = requireNonNull(fileSystem);
         this.closeFileSystem = closeFileSystem;
+        this.writableFileSystem = writableFileSystem;
         this.basePath = requireNonNull(basePath);
         this.writeOp = requireNonNull(writeOp);
 
@@ -79,12 +86,11 @@ final class FileTransporter extends AbstractTransporter {
         return ERROR_OTHER;
     }
 
-    private WriteOp effectiveFileOp(WriteOp wanted, GetTask task) {
-        // TODO: check "cross FS ops"
-        if (task.getDataPath() != null) {
+    private WriteOp effectiveFileOp(WriteOp wanted, Path source, GetTask task) {
+        if (task.getDataPath() != null && task.getDataPath().getFileSystem() == fileSystem) {
             return wanted;
         }
-        // not default FS or task carries no path, caller wants in-memory read, so COPY must be used
+        // not default FS or task carries no path (caller wants in-memory read) = COPY must be used
         return WriteOp.COPY;
     }
 
@@ -95,24 +101,24 @@ final class FileTransporter extends AbstractTransporter {
 
     @Override
     protected void implGet(GetTask task) throws Exception {
-        Path path = getPath(task, true);
-        long size = Files.size(path);
-        WriteOp effective = effectiveFileOp(writeOp, task);
+        Path source = getPath(task, true);
+        long size = Files.size(source);
+        WriteOp effective = effectiveFileOp(writeOp, source, task);
         switch (effective) {
             case COPY:
-                utilGet(task, Files.newInputStream(path), true, size, false);
+                utilGet(task, Files.newInputStream(source), true, size, false);
                 break;
             case SYMLINK:
             case HARDLINK:
                 Files.deleteIfExists(task.getDataPath());
                 task.getListener().transportStarted(0L, size);
                 if (effective == WriteOp.HARDLINK) {
-                    Files.createLink(task.getDataPath(), path);
+                    Files.createLink(task.getDataPath(), source);
                 } else {
-                    Files.createSymbolicLink(task.getDataPath(), path);
+                    Files.createSymbolicLink(task.getDataPath(), source);
                 }
                 if (size > 0) {
-                    try (FileChannel fc = FileChannel.open(path)) {
+                    try (FileChannel fc = FileChannel.open(source)) {
                         try {
                             task.getListener().transportProgressed(fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size()));
                         } catch (UnsupportedOperationException e) {
@@ -134,8 +140,7 @@ final class FileTransporter extends AbstractTransporter {
 
     @Override
     protected void implPut(PutTask task) throws Exception {
-        // TODO: better introduce own "is writable"
-        if (fileSystem.isReadOnly()) {
+        if (!writableFileSystem) {
             throw new UnsupportedOperationException("Read only FileSystem");
         }
         Path path = getPath(task, false);

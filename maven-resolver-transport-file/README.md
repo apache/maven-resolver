@@ -20,7 +20,8 @@
 This transport uses Java NIO2 `java.nio.file.FileSystem` to implement "remote storage". It is usable in variety of
 use cases, from plain local directory to much more.
 
-Valid URLs:
-* `bundle:local:/some/bundle.zip` - would go to given ZIP file on local FS
-* `bundle:remote:URL` - would use transport to get URL from remote
-* `bundle:artifact:GAV` - would resolve
+Valid file URLs:
+* as before (unchanged)
+
+Valid bundle URLs:
+* `bundle:file.zip` - should point to an existing ZIP file
