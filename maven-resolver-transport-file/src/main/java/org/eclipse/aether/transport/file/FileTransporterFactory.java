@@ -98,8 +98,8 @@ public final class FileTransporterFactory implements TransporterFactory {
                 throw new UncheckedIOException(e); // hard failure; most probably user error (ie wrong path or perm)
             }
         } else {
-            // special case in file transport: to support custom FS providers (like JIMFS), we cannot
-            // cover "all possible protocols" to throw NoTransporterEx, but we rely on FS rejecting the URI
+            // special case in file: transport: to support custom FS providers (like JIMFS), we cannot
+            // cover all possible protocols (to throw NoTransporterEx), hence we rely on FS rejecting the URI
             FileTransporter.WriteOp writeOp = FileTransporter.WriteOp.COPY;
             if (repositoryUrl.startsWith("symlink+")) {
                 writeOp = FileTransporter.WriteOp.SYMLINK;
