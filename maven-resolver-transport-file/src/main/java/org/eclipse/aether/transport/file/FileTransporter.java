@@ -44,9 +44,11 @@ final class FileTransporter extends AbstractTransporter {
      * file in remote repository reached by this transporter. Historically, and in some special cases (ZIP file system),
      * it is only {@link #COPY} that can be used.
      * <p>
-     * In case when contents of remote repository reached by this transport and target (usually Maven local repository)
-     * are on same {@link FileSystem}, then {@link #SYMLINK} and {@link #HARDLINK} can be used as well, to reduce
-     * redundancy somewhat.
+     * In case when contents of remote repository reached by this transport and target are on same {@link FileSystem},
+     * then {@link #SYMLINK} and {@link #HARDLINK} can be used as well, to reduce storage redundancy.
+     * <p>
+     * Still, Resolver cannot do much here, it is user who should evaluate of symlink/hardlink possibility, and if
+     * all found applicable, apply it. Resolver will not try play smart here.
      *
      * @since 2.0.2
      */
@@ -140,7 +142,7 @@ final class FileTransporter extends AbstractTransporter {
                 }
                 break;
             default:
-                throw new IllegalStateException("Unknown fileOp" + writeOp);
+                throw new IllegalStateException("Unknown fileOp " + writeOp);
         }
     }
 
