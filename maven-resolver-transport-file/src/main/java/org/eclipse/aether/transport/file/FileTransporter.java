@@ -18,8 +18,11 @@
  */
 package org.eclipse.aether.transport.file;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -28,29 +31,40 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
-import org.eclipse.aether.transfer.NoTransporterException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
- * A transporter using {@link java.io.File}.
+ * A transporter using {@link java.nio.file.Path} that is reading and writing from specified base directory
+ * of given {@link java.nio.file.FileSystem}. It supports multiple {@link WriteOp} and obeys read-only property.
  */
 final class FileTransporter extends AbstractTransporter {
     /**
-     * The file op transport can use.
+     * The write operation transport can use.
      *
      * @since 2.0.2
      */
-    enum FileOp {
+    enum WriteOp {
         COPY,
         SYMLINK,
         HARDLINK;
     }
 
+    private final FileSystem fileSystem;
+    private final boolean closeFileSystem;
     private final Path basePath;
-    private final FileOp fileOp;
+    private final WriteOp writeOp;
 
-    FileTransporter(Path basePath, FileOp fileOp) throws NoTransporterException {
-        this.basePath = basePath;
-        this.fileOp = fileOp;
+    FileTransporter(FileSystem fileSystem, boolean closeFileSystem, Path basePath, WriteOp writeOp) {
+        this.fileSystem = requireNonNull(fileSystem);
+        this.closeFileSystem = closeFileSystem;
+        this.basePath = requireNonNull(basePath);
+        this.writeOp = requireNonNull(writeOp);
+
+        // sanity check
+        if (basePath.getFileSystem() != fileSystem) {
+            throw new IllegalArgumentException("basePath must originate from the fileSystem");
+        }
     }
 
     Path getBasePath() {
@@ -65,12 +79,13 @@ final class FileTransporter extends AbstractTransporter {
         return ERROR_OTHER;
     }
 
-    private FileOp effectiveFileOp(FileOp wanted, GetTask task) {
+    private WriteOp effectiveFileOp(WriteOp wanted, GetTask task) {
+        // TODO: check "cross FS ops"
         if (task.getDataPath() != null) {
             return wanted;
         }
-        // task carries no path, caller wants in-memory read, so COPY must be used
-        return FileOp.COPY;
+        // not default FS or task carries no path, caller wants in-memory read, so COPY must be used
+        return WriteOp.COPY;
     }
 
     @Override
@@ -82,7 +97,7 @@ final class FileTransporter extends AbstractTransporter {
     protected void implGet(GetTask task) throws Exception {
         Path path = getPath(task, true);
         long size = Files.size(path);
-        FileOp effective = effectiveFileOp(fileOp, task);
+        WriteOp effective = effectiveFileOp(writeOp, task);
         switch (effective) {
             case COPY:
                 utilGet(task, Files.newInputStream(path), true, size, false);
@@ -91,7 +106,7 @@ final class FileTransporter extends AbstractTransporter {
             case HARDLINK:
                 Files.deleteIfExists(task.getDataPath());
                 task.getListener().transportStarted(0L, size);
-                if (effective == FileOp.HARDLINK) {
+                if (effective == WriteOp.HARDLINK) {
                     Files.createLink(task.getDataPath(), path);
                 } else {
                     Files.createSymbolicLink(task.getDataPath(), path);
@@ -113,12 +128,16 @@ final class FileTransporter extends AbstractTransporter {
                 }
                 break;
             default:
-                throw new IllegalStateException("Unknown fileOp" + fileOp);
+                throw new IllegalStateException("Unknown fileOp" + writeOp);
         }
     }
 
     @Override
     protected void implPut(PutTask task) throws Exception {
+        // TODO: better introduce own "is writable"
+        if (fileSystem.isReadOnly()) {
+            throw new UnsupportedOperationException("Read only FileSystem");
+        }
         Path path = getPath(task, false);
         Files.createDirectories(path.getParent());
         try {
@@ -142,5 +161,13 @@ final class FileTransporter extends AbstractTransporter {
     }
 
     @Override
-    protected void implClose() {}
+    protected void implClose() {
+        if (closeFileSystem) {
+            try {
+                fileSystem.close();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+    }
 }

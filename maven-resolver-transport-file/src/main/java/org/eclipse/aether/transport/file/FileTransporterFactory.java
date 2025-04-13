@@ -21,6 +21,7 @@ package org.eclipse.aether.transport.file;
 import javax.inject.Named;
 
 import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -74,18 +75,18 @@ public final class FileTransporterFactory implements TransporterFactory {
 
         // special case in file transport: to support custom FS providers (like JIMFS), we cannot
         // cover "all possible protocols" to throw NoTransporterEx, but we rely on FS rejecting the URI
-        FileTransporter.FileOp fileOp = FileTransporter.FileOp.COPY;
+        FileTransporter.WriteOp writeOp = FileTransporter.WriteOp.COPY;
         String repositoryUrl = repository.getUrl();
         if (repositoryUrl.startsWith("symlink+")) {
-            fileOp = FileTransporter.FileOp.SYMLINK;
+            writeOp = FileTransporter.WriteOp.SYMLINK;
             repositoryUrl = repositoryUrl.substring("symlink+".length());
         } else if (repositoryUrl.startsWith("hardlink+")) {
-            fileOp = FileTransporter.FileOp.HARDLINK;
+            writeOp = FileTransporter.WriteOp.HARDLINK;
             repositoryUrl = repositoryUrl.substring("hardlink+".length());
         }
         try {
-            return new FileTransporter(
-                    Paths.get(RepositoryUriUtils.toUri(repositoryUrl)).toAbsolutePath(), fileOp);
+            Path basePath = Paths.get(RepositoryUriUtils.toUri(repositoryUrl)).toAbsolutePath();
+            return new FileTransporter(basePath.getFileSystem(), false, basePath, writeOp);
         } catch (FileSystemNotFoundException | IllegalArgumentException e) {
             throw new NoTransporterException(repository, e);
         }
