@@ -113,7 +113,7 @@ public class FileTransporterTest {
             Files.write(repoDir.resolve("empty.txt"), "".getBytes(StandardCharsets.UTF_8));
             Files.write(repoDir.resolve("some space.txt"), "space".getBytes(StandardCharsets.UTF_8));
             if (fs == FS.BUNDLE) {
-                URI bundle = URI.create("jar:file:"
+                URI bundle = URI.create("jar:file://"
                         + repoDir.resolve("bundle.zip")
                                 .toAbsolutePath()
                                 .toString()

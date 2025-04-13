@@ -75,7 +75,7 @@ public final class FileTransporterFactory implements TransporterFactory {
         if (repositoryUrl.startsWith("bundle:")) {
             try {
                 repositoryUrl = repositoryUrl.substring("bundle:".length());
-                URI bundlePath = URI.create("jar:file:"
+                URI bundlePath = URI.create("jar:file://"
                         + Paths.get(RepositoryUriUtils.toUri(repositoryUrl))
                                 .toAbsolutePath()
                                 .toString()
