@@ -113,11 +113,8 @@ public class FileTransporterTest {
             Files.write(repoDir.resolve("empty.txt"), "".getBytes(StandardCharsets.UTF_8));
             Files.write(repoDir.resolve("some space.txt"), "space".getBytes(StandardCharsets.UTF_8));
             if (fs == FS.BUNDLE) {
-                URI bundle = URI.create("jar:file://"
-                        + repoDir.resolve("bundle.zip")
-                                .toAbsolutePath()
-                                .toString()
-                                .replace('\\', '/'));
+                URI bundle = URI.create("jar:"
+                        + repoDir.resolve("bundle.zip").toAbsolutePath().toUri().toASCIIString());
                 // zip it up and change uri to zip file path
                 HashMap<String, String> env = new HashMap<>();
                 env.put("create", "true");
