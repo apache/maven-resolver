@@ -18,6 +18,6 @@
  * under the License.
  */
 /**
- * Support for downloads/uploads using the local filesystem as "remote" storage.
+ * Support for downloads/uploads using the Java NIO2 filesystem as "remote" storage.
  */
 package org.eclipse.aether.transport.file;

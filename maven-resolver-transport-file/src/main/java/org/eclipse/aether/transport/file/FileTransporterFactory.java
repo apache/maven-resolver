@@ -20,8 +20,16 @@ package org.eclipse.aether.transport.file;
 
 import javax.inject.Named;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -33,22 +41,13 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A transporter factory for repositories using the {@code file:} protocol.
+ * A transporter factory for repositories using the {@code file:} or {@code bundle:} protocol.
  */
 @Named(FileTransporterFactory.NAME)
 public final class FileTransporterFactory implements TransporterFactory {
     public static final String NAME = "file";
 
     private float priority;
-
-    /**
-     * Creates an (uninitialized) instance of this transporter factory. <em>Note:</em> In case of manual instantiation
-     * by clients, the new factory needs to be configured via its various mutators before first use or runtime errors
-     * will occur.
-     */
-    public FileTransporterFactory() {
-        // enables default constructor
-    }
 
     @Override
     public float getPriority() {
@@ -66,28 +65,61 @@ public final class FileTransporterFactory implements TransporterFactory {
         return this;
     }
 
+    /**
+     * Creates new instance of {@link FileTransporter}.
+     *
+     * @param session The session.
+     * @param repository The remote repository.
+     */
     @Override
     public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        // special case in file transport: to support custom FS providers (like JIMFS), we cannot
-        // cover "all possible protocols" to throw NoTransporterEx, but we rely on FS rejecting the URI
-        FileTransporter.FileOp fileOp = FileTransporter.FileOp.COPY;
         String repositoryUrl = repository.getUrl();
-        if (repositoryUrl.startsWith("symlink+")) {
-            fileOp = FileTransporter.FileOp.SYMLINK;
-            repositoryUrl = repositoryUrl.substring("symlink+".length());
-        } else if (repositoryUrl.startsWith("hardlink+")) {
-            fileOp = FileTransporter.FileOp.HARDLINK;
-            repositoryUrl = repositoryUrl.substring("hardlink+".length());
-        }
-        try {
-            return new FileTransporter(
-                    Paths.get(RepositoryUriUtils.toUri(repositoryUrl)).toAbsolutePath(), fileOp);
-        } catch (FileSystemNotFoundException | IllegalArgumentException e) {
-            throw new NoTransporterException(repository, e);
+        if (repositoryUrl.startsWith("bundle:")) {
+            try {
+                repositoryUrl = repositoryUrl.substring("bundle:".length());
+                URI bundlePath = URI.create("jar:"
+                        + Paths.get(RepositoryUriUtils.toUri(repositoryUrl))
+                                .toAbsolutePath()
+                                .toUri()
+                                .toASCIIString());
+                Map<String, String> env = new HashMap<>();
+                FileSystem fileSystem = FileSystems.newFileSystem(bundlePath, env);
+                return new FileTransporter(
+                        fileSystem,
+                        true,
+                        false,
+                        fileSystem.getPath(fileSystem.getSeparator()),
+                        FileTransporter.WriteOp.COPY);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e); // hard failure; most probably user error (ie wrong path or perm)
+            }
+        } else {
+            // special case in file: transport: to support custom FS providers (like JIMFS), we cannot
+            // cover all possible protocols (to throw NoTransporterEx), hence we rely on FS rejecting the URI
+            FileTransporter.WriteOp writeOp = FileTransporter.WriteOp.COPY;
+            if (repositoryUrl.startsWith("symlink+")) {
+                writeOp = FileTransporter.WriteOp.SYMLINK;
+                repositoryUrl = repositoryUrl.substring("symlink+".length());
+            } else if (repositoryUrl.startsWith("hardlink+")) {
+                writeOp = FileTransporter.WriteOp.HARDLINK;
+                repositoryUrl = repositoryUrl.substring("hardlink+".length());
+            }
+            try {
+                Path basePath =
+                        Paths.get(RepositoryUriUtils.toUri(repositoryUrl)).toAbsolutePath();
+                return new FileTransporter(
+                        basePath.getFileSystem(),
+                        false,
+                        !basePath.getFileSystem().isReadOnly(),
+                        basePath,
+                        writeOp);
+            } catch (FileSystemNotFoundException | IllegalArgumentException e) {
+                throw new NoTransporterException(repository, e);
+            }
         }
     }
 }
