@@ -29,6 +29,8 @@ updates:
   target-branch: "maven-resolver-1.9.x"
   labels:
     - "resolver1"
+    - "dependencies"
+    - "java"
 
 - package-ecosystem: "github-actions"
   directory: "/"
