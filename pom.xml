@@ -93,7 +93,7 @@
     <guiceVersion>6.0.0</guiceVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <!-- used by supplier and demo only -->
-    <mavenVersion>3.9.8</mavenVersion>
+    <mavenVersion>3.9.9</mavenVersion>
     <minimalMavenBuildVersion>[3.8.7,)</minimalMavenBuildVersion>
     <minimalJavaBuildVersion>[1.8.0-362,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2024-08-05T13:38:32Z</project.build.outputTimestamp>
