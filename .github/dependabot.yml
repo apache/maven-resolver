@@ -31,6 +31,17 @@ updates:
     - "resolver1"
     - "dependencies"
     - "java"
+  ignore:
+    - dependency-name: "biz.aQute.bnd:bnd-maven-plugin"
+      versions: [ "[7.0.0,)" ]
+    - dependency-name: "com.hazelcast:hazelcast"
+      versions: [ "[5.4.0,)" ]
+    - dependency-name: "org.eclipse.jetty:*"
+      versions: [ "[10.0.0,)" ]
+    - dependency-name: "org.mockito:mockito-core"
+      versions: [ "[5.0.0,)" ]
+    - dependency-name: "org.slf4j:*"
+      versions: [ "[2.0.0,)" ]
 
 - package-ecosystem: "github-actions"
   directory: "/"
