@@ -26,7 +26,7 @@ import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.junit.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class PathRecordingDependencyVisitorTest {
 
@@ -46,7 +46,7 @@ public class PathRecordingDependencyVisitorTest {
     }
 
     @Test
-    public void testGetPaths_RecordsMatchesBeneathUnmatchedParents() throws Exception {
+    public void testGetPathsRecordsMatchesBeneathUnmatchedParents() throws Exception {
         DependencyNode root = parse("simple.txt");
 
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(new ArtifactMatcher());
@@ -59,7 +59,7 @@ public class PathRecordingDependencyVisitorTest {
     }
 
     @Test
-    public void testGetPaths_DoesNotRecordMatchesBeneathMatchedParents() throws Exception {
+    public void testGetPathsDoesNotRecordMatchesBeneathMatchedParents() throws Exception {
         DependencyNode root = parse("nested.txt");
 
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(new ArtifactMatcher());
@@ -71,7 +71,7 @@ public class PathRecordingDependencyVisitorTest {
     }
 
     @Test
-    public void testGetPaths_RecordsMatchesBeneathMatchedParentsIfRequested() throws Exception {
+    public void testGetPathsRecordsMatchesBeneathMatchedParentsIfRequested() throws Exception {
         DependencyNode root = parse("nested.txt");
 
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(new ArtifactMatcher(), false);
@@ -108,7 +108,7 @@ public class PathRecordingDependencyVisitorTest {
     }
 
     @Test
-    public void testGetPaths_HandlesCycles() throws Exception {
+    public void testGetPathsHandlesCycles() throws Exception {
         DependencyNode root = parse("cycle.txt");
 
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(new ArtifactMatcher(), false);
@@ -123,7 +123,7 @@ public class PathRecordingDependencyVisitorTest {
     }
 
     @Test
-    public void testGetPaths_HandlesCycles_threePaths() throws Exception {
+    public void testGetPathsHandlesCyclesthreePaths() throws Exception {
         DependencyNode root = parse("cycle-3paths.txt");
 
         PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(new ArtifactMatcher());

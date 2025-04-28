@@ -96,7 +96,7 @@ public class RepositoryExceptionTest {
     }
 
     @Test
-    public void testArtifactDescriptorException_Serializable() {
+    public void testArtifactDescriptorExceptionSerializable() {
         ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
         request.setArtifact(newArtifact()).addRepository(newRepo()).setTrace(newTrace());
         ArtifactDescriptorResult result = new ArtifactDescriptorResult(request);
@@ -104,7 +104,7 @@ public class RepositoryExceptionTest {
     }
 
     @Test
-    public void testArtifactResolutionException_Serializable() {
+    public void testArtifactResolutionExceptionSerializable() {
         ArtifactRequest request = new ArtifactRequest();
         request.setArtifact(newArtifact()).addRepository(newRepo()).setTrace(newTrace());
         ArtifactResult result = new ArtifactResult(request);
@@ -112,17 +112,17 @@ public class RepositoryExceptionTest {
     }
 
     @Test
-    public void testArtifactTransferException_Serializable() {
+    public void testArtifactTransferExceptionSerializable() {
         assertSerializable(new ArtifactTransferException(newArtifact(), newRepo(), "error"));
     }
 
     @Test
-    public void testArtifactNotFoundException_Serializable() {
+    public void testArtifactNotFoundExceptionSerializable() {
         assertSerializable(new ArtifactNotFoundException(newArtifact(), newRepo(), "error"));
     }
 
     @Test
-    public void testDependencyCollectionException_Serializable() {
+    public void testDependencyCollectionExceptionSerializable() {
         CollectRequest request = new CollectRequest();
         request.addDependency(new Dependency(newArtifact(), "compile"));
         request.addRepository(newRepo());
@@ -132,7 +132,7 @@ public class RepositoryExceptionTest {
     }
 
     @Test
-    public void testDependencyResolutionException_Serializable() {
+    public void testDependencyResolutionExceptionSerializable() {
         CollectRequest request = new CollectRequest();
         request.addDependency(new Dependency(newArtifact(), "compile"));
         request.addRepository(newRepo());
@@ -145,48 +145,48 @@ public class RepositoryExceptionTest {
     }
 
     @Test
-    public void testMetadataTransferException_Serializable() {
+    public void testMetadataTransferExceptionSerializable() {
         assertSerializable(new MetadataTransferException(newMetadata(), newRepo(), "error"));
     }
 
     @Test
-    public void testMetadataNotFoundException_Serializable() {
+    public void testMetadataNotFoundExceptionSerializable() {
         assertSerializable(new MetadataNotFoundException(newMetadata(), newRepo(), "error"));
     }
 
     @Test
-    public void testNoLocalRepositoryManagerException_Serializable() {
+    public void testNoLocalRepositoryManagerExceptionSerializable() {
         assertSerializable(new NoLocalRepositoryManagerException(new LocalRepository("/tmp")));
     }
 
     @Test
-    public void testNoRepositoryConnectorException_Serializable() {
+    public void testNoRepositoryConnectorExceptionSerializable() {
         assertSerializable(new NoRepositoryConnectorException(newRepo()));
     }
 
     @Test
-    public void testNoRepositoryLayoutException_Serializable() {
+    public void testNoRepositoryLayoutExceptionSerializable() {
         assertSerializable(new NoRepositoryLayoutException(newRepo()));
     }
 
     @Test
-    public void testNoTransporterException_Serializable() {
+    public void testNoTransporterExceptionSerializable() {
         assertSerializable(new NoTransporterException(newRepo()));
     }
 
     @Test
-    public void testRepositoryOfflineException_Serializable() {
+    public void testRepositoryOfflineExceptionSerializable() {
         assertSerializable(new RepositoryOfflineException(newRepo()));
     }
 
     @Test
-    public void testUnsolvableVersionConflictException_Serializable() {
+    public void testUnsolvableVersionConflictExceptionSerializable() {
         DependencyNode node = new DefaultDependencyNode(new Dependency(newArtifact(), "test"));
         assertSerializable(new UnsolvableVersionConflictException(Collections.singleton(Arrays.asList(node))));
     }
 
     @Test
-    public void testVersionResolutionException_Serializable() {
+    public void testVersionResolutionExceptionSerializable() {
         VersionRequest request = new VersionRequest();
         request.setArtifact(newArtifact()).addRepository(newRepo()).setTrace(newTrace());
         VersionResult result = new VersionResult(request);
@@ -194,7 +194,7 @@ public class RepositoryExceptionTest {
     }
 
     @Test
-    public void testVersionRangeResolutionException_Serializable() {
+    public void testVersionRangeResolutionExceptionSerializable() {
         VersionRangeRequest request = new VersionRangeRequest();
         request.setArtifact(newArtifact()).addRepository(newRepo()).setTrace(newTrace());
         VersionRangeResult result = new VersionRangeResult(request);

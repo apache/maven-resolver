@@ -26,7 +26,9 @@ import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  */
@@ -76,7 +78,7 @@ public class DefaultServiceLocatorTest {
 
     private static class DummyService implements Service {
 
-        public ServiceLocator locator;
+        ServiceLocator locator;
 
         public void initService(ServiceLocator locator) {
             this.locator = locator;

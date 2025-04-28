@@ -40,7 +40,10 @@ import org.junit.Test;
 
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.MD5;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA1;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ChecksumValidatorTest {
 
@@ -155,18 +158,18 @@ public class ChecksumValidatorTest {
 
     private File dataFile;
 
-    private static final TestChecksumAlgorithmSelector selector = new TestChecksumAlgorithmSelector();
+    private static final TestChecksumAlgorithmSelector SELECTOR = new TestChecksumAlgorithmSelector();
 
     private List<ChecksumAlgorithmFactory> newChecksumAlgorithmFactories(String... factories) {
         List<ChecksumAlgorithmFactory> checksums = new ArrayList<>();
         for (String factory : factories) {
-            checksums.add(selector.select(factory));
+            checksums.add(SELECTOR.select(factory));
         }
         return checksums;
     }
 
     private static RepositoryLayout.ChecksumLocation newChecksum(String factory) {
-        return RepositoryLayout.ChecksumLocation.forLocation(URI.create("file"), selector.select(factory));
+        return RepositoryLayout.ChecksumLocation.forLocation(URI.create("file"), SELECTOR.select(factory));
     }
 
     private List<RepositoryLayout.ChecksumLocation> newChecksums(
@@ -217,7 +220,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_NullPolicy() throws Exception {
+    public void testValidateNullPolicy() throws Exception {
         policy = null;
         ChecksumValidator validator = newValidator(SHA1);
         validator.validate(checksums(SHA1, "ignored"), null);
@@ -225,7 +228,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_AcceptOnFirstMatch() throws Exception {
+    public void testValidateAcceptOnFirstMatch() throws Exception {
         ChecksumValidator validator = newValidator(SHA1);
         fetcher.mock(SHA1, "foo");
         validator.validate(checksums(SHA1, "foo"), null);
@@ -234,7 +237,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_FailOnFirstMismatch() {
+    public void testValidateFailOnFirstMismatch() {
         ChecksumValidator validator = newValidator(SHA1);
         fetcher.mock(SHA1, "foo");
         try {
@@ -251,7 +254,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_AcceptOnEnd() throws Exception {
+    public void testValidateAcceptOnEnd() throws Exception {
         policy.inspectAll = true;
         ChecksumValidator validator = newValidator(SHA1, MD5);
         fetcher.mock(SHA1, "foo");
@@ -262,7 +265,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_FailOnEnd() {
+    public void testValidateFailOnEnd() {
         policy.inspectAll = true;
         ChecksumValidator validator = newValidator(SHA1, MD5);
         fetcher.mock(SHA1, "foo");
@@ -281,7 +284,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_IncludedBeforeExternal() throws Exception {
+    public void testValidateIncludedBeforeExternal() throws Exception {
         policy.inspectAll = true;
         HashMap<String, String> provided = new HashMap<>();
         provided.put(SHA1, "foo");
@@ -300,7 +303,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_CaseInsensitive() throws Exception {
+    public void testValidateCaseInsensitive() throws Exception {
         policy.inspectAll = true;
         ChecksumValidator validator = newValidator(SHA1);
         fetcher.mock(SHA1, "FOO");
@@ -309,7 +312,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_MissingRemoteChecksum() throws Exception {
+    public void testValidateMissingRemoteChecksum() throws Exception {
         ChecksumValidator validator = newValidator(SHA1, MD5);
         fetcher.mock(MD5, "bar");
         validator.validate(checksums(MD5, "bar"), null);
@@ -318,7 +321,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_InaccessibleRemoteChecksum() throws Exception {
+    public void testValidateInaccessibleRemoteChecksum() throws Exception {
         ChecksumValidator validator = newValidator(SHA1, MD5);
         fetcher.mock(SHA1, new IOException("inaccessible"));
         fetcher.mock(MD5, "bar");
@@ -328,7 +331,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testValidate_InaccessibleLocalChecksum() throws Exception {
+    public void testValidateInaccessibleLocalChecksum() throws Exception {
         ChecksumValidator validator = newValidator(SHA1, MD5);
         fetcher.mock(SHA1, "foo");
         fetcher.mock(MD5, "bar");
@@ -338,7 +341,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testHandle_Accept() {
+    public void testHandleAccept() {
         policy.tolerateFailure = true;
         ChecksumValidator validator = newValidator(SHA1);
         assertTrue(validator.handle(new ChecksumFailureException("accept")));
@@ -346,7 +349,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testHandle_Reject() {
+    public void testHandleReject() {
         policy.tolerateFailure = false;
         ChecksumValidator validator = newValidator(SHA1);
         assertFalse(validator.handle(new ChecksumFailureException("reject")));
@@ -354,14 +357,14 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testRetry_ResetPolicy() {
+    public void testRetryResetPolicy() {
         ChecksumValidator validator = newValidator(SHA1);
         validator.retry();
         policy.assertCallbacks("retry()");
     }
 
     @Test
-    public void testRetry_RemoveTempFiles() throws Exception {
+    public void testRetryRemoveTempFiles() throws Exception {
         ChecksumValidator validator = newValidator(SHA1);
         fetcher.mock(SHA1, "foo");
         validator.validate(checksums(SHA1, "foo"), null);
@@ -374,7 +377,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testCommit_SaveChecksumFiles() throws Exception {
+    public void testCommitSaveChecksumFiles() throws Exception {
         policy.inspectAll = true;
         ChecksumValidator validator = newValidator(SHA1, MD5);
         fetcher.mock(MD5, "bar");
@@ -393,7 +396,7 @@ public class ChecksumValidatorTest {
     }
 
     @Test
-    public void testNoCommit_NoTempFiles() throws Exception {
+    public void testNoCommitNoTempFiles() throws Exception {
         ChecksumValidator validator = newValidator(SHA1);
         fetcher.mock(SHA1, "foo");
         validator.validate(checksums(SHA1, "foo"), null);

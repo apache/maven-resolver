@@ -35,7 +35,9 @@ import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.M
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA1;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA256;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA512;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ChecksumCalculatorTest {
 

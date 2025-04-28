@@ -32,7 +32,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class AndDependencyTraverserTest {
 
@@ -42,16 +48,16 @@ public class AndDependencyTraverserTest {
 
         private final DependencyTraverser child;
 
-        public DummyDependencyTraverser() {
+        DummyDependencyTraverser() {
             this(true);
         }
 
-        public DummyDependencyTraverser(boolean traverse) {
+        DummyDependencyTraverser(boolean traverse) {
             this.traverse = traverse;
             this.child = this;
         }
 
-        public DummyDependencyTraverser(boolean traverse, DependencyTraverser child) {
+        DummyDependencyTraverser(boolean traverse, DependencyTraverser child) {
             this.traverse = traverse;
             this.child = child;
         }
@@ -114,7 +120,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testDeriveChildTraverser_Unchanged() {
+    public void testDeriveChildTraverserUnchanged() {
         DependencyTraverser other1 = new DummyDependencyTraverser(true);
         DependencyTraverser other2 = new DummyDependencyTraverser(false);
         DependencyTraverser traverser = new AndDependencyTraverser(other1, other2);
@@ -122,7 +128,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testDeriveChildTraverser_OneRemaining() {
+    public void testDeriveChildTraverserOneRemaining() {
         DependencyTraverser other1 = new DummyDependencyTraverser(true);
         DependencyTraverser other2 = new DummyDependencyTraverser(false, null);
         DependencyTraverser traverser = new AndDependencyTraverser(other1, other2);
@@ -130,7 +136,7 @@ public class AndDependencyTraverserTest {
     }
 
     @Test
-    public void testDeriveChildTraverser_ZeroRemaining() {
+    public void testDeriveChildTraverserZeroRemaining() {
         DependencyTraverser other1 = new DummyDependencyTraverser(true, null);
         DependencyTraverser other2 = new DummyDependencyTraverser(false, null);
         DependencyTraverser traverser = new AndDependencyTraverser(other1, other2);

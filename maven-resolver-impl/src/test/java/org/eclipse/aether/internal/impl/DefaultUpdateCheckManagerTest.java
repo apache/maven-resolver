@@ -44,7 +44,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  */
@@ -335,7 +338,7 @@ public class DefaultUpdateCheckManagerTest {
     }
 
     @Test
-    public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile() {
+    public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlwaysInvalidFile() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setFileValid(false);
@@ -361,7 +364,7 @@ public class DefaultUpdateCheckManagerTest {
     }
 
     @Test
-    public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl() {
+    public void testCheckMetadataAtMostOnceDuringSessionEvenIfUpdatePolicyAlwaysDifferentRepoIdSameUrl() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setFileValid(false);
@@ -650,7 +653,7 @@ public class DefaultUpdateCheckManagerTest {
     }
 
     @Test
-    public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_InvalidFile() {
+    public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlwaysInvalidFile() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
         check.setFileValid(false);
@@ -676,7 +679,7 @@ public class DefaultUpdateCheckManagerTest {
     }
 
     @Test
-    public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlways_DifferentRepoIdSameUrl() {
+    public void testCheckArtifactAtMostOnceDuringSessionEvenIfUpdatePolicyAlwaysDifferentRepoIdSameUrl() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
 

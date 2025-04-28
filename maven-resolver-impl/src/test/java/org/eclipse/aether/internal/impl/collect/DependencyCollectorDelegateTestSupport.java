@@ -277,7 +277,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testCyclicProjects_ConsiderLabelOfRootlessGraph() throws Exception {
+    public void testCyclicProjectsConsiderLabelOfRootlessGraph() throws Exception {
         Dependency dep = newDep("gid:aid:ver", "compile");
         CollectRequest request = new CollectRequest()
                 .addDependency(dep)
@@ -417,7 +417,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement_VerboseMode() throws Exception {
+    public void testDependencyManagementVerboseMode() throws Exception {
         String depId = "gid:aid2:ext";
         TestDependencyManager depMgmt = new TestDependencyManager();
         depMgmt.version(depId, "managedVersion");
@@ -444,7 +444,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement_TransitiveDependencyManager()
+    public void testDependencyManagementTransitiveDependencyManager()
             throws DependencyCollectionException, IOException {
         collector.setArtifactDescriptorReader(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
@@ -471,7 +471,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
-    public void testDependencyManagement_DefaultDependencyManager() throws DependencyCollectionException, IOException {
+    public void testDependencyManagementDefaultDependencyManager() throws DependencyCollectionException, IOException {
         collector.setArtifactDescriptorReader(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
         session.setDependencyManager(new DefaultDependencyManager());

@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class UriUtilsTest {
 
@@ -34,7 +34,7 @@ public class UriUtilsTest {
     }
 
     @Test
-    public void testResolve_BaseEmptyPath() {
+    public void testResolveBaseEmptyPath() {
         URI base = URI.create("http://host");
         assertEquals("http://host/file.jar", resolve(base, "file.jar"));
         assertEquals("http://host/dir/file.jar", resolve(base, "dir/file.jar"));
@@ -44,7 +44,7 @@ public class UriUtilsTest {
     }
 
     @Test
-    public void testResolve_BaseRootPath() {
+    public void testResolveBaseRootPath() {
         URI base = URI.create("http://host/");
         assertEquals("http://host/file.jar", resolve(base, "file.jar"));
         assertEquals("http://host/dir/file.jar", resolve(base, "dir/file.jar"));
@@ -54,7 +54,7 @@ public class UriUtilsTest {
     }
 
     @Test
-    public void testResolve_BasePathTrailingSlash() {
+    public void testResolveBasePathTrailingSlash() {
         URI base = URI.create("http://host/sub/dir/");
         assertEquals("http://host/sub/dir/file.jar", resolve(base, "file.jar"));
         assertEquals("http://host/sub/dir/dir/file.jar", resolve(base, "dir/file.jar"));
@@ -64,7 +64,7 @@ public class UriUtilsTest {
     }
 
     @Test
-    public void testResolve_BasePathNoTrailingSlash() {
+    public void testResolveBasePathNoTrailingSlash() {
         URI base = URI.create("http://host/sub/d%20r");
         assertEquals("http://host/sub/d%20r/file.jar", resolve(base, "file.jar"));
         assertEquals("http://host/sub/d%20r/dir/file.jar", resolve(base, "dir/file.jar"));
@@ -86,7 +86,7 @@ public class UriUtilsTest {
     }
 
     @Test
-    public void testGetDirectories_NoBase() {
+    public void testGetDirectoriesNoBase() {
         List<URI> parents = getDirs(null, "http://host/repo/sub/dir/file.jar");
         assertUris(parents, "http://host/repo/sub/dir/", "http://host/repo/sub/", "http://host/repo/");
 
@@ -98,7 +98,7 @@ public class UriUtilsTest {
     }
 
     @Test
-    public void testGetDirectories_ExplicitBaseTrailingSlash() {
+    public void testGetDirectoriesExplicitBaseTrailingSlash() {
         List<URI> parents = getDirs("http://host/repo/", "http://host/repo/sub/dir/file.jar");
         assertUris(parents, "http://host/repo/sub/dir/", "http://host/repo/sub/");
 
@@ -110,7 +110,7 @@ public class UriUtilsTest {
     }
 
     @Test
-    public void testGetDirectories_ExplicitBaseNoTrailingSlash() {
+    public void testGetDirectoriesExplicitBaseNoTrailingSlash() {
         List<URI> parents = getDirs("http://host/repo", "http://host/repo/sub/dir/file.jar");
         assertUris(parents, "http://host/repo/sub/dir/", "http://host/repo/sub/");
 

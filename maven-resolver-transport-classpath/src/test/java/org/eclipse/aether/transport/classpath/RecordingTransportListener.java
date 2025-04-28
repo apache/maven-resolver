@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
 
+@SuppressWarnings("checkstyle:VisibilityModifier")
 class RecordingTransportListener extends TransportListener {
 
     public final ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);

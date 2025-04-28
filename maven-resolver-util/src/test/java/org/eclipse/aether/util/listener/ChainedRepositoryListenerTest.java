@@ -23,7 +23,7 @@ import java.lang.reflect.Method;
 import org.eclipse.aether.RepositoryListener;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 /**
  */

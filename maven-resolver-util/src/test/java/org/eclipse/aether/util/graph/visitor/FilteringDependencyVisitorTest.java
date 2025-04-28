@@ -26,7 +26,7 @@ import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.junit.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class FilteringDependencyVisitorTest {
 

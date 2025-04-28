@@ -131,7 +131,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPeek_NotFound() throws Exception {
+    public void testPeekNotFound() throws Exception {
         try {
             transporter.peek(new PeekTask(URI.create("missing.txt")));
             fail("Expected error");
@@ -141,7 +141,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPeek_Closed() throws Exception {
+    public void testPeekClosed() throws Exception {
         transporter.close();
         try {
             transporter.peek(new PeekTask(URI.create("missing.txt")));
@@ -152,7 +152,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testGet_ToMemory() throws Exception {
+    public void testGetToMemory() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("file.txt")).setListener(listener);
         transporter.get(task);
@@ -165,7 +165,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testGet_ToFile() throws Exception {
+    public void testGetToFile() throws Exception {
         File file = TestFileUtils.createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("file.txt")).setDataFile(file).setListener(listener);
@@ -179,7 +179,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testGet_EmptyResource() throws Exception {
+    public void testGetEmptyResource() throws Exception {
         File file = TestFileUtils.createTempFile("failure");
         assertTrue(file.delete() && !file.exists());
         RecordingTransportListener listener = new RecordingTransportListener();
@@ -194,14 +194,14 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testGet_EncodedResourcePath() throws Exception {
+    public void testGetEncodedResourcePath() throws Exception {
         GetTask task = new GetTask(URI.create("some%20space.txt"));
         transporter.get(task);
         assertEquals("space", task.getDataString());
     }
 
     @Test
-    public void testGet_FileHandleLeak() throws Exception {
+    public void testGetFileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
             File file = TestFileUtils.createTempFile("failure");
             transporter.get(new GetTask(URI.create("file.txt")).setDataFile(file));
@@ -210,7 +210,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testGet_NotFound() throws Exception {
+    public void testGetNotFound() throws Exception {
         try {
             transporter.get(new GetTask(URI.create("missing.txt")));
             fail("Expected error");
@@ -220,7 +220,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testGet_Closed() throws Exception {
+    public void testGetClosed() throws Exception {
         transporter.close();
         try {
             transporter.get(new GetTask(URI.create("file.txt")));
@@ -231,7 +231,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testGet_StartCancelled() throws Exception {
+    public void testGetStartCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelStart = true;
         GetTask task = new GetTask(URI.create("file.txt")).setListener(listener);
@@ -240,7 +240,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testGet_ProgressCancelled() throws Exception {
+    public void testGetProgressCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelProgress = true;
         GetTask task = new GetTask(URI.create("file.txt")).setListener(listener);
@@ -257,7 +257,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPut_FromMemory() throws Exception {
+    public void testPutFromMemory() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataString("upload");
         transporter.put(task);
@@ -269,7 +269,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPut_FromFile() throws Exception {
+    public void testPutFromFile() throws Exception {
         File file = TestFileUtils.createTempFile("upload");
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataFile(file);
@@ -282,7 +282,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPut_EmptyResource() throws Exception {
+    public void testPutEmptyResource() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener);
         transporter.put(task);
@@ -294,7 +294,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPut_NonExistentParentDir() throws Exception {
+    public void testPutNonExistentParentDir() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("dir/sub/dir/file.txt"))
                 .setListener(listener)
@@ -308,7 +308,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPut_EncodedResourcePath() throws Exception {
+    public void testPutEncodedResourcePath() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task = new PutTask(URI.create("some%20space.txt"))
                 .setListener(listener)
@@ -322,7 +322,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPut_FileHandleLeak() throws Exception {
+    public void testPutFileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
             File src = TestFileUtils.createTempFile("upload");
             transporter.put(new PutTask(URI.create("file.txt")).setDataFile(src));
@@ -331,7 +331,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPut_Closed() throws Exception {
+    public void testPutClosed() throws Exception {
         transporter.close();
         try {
             transporter.put(new PutTask(URI.create("missing.txt")));
@@ -342,7 +342,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPut_StartCancelled() throws Exception {
+    public void testPutStartCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelStart = true;
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataString("upload");
@@ -351,7 +351,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testPut_ProgressCancelled() throws Exception {
+    public void testPutProgressCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelProgress = true;
         PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataString("upload");
@@ -368,40 +368,40 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test(expected = NoTransporterException.class)
-    public void testInit_BadProtocol() throws Exception {
+    public void testInitBadProtocol() throws Exception {
         newTransporter("bad:/void");
     }
 
     @Test
-    public void testInit_CaseInsensitiveProtocol() throws Exception {
+    public void testInitCaseInsensitiveProtocol() throws Exception {
         newTransporter("mem:/void");
         newTransporter("MEM:/void");
         newTransporter("mEm:/void");
     }
 
     @Test
-    public void testInit_Configuration() throws Exception {
+    public void testInitConfiguration() throws Exception {
         session.setConfigProperty("aether.connector.wagon.config.test", "passed");
         newTransporter("mem://" + id + "?config=passed");
         transporter.peek(new PeekTask(URI.create("file.txt")));
     }
 
     @Test
-    public void testInit_UserAgent() throws Exception {
+    public void testInitUserAgent() throws Exception {
         session.setConfigProperty(ConfigurationProperties.USER_AGENT, "Test/1.0");
         newTransporter("mem://" + id + "?userAgent=Test/1.0");
         transporter.peek(new PeekTask(URI.create("file.txt")));
     }
 
     @Test
-    public void testInit_Timeout() throws Exception {
+    public void testInitTimeout() throws Exception {
         session.setConfigProperty(ConfigurationProperties.REQUEST_TIMEOUT, "12345678");
         newTransporter("mem://" + id + "?requestTimeout=12345678");
         transporter.peek(new PeekTask(URI.create("file.txt")));
     }
 
     @Test
-    public void testInit_ServerAuth() throws Exception {
+    public void testInitServerAuth() throws Exception {
         String url = "mem://" + id + "?serverUsername=testuser&serverPassword=testpass"
                 + "&serverPrivateKey=testkey&serverPassphrase=testphrase";
         Authentication auth = new AuthenticationBuilder()
@@ -417,7 +417,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testInit_Proxy() throws Exception {
+    public void testInitProxy() throws Exception {
         String url = "mem://" + id + "?proxyHost=testhost&proxyPort=8888";
         RemoteRepository repo = new RemoteRepository.Builder("test", "default", url)
                 .setProxy(new Proxy("http", "testhost", 8888))
@@ -427,7 +427,7 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
-    public void testInit_ProxyAuth() throws Exception {
+    public void testInitProxyAuth() throws Exception {
         String url = "mem://" + id + "?proxyUsername=testuser&proxyPassword=testpass";
         Authentication auth = new AuthenticationBuilder()
                 .addUsername("testuser")

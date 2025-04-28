@@ -38,7 +38,7 @@ import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.transfer.TransferResource;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * A repository connector recording all get/put-requests and faking the results.
@@ -65,7 +65,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
 
     private List<Metadata> actualPutMD = new ArrayList<>();
 
-    public RecordingRepositoryConnector(
+    RecordingRepositoryConnector(
             RepositorySystemSession session,
             Artifact[] expectGet,
             Artifact[] expectPut,
@@ -78,11 +78,11 @@ class RecordingRepositoryConnector implements RepositoryConnector {
         this.expectPutMD = expectPutMD;
     }
 
-    public RecordingRepositoryConnector(RepositorySystemSession session) {
+    RecordingRepositoryConnector(RepositorySystemSession session) {
         this.session = session;
     }
 
-    public RecordingRepositoryConnector() {}
+    RecordingRepositoryConnector() {}
 
     public void get(
             Collection<? extends ArtifactDownload> artifactDownloads,

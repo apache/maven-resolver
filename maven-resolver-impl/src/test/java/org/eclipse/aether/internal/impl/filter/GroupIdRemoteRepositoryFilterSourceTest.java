@@ -40,8 +40,9 @@ public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFil
     @Override
     protected GroupIdRemoteRepositoryFilterSource getRemoteRepositoryFilterSource(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository) {
-        return groupIdRemoteRepositoryFilterSource =
+        groupIdRemoteRepositoryFilterSource =
                 new GroupIdRemoteRepositoryFilterSource(new DefaultRepositorySystemLifecycle());
+        return groupIdRemoteRepositoryFilterSource;
     }
 
     @Override

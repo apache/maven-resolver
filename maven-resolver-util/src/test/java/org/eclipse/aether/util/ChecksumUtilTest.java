@@ -30,8 +30,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.eclipse.aether.internal.test.util.TestFileUtils.*;
-import static org.junit.Assert.*;
+import static org.eclipse.aether.internal.test.util.TestFileUtils.createTempFile;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ChecksumUtilTest {
     private static final String EMPTY = "EMPTY";

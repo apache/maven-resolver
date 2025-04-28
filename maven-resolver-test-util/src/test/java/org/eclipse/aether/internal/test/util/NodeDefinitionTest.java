@@ -25,7 +25,10 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class NodeDefinitionTest {
 
@@ -108,13 +111,13 @@ public class NodeDefinitionTest {
     }
 
     @Test
-    public void testParsing_Reference() {
+    public void testParsingReference() {
         NodeDefinition desc = new NodeDefinition("^id");
         assertEquals("id", desc.reference);
     }
 
     @Test
-    public void testParsing_Node() {
+    public void testParsingNode() {
         NodeDefinition desc = new NodeDefinition("g:a:1");
         assertNull(desc.reference);
         assertEquals("g:a:1", desc.coords);

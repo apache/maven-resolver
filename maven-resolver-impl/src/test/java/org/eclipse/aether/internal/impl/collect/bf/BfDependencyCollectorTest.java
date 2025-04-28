@@ -52,6 +52,7 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
         return Arrays.asList(Boolean.TRUE, Boolean.FALSE);
     }
 
+    @SuppressWarnings("checkstyle:VisibilityModifier")
     @Parameterized.Parameter
     public boolean useSkipper;
 

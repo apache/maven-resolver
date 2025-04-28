@@ -48,7 +48,7 @@ import static org.mockito.Mockito.when;
  * UT support for {@link SyncContextFactory}.
  */
 public abstract class NamedLockFactoryAdapterTestSupport {
-    protected static final HazelcastClientUtils utils = new HazelcastClientUtils();
+    protected static final HazelcastClientUtils UTILS = new HazelcastClientUtils();
 
     private static final long ADAPTER_TIME = 100L;
 
@@ -72,7 +72,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
             adapter.getNamedLockFactory().shutdown();
         }
 
-        utils.cleanup();
+        UTILS.cleanup();
     }
 
     @Before
@@ -202,7 +202,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         final RepositorySystemSession session;
         final Access chained;
 
-        public Access(
+        Access(
                 boolean shared,
                 CountDownLatch winner,
                 CountDownLatch loser,
