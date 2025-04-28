@@ -24,7 +24,12 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class AuthenticationDigestTest {
 
@@ -77,7 +82,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForRepository_NoAuth() {
+    public void testForRepositoryNoAuth() {
         RemoteRepository repo = newRepo(null, null);
 
         String digest = AuthenticationDigest.forRepository(newSession(), repo);
@@ -118,7 +123,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForProxy_NoProxy() {
+    public void testForProxyNoProxy() {
         RemoteRepository repo = newRepo(null, null);
 
         String digest = AuthenticationDigest.forProxy(newSession(), repo);
@@ -126,7 +131,7 @@ public class AuthenticationDigestTest {
     }
 
     @Test
-    public void testForProxy_NoProxyAuth() {
+    public void testForProxyNoProxyAuth() {
         RemoteRepository repo = newRepo(null, newProxy(null));
 
         String digest = AuthenticationDigest.forProxy(newSession(), repo);

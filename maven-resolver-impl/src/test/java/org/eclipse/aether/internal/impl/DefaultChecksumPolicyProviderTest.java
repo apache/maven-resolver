@@ -64,7 +64,7 @@ public class DefaultChecksumPolicyProviderTest {
     }
 
     @Test
-    public void testNewChecksumPolicy_Fail() {
+    public void testNewChecksumPolicyFail() {
         ChecksumPolicy policy =
                 provider.newChecksumPolicy(session, repository, resource, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
         assertNotNull(policy);
@@ -72,7 +72,7 @@ public class DefaultChecksumPolicyProviderTest {
     }
 
     @Test
-    public void testNewChecksumPolicy_Warn() {
+    public void testNewChecksumPolicyWarn() {
         ChecksumPolicy policy =
                 provider.newChecksumPolicy(session, repository, resource, RepositoryPolicy.CHECKSUM_POLICY_WARN);
         assertNotNull(policy);
@@ -80,21 +80,21 @@ public class DefaultChecksumPolicyProviderTest {
     }
 
     @Test
-    public void testNewChecksumPolicy_Ignore() {
+    public void testNewChecksumPolicyIgnore() {
         ChecksumPolicy policy =
                 provider.newChecksumPolicy(session, repository, resource, RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         assertNull(policy);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewChecksumPolicy_Unknown() {
+    public void testNewChecksumPolicyUnknown() {
         ChecksumPolicy policy = provider.newChecksumPolicy(session, repository, resource, CHECKSUM_POLICY_UNKNOWN);
         assertNotNull(policy);
         assertEquals(WarnChecksumPolicy.class, policy.getClass());
     }
 
     @Test
-    public void testGetEffectiveChecksumPolicy_EqualPolicies() {
+    public void testGetEffectiveChecksumPolicyEqualPolicies() {
         String[] policies = {
             RepositoryPolicy.CHECKSUM_POLICY_FAIL,
             RepositoryPolicy.CHECKSUM_POLICY_WARN,
@@ -106,7 +106,7 @@ public class DefaultChecksumPolicyProviderTest {
     }
 
     @Test
-    public void testGetEffectiveChecksumPolicy_DifferentPolicies() {
+    public void testGetEffectiveChecksumPolicyDifferentPolicies() {
         String[][] testCases = {
             {RepositoryPolicy.CHECKSUM_POLICY_WARN, RepositoryPolicy.CHECKSUM_POLICY_FAIL},
             {RepositoryPolicy.CHECKSUM_POLICY_IGNORE, RepositoryPolicy.CHECKSUM_POLICY_FAIL},
@@ -125,7 +125,7 @@ public class DefaultChecksumPolicyProviderTest {
     }
 
     @Test
-    public void testGetEffectiveChecksumPolicy_UnknownPolicies() {
+    public void testGetEffectiveChecksumPolicyUnknownPolicies() {
         String[][] testCases = {
             {RepositoryPolicy.CHECKSUM_POLICY_WARN, RepositoryPolicy.CHECKSUM_POLICY_FAIL},
             {RepositoryPolicy.CHECKSUM_POLICY_WARN, RepositoryPolicy.CHECKSUM_POLICY_WARN},

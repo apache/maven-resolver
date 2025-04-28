@@ -29,7 +29,10 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.impl.synccontext.named.*;
+import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.eclipse.aether.repository.LocalRepository;
@@ -238,7 +241,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         final RepositorySystemSession session;
         final Access chained;
 
-        public Access(
+        Access(
                 boolean shared,
                 CountDownLatch winner,
                 CountDownLatch loser,

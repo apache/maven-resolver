@@ -37,7 +37,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -117,7 +119,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateSimpleRepos_MustKeepDisabledRecessiveRepo() {
+    public void testAggregateSimpleReposMustKeepDisabledRecessiveRepo() {
         RemoteRepository dominant = newRepo("a", "file://", true, "", "").build();
 
         RemoteRepository recessive1 = newRepo("b", "http://", false, "", "").build();
@@ -136,7 +138,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateMirrorRepos_DominantMirrorComplete() {
+    public void testAggregateMirrorReposDominantMirrorComplete() {
         RemoteRepository dominant1 = newRepo("a", "http://", false, "", "").build();
         RemoteRepository dominantMirror1 = newRepo("x", "file://", false, "", "")
                 .addMirroredRepository(dominant1)
@@ -157,7 +159,7 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     @Test
-    public void testAggregateMirrorRepos_DominantMirrorIncomplete() {
+    public void testAggregateMirrorReposDominantMirrorIncomplete() {
         RemoteRepository dominant1 = newRepo("a", "http://", false, "", "").build();
         RemoteRepository dominantMirror1 = newRepo("x", "file://", false, "", "")
                 .addMirroredRepository(dominant1)

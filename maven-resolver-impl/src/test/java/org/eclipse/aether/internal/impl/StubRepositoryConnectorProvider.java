@@ -26,11 +26,11 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 class StubRepositoryConnectorProvider implements RepositoryConnectorProvider {
 
-    public StubRepositoryConnectorProvider(RepositoryConnector connector) {
+    StubRepositoryConnectorProvider(RepositoryConnector connector) {
         setConnector(connector);
     }
 
-    public StubRepositoryConnectorProvider() {}
+    StubRepositoryConnectorProvider() {}
 
     private RepositoryConnector connector;
 

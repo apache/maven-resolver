@@ -29,7 +29,8 @@ import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  */
@@ -65,7 +66,7 @@ public class DefaultRepositoryEventDispatcherTest {
 
     static class ListenerHandler implements InvocationHandler {
 
-        public String methodName;
+        String methodName;
 
         public Object invoke(Object proxy, Method method, Object[] args) {
             if (args.length == 1 && args[0] instanceof RepositoryEvent) {

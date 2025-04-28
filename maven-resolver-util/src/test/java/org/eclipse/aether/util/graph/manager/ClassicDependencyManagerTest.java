@@ -31,17 +31,19 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ClassicDependencyManagerTest {
 
-    private final Artifact A = new DefaultArtifact("test", "a", "", "");
+    private static final Artifact A = new DefaultArtifact("test", "a", "", "");
 
-    private final Artifact A1 = new DefaultArtifact("test", "a", "", "1");
+    private static final Artifact A1 = new DefaultArtifact("test", "a", "", "1");
 
-    private final Artifact B = new DefaultArtifact("test", "b", "", "");
+    private static final Artifact B = new DefaultArtifact("test", "b", "", "");
 
-    private final Artifact B1 = new DefaultArtifact("test", "b", "", "1");
+    private static final Artifact B1 = new DefaultArtifact("test", "b", "", "1");
 
     private RepositorySystemSession session;
 

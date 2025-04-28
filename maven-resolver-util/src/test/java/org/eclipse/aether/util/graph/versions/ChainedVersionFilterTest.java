@@ -26,7 +26,9 @@ import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.eclipse.aether.util.graph.version.SnapshotVersionFilter;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertSame;
 
 public class ChainedVersionFilterTest extends AbstractVersionFilterTest {
 

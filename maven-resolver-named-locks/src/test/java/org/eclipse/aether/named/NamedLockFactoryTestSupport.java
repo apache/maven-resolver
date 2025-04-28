@@ -28,7 +28,10 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.sameInstance;
 
 /**
  * UT support for {@link NamedLockFactory}.
@@ -236,7 +239,7 @@ public abstract class NamedLockFactoryTestSupport {
         final CountDownLatch winner;
         final CountDownLatch loser;
 
-        public Access(
+        Access(
                 NamedLockFactory namedLockFactory,
                 String name,
                 boolean shared,

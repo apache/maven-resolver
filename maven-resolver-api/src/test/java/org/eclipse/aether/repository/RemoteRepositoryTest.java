@@ -20,7 +20,7 @@ package org.eclipse.aether.repository;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  */

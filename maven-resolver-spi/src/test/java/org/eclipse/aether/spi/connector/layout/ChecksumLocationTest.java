@@ -29,28 +29,28 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class ChecksumLocationTest {
-    private ChecksumAlgorithmFactory SHA512 = new ChecksumAlgorithmFactorySupport("SHA-512", "sha512") {
+    private static final ChecksumAlgorithmFactory SHA512 = new ChecksumAlgorithmFactorySupport("SHA-512", "sha512") {
         @Override
         public ChecksumAlgorithm getAlgorithm() {
             throw new RuntimeException("this should not happen");
         }
     };
 
-    private ChecksumAlgorithmFactory SHA256 = new ChecksumAlgorithmFactorySupport("SHA-256", "sha256") {
+    private static final ChecksumAlgorithmFactory SHA256 = new ChecksumAlgorithmFactorySupport("SHA-256", "sha256") {
         @Override
         public ChecksumAlgorithm getAlgorithm() {
             throw new RuntimeException("this should not happen");
         }
     };
 
-    private ChecksumAlgorithmFactory SHA1 = new ChecksumAlgorithmFactorySupport("SHA-1", "sha1") {
+    private static final ChecksumAlgorithmFactory SHA1 = new ChecksumAlgorithmFactorySupport("SHA-1", "sha1") {
         @Override
         public ChecksumAlgorithm getAlgorithm() {
             throw new RuntimeException("this should not happen");
         }
     };
 
-    private ChecksumAlgorithmFactory MD5 = new ChecksumAlgorithmFactorySupport("MD5", "md5") {
+    private static final ChecksumAlgorithmFactory MD5 = new ChecksumAlgorithmFactorySupport("MD5", "md5") {
         @Override
         public ChecksumAlgorithm getAlgorithm() {
             throw new RuntimeException("this should not happen");
@@ -77,12 +77,12 @@ public class ChecksumLocationTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testForLocation_WithQueryParams() {
+    public void testForLocationWithQueryParams() {
         ChecksumLocation.forLocation(URI.create("file.php?param=1"), SHA1);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testForLocation_WithFragment() {
+    public void testForLocationWithFragment() {
         ChecksumLocation.forLocation(URI.create("file.html#fragment"), SHA1);
     }
 }

@@ -21,8 +21,6 @@ package org.eclipse.aether.util.graph.visitor;
 import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 public class PostorderNodeListGeneratorTest extends AbstractDepthFirstNodeListGeneratorTestSupport {
 
     @Test
