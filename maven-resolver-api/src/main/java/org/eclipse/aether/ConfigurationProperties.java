@@ -306,6 +306,34 @@ public final class ConfigurationProperties {
      */
     public static final boolean DEFAULT_PERSISTED_CHECKSUMS = true;
 
+    /**
+     * If enabled, the HTTP transport will follow HTTP redirects.
+     *
+     * @since 1.9.23
+     */
+    public static final String HTTP_FOLLOW_REDIRECTS = PREFIX_CONNECTOR + "http.followRedirects";
+
+    /**
+     * The default HTTP redirect mode if {@link #HTTP_FOLLOW_REDIRECTS} isn't set.
+     *
+     * @since 1.9.23
+     */
+    public static final boolean DEFAULT_FOLLOW_REDIRECTS = true;
+
+    /**
+     * The max redirect count to follow for the HTTP transport.
+     *
+     * @since 1.9.23
+     */
+    public static final String HTTP_MAX_REDIRECTS = PREFIX_CONNECTOR + "http.maxRedirects";
+
+    /**
+     * The default max redirect count to follow for the HTTP transport.
+     *
+     * @since 1.9.23
+     */
+    public static final int DEFAULT_HTTP_MAX_REDIRECTS = 5;
+
     private ConfigurationProperties() {
         // hide constructor
     }
