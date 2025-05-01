@@ -382,7 +382,6 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         return this;
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private <T> Map<String, T> copySafe(Map<?, ?> table, Class<T> valueType) {
         Map<String, T> map;
         if (table == null || table.isEmpty()) {
