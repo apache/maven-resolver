@@ -490,7 +490,6 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 repositorySystemLifecycle);
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private static <T> Map<String, T> copySafe(Map<?, ?> table, Class<T> valueType) {
         Map<String, T> map;
         if (table == null || table.isEmpty()) {

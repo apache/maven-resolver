@@ -57,7 +57,6 @@ import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.DEFAULT_
 @Singleton
 @Named(GpgAgentPasswordLoader.NAME)
 @Priority(10)
-@SuppressWarnings("checkstyle:magicnumber")
 public final class GpgAgentPasswordLoader implements GnupgSignatureArtifactGeneratorFactory.Loader {
     public static final String NAME = "agent";
     private final Logger logger = LoggerFactory.getLogger(getClass());

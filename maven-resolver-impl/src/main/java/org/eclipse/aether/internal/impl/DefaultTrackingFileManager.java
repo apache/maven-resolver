@@ -148,7 +148,6 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         return path.toAbsolutePath().normalize().toString().intern();
     }
 
-    @SuppressWarnings({"checkstyle:magicnumber"})
     private FileLock fileLock(FileChannel channel, long size, boolean shared) throws IOException {
         FileLock lock = null;
         for (int attempts = 8; attempts >= 0; attempts--) {

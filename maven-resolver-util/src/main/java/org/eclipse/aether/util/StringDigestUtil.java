@@ -88,7 +88,6 @@ public final class StringDigestUtil {
      * @return The hexadecimal representation of the input or {@code null} if the input was {@code null}.
      * @since 2.0.0
      */
-    @SuppressWarnings("checkstyle:magicnumber")
     public static String toHexString(byte[] bytes) {
         if (bytes == null) {
             return null;
@@ -115,7 +114,6 @@ public final class StringDigestUtil {
      * @return The byte array of the input or {@code null} if the input was {@code null}.
      * @since 2.0.0
      */
-    @SuppressWarnings("checkstyle:magicnumber")
     public static byte[] fromHexString(String hexString) {
         if (hexString == null) {
             return null;

@@ -43,7 +43,6 @@ import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.CONFIG_P
 @Singleton
 @Named(GpgConfLoader.NAME)
 @Priority(20)
-@SuppressWarnings("checkstyle:magicnumber")
 public final class GpgConfLoader implements GnupgSignatureArtifactGeneratorFactory.Loader {
     public static final String NAME = "conf";
 

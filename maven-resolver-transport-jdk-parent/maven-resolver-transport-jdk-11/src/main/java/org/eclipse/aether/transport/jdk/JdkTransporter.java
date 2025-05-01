@@ -107,7 +107,6 @@ import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.D
  *
  * @since 2.0.0
  */
-@SuppressWarnings({"checkstyle:magicnumber"})
 final class JdkTransporter extends AbstractTransporter implements HttpTransporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporter.class);
 

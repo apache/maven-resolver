@@ -146,7 +146,6 @@ final class GlobalState implements Closeable {
         return connectionManagers.computeIfAbsent(config, GlobalState::newConnectionManager);
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     public static HttpClientConnectionManager newConnectionManager(ConnMgrConfig connMgrConfig) {
         RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", PlainConnectionSocketFactory.getSocketFactory());

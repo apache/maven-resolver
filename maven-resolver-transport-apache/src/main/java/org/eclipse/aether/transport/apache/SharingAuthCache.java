@@ -40,7 +40,6 @@ final class SharingAuthCache implements AuthCache {
         authSchemes = new HashMap<>();
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private static HttpHost toKey(HttpHost host) {
         if (host.getPort() <= 0) {
             int port = host.getSchemeName().equalsIgnoreCase("https") ? 443 : 80;

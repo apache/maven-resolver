@@ -78,7 +78,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Common set of tests against Http transporter.
  */
-@SuppressWarnings({"checkstyle:MagicNumber", "checkstyle:MethodName"})
+@SuppressWarnings({"checkstyle:MethodName"})
 public class HttpTransporterTest {
 
     protected static final Path KEY_STORE_PATH = Paths.get("target/keystore");

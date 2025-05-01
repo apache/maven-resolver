@@ -36,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * JDK Transporter UT.
  */
-@SuppressWarnings({"checkstyle:magicnumber"})
 class JdkTransporterTest extends HttpTransporterTest {
 
     @Override

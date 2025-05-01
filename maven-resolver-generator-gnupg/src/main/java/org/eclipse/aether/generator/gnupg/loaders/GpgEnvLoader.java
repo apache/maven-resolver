@@ -39,7 +39,6 @@ import static org.eclipse.aether.generator.gnupg.GnupgConfigurationKeys.RESOLVER
 @Singleton
 @Named(GpgEnvLoader.NAME)
 @Priority(30)
-@SuppressWarnings("checkstyle:magicnumber")
 public final class GpgEnvLoader implements GnupgSignatureArtifactGeneratorFactory.Loader {
     public static final String NAME = "env";
 
