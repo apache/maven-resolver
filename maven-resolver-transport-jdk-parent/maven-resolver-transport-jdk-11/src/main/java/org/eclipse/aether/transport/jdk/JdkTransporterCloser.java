@@ -26,7 +26,7 @@ import java.net.http.HttpClient;
  * @since 2.0.0
  */
 public final class JdkTransporterCloser {
-    @SuppressWarnings("checkstyle:MagicNumber")
+
     static Runnable closer(HttpClient httpClient) {
         return () -> {
             if (httpClient instanceof AutoCloseable) {

@@ -30,10 +30,7 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 final class NodeStack {
 
-    @SuppressWarnings({"checkstyle:magicnumber"})
-    // CHECKSTYLE_OFF: MagicNumber
     ArrayList<DependencyNode> nodes = new ArrayList<>(96);
-    // CHECKSTYLE_ON: MagicNumber
 
     public DependencyNode top() {
         if (nodes.isEmpty()) {

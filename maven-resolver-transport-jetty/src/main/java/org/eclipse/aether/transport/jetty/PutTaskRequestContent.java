@@ -39,7 +39,6 @@ class PutTaskRequestContent extends AbstractRequestContent {
     private ByteBufferPool bufferPool;
     private boolean useDirectByteBuffers = true;
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     PutTaskRequestContent(PutTask putTask) {
         this(putTask, 4096);
     }

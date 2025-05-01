@@ -533,7 +533,6 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private void mkdirs(URI uri, SharingHttpContext context) throws Exception {
         List<URI> dirs = UriUtils.getDirectories(baseUri, uri);
         int index = 0;
@@ -610,7 +609,6 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         return request;
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private <T extends HttpUriRequest> void resume(T request, GetTask task) throws IOException {
         long resumeOffset = task.getResumeOffset();
         if (resumeOffset > 0L && task.getDataPath() != null) {
@@ -622,7 +620,6 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private void handleStatus(CloseableHttpResponse response) throws Exception {
         int status = response.getStatusLine().getStatusCode();
         if (status >= 300) {
