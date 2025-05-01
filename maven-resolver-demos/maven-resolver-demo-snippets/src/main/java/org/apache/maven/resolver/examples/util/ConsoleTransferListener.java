@@ -154,7 +154,6 @@ public class ConsoleTransferListener extends AbstractTransferListener {
         event.getException().printStackTrace(out);
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     protected long toKB(long bytes) {
         return (bytes + 1023) / 1024;
     }

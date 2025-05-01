@@ -29,9 +29,7 @@ import java.util.RandomAccess;
 class Stack<E> extends AbstractList<E> implements RandomAccess {
 
     @SuppressWarnings("unchecked")
-    // CHECKSTYLE_OFF: MagicNumber
     private E[] elements = (E[]) new Object[96];
-    // CHECKSTYLE_ON: MagicNumber
 
     private int size;
 

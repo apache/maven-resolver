@@ -537,7 +537,6 @@ final class HttpTransporter extends AbstractTransporter {
         }
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private void mkdirs(URI uri, SharingHttpContext context) {
         List<URI> dirs = UriUtils.getDirectories(baseUri, uri);
         int index = 0;
@@ -614,7 +613,6 @@ final class HttpTransporter extends AbstractTransporter {
         return request;
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private <T extends HttpUriRequest> void resume(T request, GetTask task) {
         long resumeOffset = task.getResumeOffset();
         if (resumeOffset > 0L && task.getDataFile() != null) {
@@ -626,7 +624,6 @@ final class HttpTransporter extends AbstractTransporter {
         }
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private void handleStatus(CloseableHttpResponse response) throws HttpResponseException {
         int status = response.getStatusLine().getStatusCode();
         if (status >= 300) {

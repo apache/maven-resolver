@@ -146,7 +146,6 @@ public final class AuthenticationDigest {
      *
      * @param chars The characters to update the digest with, may be {@code null}.
      */
-    @SuppressWarnings("checkstyle:magicnumber")
     public void update(char... chars) {
         if (chars != null) {
             for (char c : chars) {
@@ -167,7 +166,6 @@ public final class AuthenticationDigest {
         }
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private String digest() {
         byte[] bytes = digest.digest();
         StringBuilder buffer = new StringBuilder(bytes.length * 2);
