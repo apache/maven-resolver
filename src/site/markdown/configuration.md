@@ -19,6 +19,12 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+<!--
+THIS FILE IS GENERATED - DO NOT EDIT
+Generated from: maven-resolver-tools/src/main/resources/configuration.md.vm
+To modify this file, edit the template and regenerate.
+-->
+
 
 
 
