@@ -33,6 +33,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+# THIS FILE IS GENERATED - DO NOT EDIT
+# Generated from: maven-resolver-tools/src/main/resources/configuration.yaml.vm
+# To modify this file, edit the template and regenerate.
 #]]#
 props:
   #foreach($key in $keys)
