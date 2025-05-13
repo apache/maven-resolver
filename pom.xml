@@ -602,6 +602,7 @@
           <artifactId>maven-release-plugin</artifactId>
           <configuration>
             <autoVersionSubmodules>true</autoVersionSubmodules>
+            <tagNameFormat>maven-resolver-@{project.version}</tagNameFormat>
           </configuration>
         </plugin>
         <plugin>
