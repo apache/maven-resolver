@@ -111,7 +111,10 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
                         session,
                         DEFAULT_CHECKSUMS_ALGORITHMS,
                         CONFIG_PROP_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
-                        CONFIG_PROP_CHECKSUMS_ALGORITHMS)));
+                        CONFIG_PROP_CHECKSUMS_ALGORITHMS,
+                        // MRESOLVER-701: support legacy properties for simpler transitioning
+                        "aether.checksums.algorithms",
+                        "aether.checksums.algorithms." + repository.getId())));
 
         return new Maven2RepositoryLayout(checksumsAlgorithms, artifactPredicateFactory.newInstance(session));
     }
