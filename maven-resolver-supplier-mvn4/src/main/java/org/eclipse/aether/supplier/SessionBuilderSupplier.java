@@ -18,9 +18,11 @@
  */
 package org.eclipse.aether.supplier;
 
+import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.apache.maven.repository.internal.MavenSessionBuilderSupplier;
+import org.apache.maven.utils.Os;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
@@ -37,5 +39,16 @@ import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 public class SessionBuilderSupplier extends MavenSessionBuilderSupplier {
     public SessionBuilderSupplier(RepositorySystem repositorySystem) {
         super(repositorySystem);
+    }
+
+    @Override
+    protected void configureSessionBuilder(SessionBuilder session) {
+        super.configureSessionBuilder(session);
+        session.setSystemProperties(System.getProperties());
+        boolean caseSensitive = !Os.IS_WINDOWS;
+        System.getenv().forEach((key, value) -> {
+            key = "env." + (caseSensitive ? key : key.toUpperCase(Locale.ENGLISH));
+            session.setSystemProperty(key, value);
+        });
     }
 }
