@@ -64,7 +64,6 @@ public class Booter {
     public static SessionBuilder newRepositorySystemSession(RepositorySystem system) {
         SessionBuilder result = new SessionBuilderSupplier(system)
                 .get()
-                .setSystemProperties(System.getProperties())
                 .withLocalRepositoryBaseDirectories(Path.of("target/local-repo"))
                 .setRepositoryListener(new ConsoleRepositoryListener())
                 .setTransferListener(new ConsoleTransferListener())
