@@ -14,15 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-name: Stale
-
+   
+name: Release Drafter
 on:
-  schedule:
-    - cron: '20 20 * * *'
-  issue_comment:
-    types: [ 'created' ]
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 jobs:
-  stale:
-    uses: 'apache/maven-gh-actions-shared/.github/workflows/stale.yml@v4'
+   update_release_draft:
+      uses: apache/maven-gh-actions-shared/.github/workflows/release-drafter.yml@v4
