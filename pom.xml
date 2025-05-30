@@ -78,8 +78,8 @@
     <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
   </scm>
   <issueManagement>
-    <system>jira</system>
-    <url>https://issues.apache.org/jira/browse/MRESOLVER</url>
+    <system>GitHub Issues</system>
+    <url>https://github.com/apache/maven-resolver/issues</url>
   </issueManagement>
   <ciManagement>
     <system>Jenkins</system>
