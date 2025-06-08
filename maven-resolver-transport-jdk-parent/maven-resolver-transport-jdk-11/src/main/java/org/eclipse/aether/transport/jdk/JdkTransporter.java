@@ -272,7 +272,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         try {
             while (true) {
                 HttpRequest.Builder request =
-                        HttpRequest.newBuilder().uri(resolve(task)).method("GET", HttpRequest.BodyPublishers.noBody());
+                        HttpRequest.newBuilder().uri(resolve(task)).GET();
                 headers.forEach(request::setHeader);
 
                 if (resume) {
@@ -395,7 +395,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         headers.forEach(request::setHeader);
         try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
             utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
-            request.method("PUT", HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
+            request.PUT(HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
 
             try {
                 HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
