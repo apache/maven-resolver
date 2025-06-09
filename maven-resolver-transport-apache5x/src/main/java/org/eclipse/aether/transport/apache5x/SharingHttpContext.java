@@ -41,30 +41,13 @@ final class SharingHttpContext extends HttpClientContext implements Closeable {
     }
 
     @Override
-    public Object getAttribute(String id) {
-        if (HttpClientContext.USER_TOKEN.equals(id)) {
-            return state.getUserToken();
-        }
-        return super.getAttribute(id);
+    public Object getUserToken() {
+        return state.getUserToken();
     }
 
     @Override
-    public Object setAttribute(String id, Object obj) {
-        if (HttpClientContext.USER_TOKEN.equals(id)) {
-            state.setUserToken(obj);
-            return null;
-        } else {
-            return super.setAttribute(id, obj);
-        }
-    }
-
-    @Override
-    public Object removeAttribute(String id) {
-        if (HttpClientContext.USER_TOKEN.equals(id)) {
-            state.setUserToken(null);
-            return null;
-        }
-        return super.removeAttribute(id);
+    public void setUserToken(Object userToken) {
+        state.setUserToken(userToken);
     }
 
     @Override
