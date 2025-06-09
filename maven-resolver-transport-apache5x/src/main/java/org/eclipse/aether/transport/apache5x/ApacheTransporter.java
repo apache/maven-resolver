@@ -62,6 +62,7 @@ import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.cookie.StandardCookieSpec;
+import org.apache.hc.client5.http.impl.DefaultClientConnectionReuseStrategy;
 import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy;
 import org.apache.hc.client5.http.impl.DefaultSchemePortResolver;
 import org.apache.hc.client5.http.impl.LaxRedirectStrategy;
@@ -389,6 +390,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 ConfigurationProperties.HTTP_REUSE_CONNECTIONS);
         if (!reuseConnections) {
             builder.setConnectionReuseStrategy((request, response, context) -> false);
+        } else {
+            builder.setConnectionReuseStrategy(DefaultClientConnectionReuseStrategy.INSTANCE);
         }
 
         this.client = builder.build();
