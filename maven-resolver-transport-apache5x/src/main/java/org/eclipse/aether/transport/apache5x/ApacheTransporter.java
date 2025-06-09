@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.apache;
+package org.eclipse.aether.transport.apache5x;
 
 import javax.net.ssl.SSLException;
 
@@ -113,14 +113,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_RANGE_PATTERN;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_NAME;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_USE_SYSTEM_PROPERTIES;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_FOLLOW_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_USE_SYSTEM_PROPERTIES;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_STANDARD;
+import static org.eclipse.aether.transport.apache5x.ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS;
+import static org.eclipse.aether.transport.apache5x.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_NAME;
+import static org.eclipse.aether.transport.apache5x.ApacheTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS;
+import static org.eclipse.aether.transport.apache5x.ApacheTransporterConfigurationKeys.CONFIG_PROP_USE_SYSTEM_PROPERTIES;
+import static org.eclipse.aether.transport.apache5x.ApacheTransporterConfigurationKeys.DEFAULT_FOLLOW_REDIRECTS;
+import static org.eclipse.aether.transport.apache5x.ApacheTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS;
+import static org.eclipse.aether.transport.apache5x.ApacheTransporterConfigurationKeys.DEFAULT_USE_SYSTEM_PROPERTIES;
+import static org.eclipse.aether.transport.apache5x.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_STANDARD;
 
 /**
  * A transporter for HTTP/HTTPS.

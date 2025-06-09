@@ -1,4 +1,3 @@
-// CHECKSTYLE_OFF: RegexpHeader
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -8,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,8 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.eclipse.aether.transport.apache5x;
+
+import java.net.URI;
+
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
+
 /**
- * Support for downloads/uploads via the HTTP and HTTPS protocols. The current implementation is backed by
- * <a href="https://hc.apache.org/httpcomponents-client-5.5.x/" target="_blank">Apache HttpClient 5.5.x</a>.
+ * WebDAV MKCOL request to create parent directories.
  */
-package org.eclipse.aether.transport.apache;
+final class HttpMkCol extends HttpUriRequestBase {
+    HttpMkCol(URI uri) {
+        super("MKCOL", uri);
+    }
+}

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.transport.apache;
+package org.eclipse.aether.transport.apache5x;
 
 import java.net.URI;
 import java.net.URISyntaxException;
