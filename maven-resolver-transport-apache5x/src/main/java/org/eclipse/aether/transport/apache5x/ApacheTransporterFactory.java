@@ -34,6 +34,8 @@ import static java.util.Objects.requireNonNull;
 /**
  * A transporter factory for repositories using the {@code http:} or {@code https:} protocol. The provided transporters
  * support uploads to WebDAV servers and resumable downloads.
+ *
+ * @since 2.0.10
  */
 @Named(ApacheTransporterFactory.NAME)
 public final class ApacheTransporterFactory implements HttpTransporterFactory {

@@ -24,7 +24,7 @@ import org.eclipse.aether.RepositorySystemSession;
 /**
  * Configuration for Apache Transport.
  *
- * @since 2.0.0
+ * @since 2.0.10
  */
 public final class ApacheTransporterConfigurationKeys {
     private ApacheTransporterConfigurationKeys() {}
@@ -79,7 +79,6 @@ public final class ApacheTransporterConfigurationKeys {
      * <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#ciphersuites">Cipher
      * Suites</a> which are enabled for HTTPS connections.
      *
-     * @since 2.0.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      */
@@ -90,7 +89,6 @@ public final class ApacheTransporterConfigurationKeys {
      * <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#jssenames">Protocols
      * </a> which are enabled for HTTPS connections.
      *
-     * @since 2.0.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      */
@@ -103,7 +101,6 @@ public final class ApacheTransporterConfigurationKeys {
      * @configurationType {@link Boolean}
      * @configurationDefaultValue {@link #DEFAULT_FOLLOW_REDIRECTS}
      * @configurationRepoIdSuffix Yes
-     * @since 2.0.2
      */
     public static final String CONFIG_PROP_FOLLOW_REDIRECTS = CONFIG_PROPS_PREFIX + "followRedirects";
 
@@ -116,7 +113,6 @@ public final class ApacheTransporterConfigurationKeys {
      * @configurationType {@link java.lang.Integer}
      * @configurationDefaultValue {@link #DEFAULT_MAX_REDIRECTS}
      * @configurationRepoIdSuffix Yes
-     * @since 2.0.2
      */
     public static final String CONFIG_PROP_MAX_REDIRECTS = CONFIG_PROPS_PREFIX + "maxRedirects";
 
