@@ -23,7 +23,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class DefaultRepositoryCacheTest {
 
@@ -40,12 +41,12 @@ public class DefaultRepositoryCacheTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testGet_NullKey() {
+    public void testGetNullKey() {
         get(null);
     }
 
     @Test(expected = RuntimeException.class)
-    public void testPut_NullKey() {
+    public void testPutNullKey() {
         put(null, "data");
     }
 

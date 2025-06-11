@@ -137,7 +137,6 @@ public final class UnionVersionRange implements VersionRange {
         return ranges.equals(that.ranges);
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     @Override
     public int hashCode() {
         return 97 * ranges.hashCode();

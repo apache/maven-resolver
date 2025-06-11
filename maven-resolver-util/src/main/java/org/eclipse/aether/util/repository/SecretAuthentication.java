@@ -71,7 +71,6 @@ final class SecretAuthentication implements Authentication {
         return (chars != null) ? chars.clone() : null;
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private char[] xor(char[] chars) {
         if (chars != null) {
             int mask = System.identityHashCode(this);

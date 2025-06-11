@@ -32,7 +32,7 @@ import org.eclipse.aether.util.artifact.SubArtifact;
 
 /**
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "checkstyle:UnusedLocalVariable"})
 public class ResolverDemo {
     public static void main(String[] args) throws Exception {
         System.out.println("------------------------------------------------------------");

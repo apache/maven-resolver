@@ -88,7 +88,7 @@ public class TestChecksumAlgorithmSelector implements ChecksumAlgorithmFactorySe
     }
 
     private static class MessageDigestChecksumAlgorithmFactory extends ChecksumAlgorithmFactorySupport {
-        public MessageDigestChecksumAlgorithmFactory(String name) {
+        MessageDigestChecksumAlgorithmFactory(String name) {
             super(name, name.replace("-", "").toLowerCase(Locale.ENGLISH));
         }
 

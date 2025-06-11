@@ -48,7 +48,6 @@ public class DefaultUpdatePolicyAnalyzer implements UpdatePolicyAnalyzer {
         return ordinalOfUpdatePolicy(policy1) < ordinalOfUpdatePolicy(policy2) ? policy1 : policy2;
     }
 
-    @SuppressWarnings({"checkstyle:magicnumber"})
     private int ordinalOfUpdatePolicy(String policy) {
         if (RepositoryPolicy.UPDATE_POLICY_DAILY.equals(policy)) {
             return 1440;
@@ -102,7 +101,6 @@ public class DefaultUpdatePolicyAnalyzer implements UpdatePolicyAnalyzer {
         return checkForUpdates;
     }
 
-    @SuppressWarnings({"checkstyle:magicnumber"})
     private int getMinutes(String policy) {
         int minutes;
         try {

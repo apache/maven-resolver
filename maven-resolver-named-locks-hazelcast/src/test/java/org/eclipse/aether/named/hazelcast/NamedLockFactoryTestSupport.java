@@ -39,7 +39,7 @@ import static org.hamcrest.Matchers.sameInstance;
  * UT support for {@link NamedLockFactory}.
  */
 public abstract class NamedLockFactoryTestSupport {
-    protected static final HazelcastClientUtils utils = new HazelcastClientUtils();
+    protected static final HazelcastClientUtils UTILS = new HazelcastClientUtils();
 
     protected static NamedLockFactory namedLockFactory;
 
@@ -51,7 +51,7 @@ public abstract class NamedLockFactoryTestSupport {
         if (namedLockFactory != null) {
             namedLockFactory.shutdown();
         }
-        utils.cleanup();
+        UTILS.cleanup();
     }
 
     @Test
@@ -176,7 +176,7 @@ public abstract class NamedLockFactoryTestSupport {
         final CountDownLatch winner;
         final CountDownLatch loser;
 
-        public Access(
+        Access(
                 NamedLockFactory namedLockFactory,
                 String name,
                 boolean shared,

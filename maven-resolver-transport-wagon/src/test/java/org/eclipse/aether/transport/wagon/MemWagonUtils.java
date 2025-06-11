@@ -34,13 +34,13 @@ import org.apache.maven.wagon.proxy.ProxyInfo;
  */
 class MemWagonUtils {
 
-    private static final ConcurrentMap<String, Map<String, String>> mounts = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, Map<String, String>> MOUNTS = new ConcurrentHashMap<>();
 
     public static Map<String, String> getFilesystem(String id) {
-        Map<String, String> fs = mounts.get(id);
+        Map<String, String> fs = MOUNTS.get(id);
         if (fs == null) {
             fs = new ConcurrentHashMap<>();
-            Map<String, String> prev = mounts.putIfAbsent(id, fs);
+            Map<String, String> prev = MOUNTS.putIfAbsent(id, fs);
             if (prev != null) {
                 fs = prev;
             }

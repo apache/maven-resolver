@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver</artifactId>
-    <version>1.9.23-SNAPSHOT</version>
+    <version>1.9.24-SNAPSHOT</version>
   </parent>
 
   <artifactId>maven-resolver-named-locks-redisson</artifactId>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>org.redisson</groupId>
       <artifactId>redisson</artifactId>
-      <version>3.34.1</version>
+      <version>3.46.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>

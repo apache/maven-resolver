@@ -23,8 +23,8 @@ import org.junit.BeforeClass;
 public class HazelcastClientCPSemaphoreNamedLockFactoryIT extends NamedLockFactoryTestSupport {
     @BeforeClass
     public static void createNamedLockFactory() {
-        String clusterName = utils.clusterName(HazelcastClientCPSemaphoreNamedLockFactoryIT.class);
-        utils.createMember(clusterName);
-        namedLockFactory = new HazelcastClientCPSemaphoreNamedLockFactory(utils.createClient(clusterName), true);
+        String clusterName = UTILS.clusterName(HazelcastClientCPSemaphoreNamedLockFactoryIT.class);
+        UTILS.createMember(clusterName);
+        namedLockFactory = new HazelcastClientCPSemaphoreNamedLockFactory(UTILS.createClient(clusterName), true);
     }
 }

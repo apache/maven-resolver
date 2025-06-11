@@ -28,6 +28,7 @@ import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 /**
  * Some filters used in UTs.
  */
+@SuppressWarnings("checkstyle:MemberName")
 public final class Filters {
     /**
      * Returns a filter that always accepts.

@@ -50,7 +50,7 @@ public class PrioritizedComponentsTest {
     }
 
     @Test
-    public void testAdd_PriorityOverride() {
+    public void testAddPriorityOverride() {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
         Map<Object, Object> config = new HashMap<>();
@@ -68,7 +68,7 @@ public class PrioritizedComponentsTest {
     }
 
     @Test
-    public void testAdd_ImplicitPriority() {
+    public void testAddImplicitPriority() {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
         Map<Object, Object> config = new HashMap<>();
@@ -83,7 +83,7 @@ public class PrioritizedComponentsTest {
     }
 
     @Test
-    public void testAdd_Disabled() {
+    public void testAddDisabled() {
         Exception comp1 = new IllegalArgumentException();
         Exception comp2 = new NullPointerException();
         Map<Object, Object> config = new HashMap<>();

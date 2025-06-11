@@ -24,7 +24,7 @@ public class HazelcastCPSemaphoreAdapterIT extends NamedLockFactoryAdapterTestSu
 
     @BeforeClass
     public static void createNamedLockFactory() {
-        String clusterName = utils.clusterName(HazelcastCPSemaphoreAdapterIT.class);
-        setNamedLockFactory(new HazelcastCPSemaphoreNamedLockFactory(utils.createMember(clusterName), true));
+        String clusterName = UTILS.clusterName(HazelcastCPSemaphoreAdapterIT.class);
+        setNamedLockFactory(new HazelcastCPSemaphoreNamedLockFactory(UTILS.createMember(clusterName), true));
     }
 }

@@ -20,7 +20,8 @@ package org.eclipse.aether.util.repository;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  */
@@ -31,13 +32,13 @@ public class DefaultProxySelectorTest {
     }
 
     @Test
-    public void testIsNonProxyHost_Blank() {
+    public void testIsNonProxyHostBlank() {
         assertFalse(isNonProxyHost("www.eclipse.org", null));
         assertFalse(isNonProxyHost("www.eclipse.org", ""));
     }
 
     @Test
-    public void testIsNonProxyHost_Wildcard() {
+    public void testIsNonProxyHostWildcard() {
         assertTrue(isNonProxyHost("www.eclipse.org", "*"));
         assertTrue(isNonProxyHost("www.eclipse.org", "*.org"));
         assertFalse(isNonProxyHost("www.eclipse.org", "*.com"));
@@ -46,20 +47,20 @@ public class DefaultProxySelectorTest {
     }
 
     @Test
-    public void testIsNonProxyHost_Multiple() {
+    public void testIsNonProxyHostMultiple() {
         assertTrue(isNonProxyHost("eclipse.org", "eclipse.org|host2"));
         assertTrue(isNonProxyHost("eclipse.org", "host1|eclipse.org"));
         assertTrue(isNonProxyHost("eclipse.org", "host1|eclipse.org|host2"));
     }
 
     @Test
-    public void testIsNonProxyHost_Misc() {
+    public void testIsNonProxyHostMisc() {
         assertFalse(isNonProxyHost("www.eclipse.org", "www.eclipse.com"));
         assertFalse(isNonProxyHost("www.eclipse.org", "eclipse.org"));
     }
 
     @Test
-    public void testIsNonProxyHost_CaseInsensitivity() {
+    public void testIsNonProxyHostCaseInsensitivity() {
         assertTrue(isNonProxyHost("www.eclipse.org", "www.ECLIPSE.org"));
         assertTrue(isNonProxyHost("www.ECLIPSE.org", "www.eclipse.org"));
     }

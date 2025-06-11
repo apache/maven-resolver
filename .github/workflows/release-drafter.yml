@@ -15,18 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Verify
-
+name: Release Drafter
 on:
   push:
-  pull_request:
+    branches:
+      - maven-resolver-1.9.x
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: Verify
-    uses: apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v4
-    with:
-      ff-site-run: false
-      maven-matrix: '[ "3.9.9" ]'
-
-
+   update_release_draft:
+      uses: apache/maven-gh-actions-shared/.github/workflows/release-drafter.yml@v4
+      with:
+        config-name: 'release-drafter-3.x.yml'

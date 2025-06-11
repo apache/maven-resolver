@@ -22,12 +22,16 @@ import java.util.Calendar;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.eclipse.aether.repository.RepositoryPolicy;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.eclipse.aether.repository.RepositoryPolicy.*;
-import static org.junit.Assert.*;
+import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_ALWAYS;
+import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_DAILY;
+import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_INTERVAL;
+import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_NEVER;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  */
@@ -48,8 +52,8 @@ public class DefaultUpdatePolicyAnalyzerTest {
     }
 
     @Test
-    public void testIsUpdateRequired_PolicyNever() {
-        String policy = RepositoryPolicy.UPDATE_POLICY_NEVER;
+    public void testIsUpdateRequiredPolicyNever() {
+        String policy = UPDATE_POLICY_NEVER;
         assertFalse(analyzer.isUpdatedRequired(session, Long.MIN_VALUE, policy));
         assertFalse(analyzer.isUpdatedRequired(session, Long.MAX_VALUE, policy));
         assertFalse(analyzer.isUpdatedRequired(session, 0, policy));
@@ -58,8 +62,8 @@ public class DefaultUpdatePolicyAnalyzerTest {
     }
 
     @Test
-    public void testIsUpdateRequired_PolicyAlways() {
-        String policy = RepositoryPolicy.UPDATE_POLICY_ALWAYS;
+    public void testIsUpdateRequiredPolicyAlways() {
+        String policy = UPDATE_POLICY_ALWAYS;
         assertTrue(analyzer.isUpdatedRequired(session, Long.MIN_VALUE, policy));
         assertTrue(analyzer.isUpdatedRequired(session, Long.MAX_VALUE, policy));
         assertTrue(analyzer.isUpdatedRequired(session, 0, policy));
@@ -68,7 +72,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
     }
 
     @Test
-    public void testIsUpdateRequired_PolicyDaily() {
+    public void testIsUpdateRequiredPolicyDaily() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
@@ -76,7 +80,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
         cal.set(Calendar.MILLISECOND, 0);
         long localMidnight = cal.getTimeInMillis();
 
-        String policy = RepositoryPolicy.UPDATE_POLICY_DAILY;
+        String policy = UPDATE_POLICY_DAILY;
         assertTrue(analyzer.isUpdatedRequired(session, Long.MIN_VALUE, policy));
         assertFalse(analyzer.isUpdatedRequired(session, Long.MAX_VALUE, policy));
         assertFalse(analyzer.isUpdatedRequired(session, localMidnight, policy));
@@ -85,8 +89,8 @@ public class DefaultUpdatePolicyAnalyzerTest {
     }
 
     @Test
-    public void testIsUpdateRequired_PolicyInterval() {
-        String policy = RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":5";
+    public void testIsUpdateRequiredPolicyInterval() {
+        String policy = UPDATE_POLICY_INTERVAL + ":5";
         assertTrue(analyzer.isUpdatedRequired(session, Long.MIN_VALUE, policy));
         assertFalse(analyzer.isUpdatedRequired(session, Long.MAX_VALUE, policy));
         assertFalse(analyzer.isUpdatedRequired(session, now(), policy));
@@ -94,7 +98,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
         assertFalse(analyzer.isUpdatedRequired(session, now() - 1000 * 5 - 1, policy));
         assertTrue(analyzer.isUpdatedRequired(session, now() - 1000 * 60 * 5 - 1, policy));
 
-        policy = RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":invalid";
+        policy = UPDATE_POLICY_INTERVAL + ":invalid";
         assertFalse(analyzer.isUpdatedRequired(session, now(), policy));
     }
 

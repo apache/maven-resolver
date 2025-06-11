@@ -26,7 +26,10 @@ import org.eclipse.aether.repository.AuthenticationDigest;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 
 public class SecretAuthenticationTest {
 
@@ -49,7 +52,7 @@ public class SecretAuthenticationTest {
     }
 
     @Test
-    public void testConstructor_CopyChars() {
+    public void testConstructorCopyChars() {
         char[] value = {'v', 'a', 'l'};
         new SecretAuthentication("key", value);
         assertArrayEquals(new char[] {'v', 'a', 'l'}, value);

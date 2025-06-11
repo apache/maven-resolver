@@ -36,11 +36,11 @@ class StaticUpdateCheckManager implements UpdateCheckManager {
 
     private boolean localUpToDate;
 
-    public StaticUpdateCheckManager(boolean checkRequired) {
+    StaticUpdateCheckManager(boolean checkRequired) {
         this(checkRequired, !checkRequired);
     }
 
-    public StaticUpdateCheckManager(boolean checkRequired, boolean localUpToDate) {
+    StaticUpdateCheckManager(boolean checkRequired, boolean localUpToDate) {
         this.checkRequired = checkRequired;
         this.localUpToDate = localUpToDate;
     }

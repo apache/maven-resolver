@@ -143,6 +143,15 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     // UTs below
 
     @Test
+    public void unresolvedArtifact() {
+        ArtifactResult artifactResult =
+                createArtifactResult(artifactWithTrustedChecksum).setArtifact(null);
+        assertThat(artifactResult.isResolved(), equalTo(false));
+
+        subject.postProcess(session, Collections.singletonList(artifactResult)); // no NPE
+    }
+
+    @Test
     public void haveMatchingChecksumPass() {
         ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum);
         assertThat(artifactResult.isResolved(), equalTo(true));

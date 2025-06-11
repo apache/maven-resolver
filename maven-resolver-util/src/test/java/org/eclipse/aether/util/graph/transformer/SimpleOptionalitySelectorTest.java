@@ -23,7 +23,10 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransformerTest {
 
@@ -54,7 +57,7 @@ public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransf
     }
 
     @Test
-    public void testResolveOptionalityConflict_NonOptionalWins() throws Exception {
+    public void testResolveOptionalityConflictNonOptionalWins() throws Exception {
         DependencyNode root = parseResource("conflict.txt");
         assertSame(root, transform(root));
 
@@ -65,7 +68,7 @@ public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransf
     }
 
     @Test
-    public void testResolveOptionalityConflict_DirectDeclarationWins() throws Exception {
+    public void testResolveOptionalityConflictDirectDeclarationWins() throws Exception {
         DependencyNode root = parseResource("conflict-direct-dep.txt");
         assertSame(root, transform(root));
 

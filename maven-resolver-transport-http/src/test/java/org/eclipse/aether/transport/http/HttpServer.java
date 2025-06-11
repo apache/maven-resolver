@@ -52,6 +52,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("checkstyle:VisibilityModifier")
 public class HttpServer {
 
     public static class LogEntry {
@@ -86,6 +87,8 @@ public class HttpServer {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServer.class);
+
+    private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
 
     private File repoDir;
 
@@ -280,8 +283,6 @@ public class HttpServer {
     }
 
     private class RepoHandler extends AbstractHandler {
-
-        private final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
 
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
                 throws IOException {

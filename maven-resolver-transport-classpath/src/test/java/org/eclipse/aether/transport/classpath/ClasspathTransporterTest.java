@@ -38,7 +38,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  */
@@ -91,7 +93,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testPeek_NotFound() throws Exception {
+    public void testPeekNotFound() throws Exception {
         try {
             transporter.peek(new PeekTask(URI.create("missing.txt")));
             fail("Expected error");
@@ -101,7 +103,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testPeek_Closed() throws Exception {
+    public void testPeekClosed() throws Exception {
         transporter.close();
         try {
             transporter.peek(new PeekTask(URI.create("missing.txt")));
@@ -112,7 +114,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testGet_ToMemory() throws Exception {
+    public void testGetToMemory() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("file.txt")).setListener(listener);
         transporter.get(task);
@@ -125,7 +127,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testGet_ToFile() throws Exception {
+    public void testGetToFile() throws Exception {
         File file = TestFileUtils.createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("file.txt")).setDataFile(file).setListener(listener);
@@ -139,7 +141,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testGet_EmptyResource() throws Exception {
+    public void testGetEmptyResource() throws Exception {
         File file = TestFileUtils.createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("empty.txt")).setDataFile(file).setListener(listener);
@@ -153,28 +155,28 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testGet_EncodedResourcePath() throws Exception {
+    public void testGetEncodedResourcePath() throws Exception {
         GetTask task = new GetTask(URI.create("some%20space.txt"));
         transporter.get(task);
         assertEquals("space", task.getDataString());
     }
 
     @Test
-    public void testGet_Fragment() throws Exception {
+    public void testGetFragment() throws Exception {
         GetTask task = new GetTask(URI.create("file.txt#ignored"));
         transporter.get(task);
         assertEquals("test", task.getDataString());
     }
 
     @Test
-    public void testGet_Query() throws Exception {
+    public void testGetQuery() throws Exception {
         GetTask task = new GetTask(URI.create("file.txt?ignored"));
         transporter.get(task);
         assertEquals("test", task.getDataString());
     }
 
     @Test
-    public void testGet_FileHandleLeak() throws Exception {
+    public void testGetFileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
             File file = TestFileUtils.createTempFile("failure");
             transporter.get(new GetTask(URI.create("file.txt")).setDataFile(file));
@@ -183,7 +185,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testGet_NotFound() throws Exception {
+    public void testGetNotFound() throws Exception {
         try {
             transporter.get(new GetTask(URI.create("missing.txt")));
             fail("Expected error");
@@ -193,7 +195,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testGet_Closed() throws Exception {
+    public void testGetClosed() throws Exception {
         transporter.close();
         try {
             transporter.get(new GetTask(URI.create("file.txt")));
@@ -204,7 +206,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testGet_StartCancelled() throws Exception {
+    public void testGetStartCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelStart = true;
         GetTask task = new GetTask(URI.create("file.txt")).setListener(listener);
@@ -221,7 +223,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testGet_ProgressCancelled() throws Exception {
+    public void testGetProgressCancelled() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
         listener.cancelProgress = true;
         GetTask task = new GetTask(URI.create("file.txt")).setListener(listener);
@@ -248,7 +250,7 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    public void testPut_Closed() throws Exception {
+    public void testPutClosed() throws Exception {
         transporter.close();
         try {
             transporter.put(new PutTask(URI.create("missing.txt")));
@@ -259,54 +261,54 @@ public class ClasspathTransporterTest {
     }
 
     @Test(expected = NoTransporterException.class)
-    public void testInit_BadProtocol() throws Exception {
+    public void testInitBadProtocol() throws Exception {
         newTransporter("bad:/void");
     }
 
     @Test
-    public void testInit_CaseInsensitiveProtocol() throws Exception {
+    public void testInitCaseInsensitiveProtocol() throws Exception {
         newTransporter("classpath:/void");
         newTransporter("CLASSPATH:/void");
         newTransporter("ClassPath:/void");
     }
 
     @Test
-    public void testInit_OpaqueUrl() throws Exception {
+    public void testInitOpaqueUrl() throws Exception {
         testInit("classpath:repository");
     }
 
     @Test
-    public void testInit_OpaqueUrlTrailingSlash() throws Exception {
+    public void testInitOpaqueUrlTrailingSlash() throws Exception {
         testInit("classpath:repository/");
     }
 
     @Test
-    public void testInit_OpaqueUrlSpaces() throws Exception {
+    public void testInitOpaqueUrlSpaces() throws Exception {
         testInit("classpath:repo%20space");
     }
 
     @Test
-    public void testInit_HierarchicalUrl() throws Exception {
+    public void testInitHierarchicalUrl() throws Exception {
         testInit("classpath:/repository");
     }
 
     @Test
-    public void testInit_HierarchicalUrlTrailingSlash() throws Exception {
+    public void testInitHierarchicalUrlTrailingSlash() throws Exception {
         testInit("classpath:/repository/");
     }
 
     @Test
-    public void testInit_HierarchicalUrlSpaces() throws Exception {
+    public void testInitHierarchicalUrlSpaces() throws Exception {
         testInit("classpath:/repo%20space");
     }
 
     @Test
-    public void testInit_HierarchicalUrlRoot() throws Exception {
+    public void testInitHierarchicalUrlRoot() throws Exception {
         testInit("classpath:/");
     }
 
     @Test
-    public void testInit_HierarchicalUrlNoPath() throws Exception {
+    public void testInitHierarchicalUrlNoPath() throws Exception {
         testInit("classpath://reserved");
     }
 

@@ -15,18 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Verify
-
+name: PR Automation
 on:
-  push:
-  pull_request:
+  pull_request_target:
+    types:
+      - closed
 
 jobs:
-  build:
-    name: Verify
-    uses: apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v4
-    with:
-      ff-site-run: false
-      maven-matrix: '[ "3.9.9" ]'
-
-
+  pr-automation:
+    name: PR Automation
+    uses: apache/maven-gh-actions-shared/.github/workflows/pr-automation.yml@v4

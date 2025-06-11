@@ -79,6 +79,7 @@ import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -263,6 +264,16 @@ final class HttpTransporter extends AbstractTransporter {
                 HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED);
         String userAgent = ConfigUtils.getString(
                 session, ConfigurationProperties.DEFAULT_USER_AGENT, ConfigurationProperties.USER_AGENT);
+        int maxRedirects = ConfigUtils.getInteger(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_MAX_REDIRECTS,
+                ConfigurationProperties.HTTP_MAX_REDIRECTS + "." + repository.getId(),
+                ConfigurationProperties.HTTP_MAX_REDIRECTS);
+        boolean followRedirects = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_FOLLOW_REDIRECTS,
+                ConfigurationProperties.HTTP_FOLLOW_REDIRECTS + "." + repository.getId(),
+                ConfigurationProperties.HTTP_FOLLOW_REDIRECTS);
 
         Charset credentialsCharset = Charset.forName(credentialEncoding);
         Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
@@ -275,6 +286,8 @@ final class HttpTransporter extends AbstractTransporter {
         SocketConfig socketConfig =
                 SocketConfig.custom().setSoTimeout(requestTimeout).build();
         RequestConfig requestConfig = RequestConfig.custom()
+                .setMaxRedirects(maxRedirects)
+                .setRedirectsEnabled(followRedirects)
                 .setConnectTimeout(connectTimeout)
                 .setConnectionRequestTimeout(connectTimeout)
                 .setLocalAddress(getBindAddress(session, repository))
@@ -306,6 +319,7 @@ final class HttpTransporter extends AbstractTransporter {
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
+                .setRedirectStrategy(LaxRedirectStrategy.INSTANCE)
                 .setDefaultSocketConfig(socketConfig)
                 .setDefaultRequestConfig(requestConfig)
                 .setServiceUnavailableRetryStrategy(serviceUnavailableRetryStrategy)
@@ -523,7 +537,6 @@ final class HttpTransporter extends AbstractTransporter {
         }
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private void mkdirs(URI uri, SharingHttpContext context) {
         List<URI> dirs = UriUtils.getDirectories(baseUri, uri);
         int index = 0;
@@ -600,8 +613,7 @@ final class HttpTransporter extends AbstractTransporter {
         return request;
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
-    private <T extends HttpUriRequest> T resume(T request, GetTask task) {
+    private <T extends HttpUriRequest> void resume(T request, GetTask task) {
         long resumeOffset = task.getResumeOffset();
         if (resumeOffset > 0L && task.getDataFile() != null) {
             request.setHeader(HttpHeaders.RANGE, "bytes=" + resumeOffset + '-');
@@ -610,10 +622,8 @@ final class HttpTransporter extends AbstractTransporter {
                     DateUtils.formatDate(new Date(task.getDataFile().lastModified() - 60L * 1000L)));
             request.setHeader(HttpHeaders.ACCEPT_ENCODING, "identity");
         }
-        return request;
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private void handleStatus(CloseableHttpResponse response) throws HttpResponseException {
         int status = response.getStatusLine().getStatusCode();
         if (status >= 300) {
@@ -787,7 +797,7 @@ final class HttpTransporter extends AbstractTransporter {
                     && (serviceUnavailableHttpCodes.contains(
                             response.getStatusLine().getStatusCode()));
             if (retry) {
-                Long retryInterval = retryInterval(response, executionCount, context);
+                Long retryInterval = retryInterval(response, executionCount);
                 if (retryInterval != null) {
                     RETRY_INTERVAL_HOLDER.set(retryInterval);
                     return true;
@@ -804,7 +814,7 @@ final class HttpTransporter extends AbstractTransporter {
          *
          * @return Long representing the retry interval as millis, or {@code null} if the request should be failed.
          */
-        private Long retryInterval(HttpResponse httpResponse, int executionCount, HttpContext httpContext) {
+        private Long retryInterval(HttpResponse httpResponse, int executionCount) {
             Long result = null;
             Header header = httpResponse.getFirstHeader(HttpHeaders.RETRY_AFTER);
             if (header != null && header.getValue() != null) {
