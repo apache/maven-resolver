@@ -88,6 +88,17 @@ class JdkTransporterTest extends HttpTransporterTest {
     @Test
     protected void testRequestTimeout() throws Exception {}
 
+    // https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a
+    @Override
+    @Disabled
+    @Test
+    protected void testGet_ProxyAuthenticatedHttps() {}
+
+    @Override
+    @Disabled
+    @Test
+    public void testProxyType() {}
+
     public JdkTransporterTest() {
         super(() -> new JdkTransporterFactory(standardChecksumExtractor(), new DefaultPathProcessor()));
     }

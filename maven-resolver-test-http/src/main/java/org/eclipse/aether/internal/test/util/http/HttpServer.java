@@ -350,7 +350,7 @@ public class HttpServer {
                 }
                 headers.put(name, buffer.toString());
             }
-            logEntries.add(new LogEntry(req.getMethod(), req.getPathInfo(), Collections.unmodifiableMap(headers)));
+            logEntries.add(new LogEntry(req.getMethod(), req.getOriginalURI(), Collections.unmodifiableMap(headers)));
         }
     }
 
