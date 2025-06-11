@@ -380,7 +380,7 @@ final class HttpTransporter extends AbstractTransporter {
     private static HttpHost toHost(Proxy proxy) {
         HttpHost host = null;
         if (proxy != null) {
-            host = new HttpHost(proxy.getHost(), proxy.getPort());
+            host = new HttpHost(proxy.getHost(), proxy.getPort(), proxy.getType());
         }
         return host;
     }
