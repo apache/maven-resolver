@@ -113,7 +113,7 @@ public class HttpServer {
 
     private final AtomicInteger connectionsToClose = new AtomicInteger(0);
 
-    private List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
+    private final List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
 
     public String getHost() {
         return "localhost";
@@ -275,7 +275,7 @@ public class HttpServer {
                 }
                 headers.put(name, buffer.toString());
             }
-            logEntries.add(new LogEntry(req.getMethod(), req.getPathInfo(), Collections.unmodifiableMap(headers)));
+            logEntries.add(new LogEntry(req.getMethod(), req.getOriginalURI(), Collections.unmodifiableMap(headers)));
         }
     }
 
