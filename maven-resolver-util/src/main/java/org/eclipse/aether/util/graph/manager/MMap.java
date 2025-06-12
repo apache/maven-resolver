@@ -19,7 +19,6 @@
 package org.eclipse.aether.util.graph.manager;
 
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Warning: this is a special map-like construct that suits only and should be used only in this package!
@@ -58,44 +57,60 @@ public interface MMap<K, V> {
     @Override
     boolean equals(Object o);
 
-    class MMapImpl<K, V> extends HashMap<K, V> implements MMap<K, V> {
+    class MMapImpl<K, V> implements MMap<K, V> {
         private static final MMap<?, ?> EMPTY_MAP = new MMapImpl<>();
 
-        private final ConcurrentHashMap<String, Object> cache = new ConcurrentHashMap<>();
+        private final HashMap<K, V> delegate;
+        private volatile Integer hashCode;
 
-        private MMapImpl() {}
+        private MMapImpl() {
+            this.delegate = new HashMap<>(0);
+            this.hashCode = this.delegate.hashCode();
+        }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "rawtypes"})
         private MMapImpl(MMap<? extends K, ? extends V> m) {
-            super((MMapImpl) m);
+            this.delegate = new HashMap<>(((MMapImpl) m).delegate);
+            this.hashCode = null;
         }
 
         @Override
-        public boolean containsKey(Object key) {
-            return super.containsKey(key);
+        public boolean containsKey(K key) {
+            return delegate.containsKey(key);
         }
 
         @Override
-        public V get(Object key) {
-            return super.get(key);
+        public V get(K key) {
+            return delegate.get(key);
         }
 
         @Override
         public V put(K key, V value) {
-            if (!cache.isEmpty()) {
+            if (hashCode != null) {
                 throw new IllegalStateException("MMap is immutable");
             }
-            return super.put(key, value);
+            return delegate.put(key, value);
         }
 
         @Override
         public int hashCode() {
-            return (Integer) cache.computeIfAbsent("hashCode", k -> super.hashCode());
+            if (hashCode == null) {
+                synchronized (delegate) {
+                    if (hashCode == null) {
+                        hashCode = delegate.hashCode();
+                    }
+                }
+            }
+            return hashCode;
         }
 
         @Override
         public boolean equals(Object o) {
-            return super.equals(o);
+            if (!(o instanceof MMapImpl)) {
+                return false;
+            }
+            MMapImpl<?, ?> other = (MMapImpl<?, ?>) o;
+            return delegate.equals(other.delegate);
         }
     }
 }
