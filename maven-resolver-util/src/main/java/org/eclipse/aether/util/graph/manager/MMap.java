@@ -44,13 +44,13 @@ public class MMap<K, V> {
     }
 
     public static <K, V> MMap<K, V> copy(MMap<K, V> orig) {
-        return new MMap<>(orig.delegate);
+        return new MMap<>(new HashMap<>(orig.delegate));
     }
 
     protected final HashMap<K, V> delegate;
 
     private MMap(HashMap<K, V> delegate) {
-        this.delegate = new HashMap<>(delegate);
+        this.delegate = delegate;
     }
 
     public boolean containsKey(K key) {
