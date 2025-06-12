@@ -66,7 +66,7 @@ public class MMap<K, V> {
     }
 
     public MMap<K, V> done() {
-        return this instanceof DoneMMap ? this : new DoneMMap<>(delegate);
+        return new DoneMMap<>(delegate);
     }
 
     @Override
@@ -90,6 +90,11 @@ public class MMap<K, V> {
         @Override
         public V put(K key, V value) {
             throw new IllegalStateException("Done MMap is immutable");
+        }
+
+        @Override
+        public MMap<K, V> done() {
+            return this;
         }
 
         @Override
