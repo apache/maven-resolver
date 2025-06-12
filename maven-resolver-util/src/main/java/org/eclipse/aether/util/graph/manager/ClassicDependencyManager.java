@@ -19,7 +19,6 @@
 package org.eclipse.aether.util.graph.manager;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManager;
@@ -67,11 +66,11 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
             int depth,
             int deriveUntil,
             int applyFrom,
-            Map<Object, Holder<String>> managedVersions,
-            Map<Object, Holder<String>> managedScopes,
-            Map<Object, Holder<Boolean>> managedOptionals,
-            Map<Object, Holder<String>> managedLocalPaths,
-            Map<Object, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
+            MMap<Key, Holder<String>> managedVersions,
+            MMap<Key, Holder<String>> managedScopes,
+            MMap<Key, Holder<Boolean>> managedOptionals,
+            MMap<Key, Holder<String>> managedLocalPaths,
+            MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
         super(
                 depth,
@@ -98,11 +97,11 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
 
     @Override
     protected DependencyManager newInstance(
-            Map<Object, Holder<String>> managedVersions,
-            Map<Object, Holder<String>> managedScopes,
-            Map<Object, Holder<Boolean>> managedOptionals,
-            Map<Object, Holder<String>> managedLocalPaths,
-            Map<Object, Collection<Holder<Collection<Exclusion>>>> managedExclusions) {
+            MMap<Key, Holder<String>> managedVersions,
+            MMap<Key, Holder<String>> managedScopes,
+            MMap<Key, Holder<Boolean>> managedOptionals,
+            MMap<Key, Holder<String>> managedLocalPaths,
+            MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions) {
         return new ClassicDependencyManager(
                 depth + 1,
                 deriveUntil,
