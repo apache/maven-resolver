@@ -35,81 +35,79 @@ import java.util.HashMap;
  * @param <K>
  * @param <V>
  */
-public interface MMap<K, V> {
+public class MMap<K, V> {
+    private static final MMap<?, ?> EMPTY_MAP = new MMap<>(new HashMap<>(0)).done();
+
     @SuppressWarnings("unchecked")
-    static <K, V> MMap<K, V> empty() {
-        return (MMap<K, V>) MMapImpl.EMPTY_MAP;
+    public static <K, V> MMap<K, V> empty() {
+        return (MMap<K, V>) MMap.EMPTY_MAP;
     }
 
-    static <K, V> MMap<K, V> copy(MMap<K, V> orig) {
-        return new MMapImpl<>(orig);
+    public static <K, V> MMap<K, V> copy(MMap<K, V> orig) {
+        return new MMap<>(orig.delegate);
     }
 
-    boolean containsKey(K key);
+    protected final HashMap<K, V> delegate;
 
-    V get(K key);
+    private MMap(HashMap<K, V> delegate) {
+        this.delegate = new HashMap<>(delegate);
+    }
 
-    V put(K key, V value);
+    public boolean containsKey(K key) {
+        return delegate.containsKey(key);
+    }
+
+    public V get(K key) {
+        return delegate.get(key);
+    }
+
+    public V put(K key, V value) {
+        return delegate.put(key, value);
+    }
+
+    public MMap<K, V> done() {
+        return new DoneMMap<>(delegate);
+    }
 
     @Override
-    int hashCode();
+    public int hashCode() {
+        throw new IllegalStateException("MMap is not done yet");
+    }
 
     @Override
-    boolean equals(Object o);
+    public boolean equals(Object o) {
+        throw new IllegalStateException("MMap is not done yet");
+    }
 
-    class MMapImpl<K, V> implements MMap<K, V> {
-        private static final MMap<?, ?> EMPTY_MAP = new MMapImpl<>();
+    private static class DoneMMap<K, V> extends MMap<K, V> {
+        private final int hashCode;
 
-        private final HashMap<K, V> delegate;
-        private volatile Integer hashCode;
-
-        private MMapImpl() {
-            this.delegate = new HashMap<>(0);
-            this.hashCode = this.delegate.hashCode();
-        }
-
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        private MMapImpl(MMap<? extends K, ? extends V> m) {
-            this.delegate = new HashMap<>(((MMapImpl) m).delegate);
-            this.hashCode = null;
-        }
-
-        @Override
-        public boolean containsKey(K key) {
-            return delegate.containsKey(key);
-        }
-
-        @Override
-        public V get(K key) {
-            return delegate.get(key);
+        private DoneMMap(HashMap<K, V> delegate) {
+            super(delegate);
+            this.hashCode = delegate.hashCode();
         }
 
         @Override
         public V put(K key, V value) {
-            if (hashCode != null) {
-                throw new IllegalStateException("MMap is immutable");
-            }
-            return delegate.put(key, value);
+            throw new IllegalStateException("Done MMap is immutable");
+        }
+
+        @Override
+        public MMap<K, V> done() {
+            return this;
         }
 
         @Override
         public int hashCode() {
-            if (hashCode == null) {
-                synchronized (delegate) {
-                    if (hashCode == null) {
-                        hashCode = delegate.hashCode();
-                    }
-                }
-            }
             return hashCode;
         }
 
         @Override
         public boolean equals(Object o) {
-            if (!(o instanceof MMapImpl)) {
+            if (!(o instanceof MMap)) {
                 return false;
             }
-            MMapImpl<?, ?> other = (MMapImpl<?, ?>) o;
+            MMap<?, ?> other = (MMap<?, ?>) o;
             return delegate.equals(other.delegate);
         }
     }

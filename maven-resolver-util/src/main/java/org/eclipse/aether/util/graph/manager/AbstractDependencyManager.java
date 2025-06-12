@@ -196,7 +196,12 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             }
         }
 
-        return newInstance(managedVersions, managedScopes, managedOptionals, managedLocalPaths, managedExclusions);
+        return newInstance(
+                managedVersions.done(),
+                managedScopes.done(),
+                managedOptionals.done(),
+                managedLocalPaths.done(),
+                managedExclusions.done());
     }
 
     @Override
