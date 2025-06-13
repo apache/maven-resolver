@@ -40,7 +40,7 @@ public interface DependencyManager {
      * @param dependency The dependency to manage, must not be {@code null}.
      * @return The management update to apply to the dependency or {@code null} if the dependency is not managed at all.
      */
-    DependencyManagement manageDependency(Dependency dependency);
+    DependencyManagement manageDependency(int depth, Dependency dependency);
 
     /**
      * Derives a dependency manager for the specified collection context. When calculating the child manager,
@@ -50,5 +50,5 @@ public interface DependencyManager {
      * @return The dependency manager for the dependencies of the target node or {@code null} if dependency management
      *         should no longer be applied.
      */
-    DependencyManager deriveChildManager(DependencyCollectionContext context);
+    DependencyManager deriveChildManager(int depth, DependencyCollectionContext context);
 }

@@ -98,4 +98,8 @@ final class DependencyProcessingContext {
     DependencyNode getParent() {
         return parents.get(parents.size() - 1);
     }
+
+    int depth() {
+        return parents.size();
+    }
 }

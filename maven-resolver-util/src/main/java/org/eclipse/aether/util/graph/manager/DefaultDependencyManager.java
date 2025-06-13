@@ -54,7 +54,6 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     private DefaultDependencyManager(
-            int depth,
             int deriveUntil,
             int applyFrom,
             MMap<Key, Holder<String>> managedVersions,
@@ -64,7 +63,6 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
             MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
         super(
-                depth,
                 deriveUntil,
                 applyFrom,
                 managedVersions,
@@ -83,7 +81,6 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
             MMap<Key, Holder<String>> managedLocalPaths,
             MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions) {
         return new DefaultDependencyManager(
-                depth + 1,
                 deriveUntil,
                 applyFrom,
                 managedVersions,

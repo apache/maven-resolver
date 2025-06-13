@@ -371,6 +371,12 @@
               <configuration>
                 <parameter>
                   <excludes>
+                    <exclude>org.eclipse.aether.collection.DependencyManager</exclude>
+                    <exclude>org.eclipse.aether.util.graph.manager.ClassicDependencyManager</exclude>
+                    <exclude>org.eclipse.aether.util.graph.manager.DefaultDependencyManager</exclude>
+                    <exclude>org.eclipse.aether.util.graph.manager.NoopDependencyManager</exclude>
+                    <exclude>org.eclipse.aether.util.graph.manager.TransitiveDependencyManager</exclude>
+
                     <exclude>org.eclipse.aether.RepositoryCache</exclude>
                     <exclude>org.eclipse.aether.RepositoryListener</exclude>
                     <exclude>org.eclipse.aether.RepositorySystem</exclude>
@@ -435,6 +441,12 @@
               <configuration>
                 <parameter>
                   <excludes>
+                    <exclude>org.eclipse.aether.collection.DependencyManager</exclude>
+                    <exclude>org.eclipse.aether.util.graph.manager.ClassicDependencyManager</exclude>
+                    <exclude>org.eclipse.aether.util.graph.manager.DefaultDependencyManager</exclude>
+                    <exclude>org.eclipse.aether.util.graph.manager.NoopDependencyManager</exclude>
+                    <exclude>org.eclipse.aether.util.graph.manager.TransitiveDependencyManager</exclude>
+
                     <!-- MRESOLVER-338 Drop FileTransform API -->
                     <exclude>org.eclipse.aether.RepositorySystemSession#getFileTransformerManager()</exclude>
                     <exclude>org.eclipse.aether.DefaultRepositorySystemSession#getFileTransformerManager()</exclude>

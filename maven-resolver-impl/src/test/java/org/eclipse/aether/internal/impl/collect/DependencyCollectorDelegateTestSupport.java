@@ -624,7 +624,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
         }
 
         @Override
-        public DependencyManagement manageDependency(Dependency dependency) {
+        public DependencyManagement manageDependency(int depth, Dependency dependency) {
             requireNonNull(dependency, "dependency cannot be null");
             String id = toKey(dependency);
             DependencyManagement mgmt = new DependencyManagement();
@@ -644,7 +644,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
         }
 
         @Override
-        public DependencyManager deriveChildManager(DependencyCollectionContext context) {
+        public DependencyManager deriveChildManager(int depth, DependencyCollectionContext context) {
             requireNonNull(context, "context cannot be null");
             return this;
         }
