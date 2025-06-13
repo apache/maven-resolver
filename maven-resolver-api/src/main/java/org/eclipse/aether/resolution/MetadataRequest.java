@@ -129,7 +129,7 @@ public final class MetadataRequest {
      * @return This request for chaining, never {@code null}.
      */
     public MetadataRequest setRequestContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
         return this;
     }
 

@@ -251,7 +251,7 @@ public final class DefaultDependencyNode implements DependencyNode {
     }
 
     public void setRequestContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
     }
 
     public Map<Object, Object> getData() {

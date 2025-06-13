@@ -93,7 +93,7 @@ public final class LocalArtifactRequest {
      * @return This query for chaining, never {@code null}.
      */
     public LocalArtifactRequest setContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
         return this;
     }
 

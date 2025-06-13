@@ -284,7 +284,7 @@ public final class CollectRequest {
      * @return This request for chaining, never {@code null}.
      */
     public CollectRequest setRequestContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
         return this;
     }
 
