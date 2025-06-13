@@ -40,6 +40,7 @@ import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -140,6 +141,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         List<RemoteRepository> repositories = request.getRepositories();
         List<Dependency> dependencies = request.getDependencies();
         List<Dependency> managedDependencies = request.getManagedDependencies();
+        List<Exclusion> exclusions = request.getExclusions();
 
         Map<String, Object> stats = new LinkedHashMap<>();
         long time1 = System.nanoTime();
@@ -230,6 +232,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
                     repositories,
                     dependencies,
                     managedDependencies,
+                    exclusions,
                     results);
 
             errorPath = results.getErrorPath();
@@ -301,6 +304,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             List<RemoteRepository> repositories,
             List<Dependency> dependencies,
             List<Dependency> managedDependencies,
+            List<Exclusion> exclusions,
             Results results)
             throws DependencyCollectionException;
 
