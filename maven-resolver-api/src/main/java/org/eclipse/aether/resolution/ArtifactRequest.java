@@ -176,7 +176,7 @@ public final class ArtifactRequest {
      * @return This request for chaining, never {@code null}.
      */
     public ArtifactRequest setRequestContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
         return this;
     }
 

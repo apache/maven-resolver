@@ -138,7 +138,7 @@ public final class ArtifactDescriptorRequest {
      * @return This request for chaining, never {@code null}.
      */
     public ArtifactDescriptorRequest setRequestContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
         return this;
     }
 

@@ -89,7 +89,7 @@ public final class LocalMetadataRequest {
      * @return This query for chaining, never {@code null}.
      */
     public LocalMetadataRequest setContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
         return this;
     }
 
