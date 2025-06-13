@@ -138,7 +138,7 @@ public final class VersionRequest {
      * @return This request for chaining, never {@code null}.
      */
     public VersionRequest setRequestContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
         return this;
     }
 

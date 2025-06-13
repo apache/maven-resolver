@@ -170,7 +170,7 @@ public final class ArtifactDownload extends ArtifactTransfer {
      * @return This transfer for chaining, never {@code null}.
      */
     public ArtifactDownload setRequestContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
         return this;
     }
 
