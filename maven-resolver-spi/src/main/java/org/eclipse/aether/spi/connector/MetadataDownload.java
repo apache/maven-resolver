@@ -133,7 +133,7 @@ public final class MetadataDownload extends MetadataTransfer {
      * @return This transfer for chaining, never {@code null}.
      */
     public MetadataDownload setRequestContext(String context) {
-        this.context = (context != null) ? context : "";
+        this.context = (context != null) ? context.intern() : "";
         return this;
     }
 
