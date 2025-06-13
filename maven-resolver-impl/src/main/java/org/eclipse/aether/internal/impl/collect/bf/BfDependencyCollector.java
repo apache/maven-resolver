@@ -157,6 +157,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             logger.debug("Collector skip mode enabled");
         }
 
+        int depth = 0;
         try (DependencyResolutionSkipper skipper = useSkip
                         ? DependencyResolutionSkipper.defaultSkipper()
                         : DependencyResolutionSkipper.neverSkipper();
@@ -167,7 +168,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                     ? session.getDependencySelector().deriveChildSelector(context)
                     : null;
             DependencyManager rootDepManager = session.getDependencyManager() != null
-                    ? session.getDependencyManager().deriveChildManager(context)
+                    ? session.getDependencyManager().deriveChildManager(depth, context)
                     : null;
             DependencyTraverser rootDepTraverser = session.getDependencyTraverser() != null
                     ? session.getDependencyTraverser().deriveChildTraverser(context)
@@ -190,7 +191,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                         managedDependencies,
                         parents,
                         dependency,
-                        PremanagedDependency.create(rootDepManager, dependency, false, args.premanagedState));
+                        PremanagedDependency.create(depth, rootDepManager, dependency, false, args.premanagedState));
                 if (!filter(processingContext)) {
                     processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
                     resolveArtifactDescriptorAsync(args, processingContext, results);
@@ -270,7 +271,11 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                                             .equals(d.getArtifact().getArtifactId());
 
                     PremanagedDependency premanagedDependency = PremanagedDependency.create(
-                            context.depManager, d, disableVersionManagementSubsequently, args.premanagedState);
+                            context.depth(),
+                            context.depManager,
+                            d,
+                            disableVersionManagementSubsequently,
+                            args.premanagedState);
                     DependencyProcessingContext relocatedContext = new DependencyProcessingContext(
                             context.depSelector,
                             context.depManager,
@@ -357,8 +362,9 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
 
         DependencySelector childSelector =
                 parentContext.depSelector != null ? parentContext.depSelector.deriveChildSelector(context) : null;
-        DependencyManager childManager =
-                parentContext.depManager != null ? parentContext.depManager.deriveChildManager(context) : null;
+        DependencyManager childManager = parentContext.depManager != null
+                ? parentContext.depManager.deriveChildManager(parentContext.depth(), context)
+                : null;
         DependencyTraverser childTraverser =
                 parentContext.depTraverser != null ? parentContext.depTraverser.deriveChildTraverser(context) : null;
         VersionFilter childFilter =
@@ -388,7 +394,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                     RequestTrace childTrace = collectStepTrace(
                             parentContext.trace, args.request.getRequestContext(), parents, dependency);
                     PremanagedDependency premanagedDependency = PremanagedDependency.create(
-                            childManager, dependency, disableVersionManagement, args.premanagedState);
+                            parents.size(), childManager, dependency, disableVersionManagement, args.premanagedState);
                     DependencyProcessingContext processingContext = new DependencyProcessingContext(
                             childSelector,
                             childManager,

@@ -75,58 +75,64 @@ public class DependencyManagerTest {
     void testClassic() {
         DependencyManager manager = new ClassicDependencyManager(null);
         DependencyManagement mngt;
+        int depth = 0;
 
         // depth=1: only exclusion applied, nothing more
-        manager = manager.deriveChildManager(newContext(
-                new Dependency(A2, null, null),
-                new Dependency(B, null, true),
-                new Dependency(C1, "newscope", null),
-                new Dependency(D1, null, null, Collections.singleton(EXCLUSION))));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(
+                depth,
+                newContext(
+                        new Dependency(A2, null, null),
+                        new Dependency(B, null, true),
+                        new Dependency(C1, "newscope", null),
+                        new Dependency(D1, null, null, Collections.singleton(EXCLUSION))));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         assertNull(mngt);
 
         // depth=2: all applied (new ones ignored)
-        manager = manager.deriveChildManager(newContext(new Dependency(B2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(depth, newContext(new Dependency(B2, null, null)));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
         assertNull(mngt.getVersion());
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         assertNull(mngt);
 
         // depth=3: all existing applied, new depMgt ignored, carried on only what we have so far
-        manager = manager.deriveChildManager(newContext(new Dependency(E2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(depth, newContext(new Dependency(E2, null, null)));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         assertNull(mngt);
     }
 
@@ -134,58 +140,64 @@ public class DependencyManagerTest {
     void testClassicTransitive() {
         DependencyManager manager = new ClassicDependencyManager(true, null);
         DependencyManagement mngt;
+        int depth = 0;
 
         // depth=1: only exclusion applied, nothing more
-        manager = manager.deriveChildManager(newContext(
-                new Dependency(A2, null, null),
-                new Dependency(B, null, true),
-                new Dependency(C1, "newscope", null),
-                new Dependency(D1, null, null, Collections.singleton(EXCLUSION))));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(
+                depth,
+                newContext(
+                        new Dependency(A2, null, null),
+                        new Dependency(B, null, true),
+                        new Dependency(C1, "newscope", null),
+                        new Dependency(D1, null, null, Collections.singleton(EXCLUSION))));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         assertNull(mngt);
 
         // depth=2: all applied (new ones ignored)
-        manager = manager.deriveChildManager(newContext(new Dependency(B2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(depth, newContext(new Dependency(B2, null, null)));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
         assertNull(mngt.getVersion());
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         assertNull(mngt);
 
         // depth=3: all existing applied, new depMgt processed, carried on
-        manager = manager.deriveChildManager(newContext(new Dependency(E2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(depth, newContext(new Dependency(E2, null, null)));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         // DO NOT APPLY ONTO ITSELF
         // assertNotNull(mngt);
         // assertEquals(mngt.getVersion(), E2.getVersion());
@@ -195,59 +207,65 @@ public class DependencyManagerTest {
     void testTransitive() {
         DependencyManager manager = new TransitiveDependencyManager(null);
         DependencyManagement mngt;
+        int depth = 0;
 
         // depth=1: only exclusion applied, nothing more
-        manager = manager.deriveChildManager(newContext(
-                new Dependency(A2, null, null),
-                new Dependency(B, null, true),
-                new Dependency(C1, "newscope", null),
-                new Dependency(D1, null, null, Collections.singleton(EXCLUSION))));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(
+                depth,
+                newContext(
+                        new Dependency(A2, null, null),
+                        new Dependency(B, null, true),
+                        new Dependency(C1, "newscope", null),
+                        new Dependency(D1, null, null, Collections.singleton(EXCLUSION))));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         assertNull(mngt);
 
         // depth=2: all applied
-        manager = manager.deriveChildManager(newContext(new Dependency(B2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(depth, newContext(new Dependency(B2, null, null)));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
         // DO NOT APPLY ONTO ITSELF
         // assertEquals(B2.getVersion(), mngt.getVersion());
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         assertNull(mngt);
 
         // depth=3: all existing applied, new depMgt processed, carried on
-        manager = manager.deriveChildManager(newContext(new Dependency(E2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(depth, newContext(new Dependency(E2, null, null)));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         // DO NOT APPLY ONTO ITSELF
         // assertNotNull(mngt);
         // assertEquals(mngt.getVersion(), E2.getVersion());
@@ -257,63 +275,69 @@ public class DependencyManagerTest {
     void testDefault() {
         DependencyManager manager = new DefaultDependencyManager(null);
         DependencyManagement mngt;
+        int depth = 0;
 
         // depth=1: all applied
-        manager = manager.deriveChildManager(newContext(
-                new Dependency(A2, null, null),
-                new Dependency(B, null, true),
-                new Dependency(C1, "newscope", null),
-                new Dependency(D1, null, null, Collections.singleton(EXCLUSION))));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(
+                depth,
+                newContext(
+                        new Dependency(A2, null, null),
+                        new Dependency(B, null, true),
+                        new Dependency(C1, "newscope", null),
+                        new Dependency(D1, null, null, Collections.singleton(EXCLUSION))));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
         assertNull(mngt.getVersion());
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         assertNull(mngt);
 
         // depth=2: all applied
-        manager = manager.deriveChildManager(newContext(new Dependency(B2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(depth, newContext(new Dependency(B2, null, null)));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
         // DO NOT APPLY ONTO ITSELF
         // assertEquals(B2.getVersion(), mngt.getVersion());
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         assertNull(mngt);
 
         // depth=3: all existing applied, new depMgt processed, carried on
-        manager = manager.deriveChildManager(newContext(new Dependency(E2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
+        manager = manager.deriveChildManager(depth, newContext(new Dependency(E2, null, null)));
+        depth++;
+        mngt = manager.manageDependency(depth, new Dependency(A1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
+        mngt = manager.manageDependency(depth, new Dependency(B1, null));
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
-        mngt = manager.manageDependency(new Dependency(C1, null));
+        mngt = manager.manageDependency(depth, new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getScope(), "newscope");
-        mngt = manager.manageDependency(new Dependency(D1, null));
+        mngt = manager.manageDependency(depth, new Dependency(D1, null));
         assertNotNull(mngt);
         assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
+        mngt = manager.manageDependency(depth, new Dependency(E1, null));
         // DO NOT APPLY ONTO ITSELF
         // assertNotNull(mngt);
         // assertEquals(mngt.getVersion(), E2.getVersion());

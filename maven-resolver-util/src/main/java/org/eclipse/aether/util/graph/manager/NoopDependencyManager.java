@@ -41,12 +41,12 @@ public final class NoopDependencyManager implements DependencyManager {
      */
     public NoopDependencyManager() {}
 
-    public DependencyManager deriveChildManager(DependencyCollectionContext context) {
+    public DependencyManager deriveChildManager(int depth, DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
         return this;
     }
 
-    public DependencyManagement manageDependency(Dependency dependency) {
+    public DependencyManagement manageDependency(int depth, Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
         return null;
     }

@@ -51,7 +51,6 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     private TransitiveDependencyManager(
-            int depth,
             int deriveUntil,
             int applyFrom,
             MMap<Key, Holder<String>> managedVersions,
@@ -61,7 +60,6 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
             MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
         super(
-                depth,
                 deriveUntil,
                 applyFrom,
                 managedVersions,
@@ -80,7 +78,6 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
             MMap<Key, Holder<String>> managedLocalPaths,
             MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions) {
         return new TransitiveDependencyManager(
-                depth + 1,
                 deriveUntil,
                 applyFrom,
                 managedVersions,

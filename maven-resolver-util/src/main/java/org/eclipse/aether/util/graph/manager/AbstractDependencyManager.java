@@ -55,9 +55,6 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.0
  */
 public abstract class AbstractDependencyManager implements DependencyManager {
-
-    protected final int depth;
-
     protected final int deriveUntil;
 
     protected final int applyFrom;
@@ -78,7 +75,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     protected AbstractDependencyManager(int deriveUntil, int applyFrom, ScopeManager scopeManager) {
         this(
-                0,
                 deriveUntil,
                 applyFrom,
                 MMap.empty(),
@@ -93,7 +89,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     protected AbstractDependencyManager(
-            int depth,
             int deriveUntil,
             int applyFrom,
             MMap<Key, Holder<String>> managedVersions,
@@ -102,7 +97,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             MMap<Key, Holder<String>> managedLocalPaths,
             MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
-        this.depth = depth;
         this.deriveUntil = deriveUntil;
         this.applyFrom = applyFrom;
         this.managedVersions = requireNonNull(managedVersions);
@@ -114,7 +108,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         this.systemDependencyScope = systemDependencyScope;
 
         this.hashCode = Objects.hash(
-                depth,
                 deriveUntil,
                 applyFrom,
                 managedVersions,
@@ -132,9 +125,9 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions);
 
     @Override
-    public DependencyManager deriveChildManager(DependencyCollectionContext context) {
+    public DependencyManager deriveChildManager(int depth, DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
-        if (!isDerived()) {
+        if (!isDerived(depth)) {
             return this;
         }
 
@@ -205,16 +198,16 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     @Override
-    public DependencyManagement manageDependency(Dependency dependency) {
+    public DependencyManagement manageDependency(int depth, Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
         DependencyManagement management = null;
         Key key = new Key(dependency.getArtifact());
 
-        if (isApplied()) {
+        if (isApplied(depth)) {
             Holder<String> version = managedVersions.get(key);
             // is managed locally by model builder
             // apply only rules coming from "higher" levels
-            if (version != null && isApplicable(version)) {
+            if (version != null && isApplicable(depth, version)) {
                 management = new DependencyManagement();
                 management.setVersion(version.getValue());
             }
@@ -222,7 +215,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             Holder<String> scope = managedScopes.get(key);
             // is managed locally by model builder
             // apply only rules coming from "higher" levels
-            if (scope != null && isApplicable(scope)) {
+            if (scope != null && isApplicable(depth, scope)) {
                 if (management == null) {
                     management = new DependencyManagement();
                 }
@@ -258,7 +251,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             // optional is not managed by model builder
             // apply only rules coming from "higher" levels
             Holder<Boolean> optional = managedOptionals.get(key);
-            if (optional != null && isApplicable(optional)) {
+            if (optional != null && isApplicable(depth, optional)) {
                 if (management == null) {
                     management = new DependencyManagement();
                 }
@@ -289,21 +282,21 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     /**
      * Returns {@code true} if current context should be factored in (collected/derived).
      */
-    protected boolean isDerived() {
+    protected boolean isDerived(int depth) {
         return depth < deriveUntil;
     }
 
     /**
      * Returns {@code true} if current dependency should be managed according to so far collected/derived rules.
      */
-    protected boolean isApplied() {
+    protected boolean isApplied(int depth) {
         return depth >= applyFrom;
     }
 
     /**
      * Returns {@code true} if rule in holder is applicable at current depth.
      */
-    protected boolean isApplicable(Holder<?> holder) {
+    protected boolean isApplicable(int depth, Holder<?> holder) {
         // explanation: derive collects rules (at given depth) and then last
         // call newInstance does depth++. This means that distance 1 is still "same node".
         // Hence, rules from depth - 2 or above should be applied.
@@ -320,8 +313,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         }
 
         AbstractDependencyManager that = (AbstractDependencyManager) obj;
-        return depth == that.depth
-                && deriveUntil == that.deriveUntil
+        return deriveUntil == that.deriveUntil
                 && applyFrom == that.applyFrom
                 && managedVersions.equals(that.managedVersions)
                 && managedScopes.equals(that.managedScopes)

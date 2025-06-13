@@ -86,11 +86,12 @@ public class PremanagedDependency {
     }
 
     public static PremanagedDependency create(
+            int depth,
             DependencyManager depManager,
             Dependency dependency,
             boolean disableVersionManagement,
             boolean premanagedState) {
-        DependencyManagement depMngt = depManager != null ? depManager.manageDependency(dependency) : null;
+        DependencyManagement depMngt = depManager != null ? depManager.manageDependency(depth, dependency) : null;
 
         int managedBits = 0;
         String premanagedVersion = null;

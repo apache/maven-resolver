@@ -97,9 +97,11 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
         NodeStack nodes = new NodeStack();
         nodes.push(node);
 
+        int depth = 0;
         Args args = new Args(session, pool, nodes, context, versionContext, request);
 
         process(
+                depth + 1,
                 args,
                 trace,
                 results,
@@ -109,7 +111,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                         ? session.getDependencySelector().deriveChildSelector(context)
                         : null,
                 session.getDependencyManager() != null
-                        ? session.getDependencyManager().deriveChildManager(context)
+                        ? session.getDependencyManager().deriveChildManager(depth, context)
                         : null,
                 session.getDependencyTraverser() != null
                         ? session.getDependencyTraverser().deriveChildTraverser(context)
@@ -124,6 +126,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
 
     @SuppressWarnings("checkstyle:parameternumber")
     private void process(
+            int depth,
             final Args args,
             RequestTrace trace,
             Results results,
@@ -141,12 +144,22 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
         }
         for (Dependency dependency : dependencies) {
             processDependency(
-                    args, trace, results, repositories, depSelector, depManager, depTraverser, verFilter, dependency);
+                    depth,
+                    args,
+                    trace,
+                    results,
+                    repositories,
+                    depSelector,
+                    depManager,
+                    depTraverser,
+                    verFilter,
+                    dependency);
         }
     }
 
     @SuppressWarnings("checkstyle:parameternumber")
     private void processDependency(
+            int depth,
             Args args,
             RequestTrace trace,
             Results results,
@@ -159,6 +172,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
 
         List<Artifact> relocations = Collections.emptyList();
         processDependency(
+                depth,
                 args,
                 trace,
                 results,
@@ -174,6 +188,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
 
     @SuppressWarnings("checkstyle:parameternumber")
     private void processDependency(
+            int depth,
             Args args,
             RequestTrace parent,
             Results results,
@@ -190,8 +205,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
         }
 
         RequestTrace trace = collectStepTrace(parent, args.request.getRequestContext(), args.nodes.nodes, dependency);
-        PremanagedDependency preManaged =
-                PremanagedDependency.create(depManager, dependency, disableVersionManagement, args.premanagedState);
+        PremanagedDependency preManaged = PremanagedDependency.create(
+                depth, depManager, dependency, disableVersionManagement, args.premanagedState);
         dependency = preManaged.getManagedDependency();
 
         boolean noDescriptor = isLackingDescriptor(args.session, dependency.getArtifact());
@@ -246,6 +261,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                                             .equals(d.getArtifact().getArtifactId());
 
                     processDependency(
+                            depth,
                             args,
                             parent,
                             results,
@@ -280,6 +296,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                             traverse && !descriptorResult.getDependencies().isEmpty();
                     if (recurse) {
                         doRecurse(
+                                depth,
                                 args,
                                 parent,
                                 results,
@@ -312,6 +329,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
 
     @SuppressWarnings("checkstyle:parameternumber")
     private void doRecurse(
+            int depth,
             Args args,
             RequestTrace trace,
             Results results,
@@ -328,7 +346,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
         context = args.collectionContext.get();
 
         DependencySelector childSelector = depSelector != null ? depSelector.deriveChildSelector(context) : null;
-        DependencyManager childManager = depManager != null ? depManager.deriveChildManager(context) : null;
+        DependencyManager childManager = depManager != null ? depManager.deriveChildManager(depth, context) : null;
         DependencyTraverser childTraverser = depTraverser != null ? depTraverser.deriveChildTraverser(context) : null;
         VersionFilter childFilter = verFilter != null ? verFilter.deriveChildFilter(context) : null;
 
@@ -347,6 +365,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
             args.nodes.push(child);
 
             process(
+                    depth + 1,
                     args,
                     trace,
                     results,
