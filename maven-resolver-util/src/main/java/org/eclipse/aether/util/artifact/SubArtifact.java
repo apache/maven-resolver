@@ -137,8 +137,8 @@ public final class SubArtifact extends AbstractArtifact {
     public SubArtifact(
             Artifact mainArtifact, String classifier, String extension, Map<String, String> properties, Path path) {
         this.mainArtifact = requireNonNull(mainArtifact, "main artifact cannot be null");
-        this.classifier = classifier;
-        this.extension = extension;
+        this.classifier = classifier == null ? null : classifier.intern();
+        this.extension = extension == null ? null : extension.intern();
         this.path = path;
         this.properties = copyProperties(properties);
     }
