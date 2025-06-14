@@ -119,11 +119,11 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     public static final String CONFIG_PROP_THREADS = CONFIG_PROPS_PREFIX + "threads";
 
     /**
-     * The default value for {@link #CONFIG_PROP_THREADS}, default value 5.
+     * The default value for {@link #CONFIG_PROP_THREADS}, default value {@code Runtime.getRuntime().availableProcessors()}.
      *
      * @since 1.9.0
      */
-    public static final int DEFAULT_THREADS = 5;
+    public static final int DEFAULT_THREADS = Runtime.getRuntime().availableProcessors();
 
     @Inject
     public BfDependencyCollector(
@@ -470,7 +470,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     }
 
     static class ParallelDescriptorResolver implements Closeable {
-        private final ExecutorService executorService;
+        private static volatile ExecutorService executorService;
 
         /**
          * Artifact ID -> Future of DescriptorResolutionResult
@@ -478,11 +478,20 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         private final Map<String, Future<DescriptorResolutionResult>> results = new ConcurrentHashMap<>(256);
 
         ParallelDescriptorResolver(int threads) {
-            this.executorService = ExecutorUtils.threadPool(threads, getClass().getSimpleName() + "-");
+            if (executorService == null) {
+                synchronized (ParallelDescriptorResolver.class) {
+                    if (executorService == null) {
+                        // create only once, so that we can reuse it across multiple instances of this class
+                        // and avoid creating too many threads / recreating it for too many times
+                        executorService = ExecutorUtils.threadPool(
+                                threads, ParallelDescriptorResolver.class.getSimpleName() + "-");
+                    }
+                }
+            }
         }
 
         void resolveDescriptors(Artifact artifact, Callable<DescriptorResolutionResult> callable) {
-            results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> this.executorService.submit(callable));
+            results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> executorService.submit(callable));
         }
 
         void cacheVersionRangeDescriptor(Artifact artifact, DescriptorResolutionResult resolutionResult) {
@@ -494,9 +503,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         }
 
         @Override
-        public void close() {
-            executorService.shutdown();
-        }
+        public void close() {}
     }
 
     static class DoneFuture<V> implements Future<V> {

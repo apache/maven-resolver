@@ -112,11 +112,11 @@ public final class DefaultArtifact extends AbstractArtifact {
             throw new IllegalArgumentException("Bad artifact coordinates " + coords
                     + ", expected format is <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>");
         }
-        groupId = m.group(1);
-        artifactId = m.group(2);
-        extension = get(m.group(4), type == null ? "jar" : type.getExtension());
-        classifier = get(m.group(6), type == null ? "" : type.getClassifier());
-        this.version = emptify(m.group(7));
+        groupId = m.group(1).intern();
+        artifactId = m.group(2).intern();
+        extension = get(m.group(4), type == null ? "jar" : type.getExtension()).intern();
+        classifier = get(m.group(6), type == null ? "" : type.getClassifier()).intern();
+        this.version = emptify(m.group(7)).intern();
         this.path = null;
         this.properties = mergeArtifactProperties(properties, (type != null) ? type.getProperties() : null);
     }
@@ -193,19 +193,19 @@ public final class DefaultArtifact extends AbstractArtifact {
             String version,
             Map<String, String> properties,
             ArtifactType type) {
-        this.groupId = emptify(groupId);
-        this.artifactId = emptify(artifactId);
+        this.groupId = emptify(groupId).intern();
+        this.artifactId = emptify(artifactId).intern();
         if (classifier != null || type == null) {
-            this.classifier = emptify(classifier);
+            this.classifier = emptify(classifier).intern();
         } else {
-            this.classifier = emptify(type.getClassifier());
+            this.classifier = emptify(type.getClassifier()).intern();
         }
         if (extension != null || type == null) {
-            this.extension = emptify(extension);
+            this.extension = emptify(extension).intern();
         } else {
-            this.extension = emptify(type.getExtension());
+            this.extension = emptify(type.getExtension()).intern();
         }
-        this.version = emptify(version);
+        this.version = emptify(version).intern();
         this.path = null;
         this.properties = mergeArtifactProperties(properties, (type != null) ? type.getProperties() : null);
     }
@@ -255,11 +255,11 @@ public final class DefaultArtifact extends AbstractArtifact {
             String version,
             Map<String, String> properties,
             File file) {
-        this.groupId = emptify(groupId);
-        this.artifactId = emptify(artifactId);
-        this.classifier = emptify(classifier);
-        this.extension = emptify(extension);
-        this.version = emptify(version);
+        this.groupId = emptify(groupId).intern();
+        this.artifactId = emptify(artifactId).intern();
+        this.classifier = emptify(classifier).intern();
+        this.extension = emptify(extension).intern();
+        this.version = emptify(version).intern();
         this.path = file != null ? file.toPath() : null;
         this.properties = copyProperties(properties);
     }
@@ -284,11 +284,11 @@ public final class DefaultArtifact extends AbstractArtifact {
             String version,
             Map<String, String> properties,
             Path path) {
-        this.groupId = emptify(groupId);
-        this.artifactId = emptify(artifactId);
-        this.classifier = emptify(classifier);
-        this.extension = emptify(extension);
-        this.version = emptify(version);
+        this.groupId = emptify(groupId).intern();
+        this.artifactId = emptify(artifactId).intern();
+        this.classifier = emptify(classifier).intern();
+        this.extension = emptify(extension).intern();
+        this.version = emptify(version).intern();
         this.path = path;
         this.properties = copyProperties(properties);
     }
@@ -302,11 +302,11 @@ public final class DefaultArtifact extends AbstractArtifact {
             Path path,
             Map<String, String> properties) {
         // NOTE: This constructor assumes immutability of the provided properties, for internal use only
-        this.groupId = emptify(groupId);
-        this.artifactId = emptify(artifactId);
-        this.classifier = emptify(classifier);
-        this.extension = emptify(extension);
-        this.version = emptify(version);
+        this.groupId = emptify(groupId).intern();
+        this.artifactId = emptify(artifactId).intern();
+        this.classifier = emptify(classifier).intern();
+        this.extension = emptify(extension).intern();
+        this.version = emptify(version).intern();
         this.path = path;
         this.properties = properties;
     }
