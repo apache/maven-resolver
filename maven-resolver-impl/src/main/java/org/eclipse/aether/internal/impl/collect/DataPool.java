@@ -513,7 +513,8 @@ public final class DataPool {
             this.traverser = traverser;
             this.filter = filter;
 
-            hashCode = Objects.hash(artifact, repositories, selector, manager, traverser, filter);
+            hashCode =
+                    Objects.hash(artifact, repositories, selector, System.identityHashCode(manager), traverser, filter);
         }
 
         @Override
