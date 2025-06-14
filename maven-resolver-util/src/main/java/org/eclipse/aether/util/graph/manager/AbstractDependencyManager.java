@@ -74,7 +74,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     protected final SystemDependencyScope systemDependencyScope;
 
-    private final int hashCode;
+    private volatile long hashCode = Long.MAX_VALUE;
 
     protected AbstractDependencyManager(int deriveUntil, int applyFrom, ScopeManager scopeManager) {
         this(
@@ -112,16 +112,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         this.managedExclusions = requireNonNull(managedExclusions);
         // nullable: if using scope manager, but there is no system scope defined
         this.systemDependencyScope = systemDependencyScope;
-
-        this.hashCode = Objects.hash(
-                depth,
-                deriveUntil,
-                applyFrom,
-                managedVersions,
-                managedScopes,
-                managedOptionals,
-                managedLocalPaths,
-                managedExclusions);
     }
 
     protected abstract DependencyManager newInstance(
@@ -332,7 +322,20 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     @Override
     public int hashCode() {
-        return hashCode;
+        if (this.hashCode != Long.MAX_VALUE) {
+            return (int) hashCode;
+        }
+        int result = Objects.hash(
+                depth,
+                deriveUntil,
+                applyFrom,
+                managedVersions,
+                managedScopes,
+                managedOptionals,
+                managedLocalPaths,
+                managedExclusions);
+        this.hashCode = result;
+        return result;
     }
 
     protected static class Key {

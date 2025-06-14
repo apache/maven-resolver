@@ -80,11 +80,10 @@ public class MMap<K, V> {
     }
 
     private static class DoneMMap<K, V> extends MMap<K, V> {
-        private final int hashCode;
+        private volatile long hashCode = Long.MAX_VALUE;
 
         private DoneMMap(HashMap<K, V> delegate) {
             super(delegate);
-            this.hashCode = delegate.hashCode();
         }
 
         @Override
@@ -99,7 +98,12 @@ public class MMap<K, V> {
 
         @Override
         public int hashCode() {
-            return hashCode;
+            if (this.hashCode != Long.MAX_VALUE) {
+                return (int) hashCode;
+            }
+            int result = delegate.hashCode();
+            this.hashCode = result;
+            return result;
         }
 
         @Override
