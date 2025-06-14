@@ -89,13 +89,19 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
     }
 
     private String insertRepositoryKey(String metadataType, String repositoryKey) {
-        String result;
-        int idx = metadataType.indexOf('.');
-        if (idx < 0) {
-            result = metadataType + '-' + repositoryKey;
+        if (metadataType.contains("/") && !metadataType.endsWith("/")) {
+            int lastSlash = metadataType.lastIndexOf('/');
+            return metadataType.substring(0, lastSlash + 1)
+                    + insertRepositoryKey(metadataType.substring(lastSlash + 1), repositoryKey);
         } else {
-            result = metadataType.substring(0, idx) + '-' + repositoryKey + metadataType.substring(idx);
+            String result;
+            int idx = metadataType.indexOf('.');
+            if (idx < 0) {
+                result = metadataType + '-' + repositoryKey;
+            } else {
+                result = metadataType.substring(0, idx) + '-' + repositoryKey + metadataType.substring(idx);
+            }
+            return result;
         }
-        return result;
     }
 }
