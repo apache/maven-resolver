@@ -29,7 +29,7 @@ public class GenericVersionRangeTest {
     private final GenericVersionScheme versionScheme = new GenericVersionScheme();
 
     private Version newVersion(String version) {
-        return new GenericVersion(version);
+        return versionScheme.parseVersion(version);
     }
 
     private VersionRange parseValid(String range) {

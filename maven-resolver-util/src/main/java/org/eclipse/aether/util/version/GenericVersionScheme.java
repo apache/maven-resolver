@@ -18,6 +18,9 @@
  */
 package org.eclipse.aether.util.version;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /**
@@ -46,9 +49,12 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
  * </p>
  */
 public class GenericVersionScheme extends VersionSchemeSupport {
+
+    private final ConcurrentMap<String, GenericVersion> versionCache = new ConcurrentHashMap<>(256);
+
     @Override
     public GenericVersion parseVersion(final String version) throws InvalidVersionSpecificationException {
-        return new GenericVersion(version);
+        return versionCache.computeIfAbsent(version, GenericVersion::new);
     }
 
     /**
@@ -67,10 +73,11 @@ public class GenericVersionScheme extends VersionSchemeSupport {
             return;
         }
 
+        GenericVersionScheme scheme = new GenericVersionScheme();
         GenericVersion prev = null;
         int i = 1;
         for (String version : args) {
-            GenericVersion c = new GenericVersion(version);
+            GenericVersion c = scheme.parseVersion(version);
 
             if (prev != null) {
                 int compare = prev.compareTo(c);
