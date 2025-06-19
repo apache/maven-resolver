@@ -28,9 +28,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class UnionVersionRangeTest {
 
+    private final GenericVersionScheme versionScheme = new GenericVersionScheme();
+
     private VersionRange newRange(String range) {
         try {
-            return new GenericVersionScheme().parseVersionRange(range);
+            return versionScheme.parseVersionRange(range);
         } catch (InvalidVersionSpecificationException e) {
             throw new IllegalArgumentException(e);
         }
@@ -44,7 +46,7 @@ public class UnionVersionRangeTest {
             assertNotNull(bound.getVersion());
             assertEquals(inclusive, bound.isInclusive());
             try {
-                assertEquals(new GenericVersionScheme().parseVersion(version), bound.getVersion());
+                assertEquals(versionScheme.parseVersion(version), bound.getVersion());
             } catch (InvalidVersionSpecificationException e) {
                 throw new IllegalArgumentException(e);
             }

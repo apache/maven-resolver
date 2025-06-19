@@ -28,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GenericVersionRangeTest {
     private final GenericVersionScheme versionScheme = new GenericVersionScheme();
 
-    private Version newVersion(String version) {
-        return new GenericVersion(version);
+    private Version newVersion(String version) throws InvalidVersionSpecificationException {
+        return versionScheme.parseVersion(version);
     }
 
     private VersionRange parseValid(String range) {
@@ -49,16 +49,16 @@ public class GenericVersionRangeTest {
         }
     }
 
-    private void assertContains(VersionRange range, String version) {
+    private void assertContains(VersionRange range, String version) throws InvalidVersionSpecificationException {
         assertTrue(range.containsVersion(newVersion(version)), range + " should contain " + version);
     }
 
-    private void assertNotContains(VersionRange range, String version) {
+    private void assertNotContains(VersionRange range, String version) throws InvalidVersionSpecificationException {
         assertFalse(range.containsVersion(newVersion(version)), range + " should not contain " + version);
     }
 
     @Test
-    void testLowerBoundInclusiveUpperBoundInclusive() {
+    void testLowerBoundInclusiveUpperBoundInclusive() throws InvalidVersionSpecificationException {
         VersionRange range = parseValid("[1,2]");
         assertContains(range, "1");
         assertContains(range, "1.1-SNAPSHOT");
@@ -67,7 +67,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    void testLowerBoundInclusiveUpperBoundExclusive() {
+    void testLowerBoundInclusiveUpperBoundExclusive() throws InvalidVersionSpecificationException {
         VersionRange range = parseValid("[1.2.3.4.5,1.2.3.4.6)");
         assertContains(range, "1.2.3.4.5");
         assertNotContains(range, "1.2.3.4.6");
@@ -75,7 +75,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    void testLowerBoundExclusiveUpperBoundInclusive() {
+    void testLowerBoundExclusiveUpperBoundInclusive() throws InvalidVersionSpecificationException {
         VersionRange range = parseValid("(1a,1b]");
         assertNotContains(range, "1a");
         assertContains(range, "1b");
@@ -83,7 +83,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    void testLowerBoundExclusiveUpperBoundExclusive() {
+    void testLowerBoundExclusiveUpperBoundExclusive() throws InvalidVersionSpecificationException {
         VersionRange range = parseValid("(1,3)");
         assertNotContains(range, "1");
         assertContains(range, "2-SNAPSHOT");
@@ -92,7 +92,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    void testSingleVersion() {
+    void testSingleVersion() throws InvalidVersionSpecificationException {
         VersionRange range = parseValid("[1]");
         assertContains(range, "1");
         assertEquals(range, parseValid(range.toString()));
@@ -103,7 +103,7 @@ public class GenericVersionRangeTest {
     }
 
     @Test
-    void testSingleWildcardVersion() {
+    void testSingleWildcardVersion() throws InvalidVersionSpecificationException {
         VersionRange range = parseValid("[1.2.*]");
         assertContains(range, "1.2-alpha-1");
         assertContains(range, "1.2-SNAPSHOT");
