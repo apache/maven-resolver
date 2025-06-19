@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Warning: this is a special map-like construct that suits only and should be used only in this package!
@@ -52,15 +51,12 @@ public class MMap<K, V> {
     }
 
     public static <K, V> MMap<K, Collection<V>> copyWithListValue(MMap<K, Collection<V>> orig) {
-        HashMap<K, Collection<V>> newMap = new HashMap<>((int) Math.ceil(orig.size() / 0.75D));
-        for (Map.Entry<K, Collection<V>> entry : orig.delegate.entrySet()) {
+        HashMap<K, Collection<V>> delegateLocal = orig.delegate;
+        HashMap<K, Collection<V>> newMap = new HashMap<>((int) Math.ceil(delegateLocal.size() / 0.75D));
+        for (Map.Entry<K, Collection<V>> entry : delegateLocal.entrySet()) {
             newMap.put(entry.getKey(), entry.getValue() == null ? null : new ArrayList<>(entry.getValue()));
         }
         return new MMap<>(newMap);
-    }
-
-    public static <K, V> MMap<K, V> append(MMap<K, V> orig) {
-        return new AppendMMap<>(orig);
     }
 
     protected final HashMap<K, V> delegate;
@@ -85,10 +81,6 @@ public class MMap<K, V> {
         return new DoneMMap<>(delegate);
     }
 
-    public MMap<K, V> append() {
-        return new AppendMMap<>(this);
-    }
-
     @Override
     public int hashCode() {
         throw new IllegalStateException("MMap is not done yet");
@@ -99,20 +91,12 @@ public class MMap<K, V> {
         throw new IllegalStateException("MMap is not done yet");
     }
 
-    public int size() {
-        return delegate.size();
-    }
-
     private static class DoneMMap<K, V> extends MMap<K, V> {
-        volatile long hashCode = Long.MAX_VALUE;
+        private final int hashCode;
 
         private DoneMMap(HashMap<K, V> delegate) {
             super(delegate);
-        }
-
-        private DoneMMap(HashMap<K, V> delegate, long hashCode) {
-            super(delegate);
-            this.hashCode = hashCode;
+            this.hashCode = delegate.hashCode();
         }
 
         @Override
@@ -127,12 +111,7 @@ public class MMap<K, V> {
 
         @Override
         public int hashCode() {
-            if (this.hashCode != Long.MAX_VALUE) {
-                return (int) hashCode;
-            }
-            int result = delegate.hashCode();
-            this.hashCode = result;
-            return result;
+            return hashCode;
         }
 
         @Override
@@ -142,37 +121,6 @@ public class MMap<K, V> {
             }
             MMap<?, ?> other = (MMap<?, ?>) o;
             return delegate.equals(other.delegate);
-        }
-    }
-
-    private static class AppendMMap<K, V> extends DoneMMap<K, V> {
-
-        AppendMMap(MMap<K, V> orig) {
-            super(new HashMap<>(orig.delegate));
-            if (orig instanceof DoneMMap) {
-                this.hashCode = ((DoneMMap<K, V>) orig).hashCode;
-            } else {
-                this.hashCode = Long.MAX_VALUE;
-            }
-        }
-
-        @Override
-        public V put(K key, V value) {
-            boolean ifPresent = delegate.containsKey(key);
-            V originalValue = delegate.put(key, value);
-            if (hashCode != Long.MAX_VALUE) {
-                int keyHash = Objects.hashCode(key);
-                if (ifPresent) {
-                    hashCode -= keyHash ^ Objects.hashCode(originalValue);
-                }
-                hashCode += keyHash ^ Objects.hashCode(value);
-            }
-            return originalValue;
-        }
-
-        @Override
-        public MMap<K, V> done() {
-            return new DoneMMap<>(delegate, hashCode);
         }
     }
 }
