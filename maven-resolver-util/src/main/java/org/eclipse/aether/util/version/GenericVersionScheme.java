@@ -76,18 +76,22 @@ public class GenericVersionScheme extends VersionSchemeSupport {
         GenericVersionScheme scheme = new GenericVersionScheme();
         GenericVersion prev = null;
         int i = 1;
-        for (String version : args) {
-            GenericVersion c = scheme.parseVersion(version);
+        try {
+            for (String version : args) {
+                GenericVersion c = scheme.parseVersion(version);
 
-            if (prev != null) {
-                int compare = prev.compareTo(c);
-                System.out.println(
-                        "   " + prev + ' ' + ((compare == 0) ? "==" : ((compare < 0) ? "<" : ">")) + ' ' + version);
+                if (prev != null) {
+                    int compare = prev.compareTo(c);
+                    System.out.println(
+                            "   " + prev + ' ' + ((compare == 0) ? "==" : ((compare < 0) ? "<" : ">")) + ' ' + version);
+                }
+
+                System.out.println((i++) + ". " + version + " -> " + c.asString() + "; tokens: " + c.asItems());
+
+                prev = c;
             }
-
-            System.out.println((i++) + ". " + version + " -> " + c.asString() + "; tokens: " + c.asItems());
-
-            prev = c;
+        } catch (InvalidVersionSpecificationException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 }

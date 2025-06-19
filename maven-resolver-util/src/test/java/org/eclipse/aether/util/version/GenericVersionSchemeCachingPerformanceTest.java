@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.version;
 
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GenericVersionSchemeCachingPerformanceTest {
 
     @Test
-    void testCachingPerformance() {
+    void testCachingPerformance() throws InvalidVersionSpecificationException {
         GenericVersionScheme scheme = new GenericVersionScheme();
 
         // Common version strings that would be parsed repeatedly in real scenarios
@@ -100,7 +101,7 @@ public class GenericVersionSchemeCachingPerformanceTest {
     }
 
     @Test
-    void testCachingCorrectness() {
+    void testCachingCorrectness() throws InvalidVersionSpecificationException {
         GenericVersionScheme scheme = new GenericVersionScheme();
 
         // Test that caching doesn't affect correctness
@@ -137,7 +138,11 @@ public class GenericVersionSchemeCachingPerformanceTest {
         for (int i = 0; i < numThreads; i++) {
             final int index = i;
             threads[i] = new Thread(() -> {
-                results[index] = scheme.parseVersion(version);
+                try {
+                    results[index] = scheme.parseVersion(version);
+                } catch (InvalidVersionSpecificationException e) {
+                    throw new IllegalStateException(e);
+                }
             });
         }
 
