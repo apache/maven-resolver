@@ -25,6 +25,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -35,6 +38,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.Gson;
+import org.eclipse.aether.transport.http.RFC9457.RFC9457Payload;
 import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
@@ -229,6 +234,7 @@ public class HttpServer {
         handlers.addHandler(new AuthHandler());
         handlers.addHandler(new RedirectHandler());
         handlers.addHandler(new RepoHandler());
+        handlers.addHandler(new RFC9457Handler());
 
         server = new Server();
         httpConnector = new ServerConnector(server);
@@ -476,6 +482,46 @@ public class HttpServer {
                 response.setStatus(HttpServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED);
             }
         }
+    }
+
+    private class RFC9457Handler extends AbstractHandler {
+        @Override
+        public void handle(
+                final String target,
+                final Request req,
+                final HttpServletRequest request,
+                final HttpServletResponse response)
+                throws IOException {
+            String path = req.getPathInfo().substring(1);
+
+            if (!path.startsWith("rfc9457/")) {
+                return;
+            }
+            req.setHandled(true);
+
+            if (HttpMethod.GET.is(req.getMethod())) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setHeader(HttpHeader.CONTENT_TYPE.asString(), "application/problem+json");
+                RFC9457Payload rfc9457Payload;
+                if (path.endsWith("missing_fields.txt")) {
+                    rfc9457Payload = new RFC9457Payload(null, null, null, null, null);
+                } else {
+                    rfc9457Payload = new RFC9457Payload(
+                            URI.create("https://example.com/probs/out-of-credit"),
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "You do not have enough credit.",
+                            "Your current balance is 30, but that costs 50.",
+                            URI.create("/account/12345/msgs/abc"));
+                }
+                try (OutputStream outputStream = response.getOutputStream()) {
+                    outputStream.write(buildRFC9457Message(rfc9457Payload).getBytes(StandardCharsets.UTF_8));
+                }
+            }
+        }
+    }
+
+    private String buildRFC9457Message(RFC9457Payload payload) {
+        return new Gson().toJson(payload, RFC9457Payload.class);
     }
 
     static boolean checkBasicAuth(String credentials, String username, String password) {

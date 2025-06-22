@@ -95,6 +95,8 @@ import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transport.http.RFC9457.HttpRFC9457Exception;
+import org.eclipse.aether.transport.http.RFC9457.RFC9457Reporter;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
@@ -624,9 +626,12 @@ final class HttpTransporter extends AbstractTransporter {
         }
     }
 
-    private void handleStatus(CloseableHttpResponse response) throws HttpResponseException {
+    private void handleStatus(CloseableHttpResponse response) throws HttpResponseException, HttpRFC9457Exception {
         int status = response.getStatusLine().getStatusCode();
         if (status >= 300) {
+            if (RFC9457Reporter.INSTANCE.isRFC9457Message(response)) {
+                RFC9457Reporter.INSTANCE.generateException(response);
+            }
             throw new HttpResponseException(status, response.getStatusLine().getReasonPhrase() + " (" + status + ")");
         }
     }
