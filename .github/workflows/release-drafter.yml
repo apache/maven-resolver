@@ -26,4 +26,4 @@ jobs:
    update_release_draft:
       uses: apache/maven-gh-actions-shared/.github/workflows/release-drafter.yml@v4
       with:
-        config-name: 'release-drafter-3.x.yml'
+        config-name: 'release-drafter-1.9.x.yml'
