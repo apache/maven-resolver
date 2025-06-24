@@ -54,11 +54,11 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
             int depth,
             int deriveUntil,
             int applyFrom,
-            MMap<Key, Holder<String>> managedVersions,
-            MMap<Key, Holder<String>> managedScopes,
-            MMap<Key, Holder<Boolean>> managedOptionals,
-            MMap<Key, Holder<String>> managedLocalPaths,
-            MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
+            MMap<Key, String> managedVersions,
+            MMap<Key, String> managedScopes,
+            MMap<Key, Boolean> managedOptionals,
+            MMap<Key, String> managedLocalPaths,
+            MMap<Key, Collection<Exclusion>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
         super(
                 depth,
@@ -74,11 +74,11 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
 
     @Override
     protected DependencyManager newInstance(
-            MMap<Key, Holder<String>> managedVersions,
-            MMap<Key, Holder<String>> managedScopes,
-            MMap<Key, Holder<Boolean>> managedOptionals,
-            MMap<Key, Holder<String>> managedLocalPaths,
-            MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions) {
+            MMap<Key, String> managedVersions,
+            MMap<Key, String> managedScopes,
+            MMap<Key, Boolean> managedOptionals,
+            MMap<Key, String> managedLocalPaths,
+            MMap<Key, Collection<Exclusion>> managedExclusions) {
         return new TransitiveDependencyManager(
                 depth + 1,
                 deriveUntil,
