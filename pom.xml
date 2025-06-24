@@ -193,12 +193,8 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
-        <version>4.0.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.plexus</groupId>
-        <artifactId>plexus-xml</artifactId>
-        <version>3.0.2</version>
+        <!-- the same version as in Maven 3.9,x -->
+        <version>3.6.0</version>
       </dependency>
 
       <dependency>
@@ -524,6 +520,12 @@
                     <include>com.google.inject:guice:*:jar:*:classes</include>
                   </includes>
                   <message>use guice without asm shaded in.</message>
+                </bannedDependencies>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>org.codehaus.plexus:plexus-xml</exclude>
+                  </excludes>
+                  <message>plexus-xml should not be used with plexus-util 3.6.0</message>
                 </bannedDependencies>
               </rules>
             </configuration>
