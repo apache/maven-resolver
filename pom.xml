@@ -194,7 +194,7 @@
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
         <!-- the same version as in Maven 3.9,x -->
-        <version>3.6.0</version>
+        <version>4.0.2</version>
       </dependency>
 
       <dependency>
