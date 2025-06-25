@@ -51,6 +51,9 @@ import static java.util.Objects.requireNonNull;
  * or applied in same POM) are always applied. This implementation makes sure, that version and scope are not applied
  * onto same node that actually provided the rules, to no override work that ModelBuilder did. It achieves this goal
  * by tracking "depth" for each collected rule and ignoring rules coming from same depth as processed dependency node is.
+ * <p>
+ * Note for future: the field {@code managedLocalPaths} is <em>intentionally left out of hash/equals</em>, with
+ * reason explained above.
  *
  * @since 2.0.0
  */
