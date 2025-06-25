@@ -113,15 +113,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // nullable: if using scope manager, but there is no system scope defined
         this.systemDependencyScope = systemDependencyScope;
 
-        this.hashCode = Objects.hash(
-                depth,
-                deriveUntil,
-                applyFrom,
-                managedVersions,
-                managedScopes,
-                managedOptionals,
-                managedLocalPaths,
-                managedExclusions);
+        // exclude managedLocalPaths
+        this.hashCode = Objects.hash(depth, managedVersions, managedScopes, managedOptionals, managedExclusions);
     }
 
     protected abstract DependencyManager newInstance(
@@ -320,13 +313,11 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         }
 
         AbstractDependencyManager that = (AbstractDependencyManager) obj;
+        // exclude managedLocalPaths
         return depth == that.depth
-                && deriveUntil == that.deriveUntil
-                && applyFrom == that.applyFrom
                 && managedVersions.equals(that.managedVersions)
                 && managedScopes.equals(that.managedScopes)
                 && managedOptionals.equals(that.managedOptionals)
-                && managedLocalPaths.equals(that.managedLocalPaths)
                 && managedExclusions.equals(that.managedExclusions);
     }
 
