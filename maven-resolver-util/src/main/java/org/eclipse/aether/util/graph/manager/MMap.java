@@ -21,7 +21,6 @@ package org.eclipse.aether.util.graph.manager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Warning: this is a special map-like construct that suits only and should be used only in this package!
@@ -50,13 +49,10 @@ public class MMap<K, V> {
         return new MMap<>(new HashMap<>(orig.delegate));
     }
 
-    public static <K, V> MMap<K, Collection<V>> copyWithListValue(MMap<K, Collection<V>> orig) {
-        HashMap<K, Collection<V>> delegateLocal = orig.delegate;
-        HashMap<K, Collection<V>> newMap = new HashMap<>((int) Math.ceil(delegateLocal.size() / 0.75D));
-        for (Map.Entry<K, Collection<V>> entry : delegateLocal.entrySet()) {
-            newMap.put(entry.getKey(), entry.getValue() == null ? null : new ArrayList<>(entry.getValue()));
-        }
-        return new MMap<>(newMap);
+    public static <K, V> MMap<K, Collection<V>> copyWithKey(K key, MMap<K, Collection<V>> orig) {
+        HashMap<K, Collection<V>> delegateLocal = new HashMap<>(orig.delegate);
+        delegateLocal.computeIfPresent(key, (k, v) -> new ArrayList<>(v));
+        return new MMap<>(delegateLocal);
     }
 
     protected final HashMap<K, V> delegate;

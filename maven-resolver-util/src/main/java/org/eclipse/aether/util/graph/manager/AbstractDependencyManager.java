@@ -185,7 +185,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             Collection<Exclusion> exclusions = managedDependency.getExclusions();
             if (!exclusions.isEmpty()) {
                 if (managedExclusions == this.managedExclusions) {
-                    managedExclusions = MMap.copyWithListValue(this.managedExclusions);
+                    managedExclusions = MMap.copyWithKey(key, this.managedExclusions);
                 }
                 Collection<Holder<Collection<Exclusion>>> managed = managedExclusions.get(key);
                 if (managed == null) {
