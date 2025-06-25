@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.util.graph.manager;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 /**
@@ -45,6 +47,12 @@ public class MMap<K, V> {
 
     public static <K, V> MMap<K, V> copy(MMap<K, V> orig) {
         return new MMap<>(new HashMap<>(orig.delegate));
+    }
+
+    public static <K, V> MMap<K, Collection<V>> copyWithKey(K key, MMap<K, Collection<V>> orig) {
+        HashMap<K, Collection<V>> delegateLocal = new HashMap<>(orig.delegate);
+        delegateLocal.computeIfPresent(key, (k, v) -> new ArrayList<>(v));
+        return new MMap<>(delegateLocal);
     }
 
     protected final HashMap<K, V> delegate;

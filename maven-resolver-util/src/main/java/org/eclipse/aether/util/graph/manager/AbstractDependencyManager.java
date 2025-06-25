@@ -51,6 +51,9 @@ import static java.util.Objects.requireNonNull;
  * or applied in same POM) are always applied. This implementation makes sure, that version and scope are not applied
  * onto same node that actually provided the rules, to no override work that ModelBuilder did. It achieves this goal
  * by tracking "depth" for each collected rule and ignoring rules coming from same depth as processed dependency node is.
+ * <p>
+ * Note for future: the field {@code managedLocalPaths} is <em>intentionally left out of hash/equals</em>, with
+ * reason explained above.
  *
  * @since 2.0.0
  */
@@ -113,15 +116,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // nullable: if using scope manager, but there is no system scope defined
         this.systemDependencyScope = systemDependencyScope;
 
-        this.hashCode = Objects.hash(
-                depth,
-                deriveUntil,
-                applyFrom,
-                managedVersions,
-                managedScopes,
-                managedOptionals,
-                managedLocalPaths,
-                managedExclusions);
+        // exclude managedLocalPaths
+        this.hashCode = Objects.hash(depth, managedVersions, managedScopes, managedOptionals, managedExclusions);
     }
 
     protected abstract DependencyManager newInstance(
@@ -185,7 +181,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             Collection<Exclusion> exclusions = managedDependency.getExclusions();
             if (!exclusions.isEmpty()) {
                 if (managedExclusions == this.managedExclusions) {
-                    managedExclusions = MMap.copy(this.managedExclusions);
+                    managedExclusions = MMap.copyWithKey(key, this.managedExclusions);
                 }
                 Collection<Holder<Collection<Exclusion>>> managed = managedExclusions.get(key);
                 if (managed == null) {
@@ -320,13 +316,11 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         }
 
         AbstractDependencyManager that = (AbstractDependencyManager) obj;
+        // exclude managedLocalPaths
         return depth == that.depth
-                && deriveUntil == that.deriveUntil
-                && applyFrom == that.applyFrom
                 && managedVersions.equals(that.managedVersions)
                 && managedScopes.equals(that.managedScopes)
                 && managedOptionals.equals(that.managedOptionals)
-                && managedLocalPaths.equals(that.managedLocalPaths)
                 && managedExclusions.equals(that.managedExclusions);
     }
 
