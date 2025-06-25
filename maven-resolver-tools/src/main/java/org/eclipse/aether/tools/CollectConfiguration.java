@@ -200,7 +200,8 @@ public class CollectConfiguration implements Callable<Integer> {
                                                 source = switch (source) {
                                                     case "model" -> "Model properties";
                                                     case "user_properties" -> "User properties";
-                                                    default -> source;};
+                                                    default -> source;
+                                                };
                                                 String type = (values.get("type") != null
                                                         ? (String) values.get("type")
                                                         : "java.lang.String");
