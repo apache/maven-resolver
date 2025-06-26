@@ -18,6 +18,12 @@
  */
 package org.eclipse.aether.util.version;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /**
@@ -46,9 +52,99 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
  * </p>
  */
 public class GenericVersionScheme extends VersionSchemeSupport {
+
+    // Using WeakHashMap wrapped in synchronizedMap for thread safety and memory-sensitive caching
+    private final Map<String, GenericVersion> versionCache = Collections.synchronizedMap(new WeakHashMap<>());
+
+    // Cache statistics
+    private final AtomicLong cacheHits = new AtomicLong(0);
+    private final AtomicLong cacheMisses = new AtomicLong(0);
+    private final AtomicLong totalRequests = new AtomicLong(0);
+
+    // Static statistics across all instances
+    private static final AtomicLong GLOBAL_CACHE_HITS = new AtomicLong(0);
+    private static final AtomicLong GLOBAL_CACHE_MISSES = new AtomicLong(0);
+    private static final AtomicLong GLOBAL_TOTAL_REQUESTS = new AtomicLong(0);
+    private static final AtomicLong INSTANCE_COUNT = new AtomicLong(0);
+
+    static {
+        // Register shutdown hook to print statistics if enabled
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (isStatisticsEnabled()) {
+                printGlobalStatistics();
+            }
+        }));
+    }
+
+    public GenericVersionScheme() {
+        INSTANCE_COUNT.incrementAndGet();
+    }
+
+    /**
+     * Checks if version scheme cache statistics should be printed.
+     * This checks both the system property and the configuration property.
+     */
+    private static boolean isStatisticsEnabled() {
+        // Check system property first (for backwards compatibility and ease of use)
+        String sysProp = System.getProperty(ConfigurationProperties.VERSION_SCHEME_CACHE_DEBUG);
+        if (sysProp != null) {
+            return Boolean.parseBoolean(sysProp);
+        }
+
+        // Default to false if not configured
+        return ConfigurationProperties.DEFAULT_VERSION_SCHEME_CACHE_DEBUG;
+    }
+
     @Override
     public GenericVersion parseVersion(final String version) throws InvalidVersionSpecificationException {
-        return new GenericVersion(version);
+        totalRequests.incrementAndGet();
+        GLOBAL_TOTAL_REQUESTS.incrementAndGet();
+
+        GenericVersion existing = versionCache.get(version);
+        if (existing != null) {
+            cacheHits.incrementAndGet();
+            GLOBAL_CACHE_HITS.incrementAndGet();
+            return existing;
+        } else {
+            cacheMisses.incrementAndGet();
+            GLOBAL_CACHE_MISSES.incrementAndGet();
+            return versionCache.computeIfAbsent(version, GenericVersion::new);
+        }
+    }
+
+    /**
+     * Get cache statistics for this instance.
+     */
+    public String getCacheStatistics() {
+        long hits = cacheHits.get();
+        long misses = cacheMisses.get();
+        long total = totalRequests.get();
+        double hitRate = total > 0 ? (double) hits / total * 100.0 : 0.0;
+
+        return String.format(
+                "GenericVersionScheme Cache Stats: hits=%d, misses=%d, total=%d, hit-rate=%.2f%%, cache-size=%d",
+                hits, misses, total, hitRate, versionCache.size());
+    }
+
+    /**
+     * Print global statistics across all instances.
+     */
+    private static void printGlobalStatistics() {
+        long hits = GLOBAL_CACHE_HITS.get();
+        long misses = GLOBAL_CACHE_MISSES.get();
+        long total = GLOBAL_TOTAL_REQUESTS.get();
+        long instances = INSTANCE_COUNT.get();
+        double hitRate = total > 0 ? (double) hits / total * 100.0 : 0.0;
+
+        System.err.println("=== GenericVersionScheme Global Cache Statistics (WeakHashMap) ===");
+        System.err.println(String.format("Total instances created: %d", instances));
+        System.err.println(String.format("Total requests: %d", total));
+        System.err.println(String.format("Cache hits: %d", hits));
+        System.err.println(String.format("Cache misses: %d", misses));
+        System.err.println(String.format("Hit rate: %.2f%%", hitRate));
+        System.err.println(
+                String.format("Average requests per instance: %.2f", instances > 0 ? (double) total / instances : 0.0));
+        System.err.println("=== End Cache Statistics ===");
     }
 
     /**
@@ -67,20 +163,25 @@ public class GenericVersionScheme extends VersionSchemeSupport {
             return;
         }
 
+        GenericVersionScheme scheme = new GenericVersionScheme();
         GenericVersion prev = null;
         int i = 1;
         for (String version : args) {
-            GenericVersion c = new GenericVersion(version);
+            try {
+                GenericVersion c = scheme.parseVersion(version);
 
-            if (prev != null) {
-                int compare = prev.compareTo(c);
-                System.out.println(
-                        "   " + prev + ' ' + ((compare == 0) ? "==" : ((compare < 0) ? "<" : ">")) + ' ' + version);
+                if (prev != null) {
+                    int compare = prev.compareTo(c);
+                    System.out.println(
+                            "   " + prev + ' ' + ((compare == 0) ? "==" : ((compare < 0) ? "<" : ">")) + ' ' + version);
+                }
+
+                System.out.println((i++) + ". " + version + " -> " + c.asString() + "; tokens: " + c.asItems());
+
+                prev = c;
+            } catch (InvalidVersionSpecificationException e) {
+                System.err.println("Invalid version: " + version + " - " + e.getMessage());
             }
-
-            System.out.println((i++) + ". " + version + " -> " + c.asString() + "; tokens: " + c.asItems());
-
-            prev = c;
         }
     }
 }
