@@ -21,7 +21,7 @@ package org.eclipse.aether.transport.http.RFC9457;
 import java.io.IOException;
 
 /**
- * Exception thrown by {@link HttpTransporter} in case of errors.
+ * Exception thrown by {@code HttpTransporter} in case of errors.
  *
  * @since 1.9.24
  */
