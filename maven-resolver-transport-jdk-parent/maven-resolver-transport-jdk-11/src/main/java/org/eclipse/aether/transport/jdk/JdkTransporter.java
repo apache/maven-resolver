@@ -104,6 +104,8 @@ import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.D
  * <ul>
  *     <li>Does not support {@link ConfigurationProperties#REQUEST_TIMEOUT}, see <a href="https://bugs.openjdk.org/browse/JDK-8258397">JDK-8258397</a></li>
  * </ul>
+ * <p>
+ * Related: <a href="https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a">No TLS proxy supported</a>.
  *
  * @since 2.0.0
  */

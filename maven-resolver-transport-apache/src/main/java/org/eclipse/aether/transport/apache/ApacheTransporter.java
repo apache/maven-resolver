@@ -392,7 +392,11 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     private static HttpHost toHost(Proxy proxy) {
         HttpHost host = null;
         if (proxy != null) {
-            host = new HttpHost(proxy.getHost(), proxy.getPort(), proxy.getType());
+            // in Maven, the proxy.protocol is used for proxy matching against remote repository protocol; no TLS proxy
+            // support
+            // https://github.com/apache/maven/issues/2519
+            // https://github.com/apache/maven-resolver/issues/745
+            host = new HttpHost(proxy.getHost(), proxy.getPort());
         }
         return host;
     }

@@ -466,27 +466,6 @@ public class HttpTransporterTest {
     }
 
     @Test
-    protected void testGet_ProxyAuthenticatedHttps() throws Exception {
-        httpServer.addSslConnector();
-        httpServer.setProxyAuthentication("testuser", "testpass");
-        Authentication auth = new AuthenticationBuilder()
-                .addUsername("testuser")
-                .addPassword("testpass")
-                .build();
-        proxy = new Proxy(Proxy.TYPE_HTTPS, httpServer.getHost(), httpServer.getHttpsPort(), auth);
-        newTransporter("http://bad.localhost:1/");
-        RecordingTransportListener listener = new RecordingTransportListener();
-        GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
-        transporter.get(task);
-        assertEquals("test", task.getDataString());
-        assertEquals(0L, listener.getDataOffset());
-        assertEquals(4L, listener.getDataLength());
-        assertEquals(1, listener.getStartedCount());
-        assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
-        assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
-    }
-
-    @Test
     protected void testGet_ProxyUnauthenticated() throws Exception {
         httpServer.setProxyAuthentication("testuser", "testpass");
         proxy = new Proxy(Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort());
@@ -1261,21 +1240,6 @@ public class HttpTransporterTest {
             assertEquals(401, e.getStatusCode());
         } catch (IOException e) {
             // accepted as well: point is to fail
-        }
-    }
-
-    @Test
-    public void testProxyType() throws Exception {
-        httpServer.addSslConnector();
-        proxy = new Proxy(Proxy.TYPE_HTTPS, httpServer.getHost(), httpServer.getHttpsPort(), null);
-        newTransporter("http://bad.localhost:1/");
-        try {
-            transporter.get(new GetTask(URI.create("foo/file.txt")));
-        } catch (HttpTransporterException e) {
-            assertEquals(404, e.getStatusCode());
-            assertEquals(
-                    "http://bad.localhost:1/foo/file.txt",
-                    httpServer.getLogEntries().get(0).getPath());
         }
     }
 
