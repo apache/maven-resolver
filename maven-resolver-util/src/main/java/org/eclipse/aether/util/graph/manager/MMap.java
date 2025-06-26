@@ -26,9 +26,9 @@ import java.util.HashMap;
  * Warning: this is a special map-like construct that suits only and should be used only in this package!
  * It has the following properties:
  * <ul>
- *     <ul>memorizes once calculated hashCode</ul>
- *     <ul>once hashCode calculated, goes into "read only" mode (put method will fail)</ul>
- *     <ul>otherwise all the rest is same as for {@link HashMap}</ul>
+ *     <li>memorizes once calculated hashCode</li>
+ *     <li>once hashCode calculated, goes into "read only" mode (put method will fail)</li>
+ *     <li>otherwise all the rest is same as for {@link HashMap}</li>
  * </ul>
  *
  * This class is not a generic map class; only those methods are "protected" that are in use in this very
