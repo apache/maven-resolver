@@ -102,4 +102,32 @@ public class GenericVersionSchemeTest {
         assertEquals(c, c2);
         assertTrue(c.containsVersion(new GenericVersion("1.0")));
     }
+
+    @Test
+    void testVersionCaching() throws InvalidVersionSpecificationException {
+        // Test that parsing the same version string returns the same instance (cached)
+        GenericVersion v1 = scheme.parseVersion("1.0.0");
+        GenericVersion v2 = scheme.parseVersion("1.0.0");
+
+        // Should return the same cached instance
+        assertSame(v1, v2, "Parsing the same version string should return the same cached instance");
+
+        // Test that different version strings create different instances
+        GenericVersion v3 = scheme.parseVersion("2.0.0");
+        assertNotSame(v1, v3, "Different version strings should create different instances");
+
+        // Test that parsing the first version again still returns the cached instance
+        GenericVersion v4 = scheme.parseVersion("1.0.0");
+        assertSame(v1, v4, "Re-parsing the first version should still return the cached instance");
+
+        // Test with various version formats
+        GenericVersion snapshot1 = scheme.parseVersion("1.0.0-SNAPSHOT");
+        GenericVersion snapshot2 = scheme.parseVersion("1.0.0-SNAPSHOT");
+        assertSame(snapshot1, snapshot2, "Snapshot versions should also be cached");
+
+        // Test that semantically equivalent but different strings are treated as different
+        GenericVersion v5 = scheme.parseVersion("1.0");
+        GenericVersion v6 = scheme.parseVersion("1.0.0");
+        assertNotSame(v5, v6, "Different string representations should not be cached together");
+    }
 }

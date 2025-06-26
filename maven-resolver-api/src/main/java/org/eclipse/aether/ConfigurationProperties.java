@@ -82,6 +82,13 @@ public final class ConfigurationProperties {
     public static final String PREFIX_GENERATOR = PREFIX_AETHER + "generator.";
 
     /**
+     * Prefix for util related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.10
+     */
+    public static final String PREFIX_UTIL = PREFIX_AETHER + "util.";
+
+    /**
      * Prefix for transport related configurations. <em>For internal use only.</em>
      *
      * @since 2.0.0
@@ -543,6 +550,25 @@ public final class ConfigurationProperties {
      * @since 2.0.0
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER = "levelOrder";
+
+    /**
+     * A flag indicating whether version scheme cache statistics should be printed on JVM shutdown.
+     * This is useful for analyzing cache performance and effectiveness in development and testing scenarios.
+     *
+     * @since 2.0.10
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_VERSION_SCHEME_CACHE_DEBUG}
+     * @configurationRepoIdSuffix No
+     */
+    public static final String VERSION_SCHEME_CACHE_DEBUG = PREFIX_UTIL + "versionScheme.cacheDebug";
+
+    /**
+     * The default value for version scheme cache debug if {@link #VERSION_SCHEME_CACHE_DEBUG} isn't set.
+     *
+     * @since 2.0.10
+     */
+    public static final boolean DEFAULT_VERSION_SCHEME_CACHE_DEBUG = false;
 
     private ConfigurationProperties() {
         // hide constructor
