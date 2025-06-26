@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * JDK Transporter UT.
+ * Related: <a href="https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a">No TLS proxy supported</a>.
  */
 class JdkTransporterTest extends HttpTransporterTest {
 
@@ -87,17 +88,6 @@ class JdkTransporterTest extends HttpTransporterTest {
     @Disabled
     @Test
     protected void testRequestTimeout() throws Exception {}
-
-    // https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a
-    @Override
-    @Disabled
-    @Test
-    protected void testGet_ProxyAuthenticatedHttps() {}
-
-    @Override
-    @Disabled
-    @Test
-    public void testProxyType() {}
 
     public JdkTransporterTest() {
         super(() -> new JdkTransporterFactory(standardChecksumExtractor(), new DefaultPathProcessor()));
