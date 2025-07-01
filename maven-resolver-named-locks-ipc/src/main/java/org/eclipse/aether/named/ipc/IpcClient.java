@@ -75,19 +75,19 @@ public class IpcClient {
     static final boolean IS_WINDOWS =
             System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("win");
 
-    private volatile boolean initialized;
-    private final Path lockPath;
-    private final Path logPath;
-    private final Path syncPath;
-    private final boolean noFork;
+    protected volatile boolean initialized;
+    protected final Path lockPath;
+    protected final Path logPath;
+    protected final Path syncPath;
+    protected final boolean noFork;
 
-    private SocketChannel socket;
-    private DataOutputStream output;
-    private DataInputStream input;
-    private Thread receiver;
+    protected SocketChannel socket;
+    protected DataOutputStream output;
+    protected DataInputStream input;
+    protected Thread receiver;
 
-    private final AtomicInteger requestId = new AtomicInteger();
-    private final Map<Integer, CompletableFuture<List<String>>> responses = new ConcurrentHashMap<>();
+    protected final AtomicInteger requestId = new AtomicInteger();
+    protected final Map<Integer, CompletableFuture<List<String>>> responses = new ConcurrentHashMap<>();
 
     IpcClient(Path lockPath, Path logPath, Path syncPath) {
         this.lockPath = lockPath;
