@@ -24,6 +24,9 @@ import org.junit.jupiter.api.BeforeAll;
 public class IpcAdapterNoForkIT extends NamedLockFactoryAdapterTestSupport {
     @BeforeAll
     static void createNamedLockFactory() {
+        // the goal if this IT to prove it works when noFork=true and IpcClient will clean up server
+        // needed in cases like in Maven, when there is no direct access to IpcNamedLockFactory
+        // to override doShutdown method like in IpcAdapterIT
         System.setProperty(IpcServer.SYSTEM_PROP_NO_FORK, Boolean.TRUE.toString());
         System.setProperty(IpcServer.SYSTEM_PROP_DEBUG, Boolean.TRUE.toString());
         setNamedLockFactory(new IpcNamedLockFactory());
