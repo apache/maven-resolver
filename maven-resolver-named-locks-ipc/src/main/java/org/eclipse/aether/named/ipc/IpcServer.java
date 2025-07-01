@@ -64,7 +64,7 @@ public class IpcServer {
      */
     public static final String SYSTEM_PROP_IDLE_TIMEOUT = "aether.named.ipc.idleTimeout";
 
-    public static final int DEFAULT_IDLE_TIMEOUT = 60;
+    public static final int DEFAULT_IDLE_TIMEOUT = 300;
 
     /**
      * IPC socket family to use.
