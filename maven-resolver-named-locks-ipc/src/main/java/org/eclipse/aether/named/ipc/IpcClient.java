@@ -330,13 +330,13 @@ public class IpcClient {
     }
 
     void close() {
+        if (noFork) {
+            stopServer();
+        }
         close(new IOException("Closing"));
     }
 
     synchronized void close(Throwable e) {
-        if (noFork) {
-            stopServer();
-        }
         if (socket != null) {
             try {
                 socket.close();
