@@ -75,25 +75,31 @@ public class IpcClient {
     static final boolean IS_WINDOWS =
             System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("win");
 
-    volatile boolean initialized;
-    Path lockPath;
-    Path logPath;
-    Path syncPath;
-    SocketChannel socket;
-    DataOutputStream output;
-    DataInputStream input;
-    Thread receiver;
-    AtomicInteger requestId = new AtomicInteger();
-    Map<Integer, CompletableFuture<List<String>>> responses = new ConcurrentHashMap<>();
+    protected volatile boolean initialized;
+    protected final Path lockPath;
+    protected final Path logPath;
+    protected final Path syncPath;
+    protected final boolean noFork;
+
+    protected SocketChannel socket;
+    protected DataOutputStream output;
+    protected DataInputStream input;
+    protected Thread receiver;
+
+    protected final AtomicInteger requestId = new AtomicInteger();
+    protected final Map<Integer, CompletableFuture<List<String>>> responses = new ConcurrentHashMap<>();
 
     IpcClient(Path lockPath, Path logPath, Path syncPath) {
         this.lockPath = lockPath;
         this.logPath = logPath;
         this.syncPath = syncPath;
+        this.noFork = Boolean.parseBoolean(
+                System.getProperty(IpcServer.SYSTEM_PROP_NO_FORK, Boolean.toString(IpcServer.DEFAULT_NO_FORK)));
     }
 
     void ensureInitialized() throws IOException {
         if (!initialized) {
+            // caller must block on this method
             synchronized (this) {
                 if (!initialized) {
                     socket = createClient();
@@ -152,8 +158,6 @@ public class IpcClient {
                 Path logFile = logPath.resolve("resolver-ipcsync-" + rand + ".log");
                 List<String> args = new ArrayList<>();
                 if (noNative) {
-                    boolean noFork = Boolean.parseBoolean(System.getProperty(
-                            IpcServer.SYSTEM_PROP_NO_FORK, Boolean.toString(IpcServer.DEFAULT_NO_FORK)));
                     if (noFork) {
                         IpcServer server = IpcServer.runServer(family, tmpaddr, rand);
                         close = server::close;
@@ -326,6 +330,9 @@ public class IpcClient {
     }
 
     void close() {
+        if (noFork) {
+            stopServer();
+        }
         close(new IOException("Closing"));
     }
 

@@ -64,7 +64,7 @@ public class IpcServer {
      */
     public static final String SYSTEM_PROP_IDLE_TIMEOUT = "aether.named.ipc.idleTimeout";
 
-    public static final int DEFAULT_IDLE_TIMEOUT = 60;
+    public static final int DEFAULT_IDLE_TIMEOUT = 300;
 
     /**
      * IPC socket family to use.
@@ -359,7 +359,7 @@ public class IpcServer {
                 c = clients.size();
             }
             if (!closing) {
-                info("%d clients left", c);
+                info("%d clients remained", c);
             }
         }
     }
@@ -372,7 +372,7 @@ public class IpcServer {
         while (true) {
             long current = System.nanoTime();
             long left = (lastUsed + idleTimeout) - current;
-            if (left < 0) {
+            if (clients.isEmpty() && left < 0) {
                 info("IpcServer expired, closing");
                 close();
                 break;
