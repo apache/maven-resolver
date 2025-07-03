@@ -19,15 +19,14 @@
 package org.eclipse.aether.util.graph.version;
 
 /**
- * A version filter that (unconditionally) blocks "*-SNAPSHOT" versions. For practical purposes,
- * {@link ContextualSnapshotVersionFilter} is usually more desirable.
+ * A version filter that (unconditionally) blocks non "*-SNAPSHOT" versions.
  */
-public class SnapshotVersionFilter extends PredicateVersionFilter {
+public class ReleaseVersionFilter extends PredicateVersionFilter {
 
     /**
      * Creates a new instance of this version filter.
      */
-    public SnapshotVersionFilter() {
-        super(a -> !a.getVersion().endsWith("SNAPSHOT"));
+    public ReleaseVersionFilter() {
+        super(a -> a.getVersion().endsWith("SNAPSHOT"));
     }
 }

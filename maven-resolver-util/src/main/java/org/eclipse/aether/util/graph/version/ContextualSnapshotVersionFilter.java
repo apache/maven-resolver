@@ -32,7 +32,7 @@ import org.eclipse.aether.util.ConfigUtils;
  * {@link RepositorySystemSession#getConfigProperties() configuration property} {@link #CONFIG_PROP_ENABLE} to
  * {@code true}.
  */
-public final class ContextualSnapshotVersionFilter implements VersionFilter {
+public class ContextualSnapshotVersionFilter implements VersionFilter {
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties() configuration
      * properties} used to store a {@link Boolean} flag whether this filter should be forced to ban snapshots. By

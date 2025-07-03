@@ -29,7 +29,7 @@ import org.eclipse.aether.version.Version;
  *
  * @since 2.0.0
  */
-public final class LowestVersionFilter implements VersionFilter {
+public class LowestVersionFilter implements VersionFilter {
     private final int count;
 
     /**
