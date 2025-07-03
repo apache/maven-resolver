@@ -20,7 +20,6 @@ package org.eclipse.aether.util.graph.versions;
 
 import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
 import org.eclipse.aether.util.graph.version.ReleaseVersionFilter;
-import org.eclipse.aether.util.graph.version.SnapshotVersionFilter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
