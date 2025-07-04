@@ -84,7 +84,7 @@ To modify this file, edit the template and regenerate.
 | `"aether.named.file-lock.sleepMillis"` | `Long` | Tweak: When <code>#SYSTEM_PROP_ATTEMPTS</code> used, the amount of milliseconds to sleep between subsequent retries. Default value is 50 milliseconds. |  `50`  | 1.7.3 |  No  | Java System Properties |
 | `"aether.named.ipc.debug"` | `Boolean` | Should the IPC server log debug messages? (i.e. for testing purposes) |  `false`  | 2.0.1 |  No  | Java System Properties |
 | `"aether.named.ipc.family"` | `String` | IPC socket family to use. |  `"unix"`  | 2.0.1 |  No  | Java System Properties |
-| `"aether.named.ipc.idleTimeout"` | `Integer` | IPC idle timeout in seconds. If there is no IPC request during idle time, it will stop. |  `60`  | 2.0.1 |  No  | Java System Properties |
+| `"aether.named.ipc.idleTimeout"` | `Integer` | IPC idle timeout in seconds. If there is no IPC request during idle time, it will stop. |  `300`  | 2.0.1 |  No  | Java System Properties |
 | `"aether.named.ipc.nativeName"` | `String` | The name if the IPC server native executable (without file extension like ".exe") |  `"ipc-sync"`  | 2.0.1 |  No  | Java System Properties |
 | `"aether.named.ipc.nofork"` | `Boolean` | Should the IPC server not fork? (i.e. for testing purposes) |  `false`  | 2.0.1 |  No  | Java System Properties |
 | `"aether.named.ipc.nonative"` | `Boolean` | Should the IPC server not use native executable? |  `true`  | 2.0.1 |  No  | Java System Properties |
@@ -103,7 +103,7 @@ To modify this file, edit the template and regenerate.
 | `"aether.syncContext.named.basedir.locksDir"` | `String` | The location of the directory toi use for locks. If relative path, it is resolved from the local repository root. |  `".locks"`  | 1.9.0 |  No  | Session Configuration |
 | `"aether.syncContext.named.discriminating.discriminator"` | `String` | Configuration property to pass in discriminator, if needed. If not present, it is auto-calculated. |  -  | 1.7.0 |  No  | Session Configuration |
 | `"aether.syncContext.named.discriminating.hostname"` | `String` | Configuration property to pass in hostname, if needed. If not present, hostname as reported by system will be used. |  -  | 1.7.0 |  No  | Session Configuration |
-| `"aether.syncContext.named.factory"` | `String` | Name of the lock factory to use in session. |  `"file-lock"`  | 1.9.1 |  No  | Session Configuration |
+| `"aether.syncContext.named.factory"` | `String` | Name of the lock factory to use in session. |  `"rwlock-local"`  | 1.9.1 |  No  | Session Configuration |
 | `"aether.syncContext.named.hashing.depth"` | `Integer` | The depth how many levels should adapter create. Acceptable values are 0-4 (inclusive). |  `2`  | 1.9.0 |  No  | Session Configuration |
 | `"aether.syncContext.named.nameMapper"` | `String` | Name of the name mapper to use in session. Out of the box supported ones are "static", "gav", "file-gav", "file-hgav", "file-static" and "discriminating". |  `"file-gav"`  | 1.9.1 |  No  | Session Configuration |
 | `"aether.syncContext.named.redisson.address"` | `String` | Address of the Redis instance. Optional. |  `"redis://localhost:6379"`  | 2.0.0 |  No  | Java System Properties |
