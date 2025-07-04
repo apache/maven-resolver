@@ -29,7 +29,7 @@ import org.eclipse.aether.collection.VersionFilter;
  * A version filter that combines multiple version filters into a chain where each filter gets invoked one after the
  * other, thereby accumulating their filtering effects.
  */
-public final class ChainedVersionFilter implements VersionFilter {
+public class ChainedVersionFilter implements VersionFilter {
 
     private final VersionFilter[] filters;
 
