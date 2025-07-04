@@ -21,12 +21,12 @@ package org.eclipse.aether.util.graph.version;
 /**
  * A version filter that (unconditionally) blocks non "*-SNAPSHOT" versions.
  */
-public class ReleaseVersionFilter extends PredicateVersionFilter {
+public class ReleaseVersionFilter extends VersionPredicateVersionFilter {
 
     /**
      * Creates a new instance of this version filter.
      */
     public ReleaseVersionFilter() {
-        super(a -> a.getVersion().endsWith("SNAPSHOT"));
+        super(v -> v.toString().endsWith("SNAPSHOT"));
     }
 }

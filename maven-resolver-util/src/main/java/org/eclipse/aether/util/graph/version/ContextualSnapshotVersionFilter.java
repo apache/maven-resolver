@@ -28,9 +28,7 @@ import org.eclipse.aether.util.ConfigUtils;
 /**
  * A version filter that blocks "*-SNAPSHOT" versions if the
  * {@link org.eclipse.aether.collection.CollectRequest#getRootArtifact() root artifact} of the dependency graph is not a
- * snapshot. Alternatively, this filter can be forced to always ban snapshot versions by setting the boolean
- * {@link RepositorySystemSession#getConfigProperties() configuration property} {@link #CONFIG_PROP_ENABLE} to
- * {@code true}.
+ * snapshot.
  */
 public class ContextualSnapshotVersionFilter implements VersionFilter {
     /**
@@ -41,7 +39,9 @@ public class ContextualSnapshotVersionFilter implements VersionFilter {
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue false
+     * @deprecated Use snapshot filter instead to always ban snapshots.
      */
+    @Deprecated
     public static final String CONFIG_PROP_ENABLE = ConfigurationProperties.PREFIX_AETHER + "snapshotFilter";
 
     private final SnapshotVersionFilter filter;
