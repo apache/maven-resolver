@@ -72,6 +72,7 @@ public final class VersionRangeRequest {
      * @param repositories The repositories to resolve the version from, may be {@code null}.
      * @param nature The nature of metadata to use for resolving the version from, may be {@code null}.
      * @param context The context in which this request is made, may be {@code null}.
+     * @since 2.0.11
      */
     public VersionRangeRequest(
             Artifact artifact, List<RemoteRepository> repositories, Metadata.Nature nature, String context) {
