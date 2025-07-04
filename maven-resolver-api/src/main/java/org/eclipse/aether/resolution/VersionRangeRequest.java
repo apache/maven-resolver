@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
@@ -37,6 +38,8 @@ public final class VersionRangeRequest {
     private Artifact artifact;
 
     private List<RemoteRepository> repositories = Collections.emptyList();
+
+    private Metadata.Nature nature = Metadata.Nature.RELEASE_OR_SNAPSHOT;
 
     private String context = "";
 
@@ -59,6 +62,22 @@ public final class VersionRangeRequest {
     public VersionRangeRequest(Artifact artifact, List<RemoteRepository> repositories, String context) {
         setArtifact(artifact);
         setRepositories(repositories);
+        setRequestContext(context);
+    }
+
+    /**
+     * Creates a request with the specified properties.
+     *
+     * @param artifact The artifact whose version range should be resolved, may be {@code null}.
+     * @param repositories The repositories to resolve the version from, may be {@code null}.
+     * @param nature The nature of metadata to use for resolving the version from, may be {@code null}.
+     * @param context The context in which this request is made, may be {@code null}.
+     */
+    public VersionRangeRequest(
+            Artifact artifact, List<RemoteRepository> repositories, Metadata.Nature nature, String context) {
+        setArtifact(artifact);
+        setRepositories(repositories);
+        setNature(nature);
         setRequestContext(context);
     }
 
@@ -102,6 +121,32 @@ public final class VersionRangeRequest {
             this.repositories = Collections.emptyList();
         } else {
             this.repositories = repositories;
+        }
+        return this;
+    }
+
+    /**
+     * The nature of metadata to use for resolving the version from, never {@code null}.
+     *
+     * @return The nature, never {@code null}.
+     * @since 2.0.11
+     */
+    public Metadata.Nature getNature() {
+        return nature;
+    }
+
+    /**
+     * Sets the nature of metadata to use for resolving the version from
+     *
+     * @param nature The nature, may be {@code null}.
+     * @return This request for chaining, never {@code null}.
+     * @since 2.0.11
+     */
+    public VersionRangeRequest setNature(Metadata.Nature nature) {
+        if (nature == null) {
+            this.nature = Metadata.Nature.RELEASE_OR_SNAPSHOT;
+        } else {
+            this.nature = nature;
         }
         return this;
     }
