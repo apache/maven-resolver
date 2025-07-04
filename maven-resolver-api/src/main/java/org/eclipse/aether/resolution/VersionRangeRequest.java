@@ -127,6 +127,22 @@ public final class VersionRangeRequest {
     }
 
     /**
+     * Adds the specified repository for the resolution.
+     *
+     * @param repository The repository to add, may be {@code null}.
+     * @return This request for chaining, never {@code null}.
+     */
+    public VersionRangeRequest addRepository(RemoteRepository repository) {
+        if (repository != null) {
+            if (this.repositories.isEmpty()) {
+                this.repositories = new ArrayList<>();
+            }
+            this.repositories.add(repository);
+        }
+        return this;
+    }
+
+    /**
      * The nature of metadata to use for resolving the version from, never {@code null}.
      *
      * @return The nature, never {@code null}.
@@ -148,22 +164,6 @@ public final class VersionRangeRequest {
             this.nature = Metadata.Nature.RELEASE_OR_SNAPSHOT;
         } else {
             this.nature = nature;
-        }
-        return this;
-    }
-
-    /**
-     * Adds the specified repository for the resolution.
-     *
-     * @param repository The repository to add, may be {@code null}.
-     * @return This request for chaining, never {@code null}.
-     */
-    public VersionRangeRequest addRepository(RemoteRepository repository) {
-        if (repository != null) {
-            if (this.repositories.isEmpty()) {
-                this.repositories = new ArrayList<>();
-            }
-            this.repositories.add(repository);
         }
         return this;
     }
