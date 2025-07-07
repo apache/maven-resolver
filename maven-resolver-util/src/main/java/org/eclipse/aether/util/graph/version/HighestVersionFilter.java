@@ -27,7 +27,7 @@ import org.eclipse.aether.version.Version;
 /**
  * A version filter that excludes any version except the highest one.
  */
-public final class HighestVersionFilter implements VersionFilter {
+public class HighestVersionFilter implements VersionFilter {
     private final int count;
 
     /**

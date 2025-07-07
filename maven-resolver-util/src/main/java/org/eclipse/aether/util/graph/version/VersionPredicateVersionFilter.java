@@ -19,48 +19,35 @@
 package org.eclipse.aether.util.graph.version;
 
 import java.util.Iterator;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.version.Version;
 
+import static java.util.Objects.requireNonNull;
+
 /**
- * A version filter that excludes any version except the lowest one.
+ * A version filter that excludes any version that is blacklisted.
  *
- * @since 2.0.0
+ * @since 2.0.11
  */
-public class LowestVersionFilter implements VersionFilter {
-    private final int count;
+public class VersionPredicateVersionFilter implements VersionFilter {
+    private final Predicate<Version> versionPredicate;
 
     /**
-     * Creates a new instance of this version filter.
+     * Creates a new instance of this version filter. It will filter out versions not matched by predicate.
+     * Note: filter always operates with baseVersions.
      */
-    public LowestVersionFilter() {
-        this.count = 1;
-    }
-
-    /**
-     * Creates a new instance of this version filter.
-     */
-    public LowestVersionFilter(int count) {
-        if (count < 1) {
-            throw new IllegalArgumentException("Count should be greater or equal to 1");
-        }
-        this.count = count;
+    public VersionPredicateVersionFilter(Predicate<Version> versionPredicate) {
+        this.versionPredicate = requireNonNull(versionPredicate);
     }
 
     @Override
     public void filterVersions(VersionFilterContext context) {
-        if (context.getCount() <= count) {
-            return;
-        }
-        // iterator comes in ascending order, basically we "step over" (leave) first few
-        int stepOver = count;
-        Iterator<Version> it = context.iterator();
-        while (it.hasNext()) {
-            it.next();
-            stepOver--;
-            if (stepOver < 0) {
+        for (Iterator<Version> it = context.iterator(); it.hasNext(); ) {
+            if (!versionPredicate.test(it.next())) {
                 it.remove();
             }
         }
@@ -72,13 +59,15 @@ public class LowestVersionFilter implements VersionFilter {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
-        } else if (null == obj || !getClass().equals(obj.getClass())) {
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        return true;
+        VersionPredicateVersionFilter that = (VersionPredicateVersionFilter) o;
+        return Objects.equals(versionPredicate, that.versionPredicate);
     }
 
     @Override

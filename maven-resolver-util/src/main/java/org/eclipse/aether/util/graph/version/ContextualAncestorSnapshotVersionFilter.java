@@ -18,51 +18,29 @@
  */
 package org.eclipse.aether.util.graph.version;
 
-import java.util.Iterator;
-
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.VersionFilter;
-import org.eclipse.aether.version.Version;
 
 /**
- * A version filter that excludes any version except the lowest one.
- *
- * @since 2.0.0
+ * A version filter that blocks "*-SNAPSHOT" versions if the
+ * {@link VersionFilterContext#getDependency()} ancestor whose range is being filtered is not a snapshot.
  */
-public class LowestVersionFilter implements VersionFilter {
-    private final int count;
+public class ContextualAncestorSnapshotVersionFilter implements VersionFilter {
+    private final SnapshotVersionFilter filter;
 
     /**
      * Creates a new instance of this version filter.
      */
-    public LowestVersionFilter() {
-        this.count = 1;
-    }
-
-    /**
-     * Creates a new instance of this version filter.
-     */
-    public LowestVersionFilter(int count) {
-        if (count < 1) {
-            throw new IllegalArgumentException("Count should be greater or equal to 1");
-        }
-        this.count = count;
+    public ContextualAncestorSnapshotVersionFilter() {
+        filter = new SnapshotVersionFilter();
     }
 
     @Override
     public void filterVersions(VersionFilterContext context) {
-        if (context.getCount() <= count) {
-            return;
-        }
-        // iterator comes in ascending order, basically we "step over" (leave) first few
-        int stepOver = count;
-        Iterator<Version> it = context.iterator();
-        while (it.hasNext()) {
-            it.next();
-            stepOver--;
-            if (stepOver < 0) {
-                it.remove();
-            }
+        Artifact ancestor = context.getDependency().getArtifact();
+        if (!ancestor.isSnapshot()) {
+            filter.filterVersions(context);
         }
     }
 

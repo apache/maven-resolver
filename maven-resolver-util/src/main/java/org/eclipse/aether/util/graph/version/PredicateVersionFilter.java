@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 2.0.0
  */
-public final class PredicateVersionFilter implements VersionFilter {
+public class PredicateVersionFilter implements VersionFilter {
     private final Predicate<Artifact> artifactPredicate;
 
     /**
