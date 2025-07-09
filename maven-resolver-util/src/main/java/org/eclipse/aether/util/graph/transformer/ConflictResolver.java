@@ -284,7 +284,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             // found a leftover loser (likely in a cycle) of an already processed conflict id, tell caller to nuke it
             return false;
         } else if (state.push(node, conflictId)) {
-            // found potential parent, no cycle and not visisted before with the same derived scope, so recurse
+            // found potential parent, no cycle and not visited before with the same derived scope, so recurse
             for (Iterator<DependencyNode> it = node.getChildren().iterator(); it.hasNext(); ) {
                 DependencyNode child = it.next();
                 if (!gatherConflictItems(child, state)) {

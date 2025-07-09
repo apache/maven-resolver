@@ -192,7 +192,7 @@ public final class FileUtils {
 
     /**
      * Utility method to write out file to disk in "atomic" manner, with optional backups (".bak") if needed. This
-     * ensures that no other thread or process will be able to read not fully written files. Finally, this methos
+     * ensures that no other thread or process will be able to read not fully written files. Finally, this method
      * may create the needed parent directories, if the passed in target parents does not exist.
      *
      * @param target   that is the target file (must be an existing or non-existing file, the path must have parent).
