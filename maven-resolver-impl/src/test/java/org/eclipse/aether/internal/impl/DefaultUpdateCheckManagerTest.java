@@ -506,7 +506,7 @@ public class DefaultUpdateCheckManagerTest {
         long fifteenMinutes = new Date().getTime() - (15L * 60L * 1000L);
         check.getFile().setLastModified(fifteenMinutes);
         // time is truncated on setLastModified
-        check.getFile().lastModified();
+        fifteenMinutes = check.getFile().lastModified();
 
         // never checked before
         manager.checkArtifact(session, check);
