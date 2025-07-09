@@ -38,8 +38,8 @@ public final class SimpleResolutionErrorPolicy implements ResolutionErrorPolicy 
     /**
      * Creates a new error policy with the specified behavior for both artifacts and metadata.
      *
-     * @param cacheNotFound {@code true} to enable caching of missing items, {@code false} to disable it.
-     * @param cacheTransferErrors {@code true} to enable chaching of transfer errors, {@code false} to disable it.
+     * @param cacheNotFound {@code true} to enable caching of missing items, {@code false} to disable it
+     * @param cacheTransferErrors {@code true} to enable caching of transfer errors, {@code false} to disable it
      */
     public SimpleResolutionErrorPolicy(boolean cacheNotFound, boolean cacheTransferErrors) {
         this((cacheNotFound ? CACHE_NOT_FOUND : 0) | (cacheTransferErrors ? CACHE_TRANSFER_ERROR : 0));

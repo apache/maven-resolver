@@ -76,7 +76,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
 
         Map<DependencyNode, Object> visited = new IdentityHashMap<>(conflictIds.size());
 
-        buildConflitIdDAG(ids, node, id, 0, visited, conflictIds);
+        buildConflictIdDAG(ids, node, id, 0, visited, conflictIds);
 
         long time2 = System.nanoTime();
 
@@ -93,7 +93,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
         return node;
     }
 
-    private void buildConflitIdDAG(
+    private void buildConflictIdDAG(
             Map<Object, ConflictId> ids,
             DependencyNode node,
             ConflictId id,
@@ -120,7 +120,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
                 id.add(childId);
             }
 
-            buildConflitIdDAG(ids, child, childId, depth, visited, conflictIds);
+            buildConflictIdDAG(ids, child, childId, depth, visited, conflictIds);
         }
     }
 

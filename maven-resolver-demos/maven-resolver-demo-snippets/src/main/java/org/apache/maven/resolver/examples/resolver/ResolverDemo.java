@@ -80,7 +80,7 @@ public class ResolverDemo {
         //
         resolver.install(artifact, pom);
 
-        // Deploy to a remote reposistory
+        // Deploy to a remote repository
         //
         resolver.deploy(artifact, pom, "http://localhost:8081/nexus/content/repositories/snapshots/");
     }
