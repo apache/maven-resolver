@@ -182,9 +182,9 @@ class MinioTransporterIT {
     void getExistent() throws Exception {
         try (MinioTransporter transporter =
                 new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
-                GetTask task = new GetTask(URI.create(OBJECT_NAME));
-                transporter.get(task);
-                assertEquals(OBJECT_CONTENT, new String(task.getDataBytes(), StandardCharsets.UTF_8));
+            GetTask task = new GetTask(URI.create(OBJECT_NAME));
+            transporter.get(task);
+            assertEquals(OBJECT_CONTENT, new String(task.getDataBytes(), StandardCharsets.UTF_8));
         }
     }
 
@@ -192,28 +192,28 @@ class MinioTransporterIT {
     void putNonexistent() throws Exception {
         try (MinioTransporter transporter =
                 new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
-                URI uri = URI.create("test");
-                transporter.put(new PutTask(uri).setDataBytes(OBJECT_CONTENT.getBytes(StandardCharsets.UTF_8)));
-                GetTask task = new GetTask(uri);
-                transporter.get(task);
-                assertEquals(OBJECT_CONTENT, new String(task.getDataBytes(), StandardCharsets.UTF_8));
-         }
+            URI uri = URI.create("test");
+            transporter.put(new PutTask(uri).setDataBytes(OBJECT_CONTENT.getBytes(StandardCharsets.UTF_8)));
+            GetTask task = new GetTask(uri);
+            transporter.get(task);
+            assertEquals(OBJECT_CONTENT, new String(task.getDataBytes(), StandardCharsets.UTF_8));
+        }
     }
 
     @Test
     void putExistent() throws Exception {
         try (MinioTransporter transporter =
                 new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
-                URI uri = URI.create(OBJECT_NAME);
-                GetTask task = new GetTask(uri);
-                transporter.get(task);
-                assertEquals(OBJECT_CONTENT, new String(task.getDataBytes(), StandardCharsets.UTF_8));
+            URI uri = URI.create(OBJECT_NAME);
+            GetTask task = new GetTask(uri);
+            transporter.get(task);
+            assertEquals(OBJECT_CONTENT, new String(task.getDataBytes(), StandardCharsets.UTF_8));
 
-                String altContent = "altContent";
-                transporter.put(new PutTask(uri).setDataBytes(altContent.getBytes(StandardCharsets.UTF_8)));
-                task = new GetTask(uri);
-                transporter.get(task);
-                assertEquals(altContent, new String(task.getDataBytes(), StandardCharsets.UTF_8));
+            String altContent = "altContent";
+            transporter.put(new PutTask(uri).setDataBytes(altContent.getBytes(StandardCharsets.UTF_8)));
+            task = new GetTask(uri);
+            transporter.get(task);
+            assertEquals(altContent, new String(task.getDataBytes(), StandardCharsets.UTF_8));
         }
     }
 }
