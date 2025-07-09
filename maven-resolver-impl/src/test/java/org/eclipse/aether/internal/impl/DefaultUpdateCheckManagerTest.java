@@ -505,8 +505,8 @@ public class DefaultUpdateCheckManagerTest {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         long fifteenMinutes = new Date().getTime() - (15L * 60L * 1000L);
         check.getFile().setLastModified(fifteenMinutes);
-        // time is truncated on setLastModfied
-        fifteenMinutes = check.getFile().lastModified();
+        // time is truncated on setLastModified
+        check.getFile().lastModified();
 
         // never checked before
         manager.checkArtifact(session, check);

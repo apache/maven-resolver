@@ -194,7 +194,7 @@ public class DefaultRemoteRepositoryManagerTest {
         });
 
         List<RemoteRepository> result = manager.aggregateRepositories(
-                session, Collections.<RemoteRepository>emptyList(), Arrays.asList(repo), true);
+                session, Collections.emptyList(), Arrays.asList(repo), true);
 
         assertEquals(1, result.size());
         assertSame(mirror.getAuthentication(), result.get(0).getAuthentication());
@@ -213,7 +213,7 @@ public class DefaultRemoteRepositoryManagerTest {
         });
 
         List<RemoteRepository> result = manager.aggregateRepositories(
-                session, Collections.<RemoteRepository>emptyList(), Arrays.asList(repo), true);
+                session, Collections.emptyList(), Arrays.asList(repo), true);
 
         assertEquals(1, result.size());
         assertEquals("http", result.get(0).getProxy().getType());
@@ -237,7 +237,7 @@ public class DefaultRemoteRepositoryManagerTest {
         });
 
         List<RemoteRepository> result = manager.aggregateRepositories(
-                session, Collections.<RemoteRepository>emptyList(), Arrays.asList(repo), true);
+                session, Collections.emptyList(), Arrays.asList(repo), true);
 
         assertEquals(1, result.size());
         assertEquals("http", result.get(0).getProxy().getType());

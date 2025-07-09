@@ -62,10 +62,8 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
             msg = "";
         }
         try {
-            DependencyNode node = root;
-            node = path(node, coords);
-
-            assertEquals(expected, node.getDependency().getScope(), msg + "\nculprit: " + node.toString() + "\n");
+            DependencyNode node = path(root, coords);
+            assertEquals(expected, node.getDependency().getScope(), msg + "\nculprit: " + node + "\n");
         } catch (IndexOutOfBoundsException | NullPointerException e) {
             throw new IllegalArgumentException("illegal coordinates for child", e);
         }

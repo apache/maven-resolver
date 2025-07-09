@@ -22,8 +22,7 @@ import org.eclipse.aether.version.Version;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- */
+
 abstract class AbstractVersionTest {
 
     protected static final int X_LT_Y = -1;
