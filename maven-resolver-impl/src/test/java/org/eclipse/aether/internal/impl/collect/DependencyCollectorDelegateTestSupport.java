@@ -167,7 +167,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
         });
         t.start();
         t.join();
-        assertTrue(cause.get() instanceof InterruptedException, String.valueOf(cause.get()));
+        assertInstanceOf(InterruptedException.class, cause.get(), String.valueOf(cause.get()));
     }
 
     @Test
@@ -202,7 +202,8 @@ public abstract class DependencyCollectorDelegateTestSupport {
             assertNotNull(result.getExceptions());
             assertEquals(1, result.getExceptions().size());
 
-            assertTrue(result.getExceptions().get(0) instanceof ArtifactDescriptorException);
+            assertInstanceOf(
+                    ArtifactDescriptorException.class, result.getExceptions().get(0));
 
             assertEquals(request.getRoot(), result.getRoot().getDependency());
         }
@@ -324,7 +325,8 @@ public abstract class DependencyCollectorDelegateTestSupport {
             assertNotNull(result.getExceptions());
             assertEquals(1, result.getExceptions().size());
 
-            assertTrue(result.getExceptions().get(0) instanceof ArtifactDescriptorException);
+            assertInstanceOf(
+                    ArtifactDescriptorException.class, result.getExceptions().get(0));
 
             assertEqualSubtree(root, result.getRoot());
         }

@@ -127,10 +127,10 @@ public class DefaultInstallerTest {
 
         assertEquals(result.getRequest(), request);
 
-        assertEquals(result.getArtifacts().size(), 1);
+        assertEquals(1, result.getArtifacts().size());
         assertTrue(result.getArtifacts().contains(artifact));
 
-        assertEquals(result.getMetadata().size(), 1);
+        assertEquals(1, result.getMetadata().size());
         assertTrue(result.getMetadata().contains(metadata));
 
         assertEquals(1, lrm.getMetadataRegistration().size());

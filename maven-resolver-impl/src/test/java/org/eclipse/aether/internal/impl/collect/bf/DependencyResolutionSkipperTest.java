@@ -91,12 +91,12 @@ public class DependencyResolutionSkipperTest {
             skipper.cache(gNode, mutableList(aNode, eNode, fNode));
 
             Map<DependencyNode, DependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
-            assertEquals(results.size(), 7);
+            assertEquals(7, results.size());
 
             List<DependencyResolutionSkipper.DependencyResolutionResult> skipped = results.values().stream()
                     .filter(dependencyResolutionResult -> dependencyResolutionResult.skippedAsVersionConflict)
                     .collect(Collectors.toList());
-            assertEquals(skipped.size(), 1);
+            assertEquals(1, skipped.size());
             assertSame(skipped.get(0).current, c3Node);
         }
     }
@@ -137,13 +137,13 @@ public class DependencyResolutionSkipperTest {
             skipper.cache(c1Node, mutableList(aNode, dNode));
 
             Map<DependencyNode, DependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
-            assertEquals(results.size(), 6);
+            assertEquals(6, results.size());
 
             List<DependencyResolutionSkipper.DefaultDependencyResolutionSkipper.DependencyResolutionResult> skipped =
                     results.values().stream()
                             .filter(dependencyResolutionResult -> dependencyResolutionResult.skippedAsDuplicate)
                             .collect(Collectors.toList());
-            assertEquals(skipped.size(), 2);
+            assertEquals(2, skipped.size());
             assertSame(skipped.get(0).current, b1Node);
             assertSame(skipped.get(1).current, c1Node);
         }
@@ -190,13 +190,13 @@ public class DependencyResolutionSkipperTest {
             skipper.cache(d2Node, mutableList(aNode, bNode, c1Node));
 
             Map<DependencyNode, DependencyResolutionSkipper.DependencyResolutionResult> results = skipper.getResults();
-            assertEquals(results.size(), 7);
+            assertEquals(7, results.size());
 
             List<DependencyResolutionSkipper.DefaultDependencyResolutionSkipper.DependencyResolutionResult>
                     forceResolved = results.values().stream()
                             .filter(dependencyResolutionResult -> dependencyResolutionResult.forceResolution)
                             .collect(Collectors.toList());
-            assertEquals(forceResolved.size(), 3);
+            assertEquals(3, forceResolved.size());
             assertSame(forceResolved.get(0).current, c1Node);
             assertSame(forceResolved.get(1).current, d1Node);
             assertSame(forceResolved.get(2).current, d2Node);

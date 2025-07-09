@@ -56,8 +56,8 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
     void singleArtifact() {
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
-        assertEquals(names.size(), 1);
-        assertEquals(names.iterator().next().name(), "artifact~group~artifact~1.0.lock");
+        assertEquals(1, names.size());
+        assertEquals("artifact~group~artifact~1.0.lock", names.iterator().next().name());
     }
 
     @Test
@@ -65,8 +65,8 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
         DefaultMetadata metadata =
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
-        assertEquals(names.size(), 1);
-        assertEquals(names.iterator().next().name(), "metadata~group~artifact.lock");
+        assertEquals(1, names.size());
+        assertEquals("metadata~group~artifact.lock", names.iterator().next().name());
     }
 
     @Test
@@ -76,11 +76,11 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
                 new DefaultMetadata("bgroup", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), singletonList(metadata));
 
-        assertEquals(names.size(), 2);
+        assertEquals(2, names.size());
         Iterator<NamedLockKey> namesIterator = names.iterator();
 
         // they are sorted as well
-        assertEquals(namesIterator.next().name(), "artifact~agroup~artifact~1.0.lock");
-        assertEquals(namesIterator.next().name(), "metadata~bgroup~artifact.lock");
+        assertEquals("artifact~agroup~artifact~1.0.lock", namesIterator.next().name());
+        assertEquals("metadata~bgroup~artifact.lock", namesIterator.next().name());
     }
 }
