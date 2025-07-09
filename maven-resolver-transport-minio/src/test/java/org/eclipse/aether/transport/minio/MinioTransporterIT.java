@@ -89,9 +89,8 @@ class MinioTransporterIT {
     }
 
     @AfterEach
-    public void stopSuite() {
-        // TODO is this right? should this be stop?
-        minioContainer.start();
+    void stopSuite() {
+        minioContainer.stop();
     }
 
     enum RepositoryAuth {
