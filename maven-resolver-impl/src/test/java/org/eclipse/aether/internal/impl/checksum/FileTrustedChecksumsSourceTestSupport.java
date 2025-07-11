@@ -114,6 +114,6 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
         assertNotNull(providedChecksums);
         assertFalse(providedChecksums.isEmpty());
         assertEquals(1, providedChecksums.size());
-        assertEquals(providedChecksums.get(checksumAlgorithmFactory.getName()), ARTIFACT_TRUSTED_CHECKSUM);
+        assertEquals(ARTIFACT_TRUSTED_CHECKSUM, providedChecksums.get(checksumAlgorithmFactory.getName()));
     }
 }

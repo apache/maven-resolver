@@ -45,8 +45,8 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertEquals(result, "happy");
-        assertEquals(retries.sum(), 1);
+        assertEquals("happy", result);
+        assertEquals(1, retries.sum());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertEquals(result, "notHappy");
+        assertEquals("notHappy", result);
         assertTrue(retries.sum() > 1, retries.sum() + " > 1");
     }
 
@@ -79,8 +79,8 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertEquals(result, "got it");
-        assertEquals(retries.sum(), 2);
+        assertEquals("got it", result);
+        assertEquals(2, retries.sum());
     }
 
     @Test
@@ -95,8 +95,8 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertEquals(result, "happy");
-        assertEquals(retries.sum(), 1);
+        assertEquals("happy", result);
+        assertEquals(1, retries.sum());
     }
 
     @Test
@@ -111,8 +111,8 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertEquals(result, "notHappy");
-        assertEquals(retries.sum(), 5);
+        assertEquals("notHappy", result);
+        assertEquals(5, retries.sum());
     }
 
     @Test
@@ -127,7 +127,7 @@ public class RetryTest {
                 },
                 null,
                 "notHappy");
-        assertEquals(result, "got it");
-        assertEquals(retries.sum(), 3);
+        assertEquals("got it", result);
+        assertEquals(3, retries.sum());
     }
 }

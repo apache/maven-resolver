@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -58,8 +59,8 @@ public class DefaultDependencyNodeTest {
         t.start();
         t.join();
 
-        assertTrue(thrown.get() instanceof RuntimeException, String.valueOf(thrown.get()));
-        assertTrue(thrown.get().getCause() instanceof InterruptedException, String.valueOf(thrown.get()));
+        assertInstanceOf(RuntimeException.class, thrown.get(), String.valueOf(thrown.get()));
+        assertInstanceOf(InterruptedException.class, thrown.get().getCause(), String.valueOf(thrown.get()));
         assertTrue(t.isInterrupted());
     }
 }

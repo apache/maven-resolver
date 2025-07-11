@@ -72,7 +72,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         transfer.setArtifact(artifactWithChecksum);
         Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, repository, checksums);
         assertNotNull(chk);
-        assertEquals(chk.get(Sha1ChecksumAlgorithmFactory.NAME), "foo");
+        assertEquals("foo", chk.get(Sha1ChecksumAlgorithmFactory.NAME));
     }
 
     @Test
@@ -91,7 +91,7 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         transfer.setRepositories(Collections.singletonList(repository));
         Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, mrm, checksums);
         assertNotNull(chk);
-        assertEquals(chk.get(Sha1ChecksumAlgorithmFactory.NAME), "foo");
+        assertEquals("foo", chk.get(Sha1ChecksumAlgorithmFactory.NAME));
     }
 
     @Test

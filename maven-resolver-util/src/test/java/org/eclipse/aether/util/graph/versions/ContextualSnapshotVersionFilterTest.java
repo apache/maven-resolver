@@ -48,17 +48,17 @@ public class ContextualSnapshotVersionFilterTest extends AbstractVersionFilterTe
     @Test
     void testDeriveChildFilter() {
         ContextualSnapshotVersionFilter filter = new ContextualSnapshotVersionFilter();
-        assertTrue(derive(filter, "g:a:1") instanceof SnapshotVersionFilter);
-        assertSame(null, derive(filter, "g:a:1-SNAPSHOT"));
+        assertInstanceOf(SnapshotVersionFilter.class, derive(filter, "g:a:1"));
+        assertNull(derive(filter, "g:a:1-SNAPSHOT"));
         session.setConfigProperty(ContextualSnapshotVersionFilter.CONFIG_PROP_ENABLE, "true");
-        assertTrue(derive(filter, "g:a:1-SNAPSHOT") instanceof SnapshotVersionFilter);
+        assertInstanceOf(SnapshotVersionFilter.class, derive(filter, "g:a:1-SNAPSHOT"));
     }
 
     @SuppressWarnings("EqualsWithItself")
     @Test
     void testEquals() {
         ContextualSnapshotVersionFilter filter = new ContextualSnapshotVersionFilter();
-        assertNotEquals(null, filter);
+        assertNotNull(filter);
         assertEquals(filter, filter);
         assertEquals(filter, new ContextualSnapshotVersionFilter());
     }

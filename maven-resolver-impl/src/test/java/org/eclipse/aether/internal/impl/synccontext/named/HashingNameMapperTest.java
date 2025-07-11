@@ -56,7 +56,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
-        assertEquals(names.size(), 1);
+        assertEquals(1, names.size());
         assertEquals(names.iterator().next().name(), "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
@@ -66,7 +66,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
         DefaultMetadata metadata =
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
-        assertEquals(names.size(), 1);
+        assertEquals(1, names.size());
         assertEquals(names.iterator().next().name(), "293b3990971f4b4b02b220620d2538eaac5f221b");
     }
 
@@ -92,7 +92,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
 
-        assertEquals(names.size(), 1);
+        assertEquals(1, names.size());
         assertEquals(names.iterator().next().name(), "46/e9/46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
@@ -103,7 +103,7 @@ public class HashingNameMapperTest extends NameMapperTestSupport {
                 new DefaultMetadata("group", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
 
-        assertEquals(names.size(), 1);
+        assertEquals(1, names.size());
         assertEquals(names.iterator().next().name(), "29/3b/293b3990971f4b4b02b220620d2538eaac5f221b");
     }
 
