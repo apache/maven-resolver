@@ -56,8 +56,8 @@ public class DependencyTest {
         assertEquals(0, d2.getExclusions().size());
 
         assertSame(d2, d2.setExclusions(null));
-        assertSame(d2, d2.setExclusions(Collections.<Exclusion>emptyList()));
-        assertSame(d2, d2.setExclusions(Collections.<Exclusion>emptySet()));
+        assertSame(d2, d2.setExclusions(Collections.emptyList()));
+        assertSame(d2, d2.setExclusions(Collections.emptySet()));
         assertSame(d1, d1.setExclusions(Arrays.asList(new Exclusion("g", "a", "c", "e"))));
 
         Dependency d3 =

@@ -55,7 +55,7 @@ public class UnionVersionRangeTest {
 
     @Test
     void testGetLowerBound() {
-        VersionRange range = UnionVersionRange.from(Collections.<VersionRange>emptySet());
+        VersionRange range = UnionVersionRange.from(Collections.emptySet());
         assertBound(null, false, range.getLowerBound());
 
         range = UnionVersionRange.from(newRange("[1,2]"), newRange("[3,4]"));
@@ -73,7 +73,7 @@ public class UnionVersionRangeTest {
 
     @Test
     void testGetUpperBound() {
-        VersionRange range = UnionVersionRange.from(Collections.<VersionRange>emptySet());
+        VersionRange range = UnionVersionRange.from(Collections.emptySet());
         assertBound(null, false, range.getUpperBound());
 
         range = UnionVersionRange.from(newRange("[1,2]"), newRange("[3,4]"));

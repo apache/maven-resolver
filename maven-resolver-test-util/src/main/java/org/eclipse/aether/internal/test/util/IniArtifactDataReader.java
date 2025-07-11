@@ -46,13 +46,6 @@ class IniArtifactDataReader {
     private String prefix = "";
 
     /**
-     * Constructs a data reader with the prefix {@code ""}.
-     */
-    IniArtifactDataReader() {
-        this("");
-    }
-
-    /**
      * Constructs a data reader with the given prefix.
      *
      * @param prefix the prefix to use for loading resources from the classpath.
@@ -64,7 +57,7 @@ class IniArtifactDataReader {
     /**
      * Load an artifact description from the classpath and parse it.
      */
-    public ArtifactDescription parse(String resource) throws IOException {
+    ArtifactDescription parse(String resource) throws IOException {
         URL res = this.getClass().getClassLoader().getResource(prefix + resource);
 
         if (res == null) {
@@ -76,14 +69,14 @@ class IniArtifactDataReader {
     /**
      * Open the given URL and parse ist.
      */
-    public ArtifactDescription parse(URL res) throws IOException {
+    ArtifactDescription parse(URL res) throws IOException {
         return parse(new InputStreamReader(res.openStream(), StandardCharsets.UTF_8));
     }
 
     /**
      * Parse the given String.
      */
-    public ArtifactDescription parseLiteral(String description) throws IOException {
+    ArtifactDescription parseLiteral(String description) throws IOException {
         StringReader reader = new StringReader(description);
         return parse(reader);
     }
@@ -233,99 +226,5 @@ class IniArtifactDataReader {
         }
 
         return line;
-    }
-
-    static class Definition {
-        private String groupId;
-
-        private String artifactId;
-
-        private String extension;
-
-        private String version;
-
-        private String scope = "";
-
-        private String definition;
-
-        private String id = null;
-
-        private String reference = null;
-
-        private boolean optional = false;
-
-        Definition(String def) {
-            this.definition = def.trim();
-
-            if (definition.startsWith("(")) {
-                int idx = definition.indexOf(')');
-                this.id = definition.substring(1, idx);
-                this.definition = definition.substring(idx + 1);
-            } else if (definition.startsWith("^")) {
-                this.reference = definition.substring(1);
-                return;
-            }
-
-            String[] split = definition.split(":");
-            if (split.length < 4) {
-                throw new IllegalArgumentException(
-                        "Need definition like 'gid:aid:ext:ver[:scope]', but was: " + definition);
-            }
-            groupId = split[0];
-            artifactId = split[1];
-            extension = split[2];
-            version = split[3];
-            if (split.length > 4) {
-                scope = split[4];
-            }
-            if (split.length > 5 && "true".equalsIgnoreCase(split[5])) {
-                optional = true;
-            }
-        }
-
-        public String getGroupId() {
-            return groupId;
-        }
-
-        public String getArtifactId() {
-            return artifactId;
-        }
-
-        public String getType() {
-            return extension;
-        }
-
-        public String getVersion() {
-            return version;
-        }
-
-        public String getScope() {
-            return scope;
-        }
-
-        @Override
-        public String toString() {
-            return definition;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getReference() {
-            return reference;
-        }
-
-        public boolean isReference() {
-            return reference != null;
-        }
-
-        public boolean hasId() {
-            return id != null;
-        }
-
-        public boolean isOptional() {
-            return optional;
-        }
     }
 }
