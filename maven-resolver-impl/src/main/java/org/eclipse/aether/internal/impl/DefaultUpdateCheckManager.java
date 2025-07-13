@@ -63,7 +63,7 @@ import static java.util.Objects.requireNonNull;
 @Named
 public class DefaultUpdateCheckManager implements UpdateCheckManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultUpdatePolicyAnalyzer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultUpdateCheckManager.class);
 
     private static final String UPDATED_KEY_SUFFIX = ".lastUpdated";
 
