@@ -31,6 +31,5 @@ public class IpcNamedLockFactoryIT extends NamedLockFactoryTestSupport {
                 super.doShutdown();
             }
         };
-        ;
     }
 }
