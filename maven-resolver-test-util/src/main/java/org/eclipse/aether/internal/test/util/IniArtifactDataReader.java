@@ -43,12 +43,12 @@ import org.eclipse.aether.repository.RemoteRepository;
  */
 class IniArtifactDataReader {
 
-    private String prefix = "";
+    private final String prefix;
 
     /**
      * Constructs a data reader with the given prefix.
      *
-     * @param prefix the prefix to use for loading resources from the classpath.
+     * @param prefix the prefix to use for loading resources from the classpath
      */
     IniArtifactDataReader(String prefix) {
         this.prefix = prefix;
@@ -67,9 +67,9 @@ class IniArtifactDataReader {
     }
 
     /**
-     * Open the given URL and parse ist.
+     * Open the given URL and parse it.
      */
-    ArtifactDescription parse(URL res) throws IOException {
+    private ArtifactDescription parse(URL res) throws IOException {
         return parse(new InputStreamReader(res.openStream(), StandardCharsets.UTF_8));
     }
 
