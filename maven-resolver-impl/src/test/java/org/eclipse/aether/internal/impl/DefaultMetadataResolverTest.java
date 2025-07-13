@@ -336,7 +336,7 @@ public class DefaultMetadataResolverTest {
         MetadataResult result = results.get(0);
         assertSame(request, result.getRequest());
         assertNotNull(result.getException());
-        assertTrue(result.getException() instanceof MetadataNotFoundException);
+        assertInstanceOf(MetadataNotFoundException.class, result.getException());
         assertEquals("never-accept", result.getException().getMessage());
         assertNull(result.getMetadata());
 
@@ -396,7 +396,7 @@ public class DefaultMetadataResolverTest {
         MetadataResult result = results.get(0);
         assertSame(request, result.getRequest());
         assertNotNull(result.getException());
-        assertTrue(result.getException() instanceof MetadataNotFoundException);
+        assertInstanceOf(MetadataNotFoundException.class, result.getException());
         assertEquals("never-accept-" + repository.getId(), result.getException().getMessage());
         assertNull(result.getMetadata());
 

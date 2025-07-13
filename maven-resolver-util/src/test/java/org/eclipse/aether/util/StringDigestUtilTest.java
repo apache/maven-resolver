@@ -27,43 +27,67 @@ import static org.junit.jupiter.api.Assertions.*;
 public class StringDigestUtilTest {
     @Test
     void sha1Simple() {
-        assertEquals(StringDigestUtil.sha1(null), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
-        assertEquals(StringDigestUtil.sha1(""), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
-        assertEquals(StringDigestUtil.sha1("something"), "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29");
-        assertEquals(StringDigestUtil.sha1().update(null).digest(), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
-        assertEquals(StringDigestUtil.sha1().update("").digest(), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
-        assertEquals(StringDigestUtil.sha1().update("something").digest(), "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29");
+        assertEquals("da39a3ee5e6b4b0d3255bfef95601890afd80709", StringDigestUtil.sha1(null));
+        assertEquals("da39a3ee5e6b4b0d3255bfef95601890afd80709", StringDigestUtil.sha1(""));
+        assertEquals("1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29", StringDigestUtil.sha1("something"));
         assertEquals(
-                StringDigestUtil.sha1().update("some").update("thing").digest(),
-                "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29");
+                "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                StringDigestUtil.sha1().update(null).digest());
+        assertEquals(
+                "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                StringDigestUtil.sha1().update("").digest());
+        assertEquals(
+                "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29",
+                StringDigestUtil.sha1().update("something").digest());
+        assertEquals(
+                "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29",
+                StringDigestUtil.sha1().update("some").update("thing").digest());
     }
 
     @Test
     void sha1Manual() {
-        assertEquals(new StringDigestUtil("SHA-1").digest(), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
-        assertEquals(new StringDigestUtil("SHA-1").update("").digest(), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
+        assertEquals("da39a3ee5e6b4b0d3255bfef95601890afd80709", new StringDigestUtil("SHA-1").digest());
         assertEquals(
-                new StringDigestUtil("SHA-1").update("something").digest(), "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29");
-        assertEquals(new StringDigestUtil("SHA-1").update(null).digest(), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
-        assertEquals(new StringDigestUtil("SHA-1").update("").digest(), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
+                "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                new StringDigestUtil("SHA-1").update("").digest());
         assertEquals(
-                new StringDigestUtil("SHA-1").update("something").digest(), "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29");
+                "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29",
+                new StringDigestUtil("SHA-1").update("something").digest());
         assertEquals(
-                new StringDigestUtil("SHA-1").update("some").update("thing").digest(),
-                "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29");
+                "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                new StringDigestUtil("SHA-1").update(null).digest());
+        assertEquals(
+                "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                new StringDigestUtil("SHA-1").update("").digest());
+        assertEquals(
+                "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29",
+                new StringDigestUtil("SHA-1").update("something").digest());
+        assertEquals(
+                "1af17e73721dbe0c40011b82ed4bb1a7dbe3ce29",
+                new StringDigestUtil("SHA-1").update("some").update("thing").digest());
     }
 
     @Test
     void md5Manual() {
-        assertEquals(new StringDigestUtil("MD5").digest(), "d41d8cd98f00b204e9800998ecf8427e");
-        assertEquals(new StringDigestUtil("MD5").update("").digest(), "d41d8cd98f00b204e9800998ecf8427e");
-        assertEquals(new StringDigestUtil("MD5").update("something").digest(), "437b930db84b8079c2dd804a71936b5f");
-        assertEquals(new StringDigestUtil("MD5").update(null).digest(), "d41d8cd98f00b204e9800998ecf8427e");
-        assertEquals(new StringDigestUtil("MD5").update("").digest(), "d41d8cd98f00b204e9800998ecf8427e");
-        assertEquals(new StringDigestUtil("MD5").update("something").digest(), "437b930db84b8079c2dd804a71936b5f");
+        assertEquals("d41d8cd98f00b204e9800998ecf8427e", new StringDigestUtil("MD5").digest());
         assertEquals(
-                new StringDigestUtil("MD5").update("some").update("thing").digest(),
-                "437b930db84b8079c2dd804a71936b5f");
+                "d41d8cd98f00b204e9800998ecf8427e",
+                new StringDigestUtil("MD5").update("").digest());
+        assertEquals(
+                "437b930db84b8079c2dd804a71936b5f",
+                new StringDigestUtil("MD5").update("something").digest());
+        assertEquals(
+                "d41d8cd98f00b204e9800998ecf8427e",
+                new StringDigestUtil("MD5").update(null).digest());
+        assertEquals(
+                "d41d8cd98f00b204e9800998ecf8427e",
+                new StringDigestUtil("MD5").update("").digest());
+        assertEquals(
+                "437b930db84b8079c2dd804a71936b5f",
+                new StringDigestUtil("MD5").update("something").digest());
+        assertEquals(
+                "437b930db84b8079c2dd804a71936b5f",
+                new StringDigestUtil("MD5").update("some").update("thing").digest());
     }
 
     @Test

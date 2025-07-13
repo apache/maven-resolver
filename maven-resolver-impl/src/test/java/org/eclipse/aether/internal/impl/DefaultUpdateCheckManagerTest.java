@@ -230,7 +230,7 @@ public class DefaultUpdateCheckManagerTest {
         check = newMetadataCheck().setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkMetadata(session, check);
         assertFalse(check.isRequired());
-        assertTrue(check.getException() instanceof MetadataNotFoundException);
+        assertInstanceOf(MetadataNotFoundException.class, check.getException());
         assertTrue(check.getException().isFromCache());
     }
 
@@ -268,7 +268,7 @@ public class DefaultUpdateCheckManagerTest {
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(false, true));
         manager.checkMetadata(session, check);
         assertFalse(check.isRequired());
-        assertTrue(check.getException() instanceof MetadataTransferException);
+        assertInstanceOf(MetadataTransferException.class, check.getException());
         assertTrue(check.getException().getMessage().contains("some error"), String.valueOf(check.getException()));
         assertTrue(check.getException().isFromCache());
     }
@@ -555,7 +555,7 @@ public class DefaultUpdateCheckManagerTest {
         check = newArtifactCheck().setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
         manager.checkArtifact(session, check);
         assertFalse(check.isRequired());
-        assertTrue(check.getException() instanceof ArtifactNotFoundException);
+        assertInstanceOf(ArtifactNotFoundException.class, check.getException());
         assertTrue(check.getException().isFromCache());
     }
 
@@ -591,7 +591,7 @@ public class DefaultUpdateCheckManagerTest {
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(false, true));
         manager.checkArtifact(session, check);
         assertFalse(check.isRequired());
-        assertTrue(check.getException() instanceof ArtifactTransferException);
+        assertInstanceOf(ArtifactTransferException.class, check.getException());
         assertTrue(check.getException().isFromCache());
     }
 
