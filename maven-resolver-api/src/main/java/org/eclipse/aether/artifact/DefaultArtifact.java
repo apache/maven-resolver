@@ -226,9 +226,7 @@ public final class DefaultArtifact extends AbstractArtifact {
             if (typeDefaultProperties != null) {
                 properties.putAll(typeDefaultProperties);
             }
-            if (artifactProperties != null) {
-                properties.putAll(artifactProperties);
-            }
+            properties.putAll(artifactProperties);
             properties = Collections.unmodifiableMap(properties);
         }
 

@@ -355,7 +355,7 @@ public final class ConfigUtils {
             return Collections.emptyList();
         }
         return Arrays.stream(commaSeparatedNames.split(","))
-                .filter(s -> s != null && !s.trim().isEmpty())
+                .filter(s -> !s.trim().isEmpty())
                 .collect(toList());
     }
 

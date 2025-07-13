@@ -38,8 +38,7 @@ public final class TestVersion implements Version {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
-        result = prime * result + ((version == null) ? 0 : version.hashCode());
+        int result = prime + version.hashCode();
         return result;
     }
 
@@ -55,11 +54,7 @@ public final class TestVersion implements Version {
             return false;
         }
         TestVersion other = (TestVersion) obj;
-        if (version == null) {
-            if (other.version != null) {
-                return false;
-            }
-        } else if (!version.equals(other.version)) {
+        if (!version.equals(other.version)) {
             return false;
         }
         return true;

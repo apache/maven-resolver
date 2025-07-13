@@ -284,7 +284,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private static List<String> elementsOf(final String path) {
         return Arrays.stream(path.split("/"))
-                .filter(e -> e != null && !e.isEmpty())
+                .filter(e -> !e.isEmpty())
                 .collect(toList());
     }
 }

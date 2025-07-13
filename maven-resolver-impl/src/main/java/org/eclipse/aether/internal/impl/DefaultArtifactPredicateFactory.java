@@ -68,7 +68,7 @@ public final class DefaultArtifactPredicateFactory implements ArtifactPredicateF
                                 DEFAULT_OMIT_CHECKSUMS_FOR_EXTENSIONS,
                                 CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS)
                         .split(","))
-                .filter(s -> s != null && !s.trim().isEmpty())
+                .filter(s -> !s.trim().isEmpty())
                 .collect(Collectors.toSet());
 
         // validation: enforce that all strings in this set are having leading dot
