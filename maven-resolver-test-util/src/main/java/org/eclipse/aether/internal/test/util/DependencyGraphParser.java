@@ -117,7 +117,7 @@ public class DependencyGraphParser {
      * @see DependencyGraphParser#parseResource(String)
      */
     public DependencyGraphParser(String prefix) {
-        this(prefix, Collections.<String>emptyList());
+        this(prefix, Collections.emptyList());
     }
 
     /**
