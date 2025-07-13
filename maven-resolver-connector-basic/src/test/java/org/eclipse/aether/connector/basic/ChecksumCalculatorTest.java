@@ -99,10 +99,10 @@ public class ChecksumCalculatorTest {
         calculator.update(toBuffer("World!"));
         Map<String, Object> digests = calculator.get();
         assertNotNull(digests);
-        assertTrue(digests.get(SHA512) instanceof IOException);
-        assertTrue(digests.get(SHA256) instanceof IOException);
-        assertTrue(digests.get(SHA1) instanceof IOException);
-        assertTrue(digests.get(MD5) instanceof IOException);
+        assertInstanceOf(IOException.class, digests.get(SHA512));
+        assertInstanceOf(IOException.class, digests.get(SHA256));
+        assertInstanceOf(IOException.class, digests.get(SHA1));
+        assertInstanceOf(IOException.class, digests.get(MD5));
         assertEquals(4, digests.size());
     }
 
