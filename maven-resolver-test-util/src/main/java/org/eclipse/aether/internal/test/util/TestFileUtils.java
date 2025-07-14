@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -128,10 +129,26 @@ public class TestFileUtils {
         return tmpFile;
     }
 
+    /**
+     * Creates a temporary directory.
+     *
+     * @return the temporary directory
+     * @throws IOException if an I/O error occurs
+     * @deprecated use @TempDir (JUnit 5} Or TemporaryFolder (JUnit 4)  instead
+     */
+    @Deprecated
     public static File createTempDir() throws IOException {
         return createTempDir("");
     }
 
+    /**
+     * Creates a temporary directory.
+     *
+     * @return the temporary directory
+     * @throws IOException if an I/O error occurs
+     * @deprecated use @TempDir (JUnit 5} Or TemporaryFolder (JUnit 4)  instead
+     */
+    @Deprecated
     public static File createTempDir(String suffix) throws IOException {
         mkdirs(TMP);
         File tmpFile = File.createTempFile("tmpdir-", suffix, TMP);
@@ -189,6 +206,15 @@ public class TestFileUtils {
         return total;
     }
 
+    /**
+     * Reads the contents of a file into a byte array.
+     *
+     * @param file the file to read
+     * @return the contents of the file as a byte array
+     * @throws IOException if an I/O error occurs
+     * @deprecated use {@code Files.readAllBytes(Path)} instead
+     */
+    @Deprecated
     public static byte[] readBytes(File file) throws IOException {
         RandomAccessFile in = null;
         try {
@@ -232,7 +258,7 @@ public class TestFileUtils {
     }
 
     public static String readString(File file) throws IOException {
-        byte[] content = readBytes(file);
+        byte[] content = Files.readAllBytes(file.toPath());
         return new String(content, StandardCharsets.UTF_8);
     }
 
