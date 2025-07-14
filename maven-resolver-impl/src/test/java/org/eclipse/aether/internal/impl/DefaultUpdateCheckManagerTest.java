@@ -43,6 +43,7 @@ import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -63,8 +64,7 @@ public class DefaultUpdateCheckManagerTest {
     private Artifact artifact;
 
     @BeforeEach
-    void setup() throws Exception {
-        File dir = TestFileUtils.createTempDir("");
+    void setup(@TempDir File dir) throws Exception {
         TestFileUtils.deleteFile(dir);
 
         File metadataFile = new File(dir, "metadata.txt");

@@ -29,16 +29,17 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-/**
- */
 public class SimpleLocalRepositoryManagerTest {
 
+    @TempDir
     private File basedir;
 
     private SimpleLocalRepositoryManager manager;
@@ -47,16 +48,8 @@ public class SimpleLocalRepositoryManagerTest {
 
     @BeforeEach
     void setup() throws IOException {
-        basedir = TestFileUtils.createTempDir("simple-repo");
         manager = new SimpleLocalRepositoryManager(basedir.toPath(), "simple", new DefaultLocalPathComposer());
         session = TestUtils.newSession();
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        TestFileUtils.deleteFile(basedir);
-        manager = null;
-        session = null;
     }
 
     @Test

@@ -44,7 +44,6 @@ public class DefaultFileProcessorTest {
 
     @BeforeEach
     void setup() throws IOException {
-        targetDir = TestFileUtils.createTempDir(getClass().getSimpleName());
         fileProcessor = new DefaultFileProcessor();
     }
 

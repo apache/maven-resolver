@@ -42,6 +42,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -51,6 +52,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     private Artifact snapshot;
 
+    @TempDir
     protected File basedir;
 
     protected EnhancedLocalRepositoryManager manager;
@@ -70,11 +72,8 @@ public class EnhancedLocalRepositoryManagerTest {
     private Metadata noVerMetadata;
 
     @BeforeEach
-    void setup() throws Exception {
-        String url = TestFileUtils.createTempDir("enhanced-remote-repo")
-                .toURI()
-                .toURL()
-                .toString();
+    void setup(@TempDir File dir) throws Exception {
+        String url = dir.toURI().toURL().toString();
         repository = new RemoteRepository.Builder("enhanced-remote-repo", "default", url)
                 .setRepositoryManager(true)
                 .build();
@@ -97,7 +96,6 @@ public class EnhancedLocalRepositoryManagerTest {
         noVerMetadata = new DefaultMetadata(
                 "gid", "aid", null, "maven-metadata.xml", Nature.RELEASE, TestFileUtils.createTempFile("metadata"));
 
-        basedir = TestFileUtils.createTempDir("enhanced-repo");
         session = TestUtils.newSession();
         trackingFileManager = new DefaultTrackingFileManager();
         manager = getManager();

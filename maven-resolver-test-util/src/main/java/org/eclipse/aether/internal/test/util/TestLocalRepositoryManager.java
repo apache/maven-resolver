@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.test.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -53,7 +54,7 @@ public class TestLocalRepositoryManager implements LocalRepositoryManager {
 
     public TestLocalRepositoryManager() {
         try {
-            localRepository = new LocalRepository(TestFileUtils.createTempDir("test-local-repo"));
+            localRepository = new LocalRepository(Files.createTempDirectory("test-local-repo"));
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
