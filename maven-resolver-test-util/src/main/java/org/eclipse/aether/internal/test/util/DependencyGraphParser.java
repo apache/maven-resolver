@@ -390,7 +390,7 @@ public class DependencyGraphParser {
         }
     }
 
-    class NodeEntry {
+    private static class NodeEntry {
         int level;
 
         String definition;

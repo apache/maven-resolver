@@ -71,7 +71,7 @@ public final class GpgAgentPasswordLoader implements GnupgSignatureArtifactGener
         boolean interactive = ConfigUtils.getBoolean(
                 session, ConfigurationProperties.DEFAULT_INTERACTIVE, ConfigurationProperties.INTERACTIVE);
         List<String> socketLocations = Arrays.stream(socketLocationsStr.split(","))
-                .filter(s -> s != null && !s.isEmpty())
+                .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList());
         for (String socketLocation : socketLocations) {
             try {

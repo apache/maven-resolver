@@ -87,7 +87,7 @@ public class ChecksumValidatorTest {
 
         @Override
         public void onNoMoreChecksums() throws ChecksumFailureException {
-            callbacks.add(String.format("noMore()"));
+            callbacks.add("noMore()");
             if (conclusion instanceof ChecksumFailureException) {
                 throw (ChecksumFailureException) conclusion;
             } else if (!Boolean.TRUE.equals(conclusion)) {
@@ -97,7 +97,7 @@ public class ChecksumValidatorTest {
 
         @Override
         public void onTransferRetry() {
-            callbacks.add(String.format("retry()"));
+            callbacks.add("retry()");
         }
 
         @Override

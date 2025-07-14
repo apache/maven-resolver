@@ -120,11 +120,8 @@ public class DefaultMetadataResolverTest {
 
         MetadataResult result = results.get(0);
         assertSame(request, result.getRequest());
-        assertNotNull(
-                result.getException(),
-                "" + (result.getMetadata() != null ? result.getMetadata().getFile() : result.getMetadata()));
+        assertNotNull(result.getException());
         assertEquals(MetadataNotFoundException.class, result.getException().getClass());
-
         assertNull(result.getMetadata());
     }
 
