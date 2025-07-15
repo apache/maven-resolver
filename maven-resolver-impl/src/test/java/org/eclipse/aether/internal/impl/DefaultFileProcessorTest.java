@@ -27,30 +27,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.spi.io.FileProcessor.ProgressListener;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- */
 public class DefaultFileProcessorTest {
 
+    @TempDir
     private File targetDir;
 
     private DefaultFileProcessor fileProcessor;
 
     @BeforeEach
     void setup() throws IOException {
-        targetDir = TestFileUtils.createTempDir(getClass().getSimpleName());
         fileProcessor = new DefaultFileProcessor();
-    }
-
-    @AfterEach
-    void teardown() throws Exception {
-        TestFileUtils.deleteFile(targetDir);
-        fileProcessor = null;
     }
 
     @Test
