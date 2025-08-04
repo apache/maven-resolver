@@ -187,8 +187,7 @@ public class DependencyManagerTest {
         assertEquals(Collections.singleton(EXCLUSION), mngt.getExclusions());
         mngt = manager.manageDependency(new Dependency(E1, null));
         // DO NOT APPLY ONTO ITSELF
-        // assertNotNull(mngt);
-        // assertEquals(mngt.getVersion(), E2.getVersion());
+        assertNull(mngt);
     }
 
     @Test
@@ -223,7 +222,7 @@ public class DependencyManagerTest {
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
         // DO NOT APPLY ONTO ITSELF
-        // assertEquals(B2.getVersion(), mngt.getVersion());
+        assertNull(mngt.getVersion());
         mngt = manager.manageDependency(new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals("newscope", mngt.getScope());
@@ -249,8 +248,7 @@ public class DependencyManagerTest {
         assertEquals(Collections.singleton(EXCLUSION), mngt.getExclusions());
         mngt = manager.manageDependency(new Dependency(E1, null));
         // DO NOT APPLY ONTO ITSELF
-        // assertNotNull(mngt);
-        // assertEquals(mngt.getVersion(), E2.getVersion());
+        assertNull(mngt);
     }
 
     @Test
@@ -289,7 +287,7 @@ public class DependencyManagerTest {
         assertNotNull(mngt);
         assertEquals(Boolean.TRUE, mngt.getOptional());
         // DO NOT APPLY ONTO ITSELF
-        // assertEquals(B2.getVersion(), mngt.getVersion());
+        assertNull(mngt.getVersion());
         mngt = manager.manageDependency(new Dependency(C1, null));
         assertNotNull(mngt);
         assertEquals("newscope", mngt.getScope());
@@ -315,7 +313,6 @@ public class DependencyManagerTest {
         assertEquals(Collections.singleton(EXCLUSION), mngt.getExclusions());
         mngt = manager.manageDependency(new Dependency(E1, null));
         // DO NOT APPLY ONTO ITSELF
-        // assertNotNull(mngt);
-        // assertEquals(mngt.getVersion(), E2.getVersion());
+        assertNull(mngt);
     }
 }

@@ -54,10 +54,18 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Note for future: the field {@code managedLocalPaths} is <em>intentionally left out of hash/equals</em>, with
  * reason explained above.
+ * <p>
+ * Implementation note for all managers extending this class: this class maintains "path" (list of parent managers)
+ * and "depth". Depth {@code 0} is basically used as "factory" on session; is the instance created during session
+ * creation and is usually empty (just parameterized). Depth 1 is the current collection "root", depth 2
+ * are direct dependencies, depth 3 first level of transitive dependencies of direct dependencies and so on. Hence, on
+ * depth 1 (the collection root, initialized with management possibly as well) parent will be always the empty "factory"
+ * instance, and we need special handling: "apply onto itself". This does not stand on depth > 1.
  *
  * @since 2.0.0
  */
 public abstract class AbstractDependencyManager implements DependencyManager {
+    protected final ArrayList<AbstractDependencyManager> path;
 
     protected final int depth;
 
@@ -65,15 +73,15 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     protected final int applyFrom;
 
-    protected final MMap<Key, Holder<String>> managedVersions;
+    protected final MMap<Key, String> managedVersions;
 
-    protected final MMap<Key, Holder<String>> managedScopes;
+    protected final MMap<Key, String> managedScopes;
 
-    protected final MMap<Key, Holder<Boolean>> managedOptionals;
+    protected final MMap<Key, Boolean> managedOptionals;
 
-    protected final MMap<Key, Holder<String>> managedLocalPaths;
+    protected final MMap<Key, String> managedLocalPaths;
 
-    protected final MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions;
+    protected final MMap<Key, Holder<Collection<Exclusion>>> managedExclusions;
 
     protected final SystemDependencyScope systemDependencyScope;
 
@@ -81,14 +89,15 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     protected AbstractDependencyManager(int deriveUntil, int applyFrom, ScopeManager scopeManager) {
         this(
+                new ArrayList<>(),
                 0,
                 deriveUntil,
                 applyFrom,
-                MMap.empty(),
-                MMap.empty(),
-                MMap.empty(),
-                MMap.empty(),
-                MMap.empty(),
+                null,
+                null,
+                null,
+                null,
+                null,
                 scopeManager != null
                         ? scopeManager.getSystemDependencyScope().orElse(null)
                         : SystemDependencyScope.LEGACY);
@@ -96,36 +105,138 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     protected AbstractDependencyManager(
+            ArrayList<AbstractDependencyManager> path,
             int depth,
             int deriveUntil,
             int applyFrom,
-            MMap<Key, Holder<String>> managedVersions,
-            MMap<Key, Holder<String>> managedScopes,
-            MMap<Key, Holder<Boolean>> managedOptionals,
-            MMap<Key, Holder<String>> managedLocalPaths,
-            MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
+            MMap<Key, String> managedVersions,
+            MMap<Key, String> managedScopes,
+            MMap<Key, Boolean> managedOptionals,
+            MMap<Key, String> managedLocalPaths,
+            MMap<Key, Holder<Collection<Exclusion>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
+        this.path = path;
         this.depth = depth;
         this.deriveUntil = deriveUntil;
         this.applyFrom = applyFrom;
-        this.managedVersions = requireNonNull(managedVersions);
-        this.managedScopes = requireNonNull(managedScopes);
-        this.managedOptionals = requireNonNull(managedOptionals);
-        this.managedLocalPaths = requireNonNull(managedLocalPaths);
-        this.managedExclusions = requireNonNull(managedExclusions);
+        this.managedVersions = managedVersions;
+        this.managedScopes = managedScopes;
+        this.managedOptionals = managedOptionals;
+        this.managedLocalPaths = managedLocalPaths;
+        this.managedExclusions = managedExclusions;
         // nullable: if using scope manager, but there is no system scope defined
         this.systemDependencyScope = systemDependencyScope;
 
         // exclude managedLocalPaths
-        this.hashCode = Objects.hash(depth, managedVersions, managedScopes, managedOptionals, managedExclusions);
+        this.hashCode = Objects.hash(path, depth, managedVersions, managedScopes, managedOptionals, managedExclusions);
     }
 
     protected abstract DependencyManager newInstance(
-            MMap<Key, Holder<String>> managedVersions,
-            MMap<Key, Holder<String>> managedScopes,
-            MMap<Key, Holder<Boolean>> managedOptionals,
-            MMap<Key, Holder<String>> managedLocalPaths,
-            MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions);
+            MMap<Key, String> managedVersions,
+            MMap<Key, String> managedScopes,
+            MMap<Key, Boolean> managedOptionals,
+            MMap<Key, String> managedLocalPaths,
+            MMap<Key, Holder<Collection<Exclusion>>> managedExclusions);
+
+    private boolean containsManagedVersion(Key key) {
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
+                return true;
+            }
+        }
+        return managedVersions != null && managedVersions.containsKey(key);
+    }
+
+    private String getManagedVersion(Key key) {
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
+                return ancestor.managedVersions.get(key);
+            }
+        }
+        if (depth == 1 && managedVersions != null && managedVersions.containsKey(key)) {
+            return managedVersions.get(key);
+        }
+        return null;
+    }
+
+    private boolean containsManagedScope(Key key) {
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
+                return true;
+            }
+        }
+        return managedScopes != null && managedScopes.containsKey(key);
+    }
+
+    private String getManagedScope(Key key) {
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
+                return ancestor.managedScopes.get(key);
+            }
+        }
+        if (depth == 1 && managedScopes != null && managedScopes.containsKey(key)) {
+            return managedScopes.get(key);
+        }
+        return null;
+    }
+
+    private boolean containsManagedOptional(Key key) {
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
+                return true;
+            }
+        }
+        return managedOptionals != null && managedOptionals.containsKey(key);
+    }
+
+    private Boolean getManagedOptional(Key key) {
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
+                return ancestor.managedOptionals.get(key);
+            }
+        }
+        if (depth == 1 && managedOptionals != null && managedOptionals.containsKey(key)) {
+            return managedOptionals.get(key);
+        }
+        return null;
+    }
+
+    private boolean containsManagedLocalPath(Key key) {
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
+                return true;
+            }
+        }
+        return managedLocalPaths != null && managedLocalPaths.containsKey(key);
+    }
+
+    private String getManagedLocalPath(Key key) {
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
+                return ancestor.managedLocalPaths.get(key);
+            }
+        }
+        if (managedLocalPaths != null && managedLocalPaths.containsKey(key)) {
+            return managedLocalPaths.get(key);
+        }
+        return null;
+    }
+
+    /**
+     * Merges all way down.
+     */
+    private Collection<Exclusion> getManagedExclusions(Key key) {
+        ArrayList<Exclusion> result = new ArrayList<>();
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedExclusions != null && ancestor.managedExclusions.containsKey(key)) {
+                result.addAll(ancestor.managedExclusions.get(key).value);
+            }
+        }
+        if (managedExclusions != null && managedExclusions.containsKey(key)) {
+            result.addAll(managedExclusions.get(key).value);
+        }
+        return result.isEmpty() ? null : result;
+    }
 
     @Override
     public DependencyManager deriveChildManager(DependencyCollectionContext context) {
@@ -134,70 +245,73 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             return this;
         }
 
-        MMap<Key, Holder<String>> managedVersions = this.managedVersions;
-        MMap<Key, Holder<String>> managedScopes = this.managedScopes;
-        MMap<Key, Holder<Boolean>> managedOptionals = this.managedOptionals;
-        MMap<Key, Holder<String>> managedLocalPaths = this.managedLocalPaths;
-        MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions = this.managedExclusions;
+        MMap<Key, String> managedVersions = null;
+        MMap<Key, String> managedScopes = null;
+        MMap<Key, Boolean> managedOptionals = null;
+        MMap<Key, String> managedLocalPaths = null;
+        MMap<Key, Holder<Collection<Exclusion>>> managedExclusions = null;
 
         for (Dependency managedDependency : context.getManagedDependencies()) {
             Artifact artifact = managedDependency.getArtifact();
             Key key = new Key(artifact);
 
             String version = artifact.getVersion();
-            if (!version.isEmpty() && !managedVersions.containsKey(key)) {
-                if (managedVersions == this.managedVersions) {
-                    managedVersions = MMap.copy(this.managedVersions);
+            if (!version.isEmpty() && !containsManagedVersion(key)) {
+                if (managedVersions == null) {
+                    managedVersions = MMap.emptyNotDone();
                 }
-                managedVersions.put(key, new Holder<>(depth, version));
+                managedVersions.put(key, version);
             }
 
             String scope = managedDependency.getScope();
-            if (!scope.isEmpty() && !managedScopes.containsKey(key)) {
-                if (managedScopes == this.managedScopes) {
-                    managedScopes = MMap.copy(this.managedScopes);
+            if (!scope.isEmpty() && !containsManagedScope(key)) {
+                if (managedScopes == null) {
+                    managedScopes = MMap.emptyNotDone();
                 }
-                managedScopes.put(key, new Holder<>(depth, scope));
+                managedScopes.put(key, scope);
             }
 
             Boolean optional = managedDependency.getOptional();
-            if (optional != null && !managedOptionals.containsKey(key)) {
-                if (managedOptionals == this.managedOptionals) {
-                    managedOptionals = MMap.copy(this.managedOptionals);
+            if (optional != null && !containsManagedOptional(key)) {
+                if (managedOptionals == null) {
+                    managedOptionals = MMap.emptyNotDone();
                 }
-                managedOptionals.put(key, new Holder<>(depth, optional));
+                managedOptionals.put(key, optional);
             }
 
             String localPath = systemDependencyScope == null
                     ? null
                     : systemDependencyScope.getSystemPath(managedDependency.getArtifact());
-            if (localPath != null && !managedLocalPaths.containsKey(key)) {
-                if (managedLocalPaths == this.managedLocalPaths) {
-                    managedLocalPaths = MMap.copy(this.managedLocalPaths);
+            if (localPath != null && !containsManagedLocalPath(key)) {
+                if (managedLocalPaths == null) {
+                    managedLocalPaths = MMap.emptyNotDone();
                 }
-                managedLocalPaths.put(key, new Holder<>(depth, localPath));
+                managedLocalPaths.put(key, localPath);
             }
 
             Collection<Exclusion> exclusions = managedDependency.getExclusions();
             if (!exclusions.isEmpty()) {
-                if (managedExclusions == this.managedExclusions) {
-                    managedExclusions = MMap.copyWithKey(key, this.managedExclusions);
+                if (managedExclusions == null) {
+                    managedExclusions = MMap.emptyNotDone();
                 }
-                Collection<Holder<Collection<Exclusion>>> managed = managedExclusions.get(key);
-                if (managed == null) {
-                    managed = new ArrayList<>();
+                Holder<Collection<Exclusion>> managed = managedExclusions.get(key);
+                if (managed != null) {
+                    ArrayList<Exclusion> ex = new ArrayList<>(managed.getValue());
+                    ex.addAll(exclusions);
+                    managed = new Holder<>(ex);
                     managedExclusions.put(key, managed);
+                } else {
+                    managedExclusions.put(key, new Holder<>(exclusions));
                 }
-                managed.add(new Holder<>(depth, exclusions));
             }
         }
 
         return newInstance(
-                managedVersions.done(),
-                managedScopes.done(),
-                managedOptionals.done(),
-                managedLocalPaths.done(),
-                managedExclusions.done());
+                managedVersions != null ? managedVersions.done() : null,
+                managedScopes != null ? managedScopes.done() : null,
+                managedOptionals != null ? managedOptionals.done() : null,
+                managedLocalPaths != null ? managedLocalPaths.done() : null,
+                managedExclusions != null ? managedExclusions.done() : null);
     }
 
     @Override
@@ -207,25 +321,25 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         Key key = new Key(dependency.getArtifact());
 
         if (isApplied()) {
-            Holder<String> version = managedVersions.get(key);
+            String version = getManagedVersion(key);
             // is managed locally by model builder
             // apply only rules coming from "higher" levels
-            if (version != null && isApplicable(version)) {
+            if (version != null) {
                 management = new DependencyManagement();
-                management.setVersion(version.getValue());
+                management.setVersion(version);
             }
 
-            Holder<String> scope = managedScopes.get(key);
+            String scope = getManagedScope(key);
             // is managed locally by model builder
             // apply only rules coming from "higher" levels
-            if (scope != null && isApplicable(scope)) {
+            if (scope != null) {
                 if (management == null) {
                     management = new DependencyManagement();
                 }
-                management.setScope(scope.getValue());
+                management.setScope(scope);
 
                 if (systemDependencyScope != null
-                        && !systemDependencyScope.is(scope.getValue())
+                        && !systemDependencyScope.is(scope)
                         && systemDependencyScope.getSystemPath(dependency.getArtifact()) != null) {
                     HashMap<String, String> properties =
                             new HashMap<>(dependency.getArtifact().getProperties());
@@ -237,28 +351,28 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             // system scope paths always applied to have them aligned
             // (same artifact == same path) in whole graph
             if (systemDependencyScope != null
-                    && (scope != null && systemDependencyScope.is(scope.getValue())
+                    && (scope != null && systemDependencyScope.is(scope)
                             || (scope == null && systemDependencyScope.is(dependency.getScope())))) {
-                Holder<String> localPath = managedLocalPaths.get(key);
+                String localPath = getManagedLocalPath(key);
                 if (localPath != null) {
                     if (management == null) {
                         management = new DependencyManagement();
                     }
                     HashMap<String, String> properties =
                             new HashMap<>(dependency.getArtifact().getProperties());
-                    systemDependencyScope.setSystemPath(properties, localPath.getValue());
+                    systemDependencyScope.setSystemPath(properties, localPath);
                     management.setProperties(properties);
                 }
             }
 
             // optional is not managed by model builder
             // apply only rules coming from "higher" levels
-            Holder<Boolean> optional = managedOptionals.get(key);
-            if (optional != null && isApplicable(optional)) {
+            Boolean optional = getManagedOptional(key);
+            if (optional != null) {
                 if (management == null) {
                     management = new DependencyManagement();
                 }
-                management.setOptional(optional.getValue());
+                management.setOptional(optional);
             }
         }
 
@@ -267,15 +381,13 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // is just added as additional information
         // ModelBuilder does not merge exclusions (only applies if dependency does not have exclusion)
         // so we merge it here even from same level
-        Collection<Holder<Collection<Exclusion>>> exclusions = managedExclusions.get(key);
+        Collection<Exclusion> exclusions = getManagedExclusions(key);
         if (exclusions != null) {
             if (management == null) {
                 management = new DependencyManagement();
             }
             Collection<Exclusion> result = new LinkedHashSet<>(dependency.getExclusions());
-            for (Holder<Collection<Exclusion>> exclusion : exclusions) {
-                result.addAll(exclusion.getValue());
-            }
+            result.addAll(exclusions);
             management.setExclusions(result);
         }
 
@@ -296,17 +408,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return depth >= applyFrom;
     }
 
-    /**
-     * Returns {@code true} if rule in holder is applicable at current depth.
-     */
-    protected boolean isApplicable(Holder<?> holder) {
-        // explanation: derive collects rules (at given depth) and then last
-        // call newInstance does depth++. This means that distance 1 is still "same node".
-        // Hence, rules from depth - 2 or above should be applied.
-        // root is special: is always applied.
-        return holder.getDepth() == 0 || depth > holder.getDepth() + 1;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -317,11 +418,12 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
         AbstractDependencyManager that = (AbstractDependencyManager) obj;
         // exclude managedLocalPaths
-        return depth == that.depth
-                && managedVersions.equals(that.managedVersions)
-                && managedScopes.equals(that.managedScopes)
-                && managedOptionals.equals(that.managedOptionals)
-                && managedExclusions.equals(that.managedExclusions);
+        return Objects.equals(path, that.path)
+                && depth == that.depth
+                && Objects.equals(managedVersions, that.managedVersions)
+                && Objects.equals(managedScopes, that.managedScopes)
+                && Objects.equals(managedOptionals, that.managedOptionals)
+                && Objects.equals(managedExclusions, that.managedExclusions);
     }
 
     @Override
@@ -364,19 +466,18 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         }
     }
 
+    /**
+     * Wrapper class for collection to memoize hash code.
+     *
+     * @param <T> The collection type.
+     */
     protected static class Holder<T> {
-        private final int depth;
         private final T value;
         private final int hashCode;
 
-        Holder(int depth, T value) {
-            this.depth = depth;
+        Holder(T value) {
             this.value = requireNonNull(value);
-            this.hashCode = Objects.hash(depth, value);
-        }
-
-        public int getDepth() {
-            return depth;
+            this.hashCode = Objects.hash(value);
         }
 
         public T getValue() {
@@ -389,7 +490,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 return false;
             }
             Holder<?> holder = (Holder<?>) o;
-            return depth == holder.depth && Objects.equals(value, holder.value);
+            return Objects.equals(value, holder.value);
         }
 
         @Override
