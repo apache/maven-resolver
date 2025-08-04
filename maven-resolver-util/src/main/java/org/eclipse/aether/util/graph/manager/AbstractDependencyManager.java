@@ -54,6 +54,13 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Note for future: the field {@code managedLocalPaths} is <em>intentionally left out of hash/equals</em>, with
  * reason explained above.
+ * <p>
+ * Implementation note for all managers extending this class: this class maintains "path" (list of parent managers)
+ * and "depth". Depth {@code 0} is basically used as "factory" on session; is the instance created during session
+ * creation and is usually empty (just parameterized). Depth 1 is the current collection "root", depth 2
+ * are direct dependencies, depth 3 first level of transitive dependencies of direct dependencies and so on. Hence, on
+ * depth 1 (the collection root, initialized with management possibly as well) parent will be always the empty "factory"
+ * instance, and we need special handling: "apply onto itself". This does not stand on depth > 1.
  *
  * @since 2.0.0
  */
@@ -146,7 +153,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 return ancestor.managedVersions.get(key);
             }
         }
-        if (managedVersions != null && managedVersions.containsKey(key)) {
+        if (depth == 1 && managedVersions != null && managedVersions.containsKey(key)) {
             return managedVersions.get(key);
         }
         return null;
@@ -167,7 +174,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 return ancestor.managedScopes.get(key);
             }
         }
-        if (managedScopes != null && managedScopes.containsKey(key)) {
+        if (depth == 1 && managedScopes != null && managedScopes.containsKey(key)) {
             return managedScopes.get(key);
         }
         return null;
@@ -188,7 +195,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 return ancestor.managedOptionals.get(key);
             }
         }
-        if (managedOptionals != null && managedOptionals.containsKey(key)) {
+        if (depth == 1 && managedOptionals != null && managedOptionals.containsKey(key)) {
             return managedOptionals.get(key);
         }
         return null;
