@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl.filter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import java.io.FileNotFoundException;
@@ -32,9 +33,9 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.internal.impl.filter.ruletree.PrefixTree;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
@@ -110,7 +111,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private final Logger logger = LoggerFactory.getLogger(PrefixesRemoteRepositoryFilterSource.class);
 
-    private final RepositorySystem repositorySystem;
+    private final Provider<MetadataResolver> metadataResolver;
 
     private final RepositoryLayoutProvider repositoryLayoutProvider;
 
@@ -118,13 +119,16 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private final ConcurrentHashMap<RemoteRepository, RepositoryLayout> layouts;
 
+    private final ConcurrentHashMap<RemoteRepository, Boolean> ongoingUpdates;
+
     @Inject
     public PrefixesRemoteRepositoryFilterSource(
-            RepositorySystem repositorySystem, RepositoryLayoutProvider repositoryLayoutProvider) {
-        this.repositorySystem = requireNonNull(repositorySystem);
+            Provider<MetadataResolver> metadataResolver, RepositoryLayoutProvider repositoryLayoutProvider) {
+        this.metadataResolver = requireNonNull(metadataResolver);
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);
         this.prefixes = new ConcurrentHashMap<>();
         this.layouts = new ConcurrentHashMap<>();
+        this.ongoingUpdates = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -161,7 +165,15 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private PrefixTree cachePrefixTree(
             RepositorySystemSession session, Path basedir, RemoteRepository remoteRepository) {
-        return prefixes.computeIfAbsent(remoteRepository, r -> loadPrefixTree(session, basedir, remoteRepository));
+        if (!remoteRepository.isBlocked() && null == ongoingUpdates.putIfAbsent(remoteRepository, Boolean.TRUE)) {
+            try {
+                return prefixes.computeIfAbsent(
+                        remoteRepository, r -> loadPrefixTree(session, basedir, remoteRepository));
+            } finally {
+                ongoingUpdates.remove(remoteRepository);
+            }
+        }
+        return PrefixTree.SENTINEL;
     }
 
     private PrefixTree loadPrefixTree(
@@ -201,7 +213,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         request.setRepository(remoteRepository);
         request.setDeleteLocalCopyIfMissing(true);
         request.setFavorLocalRepository(true);
-        MetadataResult result = repositorySystem
+        MetadataResult result = metadataResolver
+                .get()
                 .resolveMetadata(session, Collections.singleton(request))
                 .get(0);
         if (result.isResolved()) {
