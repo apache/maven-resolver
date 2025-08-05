@@ -50,9 +50,10 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
     }
 
     @Override
-    protected void enableSource(DefaultRepositorySystemSession session) {
+    protected void enableSource(DefaultRepositorySystemSession session, boolean enabled) {
         session.setConfigProperty(
-                "aether.remoteRepositoryFilter." + PrefixesRemoteRepositoryFilterSource.NAME, Boolean.TRUE.toString());
+                "aether.remoteRepositoryFilter." + PrefixesRemoteRepositoryFilterSource.NAME,
+                Boolean.valueOf(enabled).toString());
     }
 
     @Override
