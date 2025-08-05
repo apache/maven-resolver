@@ -86,6 +86,14 @@ Since Maven 3.9.x you can use expression like `${session.rootDirectory}/.mvn/rrf
 sources as `session.rootDirectory` will become an absolute path pointing to the root directory of your project (where
 usually the `.mvn` directory is).
 
+Both implementation without input files (being present) behave as disabled for given repository. Moreover, the
+enabled settings suffixed with ".repoId" can be used to selectively enable or disable filtering for given repository
+(for example `-Daether.remoteRepositoryFilter.prefixes.myrepo=false`).
+
+Unlike in Resolver 1.x, the filtering is **by default enabled**, and prefixes will be dynamically discovered, and
+if found, used. For groupId filter user intervention is still needed to provide input files. Hence, without these,
+only prefix filtering will automatically kick in.
+
 ### The Prefixes Filter
 
 The "prefixes" named filter relies on a file containing a list of "repository prefixes" available from a given repository.
@@ -104,30 +112,36 @@ prefixes is set by the publisher, and is usually a value between 2 and 4. It all
 paths of deployed artifacts from the repository root would be 100% coverage, but the cost would be a huge
 file size for huge repositories like Maven Central).
 
-As this file is (automatically) published by MC and MRMs, using them is the simplest. Manual authoring
-of these files, while possible, is not recommended. The best is to keep them up to date by
+As this file is (automatically) published by MC and MRMs, and using them is the simplest: they will be automatically
+discovered and cached (just like any artifact from given remote repository).
+
+Manual authoring of these files, while possible, is not recommended. The best is to keep them up to date by
 downloading the published files from the remote repositories.
 
 Many MRMs and Maven Central itself publish these files. Some prefixes file examples:
 * Maven Central [prefixes.txt](https://repo.maven.apache.org/maven2/.meta/prefixes.txt)
 * ASF Releases hosted repository [prefixes.txt](https://repository.apache.org/content/repositories/releases/.meta/prefixes.txt)
 
-The prefixes files are expected in the following location by default: 
+The user provided prefixes files are expected in the following location by default: 
 `${filterBasedir}/prefixes-${remoteRepository.id}.txt`.
 
-To enable prefixes filter, use the following setting: `-Daether.remoteRepositoryFilter.prefixes=true`.
+To disable prefixes filter, use the following setting: `-Daether.remoteRepositoryFilter.prefixes=false`.
+To disable for single repository filtering, append to key `.repoId`.
 
-The prefixes filter will "abstain" from filtering for the given remote repository, if there is no input provided for it.
+The prefixes filter will "abstain" from filtering for the given remote repository, if there was no prefix file discovered,
+nor there is user input provided for it.
 
 ### The GroupId Filter
 
 The "groupId" named implementation is filtering based on allowed `groupId` of Artifact. In essence, it is a list
-of "allowed groupId coordinates from given remote repository". The file contains one Artifact groupId per line.
+of "allowed groupId coordinates from given remote repository". The file contains one Artifact groupId per line along with
+possible modifiers.
 
 The groupId files are expected in the following location by default: 
 `${filterBasedir}/groupId-${remoteRepository.id}.txt`.
 
-To enable groupId filtering, use the following setting: `-Daether.remoteRepositoryFilter.groupId=true`.
+To disable groupId filtering, use the following setting: `-Daether.remoteRepositoryFilter.groupId=false`.
+To disable for single repository filtering, append to key `.repoId`.
 
 The groupId filter will "abstain" from filtering for the given remote repository, if there is no input provided for it.
 
@@ -143,28 +157,46 @@ To truncate recorded file(s) instead of merging recorded entries with existing f
 the groupIds that were recorded in current session, otherwise the recorded groupIds and already present ones
 in file will be merged, and then saved.
 
+Format of file:
+* Lines beginning with `#` (hash) and blank lines are ignored
+* modifier (must be first character) `!` is negation (disallow; but default entry "allow")
+* modifier (must be first, or second if negation modifier present) `=` is limiter (equals; by default entry is "and below this G")
+* a proper Maven groupId, like `org.apache.maven`
+
+Example file:
+```
+# My file                   (1)
+                            (2)
+org.apache.maven            (3)
+!=org.apache.maven.foo      (4)
+!org.apache.maven.indexer   (5)
+=org.apache.bar             (6)
+```
+
+Lines 1 and 2 are ignored. Line 3 means "allow `org.apache.maven` G and below". Line 4 is "disallow org.apache.maven.foo"
+only" (so `org.apache.maven.foo.bar` is allowed due first line). Line 5 means "disallow `org.apache.maven.indexer` and below"
+and finally line 6 means "allow `org.apache.bar` ONLY" (so `org.apache.bar.foo` is NOT enabled).
+
 ## Operation
 
-To make RRF filter operate, you have to provide two things: you have to explicitly enable the filter, and you have to
-provide input for the filter. 
+To make RRF filters operate, as they are by default enabled, you have to make sure that:
+* prefix file can be discovered (if not for any reason, you may provide alternate input for it)
+* groupId is procided.
 
-Enabling filters does not make them active (participate in filtering): if a given remote repository does not have 
+As said above, enabled filters does not make them active (participate in filtering): if a given remote repository does not have 
 any input available, the filter pulls out from "voting" (does not participate in filtering, will abstain 
-from voting).
+from voting). Same effect can be achieved by selectively enable filter by appending `.repoId` to property key.
 
-In short, enabling filters is not enough, to make it active for a remote repository, you
-must provide them with "input data" for this remote repository as well.
-
-The most common configuration in case of multiple remote repositories is the following setup: enable both filters, 
-provide the Maven Central prefixes file (downloaded) and if any remote repository offers prefixes, download them
-as well. Optionally provide groupId files for other remote repositories, if needed. It results in following filter 
+The most common configuration in case of multiple remote repositories is the following setup: use both filters, 
+the Maven Central prefixes should be discovered (same for any other remote repository that offers prefixes).
+Optionally provide groupId files for non-Central remote repositories, if needed. It results in following filter 
 activity:
 
-| Remote Repository | Prefixes Filter | GroupId Filter |
-|-------------------|-----------------|----------------|
-| Maven Central     | active          | inactive       |
-| Some Remote       | inactive        | active         |
+| Remote Repository | Prefixes Filter    | GroupId Filter |
+|-------------------|--------------------|----------------|
+| Maven Central     | active             | inactive       |
+| Some Remote       | active or inactive | active         |
 
 This leads to the following "constraints":
 * "Maven Central" is asked only for those artifacts it claims it may have (prefixes)
-* "Some Remote" is asked only for allowed groupIds. If it publishes prefixes, it can be safely added as well.
+* "Some Remote" is asked only for allowed groupIds. If it publishes prefixes, is even better: you will not ask for things it for sure does not have.
