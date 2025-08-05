@@ -116,7 +116,8 @@ As this file is (automatically) published by MC and MRMs, and using them is the 
 discovered and cached (just like any artifact from given remote repository).
 
 Manual authoring of these files, while possible, is not recommended. The best is to keep them up to date by
-downloading the published files from the remote repositories.
+downloading the published files from the remote repositories. In ideal circumstances no user intervention is needed
+as remote repository should publish prefix file and discovery should discover it.
 
 Many MRMs and Maven Central itself publish these files. Some prefixes file examples:
 * Maven Central [prefixes.txt](https://repo.maven.apache.org/maven2/.meta/prefixes.txt)
