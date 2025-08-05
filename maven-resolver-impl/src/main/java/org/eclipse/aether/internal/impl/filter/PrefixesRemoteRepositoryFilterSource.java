@@ -129,7 +129,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     @Override
     protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLED);
+        return ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED);
     }
 
     private boolean isRepositoryFilteringEnabled(RepositorySystemSession session, RemoteRepository remoteRepository) {
