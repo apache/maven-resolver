@@ -65,6 +65,10 @@ public final class SmartExecutorUtils {
             if (tasks == 1 || maxConcurrentTasks == 1) {
                 return direct();
             }
+        } else {
+            if (maxConcurrentTasks == 1) {
+                return direct();
+            }
         }
         return new SmartExecutor.Limited(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name(namePrefix, 1).factory()),maxConcurrentTasks);
     }

@@ -58,6 +58,7 @@ public final class SmartExecutorUtils {
             throw new IllegalArgumentException("maxConcurrentTasks must be > 0");
         }
         requireNonNull(namePrefix);
+        int poolSize;
         if (tasks != null) {
             if (tasks < 1) {
                 throw new IllegalArgumentException("tasks must be > 0");
@@ -65,11 +66,14 @@ public final class SmartExecutorUtils {
             if (tasks == 1 || maxConcurrentTasks == 1) {
                 return direct();
             }
+            poolSize = Math.min(tasks, maxConcurrentTasks);
         } else {
-            tasks = maxConcurrentTasks;
+            if (maxConcurrentTasks == 1) {
+                return direct();
+            }
+            poolSize = maxConcurrentTasks;
         }
-        return new SmartExecutor.Pooled(
-                Executors.newFixedThreadPool(Math.min(tasks, maxConcurrentTasks), new WorkerThreadFactory(namePrefix)));
+        return new SmartExecutor.Pooled(Executors.newFixedThreadPool(poolSize, new WorkerThreadFactory(namePrefix)));
     }
 
     /**
