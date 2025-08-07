@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -62,8 +61,9 @@ import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
-import org.eclipse.aether.util.concurrency.ExecutorUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
+import org.eclipse.aether.util.concurrency.SmartExecutor;
+import org.eclipse.aether.util.concurrency.SmartExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +109,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     private final boolean persistedChecksums;
 
-    private final ConcurrentHashMap<Boolean, Executor> executors;
+    private final ConcurrentHashMap<Boolean, SmartExecutor> executors;
 
     private final AtomicBoolean closed;
 
@@ -144,13 +144,13 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         this.executors = new ConcurrentHashMap<>();
         this.closed = new AtomicBoolean(false);
 
-        maxUpstreamThreads = ExecutorUtils.threadCount(
+        maxUpstreamThreads = ConfigUtils.getInteger(
                 session,
                 DEFAULT_THREADS,
                 CONFIG_PROP_UPSTREAM_THREADS + "." + repository.getId(),
                 CONFIG_PROP_UPSTREAM_THREADS,
                 CONFIG_PROP_THREADS);
-        maxDownstreamThreads = ExecutorUtils.threadCount(
+        maxDownstreamThreads = ConfigUtils.getInteger(
                 session,
                 DEFAULT_THREADS,
                 CONFIG_PROP_DOWNSTREAM_THREADS + "." + repository.getId(),
@@ -166,25 +166,25 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 ConfigUtils.getBoolean(session, DEFAULT_PERSISTED_CHECKSUMS, CONFIG_PROP_PERSISTED_CHECKSUMS);
     }
 
-    private Executor getExecutor(boolean downstream, int tasks) {
+    private SmartExecutor getExecutor(boolean downstream, int tasks) {
         int maxThreads = downstream ? maxDownstreamThreads : maxUpstreamThreads;
-        if (maxThreads <= 1) {
-            return ExecutorUtils.DIRECT_EXECUTOR;
+        if (maxThreads <= 1 || tasks <= 1) {
+            // direct and do not cache it
+            return SmartExecutorUtils.direct();
         }
-        if (tasks <= 1) {
-            return ExecutorUtils.DIRECT_EXECUTOR;
-        }
+        // we intentionally ignore tasks here as deployer may invoke several times connector with different count of
+        // payloads; so maximize it
         return executors.computeIfAbsent(
                 downstream,
-                k -> ExecutorUtils.threadPool(
-                        maxThreads, getClass().getSimpleName() + '-' + repository.getHost() + '-'));
+                k -> SmartExecutorUtils.newSmartExecutor(
+                        maxThreads, maxThreads, getClass().getSimpleName() + '-' + repository.getHost() + '-'));
     }
 
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            for (Executor executor : executors.values()) {
-                ExecutorUtils.shutdown(executor);
+            for (SmartExecutor executor : executors.values()) {
+                executor.close();
             }
             transporter.close();
         }
@@ -205,7 +205,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         Collection<? extends ArtifactDownload> safeArtifactDownloads = safe(artifactDownloads);
         Collection<? extends MetadataDownload> safeMetadataDownloads = safe(metadataDownloads);
 
-        Executor executor = getExecutor(true, safeArtifactDownloads.size() + safeMetadataDownloads.size());
+        SmartExecutor executor = getExecutor(true, safeArtifactDownloads.size() + safeMetadataDownloads.size());
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
@@ -236,7 +236,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 task.run();
                 first = false;
             } else {
-                executor.execute(errorForwarder.wrap(task));
+                executor.submit(errorForwarder.wrap(task));
             }
         }
 
@@ -281,7 +281,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 task.run();
                 first = false;
             } else {
-                executor.execute(errorForwarder.wrap(task));
+                executor.submit(errorForwarder.wrap(task));
             }
         }
 
@@ -297,7 +297,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         Collection<? extends ArtifactUpload> safeArtifactUploads = safe(artifactUploads);
         Collection<? extends MetadataUpload> safeMetadataUploads = safe(metadataUploads);
 
-        Executor executor =
+        SmartExecutor executor =
                 getExecutor(false, parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1);
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
@@ -318,7 +318,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 task.run();
                 first = false;
             } else {
-                executor.execute(errorForwarder.wrap(task));
+                executor.submit(errorForwarder.wrap(task));
             }
         }
 
@@ -340,7 +340,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     task.run();
                     first = false;
                 } else {
-                    executor.execute(errorForwarder.wrap(task));
+                    executor.submit(errorForwarder.wrap(task));
                 }
             }
 

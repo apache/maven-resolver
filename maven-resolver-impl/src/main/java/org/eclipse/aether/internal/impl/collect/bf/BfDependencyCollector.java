@@ -33,12 +33,8 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,7 +68,8 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
-import org.eclipse.aether.util.concurrency.ExecutorUtils;
+import org.eclipse.aether.util.concurrency.SmartExecutor;
+import org.eclipse.aether.util.concurrency.SmartExecutorUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.version.Version;
 
@@ -150,8 +147,6 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             Results results)
             throws DependencyCollectionException {
         boolean useSkip = ConfigUtils.getBoolean(session, DEFAULT_SKIPPER, CONFIG_PROP_SKIPPER);
-        int nThreads = ExecutorUtils.threadCount(session, DEFAULT_THREADS, CONFIG_PROP_THREADS);
-        logger.debug("Using thread pool with {} threads to resolve descriptors.", nThreads);
 
         if (useSkip) {
             logger.debug("Collector skip mode enabled");
@@ -160,7 +155,11 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         try (DependencyResolutionSkipper skipper = useSkip
                         ? DependencyResolutionSkipper.defaultSkipper()
                         : DependencyResolutionSkipper.neverSkipper();
-                ParallelDescriptorResolver parallelDescriptorResolver = new ParallelDescriptorResolver(nThreads)) {
+                ParallelDescriptorResolver parallelDescriptorResolver =
+                        new ParallelDescriptorResolver(SmartExecutorUtils.smartExecutor(
+                                session,
+                                ConfigUtils.getInteger(session, DEFAULT_THREADS, CONFIG_PROP_THREADS),
+                                getClass().getSimpleName() + "-"))) {
             Args args = new Args(session, pool, context, versionContext, request, skipper, parallelDescriptorResolver);
 
             DependencySelector rootDepSelector = session.getDependencySelector() != null
@@ -230,7 +229,8 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         boolean traverse =
                 !noDescriptor && (context.depTraverser == null || context.depTraverser.traverseDependency(dependency));
 
-        Future<DescriptorResolutionResult> resolutionResultFuture = args.resolver.find(dependency.getArtifact());
+        CompletableFuture<DescriptorResolutionResult> resolutionResultFuture =
+                args.resolver.find(dependency.getArtifact());
         DescriptorResolutionResult resolutionResult;
         VersionRangeResult rangeResult;
         try {
@@ -470,65 +470,36 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     }
 
     static class ParallelDescriptorResolver implements Closeable {
-        private final ExecutorService executorService;
+        private final SmartExecutor smartExecutor;
 
         /**
          * Artifact ID -> Future of DescriptorResolutionResult
          */
-        private final Map<String, Future<DescriptorResolutionResult>> results = new ConcurrentHashMap<>(256);
+        private final Map<String, CompletableFuture<DescriptorResolutionResult>> results = new ConcurrentHashMap<>(256);
 
-        ParallelDescriptorResolver(int threads) {
-            this.executorService = ExecutorUtils.threadPool(threads, getClass().getSimpleName() + "-");
+        ParallelDescriptorResolver(SmartExecutor smartExecutor) {
+            this.smartExecutor = smartExecutor;
         }
 
         void resolveDescriptors(Artifact artifact, Callable<DescriptorResolutionResult> callable) {
-            results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> this.executorService.submit(callable));
+            results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> smartExecutor.submit(callable));
         }
 
         void cacheVersionRangeDescriptor(Artifact artifact, DescriptorResolutionResult resolutionResult) {
-            results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> new DoneFuture<>(resolutionResult));
+            results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> {
+                CompletableFuture<DescriptorResolutionResult> future = new CompletableFuture<>();
+                future.complete(resolutionResult);
+                return future;
+            });
         }
 
-        Future<DescriptorResolutionResult> find(Artifact artifact) {
+        CompletableFuture<DescriptorResolutionResult> find(Artifact artifact) {
             return results.get(ArtifactIdUtils.toId(artifact));
         }
 
         @Override
         public void close() {
-            executorService.shutdown();
-        }
-    }
-
-    static class DoneFuture<V> implements Future<V> {
-        private final V v;
-
-        DoneFuture(V v) {
-            this.v = v;
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            return false;
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return false;
-        }
-
-        @Override
-        public boolean isDone() {
-            return true;
-        }
-
-        @Override
-        public V get() throws InterruptedException, ExecutionException {
-            return v;
-        }
-
-        @Override
-        public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            return v;
+            smartExecutor.close();
         }
     }
 
