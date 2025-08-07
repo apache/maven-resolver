@@ -31,7 +31,9 @@ import org.eclipse.aether.util.ConfigUtils;
  * Utilities for executors and sizing them.
  *
  * @since 1.9.5
+ * @deprecated For removal. Nothing is using this class within Resolver.
  */
+@Deprecated
 public final class ExecutorUtils {
     /**
      * Shared instance of "direct executor".

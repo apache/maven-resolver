@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
@@ -68,8 +67,10 @@ import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
-import org.eclipse.aether.util.concurrency.ExecutorUtils;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
+import org.eclipse.aether.util.concurrency.SmartExecutor;
+import org.eclipse.aether.util.concurrency.SmartExecutorUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -305,17 +306,17 @@ public class DefaultMetadataResolver implements MetadataResolver {
                 }
 
                 if (!tasks.isEmpty()) {
-                    int threads = ExecutorUtils.threadCount(session, DEFAULT_THREADS, CONFIG_PROP_THREADS);
-                    Executor executor = ExecutorUtils.executor(
-                            Math.min(tasks.size(), threads), getClass().getSimpleName() + '-');
-                    try {
+                    try (SmartExecutor executor = SmartExecutorUtils.newSmartExecutor(
+                            tasks.size(),
+                            ConfigUtils.getInteger(session, DEFAULT_THREADS, CONFIG_PROP_THREADS),
+                            getClass().getSimpleName() + "-")) {
                         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
                         for (ResolveTask task : tasks) {
                             metadataDownloading(
                                     task.session, task.trace, task.request.getMetadata(), task.request.getRepository());
 
-                            executor.execute(errorForwarder.wrap(task));
+                            executor.submit(errorForwarder.wrap(task));
                         }
 
                         errorForwarder.await();
@@ -340,8 +341,6 @@ public class DefaultMetadataResolver implements MetadataResolver {
 
                             task.result.setException(task.exception);
                         }
-                    } finally {
-                        ExecutorUtils.shutdown(executor);
                     }
                     for (ResolveTask task : tasks) {
                         Metadata metadata = task.request.getMetadata();
