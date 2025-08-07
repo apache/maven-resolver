@@ -53,28 +53,29 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
             throws RepositoryException {
         requireNonNull(node, "node cannot be null");
         requireNonNull(context, "context cannot be null");
-        Map<?, ?> conflictIds = (Map<?, ?>) context.get(TransformationContextKeys.CONFLICT_IDS);
+        Map<DependencyNode, String> conflictIds =
+                (Map<DependencyNode, String>) context.get(TransformationContextKeys.CONFLICT_IDS);
         if (conflictIds == null) {
             ConflictMarker marker = new ConflictMarker();
             marker.transformGraph(node, context);
 
-            conflictIds = (Map<?, ?>) context.get(TransformationContextKeys.CONFLICT_IDS);
+            conflictIds = (Map<DependencyNode, String>) context.get(TransformationContextKeys.CONFLICT_IDS);
         }
 
         @SuppressWarnings("unchecked")
         Map<String, Object> stats = (Map<String, Object>) context.get(TransformationContextKeys.STATS);
         long time1 = System.nanoTime();
 
-        Map<Object, ConflictId> ids = new LinkedHashMap<>(256);
+        Map<String, ConflictId> ids = new LinkedHashMap<>(256);
 
         ConflictId id = null;
-        Object key = conflictIds.get(node);
+        String key = conflictIds.get(node);
         if (key != null) {
             id = new ConflictId(key, 0);
             ids.put(key, id);
         }
 
-        Map<DependencyNode, Object> visited = new IdentityHashMap<>(conflictIds.size());
+        Map<DependencyNode, Boolean> visited = new IdentityHashMap<>(conflictIds.size());
 
         buildConflictIdDAG(ids, node, id, 0, visited, conflictIds);
 
@@ -94,12 +95,12 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
     }
 
     private void buildConflictIdDAG(
-            Map<Object, ConflictId> ids,
+            Map<String, ConflictId> ids,
             DependencyNode node,
             ConflictId id,
             int depth,
-            Map<DependencyNode, Object> visited,
-            Map<?, ?> conflictIds) {
+            Map<DependencyNode, Boolean> visited,
+            Map<DependencyNode, String> conflictIds) {
         if (visited.put(node, Boolean.TRUE) != null) {
             return;
         }
@@ -107,7 +108,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
         depth++;
 
         for (DependencyNode child : node.getChildren()) {
-            Object key = conflictIds.get(child);
+            String key = conflictIds.get(child);
             ConflictId childId = ids.get(key);
             if (childId == null) {
                 childId = new ConflictId(key, depth);
@@ -125,7 +126,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
     }
 
     private int topsortConflictIds(Collection<ConflictId> conflictIds, DependencyGraphTransformationContext context) {
-        List<Object> sorted = new ArrayList<>(conflictIds.size());
+        List<String> sorted = new ArrayList<>(conflictIds.size());
 
         RootQueue roots = new RootQueue(conflictIds.size() / 2);
         for (ConflictId id : conflictIds) {
@@ -159,7 +160,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
             processRoots(sorted, roots);
         }
 
-        Collection<Collection<Object>> cycles = Collections.emptySet();
+        Collection<Collection<String>> cycles = Collections.emptySet();
         if (cycle) {
             cycles = findCycles(conflictIds);
         }
@@ -170,7 +171,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
         return cycles.size();
     }
 
-    private void processRoots(List<Object> sorted, RootQueue roots) {
+    private void processRoots(List<String> sorted, RootQueue roots) {
         while (!roots.isEmpty()) {
             ConflictId root = roots.remove();
 
@@ -185,11 +186,11 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
         }
     }
 
-    private Collection<Collection<Object>> findCycles(Collection<ConflictId> conflictIds) {
-        Collection<Collection<Object>> cycles = new HashSet<>();
+    private Collection<Collection<String>> findCycles(Collection<ConflictId> conflictIds) {
+        Collection<Collection<String>> cycles = new HashSet<>();
 
-        Map<Object, Integer> stack = new HashMap<>(128);
-        Map<ConflictId, Object> visited = new IdentityHashMap<>(conflictIds.size());
+        Map<String, Integer> stack = new HashMap<>(128);
+        Map<ConflictId, Boolean> visited = new IdentityHashMap<>(conflictIds.size());
         for (ConflictId id : conflictIds) {
             findCycles(id, visited, stack, cycles);
         }
@@ -199,14 +200,14 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
 
     private void findCycles(
             ConflictId id,
-            Map<ConflictId, Object> visited,
-            Map<Object, Integer> stack,
-            Collection<Collection<Object>> cycles) {
+            Map<ConflictId, Boolean> visited,
+            Map<String, Integer> stack,
+            Collection<Collection<String>> cycles) {
         Integer depth = stack.put(id.key, stack.size());
         if (depth != null) {
             stack.put(id.key, depth);
-            Collection<Object> cycle = new HashSet<>();
-            for (Map.Entry<Object, Integer> entry : stack.entrySet()) {
+            Collection<String> cycle = new HashSet<>();
+            for (Map.Entry<String, Integer> entry : stack.entrySet()) {
                 if (entry.getValue() >= depth) {
                     cycle.add(entry.getKey());
                 }
@@ -224,7 +225,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
 
     static final class ConflictId {
 
-        final Object key;
+        final String key;
 
         Collection<ConflictId> children = Collections.emptySet();
 
@@ -232,7 +233,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
 
         int minDepth;
 
-        ConflictId(Object key, int depth) {
+        ConflictId(String key, int depth) {
             this.key = key;
             this.minDepth = depth;
         }

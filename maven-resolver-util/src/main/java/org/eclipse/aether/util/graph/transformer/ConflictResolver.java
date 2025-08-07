@@ -182,12 +182,12 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             throws RepositoryException {
         requireNonNull(node, "node cannot be null");
         requireNonNull(context, "context cannot be null");
-        List<?> sortedConflictIds = (List<?>) context.get(TransformationContextKeys.SORTED_CONFLICT_IDS);
+        List<String> sortedConflictIds = (List<String>) context.get(TransformationContextKeys.SORTED_CONFLICT_IDS);
         if (sortedConflictIds == null) {
             ConflictIdSorter sorter = new ConflictIdSorter();
             sorter.transformGraph(node, context);
 
-            sortedConflictIds = (List<?>) context.get(TransformationContextKeys.SORTED_CONFLICT_IDS);
+            sortedConflictIds = (List<String>) context.get(TransformationContextKeys.SORTED_CONFLICT_IDS);
         }
 
         @SuppressWarnings("unchecked")
@@ -195,28 +195,29 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         long time1 = System.nanoTime();
 
         @SuppressWarnings("unchecked")
-        Collection<Collection<?>> conflictIdCycles =
-                (Collection<Collection<?>>) context.get(TransformationContextKeys.CYCLIC_CONFLICT_IDS);
+        Collection<Collection<String>> conflictIdCycles =
+                (Collection<Collection<String>>) context.get(TransformationContextKeys.CYCLIC_CONFLICT_IDS);
         if (conflictIdCycles == null) {
             throw new RepositoryException("conflict id cycles have not been identified");
         }
 
-        Map<?, ?> conflictIds = (Map<?, ?>) context.get(TransformationContextKeys.CONFLICT_IDS);
+        Map<DependencyNode, String> conflictIds =
+                (Map<DependencyNode, String>) context.get(TransformationContextKeys.CONFLICT_IDS);
         if (conflictIds == null) {
             throw new RepositoryException("conflict groups have not been identified");
         }
 
-        Map<Object, Collection<Object>> cyclicPredecessors = new HashMap<>();
-        for (Collection<?> cycle : conflictIdCycles) {
-            for (Object conflictId : cycle) {
-                Collection<Object> predecessors = cyclicPredecessors.computeIfAbsent(conflictId, k -> new HashSet<>());
+        Map<String, Collection<String>> cyclicPredecessors = new HashMap<>();
+        for (Collection<String> cycle : conflictIdCycles) {
+            for (String conflictId : cycle) {
+                Collection<String> predecessors = cyclicPredecessors.computeIfAbsent(conflictId, k -> new HashSet<>());
                 predecessors.addAll(cycle);
             }
         }
 
         State state = new State(node, conflictIds, sortedConflictIds.size(), context);
-        for (Iterator<?> it = sortedConflictIds.iterator(); it.hasNext(); ) {
-            Object conflictId = it.next();
+        for (Iterator<String> it = sortedConflictIds.iterator(); it.hasNext(); ) {
+            String conflictId = it.next();
 
             // reset data structures for next graph walk
             state.prepare(conflictId, cyclicPredecessors.get(conflictId));
@@ -260,7 +261,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             // in case of cycles, trigger final graph walk to ensure all leftover losers are gone
             if (!it.hasNext() && !conflictIdCycles.isEmpty() && state.conflictCtx.winner != null) {
                 DependencyNode winner = state.conflictCtx.winner.node;
-                state.prepare(state, null);
+                // Note: using non-existing key here (empty) as that one for sure was not met
+                state.prepare("", null);
                 gatherConflictItems(winner, state);
             }
         }
@@ -275,7 +277,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
     }
 
     private boolean gatherConflictItems(DependencyNode node, State state) throws RepositoryException {
-        Object conflictId = state.conflictIds.get(node);
+        String conflictId = state.conflictIds.get(node);
         if (state.currentId.equals(conflictId)) {
             // found it, add conflict item (if not already done earlier by another path)
             state.add(node);
@@ -473,7 +475,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         /**
          * The conflict id currently processed.
          */
-        Object currentId;
+        String currentId;
 
         /**
          * Stats counter.
@@ -489,19 +491,19 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          * A mapping from conflict id to winner node, helps to recognize nodes that have their effective
          * scope&optionality set or are leftovers from previous removals.
          */
-        final Map<Object, DependencyNode> resolvedIds;
+        final Map<String, DependencyNode> resolvedIds;
 
         /**
          * The set of conflict ids which could apply to ancestors of nodes with the current conflict id, used to avoid
          * recursion early on. This is basically a superset of the key set of resolvedIds, the additional ids account
          * for cyclic dependencies.
          */
-        final Collection<Object> potentialAncestorIds;
+        final Collection<String> potentialAncestorIds;
 
         /**
          * The output from the conflict marker
          */
-        final Map<?, ?> conflictIds;
+        final Map<DependencyNode, String> conflictIds;
 
         /**
          * The conflict items we have gathered so far for the current conflict id.
@@ -575,7 +577,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
         State(
                 DependencyNode root,
-                Map<?, ?> conflictIds,
+                Map<DependencyNode, String> conflictIds,
                 int conflictIdCount,
                 DependencyGraphTransformationContext context)
                 throws RepositoryException {
@@ -598,7 +600,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             optionalitySelector = ConflictResolver.this.optionalitySelector.getInstance(root, context);
         }
 
-        void prepare(Object conflictId, Collection<Object> cyclicPredecessors) {
+        void prepare(String conflictId, Collection<String> cyclicPredecessors) {
             currentId = conflictId;
             conflictCtx.conflictId = conflictId;
             conflictCtx.winner = null;
@@ -633,12 +635,12 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             resolvedIds.put(currentId, (conflictCtx.winner != null) ? conflictCtx.winner.node : null);
         }
 
-        boolean loser(DependencyNode node, Object conflictId) {
+        boolean loser(DependencyNode node, String conflictId) {
             DependencyNode winner = resolvedIds.get(conflictId);
             return winner != null && winner != node;
         }
 
-        boolean push(DependencyNode node, Object conflictId) throws RepositoryException {
+        boolean push(DependencyNode node, String conflictId) throws RepositoryException {
             if (conflictId == null) {
                 if (node.getDependency() != null) {
                     if (node.getData().get(NODE_DATA_WINNER) != null) {
@@ -736,7 +738,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             return (size <= 0) ? null : parentNodes.get(size - 1);
         }
 
-        private String deriveScope(DependencyNode node, Object conflictId) throws RepositoryException {
+        private String deriveScope(DependencyNode node, String conflictId) throws RepositoryException {
             if ((node.getManagedBits() & DependencyNode.MANAGED_SCOPE) != 0
                     || (conflictId != null && resolvedIds.containsKey(conflictId))) {
                 return scope(node.getDependency());
@@ -760,7 +762,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             return (dependency != null) ? dependency.getScope() : null;
         }
 
-        private boolean deriveOptional(DependencyNode node, Object conflictId) {
+        private boolean deriveOptional(DependencyNode node, String conflictId) {
             Dependency dep = node.getDependency();
             boolean optional = (dep != null) && dep.isOptional();
             if (optional
@@ -972,8 +974,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             if (scopes instanceof Collection) {
                 ((Collection<String>) scopes).add(scope);
             } else if (!scopes.equals(scope)) {
-                Collection<Object> set = new HashSet<>();
-                set.add(scopes);
+                Collection<String> set = new HashSet<>();
+                set.add((String) scopes);
                 set.add(scope);
                 scopes = set;
             }
@@ -1013,11 +1015,11 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
         final DependencyNode root;
 
-        final Map<?, ?> conflictIds;
+        final Map<DependencyNode, String> conflictIds;
 
         final Collection<ConflictItem> items;
 
-        Object conflictId;
+        String conflictId;
 
         ConflictItem winner;
 
@@ -1025,7 +1027,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
         Boolean optional;
 
-        ConflictContext(DependencyNode root, Map<?, ?> conflictIds, Collection<ConflictItem> items) {
+        ConflictContext(DependencyNode root, Map<DependencyNode, String> conflictIds, Collection<ConflictItem> items) {
             this.root = root;
             this.conflictIds = conflictIds;
             this.items = Collections.unmodifiableCollection(items);
@@ -1044,11 +1046,25 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          */
         public ConflictContext(
                 DependencyNode root,
-                Object conflictId,
-                Map<DependencyNode, Object> conflictIds,
+                String conflictId,
+                Map<DependencyNode, String> conflictIds,
                 Collection<ConflictItem> items) {
             this(root, conflictIds, items);
             this.conflictId = conflictId;
+        }
+
+        /**
+         * Left in place only to maintain source compatibility.
+         *
+         * @deprecated Do not use, is left in place only to maintain source compatibility (Object is casted to String).
+         */
+        @Deprecated
+        public ConflictContext(
+                DependencyNode root,
+                Object conflictId,
+                Map<DependencyNode, String> conflictIds,
+                Collection<ConflictItem> items) {
+            this(root, (String) conflictId, conflictIds, items);
         }
 
         /**

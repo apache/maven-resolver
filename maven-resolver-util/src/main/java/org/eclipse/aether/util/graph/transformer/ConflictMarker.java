@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.aether.RepositoryException;
@@ -57,14 +58,14 @@ public final class ConflictMarker implements DependencyGraphTransformer {
         Map<String, Object> stats = (Map<String, Object>) context.get(TransformationContextKeys.STATS);
         long time1 = System.nanoTime();
 
-        Map<DependencyNode, Object> nodes = new IdentityHashMap<>(1024);
-        Map<Object, ConflictGroup> groups = new HashMap<>(1024);
+        Map<DependencyNode, Boolean> nodes = new IdentityHashMap<>(1024);
+        Map<Key, ConflictGroup> groups = new HashMap<>(1024);
 
         analyze(node, nodes, groups, new int[] {0});
 
         long time2 = System.nanoTime();
 
-        Map<DependencyNode, Object> conflictIds = mark(nodes.keySet(), groups);
+        Map<DependencyNode, String> conflictIds = mark(nodes.keySet(), groups);
 
         context.put(TransformationContextKeys.CONFLICT_IDS, conflictIds);
 
@@ -79,22 +80,22 @@ public final class ConflictMarker implements DependencyGraphTransformer {
     }
 
     private void analyze(
-            DependencyNode node, Map<DependencyNode, Object> nodes, Map<Object, ConflictGroup> groups, int[] counter) {
+            DependencyNode node, Map<DependencyNode, Boolean> nodes, Map<Key, ConflictGroup> groups, int[] counter) {
         if (nodes.put(node, Boolean.TRUE) != null) {
             return;
         }
 
-        Set<Object> keys = getKeys(node);
+        Set<Key> keys = getKeys(node);
         if (!keys.isEmpty()) {
             ConflictGroup group = null;
             boolean fixMappings = false;
 
-            for (Object key : keys) {
+            for (Key key : keys) {
                 ConflictGroup g = groups.get(key);
 
                 if (group != g) {
                     if (group == null) {
-                        Set<Object> newKeys = merge(g.keys, keys);
+                        Set<Key> newKeys = merge(g.keys, keys);
                         if (newKeys == g.keys) {
                             group = g;
                             break;
@@ -105,7 +106,7 @@ public final class ConflictMarker implements DependencyGraphTransformer {
                     } else if (g == null) {
                         fixMappings = true;
                     } else {
-                        Set<Object> newKeys = merge(g.keys, group.keys);
+                        Set<Key> newKeys = merge(g.keys, group.keys);
                         if (newKeys == g.keys) {
                             group = g;
                             fixMappings = false;
@@ -123,7 +124,7 @@ public final class ConflictMarker implements DependencyGraphTransformer {
                 fixMappings = true;
             }
             if (fixMappings) {
-                for (Object key : group.keys) {
+                for (Key key : group.keys) {
                     groups.put(key, group);
                 }
             }
@@ -134,7 +135,7 @@ public final class ConflictMarker implements DependencyGraphTransformer {
         }
     }
 
-    private Set<Object> merge(Set<Object> keys1, Set<Object> keys2) {
+    private Set<Key> merge(Set<Key> keys1, Set<Key> keys2) {
         int size1 = keys1.size();
         int size2 = keys2.size();
 
@@ -148,21 +149,21 @@ public final class ConflictMarker implements DependencyGraphTransformer {
             }
         }
 
-        Set<Object> keys = new HashSet<>();
+        Set<Key> keys = new HashSet<>();
         keys.addAll(keys1);
         keys.addAll(keys2);
         return keys;
     }
 
-    private Set<Object> getKeys(DependencyNode node) {
-        Set<Object> keys;
+    private Set<Key> getKeys(DependencyNode node) {
+        Set<Key> keys;
 
         Dependency dependency = node.getDependency();
 
         if (dependency == null) {
             keys = Collections.emptySet();
         } else {
-            Object key = toKey(dependency.getArtifact());
+            Key key = toKey(dependency.getArtifact());
 
             if (node.getRelocations().isEmpty() && node.getAliases().isEmpty()) {
                 keys = Collections.singleton(key);
@@ -185,31 +186,32 @@ public final class ConflictMarker implements DependencyGraphTransformer {
         return keys;
     }
 
-    private Map<DependencyNode, Object> mark(Collection<DependencyNode> nodes, Map<Object, ConflictGroup> groups) {
-        Map<DependencyNode, Object> conflictIds = new IdentityHashMap<>(nodes.size() + 1);
+    private Map<DependencyNode, String> mark(Collection<DependencyNode> nodes, Map<Key, ConflictGroup> groups) {
+        Map<DependencyNode, String> conflictIds = new IdentityHashMap<>(nodes.size() + 1);
 
         for (DependencyNode node : nodes) {
             Dependency dependency = node.getDependency();
             if (dependency != null) {
-                Object key = toKey(dependency.getArtifact());
-                conflictIds.put(node, groups.get(key).index);
+                Key key = toKey(dependency.getArtifact());
+                conflictIds.put(
+                        node, String.valueOf(groups.get(key).index).intern()); // interning it as is expected so in UT
             }
         }
 
         return conflictIds;
     }
 
-    private static Object toKey(Artifact artifact) {
+    private static Key toKey(Artifact artifact) {
         return new Key(artifact);
     }
 
     static class ConflictGroup {
 
-        final Set<Object> keys;
+        final Set<Key> keys;
 
         final int index;
 
-        ConflictGroup(Set<Object> keys, int index) {
+        ConflictGroup(Set<Key> keys, int index) {
             this.keys = keys;
             this.index = index;
         }
@@ -223,9 +225,12 @@ public final class ConflictMarker implements DependencyGraphTransformer {
     static class Key {
 
         private final Artifact artifact;
+        private final int hashCode;
 
         Key(Artifact artifact) {
             this.artifact = artifact;
+            this.hashCode = Objects.hash(
+                    artifact.getArtifactId(), artifact.getGroupId(), artifact.getExtension(), artifact.getClassifier());
         }
 
         @Override
@@ -244,12 +249,7 @@ public final class ConflictMarker implements DependencyGraphTransformer {
 
         @Override
         public int hashCode() {
-            int hash = 17;
-            hash = hash * 31 + artifact.getArtifactId().hashCode();
-            hash = hash * 31 + artifact.getGroupId().hashCode();
-            hash = hash * 31 + artifact.getClassifier().hashCode();
-            hash = hash * 31 + artifact.getExtension().hashCode();
-            return hash;
+            return hashCode;
         }
 
         @Override
