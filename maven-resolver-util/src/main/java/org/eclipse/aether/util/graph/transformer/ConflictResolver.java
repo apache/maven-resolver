@@ -520,7 +520,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          * The set of nodes on the DFS stack to detect cycles, technically keyed by the node's child list to match the
          * dirty graph structure produced by the dependency collector for cycles.
          */
-        final Map<List<DependencyNode>, Object> stack;
+        final Map<List<DependencyNode>, Boolean> stack;
 
         /**
          * The stack of parent nodes.
