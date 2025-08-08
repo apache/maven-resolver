@@ -41,9 +41,9 @@ import static java.util.Objects.requireNonNull;
  * transformer will query the key {@link TransformationContextKeys#CONFLICT_IDS} in the transformation context for an
  * existing mapping of nodes to their conflicts ids. In absence of this map, the transformer will automatically invoke
  * the {@link ConflictMarker} to calculate the conflict ids. When this transformer has executed, the transformation
- * context holds a {@code List<Object>} that denotes the topologically sorted conflict ids. The list will be stored
+ * context holds a {@code List<String>} that denotes the topologically sorted conflict ids. The list will be stored
  * using the key {@link TransformationContextKeys#SORTED_CONFLICT_IDS}. In addition, the transformer will store a
- * {@code Collection<Collection<Object>>} using the key {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} that
+ * {@code Collection<Collection<String>>} using the key {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} that
  * describes cycles among conflict ids.
  */
 public final class ConflictIdSorter implements DependencyGraphTransformer {

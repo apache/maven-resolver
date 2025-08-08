@@ -38,7 +38,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A dependency graph transformer that identifies conflicting dependencies. When this transformer has executed, the
- * transformation context holds a {@code Map<DependencyNode, Object>} where dependency nodes that belong to the same
+ * transformation context holds a {@code Map<DependencyNode, String>} where dependency nodes that belong to the same
  * conflict group will have an equal conflict identifier. This map is stored using the key
  * {@link TransformationContextKeys#CONFLICT_IDS}.
  */
