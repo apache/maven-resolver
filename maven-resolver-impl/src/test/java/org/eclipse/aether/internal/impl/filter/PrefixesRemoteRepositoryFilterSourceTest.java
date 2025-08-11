@@ -74,8 +74,7 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository, Artifact artifact) {
         try {
             Path baseDir = session.getLocalRepository()
-                    .getBasedir()
-                    .toPath()
+                    .getBasePath()
                     .resolve(PrefixesRemoteRepositoryFilterSource.LOCAL_REPO_PREFIX_DIR);
             Path groupId = baseDir.resolve(PrefixesRemoteRepositoryFilterSource.PREFIXES_FILE_PREFIX
                     + remoteRepository.getId()

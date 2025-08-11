@@ -181,11 +181,11 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         boolean repositoryFilteringEnabled =
                 ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
         if (repositoryFilteringEnabled) {
-            Path filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
+            Path filePath = resolvePrefixesFromLocalConfiguration(session, baseDir, remoteRepository);
             if (filePath == null) {
-                filePath = baseDir.resolve(PREFIXES_FILE_PREFIX + remoteRepository.getId() + PREFIXES_FILE_SUFFIX);
+                filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
             }
-            if (Files.isReadable(filePath)) {
+            if (filePath != null) {
                 logger.debug(
                         "Loading prefixes for remote repository {} from file '{}'", remoteRepository.getId(), filePath);
                 try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
@@ -204,6 +204,16 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         }
         logger.debug("Prefix file for remote repository {} disabled", remoteRepository);
         return PrefixTree.SENTINEL;
+    }
+
+    private Path resolvePrefixesFromLocalConfiguration(
+            RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
+        Path filePath = baseDir.resolve(PREFIXES_FILE_PREFIX + remoteRepository.getId() + PREFIXES_FILE_SUFFIX);
+        if (Files.isReadable(filePath)) {
+            return filePath;
+        } else {
+            return null;
+        }
     }
 
     private Path resolvePrefixesFromRemoteRepository(
