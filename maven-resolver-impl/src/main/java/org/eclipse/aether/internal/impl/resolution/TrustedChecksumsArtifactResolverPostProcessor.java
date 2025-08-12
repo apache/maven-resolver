@@ -101,6 +101,24 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
     public static final String DEFAULT_CHECKSUM_ALGORITHMS = "SHA-1";
 
     /**
+     * The scope to apply during post-processing. Accepted values are {@code all} (is default and is what happened
+     * before), and {@code project} when the scope of verification are project dependencies only (i.e. plugins are
+     * not verified).
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_SCOPE}
+     * @since 2.0.11
+     */
+    public static final String CONFIG_PROP_SCOPE = CONFIG_PROPS_PREFIX + "scope";
+
+    public static final String ALL_SCOPE = "all";
+
+    public static final String PROJECT_SCOPE = "project";
+
+    public static final String DEFAULT_SCOPE = ALL_SCOPE;
+
+    /**
      * Should post processor fail resolution if checksum is missing?
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -147,6 +165,18 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
         return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLED);
     }
 
+    private boolean inScope(RepositorySystemSession session, ArtifactResult artifactResult) {
+        String scope = ConfigUtils.getString(session, DEFAULT_SCOPE, CONFIG_PROP_SCOPE);
+        if (ALL_SCOPE.equals(scope)) {
+            return artifactResult.isResolved();
+        } else if (PROJECT_SCOPE.equals(scope)) {
+            return artifactResult.isResolved()
+                    && artifactResult.getRequest().getRequestContext().startsWith("project");
+        } else {
+            throw new IllegalArgumentException("Unknown value for configuration " + CONFIG_PROP_SCOPE + ": " + scope);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected void doPostProcess(RepositorySystemSession session, List<ArtifactResult> artifactResults) {
@@ -165,7 +195,7 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
             if (artifactResult.getRequest().getArtifact().isSnapshot() && !snapshots) {
                 continue;
             }
-            if (artifactResult.isResolved()) {
+            if (inScope(session, artifactResult)) {
                 if (record) {
                     recordArtifactChecksums(session, artifactResult, checksumAlgorithms);
                 } else if (!validateArtifactChecksums(session, artifactResult, checksumAlgorithms, failIfMissing)) {

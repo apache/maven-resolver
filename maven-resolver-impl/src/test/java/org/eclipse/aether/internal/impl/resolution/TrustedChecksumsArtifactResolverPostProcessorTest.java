@@ -73,8 +73,8 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
         // make the two artifacts, BOTH as resolved
         File tmp = Files.createTempFile("artifact", "tmp").toFile();
-        artifactWithoutTrustedChecksum = new DefaultArtifact("test:test:1.0").setFile(tmp);
-        artifactWithTrustedChecksum = new DefaultArtifact("test:test:2.0").setFile(tmp);
+        artifactWithoutTrustedChecksum = new DefaultArtifact("test:test:1.0").setPath(tmp.toPath());
+        artifactWithTrustedChecksum = new DefaultArtifact("test:test:2.0").setPath(tmp.toPath());
         artifactTrustedChecksum = "da39a3ee5e6b4b0d3255bfef95601890afd80709"; // empty file
 
         session = TestUtils.newSession();
@@ -130,7 +130,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
 
     // -- TrustedChecksumsSource interface END
 
-    private ArtifactResult createArtifactResult(Artifact artifact) {
+    private ArtifactResult createArtifactResult(Artifact artifact, String scope) {
         ArtifactResult artifactResult = new ArtifactResult(new ArtifactRequest().setArtifact(artifact));
         artifactResult.setArtifact(artifact);
         artifactResult.setRepository(
@@ -142,7 +142,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
 
     @Test
     void haveMatchingChecksumPass() {
-        ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum);
+        ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum, "project/compile");
         assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
@@ -151,16 +151,17 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
 
     @Test
     void unresolvedArtifact() {
-        ArtifactResult artifactResult =
-                createArtifactResult(artifactWithTrustedChecksum).setArtifact(null);
+        ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum, "project/compile")
+                .setArtifact(null);
         assertFalse(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult)); // no NPE
+        assertFalse(artifactResult.isResolved());
     }
 
     @Test
     void haveNoChecksumPass() {
-        ArtifactResult artifactResult = createArtifactResult(artifactWithoutTrustedChecksum);
+        ArtifactResult artifactResult = createArtifactResult(artifactWithoutTrustedChecksum, "project/compile");
         assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
@@ -171,7 +172,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     void haveNoChecksumFailIfMissingEnabledFail() {
         session.setConfigProperty(
                 "aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing", Boolean.TRUE.toString());
-        ArtifactResult artifactResult = createArtifactResult(artifactWithoutTrustedChecksum);
+        ArtifactResult artifactResult = createArtifactResult(artifactWithoutTrustedChecksum, "project/compile");
         assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
@@ -185,9 +186,21 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
     }
 
     @Test
+    void haveNoChecksumPassWithMissingEnabledFailButOutOfScope() {
+        session.setConfigProperty("aether.artifactResolver.postProcessor.trustedChecksums.scope", "project");
+        session.setConfigProperty(
+                "aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing", Boolean.TRUE.toString());
+        ArtifactResult artifactResult = createArtifactResult(artifactWithoutTrustedChecksum, "plugin");
+        assertTrue(artifactResult.isResolved());
+
+        subject.postProcess(session, Collections.singletonList(artifactResult));
+        assertTrue(artifactResult.isResolved());
+    }
+
+    @Test
     void haveMismatchingChecksumFail() {
         artifactTrustedChecksum = "foobar";
-        ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum);
+        ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum, "project/compile");
         assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
@@ -216,7 +229,7 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
         };
         session.setConfigProperty(
                 "aether.artifactResolver.postProcessor.trustedChecksums.record", Boolean.TRUE.toString());
-        ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum);
+        ArtifactResult artifactResult = createArtifactResult(artifactWithTrustedChecksum, "project/compile");
         assertTrue(artifactResult.isResolved());
 
         subject.postProcess(session, Collections.singletonList(artifactResult));
