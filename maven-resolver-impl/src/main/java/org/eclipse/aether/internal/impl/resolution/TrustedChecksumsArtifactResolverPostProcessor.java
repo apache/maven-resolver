@@ -84,6 +84,20 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
     private static final String CONF_NAME_FAIL_IF_MISSING = "failIfMissing";
 
     private static final String CONF_NAME_SNAPSHOTS = "snapshots";
+    /**
+     * The scope to apply during post-processing. Accepted values are {@code all} (is default and is what happened
+     * before), and {@code project} when the scope of verification are project dependencies only (i.e. plugins are
+     * not verified).
+     *
+     * @since 1.9.25
+     */
+    public static final String CONFIG_PROP_SCOPE = "scope";
+
+    public static final String ALL_SCOPE = "all";
+
+    public static final String PROJECT_SCOPE = "project";
+
+    public static final String DEFAULT_SCOPE = ALL_SCOPE;
 
     private static final String CONF_NAME_RECORD = "record";
 
@@ -101,6 +115,18 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
         super(NAME);
         this.checksumAlgorithmFactorySelector = requireNonNull(checksumAlgorithmFactorySelector);
         this.trustedChecksumsSources = requireNonNull(trustedChecksumsSources);
+    }
+
+    private boolean inScope(RepositorySystemSession session, ArtifactResult artifactResult) {
+        String scope = ConfigUtils.getString(session, DEFAULT_SCOPE, configPropKey(CONFIG_PROP_SCOPE));
+        if (ALL_SCOPE.equals(scope)) {
+            return artifactResult.isResolved();
+        } else if (PROJECT_SCOPE.equals(scope)) {
+            return artifactResult.isResolved()
+                    && artifactResult.getRequest().getRequestContext().startsWith("project");
+        } else {
+            throw new IllegalArgumentException("Unknown value for configuration " + CONFIG_PROP_SCOPE + ": " + scope);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -123,7 +149,7 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
             if (artifactResult.getRequest().getArtifact().isSnapshot() && !snapshots) {
                 continue;
             }
-            if (artifactResult.isResolved()) {
+            if (inScope(session, artifactResult)) {
                 if (record) {
                     recordArtifactChecksums(session, artifactResult, checksumAlgorithms);
                 } else if (!validateArtifactChecksums(session, artifactResult, checksumAlgorithms, failIfMissing)) {
