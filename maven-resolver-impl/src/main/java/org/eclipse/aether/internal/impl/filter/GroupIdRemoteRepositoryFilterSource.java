@@ -159,8 +159,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
             for (ArtifactResult artifactResult : artifactResults) {
                 if (artifactResult.isResolved() && artifactResult.getRepository() instanceof RemoteRepository) {
                     RemoteRepository remoteRepository = (RemoteRepository) artifactResult.getRepository();
-                    boolean repositoryFilteringEnabled = isRepositoryFilteringEnabled(session, remoteRepository);
-                    if (repositoryFilteringEnabled) {
+                    if (isRepositoryFilteringEnabled(session, remoteRepository)) {
                         ruleFile(session, remoteRepository); // populate it; needed for save
                         String line = "=" + artifactResult.getArtifact().getGroupId();
                         recordedRules
@@ -190,10 +189,8 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private GroupTree loadRepositoryRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        boolean repositoryFilteringEnabled =
-                ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
         Path filePath = ruleFile(session, remoteRepository);
-        if (repositoryFilteringEnabled && Files.isReadable(filePath)) {
+        if (isRepositoryFilteringEnabled(session, remoteRepository) && Files.isReadable(filePath)) {
             try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
                 GroupTree groupTree = new GroupTree("");
                 int rules = groupTree.loadNodes(lines);
