@@ -45,9 +45,10 @@ public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFil
     }
 
     @Override
-    protected void enableSource(DefaultRepositorySystemSession session) {
+    protected void enableSource(DefaultRepositorySystemSession session, boolean enabled) {
         session.setConfigProperty(
-                "aether.remoteRepositoryFilter." + GroupIdRemoteRepositoryFilterSource.NAME, Boolean.TRUE.toString());
+                "aether.remoteRepositoryFilter." + GroupIdRemoteRepositoryFilterSource.NAME,
+                Boolean.valueOf(enabled).toString());
     }
 
     protected void allowArtifact(
@@ -61,7 +62,7 @@ public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFil
             artifactResult.setArtifact(resolvedArtifact);
             artifactResult.setRepository(remoteRepository);
             List<ArtifactResult> artifactResults = Collections.singletonList(artifactResult);
-            enableSource(newSession);
+            enableSource(newSession, true);
             newSession.setConfigProperty(
                     "aether.remoteRepositoryFilter." + GroupIdRemoteRepositoryFilterSource.NAME + ".record",
                     Boolean.TRUE.toString());

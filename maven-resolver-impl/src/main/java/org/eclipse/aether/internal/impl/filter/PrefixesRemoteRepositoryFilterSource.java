@@ -20,25 +20,28 @@ package org.eclipse.aether.internal.impl.filter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.internal.impl.filter.ruletree.PrefixTree;
+import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.MetadataRequest;
+import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
@@ -48,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Remote repository filter source filtering on path prefixes. It is backed by a file that lists all allowed path
@@ -81,6 +83,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     private static final String CONFIG_PROPS_PREFIX =
             RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
 
+    private static final String PREFIX_FILE_PATH = ".meta/prefixes.txt";
+
     /**
      * Is filter enabled?
      *
@@ -105,24 +109,35 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     static final String PREFIXES_FILE_SUFFIX = ".txt";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PrefixesRemoteRepositoryFilterSource.class);
+    private final Logger logger = LoggerFactory.getLogger(PrefixesRemoteRepositoryFilterSource.class);
+
+    private final Provider<MetadataResolver> metadataResolver;
 
     private final RepositoryLayoutProvider repositoryLayoutProvider;
 
-    private final ConcurrentHashMap<RemoteRepository, Node> prefixes;
+    private final ConcurrentHashMap<RemoteRepository, PrefixTree> prefixes;
 
     private final ConcurrentHashMap<RemoteRepository, RepositoryLayout> layouts;
 
+    private final ConcurrentHashMap<RemoteRepository, Boolean> ongoingUpdates;
+
     @Inject
-    public PrefixesRemoteRepositoryFilterSource(RepositoryLayoutProvider repositoryLayoutProvider) {
+    public PrefixesRemoteRepositoryFilterSource(
+            Provider<MetadataResolver> metadataResolver, RepositoryLayoutProvider repositoryLayoutProvider) {
+        this.metadataResolver = requireNonNull(metadataResolver);
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);
         this.prefixes = new ConcurrentHashMap<>();
         this.layouts = new ConcurrentHashMap<>();
+        this.ongoingUpdates = new ConcurrentHashMap<>();
     }
 
     @Override
     protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, false, CONFIG_PROP_ENABLED);
+        return ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED);
+    }
+
+    private boolean isRepositoryFilteringEnabled(RepositorySystemSession session, RemoteRepository remoteRepository) {
+        return ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
     }
 
     @Override
@@ -148,49 +163,79 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         });
     }
 
-    /**
-     * Caches prefixes instances for remote repository.
-     */
-    private Node cacheNode(Path basedir, RemoteRepository remoteRepository) {
-        return prefixes.computeIfAbsent(remoteRepository, r -> loadRepositoryPrefixes(basedir, remoteRepository));
-    }
-
-    /**
-     * Loads prefixes file and preprocesses it into {@link Node} instance.
-     */
-    private Node loadRepositoryPrefixes(Path baseDir, RemoteRepository remoteRepository) {
-        Path filePath = baseDir.resolve(PREFIXES_FILE_PREFIX + remoteRepository.getId() + PREFIXES_FILE_SUFFIX);
-        if (Files.isReadable(filePath)) {
-            try (BufferedReader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
-                LOGGER.debug(
-                        "Loading prefixes for remote repository {} from file '{}'", remoteRepository.getId(), filePath);
-                Node root = new Node("");
-                String prefix;
-                int lines = 0;
-                while ((prefix = reader.readLine()) != null) {
-                    if (!prefix.startsWith("#") && !prefix.trim().isEmpty()) {
-                        lines++;
-                        Node currentNode = root;
-                        for (String element : elementsOf(prefix)) {
-                            currentNode = currentNode.addSibling(element);
-                        }
-                    }
-                }
-                LOGGER.info("Loaded {} prefixes for remote repository {}", lines, remoteRepository.getId());
-                return root;
-            } catch (FileNotFoundException e) {
-                // strange: we tested for it above, still, we should not fail
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
+    private PrefixTree cachePrefixTree(
+            RepositorySystemSession session, Path basedir, RemoteRepository remoteRepository) {
+        if (!remoteRepository.isBlocked() && null == ongoingUpdates.putIfAbsent(remoteRepository, Boolean.TRUE)) {
+            try {
+                return prefixes.computeIfAbsent(
+                        remoteRepository, r -> loadPrefixTree(session, basedir, remoteRepository));
+            } finally {
+                ongoingUpdates.remove(remoteRepository);
             }
         }
-        LOGGER.debug("Prefix file for remote repository {} not found at '{}'", remoteRepository, filePath);
-        return NOT_PRESENT_NODE;
+        return PrefixTree.SENTINEL;
+    }
+
+    private PrefixTree loadPrefixTree(
+            RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
+        boolean repositoryFilteringEnabled =
+                ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
+        if (repositoryFilteringEnabled) {
+            Path filePath = resolvePrefixesFromLocalConfiguration(session, baseDir, remoteRepository);
+            if (filePath == null) {
+                filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
+            }
+            if (filePath != null) {
+                logger.debug(
+                        "Loading prefixes for remote repository {} from file '{}'", remoteRepository.getId(), filePath);
+                try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
+                    PrefixTree prefixTree = new PrefixTree("");
+                    int rules = prefixTree.loadNodes(lines);
+                    logger.info("Loaded {} prefixes for remote repository {}", rules, remoteRepository.getId());
+                    return prefixTree;
+                } catch (FileNotFoundException e) {
+                    // strange: we tested for it above, still, we should not fail
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+            logger.debug("Prefix file for remote repository {} not found at '{}'", remoteRepository, filePath);
+            return PrefixTree.SENTINEL;
+        }
+        logger.debug("Prefix file for remote repository {} disabled", remoteRepository);
+        return PrefixTree.SENTINEL;
+    }
+
+    private Path resolvePrefixesFromLocalConfiguration(
+            RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
+        Path filePath = baseDir.resolve(PREFIXES_FILE_PREFIX + remoteRepository.getId() + PREFIXES_FILE_SUFFIX);
+        if (Files.isReadable(filePath)) {
+            return filePath;
+        } else {
+            return null;
+        }
+    }
+
+    private Path resolvePrefixesFromRemoteRepository(
+            RepositorySystemSession session, RemoteRepository remoteRepository) {
+        MetadataRequest request =
+                new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
+        request.setRepository(remoteRepository);
+        request.setDeleteLocalCopyIfMissing(true);
+        request.setFavorLocalRepository(true);
+        MetadataResult result = metadataResolver
+                .get()
+                .resolveMetadata(session, Collections.singleton(request))
+                .get(0);
+        if (result.isResolved()) {
+            return result.getMetadata().getPath();
+        } else {
+            return null;
+        }
     }
 
     private class PrefixesFilter implements RemoteRepositoryFilter {
         private final RepositorySystemSession session;
-
         private final Path basedir;
 
         private PrefixesFilter(RepositorySystemSession session, Path basedir) {
@@ -221,68 +266,18 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         }
 
         private Result acceptPrefix(RemoteRepository remoteRepository, String path) {
-            Node root = cacheNode(basedir, remoteRepository);
-            if (NOT_PRESENT_NODE == root) {
+            PrefixTree prefixTree = cachePrefixTree(session, basedir, remoteRepository);
+            if (PrefixTree.SENTINEL == prefixTree) {
                 return NOT_PRESENT_RESULT;
             }
-            List<String> prefix = new ArrayList<>();
-            final List<String> pathElements = elementsOf(path);
-            Node currentNode = root;
-            for (String pathElement : pathElements) {
-                prefix.add(pathElement);
-                currentNode = currentNode.getSibling(pathElement);
-                if (currentNode == null || currentNode.isLeaf()) {
-                    break;
-                }
-            }
-            if (currentNode != null && currentNode.isLeaf()) {
-                return new SimpleResult(
-                        true, "Prefix " + String.join("/", prefix) + " allowed from " + remoteRepository);
+            if (prefixTree.acceptedPath(path)) {
+                return new SimpleResult(true, "Path " + path + " allowed from " + remoteRepository);
             } else {
-                return new SimpleResult(
-                        false, "Prefix " + String.join("/", prefix) + " NOT allowed from " + remoteRepository);
+                return new SimpleResult(false, "Prefix " + path + " NOT allowed from " + remoteRepository);
             }
         }
     }
-
-    private static final Node NOT_PRESENT_NODE = new Node("not-present-node");
 
     private static final RemoteRepositoryFilter.Result NOT_PRESENT_RESULT =
             new SimpleResult(true, "Prefix file not present");
-
-    private static class Node {
-        private final String name;
-
-        private final HashMap<String, Node> siblings;
-
-        private Node(String name) {
-            this.name = name;
-            this.siblings = new HashMap<>();
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public boolean isLeaf() {
-            return siblings.isEmpty();
-        }
-
-        public Node addSibling(String name) {
-            Node sibling = siblings.get(name);
-            if (sibling == null) {
-                sibling = new Node(name);
-                siblings.put(name, sibling);
-            }
-            return sibling;
-        }
-
-        public Node getSibling(String name) {
-            return siblings.get(name);
-        }
-    }
-
-    private static List<String> elementsOf(final String path) {
-        return Arrays.stream(path.split("/")).filter(e -> !e.isEmpty()).collect(toList());
-    }
 }
