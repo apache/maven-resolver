@@ -20,7 +20,6 @@ package org.eclipse.aether.internal.impl.filter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import java.io.FileNotFoundException;
@@ -31,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -111,7 +111,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private final Logger logger = LoggerFactory.getLogger(PrefixesRemoteRepositoryFilterSource.class);
 
-    private final Provider<MetadataResolver> metadataResolver;
+    private final Supplier<MetadataResolver> metadataResolver;
 
     private final RepositoryLayoutProvider repositoryLayoutProvider;
 
@@ -123,7 +123,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     @Inject
     public PrefixesRemoteRepositoryFilterSource(
-            Provider<MetadataResolver> metadataResolver, RepositoryLayoutProvider repositoryLayoutProvider) {
+            Supplier<MetadataResolver> metadataResolver, RepositoryLayoutProvider repositoryLayoutProvider) {
         this.metadataResolver = requireNonNull(metadataResolver);
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);
         this.prefixes = new ConcurrentHashMap<>();
@@ -178,9 +178,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private PrefixTree loadPrefixTree(
             RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
-        boolean repositoryFilteringEnabled =
-                ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
-        if (repositoryFilteringEnabled) {
+        if (isRepositoryFilteringEnabled(session, remoteRepository)) {
             Path filePath = resolvePrefixesFromLocalConfiguration(session, baseDir, remoteRepository);
             if (filePath == null) {
                 filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
@@ -218,20 +216,22 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private Path resolvePrefixesFromRemoteRepository(
             RepositorySystemSession session, RemoteRepository remoteRepository) {
-        MetadataRequest request =
-                new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
-        request.setRepository(remoteRepository);
-        request.setDeleteLocalCopyIfMissing(true);
-        request.setFavorLocalRepository(true);
-        MetadataResult result = metadataResolver
-                .get()
-                .resolveMetadata(session, Collections.singleton(request))
-                .get(0);
-        if (result.isResolved()) {
-            return result.getMetadata().getPath();
-        } else {
-            return null;
+        MetadataResolver mr = metadataResolver.get();
+        if (mr != null) {
+            MetadataRequest request =
+                    new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
+            request.setRepository(remoteRepository);
+            request.setDeleteLocalCopyIfMissing(true);
+            request.setFavorLocalRepository(true);
+            MetadataResult result = metadataResolver
+                    .get()
+                    .resolveMetadata(session, Collections.singleton(request))
+                    .get(0);
+            if (result.isResolved()) {
+                return result.getMetadata().getPath();
+            }
         }
+        return null;
     }
 
     private class PrefixesFilter implements RemoteRepositoryFilter {
