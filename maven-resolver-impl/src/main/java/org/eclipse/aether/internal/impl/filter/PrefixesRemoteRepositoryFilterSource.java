@@ -223,9 +223,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             request.setRepository(remoteRepository);
             request.setDeleteLocalCopyIfMissing(true);
             request.setFavorLocalRepository(true);
-            MetadataResult result = mr
-                    .resolveMetadata(session, Collections.singleton(request))
-                    .get(0);
+            MetadataResult result =
+                    mr.resolveMetadata(session, Collections.singleton(request)).get(0);
             if (result.isResolved()) {
                 return result.getMetadata().getPath();
             }
