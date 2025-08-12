@@ -137,6 +137,7 @@ public class CollectConfiguration implements Callable<Integer> {
 
             for (String template : templates) {
                 Path output = outputDirectory.resolve(template);
+                Files.createDirectories(output.getParent());
                 System.out.println("Writing out to " + output);
                 try (Writer fileWriter = new CachingWriter(output, StandardCharsets.UTF_8)) {
                     velocityEngine.getTemplate(template + ".vm").merge(context, fileWriter);

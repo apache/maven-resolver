@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.graph.manager;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.eclipse.aether.collection.DependencyManager;
@@ -51,16 +52,18 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     private TransitiveDependencyManager(
+            ArrayList<AbstractDependencyManager> path,
             int depth,
             int deriveUntil,
             int applyFrom,
-            MMap<Key, Holder<String>> managedVersions,
-            MMap<Key, Holder<String>> managedScopes,
-            MMap<Key, Holder<Boolean>> managedOptionals,
-            MMap<Key, Holder<String>> managedLocalPaths,
-            MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions,
+            MMap<Key, String> managedVersions,
+            MMap<Key, String> managedScopes,
+            MMap<Key, Boolean> managedOptionals,
+            MMap<Key, String> managedLocalPaths,
+            MMap<Key, Holder<Collection<Exclusion>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
         super(
+                path,
                 depth,
                 deriveUntil,
                 applyFrom,
@@ -74,12 +77,15 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
 
     @Override
     protected DependencyManager newInstance(
-            MMap<Key, Holder<String>> managedVersions,
-            MMap<Key, Holder<String>> managedScopes,
-            MMap<Key, Holder<Boolean>> managedOptionals,
-            MMap<Key, Holder<String>> managedLocalPaths,
-            MMap<Key, Collection<Holder<Collection<Exclusion>>>> managedExclusions) {
+            MMap<Key, String> managedVersions,
+            MMap<Key, String> managedScopes,
+            MMap<Key, Boolean> managedOptionals,
+            MMap<Key, String> managedLocalPaths,
+            MMap<Key, Holder<Collection<Exclusion>>> managedExclusions) {
+        ArrayList<AbstractDependencyManager> path = new ArrayList<>(this.path);
+        path.add(this);
         return new TransitiveDependencyManager(
+                path,
                 depth + 1,
                 deriveUntil,
                 applyFrom,

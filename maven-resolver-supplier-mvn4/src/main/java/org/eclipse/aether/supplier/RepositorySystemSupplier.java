@@ -526,7 +526,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 new GroupIdRemoteRepositoryFilterSource(getRepositorySystemLifecycle()));
         result.put(
                 PrefixesRemoteRepositoryFilterSource.NAME,
-                new PrefixesRemoteRepositoryFilterSource(getRepositoryLayoutProvider()));
+                new PrefixesRemoteRepositoryFilterSource(this::getMetadataResolver, getRepositoryLayoutProvider()));
         return result;
     }
 

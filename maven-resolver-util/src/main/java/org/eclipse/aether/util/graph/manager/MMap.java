@@ -40,9 +40,19 @@ import java.util.HashMap;
 public class MMap<K, V> {
     private static final MMap<?, ?> EMPTY_MAP = new MMap<>(new HashMap<>(0)).done();
 
+    /**
+     * Returns empty "done" (immutable) MMap.
+     */
     @SuppressWarnings("unchecked")
     public static <K, V> MMap<K, V> empty() {
         return (MMap<K, V>) MMap.EMPTY_MAP;
+    }
+
+    /**
+     * Returns empty "not done" (mutable) MMap.
+     */
+    public static <K, V> MMap<K, V> emptyNotDone() {
+        return new MMap<>(new HashMap<>());
     }
 
     public static <K, V> MMap<K, V> copy(MMap<K, V> orig) {

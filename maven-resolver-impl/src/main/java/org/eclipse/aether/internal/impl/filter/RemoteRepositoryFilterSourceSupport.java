@@ -54,7 +54,7 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
     /**
      * Returns {@code true} if session configuration contains this name set to {@code true}.
      * <p>
-     * Default is {@code false}.
+     * Default is {@code true}.
      */
     protected abstract boolean isEnabled(RepositorySystemSession session);
 
