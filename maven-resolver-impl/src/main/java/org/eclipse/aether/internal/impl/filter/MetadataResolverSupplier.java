@@ -30,9 +30,9 @@ import org.eclipse.aether.impl.MetadataResolver;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A filtering connector that filter transfers using remote repository filter and delegates to another connector.
+ * A bridge to allow injecting plain suppliers, but while in Guice use this one.
  *
- * @since 1.9.0
+ * @since 2.0.11
  */
 @Singleton
 @Named
