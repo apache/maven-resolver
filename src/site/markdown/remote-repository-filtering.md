@@ -126,6 +126,9 @@ Many MRMs and Maven Central itself publish these files. Some prefixes file examp
 The user provided prefixes files are expected in the following location by default: 
 `${filterBasedir}/prefixes-${remoteRepository.id}.txt`.
 
+**Important**: Valid prefix files start with following "magic" on their very first line: `## repository-prefixes/2.0`.
+If the first line in file is not this string, the prefix file is discarded.
+
 To disable prefixes filter, use the following setting: `-Daether.remoteRepositoryFilter.prefixes=false`.
 To disable for single repository filtering, append to key `.repoId`.
 
