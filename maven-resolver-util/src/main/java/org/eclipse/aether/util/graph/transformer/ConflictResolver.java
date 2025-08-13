@@ -1071,7 +1071,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         /**
          * Gets the root node of the dependency graph being transformed.
          *
-         * @return The root node of the dependeny graph, never {@code null}.
+         * @return The root node of the dependency graph, never {@code null}.
          */
         public DependencyNode getRoot() {
             return root;
