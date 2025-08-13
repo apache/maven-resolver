@@ -122,12 +122,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-xml</artifactId>
-      <version>3.0.1</version>
-      <scope>runtime</scope>
-    </dependency>
     <!-- just build time -->
     <dependency>
       <groupId>javax.inject</groupId>

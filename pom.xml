@@ -113,7 +113,7 @@
     <jettyVersion>10.0.25</jettyVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.11</maven3Version>
-    <maven4Version>4.0.0-rc-3</maven4Version>
+    <maven4Version>4.0.0-rc-4</maven4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
@@ -245,12 +245,7 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
-        <version>4.0.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.plexus</groupId>
-        <artifactId>plexus-xml</artifactId>
-        <version>4.1.0</version>
+        <version>3.6.0</version>
       </dependency>
 
       <dependency>
