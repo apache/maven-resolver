@@ -39,7 +39,7 @@ public final class SmartExecutorUtils {
     private SmartExecutorUtils() {}
 
     /**
-     * Returns a smart executor for given parameters. If {@code tasks} is known (non-null), it must be grater than 0.
+     * Returns a smart executor for given parameters. If {@code tasks} is known (non-null), it must be greater than 0.
      * The {@code maxConcurrentTasks} also must be greater than 0. The {@code namePrefix} must be non-null.
      * <p>
      * If {@code tasks} is set (is known), and equals to 1 (one), or {@code maxConcurrentTasks} equals to 1, the
