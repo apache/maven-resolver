@@ -73,7 +73,7 @@ public final class SmartExecutorUtils {
                 return DIRECT;
             }
         }
-        return new SmartExecutor.Limited(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name(namePrefix, 1).factory()),maxConcurrentTasks);
+        return new SmartExecutor.Limited(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name(namePrefix, 1).factory()), maxConcurrentTasks);
     }
 
     /**
