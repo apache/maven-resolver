@@ -76,11 +76,15 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
             Path baseDir = session.getLocalRepository()
                     .getBasePath()
                     .resolve(PrefixesRemoteRepositoryFilterSource.LOCAL_REPO_PREFIX_DIR);
-            Path groupId = baseDir.resolve(PrefixesRemoteRepositoryFilterSource.PREFIXES_FILE_PREFIX
+            Path prefixes = baseDir.resolve(PrefixesRemoteRepositoryFilterSource.PREFIXES_FILE_PREFIX
                     + remoteRepository.getId()
                     + PrefixesRemoteRepositoryFilterSource.PREFIXES_FILE_SUFFIX);
-            Files.createDirectories(groupId.getParent());
-            Files.write(groupId, artifact.getGroupId().replaceAll("\\.", "/").getBytes(StandardCharsets.UTF_8));
+            Files.createDirectories(prefixes.getParent());
+            Files.write(
+                    prefixes,
+                    (PrefixesRemoteRepositoryFilterSource.PREFIX_FIRST_LINE + "\n"
+                                    + artifact.getGroupId().replaceAll("\\.", "/"))
+                            .getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -22,6 +22,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -84,6 +85,11 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
 
     private static final String PREFIX_FILE_PATH = ".meta/prefixes.txt";
+
+    /**
+     * Visible for UT.
+     */
+    static final String PREFIX_FIRST_LINE = "## repository-prefixes/2.0";
 
     /**
      * Is filter enabled?
@@ -183,7 +189,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             if (filePath == null) {
                 filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
             }
-            if (filePath != null) {
+            if (isPrefixFile(filePath)) {
                 logger.debug(
                         "Loading prefixes for remote repository {} from file '{}'", remoteRepository.getId(), filePath);
                 try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
@@ -202,6 +208,19 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         }
         logger.debug("Prefix file for remote repository {} disabled", remoteRepository);
         return PrefixTree.SENTINEL;
+    }
+
+    private boolean isPrefixFile(Path path) {
+        if (path == null || !Files.isRegularFile(path)) {
+            return false;
+        }
+        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            return PREFIX_FIRST_LINE.equals(reader.readLine());
+        } catch (FileNotFoundException e) {
+            return false;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private Path resolvePrefixesFromLocalConfiguration(
