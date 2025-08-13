@@ -178,6 +178,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         this.scopeDeriver = requireNonNull(scopeDeriver, "scope deriver cannot be null");
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {

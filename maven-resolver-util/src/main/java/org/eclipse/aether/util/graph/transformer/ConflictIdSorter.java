@@ -48,6 +48,7 @@ import static java.util.Objects.requireNonNull;
  */
 public final class ConflictIdSorter implements DependencyGraphTransformer {
 
+    @SuppressWarnings("unchecked")
     @Override
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
@@ -81,7 +82,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
 
         long time2 = System.nanoTime();
 
-        int cycles = topsortConflictIds(ids.values(), context);
+        int cycles = topoSortConflictIds(ids.values(), context);
 
         if (stats != null) {
             long time3 = System.nanoTime();
@@ -125,7 +126,7 @@ public final class ConflictIdSorter implements DependencyGraphTransformer {
         }
     }
 
-    private int topsortConflictIds(Collection<ConflictId> conflictIds, DependencyGraphTransformationContext context) {
+    private int topoSortConflictIds(Collection<ConflictId> conflictIds, DependencyGraphTransformationContext context) {
         List<String> sorted = new ArrayList<>(conflictIds.size());
 
         RootQueue roots = new RootQueue(conflictIds.size() / 2);
