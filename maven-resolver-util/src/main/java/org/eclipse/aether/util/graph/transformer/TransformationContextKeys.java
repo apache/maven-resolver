@@ -27,7 +27,7 @@ package org.eclipse.aether.util.graph.transformer;
 public final class TransformationContextKeys {
 
     /**
-     * The key in the graph transformation context where a {@code Map<DependencyNode, Object>} is stored which maps
+     * The key in the graph transformation context where a {@code Map<DependencyNode, String>} is stored which maps
      * dependency nodes to their conflict ids. All nodes that map to an equal conflict id belong to the same group of
      * conflicting dependencies. Note that the map keys use reference equality.
      *
@@ -36,7 +36,7 @@ public final class TransformationContextKeys {
     public static final Object CONFLICT_IDS = "conflictIds";
 
     /**
-     * The key in the graph transformation context where a {@code List<Object>} is stored that denotes a topological
+     * The key in the graph transformation context where a {@code List<String>} is stored that denotes a topological
      * sorting of the conflict ids.
      *
      * @see ConflictIdSorter
@@ -44,7 +44,7 @@ public final class TransformationContextKeys {
     public static final Object SORTED_CONFLICT_IDS = "sortedConflictIds";
 
     /**
-     * The key in the graph transformation context where a {@code Collection<Collection<Object>>} is stored that denotes
+     * The key in the graph transformation context where a {@code Collection<Collection<String>>} is stored that denotes
      * cycles among conflict ids. Each element in the outer collection denotes one cycle, i.e. if the collection is
      * empty, the conflict ids have no cyclic dependencies.
      *

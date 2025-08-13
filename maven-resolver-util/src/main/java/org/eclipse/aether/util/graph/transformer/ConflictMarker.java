@@ -50,6 +50,7 @@ public final class ConflictMarker implements DependencyGraphTransformer {
      *
      * @see DependencyGraphTransformer#transformGraph(DependencyNode, DependencyGraphTransformationContext)
      */
+    @Override
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
         requireNonNull(node, "node cannot be null");

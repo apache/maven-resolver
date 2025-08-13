@@ -39,6 +39,7 @@ import static java.util.Objects.requireNonNull;
 @Deprecated
 public final class JavaDependencyContextRefiner implements DependencyGraphTransformer {
 
+    @Override
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
         requireNonNull(node, "node cannot be null");
