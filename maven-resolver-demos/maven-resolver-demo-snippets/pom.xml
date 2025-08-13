@@ -38,6 +38,22 @@
     <javaVersion>17</javaVersion>
   </properties>
 
+  <dependencyManagement>
+    <!-- we need to keep these aligned with Maven4; override mgmt from top level POM -->
+    <dependencies>
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-utils</artifactId>
+        <version>4.0.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-xml</artifactId>
+        <version>4.1.0</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
