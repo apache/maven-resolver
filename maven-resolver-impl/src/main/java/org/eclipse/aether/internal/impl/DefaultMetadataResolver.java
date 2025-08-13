@@ -306,8 +306,9 @@ public class DefaultMetadataResolver implements MetadataResolver {
                 }
 
                 if (!tasks.isEmpty()) {
-                    try (SmartExecutor executor = SmartExecutorUtils.newSmartExecutor(
-                            tasks.size(),
+                    try (SmartExecutor executor = SmartExecutorUtils.smartExecutor(
+                            session,
+                            null, // we want global executor
                             ConfigUtils.getInteger(session, DEFAULT_THREADS, CONFIG_PROP_THREADS),
                             getClass().getSimpleName() + "-")) {
                         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();

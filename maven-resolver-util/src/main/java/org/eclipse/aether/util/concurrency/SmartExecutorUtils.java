@@ -37,21 +37,22 @@ public final class SmartExecutorUtils {
     private SmartExecutorUtils() {}
 
     /**
-     * Returns "direct" (caller executes) smart executor.
-     */
-    public static SmartExecutor direct() {
-        return DIRECT;
-    }
-
-    /**
      * Returns a smart executor for given parameters. If {@code tasks} is known (non-null), it must be grater than 0.
-     * The {@code maxConcurrentTasks} also must be greater than 0. The {@code namePrefix} must be non-null as well.
+     * The {@code maxConcurrentTasks} also must be greater than 0. The {@code namePrefix} must be non-null.
      * <p>
      * If {@code tasks} is set (is known), and equals to 1 (one), or {@code maxConcurrentTasks} equals to 1, the
-     * {@link #direct()} executor is returned, otherwise pooled one.
+     * {@link #DIRECT} executor is returned, otherwise pooled one.
      * <p>
      * If @code tasks} is not set (is null), pooled one is returned with pool size of {@code maxConcurrentTasks}. In
      * this case caller is advised to <em>reuse created executor across session</em>.
+     * <p>
+     * The returned instance must be closed out, ideally in try-with-resources construct. Returned instances when
+     * {@code tasks} parameter is given should not be cached (like in a session) as they may return {@link #DIRECT}
+     * executor for one call and a pool for subsequent call, based on value of tasks.
+     *
+     * @param tasks The amount of tasks, if known, {@code null} otherwise.
+     * @param maxConcurrentTasks The maximum concurrency caller wants.
+     * @param namePrefix The thread name prefixes, must not be {@code null).}
      */
     public static SmartExecutor newSmartExecutor(Integer tasks, int maxConcurrentTasks, String namePrefix) {
         if (maxConcurrentTasks < 1) {
@@ -64,12 +65,12 @@ public final class SmartExecutorUtils {
                 throw new IllegalArgumentException("tasks must be > 0");
             }
             if (tasks == 1 || maxConcurrentTasks == 1) {
-                return direct();
+                return DIRECT;
             }
             poolSize = Math.min(tasks, maxConcurrentTasks);
         } else {
             if (maxConcurrentTasks == 1) {
-                return direct();
+                return DIRECT;
             }
             poolSize = maxConcurrentTasks;
         }
@@ -77,16 +78,27 @@ public final class SmartExecutorUtils {
     }
 
     /**
-     * Returns a smart executor bound to session. The returned instance should be handled transparently, so preferably
-     * in try-with-resource even if underlying executor is probably tied to session lifecycle, if applicable.
+     * Returns a smart executor, bound to session if tasks to execute are not known ahead of time. The returned
+     * instance should be handled transparently, so preferably in try-with-resource even if underlying executor is
+     * probably tied to session lifecycle, if applicable.
+     * <p>
+     * Implementation note: by this change, the caller "concurrency" is made deterministic and global(!). If you consider
+     * collector example, it is called from project builder that in Maven 4 is already multithreaded, and before this
+     * change the actual threads doing IO (HTTP) was {@code callerThreadCount x maxConcurrentTask} per JVM/Maven process.
+     * Now, the {@code maxConcurrentTask} becomes global limit, and hence can be upped without unexpected "explosion"
+     * in increasing build threading or anything.
      */
     public static SmartExecutor smartExecutor(
-            RepositorySystemSession session, int maxConcurrentTasks, String namePrefix) {
-        return (SmartExecutor)
-                session.getData().computeIfAbsent(SmartExecutor.class.getSimpleName() + "-" + namePrefix, () -> {
-                    SmartExecutor smartExecutor = newSmartExecutor(null, maxConcurrentTasks, namePrefix);
-                    session.addOnSessionEndedHandler(smartExecutor::close);
-                    return new SmartExecutor.NonClosing(smartExecutor);
-                });
+            RepositorySystemSession session, Integer tasks, int maxConcurrentTasks, String namePrefix) {
+        if (tasks == null) {
+            return (SmartExecutor)
+                    session.getData().computeIfAbsent(SmartExecutor.class.getSimpleName() + "-" + namePrefix, () -> {
+                        SmartExecutor smartExecutor = newSmartExecutor(tasks, maxConcurrentTasks, namePrefix);
+                        session.addOnSessionEndedHandler(smartExecutor::close);
+                        return new SmartExecutor.NonClosing(smartExecutor);
+                    });
+        } else {
+            return newSmartExecutor(tasks, maxConcurrentTasks, namePrefix);
+        }
     }
 }

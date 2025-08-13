@@ -166,18 +166,21 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 ConfigUtils.getBoolean(session, DEFAULT_PERSISTED_CHECKSUMS, CONFIG_PROP_PERSISTED_CHECKSUMS);
     }
 
+    /**
+     * Returns {@link SmartExecutor} to execute tasks with or {@code null} if "direct execution" is more appropriate.
+     */
     private SmartExecutor getExecutor(boolean downstream, int tasks) {
         int maxThreads = downstream ? maxDownstreamThreads : maxUpstreamThreads;
         if (maxThreads <= 1 || tasks <= 1) {
             // direct and do not cache it
-            return SmartExecutorUtils.direct();
+            return null;
         }
         // we intentionally ignore tasks here as deployer may invoke several times connector with different count of
         // payloads; so maximize it
         return executors.computeIfAbsent(
                 downstream,
-                k -> SmartExecutorUtils.newSmartExecutor(
-                        maxThreads, maxThreads, getClass().getSimpleName() + '-' + repository.getHost() + '-'));
+                k -> SmartExecutorUtils.smartExecutor(
+                        session, null, maxThreads, getClass().getSimpleName() + '-' + repository.getHost() + '-'));
     }
 
     @Override
@@ -232,7 +235,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     checksumLocations,
                     null,
                     listener);
-            if (first) {
+            if (executor == null || first) {
                 task.run();
                 first = false;
             } else {
@@ -277,7 +280,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                         providedChecksums,
                         listener);
             }
-            if (first) {
+            if (executor == null || first) {
                 task.run();
                 first = false;
             } else {
@@ -314,7 +317,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     layout.getChecksumLocations(transfer.getArtifact(), true, location);
 
             Runnable task = new PutTaskRunner(location, transfer.getPath(), checksumLocations, listener);
-            if (first) {
+            if (executor == null || first) {
                 task.run();
                 first = false;
             } else {
@@ -336,7 +339,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                         layout.getChecksumLocations(transfer.getMetadata(), true, location);
 
                 Runnable task = new PutTaskRunner(location, transfer.getPath(), checksumLocations, listener);
-                if (first) {
+                if (executor == null || first) {
                     task.run();
                     first = false;
                 } else {

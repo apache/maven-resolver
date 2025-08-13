@@ -56,11 +56,6 @@ public interface SmartExecutor extends AutoCloseable {
      */
     class Direct implements SmartExecutor {
         @Override
-        public void submit(Runnable runnable) {
-            runnable.run();
-        }
-
-        @Override
         public <T> CompletableFuture<T> submit(Callable<T> callable) {
             CompletableFuture<T> future = new CompletableFuture<>();
             try {
@@ -105,7 +100,8 @@ public interface SmartExecutor extends AutoCloseable {
     }
 
     /**
-     * Limited executor, where the actual goal is to protect accessed resource.
+     * Limited executor, where the actual goal is to protect accessed resource, like when virtual threads
+     * are being used, so the "pool" itself does not provide any kind of back-pressure.
      */
     class Limited implements SmartExecutor {
         private final ExecutorService executor;
