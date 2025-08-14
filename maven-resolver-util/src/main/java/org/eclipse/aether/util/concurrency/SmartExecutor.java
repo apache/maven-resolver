@@ -82,12 +82,17 @@ public interface SmartExecutor extends AutoCloseable {
 
         @Override
         public <T> CompletableFuture<T> submit(Callable<T> callable) {
+            ClassLoader tccl = Thread.currentThread().getContextClassLoader();
             CompletableFuture<T> future = new CompletableFuture<>();
             executor.submit(() -> {
+                ClassLoader old = Thread.currentThread().getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(tccl);
                 try {
                     future.complete(callable.call());
                 } catch (Exception e) {
                     future.completeExceptionally(e);
+                } finally {
+                    Thread.currentThread().setContextClassLoader(old);
                 }
             });
             return future;
