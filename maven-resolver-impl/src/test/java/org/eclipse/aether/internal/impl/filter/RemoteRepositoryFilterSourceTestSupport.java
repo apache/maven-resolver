@@ -68,8 +68,8 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
 
     @Test
     void acceptedArtifact() {
-        allowArtifact(session, remoteRepository, acceptedArtifact);
         enableSource(session, true);
+        allowArtifact(session, remoteRepository, acceptedArtifact);
 
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
@@ -82,8 +82,8 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
 
     @Test
     void notAcceptedArtifact() {
-        allowArtifact(session, remoteRepository, acceptedArtifact);
         enableSource(session, true);
+        allowArtifact(session, remoteRepository, acceptedArtifact);
 
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
