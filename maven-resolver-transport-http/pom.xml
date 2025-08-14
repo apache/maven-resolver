@@ -32,7 +32,7 @@
   <description>A transport implementation for repositories using http:// and https:// URLs.</description>
 
   <properties>
-    <jettyVersion>9.4.57.v20241219</jettyVersion>
+    <jettyVersion>9.4.58.v20250814</jettyVersion>
   </properties>
 
   <dependencies>
