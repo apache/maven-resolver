@@ -64,7 +64,9 @@ public final class ScopeManagerImpl implements InternalScopeManager {
     private final BuildScopeSource buildScopeSource;
     private final AtomicReference<SystemDependencyScopeImpl> systemDependencyScope;
     private final Map<String, DependencyScopeImpl> dependencyScopes;
+    private final Collection<DependencyScope> dependencyScopesUniverse;
     private final Map<String, ResolutionScopeImpl> resolutionScopes;
+    private final Collection<ResolutionScope> resolutionScopesUniverse;
 
     public ScopeManagerImpl(ScopeManagerConfiguration configuration) {
         this.id = configuration.getId();
@@ -73,7 +75,9 @@ public final class ScopeManagerImpl implements InternalScopeManager {
         this.buildScopeSource = configuration.getBuildScopeSource();
         this.systemDependencyScope = new AtomicReference<>(null);
         this.dependencyScopes = Collections.unmodifiableMap(buildDependencyScopes(configuration));
+        this.dependencyScopesUniverse = Collections.unmodifiableCollection(new HashSet<>(dependencyScopes.values()));
         this.resolutionScopes = Collections.unmodifiableMap(buildResolutionScopes(configuration));
+        this.resolutionScopesUniverse = Collections.unmodifiableCollection(new HashSet<>(resolutionScopes.values()));
     }
 
     private Map<String, DependencyScopeImpl> buildDependencyScopes(ScopeManagerConfiguration configuration) {
@@ -111,7 +115,7 @@ public final class ScopeManagerImpl implements InternalScopeManager {
 
     @Override
     public Collection<DependencyScope> getDependencyScopeUniverse() {
-        return new HashSet<>(dependencyScopes.values());
+        return dependencyScopesUniverse;
     }
 
     @Override
@@ -125,7 +129,7 @@ public final class ScopeManagerImpl implements InternalScopeManager {
 
     @Override
     public Collection<ResolutionScope> getResolutionScopeUniverse() {
-        return new HashSet<>(resolutionScopes.values());
+        return resolutionScopesUniverse;
     }
 
     @Override
@@ -408,7 +412,6 @@ public final class ScopeManagerImpl implements InternalScopeManager {
     }
 
     private class ResolutionScopeImpl implements ResolutionScope {
-
         private final String id;
         private final Mode mode;
         private final Set<BuildScopeQuery> wantedPresence;
