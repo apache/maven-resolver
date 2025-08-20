@@ -18,18 +18,7 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -41,7 +30,6 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -171,6 +159,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         private final ScopeDeriver scopeDeriver;
         private final OptionalitySelector optionalitySelector;
 
+        private final List<String> sortedConflictIds;
         /**
          * The output from the conflict marker
          */
@@ -183,11 +172,15 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          */
         private final Map<String, Collection<String>> cyclicPredecessors;
 
+        private final Map<String, List<CRNode>> partitions;
+
+        private final Map<DependencyNode, List<List<CRNode>>> paths;
+
         /**
          * A mapping from conflict id to winner node, helps to recognize nodes that have their effective
          * scope&optionality set or are leftovers from previous removals.
          */
-        private final Map<String, DependencyNode> resolvedIds;
+        private final Map<String, CRNode> resolvedIds;
 
         private CRState(
                 Verbosity verbosity,
@@ -195,6 +188,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                 ScopeSelector scopeSelector,
                 ScopeDeriver scopeDeriver,
                 OptionalitySelector optionalitySelector,
+                List<String> sortedConflictIds,
                 Map<DependencyNode, String> conflictIds,
                 Map<String, Collection<String>> cyclicPredecessors) {
             this.verbosity = verbosity;
@@ -202,31 +196,42 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             this.scopeSelector = scopeSelector;
             this.scopeDeriver = scopeDeriver;
             this.optionalitySelector = optionalitySelector;
+            this.sortedConflictIds = sortedConflictIds;
             this.conflictIds = conflictIds;
             this.cyclicPredecessors = cyclicPredecessors;
+            this.partitions = new HashMap<>();
+            this.paths = new IdentityHashMap<>();
             this.resolvedIds = new HashMap<>();
         }
     }
 
     private static class CRNode {
         private final CRState state;
-        private final DependencyNode dn;
+        private DependencyNode dn;
         private final String conflictId;
         private final List<CRNode> path;
         private final List<CRNode> children;
         private String scope;
         private boolean optional;
 
-        private CRNode(CRState state, DependencyNode dn, List<CRNode> path) {
+        private CRNode(CRState state, DependencyNode dn, List<CRNode> parents) {
             this.state = state;
             this.dn = dn;
             this.conflictId = state.conflictIds.get(dn);
-            this.path = path;
+            this.path = new ArrayList<>(parents.size() + 1);
+            this.path.addAll(parents);
+            this.path.add(this);
             this.children = new ArrayList<>();
-            reset();
+            pull();
+
+            this.state
+                    .partitions
+                    .computeIfAbsent(this.conflictId, k -> new ArrayList<>())
+                    .add(this);
+            this.state.paths.computeIfAbsent(this.dn, k -> new ArrayList<>()).add(this.path);
         }
 
-        private void reset() {
+        private void pull() {
             Dependency d = dn.getDependency();
             if (d != null) {
                 this.scope = d.getScope();
@@ -235,111 +240,130 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                 this.scope = "";
                 this.optional = false;
             }
-            for (CRNode child : children) {
-                child.reset();
-            }
         }
 
-        private void apply() {
-            DependencyNode winner = this.state.resolvedIds.get(this.conflictId);
-            if (winner == null) {
-                throw new IllegalStateException("Winner selection did not happen for conflictId=" + this.conflictId);
-            }
-
+        private void push() {
             boolean propagate = false;
-            if (winner == this.dn) {
-                // copy onto dn; if applicable
-                if (dn.getDependency() != null) {
-                    dn.setScope(this.scope);
-                    dn.setOptional(this.optional);
+            if (path.size() > 1) {
+                CRNode winner = this.state.resolvedIds.get(this.conflictId);
+                if (winner == null) {
+                    throw new IllegalStateException("Winner selection did not happen for conflictId=" + this.conflictId);
                 }
-                propagate = true;
+
+                if (winner == this) {
+                    // copy onto dn; if applicable
+                    if (dn.getDependency() != null) {
+                        dn.setScope(this.scope);
+                        dn.setOptional(this.optional);
+                    }
+                    propagate = true;
+                } else {
+                    if (path.size() > 1) {
+                        boolean markLoser = false;
+                        CRNode parent = path.get(path.size() - 2);
+                        switch (state.verbosity) {
+                            case NONE:
+                                // remove this dn
+                                parent.children.remove(this);
+                                parent.dn.getChildren().remove(this.dn);
+                                break;
+                            case STANDARD:
+                                // remove this dn children + record the facts
+                                this.children.clear();
+                                this.dn.getChildren().clear();
+                                markLoser = true;
+                                break;
+                            case FULL:
+                                // record the facts
+                                propagate = true;
+                                markLoser = true;
+                                break;
+                            default:
+                                throw new IllegalArgumentException("Unknown " + state.verbosity);
+                        }
+                        if (markLoser) {
+                            if (winner.dn == this.dn) {
+                                DependencyNode copy = new DefaultDependencyNode(this.dn);
+                                copy.setScope(this.scope);
+                                copy.setOptional(this.optional);
+                                if (Verbosity.FULL != state.verbosity) {
+                                    copy.getChildren().clear();
+                                }
+
+                                // swap it out in DN graph
+                                parent.dn.getChildren().remove(this.dn);
+                                parent.dn.getChildren().add(copy);
+                                this.dn = copy;
+                            }
+                            this.dn.setData(NODE_DATA_WINNER, winner.dn);
+                            this.dn.setData(
+                                    NODE_DATA_ORIGINAL_SCOPE,
+                                    this.dn.getDependency().getScope());
+                            this.dn.setData(
+                                    NODE_DATA_ORIGINAL_OPTIONALITY,
+                                    this.dn.getDependency().getOptional());
+                            this.dn.setScope(this.scope);
+                            this.dn.setOptional(this.optional);
+                        }
+                    }
+                }
             } else {
-                if (!path.isEmpty()) {
-                    boolean markLoser = false;
-                    CRNode parent = path.get(path.size() - 1);
-                    switch (state.verbosity) {
-                        case NONE:
-                            // remove this dn
-                            parent.children.remove(this);
-                            parent.dn.getChildren().remove(this.dn);
-                            break;
-                        case STANDARD:
-                            // remove this dn children + record the facts
-                            this.children.clear();
-                            this.dn.getChildren().clear();
-                            markLoser = true;
-                            break;
-                        case FULL:
-                            // record the facts
-                            propagate = true;
-                            markLoser = true;
-                            break;
-                        default:
-                            throw new IllegalArgumentException("Unknown " + state.verbosity);
-                    }
-                    if (markLoser) {
-                        this.dn.setData(NODE_DATA_WINNER, winner);
-                        this.dn.setData(
-                                NODE_DATA_ORIGINAL_SCOPE, this.dn.getDependency().getScope());
-                        this.dn.setData(
-                                NODE_DATA_ORIGINAL_OPTIONALITY,
-                                this.dn.getDependency().getOptional());
-                        this.dn.setScope(this.scope);
-                        this.dn.setOptional(this.optional);
-                    }
-                }
+                propagate = true;
             }
             if (propagate) {
-                for (CRNode child : children) {
-                    child.apply();
+                // child may remove itself from iterated list
+                for (CRNode child : new ArrayList<>(children)) {
+                    child.push();
                 }
             }
         }
 
-        private void derive() throws RepositoryException {
+        private void derive(boolean winner) throws RepositoryException {
             boolean changed = false;
-            if (!path.isEmpty()) {
-                CRNode parent = this.path.get(this.path.size() - 1);
-                if ((dn.getManagedBits() & DependencyNode.MANAGED_SCOPE) == 0) {
-                    ScopeContext context = new ScopeContext(parent.scope, this.scope);
-                    state.scopeDeriver.deriveScope(context);
-                    if (!Objects.equals(this.scope, context.derivedScope)) {
-                        this.scope = context.derivedScope;
-                        changed = true;
+            if (!winner) {
+                if (path.size() > 1) {
+                    CRNode parent = this.path.get(this.path.size() - 2);
+                    if ((dn.getManagedBits() & DependencyNode.MANAGED_SCOPE) == 0) {
+                        ScopeContext context = new ScopeContext(parent.scope, this.scope);
+                        state.scopeDeriver.deriveScope(context);
+                        if (!Objects.equals(this.scope, context.derivedScope)) {
+                            this.scope = context.derivedScope;
+                            changed = true;
+                        }
                     }
-                }
-                if ((dn.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) == 0) {
-                    if (this.optional != parent.optional) {
-                        this.optional = parent.optional;
-                        changed = true;
+                    if ((dn.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) == 0) {
+                        if (!this.optional) {
+                            if (parent.optional) {
+                                this.optional = parent.optional;
+                                changed = true;
+                            }
+                        }
                     }
+                } else {
+                    this.scope = "";
+                    this.optional = false;
+                    changed = true;
                 }
-            } else {
-                this.scope = "";
-                this.optional = false;
-                changed = true;
             }
-            if (changed) {
+            if (winner || changed) {
                 for (CRNode child : children) {
-                    child.derive();
+                    child.derive(false);
                 }
             }
         }
 
         private List<CRNode> addChildren(List<DependencyNode> children) throws RepositoryException {
-            ArrayList<CRNode> childPath = new ArrayList<>(path.size() + 1);
-            childPath.addAll(this.path);
-            childPath.add(this);
-            Collection<String> thisCyclicPredecessors = this.state.cyclicPredecessors.getOrDefault(this.conflictId, Collections.emptySet());
+            Collection<String> thisCyclicPredecessors =
+                    this.state.cyclicPredecessors.getOrDefault(this.conflictId, Collections.emptySet());
 
             ArrayList<CRNode> added = new ArrayList<>(children.size());
             for (DependencyNode child : children) {
                 String childConflictId = this.state.conflictIds.get(child);
-                if (!thisCyclicPredecessors.contains(childConflictId)) {
-                    CRNode c = new CRNode(this.state, child, childPath);
+                if (!this.state.partitions.containsKey(childConflictId)
+                        || !thisCyclicPredecessors.contains(childConflictId)) {
+                    CRNode c = new CRNode(this.state, child, this.path);
                     this.children.add(c);
-                    c.derive();
+                    c.derive(false);
                     added.add(c);
                 }
             }
@@ -351,6 +375,11 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             for (CRNode child : children) {
                 child.dump(padding + "  ");
             }
+        }
+
+        @Override
+        public String toString() {
+            return String.valueOf(path.stream().map(n -> n.dn).collect(Collectors.toList()));
         }
     }
 
@@ -418,587 +447,78 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                 scopeSelector.getInstance(node, context),
                 scopeDeriver.getInstance(node, context),
                 optionalitySelector.getInstance(node, context),
+                sortedConflictIds,
                 conflictIds,
                 cyclicPredecessors);
 
         CRNode root = new CRNode(crState, node, new ArrayList<>());
-        gatherCRNodes(crState, root);
+        gatherCRNodes(root);
         root.dump("");
 
-        State state = new State(node, conflictIds, sortedConflictIds.size(), context);
-        for (Iterator<String> it = sortedConflictIds.iterator(); it.hasNext(); ) {
-            String conflictId = it.next();
-
-            // reset data structures for next graph walk
-            state.prepare(conflictId, cyclicPredecessors.get(conflictId));
-
-            // find nodes with the current conflict id and while walking the graph (more deeply), nuke leftover losers
-            gatherConflictItems(node, state);
-
-            // now that we know the min depth of the parents, update depth of conflict items
-            state.finish();
-
-            // earlier runs might have nuked all parents of the current conflict id, so it might not exist anymore
-            if (!state.items.isEmpty()) {
-                ConflictContext ctx = state.conflictCtx;
-                state.versionSelector.selectVersion(ctx);
-                if (ctx.winner == null) {
-                    throw new RepositoryException("conflict resolver did not select winner among " + state.items);
-                }
-                DependencyNode winner = ctx.winner.node;
-
-                state.scopeSelector.selectScope(ctx);
-                if (Verbosity.NONE != state.verbosity) {
-                    winner.setData(
-                            NODE_DATA_ORIGINAL_SCOPE, winner.getDependency().getScope());
-                }
-                winner.setScope(ctx.scope);
-
-                state.optionalitySelector.selectOptionality(ctx);
-                if (Verbosity.NONE != state.verbosity) {
-                    winner.setData(
-                            NODE_DATA_ORIGINAL_OPTIONALITY,
-                            winner.getDependency().isOptional());
-                }
-                winner.setOptional(ctx.optional);
-
-                removeLosers(state);
+        for (String conflictId : crState.sortedConflictIds) {
+            List<CRNode> crNodes = crState.partitions.get(conflictId);
+            ConflictContext ctx = new ConflictContext(
+                    node,
+                    crState.conflictIds,
+                    crNodes.stream().map(ConflictItem::new).collect(Collectors.toList()),
+                    conflictId);
+            crState.versionSelector.selectVersion(ctx);
+            if (ctx.winner == null) {
+                throw new RepositoryException("conflict resolver did not select winner among " + ctx.items);
             }
+            ConflictItem item = ctx.winner;
+            DependencyNode winner = item.node;
+            CRNode crNode = item.crNode;
 
-            // record the winner so we can detect leftover losers during future graph walks
-            state.winner();
+            crState.scopeSelector.selectScope(ctx);
+            if (Verbosity.NONE != crState.verbosity) {
+                winner.setData(NODE_DATA_ORIGINAL_SCOPE, winner.getDependency().getScope());
+            }
+            boolean change = !Objects.equals(crNode.scope, ctx.scope);
+            winner.setScope(ctx.scope);
 
-            // in case of cycles, trigger final graph walk to ensure all leftover losers are gone
-            if (!it.hasNext() && !conflictIdCycles.isEmpty() && state.conflictCtx.winner != null) {
-                DependencyNode winner = state.conflictCtx.winner.node;
-                // Note: using non-existing key here (empty) as that one for sure was not met
-                state.prepare("", null);
-                gatherConflictItems(winner, state);
+            crState.optionalitySelector.selectOptionality(ctx);
+            if (Verbosity.NONE != crState.verbosity) {
+                winner.setData(
+                        NODE_DATA_ORIGINAL_OPTIONALITY, winner.getDependency().isOptional());
+            }
+            change = change || !Objects.equals(crNode.optional, ctx.optional);
+            winner.setOptional(ctx.optional);
+
+            if (crState.resolvedIds.containsKey(conflictId)) {
+                throw new RepositoryException("conflict resolver already have winner for conflictId=" + conflictId
+                        + ": " + crState.resolvedIds);
+            }
+            crState.resolvedIds.put(conflictId, crNode);
+
+            if (change) {
+                crNode.pull();
+                crNode.derive(true);
             }
         }
+
+        root.push();
+        root.dump("");
 
         if (stats != null) {
             long time2 = System.nanoTime();
             stats.put("ConflictResolver.totalTime", time2 - time1);
-            stats.put("ConflictResolver.conflictItemCount", state.totalConflictItems);
+            stats.put(
+                    "ConflictResolver.conflictItemCount",
+                    crState.partitions.values().stream().map(List::size).reduce(0, Integer::sum));
         }
 
         return node;
     }
 
-    private void gatherCRNodes(CRState state, CRNode node) throws RepositoryException {
+    private void gatherCRNodes(CRNode node) throws RepositoryException {
         List<DependencyNode> children = node.dn.getChildren();
         if (!children.isEmpty()) {
-            // add children and we will get back those really added (not causing cycles)
+            // add children; we will get back those really added (not causing cycles)
             List<CRNode> added = node.addChildren(children);
-            if (Verbosity.FULL != state.verbosity) {
-                // collect those DNs that were not added (that cause cycles)
-                List<DependencyNode> addedDns = added.stream().map(c -> c.dn).collect(Collectors.toList());
-                // remove them from graph: verbosity NONE and DEFAULT made now a tree out of graph
-                children.removeIf(a -> !addedDns.contains(a));
-            }
             for (CRNode child : added) {
-                gatherCRNodes(state, child);
+                gatherCRNodes(child);
             }
-        }
-    }
-
-    private boolean gatherConflictItems(DependencyNode node, State state) throws RepositoryException {
-        String conflictId = state.conflictIds.get(node);
-        if (state.currentId.equals(conflictId)) {
-            // found it, add conflict item (if not already done earlier by another path)
-            state.add(node);
-            // we don't recurse here so we might miss losers beneath us, those will be nuked during future walks below
-        } else if (state.loser(node, conflictId)) {
-            // found a leftover loser (likely in a cycle) of an already processed conflict id, tell caller to nuke it
-            return false;
-        } else if (state.push(node, conflictId)) {
-            // found potential parent, no cycle and not visited before with the same derived scope, so recurse
-            for (Iterator<DependencyNode> it = node.getChildren().iterator(); it.hasNext(); ) {
-                DependencyNode child = it.next();
-                if (!gatherConflictItems(child, state)) {
-                    it.remove();
-                }
-            }
-            state.pop();
-        }
-        return true;
-    }
-
-    private static void removeLosers(State state) {
-        ConflictItem winner = state.conflictCtx.winner;
-        String winnerArtifactId = ArtifactIdUtils.toId(winner.node.getArtifact());
-        List<DependencyNode> previousParent = null;
-        ListIterator<DependencyNode> childIt = null;
-        HashSet<String> toRemoveIds = new HashSet<>();
-        for (ConflictItem item : state.items) {
-            if (item == winner) {
-                continue;
-            }
-            if (item.parent != previousParent) {
-                childIt = item.parent.listIterator();
-                previousParent = item.parent;
-            }
-            while (childIt.hasNext()) {
-                DependencyNode child = childIt.next();
-                if (child == item.node) {
-                    // NONE: just remove it and done
-                    if (Verbosity.NONE == state.verbosity) {
-                        childIt.remove();
-                        break;
-                    }
-
-                    // STANDARD: doing extra bookkeeping to select "which nodes to remove"
-                    if (Verbosity.STANDARD == state.verbosity) {
-                        String childArtifactId = ArtifactIdUtils.toId(child.getArtifact());
-                        // if two IDs are equal, it means "there is nearest", not conflict per se.
-                        // In that case we do NOT allow this child to be removed (but remove others)
-                        // and this keeps us safe from iteration (and in general, version) ordering
-                        // as we explicitly leave out ID that is "nearest found" state.
-                        //
-                        // This tackles version ranges mostly, where ranges are turned into list of
-                        // several nodes in collector (as many were discovered, ie. from metadata), and
-                        // old code would just "mark" the first hit as conflict, and remove the rest,
-                        // even if rest could contain "more suitable" version, that is not conflicting/diverging.
-                        // This resulted in verbose mode transformed tree, that was misrepresenting things
-                        // for dependency convergence calculations: it represented state like parent node
-                        // depends on "wrong" version (diverge), while "right" version was present (but removed)
-                        // as well, as it was contained in parents version range.
-                        if (!Objects.equals(winnerArtifactId, childArtifactId)) {
-                            toRemoveIds.add(childArtifactId);
-                        }
-                    }
-
-                    // FULL: just record the facts
-                    DependencyNode loser = new DefaultDependencyNode(child);
-                    loser.setData(NODE_DATA_WINNER, winner.node);
-                    loser.setData(
-                            NODE_DATA_ORIGINAL_SCOPE, loser.getDependency().getScope());
-                    loser.setData(
-                            NODE_DATA_ORIGINAL_OPTIONALITY,
-                            loser.getDependency().isOptional());
-                    loser.setScope(item.getScopes().iterator().next());
-                    loser.setChildren(Collections.emptyList());
-                    childIt.set(loser);
-                    item.node = loser;
-                    break;
-                }
-            }
-        }
-
-        // 2nd pass to apply "standard" verbosity: leaving only 1 loser, but with care
-        if (Verbosity.STANDARD == state.verbosity && !toRemoveIds.isEmpty()) {
-            previousParent = null;
-            for (ConflictItem item : state.items) {
-                if (item == winner) {
-                    continue;
-                }
-                if (item.parent != previousParent) {
-                    childIt = item.parent.listIterator();
-                    previousParent = item.parent;
-                }
-                while (childIt.hasNext()) {
-                    DependencyNode child = childIt.next();
-                    if (child == item.node) {
-                        String childArtifactId = ArtifactIdUtils.toId(child.getArtifact());
-                        if (toRemoveIds.contains(childArtifactId)
-                                && relatedSiblingsCount(child.getArtifact(), item.parent) > 1) {
-                            childIt.remove();
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        // there might still be losers beneath the winner (e.g. in case of cycles)
-        // those will be nuked during future graph walks when we include the winner in the recursion
-    }
-
-    private static long relatedSiblingsCount(Artifact artifact, List<DependencyNode> parent) {
-        String ga = artifact.getGroupId() + ":" + artifact.getArtifactId();
-        return parent.stream()
-                .map(DependencyNode::getArtifact)
-                .filter(a -> ga.equals(a.getGroupId() + ":" + a.getArtifactId()))
-                .count();
-    }
-
-    static final class NodeInfo {
-
-        /**
-         * The smallest depth at which the node was seen, used for "the" depth of its conflict items.
-         */
-        int minDepth;
-
-        /**
-         * The set of derived scopes the node was visited with, used to check whether an already seen node needs to be
-         * revisited again in context of another scope. To conserve memory, we start with {@code String} and update to
-         * {@code Set<String>} if needed.
-         */
-        Object derivedScopes;
-
-        /**
-         * The set of derived optionalities the node was visited with, used to check whether an already seen node needs
-         * to be revisited again in context of another optionality. To conserve memory, encoded as bit field (bit 0 ->
-         * optional=false, bit 1 -> optional=true).
-         */
-        int derivedOptionalities;
-
-        /**
-         * The conflict items which are immediate children of the node, used to easily update those conflict items after
-         * a new parent scope/optionality was encountered.
-         */
-        List<ConflictItem> children;
-
-        static final int CHANGE_SCOPE = 0x01;
-
-        static final int CHANGE_OPTIONAL = 0x02;
-
-        private static final int OPT_FALSE = 0x01;
-
-        private static final int OPT_TRUE = 0x02;
-
-        NodeInfo(int depth, String derivedScope, boolean optional) {
-            minDepth = depth;
-            derivedScopes = derivedScope;
-            derivedOptionalities = optional ? OPT_TRUE : OPT_FALSE;
-        }
-
-        @SuppressWarnings("unchecked")
-        int update(int depth, String derivedScope, boolean optional) {
-            if (depth < minDepth) {
-                minDepth = depth;
-            }
-            int changes;
-            if (derivedScopes.equals(derivedScope)) {
-                changes = 0;
-            } else if (derivedScopes instanceof Collection) {
-                changes = ((Collection<String>) derivedScopes).add(derivedScope) ? CHANGE_SCOPE : 0;
-            } else {
-                Collection<String> scopes = new HashSet<>();
-                scopes.add((String) derivedScopes);
-                scopes.add(derivedScope);
-                derivedScopes = scopes;
-                changes = CHANGE_SCOPE;
-            }
-            int bit = optional ? OPT_TRUE : OPT_FALSE;
-            if ((derivedOptionalities & bit) == 0) {
-                derivedOptionalities |= bit;
-                changes |= CHANGE_OPTIONAL;
-            }
-            return changes;
-        }
-
-        void add(ConflictItem item) {
-            if (children == null) {
-                children = new ArrayList<>(1);
-            }
-            children.add(item);
-        }
-    }
-
-    final class State {
-
-        /**
-         * The conflict id currently processed.
-         */
-        String currentId;
-
-        /**
-         * Stats counter.
-         */
-        int totalConflictItems;
-
-        /**
-         * Flag whether we should keep losers in the graph to enable visualization/troubleshooting of conflicts.
-         */
-        final Verbosity verbosity;
-
-        /**
-         * A mapping from conflict id to winner node, helps to recognize nodes that have their effective
-         * scope&optionality set or are leftovers from previous removals.
-         */
-        final Map<String, DependencyNode> resolvedIds;
-
-        /**
-         * The set of conflict ids which could apply to ancestors of nodes with the current conflict id, used to avoid
-         * recursion early on. This is basically a superset of the key set of resolvedIds, the additional ids account
-         * for cyclic dependencies.
-         */
-        final Collection<String> potentialAncestorIds;
-
-        /**
-         * The output from the conflict marker
-         */
-        final Map<DependencyNode, String> conflictIds;
-
-        /**
-         * The conflict items we have gathered so far for the current conflict id.
-         */
-        final List<ConflictItem> items;
-
-        /**
-         * The (conceptual) mapping from nodes to extra infos, technically keyed by the node's child list which better
-         * captures the identity of a node since we're basically concerned with effects towards children.
-         */
-        final Map<List<DependencyNode>, NodeInfo> infos;
-
-        /**
-         * The set of nodes on the DFS stack to detect cycles, technically keyed by the node's child list to match the
-         * dirty graph structure produced by the dependency collector for cycles.
-         */
-        final Map<List<DependencyNode>, Boolean> stack;
-
-        /**
-         * The stack of parent nodes.
-         */
-        final List<DependencyNode> parentNodes;
-
-        /**
-         * The stack of derived scopes for parent nodes.
-         */
-        final List<String> parentScopes;
-
-        /**
-         * The stack of derived optional flags for parent nodes.
-         */
-        final List<Boolean> parentOptionals;
-
-        /**
-         * The stack of node infos for parent nodes, may contain {@code null} which is used to disable creating new
-         * conflict items when visiting their parent again (conflict items are meant to be unique by parent-node combo).
-         */
-        final List<NodeInfo> parentInfos;
-
-        /**
-         * The conflict context passed to the version/scope/optionality selectors, updated as we move along rather than
-         * recreated to avoid tmp objects.
-         */
-        final ConflictContext conflictCtx;
-
-        /**
-         * The scope context passed to the scope deriver, updated as we move along rather than recreated to avoid tmp
-         * objects.
-         */
-        final ScopeContext scopeCtx;
-
-        /**
-         * The effective version selector, i.e. after initialization.
-         */
-        final VersionSelector versionSelector;
-
-        /**
-         * The effective scope selector, i.e. after initialization.
-         */
-        final ScopeSelector scopeSelector;
-
-        /**
-         * The effective scope deriver, i.e. after initialization.
-         */
-        final ScopeDeriver scopeDeriver;
-
-        /**
-         * The effective optionality selector, i.e. after initialization.
-         */
-        final OptionalitySelector optionalitySelector;
-
-        State(
-                DependencyNode root,
-                Map<DependencyNode, String> conflictIds,
-                int conflictIdCount,
-                DependencyGraphTransformationContext context)
-                throws RepositoryException {
-            this.conflictIds = conflictIds;
-            this.verbosity = getVerbosity(context.getSession());
-            potentialAncestorIds = new HashSet<>(conflictIdCount * 2);
-            resolvedIds = new HashMap<>(conflictIdCount * 2);
-            items = new ArrayList<>(256);
-            infos = new IdentityHashMap<>(64);
-            stack = new IdentityHashMap<>(64);
-            parentNodes = new ArrayList<>(64);
-            parentScopes = new ArrayList<>(64);
-            parentOptionals = new ArrayList<>(64);
-            parentInfos = new ArrayList<>(64);
-            conflictCtx = new ConflictContext(root, conflictIds, items);
-            scopeCtx = new ScopeContext(null, null);
-            versionSelector = ConflictResolver.this.versionSelector.getInstance(root, context);
-            scopeSelector = ConflictResolver.this.scopeSelector.getInstance(root, context);
-            scopeDeriver = ConflictResolver.this.scopeDeriver.getInstance(root, context);
-            optionalitySelector = ConflictResolver.this.optionalitySelector.getInstance(root, context);
-        }
-
-        void prepare(String conflictId, Collection<String> cyclicPredecessors) {
-            currentId = conflictId;
-            conflictCtx.conflictId = conflictId;
-            conflictCtx.winner = null;
-            conflictCtx.scope = null;
-            conflictCtx.optional = null;
-            items.clear();
-            infos.clear();
-            if (cyclicPredecessors != null) {
-                potentialAncestorIds.addAll(cyclicPredecessors);
-            }
-        }
-
-        void finish() {
-            List<DependencyNode> previousParent = null;
-            int previousDepth = 0;
-            totalConflictItems += items.size();
-            for (ListIterator<ConflictItem> iterator = items.listIterator(items.size()); iterator.hasPrevious(); ) {
-                ConflictItem item = iterator.previous();
-                if (item.parent == previousParent) {
-                    item.depth = previousDepth;
-                } else if (item.parent != null) {
-                    previousParent = item.parent;
-                    NodeInfo info = infos.get(previousParent);
-                    previousDepth = info.minDepth + 1;
-                    item.depth = previousDepth;
-                }
-            }
-            potentialAncestorIds.add(currentId);
-        }
-
-        void winner() {
-            resolvedIds.put(currentId, (conflictCtx.winner != null) ? conflictCtx.winner.node : null);
-        }
-
-        boolean loser(DependencyNode node, String conflictId) {
-            DependencyNode winner = resolvedIds.get(conflictId);
-            return winner != null && winner != node;
-        }
-
-        boolean push(DependencyNode node, String conflictId) throws RepositoryException {
-            if (conflictId == null) {
-                if (node.getDependency() != null) {
-                    if (node.getData().get(NODE_DATA_WINNER) != null) {
-                        return false;
-                    }
-                    throw new RepositoryException("missing conflict id for node " + node);
-                }
-            } else if (!potentialAncestorIds.contains(conflictId)) {
-                return false;
-            }
-
-            List<DependencyNode> graphNode = node.getChildren();
-            if (stack.put(graphNode, Boolean.TRUE) != null) {
-                return false;
-            }
-
-            int depth = depth();
-            String scope = deriveScope(node, conflictId);
-            boolean optional = deriveOptional(node, conflictId);
-            NodeInfo info = infos.get(graphNode);
-            if (info == null) {
-                info = new NodeInfo(depth, scope, optional);
-                infos.put(graphNode, info);
-                parentInfos.add(info);
-                parentNodes.add(node);
-                parentScopes.add(scope);
-                parentOptionals.add(optional);
-            } else {
-                int changes = info.update(depth, scope, optional);
-                if (changes == 0) {
-                    stack.remove(graphNode);
-                    return false;
-                }
-                parentInfos.add(null); // disable creating new conflict items, we update the existing ones below
-                parentNodes.add(node);
-                parentScopes.add(scope);
-                parentOptionals.add(optional);
-                if (info.children != null) {
-                    if ((changes & NodeInfo.CHANGE_SCOPE) != 0) {
-                        ListIterator<ConflictItem> itemIterator = info.children.listIterator(info.children.size());
-                        while (itemIterator.hasPrevious()) {
-                            ConflictItem item = itemIterator.previous();
-                            String childScope = deriveScope(item.node, null);
-                            item.addScope(childScope);
-                        }
-                    }
-                    if ((changes & NodeInfo.CHANGE_OPTIONAL) != 0) {
-                        ListIterator<ConflictItem> itemIterator = info.children.listIterator(info.children.size());
-                        while (itemIterator.hasPrevious()) {
-                            ConflictItem item = itemIterator.previous();
-                            boolean childOptional = deriveOptional(item.node, null);
-                            item.addOptional(childOptional);
-                        }
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        void pop() {
-            int last = parentInfos.size() - 1;
-            parentInfos.remove(last);
-            parentScopes.remove(last);
-            parentOptionals.remove(last);
-            DependencyNode node = parentNodes.remove(last);
-            stack.remove(node.getChildren());
-        }
-
-        void add(DependencyNode node) throws RepositoryException {
-            DependencyNode parent = parent();
-            if (parent == null) {
-                ConflictItem item = newConflictItem(parent, node);
-                items.add(item);
-            } else {
-                NodeInfo info = parentInfos.get(parentInfos.size() - 1);
-                if (info != null) {
-                    ConflictItem item = newConflictItem(parent, node);
-                    info.add(item);
-                    items.add(item);
-                }
-            }
-        }
-
-        private ConflictItem newConflictItem(DependencyNode parent, DependencyNode node) throws RepositoryException {
-            return new ConflictItem(parent, node, deriveScope(node, null), deriveOptional(node, null));
-        }
-
-        private int depth() {
-            return parentNodes.size();
-        }
-
-        private DependencyNode parent() {
-            int size = parentNodes.size();
-            return (size <= 0) ? null : parentNodes.get(size - 1);
-        }
-
-        private String deriveScope(DependencyNode node, String conflictId) throws RepositoryException {
-            if ((node.getManagedBits() & DependencyNode.MANAGED_SCOPE) != 0
-                    || (conflictId != null && resolvedIds.containsKey(conflictId))) {
-                return scope(node.getDependency());
-            }
-
-            int depth = parentNodes.size();
-            scopes(depth, node.getDependency());
-            if (depth > 0) {
-                scopeDeriver.deriveScope(scopeCtx);
-            }
-            return scopeCtx.derivedScope;
-        }
-
-        private void scopes(int parent, Dependency child) {
-            scopeCtx.parentScope = (parent > 0) ? parentScopes.get(parent - 1) : null;
-            scopeCtx.derivedScope = scope(child);
-            scopeCtx.childScope = scope(child);
-        }
-
-        private String scope(Dependency dependency) {
-            return (dependency != null) ? dependency.getScope() : null;
-        }
-
-        private boolean deriveOptional(DependencyNode node, String conflictId) {
-            Dependency dep = node.getDependency();
-            boolean optional = (dep != null) && dep.isOptional();
-            if (optional
-                    || (node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) != 0
-                    || (conflictId != null && resolvedIds.containsKey(conflictId))) {
-                return optional;
-            }
-            int depth = parentNodes.size();
-            return (depth > 0) ? parentOptionals.get(depth - 1) : false;
         }
     }
 
@@ -1078,6 +598,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
      *                change without notice and only exists to enable unit testing.
      */
     public static final class ConflictItem {
+        final CRNode crNode;
 
         // nodes can share child lists, we care about the unique owner of a child node which is the child list
         final List<DependencyNode> parent;
@@ -1086,15 +607,15 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         final Artifact artifact;
 
         // is mutable as removeLosers will mutate it (if Verbosity==STANDARD)
-        DependencyNode node;
+        final DependencyNode node;
 
-        int depth;
+        final int depth;
 
         // we start with String and update to Set<String> if needed
-        Object scopes;
+        final String scope;
 
         // bit field of OPTIONAL_FALSE and OPTIONAL_TRUE
-        int optionalities;
+        final int optionalities;
 
         /**
          * Bit flag indicating whether one or more paths consider the dependency non-optional.
@@ -1106,40 +627,20 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          */
         public static final int OPTIONAL_TRUE = 0x02;
 
-        ConflictItem(DependencyNode parent, DependencyNode node, String scope, boolean optional) {
-            if (parent != null) {
+        ConflictItem(CRNode crNode) {
+            this.crNode = crNode;
+            if (crNode.path.size() > 1) {
+                DependencyNode parent = crNode.path.get(crNode.path.size() - 2).dn;
                 this.parent = parent.getChildren();
                 this.artifact = parent.getArtifact();
             } else {
                 this.parent = null;
                 this.artifact = null;
             }
-            this.node = node;
-            this.scopes = scope;
-            this.optionalities = optional ? OPTIONAL_TRUE : OPTIONAL_FALSE;
-        }
-
-        /**
-         * Creates a new conflict item with the specified properties.
-         *
-         * @param parent The parent node of the conflicting dependency, may be {@code null}.
-         * @param node The conflicting dependency, must not be {@code null}.
-         * @param depth The zero-based depth of the conflicting dependency.
-         * @param optionalities The optionalities the dependency was encountered with, encoded as a bit field consisting
-         *            of {@link ConflictResolver.ConflictItem#OPTIONAL_TRUE} and
-         *            {@link ConflictResolver.ConflictItem#OPTIONAL_FALSE}.
-         * @param scopes The derived scopes of the conflicting dependency, must not be {@code null}.
-         * @noreference This class is not intended to be instantiated by clients in production code, the constructor may
-         *              change without notice and only exists to enable unit testing.
-         */
-        public ConflictItem(
-                DependencyNode parent, DependencyNode node, int depth, int optionalities, String... scopes) {
-            this.parent = (parent != null) ? parent.getChildren() : null;
-            this.artifact = (parent != null) ? parent.getArtifact() : null;
-            this.node = node;
-            this.depth = depth;
-            this.optionalities = optionalities;
-            this.scopes = Arrays.asList(scopes);
+            this.node = crNode.dn;
+            this.depth = crNode.path.size() - 1;
+            this.scope = crNode.scope;
+            this.optionalities = crNode.optional ? OPTIONAL_TRUE : OPTIONAL_FALSE;
         }
 
         /**
@@ -1188,24 +689,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          * @see ScopeDeriver
          * @return The (read-only) set of derived scopes of the dependency, never {@code null}.
          */
-        @SuppressWarnings("unchecked")
         public Collection<String> getScopes() {
-            if (scopes instanceof String) {
-                return Collections.singleton((String) scopes);
-            }
-            return (Collection<String>) scopes;
-        }
-
-        @SuppressWarnings("unchecked")
-        void addScope(String scope) {
-            if (scopes instanceof Collection) {
-                ((Collection<String>) scopes).add(scope);
-            } else if (!scopes.equals(scope)) {
-                Collection<String> set = new HashSet<>();
-                set.add((String) scopes);
-                set.add(scope);
-                scopes = set;
-            }
+            return Collections.singleton(scope);
         }
 
         /**
@@ -1218,10 +703,6 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          */
         public int getOptionalities() {
             return optionalities;
-        }
-
-        void addOptional(boolean optional) {
-            optionalities |= optional ? OPTIONAL_TRUE : OPTIONAL_FALSE;
         }
 
         @Override
@@ -1239,14 +720,13 @@ public final class ConflictResolver implements DependencyGraphTransformer {
      *                change without notice and only exists to enable unit testing.
      */
     public static final class ConflictContext {
-
         final DependencyNode root;
 
         final Map<DependencyNode, String> conflictIds;
 
         final Collection<ConflictItem> items;
 
-        String conflictId;
+        final String conflictId;
 
         ConflictItem winner;
 
@@ -1254,44 +734,15 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
         Boolean optional;
 
-        ConflictContext(DependencyNode root, Map<DependencyNode, String> conflictIds, Collection<ConflictItem> items) {
+        ConflictContext(
+                DependencyNode root,
+                Map<DependencyNode, String> conflictIds,
+                Collection<ConflictItem> items,
+                String conflictId) {
             this.root = root;
             this.conflictIds = conflictIds;
             this.items = Collections.unmodifiableCollection(items);
-        }
-
-        /**
-         * Creates a new conflict context.
-         *
-         * @param root The root node of the dependency graph, must not be {@code null}.
-         * @param conflictId The conflict id for the set of conflicting dependencies in this context, must not be
-         *            {@code null}.
-         * @param conflictIds The mapping from dependency node to conflict id, must not be {@code null}.
-         * @param items The conflict items in this context, must not be {@code null}.
-         * @noreference This class is not intended to be instantiated by clients in production code, the constructor may
-         *              change without notice and only exists to enable unit testing.
-         */
-        public ConflictContext(
-                DependencyNode root,
-                String conflictId,
-                Map<DependencyNode, String> conflictIds,
-                Collection<ConflictItem> items) {
-            this(root, conflictIds, items);
             this.conflictId = conflictId;
-        }
-
-        /**
-         * Left in place only to maintain source compatibility.
-         *
-         * @deprecated Do not use, is left in place only to maintain source compatibility (Object is casted to String).
-         */
-        @Deprecated
-        public ConflictContext(
-                DependencyNode root,
-                Object conflictId,
-                Map<DependencyNode, String> conflictIds,
-                Collection<ConflictItem> items) {
-            this(root, (String) conflictId, conflictIds, items);
         }
 
         /**
