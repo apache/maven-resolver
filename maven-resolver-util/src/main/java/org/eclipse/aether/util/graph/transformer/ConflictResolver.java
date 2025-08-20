@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryException;
@@ -159,6 +160,200 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
     private final OptionalitySelector optionalitySelector;
 
+    private static class CRState {
+        /**
+         * Flag whether we should keep losers in the graph to enable visualization/troubleshooting of conflicts.
+         */
+        private final Verbosity verbosity;
+
+        private final VersionSelector versionSelector;
+        private final ScopeSelector scopeSelector;
+        private final ScopeDeriver scopeDeriver;
+        private final OptionalitySelector optionalitySelector;
+
+        /**
+         * The output from the conflict marker
+         */
+        private final Map<DependencyNode, String> conflictIds;
+
+        /**
+         * The map of conflict ids which could apply to ancestors of nodes with the key conflict id, used to avoid
+         * recursion early on. This is basically a superset of the key set of resolvedIds, the additional ids account
+         * for cyclic dependencies.
+         */
+        private final Map<String, Collection<String>> cyclicPredecessors;
+
+        /**
+         * A mapping from conflict id to winner node, helps to recognize nodes that have their effective
+         * scope&optionality set or are leftovers from previous removals.
+         */
+        private final Map<String, DependencyNode> resolvedIds;
+
+        private CRState(
+                Verbosity verbosity,
+                VersionSelector versionSelector,
+                ScopeSelector scopeSelector,
+                ScopeDeriver scopeDeriver,
+                OptionalitySelector optionalitySelector,
+                Map<DependencyNode, String> conflictIds,
+                Map<String, Collection<String>> cyclicPredecessors) {
+            this.verbosity = verbosity;
+            this.versionSelector = versionSelector;
+            this.scopeSelector = scopeSelector;
+            this.scopeDeriver = scopeDeriver;
+            this.optionalitySelector = optionalitySelector;
+            this.conflictIds = conflictIds;
+            this.cyclicPredecessors = cyclicPredecessors;
+            this.resolvedIds = new HashMap<>();
+        }
+    }
+
+    private static class CRNode {
+        private final CRState state;
+        private final DependencyNode dn;
+        private final String conflictId;
+        private final List<CRNode> path;
+        private final List<CRNode> children;
+        private String scope;
+        private boolean optional;
+
+        private CRNode(CRState state, DependencyNode dn, List<CRNode> path) {
+            this.state = state;
+            this.dn = dn;
+            this.conflictId = state.conflictIds.get(dn);
+            this.path = path;
+            this.children = new ArrayList<>();
+            reset();
+        }
+
+        private void reset() {
+            Dependency d = dn.getDependency();
+            if (d != null) {
+                this.scope = d.getScope();
+                this.optional = d.isOptional();
+            } else {
+                this.scope = "";
+                this.optional = false;
+            }
+            for (CRNode child : children) {
+                child.reset();
+            }
+        }
+
+        private void apply() {
+            DependencyNode winner = this.state.resolvedIds.get(this.conflictId);
+            if (winner == null) {
+                throw new IllegalStateException("Winner selection did not happen for conflictId=" + this.conflictId);
+            }
+
+            boolean propagate = false;
+            if (winner == this.dn) {
+                // copy onto dn; if applicable
+                if (dn.getDependency() != null) {
+                    dn.setScope(this.scope);
+                    dn.setOptional(this.optional);
+                }
+                propagate = true;
+            } else {
+                if (!path.isEmpty()) {
+                    boolean markLoser = false;
+                    CRNode parent = path.get(path.size() - 1);
+                    switch (state.verbosity) {
+                        case NONE:
+                            // remove this dn
+                            parent.children.remove(this);
+                            parent.dn.getChildren().remove(this.dn);
+                            break;
+                        case STANDARD:
+                            // remove this dn children + record the facts
+                            this.children.clear();
+                            this.dn.getChildren().clear();
+                            markLoser = true;
+                            break;
+                        case FULL:
+                            // record the facts
+                            propagate = true;
+                            markLoser = true;
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Unknown " + state.verbosity);
+                    }
+                    if (markLoser) {
+                        this.dn.setData(NODE_DATA_WINNER, winner);
+                        this.dn.setData(
+                                NODE_DATA_ORIGINAL_SCOPE, this.dn.getDependency().getScope());
+                        this.dn.setData(
+                                NODE_DATA_ORIGINAL_OPTIONALITY,
+                                this.dn.getDependency().getOptional());
+                        this.dn.setScope(this.scope);
+                        this.dn.setOptional(this.optional);
+                    }
+                }
+            }
+            if (propagate) {
+                for (CRNode child : children) {
+                    child.apply();
+                }
+            }
+        }
+
+        private void derive() throws RepositoryException {
+            boolean changed = false;
+            if (!path.isEmpty()) {
+                CRNode parent = this.path.get(this.path.size() - 1);
+                if ((dn.getManagedBits() & DependencyNode.MANAGED_SCOPE) == 0) {
+                    ScopeContext context = new ScopeContext(parent.scope, this.scope);
+                    state.scopeDeriver.deriveScope(context);
+                    if (!Objects.equals(this.scope, context.derivedScope)) {
+                        this.scope = context.derivedScope;
+                        changed = true;
+                    }
+                }
+                if ((dn.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) == 0) {
+                    if (this.optional != parent.optional) {
+                        this.optional = parent.optional;
+                        changed = true;
+                    }
+                }
+            } else {
+                this.scope = "";
+                this.optional = false;
+                changed = true;
+            }
+            if (changed) {
+                for (CRNode child : children) {
+                    child.derive();
+                }
+            }
+        }
+
+        private List<CRNode> addChildren(List<DependencyNode> children) throws RepositoryException {
+            ArrayList<CRNode> childPath = new ArrayList<>(path.size() + 1);
+            childPath.addAll(this.path);
+            childPath.add(this);
+            Collection<String> thisCyclicPredecessors = this.state.cyclicPredecessors.getOrDefault(this.conflictId, Collections.emptySet());
+
+            ArrayList<CRNode> added = new ArrayList<>(children.size());
+            for (DependencyNode child : children) {
+                String childConflictId = this.state.conflictIds.get(child);
+                if (!thisCyclicPredecessors.contains(childConflictId)) {
+                    CRNode c = new CRNode(this.state, child, childPath);
+                    this.children.add(c);
+                    c.derive();
+                    added.add(c);
+                }
+            }
+            return added;
+        }
+
+        private void dump(String padding) {
+            System.out.println(padding + this.dn + ": " + this.scope + "/" + this.optional);
+            for (CRNode child : children) {
+                child.dump(padding + "  ");
+            }
+        }
+    }
+
     /**
      * Creates a new conflict resolver instance with the specified hooks.
      *
@@ -216,6 +411,19 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                 predecessors.addAll(cycle);
             }
         }
+
+        CRState crState = new CRState(
+                getVerbosity(context.getSession()),
+                versionSelector.getInstance(node, context),
+                scopeSelector.getInstance(node, context),
+                scopeDeriver.getInstance(node, context),
+                optionalitySelector.getInstance(node, context),
+                conflictIds,
+                cyclicPredecessors);
+
+        CRNode root = new CRNode(crState, node, new ArrayList<>());
+        gatherCRNodes(crState, root);
+        root.dump("");
 
         State state = new State(node, conflictIds, sortedConflictIds.size(), context);
         for (Iterator<String> it = sortedConflictIds.iterator(); it.hasNext(); ) {
@@ -276,6 +484,23 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         }
 
         return node;
+    }
+
+    private void gatherCRNodes(CRState state, CRNode node) throws RepositoryException {
+        List<DependencyNode> children = node.dn.getChildren();
+        if (!children.isEmpty()) {
+            // add children and we will get back those really added (not causing cycles)
+            List<CRNode> added = node.addChildren(children);
+            if (Verbosity.FULL != state.verbosity) {
+                // collect those DNs that were not added (that cause cycles)
+                List<DependencyNode> addedDns = added.stream().map(c -> c.dn).collect(Collectors.toList());
+                // remove them from graph: verbosity NONE and DEFAULT made now a tree out of graph
+                children.removeIf(a -> !addedDns.contains(a));
+            }
+            for (CRNode child : added) {
+                gatherCRNodes(state, child);
+            }
+        }
     }
 
     private boolean gatherConflictItems(DependencyNode node, State state) throws RepositoryException {
