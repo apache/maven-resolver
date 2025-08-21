@@ -37,7 +37,6 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -339,23 +338,20 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                     boolean markLoser = false;
                     switch (state.verbosity) {
                         case NONE:
-                            // remove this dn; discard all children from winner consideration as well
+                            // remove this dn
                             this.parent.children.remove(this);
                             this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
                             this.parent.dn.getChildren().remove(this.dn);
                             this.children.clear();
                             break;
                         case STANDARD:
-                            // if same ArtifactId, just record the facts, otherwise remove this dn children as well
-                            String winnerArtifactId = ArtifactIdUtils.toId(winner.dn.getArtifact());
-                            if (!winnerArtifactId.equals(ArtifactIdUtils.toId(this.dn.getArtifact()))) {
-                                this.children.clear();
-                                this.dn.setChildren(Collections.emptyList());
-                            }
+                            // leave this dn; remove children
+                            this.children.clear();
+                            this.dn.setChildren(Collections.emptyList());
                             markLoser = true;
                             break;
                         case FULL:
-                            // record the facts
+                            // leave all in place (even cycles)
                             markLoser = true;
                             break;
                         default:
