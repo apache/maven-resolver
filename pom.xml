@@ -411,6 +411,9 @@
                     <!-- MRESOLVER-440 Move properties to their place and cleanup -->
                     <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
                     <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
+                    <!-- ConflictResolver (these API classes should not be created by clients; ctor changes) -->
+                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver$ConflictItem</exclude>
+                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver$ConflictContext</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -455,6 +458,9 @@
                     <!-- MRESOLVER-440 Move properties to their place and cleanup -->
                     <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
                     <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
+                    <!-- ConflictResolver (these API classes should not be created by clients; ctor changes) -->
+                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver$ConflictItem</exclude>
+                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver$ConflictContext</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>

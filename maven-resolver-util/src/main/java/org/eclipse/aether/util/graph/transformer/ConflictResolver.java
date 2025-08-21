@@ -313,52 +313,53 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                         this.dn.setOptional(this.optional);
                     }
                 } else {
-                        boolean markLoser = false;
-                        switch (state.verbosity) {
-                            case NONE:
-                                // remove this dn; discard all children from winner consideration as well
-                                this.parent.children.remove(this);
-                                this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
-                                this.parent.dn.getChildren().remove(this.dn);
-                                break;
-                            case STANDARD:
-                                // if same ArtifactId, just record the facts, otherwise remove this dn children as well
-                                String winnerArtifactId = ArtifactIdUtils.toId(winner.dn.getArtifact());
-                                if (!winnerArtifactId.equals(ArtifactIdUtils.toId(this.dn.getArtifact()))) {
-                                    this.children.clear();
-                                    this.dn.setChildren(Collections.emptyList());
-                                }
-                                markLoser = true;
-                                break;
-                            case FULL:
-                                // record the facts
-                                markLoser = true;
-                                break;
-                            default:
-                                throw new IllegalArgumentException("Unknown " + state.verbosity);
-                        }
-                        if (markLoser) {
-                            // copy dn
-                            DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
-                            dnCopy.setData(
-                                    NODE_DATA_ORIGINAL_SCOPE,
-                                    this.dn.getDependency().getScope());
-                            dnCopy.setData(
-                                    NODE_DATA_ORIGINAL_OPTIONALITY,
-                                    this.dn.getDependency().getOptional());
-                            dnCopy.setScope(this.scope);
-                            dnCopy.setOptional(this.optional);
-                            if (Verbosity.FULL != state.verbosity) {
-                                dnCopy.getChildren().clear();
-                            }
-
-                            // swap it out in DN graph
+                    boolean markLoser = false;
+                    switch (state.verbosity) {
+                        case NONE:
+                            // remove this dn; discard all children from winner consideration as well
+                            this.parent.children.remove(this);
+                            this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
                             this.parent.dn.getChildren().remove(this.dn);
-                            this.parent.dn.getChildren().add(dnCopy);
-                            this.dn = dnCopy;
-
-                            this.dn.setData(NODE_DATA_WINNER, winner.dn);
+                            this.children.clear();
+                            break;
+                        case STANDARD:
+                            // if same ArtifactId, just record the facts, otherwise remove this dn children as well
+                            String winnerArtifactId = ArtifactIdUtils.toId(winner.dn.getArtifact());
+                            if (!winnerArtifactId.equals(ArtifactIdUtils.toId(this.dn.getArtifact()))) {
+                                this.children.clear();
+                                this.dn.setChildren(Collections.emptyList());
+                            }
+                            markLoser = true;
+                            break;
+                        case FULL:
+                            // record the facts
+                            markLoser = true;
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Unknown " + state.verbosity);
+                    }
+                    if (markLoser) {
+                        // copy dn
+                        DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
+                        dnCopy.setData(
+                                NODE_DATA_ORIGINAL_SCOPE,
+                                this.dn.getDependency().getScope());
+                        dnCopy.setData(
+                                NODE_DATA_ORIGINAL_OPTIONALITY,
+                                this.dn.getDependency().getOptional());
+                        dnCopy.setScope(this.scope);
+                        dnCopy.setOptional(this.optional);
+                        if (Verbosity.FULL != state.verbosity) {
+                            dnCopy.getChildren().clear();
                         }
+
+                        // swap it out in DN graph
+                        this.parent.dn.getChildren().remove(this.dn);
+                        this.parent.dn.getChildren().add(dnCopy);
+                        this.dn = dnCopy;
+
+                        this.dn.setData(NODE_DATA_WINNER, winner.dn);
+                    }
                 }
             }
             if (!this.children.isEmpty()) {
@@ -482,11 +483,13 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
         CRNode root = new CRNode(crState, node, null);
         gatherCRNodes(root);
-        System.out.println("LOAD:");
-        root.dump("");
+        // System.out.println("LOAD:");
+        // root.dump("");
 
         for (String conflictId : crState.sortedConflictIds) {
-            List<CRNode> crNodes = crState.partitions.get(conflictId).stream().filter(n -> n.parent == null || n.parent.children.contains(n)).collect(Collectors.toList());
+            List<CRNode> crNodes = crState.partitions.get(conflictId).stream()
+                    .filter(n -> n.parent == null || n.parent.children.contains(n))
+                    .collect(Collectors.toList());
 
             if (crNodes.isEmpty()) {
                 continue;
@@ -518,19 +521,20 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                 DependencyNode dependencyNode = crNode.dn;
                 boolean winner = winnerNode == dependencyNode;
 
-                //dependencyNode.setScope(ctx.scope);
-                //dependencyNode.setOptional(ctx.optional);
                 crNode.scope = ctx.scope;
                 crNode.optional = ctx.optional;
 
+                // reset children
                 crNode.children.forEach(c -> c.pull(0));
+                // derive with new values from this to children
                 crNode.derive(1, winner);
+                // push this node changes
                 crNode.push(0);
             }
         }
 
-        System.out.println("FINISH:");
-        root.dump("");
+        // System.out.println("FINISH:");
+        // root.dump("");
 
         if (stats != null) {
             long time2 = System.nanoTime();
