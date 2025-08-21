@@ -158,33 +158,54 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
     private static class CRState {
         /**
-         * Flag whether we should keep losers in the graph to enable visualization/troubleshooting of conflicts.
+         * Verbosity to be applied, see {@link Verbosity}.
          */
         private final Verbosity verbosity;
 
+        /**
+         * The {@link VersionSelector} to use.
+         */
         private final VersionSelector versionSelector;
+
+        /**
+         * The {@link ScopeSelector} to use.
+         */
         private final ScopeSelector scopeSelector;
+
+        /**
+         * The {@link ScopeDeriver} to use.
+         */
         private final ScopeDeriver scopeDeriver;
+
+        /**
+         * The {@link OptionalitySelector} to use/
+         */
         private final OptionalitySelector optionalitySelector;
 
-        private final List<String> sortedConflictIds;
         /**
-         * The output from the conflict marker
+         * Topologically sorted conflictIds from {@link ConflictIdSorter}.
+         */
+        private final List<String> sortedConflictIds;
+
+        /**
+         * The node to conflictId mapping from {@link ConflictMarker}.
          */
         private final Map<DependencyNode, String> conflictIds;
 
         /**
-         * The map of conflict ids which could apply to ancestors of nodes with the key conflict id, used to avoid
+         * The map of conflictIds which could apply to ancestors of nodes with the key conflict id, used to avoid
          * recursion early on. This is basically a superset of the key set of resolvedIds, the additional ids account
-         * for cyclic dependencies.
+         * for cyclic dependencies. From {@link ConflictIdSorter}.
          */
         private final Map<String, Collection<String>> cyclicPredecessors;
 
+        /**
+         * A mapping from conflictId to paths represented as {@link CRNode}s that exist for each conflictId.
+         */
         private final Map<String, List<CRNode>> partitions;
 
         /**
-         * A mapping from conflict id to winner node, helps to recognize nodes that have their effective
-         * scope&optionality set or are leftovers from previous removals.
+         * A mapping from conflictIds to winner node for given conflictId.
          */
         private final Map<String, CRNode> resolvedIds;
 
@@ -372,6 +393,9 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             }
         }
 
+        /**
+         * Unlinks this and recursively all children, to achieve effect to not consider nodes for selection.
+         */
         private void unlink(int levels) {
             int newLevels = levels - 1;
             if (newLevels >= 0) {
@@ -408,7 +432,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         }
 
         /**
-         * Dumps.
+         * Dumps for debug.
          */
         private void dump(String padding) {
             System.out.println(padding + this.dn + ": " + this.scope + "/" + this.optional);
@@ -417,6 +441,9 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             }
         }
 
+        /**
+         * For easier debug.
+         */
         @Override
         public String toString() {
             return this.dn.toString();
