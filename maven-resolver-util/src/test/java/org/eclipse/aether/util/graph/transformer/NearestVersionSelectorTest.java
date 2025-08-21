@@ -23,6 +23,7 @@ import java.util.List;
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
+import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -189,6 +190,16 @@ public class NearestVersionSelectorTest extends AbstractDependencyGraphTransform
     }
 
     @Test
+    void testExpectedSubtreeOnDescriptorDependenciesEmptyLeft() throws Exception {
+        DependencyNode root = parseResource("expectedSubtreeOnDescriptorDependenciesEmptyLeft.txt");
+
+        assertSame(root, transform(root));
+
+        // h is not lost
+        assertEquals(5, find(root, "h").size());
+    }
+
+    @Test
     void testVerboseMode() throws Exception {
         DependencyNode root = parseResource("verbose.txt");
 
@@ -196,12 +207,20 @@ public class NearestVersionSelectorTest extends AbstractDependencyGraphTransform
         assertSame(root, transform(root));
 
         assertEquals(2, root.getChildren().size());
-        assertEquals(1, root.getChildren().get(0).getChildren().size());
+        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
+        // original:
+        // assertEquals(1, root.getChildren().get(0).getChildren().size());
+        // modified:
+        assertEquals(2, root.getChildren().get(0).getChildren().size());
         DependencyNode winner = root.getChildren().get(0).getChildren().get(0);
         assertEquals("test", winner.getDependency().getScope());
         assertEquals("compile", winner.getData().get(ConflictResolver.NODE_DATA_ORIGINAL_SCOPE));
         assertEquals(false, winner.getData().get(ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY));
-        assertEquals(1, root.getChildren().get(1).getChildren().size());
+        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
+        // original:
+        // assertEquals(1, root.getChildren().get(1).getChildren().size());
+        // modified:
+        assertEquals(2, root.getChildren().get(1).getChildren().size());
         DependencyNode loser = root.getChildren().get(1).getChildren().get(0);
         assertEquals("test", loser.getDependency().getScope());
         assertEquals(0, loser.getChildren().size());

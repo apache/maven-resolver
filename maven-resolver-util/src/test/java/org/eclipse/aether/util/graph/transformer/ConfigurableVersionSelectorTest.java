@@ -217,12 +217,21 @@ public class ConfigurableVersionSelectorTest extends AbstractDependencyGraphTran
         assertSame(root, transform(root));
 
         assertEquals(2, root.getChildren().size());
-        assertEquals(1, root.getChildren().get(0).getChildren().size());
+
+        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
+        // original:
+        // assertEquals(1, root.getChildren().get(0).getChildren().size());
+        // modified:
+        assertEquals(2, root.getChildren().get(0).getChildren().size());
         DependencyNode winner = root.getChildren().get(0).getChildren().get(0);
         assertEquals("test", winner.getDependency().getScope());
         assertEquals("compile", winner.getData().get(ConflictResolver.NODE_DATA_ORIGINAL_SCOPE));
         assertEquals(false, winner.getData().get(ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY));
-        assertEquals(1, root.getChildren().get(1).getChildren().size());
+        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
+        // original:
+        // assertEquals(1, root.getChildren().get(1).getChildren().size());
+        // modified:
+        assertEquals(2, root.getChildren().get(1).getChildren().size());
         DependencyNode loser = root.getChildren().get(1).getChildren().get(0);
         assertEquals("test", loser.getDependency().getScope());
         assertEquals(0, loser.getChildren().size());

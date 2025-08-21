@@ -317,10 +317,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                     switch (state.verbosity) {
                         case NONE:
                             // remove this dn; discard all children from winner consideration as well
-                            this.parent.children.remove(this);
-                            this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
-                            this.parent.dn.getChildren().remove(this.dn);
-                            this.children.clear();
+                            unlink(Integer.MAX_VALUE);
                             break;
                         case STANDARD:
                             // if same ArtifactId, just record the facts, otherwise remove this dn children as well
@@ -373,6 +370,19 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             } else if (!this.dn.getChildren().isEmpty()) {
                 this.dn.setChildren(Collections.emptyList());
             }
+        }
+
+        private void unlink(int levels) {
+            int newLevels = levels - 1;
+            if (newLevels >= 0) {
+                for (CRNode child : new ArrayList<>(children)) {
+                    child.unlink(newLevels);
+                }
+            }
+            this.parent.children.remove(this);
+            this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
+            this.parent.dn.getChildren().remove(this.dn);
+            this.children.clear();
         }
 
         /**
