@@ -398,10 +398,12 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         private void unlink(int levels) {
             int newLevels = levels - 1;
             if (newLevels >= 0) {
+                // child may remove itself from iterated list
                 for (CRNode child : new ArrayList<>(children)) {
                     child.unlink(newLevels);
                 }
             }
+            this.state.partitions.get(this.conflictId).remove(this);
             this.parent.children.remove(this);
             this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
             this.parent.dn.getChildren().remove(this.dn);
@@ -523,10 +525,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         // root.dump("");
 
         for (String conflictId : crState.sortedConflictIds) {
-            List<CRNode> crNodes = crState.partitions.get(conflictId).stream()
-                    .filter(n -> n.parent == null || n.parent.children.contains(n))
-                    .collect(Collectors.toList());
-
+            // paths in conflict group to consider
+            List<CRNode> crNodes = crState.partitions.get(conflictId);
             if (crNodes.isEmpty()) {
                 continue;
             }
@@ -553,7 +553,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             }
             crState.resolvedIds.put(conflictId, winnerCrNode);
 
-            for (CRNode crNode : crNodes) {
+            // node may remove itself from iterated list
+            for (CRNode crNode : new ArrayList<>(crNodes)) {
                 DependencyNode dependencyNode = crNode.dn;
                 boolean winner = winnerNode == dependencyNode;
 
