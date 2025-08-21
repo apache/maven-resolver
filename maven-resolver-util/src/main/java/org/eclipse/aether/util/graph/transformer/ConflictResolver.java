@@ -334,11 +334,16 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                         this.dn.setOptional(this.optional);
                     }
                 } else {
+                    // loser; move out of scope
+                    moveOutOfScope();
                     boolean markLoser = false;
                     switch (state.verbosity) {
                         case NONE:
                             // remove this dn; discard all children from winner consideration as well
-                            unlink(Integer.MAX_VALUE);
+                            this.parent.children.remove(this);
+                            this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
+                            this.parent.dn.getChildren().remove(this.dn);
+                            this.children.clear();
                             break;
                         case STANDARD:
                             // if same ArtifactId, just record the facts, otherwise remove this dn children as well
@@ -393,21 +398,14 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         }
 
         /**
-         * Unlinks this and recursively all children, to achieve effect to not consider nodes for selection.
+         * Removes this and all child nodes from winner selection scope.
          */
-        private void unlink(int levels) {
-            int newLevels = levels - 1;
-            if (newLevels >= 0) {
-                // child may remove itself from iterated list
-                for (CRNode child : new ArrayList<>(children)) {
-                    child.unlink(newLevels);
-                }
+        private void moveOutOfScope() {
+            // child may remove itself from iterated list
+            for (CRNode child : new ArrayList<>(children)) {
+                child.moveOutOfScope();
             }
             this.state.partitions.get(this.conflictId).remove(this);
-            this.parent.children.remove(this);
-            this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
-            this.parent.dn.getChildren().remove(this.dn);
-            this.children.clear();
         }
 
         /**
