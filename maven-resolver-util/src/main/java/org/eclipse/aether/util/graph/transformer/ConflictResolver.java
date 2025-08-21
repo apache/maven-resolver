@@ -397,11 +397,10 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          * Removes this and all child nodes from winner selection scope.
          */
         private void moveOutOfScope() {
-            // child may remove itself from iterated list
-            for (CRNode child : new ArrayList<>(children)) {
+            this.state.partitions.get(this.conflictId).remove(this);
+            for (CRNode child : this.children) {
                 child.moveOutOfScope();
             }
-            this.state.partitions.get(this.conflictId).remove(this);
         }
 
         /**
