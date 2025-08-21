@@ -359,6 +359,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                     if (markLoser) {
                         // copy dn
                         DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
+                        dnCopy.setData(NODE_DATA_WINNER, winner.dn);
                         dnCopy.setData(
                                 NODE_DATA_ORIGINAL_SCOPE,
                                 this.dn.getDependency().getScope());
@@ -375,8 +376,6 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                         this.parent.dn.getChildren().remove(this.dn);
                         this.parent.dn.getChildren().add(dnCopy);
                         this.dn = dnCopy;
-
-                        this.dn.setData(NODE_DATA_WINNER, winner.dn);
                     }
                 }
             }
