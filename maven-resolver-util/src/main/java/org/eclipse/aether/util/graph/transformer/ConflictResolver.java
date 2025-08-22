@@ -156,7 +156,142 @@ public final class ConflictResolver implements DependencyGraphTransformer {
 
     private final OptionalitySelector optionalitySelector;
 
-    private static class CRState {
+    /**
+     * Creates a new conflict resolver instance with the specified hooks.
+     *
+     * @param versionSelector The version selector to use, must not be {@code null}.
+     * @param scopeSelector The scope selector to use, must not be {@code null}.
+     * @param optionalitySelector The optionality selector ot use, must not be {@code null}.
+     * @param scopeDeriver The scope deriver to use, must not be {@code null}.
+     */
+    public ConflictResolver(
+            VersionSelector versionSelector,
+            ScopeSelector scopeSelector,
+            OptionalitySelector optionalitySelector,
+            ScopeDeriver scopeDeriver) {
+        this.versionSelector = requireNonNull(versionSelector, "version selector cannot be null");
+        this.scopeSelector = requireNonNull(scopeSelector, "scope selector cannot be null");
+        this.optionalitySelector = requireNonNull(optionalitySelector, "optionality selector cannot be null");
+        this.scopeDeriver = requireNonNull(scopeDeriver, "scope deriver cannot be null");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
+            throws RepositoryException {
+        requireNonNull(node, "node cannot be null");
+        requireNonNull(context, "context cannot be null");
+        List<String> sortedConflictIds = (List<String>) context.get(TransformationContextKeys.SORTED_CONFLICT_IDS);
+        if (sortedConflictIds == null) {
+            ConflictIdSorter sorter = new ConflictIdSorter();
+            sorter.transformGraph(node, context);
+
+            sortedConflictIds = (List<String>) context.get(TransformationContextKeys.SORTED_CONFLICT_IDS);
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> stats = (Map<String, Object>) context.get(TransformationContextKeys.STATS);
+        long time1 = System.nanoTime();
+
+        @SuppressWarnings("unchecked")
+        Collection<Collection<String>> conflictIdCycles =
+                (Collection<Collection<String>>) context.get(TransformationContextKeys.CYCLIC_CONFLICT_IDS);
+        if (conflictIdCycles == null) {
+            throw new RepositoryException("conflict id cycles have not been identified");
+        }
+
+        Map<DependencyNode, String> conflictIds =
+                (Map<DependencyNode, String>) context.get(TransformationContextKeys.CONFLICT_IDS);
+        if (conflictIds == null) {
+            throw new RepositoryException("conflict groups have not been identified");
+        }
+
+        Map<String, Collection<String>> cyclicPredecessors = new HashMap<>();
+        for (Collection<String> cycle : conflictIdCycles) {
+            for (String conflictId : cycle) {
+                Collection<String> predecessors = cyclicPredecessors.computeIfAbsent(conflictId, k -> new HashSet<>());
+                predecessors.addAll(cycle);
+            }
+        }
+
+        State state = new State(
+                getVerbosity(context.getSession()),
+                versionSelector.getInstance(node, context),
+                scopeSelector.getInstance(node, context),
+                scopeDeriver.getInstance(node, context),
+                optionalitySelector.getInstance(node, context),
+                sortedConflictIds,
+                conflictIds,
+                cyclicPredecessors);
+
+        state.build(node);
+
+        // loop over topographically sorted conflictIds
+        for (String conflictId : state.sortedConflictIds) {
+            // paths in given conflict group to consider
+            List<Path> paths = state.partitions.get(conflictId);
+            if (paths.isEmpty()) {
+                // this means that whole group "fall out of scope" (are all on loser branches); skip
+                continue;
+            }
+
+            // create conflict context for given conflictId
+            ConflictContext ctx = new ConflictContext(
+                    node,
+                    state.conflictIds,
+                    paths.stream().map(ConflictItem::new).collect(Collectors.toList()),
+                    conflictId);
+
+            // select winner (is done by VersionSelector)
+            state.versionSelector.selectVersion(ctx);
+            if (ctx.winner == null) {
+                throw new RepositoryException("conflict resolver did not select winner among " + ctx.items);
+            }
+            // select scope (no side effect between this and above operations)
+            state.scopeSelector.selectScope(ctx);
+            // select optionality (no side effect between this and above operations)
+            state.optionalitySelector.selectOptionality(ctx);
+
+            // we have a winner path
+            Path winnerPath = ctx.winner.path;
+
+            // mark conflictId as resolved with winner; sanity check
+            if (state.resolvedIds.containsKey(conflictId)) {
+                throw new RepositoryException("conflict resolver already have winner for conflictId=" + conflictId
+                        + ": " + state.resolvedIds);
+            }
+            state.resolvedIds.put(conflictId, winnerPath);
+
+            // loop over considered paths and apply selection results; note: node may remove itself from iterated list
+            for (Path path : new ArrayList<>(paths)) {
+                // apply selected inherited properties scope/optional to all (winner carries version; others are losers)
+                path.scope = ctx.scope;
+                path.optional = ctx.optional;
+
+                // reset children as inheritance may be affected by this node scope/optionality change
+                path.children.forEach(c -> c.pull(0));
+                // derive with new values from this to children only; observe winner flag
+                path.derive(1, path == winnerPath);
+                // push this node full level changes to DN graph
+                path.push(0);
+            }
+        }
+
+        if (stats != null) {
+            long time2 = System.nanoTime();
+            stats.put("ConflictResolver.totalTime", time2 - time1);
+            stats.put(
+                    "ConflictResolver.conflictItemCount",
+                    state.partitions.values().stream().map(List::size).reduce(0, Integer::sum));
+        }
+
+        return node;
+    }
+
+    /**
+     * State of conflict resolution processing, to make this component (held in session) re-entrant by multiple threads.
+     */
+    private static class State {
         /**
          * Verbosity to be applied, see {@link Verbosity}.
          */
@@ -200,17 +335,18 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         private final Map<String, Collection<String>> cyclicPredecessors;
 
         /**
-         * A mapping from conflictId to paths represented as {@link CRNode}s that exist for each conflictId.
+         * A mapping from conflictId to paths represented as {@link Path}s that exist for each conflictId. In other
+         * words all paths to each {@link DependencyNode} that are member of same conflictId group.
          */
-        private final Map<String, List<CRNode>> partitions;
+        private final Map<String, List<Path>> partitions;
 
         /**
-         * A mapping from conflictIds to winner node for given conflictId.
+         * A mapping from conflictIds to winner {@link Path}, hence {@link DependencyNode}  for given conflictId.
          */
-        private final Map<String, CRNode> resolvedIds;
+        private final Map<String, Path> resolvedIds;
 
         @SuppressWarnings("checkstyle:ParameterNumber")
-        private CRState(
+        private State(
                 Verbosity verbosity,
                 VersionSelector versionSelector,
                 ScopeSelector scopeSelector,
@@ -230,19 +366,50 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             this.partitions = new HashMap<>();
             this.resolvedIds = new HashMap<>();
         }
+
+        /**
+         * Consumes the dirty graph and builds internal structures out of {@link Path} instances that is always a
+         * tree.
+         */
+        private Path build(DependencyNode node) throws RepositoryException {
+            Path root = new Path(this, node, null);
+            gatherCRNodes(root);
+            return root;
+        }
+
+        /**
+         * Recursively builds {@link Path} graph by observing each node associated {@link DependencyNode}.
+         */
+        private void gatherCRNodes(Path node) throws RepositoryException {
+            List<DependencyNode> children = node.dn.getChildren();
+            if (!children.isEmpty()) {
+                // add children; we will get back those really added (not causing cycles)
+                List<Path> added = node.addChildren(children);
+                for (Path child : added) {
+                    gatherCRNodes(child);
+                }
+            }
+        }
     }
 
-    private static class CRNode {
-        private final CRState state;
+    /**
+     * Class that represents a unique path within dirty graph (sans cycles) from which referenced {@link DependencyNode}
+     * is reachable from. Each path is represented by unique instance of this class, but multiple instances of this
+     * class may point to same instance of {@link DependencyNode}.
+     * <p>
+     * Structure represented by {@link Path} instances is guaranteed to be a tree (has root and contains no cycles).
+     */
+    private static class Path {
+        private final State state;
         private DependencyNode dn;
         private final String conflictId;
-        private final CRNode parent;
+        private final Path parent;
         private final int depth;
-        private final List<CRNode> children;
+        private final List<Path> children;
         private String scope;
         private boolean optional;
 
-        private CRNode(CRState state, DependencyNode dn, CRNode parent) {
+        private Path(State state, DependencyNode dn, Path parent) {
             this.state = state;
             this.dn = dn;
             this.conflictId = state.conflictIds.get(dn);
@@ -258,7 +425,8 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         }
 
         /**
-         * Pulls (possibly updated) scope and optional values from associated dependency node.
+         * Pulls (possibly updated) scope and optional values from associated {@link DependencyNode} to this instance,
+         * going down toward children recursively the required count of levels.
          */
         private void pull(int levels) {
             Dependency d = dn.getDependency();
@@ -271,14 +439,15 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             }
             int newLevels = levels - 1;
             if (newLevels >= 0) {
-                for (CRNode child : this.children) {
+                for (Path child : this.children) {
                     child.pull(newLevels);
                 }
             }
         }
 
         /**
-         * Derives values (scope and optionality) in the tree recursively.
+         * Derives (from this to children direction) values that are "inherited" in tree: scope and optionality in the tree
+         * recursively going down required count of "levels".
          */
         private void derive(int levels, boolean winner) throws RepositoryException {
             if (!winner) {
@@ -300,18 +469,21 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             }
             int newLevels = levels - 1;
             if (newLevels >= 0) {
-                for (CRNode child : children) {
+                for (Path child : children) {
                     child.derive(newLevels, false);
                 }
             }
         }
 
         /**
-         * Pushes (applies) the scope and optional and more to associated dependency node.
+         * Pushes (applies) the scope and optional and structural changes to associated {@link DependencyNode} modifying
+         * the graph of it. Verbosity is observed, and depending on it the conflicting/loser nodes are removed, or
+         * just their children is removed (with special care for version ranges, see {@link #relatedSiblingsCount(Artifact, Path)}
+         * or by just doing nothing with them only marking losers in full verbosity mode.
          */
         private void push(int levels) {
             if (this.parent != null) {
-                CRNode winner = this.state.resolvedIds.get(this.conflictId);
+                Path winner = this.state.resolvedIds.get(this.conflictId);
                 if (winner == null) {
                     throw new IllegalStateException(
                             "Winner selection did not happen for conflictId=" + this.conflictId);
@@ -397,7 +569,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                 int newLevels = levels - 1;
                 if (newLevels >= 0) {
                     // child may remove itself from iterated list
-                    for (CRNode child : new ArrayList<>(children)) {
+                    for (Path child : new ArrayList<>(children)) {
                         child.push(newLevels);
                     }
                 }
@@ -406,7 +578,12 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             }
         }
 
-        private static int relatedSiblingsCount(Artifact artifact, CRNode parent) {
+        /**
+         * Counts "relatives" (GACE equal) artifacts under same parent; this is for cleaning up redundant nodes in
+         * case of version ranges, where same GACE is resolved into multiple GACEV as range is resolved. In {@link Verbosity#STANDARD}
+         * verbosity mode we remove "redundant" nodes (of a range) leaving only "winner equal" loser, that have same GACEV as winner.
+         */
+        private int relatedSiblingsCount(Artifact artifact, Path parent) {
             String ga = artifact.getGroupId() + ":" + artifact.getArtifactId();
             return Math.toIntExact(parent.children.stream()
                     .map(n -> n.dn.getArtifact())
@@ -415,29 +592,30 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         }
 
         /**
-         * Removes this and all child nodes from winner selection scope.
+         * Removes this and all child {@link Path} nodes from winner selection scope; essentially marks whole subtree
+         * from "this and below" as loser, to not be considered in subsequent winner selections.
          */
         private void moveOutOfScope() {
             this.state.partitions.get(this.conflictId).remove(this);
-            for (CRNode child : this.children) {
+            for (Path child : this.children) {
                 child.moveOutOfScope();
             }
         }
 
         /**
          * Adds node children: this method should be "batch" used, as all (potential) children should be added at once.
-         * Method will return really added ones, as this class avoids cycles, is always a tree.
+         * Method will return really added ones, as this class avoids cycles.
          */
-        private List<CRNode> addChildren(List<DependencyNode> children) throws RepositoryException {
+        private List<Path> addChildren(List<DependencyNode> children) throws RepositoryException {
             Collection<String> thisCyclicPredecessors =
                     this.state.cyclicPredecessors.getOrDefault(this.conflictId, Collections.emptySet());
 
-            ArrayList<CRNode> added = new ArrayList<>(children.size());
+            ArrayList<Path> added = new ArrayList<>(children.size());
             for (DependencyNode child : children) {
                 String childConflictId = this.state.conflictIds.get(child);
                 if (!this.state.partitions.containsKey(childConflictId)
                         || !thisCyclicPredecessors.contains(childConflictId)) {
-                    CRNode c = new CRNode(this.state, child, this);
+                    Path c = new Path(this.state, child, this);
                     this.children.add(c);
                     c.derive(0, false);
                     added.add(c);
@@ -447,11 +625,11 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         }
 
         /**
-         * Dumps for debug.
+         * Dump for debug.
          */
         private void dump(String padding) {
             System.out.println(padding + this.dn + ": " + this.scope + "/" + this.optional);
-            for (CRNode child : children) {
+            for (Path child : children) {
                 child.dump(padding + "  ");
             }
         }
@@ -462,150 +640,6 @@ public final class ConflictResolver implements DependencyGraphTransformer {
         @Override
         public String toString() {
             return this.dn.toString();
-        }
-    }
-
-    /**
-     * Creates a new conflict resolver instance with the specified hooks.
-     *
-     * @param versionSelector The version selector to use, must not be {@code null}.
-     * @param scopeSelector The scope selector to use, must not be {@code null}.
-     * @param optionalitySelector The optionality selector ot use, must not be {@code null}.
-     * @param scopeDeriver The scope deriver to use, must not be {@code null}.
-     */
-    public ConflictResolver(
-            VersionSelector versionSelector,
-            ScopeSelector scopeSelector,
-            OptionalitySelector optionalitySelector,
-            ScopeDeriver scopeDeriver) {
-        this.versionSelector = requireNonNull(versionSelector, "version selector cannot be null");
-        this.scopeSelector = requireNonNull(scopeSelector, "scope selector cannot be null");
-        this.optionalitySelector = requireNonNull(optionalitySelector, "optionality selector cannot be null");
-        this.scopeDeriver = requireNonNull(scopeDeriver, "scope deriver cannot be null");
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
-            throws RepositoryException {
-        requireNonNull(node, "node cannot be null");
-        requireNonNull(context, "context cannot be null");
-        List<String> sortedConflictIds = (List<String>) context.get(TransformationContextKeys.SORTED_CONFLICT_IDS);
-        if (sortedConflictIds == null) {
-            ConflictIdSorter sorter = new ConflictIdSorter();
-            sorter.transformGraph(node, context);
-
-            sortedConflictIds = (List<String>) context.get(TransformationContextKeys.SORTED_CONFLICT_IDS);
-        }
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> stats = (Map<String, Object>) context.get(TransformationContextKeys.STATS);
-        long time1 = System.nanoTime();
-
-        @SuppressWarnings("unchecked")
-        Collection<Collection<String>> conflictIdCycles =
-                (Collection<Collection<String>>) context.get(TransformationContextKeys.CYCLIC_CONFLICT_IDS);
-        if (conflictIdCycles == null) {
-            throw new RepositoryException("conflict id cycles have not been identified");
-        }
-
-        Map<DependencyNode, String> conflictIds =
-                (Map<DependencyNode, String>) context.get(TransformationContextKeys.CONFLICT_IDS);
-        if (conflictIds == null) {
-            throw new RepositoryException("conflict groups have not been identified");
-        }
-
-        Map<String, Collection<String>> cyclicPredecessors = new HashMap<>();
-        for (Collection<String> cycle : conflictIdCycles) {
-            for (String conflictId : cycle) {
-                Collection<String> predecessors = cyclicPredecessors.computeIfAbsent(conflictId, k -> new HashSet<>());
-                predecessors.addAll(cycle);
-            }
-        }
-
-        CRState crState = new CRState(
-                getVerbosity(context.getSession()),
-                versionSelector.getInstance(node, context),
-                scopeSelector.getInstance(node, context),
-                scopeDeriver.getInstance(node, context),
-                optionalitySelector.getInstance(node, context),
-                sortedConflictIds,
-                conflictIds,
-                cyclicPredecessors);
-
-        CRNode root = new CRNode(crState, node, null);
-        gatherCRNodes(root);
-        // System.out.println("LOAD:");
-        // root.dump("");
-
-        for (String conflictId : crState.sortedConflictIds) {
-            // paths in conflict group to consider
-            List<CRNode> crNodes = crState.partitions.get(conflictId);
-            if (crNodes.isEmpty()) {
-                continue;
-            }
-
-            ConflictContext ctx = new ConflictContext(
-                    node,
-                    crState.conflictIds,
-                    crNodes.stream().map(ConflictItem::new).collect(Collectors.toList()),
-                    conflictId);
-            crState.versionSelector.selectVersion(ctx);
-            if (ctx.winner == null) {
-                throw new RepositoryException("conflict resolver did not select winner among " + ctx.items);
-            }
-            crState.scopeSelector.selectScope(ctx);
-            crState.optionalitySelector.selectOptionality(ctx);
-
-            ConflictItem winnerItem = ctx.winner;
-            DependencyNode winnerNode = winnerItem.node;
-            CRNode winnerCrNode = winnerItem.crNode;
-
-            if (crState.resolvedIds.containsKey(conflictId)) {
-                throw new RepositoryException("conflict resolver already have winner for conflictId=" + conflictId
-                        + ": " + crState.resolvedIds);
-            }
-            crState.resolvedIds.put(conflictId, winnerCrNode);
-
-            // node may remove itself from iterated list
-            for (CRNode crNode : new ArrayList<>(crNodes)) {
-                DependencyNode dependencyNode = crNode.dn;
-                boolean winner = winnerNode == dependencyNode;
-
-                crNode.scope = ctx.scope;
-                crNode.optional = ctx.optional;
-
-                // reset children
-                crNode.children.forEach(c -> c.pull(0));
-                // derive with new values from this to children
-                crNode.derive(1, winner);
-                // push this node changes
-                crNode.push(0);
-            }
-        }
-
-        // System.out.println("FINISH:");
-        // root.dump("");
-
-        if (stats != null) {
-            long time2 = System.nanoTime();
-            stats.put("ConflictResolver.totalTime", time2 - time1);
-            stats.put(
-                    "ConflictResolver.conflictItemCount",
-                    crState.partitions.values().stream().map(List::size).reduce(0, Integer::sum));
-        }
-
-        return node;
-    }
-
-    private void gatherCRNodes(CRNode node) throws RepositoryException {
-        List<DependencyNode> children = node.dn.getChildren();
-        if (!children.isEmpty()) {
-            // add children; we will get back those really added (not causing cycles)
-            List<CRNode> added = node.addChildren(children);
-            for (CRNode child : added) {
-                gatherCRNodes(child);
-            }
         }
     }
 
@@ -685,7 +719,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
      *                change without notice and only exists to enable unit testing.
      */
     public static final class ConflictItem {
-        private final CRNode crNode;
+        private final Path path;
         private final List<DependencyNode> parent;
         private final Artifact artifact;
         private final DependencyNode node;
@@ -703,20 +737,20 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          */
         public static final int OPTIONAL_TRUE = 0x02;
 
-        private ConflictItem(CRNode crNode) {
-            this.crNode = crNode;
-            if (crNode.parent != null) {
-                DependencyNode parent = crNode.parent.dn;
+        private ConflictItem(Path path) {
+            this.path = path;
+            if (path.parent != null) {
+                DependencyNode parent = path.parent.dn;
                 this.parent = parent.getChildren();
                 this.artifact = parent.getArtifact();
             } else {
                 this.parent = null;
                 this.artifact = null;
             }
-            this.node = crNode.dn;
-            this.depth = crNode.depth;
-            this.scope = crNode.scope;
-            this.optionalities = crNode.optional ? OPTIONAL_TRUE : OPTIONAL_FALSE;
+            this.node = path.dn;
+            this.depth = path.depth;
+            this.scope = path.scope;
+            this.optionalities = path.optional ? OPTIONAL_TRUE : OPTIONAL_FALSE;
         }
 
         /**
