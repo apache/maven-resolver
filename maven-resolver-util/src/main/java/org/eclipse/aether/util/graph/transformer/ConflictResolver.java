@@ -44,11 +44,9 @@ import static java.util.Objects.requireNonNull;
  * data. Additionally, the keys {@link #NODE_DATA_ORIGINAL_SCOPE} and {@link #NODE_DATA_ORIGINAL_OPTIONALITY} are used
  * to store the original scope and optionality of each node. Obviously, the resulting dependency tree is not suitable
  * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
- * <p>
- * This transformer will query the keys {@link TransformationContextKeys#CONFLICT_IDS},
- * {@link TransformationContextKeys#SORTED_CONFLICT_IDS}, {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} for
- * existing information about conflict ids. In absence of this information, it will automatically invoke the
- * {@link ConflictIdSorter} to calculate it.
+ *
+ * @see ClassicConflictResolver
+ * @see PathConflictResolver
  */
 public abstract class ConflictResolver implements DependencyGraphTransformer {
 

@@ -60,6 +60,8 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Implementation note: this conflict resolver builds a cycle-free "parallel" structure based ib passed in dirty graph,
  * and applies operations level by level starting from root.
+ *
+ * @since 2.0.11
  */
 public final class PathConflictResolver extends ConflictResolver {
 

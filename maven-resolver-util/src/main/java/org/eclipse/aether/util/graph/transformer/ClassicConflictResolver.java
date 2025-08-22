@@ -63,6 +63,8 @@ import static java.util.Objects.requireNonNull;
  * Implementation note: this conflict resolver is completely same as the one used in Maven 3/Resolver 1. This implementation
  * may produce "worst case" performance of O(N^2) on certain case of projects and dependencies where conflict groups are
  * mostly having 1 member.
+ *
+ * @since 2.0.11
  */
 public final class ClassicConflictResolver extends ConflictResolver {
     /**

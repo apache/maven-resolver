@@ -51,8 +51,8 @@ import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
-import org.eclipse.aether.util.graph.transformer.ClassicConflictResolver;
 import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
+import org.eclipse.aether.util.graph.transformer.PathConflictResolver;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
 
@@ -108,7 +108,7 @@ public class SessionBuilderSupplier {
 
     protected DependencyGraphTransformer getDependencyGraphTransformer() {
         return new ChainedDependencyGraphTransformer(new DependencyGraphTransformer[] {
-            new ClassicConflictResolver(
+            new PathConflictResolver(
                     new NearestVersionSelector(),
                     new ManagedScopeSelector(this.getScopeManager()),
                     new SimpleOptionalitySelector(),
