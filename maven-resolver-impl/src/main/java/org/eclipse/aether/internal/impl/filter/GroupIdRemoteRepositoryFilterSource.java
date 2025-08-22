@@ -142,8 +142,13 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private boolean isRepositoryFilteringEnabled(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return ConfigUtils.getBoolean(
-                session, isEnabled(session), CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
+        if (isEnabled(session)) {
+            return ConfigUtils.getBoolean(
+                    session,
+                    ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + ".*"),
+                    CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
+        }
+        return false;
     }
 
     @Override
