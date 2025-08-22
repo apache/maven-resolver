@@ -41,8 +41,8 @@ import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
+import org.eclipse.aether.util.graph.transformer.ClassicConflictResolver;
 import org.eclipse.aether.util.graph.transformer.ConfigurableVersionSelector;
-import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
@@ -102,7 +102,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
 
     protected DependencyGraphTransformer getDependencyGraphTransformer() {
         return new ChainedDependencyGraphTransformer(
-                new ConflictResolver(
+                new ClassicConflictResolver(
                         new ConfigurableVersionSelector(), new JavaScopeSelector(),
                         new SimpleOptionalitySelector(), new JavaScopeDeriver()),
                 new JavaDependencyContextRefiner());

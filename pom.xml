@@ -412,9 +412,7 @@
                     <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
                     <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
                     <!-- ConflictResolver (these API classes should not be created by clients; ctor changes) -->
-                    <!-- TODO: this as is is wrong: i don't want to ignore whole class, just ctor changes (unsure is it possible?) -->
-                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver$ConflictItem</exclude>
-                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver$ConflictContext</exclude>
+                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>false</breakBuildOnBinaryIncompatibleModifications>
@@ -460,9 +458,7 @@
                     <exclude>org.eclipse.aether.ConfigurationProperties#PERSISTED_CHECKSUMS</exclude>
                     <exclude>org.eclipse.aether.ConfigurationProperties#DEFAULT_PERSISTED_CHECKSUMS</exclude>
                     <!-- ConflictResolver (these API classes should not be created by clients; ctor changes) -->
-                    <!-- TODO: this as is is wrong: i don't want to ignore whole class, just ctor changes (unsure is it possible?) -->
-                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver$ConflictItem</exclude>
-                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver$ConflictContext</exclude>
+                    <exclude>org.eclipse.aether.util.graph.transformer.ConflictResolver</exclude>
                   </excludes>
                   <ignoreMissingClasses>true</ignoreMissingClasses>
                   <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>

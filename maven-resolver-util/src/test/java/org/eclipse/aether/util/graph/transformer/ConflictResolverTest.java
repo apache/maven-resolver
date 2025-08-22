@@ -21,43 +21,62 @@ package org.eclipse.aether.util.graph.transformer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
 import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ConflictResolverTest {
-    @Test
-    void noTransformationRequired() throws RepositoryException {
-        ConflictResolver resolver = makeDefaultResolver();
+public final class ConflictResolverTest extends AbstractConflictResolverTest {
+    private static Stream<Arguments> conflictResolverSource() {
+        return Stream.of(
+                Arguments.of(new ClassicConflictResolver(
+                        new NearestVersionSelector(),
+                        new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(),
+                        new JavaScopeDeriver())),
+                Arguments.of(new PathConflictResolver(
+                        new NearestVersionSelector(),
+                        new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(),
+                        new JavaScopeDeriver())));
+    }
 
+    @Override
+    protected DependencyGraphParser newParser() {
+        // is unused!!!
+        return new DependencyGraphParser("transformer/conflict-resolver/");
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void noTransformationRequired(ConflictResolver conflictResolver) throws RepositoryException {
         // Foo -> Bar
         DependencyNode fooNode = makeDependencyNode("group-id", "foo", "1.0");
         DependencyNode barNode = makeDependencyNode("group-id", "bar", "1.0");
         fooNode.setChildren(mutableList(barNode));
 
-        DependencyNode transformedNode =
-                resolver.transformGraph(fooNode, TestUtils.newTransformationContext(TestUtils.newSession()));
+        DependencyNode transformedNode = transform(conflictResolver, fooNode);
 
         assertSame(fooNode, transformedNode);
         assertEquals(1, transformedNode.getChildren().size());
         assertSame(barNode, transformedNode.getChildren().get(0));
     }
 
-    @Test
-    void versionClash() throws RepositoryException {
-        ConflictResolver resolver = makeDefaultResolver();
-
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionClash(ConflictResolver conflictResolver) throws RepositoryException {
         // Foo -> Bar -> Baz 2.0
         //  |---> Baz 1.0
         DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
@@ -67,8 +86,7 @@ public class ConflictResolverTest {
         fooNode.setChildren(mutableList(barNode, baz1Node));
         barNode.setChildren(mutableList(baz2Node));
 
-        DependencyNode transformedNode =
-                resolver.transformGraph(fooNode, TestUtils.newTransformationContext(TestUtils.newSession()));
+        DependencyNode transformedNode = transform(conflictResolver, fooNode);
 
         assertSame(fooNode, transformedNode);
         assertEquals(2, fooNode.getChildren().size());
@@ -77,9 +95,9 @@ public class ConflictResolverTest {
         assertSame(baz1Node, fooNode.getChildren().get(1));
     }
 
-    @Test
-    void versionClashForkedStandardVerbose() throws RepositoryException {
-
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionClashForkedStandardVerbose(ConflictResolver conflictResolver) throws RepositoryException {
         // root -> impl1 -> api:1
         //  |----> impl2 -> api:2
         DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
@@ -92,7 +110,7 @@ public class ConflictResolverTest {
         impl1.setChildren(mutableList(api1));
         impl2.setChildren(mutableList(api2));
 
-        DependencyNode transformedNode = versionRangeClash(root, ConflictResolver.Verbosity.STANDARD);
+        DependencyNode transformedNode = versionRangeClash(conflictResolver, root, ConflictResolver.Verbosity.STANDARD);
 
         assertSame(root, transformedNode);
         assertEquals(2, root.getChildren().size());
@@ -104,8 +122,9 @@ public class ConflictResolverTest {
         assertConflictedButSameAsOriginal(api2, impl2.getChildren().get(0));
     }
 
-    @Test
-    void versionRangeClashAscOrder() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashAscOrder(ConflictResolver conflictResolver) throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -115,7 +134,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c1, c2));
         b.setChildren(mutableList(c1, c2));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.NONE);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.NONE);
 
         assertSame(a, ta);
         assertEquals(2, a.getChildren().size());
@@ -124,8 +143,9 @@ public class ConflictResolverTest {
         assertEquals(0, b.getChildren().size());
     }
 
-    @Test
-    void versionRangeClashAscOrderStandardVerbose() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashAscOrderStandardVerbose(ConflictResolver conflictResolver) throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -135,7 +155,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c1, c2));
         b.setChildren(mutableList(c1, c2));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.STANDARD);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.STANDARD);
 
         assertSame(a, ta);
         assertEquals(2, a.getChildren().size());
@@ -145,8 +165,9 @@ public class ConflictResolverTest {
         assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
     }
 
-    @Test
-    void versionRangeClashAscOrderFullVerbose() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashAscOrderFullVerbose(ConflictResolver conflictResolver) throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -156,7 +177,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c1, c2));
         b.setChildren(mutableList(c1, c2));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.FULL);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.FULL);
 
         assertSame(a, ta);
         assertEquals(3, a.getChildren().size());
@@ -168,8 +189,9 @@ public class ConflictResolverTest {
         assertConflictedButSameAsOriginal(c2, b.getChildren().get(1));
     }
 
-    @Test
-    void versionRangeClashDescOrder() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashDescOrder(ConflictResolver conflictResolver) throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -179,7 +201,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c2, c1));
         b.setChildren(mutableList(c2, c1));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.NONE);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.NONE);
 
         assertSame(a, ta);
         assertEquals(2, a.getChildren().size());
@@ -188,8 +210,9 @@ public class ConflictResolverTest {
         assertEquals(0, b.getChildren().size());
     }
 
-    @Test
-    void versionRangeClashDescOrderStandardVerbose() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashDescOrderStandardVerbose(ConflictResolver conflictResolver) throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -199,7 +222,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c2, c1));
         b.setChildren(mutableList(c2, c1));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.STANDARD);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.STANDARD);
 
         assertSame(a, ta);
         assertEquals(2, a.getChildren().size());
@@ -209,8 +232,9 @@ public class ConflictResolverTest {
         assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
     }
 
-    @Test
-    void versionRangeClashDescOrderFullVerbose() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashDescOrderFullVerbose(ConflictResolver conflictResolver) throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -220,7 +244,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c2, c1));
         b.setChildren(mutableList(c2, c1));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.FULL);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.FULL);
 
         assertSame(a, ta);
         assertEquals(3, a.getChildren().size());
@@ -232,8 +256,9 @@ public class ConflictResolverTest {
         assertConflictedButSameAsOriginal(c1, b.getChildren().get(1));
     }
 
-    @Test
-    void versionRangeClashMixedOrder() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashMixedOrder(ConflictResolver conflictResolver) throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -243,7 +268,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c2, c1));
         b.setChildren(mutableList(c1, c2));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.NONE);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.NONE);
 
         assertSame(a, ta);
         assertEquals(2, a.getChildren().size());
@@ -252,8 +277,9 @@ public class ConflictResolverTest {
         assertEquals(0, b.getChildren().size());
     }
 
-    @Test
-    void versionRangeClashMixedOrderStandardVerbose() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashMixedOrderStandardVerbose(ConflictResolver conflictResolver) throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -263,7 +289,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c2, c1));
         b.setChildren(mutableList(c1, c2));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.STANDARD);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.STANDARD);
 
         assertSame(a, ta);
         assertEquals(2, a.getChildren().size());
@@ -273,8 +299,10 @@ public class ConflictResolverTest {
         assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
     }
 
-    @Test
-    void versionRangeClashMixedOrderStandardVerboseLeavesOne() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashMixedOrderStandardVerboseLeavesOne(ConflictResolver conflictResolver)
+            throws RepositoryException {
         // This is a bit different then others, is related to MRESOLVER-357 and makes sure that
         // ConflictResolver fulfils the promise of "leaving 1 loser"
         //
@@ -291,7 +319,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c2, c1, d2));
         b.setChildren(mutableList(c1, c2, d1));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.STANDARD);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.STANDARD);
 
         assertSame(a, ta);
         assertEquals(3, a.getChildren().size());
@@ -303,8 +331,9 @@ public class ConflictResolverTest {
         assertConflictedButSameAsOriginal(d1, b.getChildren().get(1));
     }
 
-    @Test
-    void versionRangeClashMixedOrderFullVerbose() throws RepositoryException {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void versionRangeClashMixedOrderFullVerbose(ConflictResolver conflictResolver) throws RepositoryException {
         //  A -> B -> C[1..2]
         //  \--> C[1..2]
         DependencyNode a = makeDependencyNode("some-group", "a", "1.0");
@@ -314,7 +343,7 @@ public class ConflictResolverTest {
         a.setChildren(mutableList(b, c2, c1));
         b.setChildren(mutableList(c1, c2));
 
-        DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.FULL);
+        DependencyNode ta = versionRangeClash(conflictResolver, a, ConflictResolver.Verbosity.FULL);
 
         assertSame(a, ta);
         assertEquals(3, a.getChildren().size());
@@ -348,17 +377,15 @@ public class ConflictResolverTest {
     /**
      * Performs a verbose conflict resolution on passed in root.
      */
-    private DependencyNode versionRangeClash(DependencyNode root, ConflictResolver.Verbosity verbosity)
+    private DependencyNode versionRangeClash(
+            ConflictResolver conflictResolver, DependencyNode root, ConflictResolver.Verbosity verbosity)
             throws RepositoryException {
-        ConflictResolver resolver = makeDefaultResolver();
-
         System.out.println();
         System.out.println("Input node:");
         root.accept(DUMPER_SOUT);
 
-        DefaultRepositorySystemSession session = TestUtils.newSession();
-        session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, verbosity);
-        DependencyNode transformedRoot = resolver.transformGraph(root, TestUtils.newTransformationContext(session));
+        setVerbosity(verbosity);
+        DependencyNode transformedRoot = transform(conflictResolver, root);
 
         System.out.println();
         System.out.println("Transformed node:");
@@ -367,10 +394,9 @@ public class ConflictResolverTest {
         return transformedRoot;
     }
 
-    @Test
-    void derivedScopeChange() throws RepositoryException {
-        ConflictResolver resolver = makeDefaultResolver();
-
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void derivedScopeChange(ConflictResolver conflictResolver) throws RepositoryException {
         // Foo -> Bar (test) -> Jaz
         //  |---> Baz -> Jaz
         DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
@@ -383,8 +409,7 @@ public class ConflictResolverTest {
         barNode.setChildren(jazList);
         bazNode.setChildren(jazList);
 
-        DependencyNode transformedNode =
-                resolver.transformGraph(fooNode, TestUtils.newTransformationContext(TestUtils.newSession()));
+        DependencyNode transformedNode = transform(conflictResolver, fooNode);
 
         assertSame(fooNode, transformedNode);
         assertEquals(2, fooNode.getChildren().size());
@@ -396,10 +421,9 @@ public class ConflictResolverTest {
         assertSame(jazNode, barNode.getChildren().get(0));
     }
 
-    @Test
-    void derivedOptionalStatusChange() throws RepositoryException {
-        ConflictResolver resolver = makeDefaultResolver();
-
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void derivedOptionalStatusChange(ConflictResolver conflictResolver) throws RepositoryException {
         // Foo -> Bar (optional) -> Jaz
         //  |---> Baz -> Jaz
         DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
@@ -413,8 +437,7 @@ public class ConflictResolverTest {
         barNode.setChildren(jazList);
         bazNode.setChildren(jazList);
 
-        DependencyNode transformedNode =
-                resolver.transformGraph(fooNode, TestUtils.newTransformationContext(TestUtils.newSession()));
+        DependencyNode transformedNode = transform(conflictResolver, fooNode);
 
         assertSame(fooNode, transformedNode);
         assertEquals(2, fooNode.getChildren().size());
@@ -424,14 +447,6 @@ public class ConflictResolverTest {
         assertSame(bazNode, fooNode.getChildren().get(1));
         assertEquals(1, barNode.getChildren().size());
         assertSame(jazNode, barNode.getChildren().get(0));
-    }
-
-    private static ConflictResolver makeDefaultResolver() {
-        return new ConflictResolver(
-                new NearestVersionSelector(),
-                new JavaScopeSelector(),
-                new SimpleOptionalitySelector(),
-                new JavaScopeDeriver());
     }
 
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
