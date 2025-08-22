@@ -19,7 +19,6 @@
 package org.eclipse.aether.supplier;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -99,7 +98,8 @@ public class SessionBuilderSupplier {
 
     protected DependencySelector getDependencySelector() {
         return new AndDependencySelector(new DependencySelector[] {
-            ScopeDependencySelector.legacy(null, Arrays.asList(DependencyScope.TEST.id(), DependencyScope.PROVIDED.id())),
+            ScopeDependencySelector.legacy(
+                    null, Arrays.asList(DependencyScope.TEST.id(), DependencyScope.PROVIDED.id())),
             OptionalDependencySelector.fromDirect(),
             new ExclusionDependencySelector()
         });
