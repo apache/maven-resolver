@@ -51,6 +51,7 @@ import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
@@ -71,6 +72,7 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.eclipse.aether.util.concurrency.SmartExecutor;
 import org.eclipse.aether.util.concurrency.SmartExecutorUtils;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.version.Version;
 
 import static org.eclipse.aether.internal.impl.collect.DefaultDependencyCycle.find;
@@ -144,6 +146,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             List<RemoteRepository> repositories,
             List<Dependency> dependencies,
             List<Dependency> managedDependencies,
+            List<Exclusion> exclusions,
             Results results)
             throws DependencyCollectionException {
         boolean useSkip = ConfigUtils.getBoolean(session, DEFAULT_SKIPPER, CONFIG_PROP_SKIPPER);
@@ -162,6 +165,8 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                                 ConfigUtils.getInteger(session, DEFAULT_THREADS, CONFIG_PROP_THREADS),
                                 getClass().getSimpleName() + "-"))) {
             Args args = new Args(session, pool, context, versionContext, request, skipper, parallelDescriptorResolver);
+            ExclusionDependencySelector exclusionDependencySelector =
+                    exclusions == null || exclusions.isEmpty() ? null : new ExclusionDependencySelector(exclusions);
 
             DependencySelector rootDepSelector = session.getDependencySelector() != null
                     ? session.getDependencySelector().deriveChildSelector(context)
@@ -200,7 +205,12 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
 
             while (!args.dependencyProcessingQueue.isEmpty()) {
                 processDependency(
-                        args, results, args.dependencyProcessingQueue.remove(), Collections.emptyList(), false);
+                        args,
+                        results,
+                        args.dependencyProcessingQueue.remove(),
+                        Collections.emptyList(),
+                        false,
+                        exclusionDependencySelector);
             }
 
             if (args.interruptedException.get() != null) {
@@ -216,7 +226,8 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             Results results,
             DependencyProcessingContext context,
             List<Artifact> relocations,
-            boolean disableVersionManagement) {
+            boolean disableVersionManagement,
+            ExclusionDependencySelector exclusionDependencySelector) {
         if (Thread.interrupted()) {
             args.interruptedException.set(new InterruptedException());
         }
@@ -224,6 +235,11 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             return;
         }
         Dependency dependency = context.dependency;
+        if (exclusionDependencySelector != null) {
+            if (!exclusionDependencySelector.selectDependency(dependency)) {
+                return;
+            }
+        }
         PremanagedDependency preManaged = context.premanagedDependency;
 
         boolean noDescriptor = isLackingDescriptor(args.session, dependency.getArtifact());
@@ -292,7 +308,8 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                                 results,
                                 relocatedContext,
                                 descriptorResult.getRelocations(),
-                                disableVersionManagementSubsequently);
+                                disableVersionManagementSubsequently,
+                                exclusionDependencySelector);
                     }
 
                     return;
