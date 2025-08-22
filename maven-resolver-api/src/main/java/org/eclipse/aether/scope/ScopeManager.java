@@ -52,7 +52,7 @@ public interface ScopeManager {
     Optional<DependencyScope> getDependencyScope(String id);
 
     /**
-     * Returns the "universe" (all) of dependency scopes.
+     * Returns the "universe" (all) of dependency scopes as immutable collection.
      */
     Collection<DependencyScope> getDependencyScopeUniverse();
 
@@ -64,7 +64,7 @@ public interface ScopeManager {
     Optional<ResolutionScope> getResolutionScope(String id);
 
     /**
-     * Returns the "universe" (all) of resolution scopes.
+     * Returns the "universe" (all) of resolution scopes as immutable collection.
      */
     Collection<ResolutionScope> getResolutionScopeUniverse();
 }

@@ -69,11 +69,9 @@ public class GenericVersionScheme extends VersionSchemeSupport {
 
     static {
         // Register shutdown hook to print statistics if enabled
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            if (isStatisticsEnabled()) {
-                printGlobalStatistics();
-            }
-        }));
+        if (isStatisticsEnabled()) {
+            Runtime.getRuntime().addShutdownHook(new Thread(GenericVersionScheme::printGlobalStatistics));
+        }
     }
 
     public GenericVersionScheme() {
