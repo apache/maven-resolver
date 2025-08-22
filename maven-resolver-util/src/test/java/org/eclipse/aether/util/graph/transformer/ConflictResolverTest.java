@@ -138,13 +138,11 @@ public class ConflictResolverTest {
         DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.STANDARD);
 
         assertSame(a, ta);
-        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
-        assertEquals(3, a.getChildren().size());
+        assertEquals(2, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
         assertSame(c2, a.getChildren().get(1));
-        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
-        assertEquals(2, b.getChildren().size());
-        assertConflictedButSameAsOriginal(c2, b.getChildren().get(1));
+        assertEquals(1, b.getChildren().size());
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
     }
 
     @Test
@@ -160,12 +158,11 @@ public class ConflictResolverTest {
 
         DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.FULL);
 
-        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
         assertSame(a, ta);
         assertEquals(3, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
-        assertConflictedButSameAsOriginal(c1, a.getChildren().get(2));
-        assertSame(c2, a.getChildren().get(1));
+        assertConflictedButSameAsOriginal(c1, a.getChildren().get(1));
+        assertSame(c2, a.getChildren().get(2));
         assertEquals(2, b.getChildren().size());
         assertConflictedButSameAsOriginal(c1, b.getChildren().get(0));
         assertConflictedButSameAsOriginal(c2, b.getChildren().get(1));
@@ -205,12 +202,10 @@ public class ConflictResolverTest {
         DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.STANDARD);
 
         assertSame(a, ta);
-        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
-        assertEquals(3, a.getChildren().size());
+        assertEquals(2, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
         assertSame(c2, a.getChildren().get(1));
-        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
-        assertEquals(2, b.getChildren().size());
+        assertEquals(1, b.getChildren().size());
         assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
     }
 
@@ -271,13 +266,11 @@ public class ConflictResolverTest {
         DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.STANDARD);
 
         assertSame(a, ta);
-        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
-        assertEquals(3, a.getChildren().size());
+        assertEquals(2, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
         assertSame(c2, a.getChildren().get(1));
-        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
-        assertEquals(2, b.getChildren().size());
-        assertConflictedButSameAsOriginal(c2, b.getChildren().get(1));
+        assertEquals(1, b.getChildren().size());
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
     }
 
     @Test
@@ -301,15 +294,13 @@ public class ConflictResolverTest {
         DependencyNode ta = versionRangeClash(a, ConflictResolver.Verbosity.STANDARD);
 
         assertSame(a, ta);
-        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
-        assertEquals(4, a.getChildren().size());
+        assertEquals(3, a.getChildren().size());
         assertSame(b, a.getChildren().get(0));
         assertSame(c2, a.getChildren().get(1));
         assertSame(d2, a.getChildren().get(2));
-        // TODO: IMO original code was wrong: this is VERBOSE mode when we do not remove losers
-        assertEquals(3, b.getChildren().size());
-        assertConflictedButSameAsOriginal(c1, b.getChildren().get(0));
-        assertConflictedButSameAsOriginal(d1, b.getChildren().get(2));
+        assertEquals(2, b.getChildren().size());
+        assertConflictedButSameAsOriginal(c2, b.getChildren().get(0));
+        assertConflictedButSameAsOriginal(d1, b.getChildren().get(1));
     }
 
     @Test

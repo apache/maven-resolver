@@ -37,6 +37,7 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -346,9 +347,19 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                             break;
                         case STANDARD:
                             // leave this dn; remove children
-                            this.children.clear();
-                            this.dn.setChildren(Collections.emptyList());
-                            markLoser = true;
+                            String artifactId = ArtifactIdUtils.toId(this.dn.getArtifact());
+                            String winnerArtifactId = ArtifactIdUtils.toId(winner.dn.getArtifact());
+                            if (!Objects.equals(artifactId, winnerArtifactId)
+                                    && relatedSiblingsCount(this.dn.getArtifact(), this.parent) > 1) {
+                                this.parent.children.remove(this);
+                                this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
+                                this.parent.dn.getChildren().remove(this.dn);
+                                this.children.clear();
+                            } else {
+                                this.children.clear();
+                                this.dn.setChildren(Collections.emptyList());
+                                markLoser = true;
+                            }
                             break;
                         case FULL:
                             // leave all in place (even cycles)
@@ -374,8 +385,10 @@ public final class ConflictResolver implements DependencyGraphTransformer {
                         }
 
                         // swap it out in DN graph
-                        this.parent.dn.getChildren().remove(this.dn);
-                        this.parent.dn.getChildren().add(dnCopy);
+                        this.parent
+                                .dn
+                                .getChildren()
+                                .set(this.parent.dn.getChildren().indexOf(this.dn), dnCopy);
                         this.dn = dnCopy;
                     }
                 }
@@ -391,6 +404,14 @@ public final class ConflictResolver implements DependencyGraphTransformer {
             } else if (!this.dn.getChildren().isEmpty()) {
                 this.dn.setChildren(Collections.emptyList());
             }
+        }
+
+        private static int relatedSiblingsCount(Artifact artifact, CRNode parent) {
+            String ga = artifact.getGroupId() + ":" + artifact.getArtifactId();
+            return Math.toIntExact(parent.children.stream()
+                    .map(n -> n.dn.getArtifact())
+                    .filter(a -> ga.equals(a.getGroupId() + ":" + a.getArtifactId()))
+                    .count());
         }
 
         /**
@@ -664,24 +685,13 @@ public final class ConflictResolver implements DependencyGraphTransformer {
      *                change without notice and only exists to enable unit testing.
      */
     public static final class ConflictItem {
-        final CRNode crNode;
-
-        // nodes can share child lists, we care about the unique owner of a child node which is the child list
-        final List<DependencyNode> parent;
-
-        // only for debugging/toString() to help identify the parent node(s)
-        final Artifact artifact;
-
-        // is mutable as removeLosers will mutate it (if Verbosity==STANDARD)
-        final DependencyNode node;
-
-        final int depth;
-
-        // we start with String and update to Set<String> if needed
-        final String scope;
-
-        // bit field of OPTIONAL_FALSE and OPTIONAL_TRUE
-        final int optionalities;
+        private final CRNode crNode;
+        private final List<DependencyNode> parent;
+        private final Artifact artifact;
+        private final DependencyNode node;
+        private final int depth;
+        private final String scope;
+        private final int optionalities;
 
         /**
          * Bit flag indicating whether one or more paths consider the dependency non-optional.
@@ -693,7 +703,7 @@ public final class ConflictResolver implements DependencyGraphTransformer {
          */
         public static final int OPTIONAL_TRUE = 0x02;
 
-        ConflictItem(CRNode crNode) {
+        private ConflictItem(CRNode crNode) {
             this.crNode = crNode;
             if (crNode.parent != null) {
                 DependencyNode parent = crNode.parent.dn;
@@ -786,21 +796,17 @@ public final class ConflictResolver implements DependencyGraphTransformer {
      *                change without notice and only exists to enable unit testing.
      */
     public static final class ConflictContext {
-        final DependencyNode root;
+        private final DependencyNode root;
+        private final Map<DependencyNode, String> conflictIds;
+        private final Collection<ConflictItem> items;
+        private final String conflictId;
 
-        final Map<DependencyNode, String> conflictIds;
+        // elected properties
+        private ConflictItem winner;
+        private String scope;
+        private Boolean optional;
 
-        final Collection<ConflictItem> items;
-
-        final String conflictId;
-
-        ConflictItem winner;
-
-        String scope;
-
-        Boolean optional;
-
-        ConflictContext(
+        private ConflictContext(
                 DependencyNode root,
                 Map<DependencyNode, String> conflictIds,
                 Collection<ConflictItem> items,
