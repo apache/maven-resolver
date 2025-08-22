@@ -99,8 +99,7 @@ public class SessionBuilderSupplier {
 
     protected DependencySelector getDependencySelector() {
         return new AndDependencySelector(new DependencySelector[] {
-            ScopeDependencySelector.legacy(
-                    (Collection) null, Arrays.asList(DependencyScope.TEST.id(), DependencyScope.PROVIDED.id())),
+            ScopeDependencySelector.legacy(null, Arrays.asList(DependencyScope.TEST.id(), DependencyScope.PROVIDED.id())),
             OptionalDependencySelector.fromDirect(),
             new ExclusionDependencySelector()
         });
