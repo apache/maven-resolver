@@ -19,15 +19,30 @@
 package org.eclipse.aether.util.graph.transformer;
 
 import java.util.Locale;
+import java.util.stream.Stream;
 
-import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTest {
+public final class JavaScopeSelectorTest extends AbstractConflictResolverTest {
+    private static Stream<Arguments> conflictResolverSource() {
+        return Stream.of(
+                Arguments.of(new ClassicConflictResolver(
+                        new NearestVersionSelector(),
+                        new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(),
+                        new JavaScopeDeriver())),
+                Arguments.of(new PathConflictResolver(
+                        new NearestVersionSelector(),
+                        new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(),
+                        new JavaScopeDeriver())));
+    }
 
     private enum Scope {
         TEST,
@@ -39,13 +54,6 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
         public String toString() {
             return super.name().toLowerCase(Locale.ENGLISH);
         }
-    }
-
-    @Override
-    protected DependencyGraphTransformer newTransformer() {
-        return new ConflictResolver(
-                new NearestVersionSelector(), new JavaScopeSelector(),
-                new SimpleOptionalitySelector(), new JavaScopeDeriver());
     }
 
     @Override
@@ -76,55 +84,61 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
         return node;
     }
 
-    @Test
-    void testScopeInheritanceProvided() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testScopeInheritanceProvided(ConflictResolver conflictResolver) throws Exception {
         String resource = "inheritance.txt";
 
         String expected = "test";
-        DependencyNode root = transform(parseResource(resource, "provided", "test"));
+        DependencyNode root = transform(conflictResolver, parseResource(resource, "provided", "test"));
         expectScope(parser.dump(root), expected, root, 0, 0);
     }
 
-    @Test
-    void testConflictWinningScopeGetsUsedForInheritance() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testConflictWinningScopeGetsUsedForInheritance(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("conflict-and-inheritance.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         expectScope("compile", root, 0, 0);
         expectScope("compile", root, 0, 0, 0);
     }
 
-    @Test
-    void testScopeOfDirectDependencyWinsConflictAndGetsUsedForInheritanceToChildrenEverywhereInGraph()
-            throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testScopeOfDirectDependencyWinsConflictAndGetsUsedForInheritanceToChildrenEverywhereInGraph(
+            ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("direct-with-conflict-and-inheritance.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         expectScope("test", root, 0, 0);
     }
 
-    @Test
-    void testCycleA() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testCycleA(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("cycle-a.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         expectScope("compile", root, 0);
         expectScope("runtime", root, 1);
     }
 
-    @Test
-    void testCycleB() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testCycleB(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("cycle-b.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         expectScope("runtime", root, 0);
         expectScope("compile", root, 1);
     }
 
-    @Test
-    void testCycleC() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testCycleC(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("cycle-c.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         expectScope("runtime", root, 0);
         expectScope("runtime", root, 0, 0);
@@ -132,17 +146,19 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
         expectScope("runtime", root, 1, 0);
     }
 
-    @Test
-    void testCycleD() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testCycleD(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("cycle-d.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         expectScope("compile", root, 0);
         expectScope("compile", root, 0, 0);
     }
 
-    @Test
-    void testDirectNodesAlwaysWin() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testDirectNodesAlwaysWin(ConflictResolver conflictResolver) throws Exception {
 
         for (Scope directScope : Scope.values()) {
             String direct = directScope.toString();
@@ -151,15 +167,16 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
 
             String msg = String.format(
                     "direct node should be setting scope ('%s') for all nodes.\n" + parser.dump(root), direct);
-            assertSame(root, transform(root));
+            assertSame(root, transform(conflictResolver, root));
             msg += "\ntransformed:\n" + parser.dump(root);
 
             expectScope(msg, direct, root, 0);
         }
     }
 
-    @Test
-    void testNonDirectMultipleInheritance() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testNonDirectMultipleInheritance(ConflictResolver conflictResolver) throws Exception {
         for (Scope scope1 : Scope.values()) {
             for (Scope scope2 : Scope.values()) {
                 DependencyNode root = parseResource("multiple-inheritance.txt", scope1.toString(), scope2.toString());
@@ -167,7 +184,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
                 String expected = scope1.compareTo(scope2) >= 0 ? scope1.toString() : scope2.toString();
                 String msg = String.format("expected '%s' to win\n" + parser.dump(root), expected);
 
-                assertSame(root, transform(root));
+                assertSame(root, transform(conflictResolver, root));
                 msg += "\ntransformed:\n" + parser.dump(root);
 
                 expectScope(msg, expected, root, 0, 0);
@@ -175,8 +192,9 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
         }
     }
 
-    @Test
-    void testConflictScopeOrdering() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testConflictScopeOrdering(ConflictResolver conflictResolver) throws Exception {
         for (Scope scope1 : Scope.values()) {
             for (Scope scope2 : Scope.values()) {
                 DependencyNode root = parseResource("dueling-scopes.txt", scope1.toString(), scope2.toString());
@@ -184,7 +202,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
                 String expected = scope1.compareTo(scope2) >= 0 ? scope1.toString() : scope2.toString();
                 String msg = String.format("expected '%s' to win\n" + parser.dump(root), expected);
 
-                assertSame(root, transform(root));
+                assertSame(root, transform(conflictResolver, root));
                 msg += "\ntransformed:\n" + parser.dump(root);
 
                 expectScope(msg, expected, root, 0, 0);
@@ -195,8 +213,9 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
     /**
      * obscure case (illegal maven POM).
      */
-    @Test
-    void testConflictingDirectNodes() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testConflictingDirectNodes(ConflictResolver conflictResolver) throws Exception {
         for (Scope scope1 : Scope.values()) {
             for (Scope scope2 : Scope.values()) {
                 DependencyNode root =
@@ -205,7 +224,7 @@ public class JavaScopeSelectorTest extends AbstractDependencyGraphTransformerTes
                 String expected = scope1.toString();
                 String msg = String.format("expected '%s' to win\n" + parser.dump(root), expected);
 
-                assertSame(root, transform(root));
+                assertSame(root, transform(conflictResolver, root));
                 msg += "\ntransformed:\n" + parser.dump(root);
 
                 expectScope(msg, expected, root, 0);

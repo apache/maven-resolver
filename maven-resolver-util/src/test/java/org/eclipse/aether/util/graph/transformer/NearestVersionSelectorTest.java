@@ -19,23 +19,32 @@
 package org.eclipse.aether.util.graph.transformer;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
-public class NearestVersionSelectorTest extends AbstractDependencyGraphTransformerTest {
-
-    @Override
-    protected ConflictResolver newTransformer() {
-        return new ConflictResolver(
-                new NearestVersionSelector(), new JavaScopeSelector(),
-                new SimpleOptionalitySelector(), new JavaScopeDeriver());
+public final class NearestVersionSelectorTest extends AbstractConflictResolverTest {
+    private static Stream<Arguments> conflictResolverSource() {
+        return Stream.of(
+                Arguments.of(new ClassicConflictResolver(
+                        new NearestVersionSelector(),
+                        new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(),
+                        new JavaScopeDeriver())),
+                Arguments.of(new PathConflictResolver(
+                        new NearestVersionSelector(),
+                        new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(),
+                        new JavaScopeDeriver())));
     }
 
     @Override
@@ -43,51 +52,57 @@ public class NearestVersionSelectorTest extends AbstractDependencyGraphTransform
         return new DependencyGraphParser("transformer/version-resolver/");
     }
 
-    @Test
-    void testSelectHighestVersionFromMultipleVersionsAtSameLevel() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testSelectHighestVersionFromMultipleVersionsAtSameLevel(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("sibling-versions.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(1, root.getChildren().size());
         assertEquals("3", root.getChildren().get(0).getArtifact().getVersion());
     }
 
-    @Test
-    void testSelectedVersionAtDeeperLevelThanOriginallySeen() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testSelectedVersionAtDeeperLevelThanOriginallySeen(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("nearest-underneath-loser-a.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         List<DependencyNode> trail = find(root, "j");
         assertEquals(5, trail.size());
     }
 
-    @Test
-    void testNearestDirtyVersionUnderneathRemovedNode() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testNearestDirtyVersionUnderneathRemovedNode(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("nearest-underneath-loser-b.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         List<DependencyNode> trail = find(root, "j");
         assertEquals(5, trail.size());
     }
 
-    @Test
-    void testViolationOfHardConstraintFallsBackToNearestSeenNotFirstSeen() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testViolationOfHardConstraintFallsBackToNearestSeenNotFirstSeen(ConflictResolver conflictResolver)
+            throws Exception {
         DependencyNode root = parseResource("range-backtracking.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         List<DependencyNode> trail = find(root, "x");
         assertEquals(3, trail.size());
         assertEquals("2", trail.get(0).getArtifact().getVersion());
     }
 
-    @Test
-    void testCyclicConflictIdGraph() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testCyclicConflictIdGraph(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("conflict-id-cycle.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(2, root.getChildren().size());
         assertEquals("a", root.getChildren().get(0).getArtifact().getArtifactId());
@@ -96,34 +111,38 @@ public class NearestVersionSelectorTest extends AbstractDependencyGraphTransform
         assertTrue(root.getChildren().get(1).getChildren().isEmpty());
     }
 
-    @Test
-    void testUnsolvableRangeConflictBetweenHardConstraints() {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testUnsolvableRangeConflictBetweenHardConstraints(ConflictResolver conflictResolver) {
         assertThrows(UnsolvableVersionConflictException.class, () -> {
             DependencyNode root = parseResource("unsolvable.txt");
-            transform(root);
+            transform(conflictResolver, root);
         });
     }
 
-    @Test
-    void testUnsolvableRangeConflictWithUnrelatedCycle() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testUnsolvableRangeConflictWithUnrelatedCycle(ConflictResolver conflictResolver) throws Exception {
         assertThrows(UnsolvableVersionConflictException.class, () -> {
             DependencyNode root = parseResource("unsolvable-with-cycle.txt");
-            assertSame(root, transform(root));
+            assertSame(root, transform(conflictResolver, root));
         });
     }
 
-    @Test
-    void testSolvableConflictBetweenHardConstraints() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testSolvableConflictBetweenHardConstraints(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("ranges.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
     }
 
-    @Test
-    void testConflictGroupCompletelyDroppedFromResolvedTree() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testConflictGroupCompletelyDroppedFromResolvedTree(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("dead-conflict-group.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(2, root.getChildren().size());
         assertEquals("a", root.getChildren().get(0).getArtifact().getArtifactId());
@@ -132,11 +151,12 @@ public class NearestVersionSelectorTest extends AbstractDependencyGraphTransform
         assertTrue(root.getChildren().get(1).getChildren().isEmpty());
     }
 
-    @Test
-    void testNearestSoftVersionPrunedByFartherRange() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testNearestSoftVersionPrunedByFartherRange(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("soft-vs-range.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(2, root.getChildren().size());
         assertEquals("a", root.getChildren().get(0).getArtifact().getArtifactId());
@@ -145,11 +165,12 @@ public class NearestVersionSelectorTest extends AbstractDependencyGraphTransform
         assertEquals(1, root.getChildren().get(1).getChildren().size());
     }
 
-    @Test
-    void testCyclicGraph() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testCyclicGraph(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("cycle.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(2, root.getChildren().size());
         assertEquals(1, root.getChildren().get(0).getChildren().size());
@@ -158,29 +179,33 @@ public class NearestVersionSelectorTest extends AbstractDependencyGraphTransform
         assertEquals(0, root.getChildren().get(1).getChildren().size());
     }
 
-    @Test
-    void testLoop() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testLoop(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("loop.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(0, root.getChildren().size());
     }
 
-    @Test
-    void testOverlappingCycles() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testOverlappingCycles(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("overlapping-cycles.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(2, root.getChildren().size());
     }
 
-    @Test
-    void testScopeDerivationAndConflictResolutionCantHappenForAllNodesBeforeVersionSelection() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testScopeDerivationAndConflictResolutionCantHappenForAllNodesBeforeVersionSelection(
+            ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("scope-vs-version.txt");
 
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         DependencyNode[] nodes = find(root, "y").toArray(new DependencyNode[0]);
         assertEquals(3, nodes.length);
@@ -188,12 +213,24 @@ public class NearestVersionSelectorTest extends AbstractDependencyGraphTransform
         assertEquals("test", nodes[0].getDependency().getScope());
     }
 
-    @Test
-    void testVerboseMode() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testExpectedSubtreeOnDescriptorDependenciesEmptyLeft(ConflictResolver conflictResolver) throws Exception {
+        DependencyNode root = parseResource("expectedSubtreeOnDescriptorDependenciesEmptyLeft.txt");
+
+        assertSame(root, transform(conflictResolver, root));
+
+        // h is not lost
+        assertEquals(5, find(root, "h").size());
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testVerboseMode(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("verbose.txt");
 
         session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, Boolean.TRUE);
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(2, root.getChildren().size());
         assertEquals(1, root.getChildren().get(0).getChildren().size());

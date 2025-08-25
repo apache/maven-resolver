@@ -18,20 +18,29 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
-import org.eclipse.aether.collection.DependencyGraphTransformer;
+import java.util.stream.Stream;
+
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransformerTest {
-
-    @Override
-    protected DependencyGraphTransformer newTransformer() {
-        return new ConflictResolver(
-                new NearestVersionSelector(), new JavaScopeSelector(),
-                new SimpleOptionalitySelector(), new JavaScopeDeriver());
+public final class SimpleOptionalitySelectorTest extends AbstractConflictResolverTest {
+    private static Stream<Arguments> conflictResolverSource() {
+        return Stream.of(
+                Arguments.of(new ClassicConflictResolver(
+                        new NearestVersionSelector(),
+                        new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(),
+                        new JavaScopeDeriver())),
+                Arguments.of(new PathConflictResolver(
+                        new NearestVersionSelector(),
+                        new JavaScopeSelector(),
+                        new SimpleOptionalitySelector(),
+                        new JavaScopeDeriver())));
     }
 
     @Override
@@ -39,10 +48,11 @@ public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransf
         return new DependencyGraphParser("transformer/optionality-selector/");
     }
 
-    @Test
-    void testDeriveOptionality() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testDeriveOptionality(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("derive.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(2, root.getChildren().size());
         assertTrue(root.getChildren().get(0).getDependency().isOptional());
@@ -53,10 +63,11 @@ public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransf
                 root.getChildren().get(1).getChildren().get(0).getDependency().isOptional());
     }
 
-    @Test
-    void testResolveOptionalityConflict_NonOptionalWins() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testResolveOptionalityConflict_NonOptionalWins(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("conflict.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(2, root.getChildren().size());
         assertTrue(root.getChildren().get(0).getDependency().isOptional());
@@ -64,10 +75,11 @@ public class SimpleOptionalitySelectorTest extends AbstractDependencyGraphTransf
                 root.getChildren().get(0).getChildren().get(0).getDependency().isOptional());
     }
 
-    @Test
-    void testResolveOptionalityConflict_DirectDeclarationWins() throws Exception {
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testResolveOptionalityConflict_DirectDeclarationWins(ConflictResolver conflictResolver) throws Exception {
         DependencyNode root = parseResource("conflict-direct-dep.txt");
-        assertSame(root, transform(root));
+        assertSame(root, transform(conflictResolver, root));
 
         assertEquals(2, root.getChildren().size());
         assertTrue(root.getChildren().get(1).getDependency().isOptional());
