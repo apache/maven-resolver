@@ -43,9 +43,10 @@ import static java.util.Objects.requireNonNull;
  * This is the recommended conflict resolver implementation that provides O(N) performance characteristics,
  * significantly improving upon the O(N²) worst-case performance of {@link ClassicConflictResolver}.
  * <p>
- * For a given set of conflicting nodes, one node will be chosen as the winner and the other nodes are removed
- * from the dependency graph. The exact rules by which a winning node and its effective scope are determined
- * are controlled by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector},
+ * For a given set of conflicting nodes, one node will be chosen as the winner. How losing nodes are handled
+ * depends on the configured verbosity level: they may be removed entirely, have their children removed, or
+ * be left in place with conflict information. The exact rules by which a winning node and its effective scope
+ * are determined are controlled by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector},
  * {@link OptionalitySelector} and {@link ScopeDeriver}.
  * <p>
  * <strong>Performance Characteristics:</strong>
@@ -59,7 +60,7 @@ import static java.util.Objects.requireNonNull;
  * <ol>
  * <li><strong>Path Tree Construction:</strong> Builds a cycle-free parallel tree structure from the input
  *     dependency graph, where each {@code Path} represents a unique route to a dependency node</li>
- * <li><strong>Conflict Partitioning:</strong> Groups paths by conflict ID (typically groupId:artifactId)</li>
+ * <li><strong>Conflict Partitioning:</strong> Groups paths by conflict ID (based on groupId:artifactId:classifier:extension coordinates)</li>
  * <li><strong>Topological Processing:</strong> Processes conflict groups in topologically sorted order</li>
  * <li><strong>Winner Selection:</strong> Uses provided selectors to choose winners within each conflict group</li>
  * <li><strong>Graph Transformation:</strong> Applies changes back to the original dependency graph</li>
@@ -73,14 +74,31 @@ import static java.util.Objects.requireNonNull;
  * <li><strong>Processing Order:</strong> Level-by-level from root vs depth-first traversal</li>
  * </ul>
  * <p>
- * By default, this graph transformer will turn the dependency graph into a tree without duplicate artifacts. Using the
- * configuration property {@link #CONFIG_PROP_VERBOSE}, a verbose mode can be enabled where the graph is still turned
- * into a tree but all nodes participating in a conflict are retained. The nodes that were rejected during conflict
- * resolution have no children and link back to the winner node via the {@link #NODE_DATA_WINNER} key in their custom
- * data. Additionally, the keys {@link #NODE_DATA_ORIGINAL_SCOPE} and {@link #NODE_DATA_ORIGINAL_OPTIONALITY} are used
- * to store the original scope and optionality of each node. Obviously, the resulting dependency tree is not suitable
- * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
+ * <strong>Verbosity Levels and Conflict Handling:</strong>
+ * <ul>
+ * <li><strong>NONE (default):</strong> Creates a clean dependency tree without duplicate artifacts.
+ *     Losing nodes are completely removed from the graph.</li>
+ * <li><strong>STANDARD:</strong> Retains losing nodes for analysis but removes their children to prevent
+ *     duplicate dependencies. Special handling for version ranges: redundant nodes may still be removed
+ *     if multiple versions of the same artifact exist. Losing nodes link back to the winner via
+ *     {@link #NODE_DATA_WINNER} and preserve original scope/optionality information.</li>
+ * <li><strong>FULL:</strong> Preserves the complete original graph structure including all conflicts and cycles.
+ *     All nodes remain with their children, but conflict information is recorded for analysis.</li>
+ * </ul>
+ * The verbosity level is controlled by the {@link #CONFIG_PROP_VERBOSE} configuration property.
  * <p>
+ * <strong>Conflict Metadata:</strong> In STANDARD and FULL modes, the keys {@link #NODE_DATA_ORIGINAL_SCOPE}
+ * and {@link #NODE_DATA_ORIGINAL_OPTIONALITY} are used to store the original scope and optionality of each node.
+ * Obviously, dependency trees with verbosity STANDARD or FULL are not suitable for artifact resolution unless
+ * a filter is employed to exclude the duplicate dependencies.
+ * <p>
+ * <strong>Conflict ID Processing Pipeline:</strong>
+ * <ol>
+ * <li><strong>{@link ConflictMarker}:</strong> Assigns conflict IDs based on GACE (groupId:artifactId:classifier:extension)
+ *     coordinates, grouping artifacts that differ only in version</li>
+ * <li><strong>{@link ConflictIdSorter}:</strong> Creates topological ordering of conflict IDs and detects cycles</li>
+ * <li><strong>ConflictResolver:</strong> Uses the sorted conflict IDs to resolve conflicts in dependency order</li>
+ * </ol>
  * This transformer will query the keys {@link TransformationContextKeys#CONFLICT_IDS},
  * {@link TransformationContextKeys#SORTED_CONFLICT_IDS}, {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} for
  * existing information about conflict ids. In absence of this information, it will automatically invoke the
@@ -361,7 +379,7 @@ public final class PathConflictResolver extends ConflictResolver {
      * <strong>Memory Optimization:</strong> While this creates additional objects, it enables the algorithm
      * to process conflicts in O(N) time rather than O(N²), making it much more efficient for large graphs.
      * <p>
-     * <strong>Conflict Resolution:</strong> Paths are grouped by conflict ID (typically groupId:artifactId),
+     * <strong>Conflict Resolution:</strong> Paths are grouped by conflict ID (based on groupId:artifactId:classifier:extension coordinates),
      * and the conflict resolution algorithm can efficiently process each group independently.
      */
     private static class Path {

@@ -45,9 +45,10 @@ import static java.util.Objects.requireNonNull;
  * This implementation maintains backward compatibility with Maven 3.x and Resolver 1.x behavior but has
  * O(N²) worst-case performance characteristics. For new projects, consider using {@link PathConflictResolver}.
  * <p>
- * For a given set of conflicting nodes, one node will be chosen as the winner and the other nodes are removed
- * from the dependency graph. The exact rules by which a winning node and its effective scope are determined
- * are controlled by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector},
+ * For a given set of conflicting nodes, one node will be chosen as the winner. How losing nodes are handled
+ * depends on the configured verbosity level: they may be removed entirely, have their children removed, or
+ * be left in place with conflict information. The exact rules by which a winning node and its effective scope
+ * are determined are controlled by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector},
  * {@link OptionalitySelector} and {@link ScopeDeriver}.
  * <p>
  * <strong>Performance Characteristics:</strong>

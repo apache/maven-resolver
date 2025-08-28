@@ -32,10 +32,11 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Abstract base class for dependency graph transformers that resolve version and scope conflicts among dependencies.
- * For a given set of conflicting nodes, one node will be chosen as the winner and the other nodes are removed from
- * the dependency graph. The exact rules by which a winning node and its effective scope are determined are controlled
- * by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector}, {@link OptionalitySelector}
- * and {@link ScopeDeriver}.
+ * For a given set of conflicting nodes, one node will be chosen as the winner. How losing nodes are handled depends
+ * on the configured verbosity level: they may be removed entirely, have their children removed, or be left in place
+ * with conflict information. The exact rules by which a winning node and its effective scope are determined are
+ * controlled by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector},
+ * {@link OptionalitySelector} and {@link ScopeDeriver}.
  * <p>
  * <strong>Available Implementations:</strong>
  * <ul>
@@ -74,13 +75,23 @@ import static java.util.Objects.requireNonNull;
  * );
  * }</pre>
  * <p>
- * By default, this graph transformer will turn the dependency graph into a tree without duplicate artifacts. Using the
- * configuration property {@link #CONFIG_PROP_VERBOSE}, a verbose mode can be enabled where the graph is still turned
- * into a tree but all nodes participating in a conflict are retained. The nodes that were rejected during conflict
- * resolution have no children and link back to the winner node via the {@link #NODE_DATA_WINNER} key in their custom
- * data. Additionally, the keys {@link #NODE_DATA_ORIGINAL_SCOPE} and {@link #NODE_DATA_ORIGINAL_OPTIONALITY} are used
- * to store the original scope and optionality of each node. Obviously, the resulting dependency tree is not suitable
- * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
+ * <strong>Verbosity Levels and Conflict Handling:</strong>
+ * <ul>
+ * <li><strong>NONE (default):</strong> Creates a clean dependency tree without duplicate artifacts.
+ *     Losing nodes are completely removed from the graph.</li>
+ * <li><strong>STANDARD:</strong> Retains losing nodes for analysis but removes their children to prevent
+ *     duplicate dependencies. Special handling for version ranges: redundant nodes may still be removed
+ *     if multiple versions of the same artifact exist. Losing nodes link back to the winner via
+ *     {@link #NODE_DATA_WINNER} and preserve original scope/optionality information.</li>
+ * <li><strong>FULL:</strong> Preserves the complete original graph structure including all conflicts and cycles.
+ *     All nodes remain with their children, but conflict information is recorded for analysis.</li>
+ * </ul>
+ * The verbosity level is controlled by the {@link #CONFIG_PROP_VERBOSE} configuration property.
+ * <p>
+ * <strong>Conflict Metadata:</strong> In STANDARD and FULL modes, the keys {@link #NODE_DATA_ORIGINAL_SCOPE}
+ * and {@link #NODE_DATA_ORIGINAL_OPTIONALITY} are used to store the original scope and optionality of each node.
+ * Obviously, dependency trees with verbosity STANDARD or FULL are not suitable for artifact resolution unless
+ * a filter is employed to exclude the duplicate dependencies.
  *
  * @see PathConflictResolver
  * @see ClassicConflictResolver
