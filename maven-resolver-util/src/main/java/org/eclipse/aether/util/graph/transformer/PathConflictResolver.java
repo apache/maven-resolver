@@ -39,11 +39,39 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A dependency graph transformer that resolves version and scope conflicts among dependencies. For a given set of
- * conflicting nodes, one node will be chosen as the winner and the other nodes are removed from the dependency graph.
- * The exact rules by which a winning node and its effective scope are determined are controlled by user-supplied
- * implementations of {@link VersionSelector}, {@link ScopeSelector}, {@link OptionalitySelector} and
- * {@link ScopeDeriver}.
+ * A high-performance dependency graph transformer that resolves version and scope conflicts among dependencies.
+ * This is the recommended conflict resolver implementation that provides O(N) performance characteristics,
+ * significantly improving upon the O(N²) worst-case performance of {@link ClassicConflictResolver}.
+ * <p>
+ * For a given set of conflicting nodes, one node will be chosen as the winner and the other nodes are removed
+ * from the dependency graph. The exact rules by which a winning node and its effective scope are determined
+ * are controlled by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector},
+ * {@link OptionalitySelector} and {@link ScopeDeriver}.
+ * <p>
+ * <strong>Performance Characteristics:</strong>
+ * <ul>
+ * <li><strong>Time Complexity:</strong> O(N) where N is the number of dependency nodes</li>
+ * <li><strong>Memory Usage:</strong> Creates a parallel tree structure for conflict-free processing</li>
+ * <li><strong>Scalability:</strong> Excellent performance on large multi-module projects</li>
+ * </ul>
+ * <p>
+ * <strong>Algorithm Overview:</strong>
+ * <ol>
+ * <li><strong>Path Tree Construction:</strong> Builds a cycle-free parallel tree structure from the input
+ *     dependency graph, where each {@code Path} represents a unique route to a dependency node</li>
+ * <li><strong>Conflict Partitioning:</strong> Groups paths by conflict ID (typically groupId:artifactId)</li>
+ * <li><strong>Topological Processing:</strong> Processes conflict groups in topologically sorted order</li>
+ * <li><strong>Winner Selection:</strong> Uses provided selectors to choose winners within each conflict group</li>
+ * <li><strong>Graph Transformation:</strong> Applies changes back to the original dependency graph</li>
+ * </ol>
+ * <p>
+ * <strong>Key Differences from {@link ClassicConflictResolver}:</strong>
+ * <ul>
+ * <li><strong>Performance:</strong> O(N) vs O(N²) time complexity</li>
+ * <li><strong>Memory Strategy:</strong> Uses parallel tree structure vs in-place graph modification</li>
+ * <li><strong>Cycle Handling:</strong> Explicitly breaks cycles during tree construction</li>
+ * <li><strong>Processing Order:</strong> Level-by-level from root vs depth-first traversal</li>
+ * </ul>
  * <p>
  * By default, this graph transformer will turn the dependency graph into a tree without duplicate artifacts. Using the
  * configuration property {@link #CONFIG_PROP_VERBOSE}, a verbose mode can be enabled where the graph is still turned
@@ -58,9 +86,19 @@ import static java.util.Objects.requireNonNull;
  * existing information about conflict ids. In absence of this information, it will automatically invoke the
  * {@link ConflictIdSorter} to calculate it.
  * <p>
- * Implementation note: this conflict resolver builds a cycle-free "parallel" structure based ib passed in dirty graph,
- * and applies operations level by level starting from root.
+ * <strong>When to Use:</strong>
+ * <ul>
+ * <li>Default choice for all new projects and Maven 4+ installations</li>
+ * <li>Large multi-module projects with many dependencies</li>
+ * <li>Performance-critical build environments</li>
+ * <li>Any scenario where {@link ClassicConflictResolver} shows performance bottlenecks</li>
+ * </ul>
+ * <p>
+ * <strong>Implementation Note:</strong> This conflict resolver builds a cycle-free "parallel" structure based on the
+ * passed-in dependency graph, and applies operations level by level starting from the root. The parallel {@code Path}
+ * tree ensures that cycles in the original graph don't affect the conflict resolution algorithm's performance.
  *
+ * @see ClassicConflictResolver
  * @since 2.0.11
  */
 public final class PathConflictResolver extends ConflictResolver {
@@ -299,11 +337,32 @@ public final class PathConflictResolver extends ConflictResolver {
     }
 
     /**
-     * Class that represents a unique path within dirty graph (sans cycles) from which referenced {@link DependencyNode}
-     * is reachable from. Each path is represented by unique instance of this class, but multiple instances of this
-     * class may point to same instance of {@link DependencyNode}.
+     * Represents a unique path within the dependency graph from the root to a specific {@link DependencyNode}.
+     * This is the core data structure that enables the O(N) performance of {@link PathConflictResolver}.
      * <p>
-     * Structure represented by {@link Path} instances is guaranteed to be a tree (has root and contains no cycles).
+     * <strong>Key Concepts:</strong>
+     * <ul>
+     * <li><strong>Path Uniqueness:</strong> Each {@code Path} instance represents a distinct route through
+     *     the dependency graph, even if multiple paths lead to the same {@code DependencyNode}</li>
+     * <li><strong>Cycle-Free Structure:</strong> The {@code Path} tree is guaranteed to be acyclic, even
+     *     when the original dependency graph contains cycles</li>
+     * <li><strong>Parallel Structure:</strong> This creates a "clean" tree alongside the original "dirty"
+     *     graph for efficient processing</li>
+     * </ul>
+     * <p>
+     * <strong>Example:</strong> If dependency A appears in the graph via two different routes:
+     * <pre>
+     * Root → B → A (path 1)
+     * Root → C → A (path 2)
+     * </pre>
+     * Two separate {@code Path} instances will be created, both pointing to the same {@code DependencyNode} A,
+     * but representing different paths through the dependency tree.
+     * <p>
+     * <strong>Memory Optimization:</strong> While this creates additional objects, it enables the algorithm
+     * to process conflicts in O(N) time rather than O(N²), making it much more efficient for large graphs.
+     * <p>
+     * <strong>Conflict Resolution:</strong> Paths are grouped by conflict ID (typically groupId:artifactId),
+     * and the conflict resolution algorithm can efficiently process each group independently.
      */
     private static class Path {
         private final State state;

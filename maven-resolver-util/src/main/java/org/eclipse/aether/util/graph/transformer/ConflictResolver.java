@@ -31,11 +31,48 @@ import org.eclipse.aether.graph.DependencyNode;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A dependency graph transformer that resolves version and scope conflicts among dependencies. For a given set of
- * conflicting nodes, one node will be chosen as the winner and the other nodes are removed from the dependency graph.
- * The exact rules by which a winning node and its effective scope are determined are controlled by user-supplied
- * implementations of {@link VersionSelector}, {@link ScopeSelector}, {@link OptionalitySelector} and
- * {@link ScopeDeriver}.
+ * Abstract base class for dependency graph transformers that resolve version and scope conflicts among dependencies.
+ * For a given set of conflicting nodes, one node will be chosen as the winner and the other nodes are removed from
+ * the dependency graph. The exact rules by which a winning node and its effective scope are determined are controlled
+ * by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector}, {@link OptionalitySelector}
+ * and {@link ScopeDeriver}.
+ * <p>
+ * <strong>Available Implementations:</strong>
+ * <ul>
+ * <li><strong>{@link PathConflictResolver}</strong> - Recommended high-performance implementation with O(N) complexity</li>
+ * <li><strong>{@link ClassicConflictResolver}</strong> - Legacy implementation for backward compatibility (O(N²) worst-case)</li>
+ * </ul>
+ * <p>
+ * <strong>Implementation Selection Guide:</strong>
+ * <ul>
+ * <li><strong>New Projects:</strong> Use {@link PathConflictResolver} for optimal performance</li>
+ * <li><strong>Large Multi-Module Projects:</strong> Use {@link PathConflictResolver} to avoid performance bottlenecks</li>
+ * <li><strong>Maven 4+ Environments:</strong> Use {@link PathConflictResolver} for best build performance</li>
+ * <li><strong>Legacy Compatibility:</strong> Use {@link ClassicConflictResolver} only when exact Maven 3.x behavior is required</li>
+ * </ul>
+ * <p>
+ * <strong>Usage Example:</strong>
+ * <pre>{@code
+ * // Recommended: High-performance path-based resolver
+ * DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
+ *     new PathConflictResolver(
+ *         new NearestVersionSelector(),
+ *         new JavaScopeSelector(),
+ *         new SimpleOptionalitySelector(),
+ *         new JavaScopeDeriver()),
+ *     // other transformers...
+ * );
+ *
+ * // Legacy: Classic resolver for backward compatibility
+ * DependencyGraphTransformer legacyTransformer = new ChainedDependencyGraphTransformer(
+ *     new ClassicConflictResolver(
+ *         new NearestVersionSelector(),
+ *         new JavaScopeSelector(),
+ *         new SimpleOptionalitySelector(),
+ *         new JavaScopeDeriver()),
+ *     // other transformers...
+ * );
+ * }</pre>
  * <p>
  * By default, this graph transformer will turn the dependency graph into a tree without duplicate artifacts. Using the
  * configuration property {@link #CONFIG_PROP_VERBOSE}, a verbose mode can be enabled where the graph is still turned
@@ -45,8 +82,8 @@ import static java.util.Objects.requireNonNull;
  * to store the original scope and optionality of each node. Obviously, the resulting dependency tree is not suitable
  * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
  *
- * @see ClassicConflictResolver
  * @see PathConflictResolver
+ * @see ClassicConflictResolver
  */
 public abstract class ConflictResolver implements DependencyGraphTransformer {
 

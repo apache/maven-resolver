@@ -41,11 +41,41 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A dependency graph transformer that resolves version and scope conflicts among dependencies. For a given set of
- * conflicting nodes, one node will be chosen as the winner and the other nodes are removed from the dependency graph.
- * The exact rules by which a winning node and its effective scope are determined are controlled by user-supplied
- * implementations of {@link VersionSelector}, {@link ScopeSelector}, {@link OptionalitySelector} and
- * {@link ScopeDeriver}.
+ * A legacy dependency graph transformer that resolves version and scope conflicts among dependencies.
+ * This implementation maintains backward compatibility with Maven 3.x and Resolver 1.x behavior but has
+ * O(N²) worst-case performance characteristics. For new projects, consider using {@link PathConflictResolver}.
+ * <p>
+ * For a given set of conflicting nodes, one node will be chosen as the winner and the other nodes are removed
+ * from the dependency graph. The exact rules by which a winning node and its effective scope are determined
+ * are controlled by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector},
+ * {@link OptionalitySelector} and {@link ScopeDeriver}.
+ * <p>
+ * <strong>Performance Characteristics:</strong>
+ * <ul>
+ * <li><strong>Time Complexity:</strong> O(N²) worst-case where N is the number of dependency nodes</li>
+ * <li><strong>Memory Usage:</strong> Modifies the dependency graph in-place</li>
+ * <li><strong>Scalability:</strong> Performance degrades significantly on large multi-module projects</li>
+ * </ul>
+ * <p>
+ * <strong>Algorithm Overview:</strong>
+ * <ol>
+ * <li><strong>Depth-First Traversal:</strong> Walks the dependency graph depth-first</li>
+ * <li><strong>In-Place Modification:</strong> Modifies nodes directly during traversal</li>
+ * <li><strong>Conflict Detection:</strong> Identifies conflicts by comparing conflict IDs</li>
+ * <li><strong>Winner Selection:</strong> Uses provided selectors to choose winners</li>
+ * <li><strong>Loser Removal:</strong> Removes or marks losing nodes during traversal</li>
+ * </ol>
+ * <p>
+ * <strong>When to Use:</strong>
+ * <ul>
+ * <li>Exact backward compatibility with Maven 3.x/Resolver 1.x is required</li>
+ * <li>Debugging performance differences between old and new algorithms</li>
+ * <li>Small projects where performance is not a concern</li>
+ * <li>Testing and validation scenarios</li>
+ * </ul>
+ * <p>
+ * <strong>Migration Recommendation:</strong> New projects should use {@link PathConflictResolver} for better
+ * performance. This implementation is retained primarily for compatibility and testing purposes.
  * <p>
  * By default, this graph transformer will turn the dependency graph into a tree without duplicate artifacts. Using the
  * configuration property {@link #CONFIG_PROP_VERBOSE}, a verbose mode can be enabled where the graph is still turned
@@ -60,10 +90,11 @@ import static java.util.Objects.requireNonNull;
  * existing information about conflict ids. In absence of this information, it will automatically invoke the
  * {@link ConflictIdSorter} to calculate it.
  * <p>
- * Implementation note: this conflict resolver is completely same as the one used in Maven 3/Resolver 1. This implementation
- * may produce "worst case" performance of O(N^2) on certain case of projects and dependencies where conflict groups are
- * mostly having 1 member.
+ * <strong>Implementation Note:</strong> This conflict resolver is identical to the one used in Maven 3/Resolver 1.x.
+ * The implementation may produce O(N²) worst-case performance on projects with many small conflict groups
+ * (typically one member each), which is common in large multi-module projects.
  *
+ * @see PathConflictResolver
  * @since 2.0.11
  */
 public final class ClassicConflictResolver extends ConflictResolver {
