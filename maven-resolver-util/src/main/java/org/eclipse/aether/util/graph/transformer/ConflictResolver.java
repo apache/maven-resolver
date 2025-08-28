@@ -78,13 +78,16 @@ import static java.util.Objects.requireNonNull;
  * <strong>Verbosity Levels and Conflict Handling:</strong>
  * <ul>
  * <li><strong>NONE (default):</strong> Creates a clean dependency tree without duplicate artifacts.
- *     Losing nodes are completely removed from the graph.</li>
+ *     Losing nodes are completely removed from the graph, so are cycles as well.</li>
  * <li><strong>STANDARD:</strong> Retains losing nodes for analysis but removes their children to prevent
  *     duplicate dependencies. Special handling for version ranges: redundant nodes may still be removed
  *     if multiple versions of the same artifact exist. Losing nodes link back to the winner via
- *     {@link #NODE_DATA_WINNER} and preserve original scope/optionality information.</li>
+ *     {@link #NODE_DATA_WINNER} and preserve original scope/optionality information. This mode removes cycles only,
+ *     while conflict nodes/duplicates are left in place. Graphs in this verbosity level cannot be resolved,
+ *     their purpose is for analysis only.</li>
  * <li><strong>FULL:</strong> Preserves the complete original graph structure including all conflicts and cycles.
- *     All nodes remain with their children, but conflict information is recorded for analysis.</li>
+ *     All nodes remain with their children, but conflict information is recorded for analysis.
+ *     Graphs in this verbosity level cannot be resolved, their purpose is for analysis only.</li>
  * </ul>
  * The verbosity level is controlled by the {@link #CONFIG_PROP_VERBOSE} configuration property.
  * <p>
@@ -92,6 +95,19 @@ import static java.util.Objects.requireNonNull;
  * and {@link #NODE_DATA_ORIGINAL_OPTIONALITY} are used to store the original scope and optionality of each node.
  * Obviously, dependency trees with verbosity STANDARD or FULL are not suitable for artifact resolution unless
  * a filter is employed to exclude the duplicate dependencies.
+ * <p>
+ * <strong>Conflict ID Processing Pipeline:</strong>
+ * <ol>
+ * <li><strong>{@link ConflictMarker}:</strong> Assigns conflict IDs based on GACE (groupId:artifactId:classifier:extension)
+ *     coordinates, grouping artifacts that differ only in version (partitions the graph, assigning same conflict IDs
+ *     to nodes belonging to same conflict group).</li>
+ * <li><strong>{@link ConflictIdSorter}:</strong> Creates topological ordering of conflict IDs and detects cycles</li>
+ * <li><strong>ConflictResolver implementation:</strong> Uses the sorted conflict IDs to resolve conflicts in dependency order</li>
+ * </ol>
+ * This transformer will query the keys {@link TransformationContextKeys#CONFLICT_IDS},
+ * {@link TransformationContextKeys#SORTED_CONFLICT_IDS}, {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} for
+ * existing information about conflict ids. In absence of this information, it will automatically invoke the
+ * {@link ConflictIdSorter} to calculate it.
  *
  * @see PathConflictResolver
  * @see ClassicConflictResolver

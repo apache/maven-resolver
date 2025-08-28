@@ -74,36 +74,6 @@ import static java.util.Objects.requireNonNull;
  * <li><strong>Processing Order:</strong> Level-by-level from root vs depth-first traversal</li>
  * </ul>
  * <p>
- * <strong>Verbosity Levels and Conflict Handling:</strong>
- * <ul>
- * <li><strong>NONE (default):</strong> Creates a clean dependency tree without duplicate artifacts.
- *     Losing nodes are completely removed from the graph.</li>
- * <li><strong>STANDARD:</strong> Retains losing nodes for analysis but removes their children to prevent
- *     duplicate dependencies. Special handling for version ranges: redundant nodes may still be removed
- *     if multiple versions of the same artifact exist. Losing nodes link back to the winner via
- *     {@link #NODE_DATA_WINNER} and preserve original scope/optionality information.</li>
- * <li><strong>FULL:</strong> Preserves the complete original graph structure including all conflicts and cycles.
- *     All nodes remain with their children, but conflict information is recorded for analysis.</li>
- * </ul>
- * The verbosity level is controlled by the {@link #CONFIG_PROP_VERBOSE} configuration property.
- * <p>
- * <strong>Conflict Metadata:</strong> In STANDARD and FULL modes, the keys {@link #NODE_DATA_ORIGINAL_SCOPE}
- * and {@link #NODE_DATA_ORIGINAL_OPTIONALITY} are used to store the original scope and optionality of each node.
- * Obviously, dependency trees with verbosity STANDARD or FULL are not suitable for artifact resolution unless
- * a filter is employed to exclude the duplicate dependencies.
- * <p>
- * <strong>Conflict ID Processing Pipeline:</strong>
- * <ol>
- * <li><strong>{@link ConflictMarker}:</strong> Assigns conflict IDs based on GACE (groupId:artifactId:classifier:extension)
- *     coordinates, grouping artifacts that differ only in version</li>
- * <li><strong>{@link ConflictIdSorter}:</strong> Creates topological ordering of conflict IDs and detects cycles</li>
- * <li><strong>ConflictResolver:</strong> Uses the sorted conflict IDs to resolve conflicts in dependency order</li>
- * </ol>
- * This transformer will query the keys {@link TransformationContextKeys#CONFLICT_IDS},
- * {@link TransformationContextKeys#SORTED_CONFLICT_IDS}, {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} for
- * existing information about conflict ids. In absence of this information, it will automatically invoke the
- * {@link ConflictIdSorter} to calculate it.
- * <p>
  * <strong>When to Use:</strong>
  * <ul>
  * <li>Default choice for all new projects and Maven 4+ installations</li>

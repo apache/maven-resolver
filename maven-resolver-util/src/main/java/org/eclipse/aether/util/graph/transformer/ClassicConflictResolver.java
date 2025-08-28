@@ -78,19 +78,6 @@ import static java.util.Objects.requireNonNull;
  * <strong>Migration Recommendation:</strong> New projects should use {@link PathConflictResolver} for better
  * performance. This implementation is retained primarily for compatibility and testing purposes.
  * <p>
- * By default, this graph transformer will turn the dependency graph into a tree without duplicate artifacts. Using the
- * configuration property {@link #CONFIG_PROP_VERBOSE}, a verbose mode can be enabled where the graph is still turned
- * into a tree but all nodes participating in a conflict are retained. The nodes that were rejected during conflict
- * resolution have no children and link back to the winner node via the {@link #NODE_DATA_WINNER} key in their custom
- * data. Additionally, the keys {@link #NODE_DATA_ORIGINAL_SCOPE} and {@link #NODE_DATA_ORIGINAL_OPTIONALITY} are used
- * to store the original scope and optionality of each node. Obviously, the resulting dependency tree is not suitable
- * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
- * <p>
- * This transformer will query the keys {@link TransformationContextKeys#CONFLICT_IDS},
- * {@link TransformationContextKeys#SORTED_CONFLICT_IDS}, {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} for
- * existing information about conflict ids. In absence of this information, it will automatically invoke the
- * {@link ConflictIdSorter} to calculate it.
- * <p>
  * <strong>Implementation Note:</strong> This conflict resolver is identical to the one used in Maven 3/Resolver 1.x.
  * The implementation may produce O(N²) worst-case performance on projects with many small conflict groups
  * (typically one member each), which is common in large multi-module projects.
