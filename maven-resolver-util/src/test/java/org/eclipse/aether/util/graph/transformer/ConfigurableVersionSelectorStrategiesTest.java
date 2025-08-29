@@ -108,10 +108,12 @@ public final class ConfigurableVersionSelectorStrategiesTest extends AbstractCon
 
         if (strategy == NEAREST) {
             List<DependencyNode> path = find(root, "x");
-            assertEquals(3, path.size()); // x is at level 2; is closest out of all x
+            assertEquals(3, path.size()); // x is at level 2; is closest out of all x:1
+            assertEquals("1", path.get(0).getVersion().toString());
         } else if (strategy == HIGHEST) {
             List<DependencyNode> path = find(root, "x");
-            assertEquals(6, path.size()); // path is at level 5; is highest out of all x
+            assertEquals(6, path.size()); // path is at level 5; is highest out of all x:3
+            assertEquals("3", path.get(0).getVersion().toString());
         } else {
             throw new IllegalArgumentException("what strategy is this?");
         }
