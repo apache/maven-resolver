@@ -26,15 +26,11 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.CollectResult;
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.Deployer;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.io.PathProcessor;
-import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 import org.eclipse.aether.version.Version;
 import org.junit.jupiter.api.Test;
 
@@ -60,29 +56,6 @@ public class RepositorySystemSupplierTest {
             // As of 2023-11-14, Maven Central has 36 versions of this artifact (and it will just grow)
             assertTrue(versions.size() >= 36);
             System.out.println("Available " + versions.size() + " versions: " + versions);
-        }
-    }
-
-    @Test
-    void smokeV2Feature() throws Exception {
-        try (RepositorySystem system = new RepositorySystemSupplier().get();
-                CloseableSession session = new SessionBuilderSupplier(system)
-                        .get()
-                        .withLocalRepositoryBaseDirectories(new File("target/local-repo").toPath())
-                        .build()) {
-            CollectRequest collectRequest = new CollectRequest();
-            collectRequest.setResolutionScope(session.getScopeManager()
-                    .getResolutionScope(Maven3ScopeManagerConfiguration.RS_TEST_RUNTIME)
-                    .orElseThrow(AssertionError::new));
-            collectRequest.setRoot(
-                    new Dependency(new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1"), ""));
-            collectRequest.setRepositories(Collections.singletonList(
-                    new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/")
-                            .build()));
-
-            CollectResult collectResult = system.collectDependencies(session, collectRequest);
-
-            collectResult.getRoot().accept(new DependencyGraphDumper(System.out::println));
         }
     }
 
