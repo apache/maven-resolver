@@ -72,8 +72,7 @@ public final class ConfigurableVersionSelectorStrategiesTest extends AbstractCon
                                 new ConfigurableVersionSelector(HIGHEST),
                                 new JavaScopeSelector(),
                                 new SimpleOptionalitySelector(),
-                                new JavaScopeDeriver()))
-        );
+                                new JavaScopeDeriver())));
     }
 
     @Override
