@@ -64,7 +64,7 @@ public class Booter {
     public static SessionBuilder newRepositorySystemSession(RepositorySystem system) {
         SessionBuilder result = new SessionBuilderSupplier(system)
                 .get()
-                .withLocalRepositoryBaseDirectories(Path.of("target/local-repo"))
+                .withLocalRepositoryBaseDirectories(Path.of("target/example-snippets-repo"))
                 .setRepositoryListener(new ConsoleRepositoryListener())
                 .setTransferListener(new ConsoleTransferListener())
                 .setConfigProperty("aether.generator.gpg.enabled", Boolean.TRUE.toString())

@@ -38,8 +38,8 @@ public class ResolverDemo {
         System.out.println("------------------------------------------------------------");
         System.out.println(ResolverDemo.class.getSimpleName());
 
-        Resolver resolver =
-                new Resolver(Booter.selectFactory(args), "https://repo.maven.apache.org/maven2/", "target/aether-repo");
+        Resolver resolver = new Resolver(
+                Booter.selectFactory(args), "https://repo.maven.apache.org/maven2/", "target/resolver-demo-repo");
         ResolverResult result = resolver.resolve("junit", "junit", "4.13.2");
 
         System.out.println("Result:");

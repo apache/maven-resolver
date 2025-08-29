@@ -157,6 +157,11 @@ public class ConfigurableVersionSelector extends VersionSelector {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" + selectionStrategy.getClass().getSimpleName() + ")";
+    }
+
     /**
      * Helper method to create failure, creates instance of {@link UnsolvableVersionConflictException}.
      */
@@ -194,6 +199,9 @@ public class ConfigurableVersionSelector extends VersionSelector {
      * Selection strategy that selects "nearest" (to the root) version.
      * <p>
      * This is the "classic" Maven strategy.
+     * <p>
+     * If candidates are siblings, it will select higher version (ie version ranges), otherwise item with smaller
+     * depth is selected.
      */
     public static class Nearest implements SelectionStrategy {
         @Override
@@ -212,11 +220,28 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
     /**
      * Selection strategy that selects "highest" version.
+     * <p>
+     * If winner is level 1 or less (is direct dependency of root), it is kept as winner (as in "real life" it means
+     * dependency is enlisted in POM). Then candidate is checked for same thing, and selected if it is direct dependency.
+     * Then if both, candidate and winner carries same version (so are same GACEV, same artifact) then "nearest" is selected.
+     * Finally, if none of above, higher version is selected out of two.
      */
     public static class Highest implements SelectionStrategy {
         @Override
         public boolean isBetter(ConflictItem candidate, ConflictItem winner) {
-            return candidate.getNode().getVersion().compareTo(winner.getNode().getVersion()) > 0;
+            if (winner.getDepth() <= 1) {
+                return false;
+            } else if (candidate.getDepth() <= 1) {
+                return true;
+            } else if (candidate.getNode().getVersion().equals(winner.getNode().getVersion())) {
+                return candidate.getDepth() < winner.getDepth();
+            } else {
+                return candidate
+                                .getNode()
+                                .getVersion()
+                                .compareTo(winner.getNode().getVersion())
+                        > 0;
+            }
         }
     }
 

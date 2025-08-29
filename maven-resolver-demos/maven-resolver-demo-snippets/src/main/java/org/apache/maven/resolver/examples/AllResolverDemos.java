@@ -30,6 +30,7 @@ public class AllResolverDemos {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
+        // examples
         FindAvailableVersions.main(args);
         FindNewestVersion.main(args);
         GetDirectDependencies.main(args);
@@ -42,6 +43,7 @@ public class AllResolverDemos {
         InstallArtifacts.main(args);
         DeployArtifacts.main(args);
 
+        // resolver demo
         ResolverDemo.main(args);
     }
 }
