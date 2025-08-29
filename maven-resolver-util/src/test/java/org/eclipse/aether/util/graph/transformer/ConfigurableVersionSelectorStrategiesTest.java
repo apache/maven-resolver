@@ -118,4 +118,28 @@ public final class ConfigurableVersionSelectorStrategiesTest extends AbstractCon
             throw new IllegalArgumentException("what strategy is this?");
         }
     }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void testStrategyDifference03(
+            ConfigurableVersionSelector.SelectionStrategy strategy, ConflictResolver conflictResolver)
+            throws Exception {
+        System.out.println(conflictResolver.versionSelector);
+        DependencyNode root = parseResource("nearest-highest-strategy-difference03.txt");
+        root.accept(new DependencyGraphDumper(System.out::println));
+        assertSame(root, transform(conflictResolver, root));
+        root.accept(new DependencyGraphDumper(System.out::println));
+
+        if (strategy == NEAREST) {
+            List<DependencyNode> path = find(root, "annotations");
+            assertEquals(5, path.size()); // 1.8.21 branch wins
+            assertEquals("13.0", path.get(0).getVersion().toString());
+        } else if (strategy == HIGHEST) {
+            List<DependencyNode> path = find(root, "annotations");
+            assertEquals(7, path.size()); // 1.9.10 branch wins
+            assertEquals("13.0", path.get(0).getVersion().toString());
+        } else {
+            throw new IllegalArgumentException("what strategy is this?");
+        }
+    }
 }

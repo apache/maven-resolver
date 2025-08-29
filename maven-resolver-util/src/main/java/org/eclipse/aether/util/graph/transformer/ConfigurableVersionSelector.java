@@ -80,6 +80,8 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
     /**
      * Creates a new instance of this version selector that works "as Maven did so far".
+     *
+     * @see Nearest
      */
     public ConfigurableVersionSelector() {
         this(new Nearest());

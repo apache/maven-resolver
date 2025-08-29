@@ -43,6 +43,9 @@ public class AllResolverDemos {
         InstallArtifacts.main(args);
         DeployArtifacts.main(args);
 
+        // experimental
+        GetDependencyHierarchyWithConflictsStrategies.main(args);
+
         // resolver demo
         ResolverDemo.main(args);
     }
