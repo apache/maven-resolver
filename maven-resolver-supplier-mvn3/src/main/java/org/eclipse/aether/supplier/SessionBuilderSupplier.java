@@ -79,6 +79,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
             key = "env." + (caseSensitive ? key : key.toUpperCase(Locale.ENGLISH));
             session.setSystemProperty(key, value);
         });
+        session.setScopeManager(scopeManager);
         session.setDependencyTraverser(getDependencyTraverser());
         session.setDependencyManager(getDependencyManager());
         session.setDependencySelector(getDependencySelector());
