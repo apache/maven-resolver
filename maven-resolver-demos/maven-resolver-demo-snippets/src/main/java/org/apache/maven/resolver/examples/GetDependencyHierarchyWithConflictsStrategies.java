@@ -28,7 +28,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
@@ -57,8 +56,14 @@ public class GetDependencyHierarchyWithConflictsStrategies {
         System.out.println("------------------------------------------------------------");
         System.out.println(GetDependencyHierarchyWithConflictsStrategies.class.getSimpleName());
 
+        runItWithStrategy(args, new ConfigurableVersionSelector.Nearest());
+        runItWithStrategy(args, new ConfigurableVersionSelector.Highest());
+    }
+
+    private static void runItWithStrategy(
+            String[] args, ConfigurableVersionSelector.SelectionStrategy selectionStrategy) throws Exception {
         System.out.println();
-        System.out.println("Nearest:");
+        System.out.println(selectionStrategy.toString());
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
             SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
             sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, ConflictResolver.Verbosity.FULL);
@@ -68,7 +73,7 @@ public class GetDependencyHierarchyWithConflictsStrategies {
             try (CloseableSession session = sessionBuilder
                     .setDependencyGraphTransformer(new ChainedDependencyGraphTransformer(
                             new PathConflictResolver(
-                                    new ConfigurableVersionSelector(new ConfigurableVersionSelector.Nearest()),
+                                    new ConfigurableVersionSelector(selectionStrategy),
                                     new JavaScopeSelector(),
                                     new SimpleOptionalitySelector(),
                                     new JavaScopeDeriver()),
@@ -88,54 +93,8 @@ public class GetDependencyHierarchyWithConflictsStrategies {
                 result.getRoot().accept(new DependencyGraphDumper(System.out::println));
 
                 List<DependencyNode> selected =
-                        system.flattenDependencyNodes(session, result.getRoot(), new DependencyFilter() {
-                            @Override
-                            public boolean accept(DependencyNode node, List<DependencyNode> parents) {
-                                return !node.getData().containsKey(ConflictResolver.NODE_DATA_WINNER);
-                            }
-                        });
-                System.out.println("cp:");
-                selected.forEach(System.out::println);
-            }
-        }
-
-        System.out.println();
-        System.out.println("Highest:");
-        try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
-            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
-            sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, ConflictResolver.Verbosity.FULL);
-            sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
-            sessionBuilder.setConfigProperty(DefaultDependencyCollector.CONFIG_PROP_COLLECTOR_IMPL, "bf");
-            sessionBuilder.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, false);
-            try (CloseableSession session = sessionBuilder
-                    .setDependencyGraphTransformer(new ChainedDependencyGraphTransformer(
-                            new PathConflictResolver(
-                                    new ConfigurableVersionSelector(new ConfigurableVersionSelector.Highest()),
-                                    new JavaScopeSelector(),
-                                    new SimpleOptionalitySelector(),
-                                    new JavaScopeDeriver()),
-                            new JavaDependencyContextRefiner()))
-                    .setRepositoryListener(null)
-                    .setTransferListener(null)
-                    .build()) {
-
-                CollectRequest collectRequest = new CollectRequest();
-                collectRequest.setRootArtifact(new DefaultArtifact("demo:demo:1.0"));
-                collectRequest.setDependencies(List.of(
-                        new Dependency(new DefaultArtifact("com.squareup.okhttp3:okhttp:jar:4.12.0"), "compile")));
-                collectRequest.setRepositories(Booter.newRepositories(system, session));
-
-                CollectResult result = system.collectDependencies(session, collectRequest);
-                System.out.println("tree:");
-                result.getRoot().accept(new DependencyGraphDumper(System.out::println));
-
-                List<DependencyNode> selected =
-                        system.flattenDependencyNodes(session, result.getRoot(), new DependencyFilter() {
-                            @Override
-                            public boolean accept(DependencyNode node, List<DependencyNode> parents) {
-                                return !node.getData().containsKey(ConflictResolver.NODE_DATA_WINNER);
-                            }
-                        });
+                        system.flattenDependencyNodes(session, result.getRoot(), (node, parents) -> !node.getData()
+                                .containsKey(ConflictResolver.NODE_DATA_WINNER));
                 System.out.println("cp:");
                 selected.forEach(System.out::println);
             }
