@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  */
-public final class ConfigurableVersionSelectorHighestTest extends AbstractConflictResolverTest {
+public final class ConfigurableVersionSelectorStrategiesTest extends AbstractConflictResolverTest {
     private static final ConfigurableVersionSelector.SelectionStrategy NEAREST =
             new ConfigurableVersionSelector.Nearest();
     private static final ConfigurableVersionSelector.SelectionStrategy HIGHEST =
@@ -41,6 +41,7 @@ public final class ConfigurableVersionSelectorHighestTest extends AbstractConfli
 
     private static Stream<Arguments> conflictResolverSource() {
         return Stream.of(
+                // path + nearest
                 Arguments.of(
                         NEAREST,
                         new PathConflictResolver(
@@ -48,18 +49,36 @@ public final class ConfigurableVersionSelectorHighestTest extends AbstractConfli
                                 new JavaScopeSelector(),
                                 new SimpleOptionalitySelector(),
                                 new JavaScopeDeriver())),
+                // path + highest
                 Arguments.of(
                         HIGHEST,
                         new PathConflictResolver(
                                 new ConfigurableVersionSelector(HIGHEST),
                                 new JavaScopeSelector(),
                                 new SimpleOptionalitySelector(),
-                                new JavaScopeDeriver())));
+                                new JavaScopeDeriver())),
+                // classic + nearest
+                Arguments.of(
+                        NEAREST,
+                        new ClassicConflictResolver(
+                                new ConfigurableVersionSelector(NEAREST),
+                                new JavaScopeSelector(),
+                                new SimpleOptionalitySelector(),
+                                new JavaScopeDeriver())),
+                // classic + highest
+                Arguments.of(
+                        HIGHEST,
+                        new ClassicConflictResolver(
+                                new ConfigurableVersionSelector(HIGHEST),
+                                new JavaScopeSelector(),
+                                new SimpleOptionalitySelector(),
+                                new JavaScopeDeriver()))
+        );
     }
 
     @Override
     protected DependencyGraphParser newParser() {
-        return new DependencyGraphParser("transformer/version-resolver/");
+        return new DependencyGraphParser("transformer/version-resolver-strategies/");
     }
 
     @ParameterizedTest
