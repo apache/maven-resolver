@@ -48,8 +48,8 @@ import static java.util.Objects.requireNonNull;
  * For a given set of conflicting nodes, one node will be chosen as the winner. How losing nodes are handled
  * depends on the configured verbosity level: they may be removed entirely, have their children removed, or
  * be left in place with conflict information. The exact rules by which a winning node and its effective scope
- * are determined are controlled by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector},
- * {@link OptionalitySelector} and {@link ScopeDeriver}.
+ * are determined are controlled by user-supplied implementations of {@link ConflictResolver.VersionSelector}, {@link ConflictResolver.ScopeSelector},
+ * {@link ConflictResolver.OptionalitySelector} and {@link ConflictResolver.ScopeDeriver}.
  * <p>
  * <strong>Performance Characteristics:</strong>
  * <ul>
@@ -86,6 +86,11 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.11
  */
 public final class ClassicConflictResolver extends ConflictResolver {
+    private final ConflictResolver.VersionSelector versionSelector;
+    private final ConflictResolver.ScopeSelector scopeSelector;
+    private final ConflictResolver.ScopeDeriver scopeDeriver;
+    private final ConflictResolver.OptionalitySelector optionalitySelector;
+
     /**
      * Creates a new conflict resolver instance with the specified hooks.
      *
@@ -95,11 +100,14 @@ public final class ClassicConflictResolver extends ConflictResolver {
      * @param scopeDeriver The scope deriver to use, must not be {@code null}.
      */
     public ClassicConflictResolver(
-            VersionSelector versionSelector,
-            ScopeSelector scopeSelector,
-            OptionalitySelector optionalitySelector,
-            ScopeDeriver scopeDeriver) {
-        super(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+            ConflictResolver.VersionSelector versionSelector,
+            ConflictResolver.ScopeSelector scopeSelector,
+            ConflictResolver.OptionalitySelector optionalitySelector,
+            ConflictResolver.ScopeDeriver scopeDeriver) {
+        this.versionSelector = requireNonNull(versionSelector, "version selector cannot be null");
+        this.scopeSelector = requireNonNull(scopeSelector, "scope selector cannot be null");
+        this.optionalitySelector = requireNonNull(optionalitySelector, "optionality selector cannot be null");
+        this.scopeDeriver = requireNonNull(scopeDeriver, "scope deriver cannot be null");
     }
 
     @SuppressWarnings("unchecked")
@@ -164,16 +172,17 @@ public final class ClassicConflictResolver extends ConflictResolver {
                 DependencyNode winner = ((ConflictItem) (ctx.winner)).node;
 
                 state.scopeSelector.selectScope(ctx);
-                if (Verbosity.NONE != state.verbosity) {
+                if (ConflictResolver.Verbosity.NONE != state.verbosity) {
                     winner.setData(
-                            NODE_DATA_ORIGINAL_SCOPE, winner.getDependency().getScope());
+                            ConflictResolver.NODE_DATA_ORIGINAL_SCOPE,
+                            winner.getDependency().getScope());
                 }
                 winner.setScope(ctx.scope);
 
                 state.optionalitySelector.selectOptionality(ctx);
-                if (Verbosity.NONE != state.verbosity) {
+                if (ConflictResolver.Verbosity.NONE != state.verbosity) {
                     winner.setData(
-                            NODE_DATA_ORIGINAL_OPTIONALITY,
+                            ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY,
                             winner.getDependency().isOptional());
                 }
                 winner.setOptional(ctx.optional);
@@ -242,13 +251,13 @@ public final class ClassicConflictResolver extends ConflictResolver {
                 DependencyNode child = childIt.next();
                 if (child == item.node) {
                     // NONE: just remove it and done
-                    if (Verbosity.NONE == state.verbosity) {
+                    if (ConflictResolver.Verbosity.NONE == state.verbosity) {
                         childIt.remove();
                         break;
                     }
 
                     // STANDARD: doing extra bookkeeping to select "which nodes to remove"
-                    if (Verbosity.STANDARD == state.verbosity) {
+                    if (ConflictResolver.Verbosity.STANDARD == state.verbosity) {
                         String childArtifactId = ArtifactIdUtils.toId(child.getArtifact());
                         // if two IDs are equal, it means "there is nearest", not conflict per se.
                         // In that case we do NOT allow this child to be removed (but remove others)
@@ -270,11 +279,12 @@ public final class ClassicConflictResolver extends ConflictResolver {
 
                     // FULL: just record the facts
                     DependencyNode loser = new DefaultDependencyNode(child);
-                    loser.setData(NODE_DATA_WINNER, winner.node);
+                    loser.setData(ConflictResolver.NODE_DATA_WINNER, winner.node);
                     loser.setData(
-                            NODE_DATA_ORIGINAL_SCOPE, loser.getDependency().getScope());
+                            ConflictResolver.NODE_DATA_ORIGINAL_SCOPE,
+                            loser.getDependency().getScope());
                     loser.setData(
-                            NODE_DATA_ORIGINAL_OPTIONALITY,
+                            ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY,
                             loser.getDependency().isOptional());
                     loser.setScope(item.getScopes().iterator().next());
                     loser.setChildren(Collections.emptyList());
@@ -286,7 +296,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
         }
 
         // 2nd pass to apply "standard" verbosity: leaving only 1 loser, but with care
-        if (Verbosity.STANDARD == state.verbosity && !toRemoveIds.isEmpty()) {
+        if (ConflictResolver.Verbosity.STANDARD == state.verbosity && !toRemoveIds.isEmpty()) {
             previousParent = null;
             for (ConflictItem item : state.items) {
                 if (item == winner) {
@@ -411,7 +421,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
         /**
          * Flag whether we should keep losers in the graph to enable visualization/troubleshooting of conflicts.
          */
-        final Verbosity verbosity;
+        final ConflictResolver.Verbosity verbosity;
 
         /**
          * A mapping from conflict id to winner node, helps to recognize nodes that have their effective
@@ -484,22 +494,22 @@ public final class ClassicConflictResolver extends ConflictResolver {
         /**
          * The effective version selector, i.e. after initialization.
          */
-        final VersionSelector versionSelector;
+        final ConflictResolver.VersionSelector versionSelector;
 
         /**
          * The effective scope selector, i.e. after initialization.
          */
-        final ScopeSelector scopeSelector;
+        final ConflictResolver.ScopeSelector scopeSelector;
 
         /**
          * The effective scope deriver, i.e. after initialization.
          */
-        final ScopeDeriver scopeDeriver;
+        final ConflictResolver.ScopeDeriver scopeDeriver;
 
         /**
          * The effective optionality selector, i.e. after initialization.
          */
-        final OptionalitySelector optionalitySelector;
+        final ConflictResolver.OptionalitySelector optionalitySelector;
 
         State(
                 DependencyNode root,
@@ -508,7 +518,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
                 DependencyGraphTransformationContext context)
                 throws RepositoryException {
             this.conflictIds = conflictIds;
-            this.verbosity = getVerbosity(context.getSession());
+            this.verbosity = ConflictResolver.getVerbosity(context.getSession());
             potentialAncestorIds = new HashSet<>(conflictIdCount * 2);
             resolvedIds = new HashMap<>(conflictIdCount * 2);
             items = new ArrayList<>(256);
@@ -569,7 +579,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
         boolean push(DependencyNode node, String conflictId) throws RepositoryException {
             if (conflictId == null) {
                 if (node.getDependency() != null) {
-                    if (node.getData().get(NODE_DATA_WINNER) != null) {
+                    if (node.getData().get(ConflictResolver.NODE_DATA_WINNER) != null) {
                         return false;
                     }
                     throw new RepositoryException("missing conflict id for node " + node);
@@ -704,7 +714,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
     /**
      * A context used to hold information that is relevant for deriving the scope of a child dependency.
      *
-     * @see ScopeDeriver
+     * @see ConflictResolver.ScopeDeriver
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
@@ -866,7 +876,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
          * Gets the derived scopes of the dependency. In general, the same dependency node could be reached via
          * different paths and each path might result in a different derived scope.
          *
-         * @see ScopeDeriver
+         * @see ConflictResolver.ScopeDeriver
          * @return The (read-only) set of derived scopes of the dependency, never {@code null}.
          */
         @SuppressWarnings("unchecked")
@@ -916,8 +926,8 @@ public final class ClassicConflictResolver extends ConflictResolver {
     /**
      * A context used to hold information that is relevant for resolving version and scope conflicts.
      *
-     * @see VersionSelector
-     * @see ScopeSelector
+     * @see ConflictResolver.VersionSelector
+     * @see ConflictResolver.ScopeSelector
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */

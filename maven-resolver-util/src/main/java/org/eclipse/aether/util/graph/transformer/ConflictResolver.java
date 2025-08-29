@@ -28,8 +28,6 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * Abstract base class for dependency graph transformers that resolve version and scope conflicts among dependencies.
  * For a given set of conflicting nodes, one node will be chosen as the winner. How losing nodes are handled depends
@@ -112,7 +110,7 @@ import static java.util.Objects.requireNonNull;
  * @see PathConflictResolver
  * @see ClassicConflictResolver
  */
-public abstract class ConflictResolver implements DependencyGraphTransformer {
+public class ConflictResolver implements DependencyGraphTransformer {
 
     /**
      * The key in the repository session's {@link org.eclipse.aether.RepositorySystemSession#getConfigProperties()
@@ -167,7 +165,7 @@ public abstract class ConflictResolver implements DependencyGraphTransformer {
      * is returned.
      * This method never returns {@code null}.
      */
-    protected static Verbosity getVerbosity(RepositorySystemSession session) {
+    public static Verbosity getVerbosity(RepositorySystemSession session) {
         final Object verbosityValue = session.getConfigProperties().get(CONFIG_PROP_VERBOSE);
         if (verbosityValue instanceof Boolean) {
             return (Boolean) verbosityValue ? Verbosity.STANDARD : Verbosity.NONE;
@@ -199,31 +197,40 @@ public abstract class ConflictResolver implements DependencyGraphTransformer {
      */
     public static final String NODE_DATA_ORIGINAL_OPTIONALITY = "conflict.originalOptionality";
 
-    protected final VersionSelector versionSelector;
-
-    protected final ScopeSelector scopeSelector;
-
-    protected final ScopeDeriver scopeDeriver;
-
-    protected final OptionalitySelector optionalitySelector;
+    private final ClassicConflictResolver delegate;
 
     /**
-     * Creates a new conflict resolver instance with the specified hooks.
+     * No arg ctor for subclasses.
+     */
+    protected ConflictResolver() {
+        this.delegate = null;
+    }
+
+    /**
+     * Creates a new conflict resolver instance with the specified hooks that delegates to "classic" conflict resolver.
+     * This constructor usage should be avoided, and instantiate directly {@link PathConflictResolver} or
+     * {@link ClassicConflictResolver} instead.
      *
      * @param versionSelector The version selector to use, must not be {@code null}.
      * @param scopeSelector The scope selector to use, must not be {@code null}.
      * @param optionalitySelector The optionality selector ot use, must not be {@code null}.
      * @param scopeDeriver The scope deriver to use, must not be {@code null}.
+     *
+     * @deprecated Use {@link PathConflictResolver} or {@link ClassicConflictResolver} instead.
      */
+    @Deprecated
     public ConflictResolver(
             VersionSelector versionSelector,
             ScopeSelector scopeSelector,
             OptionalitySelector optionalitySelector,
             ScopeDeriver scopeDeriver) {
-        this.versionSelector = requireNonNull(versionSelector, "version selector cannot be null");
-        this.scopeSelector = requireNonNull(scopeSelector, "scope selector cannot be null");
-        this.optionalitySelector = requireNonNull(optionalitySelector, "optionality selector cannot be null");
-        this.scopeDeriver = requireNonNull(scopeDeriver, "scope deriver cannot be null");
+        this.delegate = new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+    }
+
+    @Override
+    public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
+            throws RepositoryException {
+        return delegate.transformGraph(node, context);
     }
 
     /**
