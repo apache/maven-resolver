@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -49,10 +50,17 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
     private final LocalPathComposer localPathComposer;
 
-    SimpleLocalRepositoryManager(Path basePath, String type, LocalPathComposer localPathComposer) {
+    private final Function<RemoteRepository, String> remoteRepositorySafeId;
+
+    SimpleLocalRepositoryManager(
+            Path basePath,
+            String type,
+            LocalPathComposer localPathComposer,
+            Function<RemoteRepository, String> remoteRepositorySafeId) {
         requireNonNull(basePath, "base directory cannot be null");
         repository = new LocalRepository(basePath.toAbsolutePath(), type);
         this.localPathComposer = requireNonNull(localPathComposer);
+        this.remoteRepositorySafeId = requireNonNull(remoteRepositorySafeId);
     }
 
     @Override
@@ -117,9 +125,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
             key = buffer.toString();
         } else {
-            // repository serves static contents, its id is sufficient as key
-
-            key = repository.getId();
+            key = remoteRepositorySafeId.apply(repository);
         }
 
         return key;

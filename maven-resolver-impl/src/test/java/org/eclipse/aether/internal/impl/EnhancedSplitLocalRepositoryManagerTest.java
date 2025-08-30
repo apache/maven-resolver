@@ -33,6 +33,7 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
         return new EnhancedLocalRepositoryManager(
                 basedir.toPath(),
                 new DefaultLocalPathComposer(),
+                RemoteRepository::getId,
                 "_remote.repositories",
                 trackingFileManager,
                 new DefaultLocalPathPrefixComposerFactory().createComposer(session));

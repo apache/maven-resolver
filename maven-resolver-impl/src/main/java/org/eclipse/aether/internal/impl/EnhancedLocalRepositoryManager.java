@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -70,10 +71,11 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
+            Function<RemoteRepository, String> remoteRepositorySafeId,
             String trackingFilename,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposer localPathPrefixComposer) {
-        super(basedir, "enhanced", localPathComposer);
+        super(basedir, "enhanced", localPathComposer, remoteRepositorySafeId);
         this.trackingFilename = requireNonNull(trackingFilename);
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);

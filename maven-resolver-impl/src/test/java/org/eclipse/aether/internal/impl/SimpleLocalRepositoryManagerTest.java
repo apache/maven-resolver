@@ -48,7 +48,8 @@ public class SimpleLocalRepositoryManagerTest {
 
     @BeforeEach
     void setup() throws IOException {
-        manager = new SimpleLocalRepositoryManager(basedir.toPath(), "simple", new DefaultLocalPathComposer());
+        manager = new SimpleLocalRepositoryManager(
+                basedir.toPath(), "simple", new DefaultLocalPathComposer(), RemoteRepository::getId);
         session = TestUtils.newSession();
     }
 
