@@ -18,20 +18,12 @@
  */
 package org.eclipse.aether.util.repository;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.ArtifactRepository;
-import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.WorkspaceRepository;
-import org.eclipse.aether.util.StringDigestUtil;
 
 import static java.util.Objects.requireNonNull;
 
@@ -43,52 +35,15 @@ import static java.util.Objects.requireNonNull;
 public final class RepositoryIdHelper {
     private RepositoryIdHelper() {}
 
-    private static final String ILLEGAL_REPO_ID_CHARS = "\\/:\"<>|?*";
+    private static final String ILLEGAL_REPO_ID_CHARS = "\\/:\"<>|?*"; // copied from Maven
     private static final String REPLACEMENT_REPO_ID_CHAR = "X";
-    private static final String CENTRAL_REPOSITORY_ID = "central";
-    private static final Collection<String> CENTRAL_URLS = Collections.unmodifiableList(Arrays.asList(
-            "https://repo.maven.apache.org/maven2",
-            "https://repo1.maven.org/maven2",
-            "https://maven-central.storage-download.googleapis.com/maven2"));
-    private static final Predicate<RemoteRepository> CENTRAL_DIRECT_ONLY =
-            remoteRepository -> CENTRAL_REPOSITORY_ID.equals(remoteRepository.getId())
-                    && "https".equals(remoteRepository.getProtocol().toLowerCase(Locale.ROOT))
-                    && CENTRAL_URLS.stream().anyMatch(remoteUrl -> {
-                        String rurl = remoteRepository.getUrl().toLowerCase(Locale.ROOT);
-                        if (rurl.endsWith("/")) {
-                            rurl = rurl.substring(0, rurl.length() - 1);
-                        }
-                        return rurl.equals(remoteUrl);
-                    })
-                    && remoteRepository.getPolicy(false).isEnabled()
-                    && !remoteRepository.getPolicy(true).isEnabled()
-                    && remoteRepository.getMirroredRepositories().isEmpty()
-                    && !remoteRepository.isRepositoryManager()
-                    && !remoteRepository.isBlocked();
-
-    /**
-     * Provides cached (or uncached, if session has no cache set) for {@link #idToSafePathSegment(RemoteRepository)} function.
-     */
-    @SuppressWarnings("unchecked")
-    public static Function<? extends ArtifactRepository, String> cachedIdToSafePathSegment(
-            RepositorySystemSession session) {
-        if (session.getCache() != null) {
-            return repository -> ((ConcurrentHashMap<ArtifactRepository, String>) session.getCache()
-                            .computeIfAbsent(
-                                    session,
-                                    RepositoryIdHelper.class.getSimpleName() + "-idToSafePathSegment",
-                                    ConcurrentHashMap::new))
-                    .computeIfAbsent(repository, RepositoryIdHelper::idToSafePathSegment);
-        } else {
-            return RepositoryIdHelper::idToSafePathSegment; // uncached
-        }
-    }
 
     /**
      * Provides cached (or uncached, if session has no cache set) for {@link #idToPathSegment(RemoteRepository)} function.
      */
     @SuppressWarnings("unchecked")
     public static Function<RemoteRepository, String> cachedIdToPathSegment(RepositorySystemSession session) {
+        requireNonNull(session, "session");
         if (session.getCache() != null) {
             return repository -> ((ConcurrentHashMap<RemoteRepository, String>) session.getCache()
                             .computeIfAbsent(
@@ -98,51 +53,6 @@ public final class RepositoryIdHelper {
                     .computeIfAbsent(repository, RepositoryIdHelper::idToPathSegment);
         } else {
             return RepositoryIdHelper::idToPathSegment; // uncached
-        }
-    }
-
-    /**
-     * This method returns the passed in {@link ArtifactRepository#getId()} value, but it makes them unique to prevent
-     * ID overlap in unrelated builds. Only Maven Central will have return ID "central", while all the other
-     * remote repository will have returned string in form of {@code repo.ID-sha1(repo.url)}.
-     * <p>
-     * This method should be used when code operates with {@link ArtifactRepository}s and uses repository ID as identifier
-     * (like enhanced local repository is, or split repository). Use of ID solely can result in clash and overlaps,
-     * as for example repository with ID "releases" may be defined in multiple builds, but pointing to different
-     * URLs.
-     * <p>
-     * This method is simplistic on purpose, and if frequently used, best if results are cached (per session).
-     */
-    public static String idToSafePathSegment(ArtifactRepository repository) {
-        requireNonNull(repository, "repository");
-        if (repository instanceof LocalRepository) {
-            return repository.getId(); // "local"
-        } else if (repository instanceof WorkspaceRepository) {
-            return repository.getId(); // "workspace"
-        } else if (repository instanceof RemoteRepository) {
-            return idToSafePathSegment((RemoteRepository) repository);
-        } else {
-            throw new IllegalArgumentException("Unknown repository type: " + repository);
-        }
-    }
-
-    /**
-     * This method returns the passed in {@link RemoteRepository#getId()} value, but it makes them unique to prevent
-     * ID overlap in unrelated builds. Only Maven Central will have return ID "central", while all the other
-     * remote repository will have returned string in form of {@code repo.ID-sha1(repo.url)}.
-     * <p>
-     * This method should be used when code operates with {@link RemoteRepository}s and uses repository ID as identifier
-     * (like enhanced local repository is, or split repository). Use of ID solely can result in clash and overlaps,
-     * as for example repository with ID "releases" may be defined in multiple builds, but pointing to different
-     * URLs.
-     * <p>
-     * This method is simplistic on purpose, and if frequently used, best if results are cached (per session).
-     */
-    public static String idToSafePathSegment(RemoteRepository repository) {
-        if (CENTRAL_DIRECT_ONLY.test(repository)) {
-            return repository.getId();
-        } else {
-            return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(repository.getUrl());
         }
     }
 
