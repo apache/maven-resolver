@@ -610,7 +610,7 @@ public final class PathConflictResolver extends ConflictResolver {
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
-    private static final class ScopeContext implements ConflictResolver.ScopeContext {
+    private static final class ScopeContext extends ConflictResolver.ScopeContext {
         private final String parentScope;
         private final String childScope;
         private String derivedScope;
@@ -675,7 +675,7 @@ public final class PathConflictResolver extends ConflictResolver {
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
-    private static final class ConflictItem implements ConflictResolver.ConflictItem {
+    private static final class ConflictItem extends ConflictResolver.ConflictItem {
         private final Path path;
         private final List<DependencyNode> parent;
         private final Artifact artifact;
@@ -792,7 +792,7 @@ public final class PathConflictResolver extends ConflictResolver {
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
-    private static final class ConflictContext implements ConflictResolver.ConflictContext {
+    private static final class ConflictContext extends ConflictResolver.ConflictContext {
         private final DependencyNode root;
         private final Map<DependencyNode, String> conflictIds;
         private final Collection<ConflictResolver.ConflictItem> items;
