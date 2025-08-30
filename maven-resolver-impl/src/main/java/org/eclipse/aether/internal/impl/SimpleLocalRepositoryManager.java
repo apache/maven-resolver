@@ -107,7 +107,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
             StringBuilder buffer = new StringBuilder(128);
 
-            buffer.append(repository.getId());
+            buffer.append(remoteRepositorySafeId.apply(repository));
 
             buffer.append('-');
 
