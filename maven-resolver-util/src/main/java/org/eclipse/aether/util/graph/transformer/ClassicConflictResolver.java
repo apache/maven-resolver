@@ -718,7 +718,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
-    private static final class ScopeContext implements ConflictResolver.ScopeContext {
+    private static final class ScopeContext extends ConflictResolver.ScopeContext {
         private String parentScope;
         private String childScope;
         private String derivedScope;
@@ -787,7 +787,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
-    private static final class ConflictItem implements ConflictResolver.ConflictItem {
+    private static final class ConflictItem extends ConflictResolver.ConflictItem {
 
         // nodes can share child lists, we care about the unique owner of a child node which is the child list
         final List<DependencyNode> parent;
@@ -931,7 +931,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
-    private static final class ConflictContext implements ConflictResolver.ConflictContext {
+    private static final class ConflictContext extends ConflictResolver.ConflictContext {
         final DependencyNode root;
         final Map<DependencyNode, String> conflictIds;
         final Collection<ConflictResolver.ConflictItem> items;
