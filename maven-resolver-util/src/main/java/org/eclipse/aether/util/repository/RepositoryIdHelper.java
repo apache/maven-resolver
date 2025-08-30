@@ -18,6 +18,9 @@
  */
 package org.eclipse.aether.util.repository;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -35,8 +38,10 @@ import static java.util.Objects.requireNonNull;
 public final class RepositoryIdHelper {
     private RepositoryIdHelper() {}
 
-    private static final String ILLEGAL_REPO_ID_CHARS = "\\/:\"<>|?*"; // copied from Maven
-    private static final String REPLACEMENT_REPO_ID_CHAR = "X";
+    private static final List<String> ILLEGAL_REPO_ID_CHARS = Collections.unmodifiableList(
+            Arrays.asList("\\", "/", ":", "\"", "<", ">", "|", "?", "*")); // copied from Maven
+    private static final List<String> REPLACEMENT_REPO_ID_CHARS =
+            Collections.unmodifiableList(Arrays.asList("X", "X", "X", "X", "X", "X", "X", "X", "X"));
 
     /**
      * Provides cached (or uncached, if session has no cache set) for {@link #idToPathSegment(RemoteRepository)} function.
@@ -69,11 +74,11 @@ public final class RepositoryIdHelper {
      */
     public static String idToPathSegment(RemoteRepository repository) {
         StringBuilder result = new StringBuilder(repository.getId());
-        for (int illegalIndex = 0; illegalIndex < ILLEGAL_REPO_ID_CHARS.length(); illegalIndex++) {
-            String illegal = ILLEGAL_REPO_ID_CHARS.substring(illegalIndex, illegalIndex + 1);
+        for (int illegalIndex = 0; illegalIndex < ILLEGAL_REPO_ID_CHARS.size(); illegalIndex++) {
+            String illegal = ILLEGAL_REPO_ID_CHARS.get(illegalIndex);
             int pos = result.indexOf(illegal);
             while (pos >= 0) {
-                result.replace(pos, pos + 1, REPLACEMENT_REPO_ID_CHAR);
+                result.replace(pos, pos + illegal.length(), REPLACEMENT_REPO_ID_CHARS.get(illegalIndex));
                 pos = result.indexOf(illegal);
             }
         }
