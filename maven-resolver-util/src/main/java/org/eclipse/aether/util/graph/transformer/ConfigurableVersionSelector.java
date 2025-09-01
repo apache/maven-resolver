@@ -19,6 +19,7 @@
 package org.eclipse.aether.util.graph.transformer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,10 +27,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ConflictContext;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.ConflictItem;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver.VersionSelector;
@@ -48,6 +53,22 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.0
  */
 public class ConfigurableVersionSelector extends VersionSelector {
+    /**
+     * The name of the version selection strategy to use in conflict resolution: "nearest" (default) or "highest".
+     *
+     * @since 2.0.11
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_SELECTION_STRATEGY}
+     */
+    public static final String CONFIG_PROP_SELECTION_STRATEGY =
+            ConfigurationProperties.PREFIX_AETHER + "conflictResolver.versionSelector.selectionStrategy";
+
+    public static final String NEAREST_SELECTION_STRATEGY = "nearest";
+    public static final String HIGHEST_SELECTION_STRATEGY = "highest";
+
+    public static final String DEFAULT_SELECTION_STRATEGY = NEAREST_SELECTION_STRATEGY;
+
     /**
      * The strategy how "winner" is being selected.
      */
@@ -73,28 +94,48 @@ public class ConfigurableVersionSelector extends VersionSelector {
             return winner;
         }
     }
+
     /**
      * The strategy of winner selection, never {@code null}.
      */
     protected final SelectionStrategy selectionStrategy;
 
     /**
-     * Creates a new instance of this version selector that works "as Maven did so far".
-     *
-     * @see Nearest
+     * Creates a new instance of this version selector that will use configured selection strategy dynamically.
      */
     public ConfigurableVersionSelector() {
-        this(new Nearest());
+        this.selectionStrategy = null;
     }
 
     /**
-     * Creates a new instance of this version selector.
+     * Creates a new instance of this version selector using passed in selection strategy always.
      *
      * @param selectionStrategy The winner selection strategy, must not be {@code null}. Maven3
      *                          used {@link Nearest} strategy.
      */
     public ConfigurableVersionSelector(SelectionStrategy selectionStrategy) {
         this.selectionStrategy = requireNonNull(selectionStrategy, "selectionStrategy");
+    }
+
+    @Override
+    public VersionSelector getInstance(DependencyNode root, DependencyGraphTransformationContext context)
+            throws RepositoryException {
+        if (selectionStrategy == null) {
+            String ss = ConfigUtils.getString(
+                    context.getSession(), DEFAULT_SELECTION_STRATEGY, CONFIG_PROP_SELECTION_STRATEGY);
+            SelectionStrategy strategy;
+            if (NEAREST_SELECTION_STRATEGY.equals(ss)) {
+                strategy = new Nearest();
+            } else if (HIGHEST_SELECTION_STRATEGY.equals(ss)) {
+                strategy = new Highest();
+            } else {
+                throw new IllegalArgumentException("Unknown selection strategy: " + ss + "; known are "
+                        + Arrays.asList(NEAREST_SELECTION_STRATEGY, HIGHEST_SELECTION_STRATEGY));
+            }
+            return new ConfigurableVersionSelector(strategy);
+        } else {
+            return this;
+        }
     }
 
     @Override

@@ -45,7 +45,7 @@ import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.ConfigurableVersionSelector;
-import org.eclipse.aether.util.graph.transformer.PathConflictResolver;
+import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.traverser.FatArtifactTraverser;
 import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
@@ -108,10 +108,12 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
 
     protected DependencyGraphTransformer getDependencyGraphTransformer() {
         return new ChainedDependencyGraphTransformer(
-                new PathConflictResolver(
-                        new ConfigurableVersionSelector(), new ManagedScopeSelector(scopeManager),
-                        new SimpleOptionalitySelector(), new ManagedScopeDeriver(scopeManager)),
-                new ManagedDependencyContextRefiner(scopeManager));
+                new ConflictResolver(
+                        new ConfigurableVersionSelector(),
+                        new ManagedScopeSelector(this.scopeManager),
+                        new SimpleOptionalitySelector(),
+                        new ManagedScopeDeriver(this.scopeManager)),
+                new ManagedDependencyContextRefiner(this.scopeManager));
     }
 
     protected ArtifactTypeRegistry getArtifactTypeRegistry() {

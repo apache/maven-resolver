@@ -85,7 +85,7 @@ public final class ConfigurableVersionSelectorStrategiesTest extends AbstractCon
     void testStrategyDifference01(
             ConfigurableVersionSelector.SelectionStrategy strategy, ConflictResolver conflictResolver)
             throws Exception {
-        System.out.println(conflictResolver.versionSelector);
+        System.out.println(strategy);
         DependencyNode root = parseResource("nearest-highest-strategy-difference01.txt");
         root.accept(new DependencyGraphDumper(System.out::println));
         assertSame(root, transform(conflictResolver, root));
@@ -100,7 +100,7 @@ public final class ConfigurableVersionSelectorStrategiesTest extends AbstractCon
     void testStrategyDifference02(
             ConfigurableVersionSelector.SelectionStrategy strategy, ConflictResolver conflictResolver)
             throws Exception {
-        System.out.println(conflictResolver.versionSelector);
+        System.out.println(strategy);
         DependencyNode root = parseResource("nearest-highest-strategy-difference02.txt");
         root.accept(new DependencyGraphDumper(System.out::println));
         assertSame(root, transform(conflictResolver, root));
@@ -124,7 +124,7 @@ public final class ConfigurableVersionSelectorStrategiesTest extends AbstractCon
     void testStrategyDifference03(
             ConfigurableVersionSelector.SelectionStrategy strategy, ConflictResolver conflictResolver)
             throws Exception {
-        System.out.println(conflictResolver.versionSelector);
+        System.out.println(strategy);
         DependencyNode root = parseResource("nearest-highest-strategy-difference03.txt");
         root.accept(new DependencyGraphDumper(System.out::println));
         assertSame(root, transform(conflictResolver, root));

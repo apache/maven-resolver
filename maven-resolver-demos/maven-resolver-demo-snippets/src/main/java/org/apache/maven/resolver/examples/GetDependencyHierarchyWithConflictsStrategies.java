@@ -29,7 +29,6 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.internal.impl.collect.DefaultDependencyCollector;
 import org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
@@ -38,7 +37,6 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
-import org.eclipse.aether.util.graph.transformer.PathConflictResolver;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 
@@ -56,24 +54,25 @@ public class GetDependencyHierarchyWithConflictsStrategies {
         System.out.println("------------------------------------------------------------");
         System.out.println(GetDependencyHierarchyWithConflictsStrategies.class.getSimpleName());
 
-        runItWithStrategy(args, new ConfigurableVersionSelector.Nearest());
-        runItWithStrategy(args, new ConfigurableVersionSelector.Highest());
+        runItWithStrategy(args, ConfigurableVersionSelector.NEAREST_SELECTION_STRATEGY);
+        runItWithStrategy(args, ConfigurableVersionSelector.HIGHEST_SELECTION_STRATEGY);
     }
 
-    private static void runItWithStrategy(
-            String[] args, ConfigurableVersionSelector.SelectionStrategy selectionStrategy) throws Exception {
+    private static void runItWithStrategy(String[] args, String selectionStrategy) throws Exception {
         System.out.println();
-        System.out.println(selectionStrategy.toString());
+        System.out.println(selectionStrategy);
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
             SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
             sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, ConflictResolver.Verbosity.FULL);
             sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
-            sessionBuilder.setConfigProperty(DefaultDependencyCollector.CONFIG_PROP_COLLECTOR_IMPL, "bf");
-            sessionBuilder.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, false);
+            sessionBuilder.setConfigProperty(
+                    ConfigurableVersionSelector.CONFIG_PROP_SELECTION_STRATEGY, selectionStrategy);
+            sessionBuilder.setConfigProperty(
+                    BfDependencyCollector.CONFIG_PROP_SKIPPER, BfDependencyCollector.GACEV_SKIPPER);
             try (CloseableSession session = sessionBuilder
                     .setDependencyGraphTransformer(new ChainedDependencyGraphTransformer(
-                            new PathConflictResolver(
-                                    new ConfigurableVersionSelector(selectionStrategy),
+                            new ConflictResolver(
+                                    new ConfigurableVersionSelector(),
                                     new JavaScopeSelector(),
                                     new SimpleOptionalitySelector(),
                                     new JavaScopeDeriver()),

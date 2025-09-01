@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 import java.io.Closeable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +37,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -89,21 +91,26 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
 
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties()
-     * configuration properties} used to store a {@link Boolean} flag controlling the resolver's skip mode.
+     * configuration properties} used to store a {@link String} flag controlling the resolver's skip mode.
+     * Supported modes are "gace" (default), "gacev" and "false" to not use skipper.
      *
      * @since 1.8.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.Boolean}
+     * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_SKIPPER}
      */
     public static final String CONFIG_PROP_SKIPPER = CONFIG_PROPS_PREFIX + "skipper";
+
+    public static final String NONE_SKIPPER = "false";
+    public static final String GACE_SKIPPER = "gace";
+    public static final String GACEV_SKIPPER = "gacev";
 
     /**
      * The default value for {@link #CONFIG_PROP_SKIPPER}, {@code true}.
      *
      * @since 1.8.0
      */
-    public static final boolean DEFAULT_SKIPPER = true;
+    public static final String DEFAULT_SKIPPER = GACE_SKIPPER;
 
     /**
      * The count of threads to be used when collecting POMs in parallel.
@@ -146,15 +153,23 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             List<Dependency> managedDependencies,
             Results results)
             throws DependencyCollectionException {
-        boolean useSkip = ConfigUtils.getBoolean(session, DEFAULT_SKIPPER, CONFIG_PROP_SKIPPER);
-
-        if (useSkip) {
-            logger.debug("Collector skip mode enabled");
+        String skipperMode = ConfigUtils.getString(session, DEFAULT_SKIPPER, CONFIG_PROP_SKIPPER);
+        Supplier<DependencyResolutionSkipper> skipperSupplier;
+        if (NONE_SKIPPER.equals(skipperMode)) {
+            logger.debug("Collector skip mode disabled");
+            skipperSupplier = DependencyResolutionSkipper::neverSkipper;
+        } else if (GACE_SKIPPER.equals(skipperMode)) {
+            logger.debug("Collector skip mode enabled: GACE");
+            skipperSupplier = DependencyResolutionSkipper::defaultGACESkipper;
+        } else if (GACEV_SKIPPER.equals(skipperMode)) {
+            logger.debug("Collector skip mode enabled: GACEV");
+            skipperSupplier = DependencyResolutionSkipper::defaultGACEVSkipper;
+        } else {
+            throw new IllegalArgumentException("Unknown skipper mode: " + skipperMode + "; known are "
+                    + Arrays.asList(GACE_SKIPPER, GACEV_SKIPPER, NONE_SKIPPER));
         }
 
-        try (DependencyResolutionSkipper skipper = useSkip
-                        ? DependencyResolutionSkipper.defaultSkipper()
-                        : DependencyResolutionSkipper.neverSkipper();
+        try (DependencyResolutionSkipper skipper = skipperSupplier.get();
                 ParallelDescriptorResolver parallelDescriptorResolver =
                         new ParallelDescriptorResolver(SmartExecutorUtils.smartExecutor(
                                 session,

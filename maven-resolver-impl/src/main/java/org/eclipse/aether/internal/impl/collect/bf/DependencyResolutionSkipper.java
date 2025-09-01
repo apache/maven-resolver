@@ -24,12 +24,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A skipper that determines whether to skip resolving given node during the dependency collection.
@@ -63,12 +66,21 @@ abstract class DependencyResolutionSkipper implements Closeable {
     public abstract void close();
 
     /**
-     * Returns new instance of "default" skipper.
+     * Returns new instance of "default" GACE skipper.
      *
      * Note: type is specialized for testing purposes.
      */
-    public static DefaultDependencyResolutionSkipper defaultSkipper() {
-        return new DefaultDependencyResolutionSkipper();
+    public static DefaultDependencyResolutionSkipper defaultGACESkipper() {
+        return new DefaultDependencyResolutionSkipper(ArtifactIdUtils::toVersionlessId);
+    }
+
+    /**
+     * Returns new instance of "default" GACEV skipper.
+     *
+     * Note: type is specialized for testing purposes.
+     */
+    public static DefaultDependencyResolutionSkipper defaultGACEVSkipper() {
+        return new DefaultDependencyResolutionSkipper(ArtifactIdUtils::toId);
     }
 
     /**
@@ -97,14 +109,20 @@ abstract class DependencyResolutionSkipper implements Closeable {
     }
 
     /**
-     * Visible for testing.
+     * Default implementation with selectable key function. Visible for testing.
      */
     static final class DefaultDependencyResolutionSkipper extends DependencyResolutionSkipper {
         private static final Logger LOGGER = LoggerFactory.getLogger(DependencyResolutionSkipper.class);
 
-        private final Map<DependencyNode, DependencyResolutionResult> results = new LinkedHashMap<>(256);
-        private final CacheManager cacheManager = new CacheManager();
-        private final CoordinateManager coordinateManager = new CoordinateManager();
+        private final Map<DependencyNode, DependencyResolutionResult> results;
+        private final CacheManager cacheManager;
+        private final CoordinateManager coordinateManager;
+
+        private DefaultDependencyResolutionSkipper(Function<Artifact, String> keyFunction) {
+            this.results = new LinkedHashMap<>(256);
+            this.cacheManager = new CacheManager(keyFunction);
+            this.coordinateManager = new CoordinateManager();
+        }
 
         @Override
         public boolean skipResolution(DependencyNode node, List<DependencyNode> parents) {
@@ -213,15 +231,26 @@ abstract class DependencyResolutionSkipper implements Closeable {
             /**
              * artifact -> node
              */
-            private final Map<Artifact, DependencyNode> winners = new HashMap<>(256);
+            private final Map<Artifact, DependencyNode> winners;
 
             /**
              * versionLessId -> Artifact, only cache winners
              */
-            private final Map<String, Artifact> winnerGAs = new HashMap<>(256);
+            private final Map<String, Artifact> winnerGAs;
+
+            /**
+             * artifact -> key function (GACE or GACEV is what makes sense primarily)
+             */
+            private final Function<Artifact, String> keyFunction;
+
+            private CacheManager(Function<Artifact, String> keyFunction) {
+                this.winners = new HashMap<>(256);
+                this.winnerGAs = new HashMap<>(256);
+                this.keyFunction = requireNonNull(keyFunction);
+            }
 
             boolean isVersionConflict(DependencyNode node) {
-                String ga = ArtifactIdUtils.toVersionlessId(node.getArtifact());
+                String ga = keyFunction.apply(node.getArtifact());
                 if (winnerGAs.containsKey(ga)) {
                     Artifact result = winnerGAs.get(ga);
                     return !node.getArtifact().getVersion().equals(result.getVersion());
@@ -232,7 +261,7 @@ abstract class DependencyResolutionSkipper implements Closeable {
 
             void cacheWinner(DependencyNode node) {
                 winners.put(node.getArtifact(), node);
-                winnerGAs.put(ArtifactIdUtils.toVersionlessId(node.getArtifact()), node.getArtifact());
+                winnerGAs.put(keyFunction.apply(node.getArtifact()), node.getArtifact());
             }
 
             boolean isDuplicate(DependencyNode node) {
