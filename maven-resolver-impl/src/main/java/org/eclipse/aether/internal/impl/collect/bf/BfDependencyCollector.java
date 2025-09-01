@@ -92,7 +92,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link String} flag controlling the resolver's skip mode.
-     * Supported modes are "gace" (default), "gacev" and "false" to not use skipper.
+     * Supported modes are "versionless" (default), "versioned" and "false" to not use skipper.
      *
      * @since 1.8.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -102,15 +102,15 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     public static final String CONFIG_PROP_SKIPPER = CONFIG_PROPS_PREFIX + "skipper";
 
     public static final String NONE_SKIPPER = "false";
-    public static final String GACE_SKIPPER = "gace";
-    public static final String GACEV_SKIPPER = "gacev";
+    public static final String VERSIONLESS_SKIPPER = "versionless";
+    public static final String VERSIONED_SKIPPER = "versioned";
 
     /**
      * The default value for {@link #CONFIG_PROP_SKIPPER}, {@code true}.
      *
      * @since 1.8.0
      */
-    public static final String DEFAULT_SKIPPER = GACE_SKIPPER;
+    public static final String DEFAULT_SKIPPER = VERSIONLESS_SKIPPER;
 
     /**
      * The count of threads to be used when collecting POMs in parallel.
@@ -158,15 +158,15 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         if (NONE_SKIPPER.equals(skipperMode)) {
             logger.debug("Collector skip mode disabled");
             skipperSupplier = DependencyResolutionSkipper::neverSkipper;
-        } else if (GACE_SKIPPER.equals(skipperMode)) {
-            logger.debug("Collector skip mode enabled: GACE");
+        } else if (VERSIONLESS_SKIPPER.equals(skipperMode)) {
+            logger.debug("Collector skip mode enabled: {} (key function GACE)", skipperMode);
             skipperSupplier = DependencyResolutionSkipper::defaultGACESkipper;
-        } else if (GACEV_SKIPPER.equals(skipperMode)) {
-            logger.debug("Collector skip mode enabled: GACEV");
+        } else if (VERSIONED_SKIPPER.equals(skipperMode)) {
+            logger.debug("Collector skip mode enabled: {} (key function GACEV)", skipperMode);
             skipperSupplier = DependencyResolutionSkipper::defaultGACEVSkipper;
         } else {
             throw new IllegalArgumentException("Unknown skipper mode: " + skipperMode + "; known are "
-                    + Arrays.asList(GACE_SKIPPER, GACEV_SKIPPER, NONE_SKIPPER));
+                    + Arrays.asList(VERSIONLESS_SKIPPER, VERSIONED_SKIPPER, NONE_SKIPPER));
         }
 
         try (DependencyResolutionSkipper skipper = skipperSupplier.get();

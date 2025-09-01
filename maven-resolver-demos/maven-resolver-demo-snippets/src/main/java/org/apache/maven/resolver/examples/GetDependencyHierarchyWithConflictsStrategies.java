@@ -68,7 +68,7 @@ public class GetDependencyHierarchyWithConflictsStrategies {
             sessionBuilder.setConfigProperty(
                     ConfigurableVersionSelector.CONFIG_PROP_SELECTION_STRATEGY, selectionStrategy);
             sessionBuilder.setConfigProperty(
-                    BfDependencyCollector.CONFIG_PROP_SKIPPER, BfDependencyCollector.GACEV_SKIPPER);
+                    BfDependencyCollector.CONFIG_PROP_SKIPPER, BfDependencyCollector.VERSIONED_SKIPPER);
             try (CloseableSession session = sessionBuilder
                     .setDependencyGraphTransformer(new ChainedDependencyGraphTransformer(
                             new ConflictResolver(
