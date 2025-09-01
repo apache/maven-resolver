@@ -45,7 +45,7 @@ public class RepositoryIdHelperTest {
         String badId = bad.getId();
         String badFixedId = safeId.apply(bad);
         assertNotEquals(badId, badFixedId);
-        assertEquals("badCOLONid", badFixedId);
+        assertEquals("bad-COLON-id", badFixedId);
     }
 
     @Test
@@ -56,7 +56,7 @@ public class RepositoryIdHelperTest {
         String badId = veryBad.getId();
         String badFixedId = RepositoryIdHelper.idToPathSegment(veryBad);
         assertNotEquals(badId, badFixedId);
-        assertEquals("BACKSLASHSLASHCOLONQUOTELTGTPIPEQMARKASTERISK", badFixedId);
+        assertEquals("-BACKSLASH--SLASH--COLON--QUOTE--LT--GT--PIPE--QMARK--ASTERISK-", badFixedId);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class RepositoryIdHelperTest {
         String badId = bad.getId();
         String badFixedId = safeId.apply(bad);
         assertNotEquals(badId, badFixedId);
-        assertEquals("badSLASHid", badFixedId);
+        assertEquals("bad-SLASH-id", badFixedId);
         assertSame(badFixedId, safeId.apply(bad));
     }
 
@@ -97,7 +97,7 @@ public class RepositoryIdHelperTest {
         String badId = bad.getId();
         String badFixedId = safeId.apply(bad);
         assertNotEquals(badId, badFixedId);
-        assertEquals("badSLASHid", badFixedId);
+        assertEquals("bad-SLASH-id", badFixedId);
         assertNotSame(badFixedId, safeId.apply(bad));
     }
 }

@@ -44,17 +44,17 @@ public final class RepositoryIdHelper {
     private static final Map<String, String> ILLEGAL_REPO_ID_REPLACEMENTS;
 
     static {
-        HashMap<String, String> illegalReposIdReplacements = new HashMap<>();
-        illegalReposIdReplacements.put("\\", "BACKSLASH");
-        illegalReposIdReplacements.put("/", "SLASH");
-        illegalReposIdReplacements.put(":", "COLON");
-        illegalReposIdReplacements.put("\"", "QUOTE");
-        illegalReposIdReplacements.put("<", "LT");
-        illegalReposIdReplacements.put(">", "GT");
-        illegalReposIdReplacements.put("|", "PIPE");
-        illegalReposIdReplacements.put("?", "QMARK");
-        illegalReposIdReplacements.put("*", "ASTERISK");
-        ILLEGAL_REPO_ID_REPLACEMENTS = Collections.unmodifiableMap(illegalReposIdReplacements);
+        HashMap<String, String> illegalRepoIdReplacements = new HashMap<>();
+        illegalRepoIdReplacements.put("\\", "-BACKSLASH-");
+        illegalRepoIdReplacements.put("/", "-SLASH-");
+        illegalRepoIdReplacements.put(":", "-COLON-");
+        illegalRepoIdReplacements.put("\"", "-QUOTE-");
+        illegalRepoIdReplacements.put("<", "-LT-");
+        illegalRepoIdReplacements.put(">", "-GT-");
+        illegalRepoIdReplacements.put("|", "-PIPE-");
+        illegalRepoIdReplacements.put("?", "-QMARK-");
+        illegalRepoIdReplacements.put("*", "-ASTERISK-");
+        ILLEGAL_REPO_ID_REPLACEMENTS = Collections.unmodifiableMap(illegalRepoIdReplacements);
     }
 
     /**
