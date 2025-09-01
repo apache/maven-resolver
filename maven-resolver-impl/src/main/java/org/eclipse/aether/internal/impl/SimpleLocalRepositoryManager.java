@@ -50,17 +50,17 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
     private final LocalPathComposer localPathComposer;
 
-    private final Function<RemoteRepository, String> remoteRepositorySafeId;
+    private final Function<RemoteRepository, String> idToPathSegmentFunction;
 
     SimpleLocalRepositoryManager(
             Path basePath,
             String type,
             LocalPathComposer localPathComposer,
-            Function<RemoteRepository, String> remoteRepositorySafeId) {
+            Function<RemoteRepository, String> idToPathSegmentFunction) {
         requireNonNull(basePath, "base directory cannot be null");
         repository = new LocalRepository(basePath.toAbsolutePath(), type);
         this.localPathComposer = requireNonNull(localPathComposer);
-        this.remoteRepositorySafeId = requireNonNull(remoteRepositorySafeId);
+        this.idToPathSegmentFunction = requireNonNull(idToPathSegmentFunction);
     }
 
     @Override
@@ -107,7 +107,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
             StringBuilder buffer = new StringBuilder(128);
 
-            buffer.append(remoteRepositorySafeId.apply(repository));
+            buffer.append(idToPathSegmentFunction.apply(repository));
 
             buffer.append('-');
 
@@ -125,7 +125,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
             key = buffer.toString();
         } else {
-            key = remoteRepositorySafeId.apply(repository);
+            key = idToPathSegmentFunction.apply(repository);
         }
 
         return key;

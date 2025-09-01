@@ -31,7 +31,9 @@ import org.eclipse.aether.repository.RemoteRepository;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Helper class for {@link ArtifactRepository#getId()} handling.
+ * Helper class for {@link ArtifactRepository#getId()} handling. This class provides helper function (cached or uncached)
+ * to get {@link RemoteRepository#getId()} as it was originally envisioned: as path safe. While POMs are validated
+ * by Maven, there are POMs out there that somehow define repositories with unsafe characters in their id.
  *
  * @since 2.0.11
  */

@@ -71,11 +71,11 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
-            Function<RemoteRepository, String> remoteRepositorySafeId,
+            Function<RemoteRepository, String> idToPathSegmentFunction,
             String trackingFilename,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposer localPathPrefixComposer) {
-        super(basedir, "enhanced", localPathComposer, remoteRepositorySafeId);
+        super(basedir, "enhanced", localPathComposer, idToPathSegmentFunction);
         this.trackingFilename = requireNonNull(trackingFilename);
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);

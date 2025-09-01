@@ -66,7 +66,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 boolean splitRemoteRepositoryLast,
                 String releasesPrefix,
                 String snapshotsPrefix,
-                Function<RemoteRepository, String> safeIdToPathSegment) {
+                Function<RemoteRepository, String> idToPathSegmentFunction) {
             super(
                     split,
                     localPrefix,
@@ -77,7 +77,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                     splitRemoteRepositoryLast,
                     releasesPrefix,
                     snapshotsPrefix,
-                    safeIdToPathSegment);
+                    idToPathSegmentFunction);
         }
     }
 }

@@ -243,7 +243,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
         protected final String snapshotsPrefix;
 
-        protected final Function<RemoteRepository, String> safeIdToPathSegment;
+        protected final Function<RemoteRepository, String> idToPathSegmentFunction;
 
         protected LocalPathPrefixComposerSupport(
                 boolean split,
@@ -255,7 +255,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                 boolean splitRemoteRepositoryLast,
                 String releasesPrefix,
                 String snapshotsPrefix,
-                Function<RemoteRepository, String> safeIdToPathSegment) {
+                Function<RemoteRepository, String> idToPathSegmentFunction) {
             this.split = split;
             this.localPrefix = localPrefix;
             this.splitLocal = splitLocal;
@@ -265,7 +265,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             this.splitRemoteRepositoryLast = splitRemoteRepositoryLast;
             this.releasesPrefix = releasesPrefix;
             this.snapshotsPrefix = snapshotsPrefix;
-            this.safeIdToPathSegment = safeIdToPathSegment;
+            this.idToPathSegmentFunction = idToPathSegmentFunction;
         }
 
         @Override
@@ -287,13 +287,13 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             }
             String result = remotePrefix;
             if (!splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + safeIdToPathSegment.apply(repository);
+                result += "/" + idToPathSegmentFunction.apply(repository);
             }
             if (splitRemote) {
                 result += "/" + (artifact.isSnapshot() ? snapshotsPrefix : releasesPrefix);
             }
             if (splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + safeIdToPathSegment.apply(repository);
+                result += "/" + idToPathSegmentFunction.apply(repository);
             }
             return result;
         }
@@ -317,13 +317,13 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             }
             String result = remotePrefix;
             if (!splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + safeIdToPathSegment.apply(repository);
+                result += "/" + idToPathSegmentFunction.apply(repository);
             }
             if (splitRemote) {
                 result += "/" + (isSnapshot(metadata) ? snapshotsPrefix : releasesPrefix);
             }
             if (splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + safeIdToPathSegment.apply(repository);
+                result += "/" + idToPathSegmentFunction.apply(repository);
             }
             return result;
         }
