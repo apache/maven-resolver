@@ -31,9 +31,10 @@ import org.eclipse.aether.repository.RemoteRepository;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Helper class for {@link ArtifactRepository#getId()} handling. This class provides helper function (cached or uncached)
- * to get {@link RemoteRepository#getId()} as it was originally envisioned: as path safe. While POMs are validated
- * by Maven, there are POMs out there that somehow define repositories with unsafe characters in their id.
+ * Helper class for {@link ArtifactRepository#getId()} handling. This class provides  helper function (cached or uncached)
+ * to get id of repository as it was originally envisioned: as path safe. While POMs are validated by Maven, there are
+ * POMs out there that somehow define repositories with unsafe characters in their id. The problem affects mostly
+ * {@link RemoteRepository} instances, as all other implementations have fixed ids that are path safe.
  *
  * @since 2.0.11
  */
@@ -46,44 +47,62 @@ public final class RepositoryIdHelper {
             Collections.unmodifiableList(Arrays.asList("X", "X", "X", "X", "X", "X", "X", "X", "X"));
 
     /**
-     * Provides cached (or uncached, if session has no cache set) for {@link #idToPathSegment(RemoteRepository)} function.
+     * Returns same instance of (session cached) function for session.
      */
     @SuppressWarnings("unchecked")
-    public static Function<RemoteRepository, String> cachedIdToPathSegment(RepositorySystemSession session) {
+    public static Function<ArtifactRepository, String> cachedIdToPathSegment(RepositorySystemSession session) {
         requireNonNull(session, "session");
+        return (Function<ArtifactRepository, String>) session.getData()
+                .computeIfAbsent(
+                        RepositoryIdHelper.class.getSimpleName() + "-idToPathSegmentFunction",
+                        () -> cachedIdToPathSegmentFunction(session));
+    }
+
+    /**
+     * Returns new instance of function backed by cached or uncached (if session has no cache set)
+     * {@link #idToPathSegment(ArtifactRepository)} method call.
+     */
+    @SuppressWarnings("unchecked")
+    private static Function<ArtifactRepository, String> cachedIdToPathSegmentFunction(RepositorySystemSession session) {
         if (session.getCache() != null) {
-            return repository -> ((ConcurrentHashMap<RemoteRepository, String>) session.getCache()
+            return repository -> ((ConcurrentHashMap<String, String>) session.getCache()
                             .computeIfAbsent(
                                     session,
-                                    RepositoryIdHelper.class.getSimpleName() + "-idToPathSegment",
+                                    RepositoryIdHelper.class.getSimpleName() + "-idToPathSegmentCache",
                                     ConcurrentHashMap::new))
-                    .computeIfAbsent(repository, RepositoryIdHelper::idToPathSegment);
+                    .computeIfAbsent(repository.getId(), id -> idToPathSegment(repository));
         } else {
             return RepositoryIdHelper::idToPathSegment; // uncached
         }
     }
 
     /**
-     * This method returns the passed in {@link RemoteRepository#getId()} value, modifying it if needed, making sure that
+     * This method returns the passed in {@link ArtifactRepository#getId()} value, modifying it if needed, making sure that
      * returned repository ID is "path segment" safe. Ideally, this method should never modify repository ID, as
      * Maven validation prevents use of illegal FS characters in them, but we found in Maven Central several POMs that
      * define remote repositories with illegal FS characters in their ID.
      * <p>
      * This method is simplistic on purpose, and if frequently used, best if results are cached (per session),
      * see {@link #cachedIdToPathSegment(RepositorySystemSession)} method.
+     * <p>
+     * This method is visible for testing only, should not be used in any other scenarios.
      *
      * @see #cachedIdToPathSegment(RepositorySystemSession)
      */
-    public static String idToPathSegment(RemoteRepository repository) {
-        StringBuilder result = new StringBuilder(repository.getId());
-        for (int illegalIndex = 0; illegalIndex < ILLEGAL_REPO_ID_CHARS.size(); illegalIndex++) {
-            String illegal = ILLEGAL_REPO_ID_CHARS.get(illegalIndex);
-            int pos = result.indexOf(illegal);
-            while (pos >= 0) {
-                result.replace(pos, pos + illegal.length(), REPLACEMENT_REPO_ID_CHARS.get(illegalIndex));
-                pos = result.indexOf(illegal);
+    static String idToPathSegment(ArtifactRepository repository) {
+        if (repository instanceof RemoteRepository) {
+            StringBuilder result = new StringBuilder(repository.getId());
+            for (int illegalIndex = 0; illegalIndex < ILLEGAL_REPO_ID_CHARS.size(); illegalIndex++) {
+                String illegal = ILLEGAL_REPO_ID_CHARS.get(illegalIndex);
+                int pos = result.indexOf(illegal);
+                while (pos >= 0) {
+                    result.replace(pos, pos + illegal.length(), REPLACEMENT_REPO_ID_CHARS.get(illegalIndex));
+                    pos = result.indexOf(illegal);
+                }
             }
+            return result.toString();
+        } else {
+            return repository.getId();
         }
-        return result.toString();
     }
 }

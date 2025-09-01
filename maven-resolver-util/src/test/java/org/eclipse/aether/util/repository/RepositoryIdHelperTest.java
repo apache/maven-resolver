@@ -22,6 +22,7 @@ import java.util.function.Function;
 
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.jupiter.api.Test;
 
@@ -62,7 +63,7 @@ public class RepositoryIdHelperTest {
     void caching() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(s -> false);
         session.setCache(new DefaultRepositoryCache()); // session has cache set
-        Function<RemoteRepository, String> safeId = RepositoryIdHelper.cachedIdToPathSegment(session);
+        Function<ArtifactRepository, String> safeId = RepositoryIdHelper.cachedIdToPathSegment(session);
 
         RemoteRepository good = new RemoteRepository.Builder("good", "default", "https://somewhere.com").build();
         RemoteRepository bad = new RemoteRepository.Builder("bad/id", "default", "https://somewhere.com").build();
@@ -83,7 +84,7 @@ public class RepositoryIdHelperTest {
     void nonCaching() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(s -> false);
         session.setCache(null); // session has no cache set
-        Function<RemoteRepository, String> safeId = RepositoryIdHelper.cachedIdToPathSegment(session);
+        Function<ArtifactRepository, String> safeId = RepositoryIdHelper.cachedIdToPathSegment(session);
 
         RemoteRepository good = new RemoteRepository.Builder("good", "default", "https://somewhere.com").build();
         RemoteRepository bad = new RemoteRepository.Builder("bad/id", "default", "https://somewhere.com").build();

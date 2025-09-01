@@ -24,7 +24,7 @@ import javax.inject.Singleton;
 import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
 
 /**
@@ -66,7 +66,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 boolean splitRemoteRepositoryLast,
                 String releasesPrefix,
                 String snapshotsPrefix,
-                Function<RemoteRepository, String> idToPathSegmentFunction) {
+                Function<ArtifactRepository, String> idToPathSegmentFunction) {
             super(
                     split,
                     localPrefix,

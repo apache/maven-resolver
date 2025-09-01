@@ -28,6 +28,7 @@ import java.util.function.Function;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
@@ -50,13 +51,13 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
     private final LocalPathComposer localPathComposer;
 
-    private final Function<RemoteRepository, String> idToPathSegmentFunction;
+    private final Function<ArtifactRepository, String> idToPathSegmentFunction;
 
     SimpleLocalRepositoryManager(
             Path basePath,
             String type,
             LocalPathComposer localPathComposer,
-            Function<RemoteRepository, String> idToPathSegmentFunction) {
+            Function<ArtifactRepository, String> idToPathSegmentFunction) {
         requireNonNull(basePath, "base directory cannot be null");
         repository = new LocalRepository(basePath.toAbsolutePath(), type);
         this.localPathComposer = requireNonNull(localPathComposer);

@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
@@ -45,6 +46,7 @@ import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
+import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -168,7 +170,10 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             final boolean originAware = isOriginAware(session);
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
                 Path summaryFile = summaryFile(
-                        basedir, originAware, artifactRepository.getId(), checksumAlgorithmFactory.getFileExtension());
+                        basedir,
+                        originAware,
+                        RepositoryIdHelper.cachedIdToPathSegment(session).apply(artifactRepository),
+                        checksumAlgorithmFactory.getFileExtension());
                 ConcurrentHashMap<String, String> algorithmChecksums =
                         checksums.computeIfAbsent(summaryFile, f -> loadProvidedChecksums(summaryFile));
                 String checksum = algorithmChecksums.get(artifactPath);
@@ -188,17 +193,18 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
         return new SummaryFileWriter(
                 checksums,
                 getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
-                isOriginAware(session));
+                isOriginAware(session),
+                RepositoryIdHelper.cachedIdToPathSegment(session));
     }
 
     /**
      * Returns the summary file path. The file itself and its parent directories may not exist, this method merely
      * calculate the path.
      */
-    private Path summaryFile(Path basedir, boolean originAware, String repositoryId, String checksumExtension) {
+    private Path summaryFile(Path basedir, boolean originAware, String safeRepositoryId, String checksumExtension) {
         String fileName = CHECKSUMS_FILE_PREFIX;
         if (originAware) {
-            fileName += "-" + repositoryId;
+            fileName += "-" + safeRepositoryId;
         }
         return basedir.resolve(fileName + "." + checksumExtension);
     }
@@ -252,11 +258,17 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
 
         private final boolean originAware;
 
+        private final Function<ArtifactRepository, String> idToPathSegmentFunction;
+
         private SummaryFileWriter(
-                ConcurrentHashMap<Path, ConcurrentHashMap<String, String>> cache, Path basedir, boolean originAware) {
+                ConcurrentHashMap<Path, ConcurrentHashMap<String, String>> cache,
+                Path basedir,
+                boolean originAware,
+                Function<ArtifactRepository, String> idToPathSegmentFunction) {
             this.cache = cache;
             this.basedir = basedir;
             this.originAware = originAware;
+            this.idToPathSegmentFunction = idToPathSegmentFunction;
         }
 
         @Override
@@ -268,7 +280,10 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             String artifactPath = localPathComposer.getPathForArtifact(artifact, false);
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
                 Path summaryFile = summaryFile(
-                        basedir, originAware, artifactRepository.getId(), checksumAlgorithmFactory.getFileExtension());
+                        basedir,
+                        originAware,
+                        idToPathSegmentFunction.apply(artifactRepository),
+                        checksumAlgorithmFactory.getFileExtension());
                 String checksum = requireNonNull(trustedArtifactChecksums.get(checksumAlgorithmFactory.getName()));
 
                 String oldChecksum = cache.computeIfAbsent(summaryFile, k -> loadProvidedChecksums(summaryFile))

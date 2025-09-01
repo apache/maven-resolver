@@ -23,6 +23,7 @@ import java.util.function.Function;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -243,7 +244,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
         protected final String snapshotsPrefix;
 
-        protected final Function<RemoteRepository, String> idToPathSegmentFunction;
+        protected final Function<ArtifactRepository, String> idToPathSegmentFunction;
 
         protected LocalPathPrefixComposerSupport(
                 boolean split,
@@ -255,7 +256,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                 boolean splitRemoteRepositoryLast,
                 String releasesPrefix,
                 String snapshotsPrefix,
-                Function<RemoteRepository, String> idToPathSegmentFunction) {
+                Function<ArtifactRepository, String> idToPathSegmentFunction) {
             this.split = split;
             this.localPrefix = localPrefix;
             this.splitLocal = splitLocal;

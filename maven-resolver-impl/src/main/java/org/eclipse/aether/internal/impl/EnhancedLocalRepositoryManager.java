@@ -32,6 +32,7 @@ import java.util.function.Function;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
@@ -71,7 +72,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
-            Function<RemoteRepository, String> idToPathSegmentFunction,
+            Function<ArtifactRepository, String> idToPathSegmentFunction,
             String trackingFilename,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposer localPathPrefixComposer) {

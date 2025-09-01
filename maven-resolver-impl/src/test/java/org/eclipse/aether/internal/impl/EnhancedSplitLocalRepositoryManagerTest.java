@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,7 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
         return new EnhancedLocalRepositoryManager(
                 basedir.toPath(),
                 new DefaultLocalPathComposer(),
-                RemoteRepository::getId,
+                ArtifactRepository::getId,
                 "_remote.repositories",
                 trackingFileManager,
                 new DefaultLocalPathPrefixComposerFactory().createComposer(session));
