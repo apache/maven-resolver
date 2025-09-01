@@ -92,7 +92,10 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
     /**
      * The key in the repository session's {@link RepositorySystemSession#getConfigProperties()
      * configuration properties} used to store a {@link String} flag controlling the resolver's skip mode.
-     * Supported modes are "versionless" (default), "versioned" and "false" to not use skipper.
+     * Supported modes are "versionless" (default), "versioned" and "false" to not use skipper. The first two modes
+     * are defining "function" how to map artifact coordinates to (String) key while deciding "skip" logic.
+     * The "versionless" uses {@code G:A:C:E} coordinate elements only (without version), while "versioned" uses
+     * all {@code G:A:C:E:V} artifact coordinates.
      *
      * @since 1.8.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
