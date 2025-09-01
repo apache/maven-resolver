@@ -46,8 +46,8 @@ import static java.util.Objects.requireNonNull;
  * For a given set of conflicting nodes, one node will be chosen as the winner. How losing nodes are handled
  * depends on the configured verbosity level: they may be removed entirely, have their children removed, or
  * be left in place with conflict information. The exact rules by which a winning node and its effective scope
- * are determined are controlled by user-supplied implementations of {@link VersionSelector}, {@link ScopeSelector},
- * {@link OptionalitySelector} and {@link ScopeDeriver}.
+ * are determined are controlled by user-supplied implementations of {@link ConflictResolver.VersionSelector}, {@link ConflictResolver.ScopeSelector},
+ * {@link ConflictResolver.OptionalitySelector} and {@link ConflictResolver.ScopeDeriver}.
  * <p>
  * <strong>Performance Characteristics:</strong>
  * <ul>
@@ -90,6 +90,10 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.11
  */
 public final class PathConflictResolver extends ConflictResolver {
+    private final ConflictResolver.VersionSelector versionSelector;
+    private final ConflictResolver.ScopeSelector scopeSelector;
+    private final ConflictResolver.ScopeDeriver scopeDeriver;
+    private final ConflictResolver.OptionalitySelector optionalitySelector;
 
     /**
      * Creates a new conflict resolver instance with the specified hooks.
@@ -100,11 +104,14 @@ public final class PathConflictResolver extends ConflictResolver {
      * @param scopeDeriver The scope deriver to use, must not be {@code null}.
      */
     public PathConflictResolver(
-            VersionSelector versionSelector,
-            ScopeSelector scopeSelector,
-            OptionalitySelector optionalitySelector,
-            ScopeDeriver scopeDeriver) {
-        super(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+            ConflictResolver.VersionSelector versionSelector,
+            ConflictResolver.ScopeSelector scopeSelector,
+            ConflictResolver.OptionalitySelector optionalitySelector,
+            ConflictResolver.ScopeDeriver scopeDeriver) {
+        this.versionSelector = requireNonNull(versionSelector, "version selector cannot be null");
+        this.scopeSelector = requireNonNull(scopeSelector, "scope selector cannot be null");
+        this.optionalitySelector = requireNonNull(optionalitySelector, "optionality selector cannot be null");
+        this.scopeDeriver = requireNonNull(scopeDeriver, "scope deriver cannot be null");
     }
 
     @SuppressWarnings("unchecked")
@@ -147,7 +154,7 @@ public final class PathConflictResolver extends ConflictResolver {
         }
 
         State state = new State(
-                getVerbosity(context.getSession()),
+                ConflictResolver.getVerbosity(context.getSession()),
                 versionSelector.getInstance(node, context),
                 scopeSelector.getInstance(node, context),
                 scopeDeriver.getInstance(node, context),
@@ -225,29 +232,29 @@ public final class PathConflictResolver extends ConflictResolver {
      */
     private static class State {
         /**
-         * Verbosity to be applied, see {@link Verbosity}.
+         * Verbosity to be applied, see {@link ConflictResolver.Verbosity}.
          */
-        private final Verbosity verbosity;
+        private final ConflictResolver.Verbosity verbosity;
 
         /**
-         * The {@link VersionSelector} to use.
+         * The {@link ConflictResolver.VersionSelector} to use.
          */
-        private final VersionSelector versionSelector;
+        private final ConflictResolver.VersionSelector versionSelector;
 
         /**
-         * The {@link ScopeSelector} to use.
+         * The {@link ConflictResolver.ScopeSelector} to use.
          */
-        private final ScopeSelector scopeSelector;
+        private final ConflictResolver.ScopeSelector scopeSelector;
 
         /**
-         * The {@link ScopeDeriver} to use.
+         * The {@link ConflictResolver.ScopeDeriver} to use.
          */
-        private final ScopeDeriver scopeDeriver;
+        private final ConflictResolver.ScopeDeriver scopeDeriver;
 
         /**
-         * The {@link OptionalitySelector} to use/
+         * The {@link ConflictResolver.OptionalitySelector} to use/
          */
-        private final OptionalitySelector optionalitySelector;
+        private final ConflictResolver.OptionalitySelector optionalitySelector;
 
         /**
          * Topologically sorted conflictIds from {@link ConflictIdSorter}.
@@ -279,11 +286,11 @@ public final class PathConflictResolver extends ConflictResolver {
 
         @SuppressWarnings("checkstyle:ParameterNumber")
         private State(
-                Verbosity verbosity,
-                VersionSelector versionSelector,
-                ScopeSelector scopeSelector,
-                ScopeDeriver scopeDeriver,
-                OptionalitySelector optionalitySelector,
+                ConflictResolver.Verbosity verbosity,
+                ConflictResolver.VersionSelector versionSelector,
+                ConflictResolver.ScopeSelector scopeSelector,
+                ConflictResolver.ScopeDeriver scopeDeriver,
+                ConflictResolver.OptionalitySelector optionalitySelector,
                 List<String> sortedConflictIds,
                 Map<DependencyNode, String> conflictIds,
                 Map<String, Collection<String>> cyclicPredecessors) {
@@ -450,10 +457,10 @@ public final class PathConflictResolver extends ConflictResolver {
                     // copy onto dn; if applicable
                     if (this.dn.getDependency() != null) {
                         this.dn.setData(
-                                NODE_DATA_ORIGINAL_SCOPE,
+                                ConflictResolver.NODE_DATA_ORIGINAL_SCOPE,
                                 this.dn.getDependency().getScope());
                         this.dn.setData(
-                                NODE_DATA_ORIGINAL_OPTIONALITY,
+                                ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY,
                                 this.dn.getDependency().getOptional());
                         this.dn.setScope(this.scope);
                         this.dn.setOptional(this.optional);
@@ -496,16 +503,16 @@ public final class PathConflictResolver extends ConflictResolver {
                     if (markLoser) {
                         // copy dn
                         DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
-                        dnCopy.setData(NODE_DATA_WINNER, winner.dn);
+                        dnCopy.setData(ConflictResolver.NODE_DATA_WINNER, winner.dn);
                         dnCopy.setData(
-                                NODE_DATA_ORIGINAL_SCOPE,
+                                ConflictResolver.NODE_DATA_ORIGINAL_SCOPE,
                                 this.dn.getDependency().getScope());
                         dnCopy.setData(
-                                NODE_DATA_ORIGINAL_OPTIONALITY,
+                                ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY,
                                 this.dn.getDependency().getOptional());
                         dnCopy.setScope(this.scope);
                         dnCopy.setOptional(this.optional);
-                        if (Verbosity.FULL != state.verbosity) {
+                        if (ConflictResolver.Verbosity.FULL != state.verbosity) {
                             dnCopy.getChildren().clear();
                         }
 
@@ -533,7 +540,7 @@ public final class PathConflictResolver extends ConflictResolver {
 
         /**
          * Counts "relatives" (GACE equal) artifacts under same parent; this is for cleaning up redundant nodes in
-         * case of version ranges, where same GACE is resolved into multiple GACEV as range is resolved. In {@link Verbosity#STANDARD}
+         * case of version ranges, where same GACE is resolved into multiple GACEV as range is resolved. In {@link ConflictResolver.Verbosity#STANDARD}
          * verbosity mode we remove "redundant" nodes (of a range) leaving only "winner equal" loser, that have same GACEV as winner.
          */
         private int relatedSiblingsCount(Artifact artifact, Path parent) {
@@ -599,11 +606,11 @@ public final class PathConflictResolver extends ConflictResolver {
     /**
      * A context used to hold information that is relevant for deriving the scope of a child dependency.
      *
-     * @see ScopeDeriver
+     * @see ConflictResolver.ScopeDeriver
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
-    private static final class ScopeContext implements ConflictResolver.ScopeContext {
+    private static final class ScopeContext extends ConflictResolver.ScopeContext {
         private final String parentScope;
         private final String childScope;
         private String derivedScope;
@@ -668,7 +675,7 @@ public final class PathConflictResolver extends ConflictResolver {
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
-    private static final class ConflictItem implements ConflictResolver.ConflictItem {
+    private static final class ConflictItem extends ConflictResolver.ConflictItem {
         private final Path path;
         private final List<DependencyNode> parent;
         private final Artifact artifact;
@@ -750,7 +757,7 @@ public final class PathConflictResolver extends ConflictResolver {
          * Gets the derived scopes of the dependency. In general, the same dependency node could be reached via
          * different paths and each path might result in a different derived scope.
          *
-         * @see ScopeDeriver
+         * @see ConflictResolver.ScopeDeriver
          * @return The (read-only) set of derived scopes of the dependency, never {@code null}.
          */
         @Override
@@ -780,12 +787,12 @@ public final class PathConflictResolver extends ConflictResolver {
     /**
      * A context used to hold information that is relevant for resolving version and scope conflicts.
      *
-     * @see VersionSelector
-     * @see ScopeSelector
+     * @see ConflictResolver.VersionSelector
+     * @see ConflictResolver.ScopeSelector
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
      *                change without notice and only exists to enable unit testing.
      */
-    private static final class ConflictContext implements ConflictResolver.ConflictContext {
+    private static final class ConflictContext extends ConflictResolver.ConflictContext {
         private final DependencyNode root;
         private final Map<DependencyNode, String> conflictIds;
         private final Collection<ConflictResolver.ConflictItem> items;
