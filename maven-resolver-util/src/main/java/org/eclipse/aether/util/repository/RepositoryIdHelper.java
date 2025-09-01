@@ -18,9 +18,9 @@
  */
 package org.eclipse.aether.util.repository;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -41,10 +41,21 @@ import static java.util.Objects.requireNonNull;
 public final class RepositoryIdHelper {
     private RepositoryIdHelper() {}
 
-    private static final List<String> ILLEGAL_REPO_ID_CHARS = Collections.unmodifiableList(
-            Arrays.asList("\\", "/", ":", "\"", "<", ">", "|", "?", "*")); // copied from Maven
-    private static final List<String> REPLACEMENT_REPO_ID_CHARS =
-            Collections.unmodifiableList(Arrays.asList("X", "X", "X", "X", "X", "X", "X", "X", "X"));
+    private static final Map<String, String> ILLEGAL_REPO_ID_REPLACEMENTS;
+
+    static {
+        HashMap<String, String> illegalReposIdReplacements = new HashMap<>();
+        illegalReposIdReplacements.put("\\", "BACKSLASH");
+        illegalReposIdReplacements.put("/", "SLASH");
+        illegalReposIdReplacements.put(":", "COLON");
+        illegalReposIdReplacements.put("\"", "QUOTE");
+        illegalReposIdReplacements.put("<", "LT");
+        illegalReposIdReplacements.put(">", "GT");
+        illegalReposIdReplacements.put("|", "PIPE");
+        illegalReposIdReplacements.put("?", "QMARK");
+        illegalReposIdReplacements.put("*", "ASTERISK");
+        ILLEGAL_REPO_ID_REPLACEMENTS = Collections.unmodifiableMap(illegalReposIdReplacements);
+    }
 
     /**
      * Returns same instance of (session cached) function for session.
@@ -92,11 +103,11 @@ public final class RepositoryIdHelper {
     static String idToPathSegment(ArtifactRepository repository) {
         if (repository instanceof RemoteRepository) {
             StringBuilder result = new StringBuilder(repository.getId());
-            for (int illegalIndex = 0; illegalIndex < ILLEGAL_REPO_ID_CHARS.size(); illegalIndex++) {
-                String illegal = ILLEGAL_REPO_ID_CHARS.get(illegalIndex);
+            for (Map.Entry<String, String> entry : ILLEGAL_REPO_ID_REPLACEMENTS.entrySet()) {
+                String illegal = entry.getKey();
                 int pos = result.indexOf(illegal);
                 while (pos >= 0) {
-                    result.replace(pos, pos + illegal.length(), REPLACEMENT_REPO_ID_CHARS.get(illegalIndex));
+                    result.replace(pos, pos + illegal.length(), entry.getValue());
                     pos = result.indexOf(illegal);
                 }
             }

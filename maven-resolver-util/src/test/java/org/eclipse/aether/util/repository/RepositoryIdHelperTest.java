@@ -36,7 +36,7 @@ public class RepositoryIdHelperTest {
     void fixes() {
         Function<RemoteRepository, String> safeId = RepositoryIdHelper::idToPathSegment;
         RemoteRepository good = new RemoteRepository.Builder("good", "default", "https://somewhere.com").build();
-        RemoteRepository bad = new RemoteRepository.Builder("bad/id", "default", "https://somewhere.com").build();
+        RemoteRepository bad = new RemoteRepository.Builder("bad:id", "default", "https://somewhere.com").build();
 
         String goodId = good.getId();
         String goodFixedId = safeId.apply(good);
@@ -45,7 +45,7 @@ public class RepositoryIdHelperTest {
         String badId = bad.getId();
         String badFixedId = safeId.apply(bad);
         assertNotEquals(badId, badFixedId);
-        assertEquals("badXid", badFixedId);
+        assertEquals("badCOLONid", badFixedId);
     }
 
     @Test
@@ -56,7 +56,7 @@ public class RepositoryIdHelperTest {
         String badId = veryBad.getId();
         String badFixedId = RepositoryIdHelper.idToPathSegment(veryBad);
         assertNotEquals(badId, badFixedId);
-        assertEquals("XXXXXXXXX", badFixedId);
+        assertEquals("BACKSLASHSLASHCOLONQUOTELTGTPIPEQMARKASTERISK", badFixedId);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class RepositoryIdHelperTest {
         String badId = bad.getId();
         String badFixedId = safeId.apply(bad);
         assertNotEquals(badId, badFixedId);
-        assertEquals("badXid", badFixedId);
+        assertEquals("badSLASHid", badFixedId);
         assertSame(badFixedId, safeId.apply(bad));
     }
 
@@ -97,7 +97,7 @@ public class RepositoryIdHelperTest {
         String badId = bad.getId();
         String badFixedId = safeId.apply(bad);
         assertNotEquals(badId, badFixedId);
-        assertEquals("badXid", badFixedId);
+        assertEquals("badSLASHid", badFixedId);
         assertNotSame(badFixedId, safeId.apply(bad));
     }
 }
