@@ -657,6 +657,7 @@
           <version>7.1.0</version>
           <configuration>
             <outputDir>${bnd.output}</outputDir>
+            <manifestPath>${bnd.output}/META-INF/MANIFEST.MF</manifestPath>
             <bnd><![CDATA[
               Bundle-SymbolicName: org.apache.${replacestring;${project.artifactId};-;.}
               Automatic-Module-Name: ${Bundle-SymbolicName}
