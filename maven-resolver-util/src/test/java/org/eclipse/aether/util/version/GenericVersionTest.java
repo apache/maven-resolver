@@ -231,6 +231,7 @@ public class GenericVersionTest extends AbstractVersionTest {
 
     @Test
     void testTrailingZerosBeforeQualifierAreSemanticallyIrrelevant() {
+        assertOrder(X_EQ_Y, "1.0_ga", "1.0.0_ga");
         assertOrder(X_EQ_Y, "1.0-ga", "1.0.0-ga");
         assertOrder(X_EQ_Y, "1.0.ga", "1.0.0.ga");
         assertOrder(X_EQ_Y, "1.0ga", "1.0.0ga");
@@ -253,6 +254,7 @@ public class GenericVersionTest extends AbstractVersionTest {
         assertOrder(X_EQ_Y, "1", "1-------------");
         assertOrder(X_EQ_Y, "1.0", "1.............");
         assertOrder(X_EQ_Y, "1.0", "1-------------");
+        assertOrder(X_EQ_Y, "1.0", "1_______");
     }
 
     @Test
@@ -261,6 +263,7 @@ public class GenericVersionTest extends AbstractVersionTest {
         assertOrder(X_EQ_Y, "0.0.1", "..1");
         assertOrder(X_EQ_Y, "0.1", "-1");
         assertOrder(X_EQ_Y, "0.0.1", "--1");
+        assertOrder(X_EQ_Y, "0.1", "_1");
     }
 
     @Test
@@ -397,6 +400,13 @@ public class GenericVersionTest extends AbstractVersionTest {
 
         assertOrder(X_EQ_Y, "1.unknown", "1.UNKNOWN");
         assertOrder(X_EQ_Y, "1.unknown", "1.Unknown");
+    }
+
+    @Test
+    void testHypenBeforeUnderscoreDotOrder() {
+        assertOrder(X_EQ_Y, "1.0.0-1", "1.0.0_1");
+        assertOrder(X_EQ_Y, "1.0.0-1", "1.0.0.1");
+        assertOrder(X_EQ_Y, "1.0.0_1", "1.0.0.1");
     }
 
     @Test
