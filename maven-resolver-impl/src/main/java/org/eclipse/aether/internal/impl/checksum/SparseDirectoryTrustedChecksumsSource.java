@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -37,6 +38,7 @@ import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,8 +131,11 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
         Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
-                Path checksumPath = basedir.resolve(
-                        calculateArtifactPath(originAware, artifact, artifactRepository, checksumAlgorithmFactory));
+                Path checksumPath = basedir.resolve(calculateArtifactPath(
+                        originAware,
+                        artifact,
+                        RepositoryIdHelper.cachedIdToPathSegment(session).apply(artifactRepository),
+                        checksumAlgorithmFactory));
 
                 if (!Files.isRegularFile(checksumPath)) {
                     LOGGER.debug(
@@ -160,18 +165,20 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
     @Override
     protected Writer doGetTrustedArtifactChecksumsWriter(RepositorySystemSession session) {
         return new SparseDirectoryWriter(
-                getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true), isOriginAware(session));
+                getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
+                isOriginAware(session),
+                RepositoryIdHelper.cachedIdToPathSegment(session));
     }
 
     private String calculateArtifactPath(
             boolean originAware,
             Artifact artifact,
-            ArtifactRepository artifactRepository,
+            String safeRepositoryId,
             ChecksumAlgorithmFactory checksumAlgorithmFactory) {
         String path = localPathComposer.getPathForArtifact(artifact, false) + "."
                 + checksumAlgorithmFactory.getFileExtension();
         if (originAware) {
-            path = artifactRepository.getId() + "/" + path;
+            path = safeRepositoryId + "/" + path;
         }
         return path;
     }
@@ -181,9 +188,13 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
 
         private final boolean originAware;
 
-        private SparseDirectoryWriter(Path basedir, boolean originAware) {
+        private final Function<ArtifactRepository, String> idToPathSegmentFunction;
+
+        private SparseDirectoryWriter(
+                Path basedir, boolean originAware, Function<ArtifactRepository, String> idToPathSegmentFunction) {
             this.basedir = basedir;
             this.originAware = originAware;
+            this.idToPathSegmentFunction = idToPathSegmentFunction;
         }
 
         @Override
@@ -194,8 +205,11 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
                 Map<String, String> trustedArtifactChecksums)
                 throws IOException {
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
-                Path checksumPath = basedir.resolve(
-                        calculateArtifactPath(originAware, artifact, artifactRepository, checksumAlgorithmFactory));
+                Path checksumPath = basedir.resolve(calculateArtifactPath(
+                        originAware,
+                        artifact,
+                        idToPathSegmentFunction.apply(artifactRepository),
+                        checksumAlgorithmFactory));
                 String checksum = requireNonNull(trustedArtifactChecksums.get(checksumAlgorithmFactory.getName()));
                 checksumProcessor.writeChecksum(checksumPath, checksum);
             }

@@ -18,9 +18,12 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.util.function.Function;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -241,6 +244,8 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
 
         protected final String snapshotsPrefix;
 
+        protected final Function<ArtifactRepository, String> idToPathSegmentFunction;
+
         protected LocalPathPrefixComposerSupport(
                 boolean split,
                 String localPrefix,
@@ -250,7 +255,8 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                 boolean splitRemoteRepository,
                 boolean splitRemoteRepositoryLast,
                 String releasesPrefix,
-                String snapshotsPrefix) {
+                String snapshotsPrefix,
+                Function<ArtifactRepository, String> idToPathSegmentFunction) {
             this.split = split;
             this.localPrefix = localPrefix;
             this.splitLocal = splitLocal;
@@ -260,6 +266,7 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             this.splitRemoteRepositoryLast = splitRemoteRepositoryLast;
             this.releasesPrefix = releasesPrefix;
             this.snapshotsPrefix = snapshotsPrefix;
+            this.idToPathSegmentFunction = idToPathSegmentFunction;
         }
 
         @Override
@@ -281,13 +288,13 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             }
             String result = remotePrefix;
             if (!splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + repository.getId();
+                result += "/" + idToPathSegmentFunction.apply(repository);
             }
             if (splitRemote) {
                 result += "/" + (artifact.isSnapshot() ? snapshotsPrefix : releasesPrefix);
             }
             if (splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + repository.getId();
+                result += "/" + idToPathSegmentFunction.apply(repository);
             }
             return result;
         }
@@ -311,13 +318,13 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             }
             String result = remotePrefix;
             if (!splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + repository.getId();
+                result += "/" + idToPathSegmentFunction.apply(repository);
             }
             if (splitRemote) {
                 result += "/" + (isSnapshot(metadata) ? snapshotsPrefix : releasesPrefix);
             }
             if (splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + repository.getId();
+                result += "/" + idToPathSegmentFunction.apply(repository);
             }
             return result;
         }

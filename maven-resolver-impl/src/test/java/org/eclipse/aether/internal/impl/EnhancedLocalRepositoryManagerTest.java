@@ -33,6 +33,7 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
@@ -107,6 +108,7 @@ public class EnhancedLocalRepositoryManagerTest {
         return new EnhancedLocalRepositoryManager(
                 basedir.toPath(),
                 new DefaultLocalPathComposer(),
+                ArtifactRepository::getId,
                 "_remote.repositories",
                 trackingFileManager,
                 new DefaultLocalPathPrefixComposerFactory().createComposer(session));

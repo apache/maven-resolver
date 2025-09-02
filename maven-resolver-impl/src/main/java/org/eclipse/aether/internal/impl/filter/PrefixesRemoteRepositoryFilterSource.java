@@ -48,6 +48,7 @@ import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -210,6 +211,18 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         return PrefixTree.SENTINEL;
     }
 
+    private Path resolvePrefixesFromLocalConfiguration(
+            RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
+        Path filePath = baseDir.resolve(PREFIXES_FILE_PREFIX
+                + RepositoryIdHelper.cachedIdToPathSegment(session).apply(remoteRepository)
+                + PREFIXES_FILE_SUFFIX);
+        if (Files.isReadable(filePath)) {
+            return filePath;
+        } else {
+            return null;
+        }
+    }
+
     private boolean isPrefixFile(Path path) {
         if (path == null || !Files.isRegularFile(path)) {
             return false;
@@ -220,16 +233,6 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             return false;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        }
-    }
-
-    private Path resolvePrefixesFromLocalConfiguration(
-            RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
-        Path filePath = baseDir.resolve(PREFIXES_FILE_PREFIX + remoteRepository.getId() + PREFIXES_FILE_SUFFIX);
-        if (Files.isReadable(filePath)) {
-            return filePath;
-        } else {
-            return null;
         }
     }
 

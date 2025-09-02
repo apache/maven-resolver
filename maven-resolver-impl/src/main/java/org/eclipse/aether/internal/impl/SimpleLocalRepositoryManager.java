@@ -23,10 +23,12 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
@@ -49,10 +51,17 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
     private final LocalPathComposer localPathComposer;
 
-    SimpleLocalRepositoryManager(Path basePath, String type, LocalPathComposer localPathComposer) {
+    private final Function<ArtifactRepository, String> idToPathSegmentFunction;
+
+    SimpleLocalRepositoryManager(
+            Path basePath,
+            String type,
+            LocalPathComposer localPathComposer,
+            Function<ArtifactRepository, String> idToPathSegmentFunction) {
         requireNonNull(basePath, "base directory cannot be null");
         repository = new LocalRepository(basePath.toAbsolutePath(), type);
         this.localPathComposer = requireNonNull(localPathComposer);
+        this.idToPathSegmentFunction = requireNonNull(idToPathSegmentFunction);
     }
 
     @Override
@@ -99,7 +108,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
             StringBuilder buffer = new StringBuilder(128);
 
-            buffer.append(repository.getId());
+            buffer.append(idToPathSegmentFunction.apply(repository));
 
             buffer.append('-');
 
@@ -117,9 +126,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
             key = buffer.toString();
         } else {
-            // repository serves static contents, its id is sufficient as key
-
-            key = repository.getId();
+            key = idToPathSegmentFunction.apply(repository);
         }
 
         return key;

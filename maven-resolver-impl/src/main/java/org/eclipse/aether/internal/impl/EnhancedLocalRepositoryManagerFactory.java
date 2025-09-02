@@ -29,6 +29,7 @@ import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.repository.RepositoryIdHelper;
 
 import static java.util.Objects.requireNonNull;
 
@@ -93,6 +94,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
             return new EnhancedLocalRepositoryManager(
                     repository.getBasePath(),
                     localPathComposer,
+                    RepositoryIdHelper.cachedIdToPathSegment(session),
                     trackingFilename,
                     trackingFileManager,
                     localPathPrefixComposerFactory.createComposer(session));
