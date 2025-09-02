@@ -310,7 +310,6 @@ public class DefaultMetadataResolver implements MetadataResolver {
                             session,
                             tasks.size(), // we DON'T want global executor; call can be recursive (pool depletion)
                             ConfigUtils.getInteger(session, DEFAULT_THREADS, CONFIG_PROP_THREADS),
-                            true,
                             getClass().getSimpleName() + "-")) {
                         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 

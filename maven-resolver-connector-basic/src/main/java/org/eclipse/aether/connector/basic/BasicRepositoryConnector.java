@@ -180,11 +180,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         return executors.computeIfAbsent(
                 downstream,
                 k -> SmartExecutorUtils.smartExecutor(
-                        session,
-                        null,
-                        maxThreads,
-                        true,
-                        getClass().getSimpleName() + '-' + repository.getHost() + '-'));
+                        session, null, maxThreads, getClass().getSimpleName() + '-' + repository.getHost() + '-'));
     }
 
     @Override

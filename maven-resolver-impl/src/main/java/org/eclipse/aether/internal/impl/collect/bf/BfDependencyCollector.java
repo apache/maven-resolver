@@ -179,7 +179,6 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                                 session,
                                 null, // we don't know ahead of time; we want global executor
                                 ConfigUtils.getInteger(session, DEFAULT_THREADS, CONFIG_PROP_THREADS),
-                                false,
                                 getClass().getSimpleName() + "-"))) {
             Args args = new Args(session, pool, context, versionContext, request, skipper, parallelDescriptorResolver);
 
