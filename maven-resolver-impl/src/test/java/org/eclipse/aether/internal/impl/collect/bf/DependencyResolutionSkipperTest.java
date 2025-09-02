@@ -75,7 +75,7 @@ public class DependencyResolutionSkipperTest {
 
         // follow the BFS resolve sequence
         try (DependencyResolutionSkipper.DefaultDependencyResolutionSkipper skipper =
-                DependencyResolutionSkipper.defaultSkipper()) {
+                DependencyResolutionSkipper.defaultGACESkipper()) {
             assertFalse(skipper.skipResolution(aNode, new ArrayList<>()));
             skipper.cache(aNode, new ArrayList<>());
             assertFalse(skipper.skipResolution(bNode, mutableList(aNode)));
@@ -120,7 +120,7 @@ public class DependencyResolutionSkipperTest {
 
         // follow the BFS resolve sequence
         try (DependencyResolutionSkipper.DefaultDependencyResolutionSkipper skipper =
-                DependencyResolutionSkipper.defaultSkipper()) {
+                DependencyResolutionSkipper.defaultGACESkipper()) {
             assertFalse(skipper.skipResolution(aNode, new ArrayList<>()));
             skipper.cache(aNode, new ArrayList<>());
             assertFalse(skipper.skipResolution(bNode, mutableList(aNode)));
@@ -170,7 +170,7 @@ public class DependencyResolutionSkipperTest {
 
         // follow the BFS resolve sequence
         try (DependencyResolutionSkipper.DefaultDependencyResolutionSkipper skipper =
-                DependencyResolutionSkipper.defaultSkipper()) {
+                DependencyResolutionSkipper.defaultGACESkipper()) {
             assertFalse(skipper.skipResolution(aNode, new ArrayList<>()));
             skipper.cache(aNode, new ArrayList<>());
             assertFalse(skipper.skipResolution(bNode, mutableList(aNode)));

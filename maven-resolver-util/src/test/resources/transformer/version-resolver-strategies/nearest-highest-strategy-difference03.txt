@@ -1,0 +1,21 @@
+demo:demo:jar:1.0
+\- com.squareup.okhttp3:okhttp:jar:4.12.0
+   +- com.squareup.okio:okio:jar:3.6.0
+   |  \- com.squareup.okio:okio-jvm:jar:3.6.0
+   |     +- org.jetbrains.kotlin:kotlin-stdlib-jdk8:jar:1.9.10
+   |     |  +- org.jetbrains.kotlin:kotlin-stdlib:jar:1.9.10
+   |     |  |  +- org.jetbrains.kotlin:kotlin-stdlib-common:jar:1.9.10
+   |     |  |  \- org.jetbrains:annotations:jar:13.0
+   |     |  \- org.jetbrains.kotlin:kotlin-stdlib-jdk7:jar:1.9.10
+   |     |     \- org.jetbrains.kotlin:kotlin-stdlib:jar:1.9.10
+   |     |        +- org.jetbrains.kotlin:kotlin-stdlib-common:jar:1.9.10
+   |     |        \- org.jetbrains:annotations:jar:13.0
+   |     \- org.jetbrains.kotlin:kotlin-stdlib-common:jar:1.9.10
+   \- org.jetbrains.kotlin:kotlin-stdlib-jdk8:jar:1.8.21
+      +- org.jetbrains.kotlin:kotlin-stdlib:jar:1.8.21
+      |  +- org.jetbrains.kotlin:kotlin-stdlib-common:jar:1.8.21
+      |  \- org.jetbrains:annotations:jar:13.0
+      \- org.jetbrains.kotlin:kotlin-stdlib-jdk7:jar:1.8.21
+         \- org.jetbrains.kotlin:kotlin-stdlib:jar:1.8.21
+            +- org.jetbrains.kotlin:kotlin-stdlib-common:jar:1.8.21
+            \- org.jetbrains:annotations:jar:13.0

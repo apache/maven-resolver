@@ -50,7 +50,7 @@ import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.ConfigurableVersionSelector;
-import org.eclipse.aether.util.graph.transformer.PathConflictResolver;
+import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.visitor.CloningDependencyVisitor;
 import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
@@ -159,9 +159,8 @@ public final class ScopeManagerImpl implements InternalScopeManager {
 
     @Override
     public DependencyGraphTransformer getDependencyGraphTransformer(ResolutionScope resolutionScope) {
-        // TODO: this should be parameterized!
         return new ChainedDependencyGraphTransformer(
-                new PathConflictResolver(
+                new ConflictResolver(
                         new ConfigurableVersionSelector(), new ManagedScopeSelector(this),
                         new SimpleOptionalitySelector(), new ManagedScopeDeriver(this)),
                 new ManagedDependencyContextRefiner(this));

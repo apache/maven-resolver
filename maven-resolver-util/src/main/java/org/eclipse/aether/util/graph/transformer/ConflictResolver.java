@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -27,6 +28,9 @@ import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.ConfigUtils;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Abstract base class for dependency graph transformers that resolve version and scope conflicts among dependencies.
@@ -125,6 +129,22 @@ public class ConflictResolver implements DependencyGraphTransformer {
     public static final String CONFIG_PROP_VERBOSE = ConfigurationProperties.PREFIX_AETHER + "conflictResolver.verbose";
 
     /**
+     * The name of the conflict resolver implementation to use: "path" (default) or "classic" (same as Maven 3).
+     *
+     * @since 2.0.11
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_CONFLICT_RESOLVER_IMPL}
+     */
+    public static final String CONFIG_PROP_CONFLICT_RESOLVER_IMPL =
+            ConfigurationProperties.PREFIX_AETHER + "conflictResolver.impl";
+
+    public static final String CLASSIC_CONFLICT_RESOLVER = "classic";
+    public static final String PATH_CONFLICT_RESOLVER = "path";
+
+    public static final String DEFAULT_CONFLICT_RESOLVER_IMPL = PATH_CONFLICT_RESOLVER;
+
+    /**
      * The enum representing verbosity levels of conflict resolver.
      *
      * @since 1.9.8
@@ -197,39 +217,55 @@ public class ConflictResolver implements DependencyGraphTransformer {
      */
     public static final String NODE_DATA_ORIGINAL_OPTIONALITY = "conflict.originalOptionality";
 
-    private final ClassicConflictResolver delegate;
+    private final ConflictResolver.VersionSelector versionSelector;
+    private final ConflictResolver.ScopeSelector scopeSelector;
+    private final ConflictResolver.ScopeDeriver scopeDeriver;
+    private final ConflictResolver.OptionalitySelector optionalitySelector;
 
     /**
-     * No arg ctor for subclasses.
+     * No arg ctor for subclasses and default cases.
      */
     protected ConflictResolver() {
-        this.delegate = null;
+        this.versionSelector = null;
+        this.scopeSelector = null;
+        this.scopeDeriver = null;
+        this.optionalitySelector = null;
     }
 
     /**
-     * Creates a new conflict resolver instance with the specified hooks that delegates to "classic" conflict resolver.
-     * This constructor usage should be avoided, and instantiate directly {@link PathConflictResolver} or
-     * {@link ClassicConflictResolver} instead.
+     * Creates a new conflict resolver instance with the specified hooks that delegates to configured conflict resolver
+     * dynamically.
      *
      * @param versionSelector The version selector to use, must not be {@code null}.
      * @param scopeSelector The scope selector to use, must not be {@code null}.
      * @param optionalitySelector The optionality selector ot use, must not be {@code null}.
      * @param scopeDeriver The scope deriver to use, must not be {@code null}.
-     *
-     * @deprecated Use {@link PathConflictResolver} or {@link ClassicConflictResolver} instead.
      */
-    @Deprecated
     public ConflictResolver(
             VersionSelector versionSelector,
             ScopeSelector scopeSelector,
             OptionalitySelector optionalitySelector,
             ScopeDeriver scopeDeriver) {
-        this.delegate = new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+        this.versionSelector = requireNonNull(versionSelector, "version selector cannot be null");
+        this.scopeSelector = requireNonNull(scopeSelector, "scope selector cannot be null");
+        this.optionalitySelector = requireNonNull(optionalitySelector, "optionality selector cannot be null");
+        this.scopeDeriver = requireNonNull(scopeDeriver, "scope deriver cannot be null");
     }
 
     @Override
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
+        String cf = ConfigUtils.getString(
+                context.getSession(), DEFAULT_CONFLICT_RESOLVER_IMPL, CONFIG_PROP_CONFLICT_RESOLVER_IMPL);
+        ConflictResolver delegate;
+        if (PATH_CONFLICT_RESOLVER.equals(cf)) {
+            delegate = new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+        } else if (CLASSIC_CONFLICT_RESOLVER.equals(cf)) {
+            delegate = new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+        } else {
+            throw new IllegalArgumentException("Unknown conflict resolver: " + cf + "; known are "
+                    + Arrays.asList(PATH_CONFLICT_RESOLVER, CLASSIC_CONFLICT_RESOLVER));
+        }
         return delegate.transformGraph(node, context);
     }
 
