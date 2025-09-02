@@ -67,28 +67,6 @@
         <artifactId>japicmp-maven-plugin</artifactId>
       </plugin>
       <plugin>
-        <!-- https://github.com/bndtools/bnd/pull/6222 : this makes subsequent `mvn verify` invocation work -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>delete-manifest</id>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <phase>compile</phase>
-            <configuration>
-              <target>
-                <delete file="${project.build.outputDirectory}/META-INF/MANIFEST.MF" />
-                <delete file="${project.build.outputDirectory}/module-info.class" />
-                <delete file="${project.build.outputDirectory}/META-INF/versions/21/OSGI-INF/MANIFEST.MF" />
-                <delete file="${project.build.outputDirectory}/META-INF/versions/21/module-info.class" />
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <executions>

@@ -119,6 +119,7 @@
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2025-06-26T18:36:53Z</project.build.outputTimestamp>
     <bnd.instructions.additions />
+    <bnd.output>${project.build.directory}/bnd-output</bnd.output>
   </properties>
 
   <dependencyManagement>
@@ -655,6 +656,7 @@
           <artifactId>bnd-maven-plugin</artifactId>
           <version>7.1.0</version>
           <configuration>
+            <outputDir>${bnd.output}</outputDir>
             <bnd><![CDATA[
               Bundle-SymbolicName: org.apache.${replacestring;${project.artifactId};-;.}
               Automatic-Module-Name: ${Bundle-SymbolicName}
@@ -684,8 +686,9 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <configuration>
+            <classesDirectory>${bnd.output}</classesDirectory>
             <archive>
-              <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+              <manifestFile>${bnd.output}/META-INF/MANIFEST.MF</manifestFile>
             </archive>
           </configuration>
         </plugin>
