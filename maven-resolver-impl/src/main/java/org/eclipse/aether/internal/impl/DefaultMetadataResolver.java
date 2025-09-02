@@ -308,7 +308,7 @@ public class DefaultMetadataResolver implements MetadataResolver {
                 if (!tasks.isEmpty()) {
                     try (SmartExecutor executor = SmartExecutorUtils.smartExecutor(
                             session,
-                            null, // we want global executor
+                            tasks.size(), // we DON'T want global executor; call can be recursive (pool depletion)
                             ConfigUtils.getInteger(session, DEFAULT_THREADS, CONFIG_PROP_THREADS),
                             getClass().getSimpleName() + "-")) {
                         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();

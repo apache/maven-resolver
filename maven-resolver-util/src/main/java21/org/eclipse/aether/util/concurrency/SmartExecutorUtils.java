@@ -92,7 +92,7 @@ public final class SmartExecutorUtils {
         if (tasks == null) {
             return (SmartExecutor)
                     session.getData().computeIfAbsent(SmartExecutor.class.getSimpleName() + "-" + namePrefix, () -> {
-                        SmartExecutor smartExecutor = newSmartExecutor(tasks, maxConcurrentTasks, namePrefix);
+                        SmartExecutor smartExecutor = newSmartExecutor(null, maxConcurrentTasks, namePrefix);
                         session.addOnSessionEndedHandler(smartExecutor::close);
                         return new SmartExecutor.NonClosing(smartExecutor);
                     });
