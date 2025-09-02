@@ -21,6 +21,7 @@ package org.eclipse.aether.util.concurrency;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -34,17 +35,12 @@ public interface SmartExecutor extends AutoCloseable {
     /**
      * Submits a {@link Runnable} to execution.
      */
-    default void submit(Runnable runnable) {
-        submit(() -> {
-            runnable.run();
-            return null;
-        });
-    }
+    void submit(Runnable runnable);
 
     /**
      * Submits a {@link Callable} to execution, returns a {@link CompletableFuture}.
      */
-    <T> CompletableFuture<T> submit(Callable<T> callable);
+    <T> Future<T> submit(Callable<T> callable);
 
     /**
      * Shut down this instance (ideally used in try-with-resource construct).
@@ -55,6 +51,11 @@ public interface SmartExecutor extends AutoCloseable {
      * Direct executor (caller executes).
      */
     class Direct implements SmartExecutor {
+        @Override
+        public void submit(Runnable runnable) {
+            runnable.run();
+        }
+
         @Override
         public <T> CompletableFuture<T> submit(Callable<T> callable) {
             CompletableFuture<T> future = new CompletableFuture<>();
@@ -81,7 +82,21 @@ public interface SmartExecutor extends AutoCloseable {
         }
 
         @Override
-        public <T> CompletableFuture<T> submit(Callable<T> callable) {
+        public void submit(Runnable runnable) {
+            ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+            executor.submit(() -> {
+                ClassLoader old = Thread.currentThread().getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(tccl);
+                try {
+                    runnable.run();
+                } finally {
+                    Thread.currentThread().setContextClassLoader(old);
+                }
+            });
+        }
+
+        @Override
+        public <T> Future<T> submit(Callable<T> callable) {
             ClassLoader tccl = Thread.currentThread().getContextClassLoader();
             CompletableFuture<T> future = new CompletableFuture<>();
             executor.submit(() -> {
@@ -109,16 +124,32 @@ public interface SmartExecutor extends AutoCloseable {
      * are being used, so the "pool" itself does not provide any kind of back-pressure.
      */
     class Limited implements SmartExecutor {
-        private final ExecutorService executor;
+        private final SmartExecutor executor;
         private final Semaphore semaphore;
 
-        Limited(ExecutorService executor, int limit) {
+        Limited(SmartExecutor executor, int limit) {
             this.executor = executor;
             this.semaphore = new Semaphore(limit);
         }
 
         @Override
-        public <T> CompletableFuture<T> submit(Callable<T> callable) {
+        public void submit(Runnable runnable) {
+            try {
+                semaphore.acquire();
+                executor.submit(() -> {
+                    try {
+                        runnable.run();
+                    } finally {
+                        semaphore.release();
+                    }
+                });
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        @Override
+        public <T> Future<T> submit(Callable<T> callable) {
             try {
                 semaphore.acquire();
                 CompletableFuture<T> future = new CompletableFuture<>();
@@ -142,7 +173,7 @@ public interface SmartExecutor extends AutoCloseable {
 
         @Override
         public void close() {
-            executor.shutdown();
+            executor.close();
         }
     }
 
@@ -157,7 +188,12 @@ public interface SmartExecutor extends AutoCloseable {
         }
 
         @Override
-        public <T> CompletableFuture<T> submit(Callable<T> callable) {
+        public void submit(Runnable runnable) {
+            smartExecutor.submit(runnable);
+        }
+
+        @Override
+        public <T> Future<T> submit(Callable<T> callable) {
             return smartExecutor.submit(callable);
         }
 
