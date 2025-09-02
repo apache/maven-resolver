@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -178,6 +179,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                                 session,
                                 null, // we don't know ahead of time; we want global executor
                                 ConfigUtils.getInteger(session, DEFAULT_THREADS, CONFIG_PROP_THREADS),
+                                false,
                                 getClass().getSimpleName() + "-"))) {
             Args args = new Args(session, pool, context, versionContext, request, skipper, parallelDescriptorResolver);
 
@@ -248,8 +250,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         boolean traverse =
                 !noDescriptor && (context.depTraverser == null || context.depTraverser.traverseDependency(dependency));
 
-        CompletableFuture<DescriptorResolutionResult> resolutionResultFuture =
-                args.resolver.find(dependency.getArtifact());
+        Future<DescriptorResolutionResult> resolutionResultFuture = args.resolver.find(dependency.getArtifact());
         DescriptorResolutionResult resolutionResult;
         VersionRangeResult rangeResult;
         try {
@@ -494,7 +495,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         /**
          * Artifact ID -> Future of DescriptorResolutionResult
          */
-        private final Map<String, CompletableFuture<DescriptorResolutionResult>> results = new ConcurrentHashMap<>(256);
+        private final Map<String, Future<DescriptorResolutionResult>> results = new ConcurrentHashMap<>(256);
 
         ParallelDescriptorResolver(SmartExecutor smartExecutor) {
             this.smartExecutor = smartExecutor;
@@ -505,14 +506,11 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         }
 
         void cacheVersionRangeDescriptor(Artifact artifact, DescriptorResolutionResult resolutionResult) {
-            results.computeIfAbsent(ArtifactIdUtils.toId(artifact), key -> {
-                CompletableFuture<DescriptorResolutionResult> future = new CompletableFuture<>();
-                future.complete(resolutionResult);
-                return future;
-            });
+            results.computeIfAbsent(
+                    ArtifactIdUtils.toId(artifact), key -> CompletableFuture.completedFuture(resolutionResult));
         }
 
-        CompletableFuture<DescriptorResolutionResult> find(Artifact artifact) {
+        Future<DescriptorResolutionResult> find(Artifact artifact) {
             return results.get(ArtifactIdUtils.toId(artifact));
         }
 
