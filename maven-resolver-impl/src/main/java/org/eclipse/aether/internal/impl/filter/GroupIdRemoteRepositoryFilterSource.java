@@ -81,13 +81,16 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
             RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
 
     /**
-     * Is filter enabled?
+     * Is filter enabled? Filter must be enabled, and can be "fine-tuned" by repository id appended properties.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
-     * @configurationDefaultValue false
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_ENABLED}
      */
     public static final String CONFIG_PROP_ENABLED = RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME;
+
+    public static final boolean DEFAULT_ENABLED = false;
 
     /**
      * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
@@ -136,11 +139,17 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
 
     @Override
     protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED);
+        return ConfigUtils.getBoolean(session, DEFAULT_ENABLED, CONFIG_PROP_ENABLED);
     }
 
     private boolean isRepositoryFilteringEnabled(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
+        if (isEnabled(session)) {
+            return ConfigUtils.getBoolean(
+                    session,
+                    ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + ".*"),
+                    CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
+        }
+        return false;
     }
 
     @Override
