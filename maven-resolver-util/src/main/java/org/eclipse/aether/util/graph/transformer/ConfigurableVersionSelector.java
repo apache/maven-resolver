@@ -202,7 +202,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "(" + selectionStrategy.getClass().getSimpleName() + ")";
+        return getClass().getSimpleName() + "(" + (selectionStrategy != null ? selectionStrategy.getClass().getSimpleName() : "not inited") + ")";
     }
 
     /**
