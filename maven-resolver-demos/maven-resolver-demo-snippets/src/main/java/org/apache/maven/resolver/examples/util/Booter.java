@@ -28,6 +28,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.supplier.SessionBuilderSupplier;
 import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 
@@ -86,6 +87,17 @@ public class Booter {
     }
 
     private static RemoteRepository newCentralRepository() {
-        return new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/").build();
+        return new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/")
+                .setReleasePolicy(new RepositoryPolicy(
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_NEVER,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_FAIL))
+                .setSnapshotPolicy(new RepositoryPolicy(
+                        false,
+                        RepositoryPolicy.UPDATE_POLICY_NEVER,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_FAIL))
+                .build();
     }
 }
