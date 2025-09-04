@@ -85,8 +85,7 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
             Files.createDirectories(prefixes.getParent());
             Files.write(
                     prefixes,
-                    (PrefixesRemoteRepositoryFilterSource.PREFIX_FIRST_LINE + "\n"
-                                    + artifact.getGroupId().replaceAll("\\.", "/"))
+                    ("## repository-prefixes/2.0\n" + artifact.getGroupId().replaceAll("\\.", "/"))
                             .getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new UncheckedIOException(e);

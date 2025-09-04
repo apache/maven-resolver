@@ -22,23 +22,18 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.internal.impl.filter.prefixes.PrefixesSource;
 import org.eclipse.aether.internal.impl.filter.ruletree.PrefixTree;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
@@ -88,11 +83,6 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
 
     private static final String PREFIX_FILE_PATH = ".meta/prefixes.txt";
-
-    /**
-     * Visible for UT.
-     */
-    static final String PREFIX_FIRST_LINE = "## repository-prefixes/2.0";
 
     /**
      * Configuration to enable the Prefixes filter (enabled by default). Can be fine-tuned per repository using
@@ -240,18 +230,27 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             if (filePath == null) {
                 filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
             }
-            if (isPrefixFile(filePath)) {
-                logger.debug(
-                        "Loading prefixes for remote repository {} from file '{}'", remoteRepository.getId(), filePath);
-                try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
+            if (filePath != null) {
+                PrefixesSource prefixesSource = PrefixesSource.of(remoteRepository, filePath);
+                if (prefixesSource.valid()) {
+                    logger.debug(
+                            "Loaded prefixes for remote repository {} from file '{}'",
+                            prefixesSource.origin().getId(),
+                            prefixesSource.path());
                     PrefixTree prefixTree = new PrefixTree("");
-                    int rules = prefixTree.loadNodes(lines);
-                    logger.info("Loaded {} prefixes for remote repository {}", rules, remoteRepository.getId());
+                    int rules = prefixTree.loadNodes(prefixesSource.entries().stream());
+                    logger.info(
+                            "Loaded {} prefixes for remote repository {} ({})",
+                            rules,
+                            prefixesSource.origin().getId(),
+                            prefixesSource.path().getFileName());
                     return prefixTree;
-                } catch (FileNotFoundException e) {
-                    // strange: we tested for it above, still, we should not fail
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
+                } else {
+                    logger.info(
+                            "Rejected prefixes for remote repository {} ({}): {}",
+                            prefixesSource.origin().getId(),
+                            prefixesSource.path().getFileName(),
+                            prefixesSource.message());
                 }
             }
             logger.debug("Prefix file for remote repository {} not found at '{}'", remoteRepository, filePath);
@@ -270,19 +269,6 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             return filePath;
         } else {
             return null;
-        }
-    }
-
-    private boolean isPrefixFile(Path path) {
-        if (path == null || !Files.isRegularFile(path)) {
-            return false;
-        }
-        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
-            return PREFIX_FIRST_LINE.equals(reader.readLine());
-        } catch (FileNotFoundException e) {
-            return false;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 
