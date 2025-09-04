@@ -81,22 +81,26 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
             RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
 
     /**
-     * The configuration to enable filter (by default is enabled). It can be "fine-tuned" by repository id appended.
-     * Note: for this filter to have effect, aside of enabling it, user must provide configuration file as well.
-     * Without configuration file for given repository, the enabled filter remains dormant, the filter does not interfere.
-     * Configuration files are looked up from directory specified by {@link #CONFIG_PROP_BASEDIR} that defaults to
-     * {@code $LOCAL_REPO/.remoteRepositoryFilters}. The files for each repository should be named as
-     * {@code groupId-$(repository.id).txt}.
+     * Configuration to enable the GroupId filter (enabled by default). Can be fine-tuned per repository using
+     * repository ID suffixes.
      * <p>
-     * The recommended way to set up group filtering is per project (project specific) that avoids possible repository ID
-     * clashes. To achieve this one can use {@code .mvn/maven.config} file with following entries:
+     * <strong>Important:</strong> For this filter to take effect, you must provide configuration files. Without
+     * configuration files, the enabled filter remains dormant and does not interfere with resolution.
+     * <p>
+     * <strong>Configuration Files:</strong>
+     * <ul>
+     * <li>Location: Directory specified by {@link #CONFIG_PROP_BASEDIR} (defaults to {@code $LOCAL_REPO/.remoteRepositoryFilters})</li>
+     * <li>Naming: {@code groupId-$(repository.id).txt}</li>
+     * <li>Content: One groupId per line to allow/block from the repository</li>
+     * </ul>
+     * <p>
+     * <strong>Recommended Setup (Per-Project):</strong>
+     * Use project-specific configuration to avoid repository ID clashes. Add to {@code .mvn/maven.config}:
      * <pre>
-     * {@code
      * -Daether.remoteRepositoryFilter.groupId=true
      * -Daether.remoteRepositoryFilter.groupId.basedir=${session.rootDirectory}/.mvn/rrf/
-     * }
      * </pre>
-     * And have the {@code groupId-myrepoId.txt} named configuration files checked into the {@code .mvn/rrf/} directory.
+     * Then create {@code groupId-myrepoId.txt} files in the {@code .mvn/rrf/} directory and commit them to version control.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}

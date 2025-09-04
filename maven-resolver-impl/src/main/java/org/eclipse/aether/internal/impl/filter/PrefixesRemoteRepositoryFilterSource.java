@@ -95,28 +95,34 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     static final String PREFIX_FIRST_LINE = "## repository-prefixes/2.0";
 
     /**
-     * The configuration to enable filter (by default is enabled). It can be "fine-tuned" by repository id appended.
-     * Note: for this filter to have effect, aside of enabling it, it must have configuration file available as well.
-     * Without configuration file for given repository, the enabled filter remains dormant, the filter does not interfere.
-     * The filter will check for user provided configuration file first, that are looked up from directory specified by
-     * {@link #CONFIG_PROP_BASEDIR} that defaults to {@code $LOCAL_REPO/.remoteRepositoryFilters} and if not found,
-     * will try to discover it (by getting it from remote repository and caching it in local repository). The user
-     * provided files for each repository should be named as {@code prefixes-$(repository.id).txt}.
+     * Configuration to enable the Prefixes filter (enabled by default). Can be fine-tuned per repository using
+     * repository ID suffixes.
      * <p>
-     * The recommended way to set up prefix filtering is to rely on auto discovery, but be prepared for per project
-     * (project specific) intervention. To achieve this one can use {@code .mvn/maven.config} file with following entries:
+     * <strong>Important:</strong> For this filter to take effect, configuration files must be available. Without
+     * configuration files, the enabled filter remains dormant and does not interfere with resolution.
+     * <p>
+     * <strong>Configuration File Resolution:</strong>
+     * <ol>
+     * <li><strong>User-provided files:</strong> Checked first from directory specified by {@link #CONFIG_PROP_BASEDIR}
+     *     (defaults to {@code $LOCAL_REPO/.remoteRepositoryFilters})</li>
+     * <li><strong>Auto-discovery:</strong> If not found, attempts to download from remote repository and cache locally</li>
+     * </ol>
+     * <p>
+     * <strong>File Naming:</strong> {@code prefixes-$(repository.id).txt}
+     * <p>
+     * <strong>Recommended Setup (Auto-Discovery with Override Capability):</strong>
+     * Start with auto-discovery, but prepare for project-specific overrides. Add to {@code .mvn/maven.config}:
      * <pre>
-     * {@code
      * -Daether.remoteRepositoryFilter.prefixes=true
      * -Daether.remoteRepositoryFilter.prefixes.basedir=${session.rootDirectory}/.mvn/rrf/
-     * }
      * </pre>
-     * And as starting point user should not provide any files. This setup will rely on auto-discovery of required
-     * prefix files (as repositories are accessed), while if user override is needed, override files should be named as
-     * {@code prefixes-myrepoId.txt} and checked into the {@code .mvn/rrf/} directory.
+     * <strong>Initial setup:</strong> Don't provide any files - rely on auto-discovery as repositories are accessed.
+     * <strong>Override when needed:</strong> Create {@code prefixes-myrepoId.txt} files in {@code .mvn/rrf/} and
+     * commit to version control.
      * <p>
-     * Note: cached prefix file in local repository are made to have unique IDs using {@link RepositoryIdHelper#remoteRepositoryUniqueId(RemoteRepository)}
-     * method, to ensure that prefix files does not clash as that may lead to build failures.
+     * <strong>Caching:</strong> Auto-discovered prefix files are cached in the local repository with unique IDs
+     * (using {@link RepositoryIdHelper#remoteRepositoryUniqueId(RemoteRepository)}) to prevent conflicts that
+     * could cause build failures.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
