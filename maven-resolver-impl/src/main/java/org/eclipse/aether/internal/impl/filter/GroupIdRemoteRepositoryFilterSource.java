@@ -81,7 +81,26 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
             RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
 
     /**
-     * Is filter enabled? Filter must be enabled, and can be "fine-tuned" by repository id appended properties.
+     * Configuration to enable the GroupId filter (enabled by default). Can be fine-tuned per repository using
+     * repository ID suffixes.
+     * <p>
+     * <strong>Important:</strong> For this filter to take effect, you must provide configuration files. Without
+     * configuration files, the enabled filter remains dormant and does not interfere with resolution.
+     * <p>
+     * <strong>Configuration Files:</strong>
+     * <ul>
+     * <li>Location: Directory specified by {@link #CONFIG_PROP_BASEDIR} (defaults to {@code $LOCAL_REPO/.remoteRepositoryFilters})</li>
+     * <li>Naming: {@code groupId-$(repository.id).txt}</li>
+     * <li>Content: One groupId per line to allow/block from the repository</li>
+     * </ul>
+     * <p>
+     * <strong>Recommended Setup (Per-Project):</strong>
+     * Use project-specific configuration to avoid repository ID clashes. Add to {@code .mvn/maven.config}:
+     * <pre>
+     * -Daether.remoteRepositoryFilter.groupId=true
+     * -Daether.remoteRepositoryFilter.groupId.basedir=${session.rootDirectory}/.mvn/rrf/
+     * </pre>
+     * Then create {@code groupId-myrepoId.txt} files in the {@code .mvn/rrf/} directory and commit them to version control.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
@@ -90,7 +109,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
      */
     public static final String CONFIG_PROP_ENABLED = RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME;
 
-    public static final boolean DEFAULT_ENABLED = false;
+    public static final boolean DEFAULT_ENABLED = true;
 
     /**
      * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
@@ -201,18 +220,20 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private GroupTree loadRepositoryRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        Path filePath = ruleFile(session, remoteRepository);
-        if (isRepositoryFilteringEnabled(session, remoteRepository) && Files.isReadable(filePath)) {
-            try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
-                GroupTree groupTree = new GroupTree("");
-                int rules = groupTree.loadNodes(lines);
-                logger.info("Loaded {} group rules for remote repository {}", rules, remoteRepository.getId());
-                if (logger.isDebugEnabled()) {
-                    groupTree.dump("");
+        if (isRepositoryFilteringEnabled(session, remoteRepository)) {
+            Path filePath = ruleFile(session, remoteRepository);
+            if (Files.isReadable(filePath)) {
+                try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
+                    GroupTree groupTree = new GroupTree("");
+                    int rules = groupTree.loadNodes(lines);
+                    logger.info("Loaded {} group rules for remote repository {}", rules, remoteRepository.getId());
+                    if (logger.isDebugEnabled()) {
+                        groupTree.dump("");
+                    }
+                    return groupTree;
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
                 }
-                return groupTree;
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
             }
         }
         return GroupTree.SENTINEL;

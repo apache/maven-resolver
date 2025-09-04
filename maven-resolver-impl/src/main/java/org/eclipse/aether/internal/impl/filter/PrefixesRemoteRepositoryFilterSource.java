@@ -22,21 +22,18 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.internal.impl.filter.prefixes.PrefixesSource;
 import org.eclipse.aether.internal.impl.filter.ruletree.PrefixTree;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
@@ -88,12 +85,34 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     private static final String PREFIX_FILE_PATH = ".meta/prefixes.txt";
 
     /**
-     * Visible for UT.
-     */
-    static final String PREFIX_FIRST_LINE = "## repository-prefixes/2.0";
-
-    /**
-     * Is filter enabled? Filter must be enabled, and can be "fine-tuned" by repository id appended properties.
+     * Configuration to enable the Prefixes filter (enabled by default). Can be fine-tuned per repository using
+     * repository ID suffixes.
+     * <p>
+     * <strong>Important:</strong> For this filter to take effect, configuration files must be available. Without
+     * configuration files, the enabled filter remains dormant and does not interfere with resolution.
+     * <p>
+     * <strong>Configuration File Resolution:</strong>
+     * <ol>
+     * <li><strong>User-provided files:</strong> Checked first from directory specified by {@link #CONFIG_PROP_BASEDIR}
+     *     (defaults to {@code $LOCAL_REPO/.remoteRepositoryFilters})</li>
+     * <li><strong>Auto-discovery:</strong> If not found, attempts to download from remote repository and cache locally</li>
+     * </ol>
+     * <p>
+     * <strong>File Naming:</strong> {@code prefixes-$(repository.id).txt}
+     * <p>
+     * <strong>Recommended Setup (Auto-Discovery with Override Capability):</strong>
+     * Start with auto-discovery, but prepare for project-specific overrides. Add to {@code .mvn/maven.config}:
+     * <pre>
+     * -Daether.remoteRepositoryFilter.prefixes=true
+     * -Daether.remoteRepositoryFilter.prefixes.basedir=${session.rootDirectory}/.mvn/rrf/
+     * </pre>
+     * <strong>Initial setup:</strong> Don't provide any files - rely on auto-discovery as repositories are accessed.
+     * <strong>Override when needed:</strong> Create {@code prefixes-myrepoId.txt} files in {@code .mvn/rrf/} and
+     * commit to version control.
+     * <p>
+     * <strong>Caching:</strong> Auto-discovered prefix files are cached in the local repository with unique IDs
+     * (using {@link RepositoryIdHelper#remoteRepositoryUniqueId(RemoteRepository)}) to prevent conflicts that
+     * could cause build failures.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
@@ -102,7 +121,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
      */
     public static final String CONFIG_PROP_ENABLED = RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME;
 
-    public static final boolean DEFAULT_ENABLED = false;
+    public static final boolean DEFAULT_ENABLED = true;
 
     /**
      * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
@@ -123,6 +142,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private final Supplier<MetadataResolver> metadataResolver;
 
+    private final Supplier<RemoteRepositoryManager> remoteRepositoryManager;
+
     private final RepositoryLayoutProvider repositoryLayoutProvider;
 
     private final ConcurrentHashMap<RemoteRepository, PrefixTree> prefixes;
@@ -133,8 +154,11 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     @Inject
     public PrefixesRemoteRepositoryFilterSource(
-            Supplier<MetadataResolver> metadataResolver, RepositoryLayoutProvider repositoryLayoutProvider) {
+            Supplier<MetadataResolver> metadataResolver,
+            Supplier<RemoteRepositoryManager> remoteRepositoryManager,
+            RepositoryLayoutProvider repositoryLayoutProvider) {
         this.metadataResolver = requireNonNull(metadataResolver);
+        this.remoteRepositoryManager = requireNonNull(remoteRepositoryManager);
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);
         this.prefixes = new ConcurrentHashMap<>();
         this.layouts = new ConcurrentHashMap<>();
@@ -181,15 +205,22 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private PrefixTree cachePrefixTree(
             RepositorySystemSession session, Path basedir, RemoteRepository remoteRepository) {
+        return ongoingUpdatesGuard(
+                remoteRepository,
+                () -> prefixes.computeIfAbsent(
+                        remoteRepository, r -> loadPrefixTree(session, basedir, remoteRepository)),
+                () -> PrefixTree.SENTINEL);
+    }
+
+    private <T> T ongoingUpdatesGuard(RemoteRepository remoteRepository, Supplier<T> unblocked, Supplier<T> blocked) {
         if (!remoteRepository.isBlocked() && null == ongoingUpdates.putIfAbsent(remoteRepository, Boolean.TRUE)) {
             try {
-                return prefixes.computeIfAbsent(
-                        remoteRepository, r -> loadPrefixTree(session, basedir, remoteRepository));
+                return unblocked.get();
             } finally {
                 ongoingUpdates.remove(remoteRepository);
             }
         }
-        return PrefixTree.SENTINEL;
+        return blocked.get();
     }
 
     private PrefixTree loadPrefixTree(
@@ -199,18 +230,27 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             if (filePath == null) {
                 filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
             }
-            if (isPrefixFile(filePath)) {
-                logger.debug(
-                        "Loading prefixes for remote repository {} from file '{}'", remoteRepository.getId(), filePath);
-                try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
+            if (filePath != null) {
+                PrefixesSource prefixesSource = PrefixesSource.of(remoteRepository, filePath);
+                if (prefixesSource.valid()) {
+                    logger.debug(
+                            "Loaded prefixes for remote repository {} from file '{}'",
+                            prefixesSource.origin().getId(),
+                            prefixesSource.path());
                     PrefixTree prefixTree = new PrefixTree("");
-                    int rules = prefixTree.loadNodes(lines);
-                    logger.info("Loaded {} prefixes for remote repository {}", rules, remoteRepository.getId());
+                    int rules = prefixTree.loadNodes(prefixesSource.entries().stream());
+                    logger.info(
+                            "Loaded {} prefixes for remote repository {} ({})",
+                            rules,
+                            prefixesSource.origin().getId(),
+                            prefixesSource.path().getFileName());
                     return prefixTree;
-                } catch (FileNotFoundException e) {
-                    // strange: we tested for it above, still, we should not fail
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
+                } else {
+                    logger.info(
+                            "Rejected prefixes for remote repository {} ({}): {}",
+                            prefixesSource.origin().getId(),
+                            prefixesSource.path().getFileName(),
+                            prefixesSource.message());
                 }
             }
             logger.debug("Prefix file for remote repository {} not found at '{}'", remoteRepository, filePath);
@@ -232,32 +272,43 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         }
     }
 
-    private boolean isPrefixFile(Path path) {
-        if (path == null || !Files.isRegularFile(path)) {
-            return false;
-        }
-        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
-            return PREFIX_FIRST_LINE.equals(reader.readLine());
-        } catch (FileNotFoundException e) {
-            return false;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
     private Path resolvePrefixesFromRemoteRepository(
             RepositorySystemSession session, RemoteRepository remoteRepository) {
         MetadataResolver mr = metadataResolver.get();
-        if (mr != null) {
-            MetadataRequest request =
-                    new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
-            request.setRepository(remoteRepository);
-            request.setDeleteLocalCopyIfMissing(true);
-            request.setFavorLocalRepository(true);
-            MetadataResult result =
-                    mr.resolveMetadata(session, Collections.singleton(request)).get(0);
-            if (result.isResolved()) {
-                return result.getMetadata().getPath();
+        RemoteRepositoryManager rm = remoteRepositoryManager.get();
+        if (mr != null && rm != null) {
+            // create "prepared" (auth, proxy and mirror equipped repo)
+            RemoteRepository prepared = rm.aggregateRepositories(
+                            session, Collections.emptyList(), Collections.singletonList(remoteRepository), true)
+                    .get(0);
+            // make it unique
+            RemoteRepository unique = new RemoteRepository.Builder(prepared)
+                    .setId(RepositoryIdHelper.remoteRepositoryUniqueId(remoteRepository))
+                    .build();
+            // supplier for path
+            Supplier<Path> supplier = () -> {
+                MetadataRequest request =
+                        new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
+                // use unique repository; this will result in prefix (repository metadata) cached under unique
+                // id
+                request.setRepository(unique);
+                request.setDeleteLocalCopyIfMissing(true);
+                request.setFavorLocalRepository(true);
+                MetadataResult result = mr.resolveMetadata(session, Collections.singleton(request))
+                        .get(0);
+                if (result.isResolved()) {
+                    return result.getMetadata().getPath();
+                } else {
+                    return null;
+                }
+            };
+
+            // prevent recursive calls; but we need extra work if not dealing with Central (as in that case outer call
+            // shields us)
+            if (Objects.equals(prepared.getId(), unique.getId())) {
+                return supplier.get();
+            } else {
+                return ongoingUpdatesGuard(unique, supplier, () -> null);
             }
         }
         return null;

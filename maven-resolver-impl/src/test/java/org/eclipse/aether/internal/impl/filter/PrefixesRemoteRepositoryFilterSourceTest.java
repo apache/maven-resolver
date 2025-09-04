@@ -30,6 +30,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.DefaultArtifactPredicateFactory;
 import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
@@ -53,13 +54,15 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
         // in test we do not resolve; just reply failed resolution
         MetadataResult failed = new MetadataResult(new MetadataRequest());
         MetadataResolver metadataResolver = mock(MetadataResolver.class);
+        RemoteRepositoryManager remoteRepositoryManager = mock(RemoteRepositoryManager.class);
         when(metadataResolver.resolveMetadata(any(RepositorySystemSession.class), any(Collection.class)))
                 .thenReturn(Collections.singletonList(failed));
         DefaultRepositoryLayoutProvider layoutProvider = new DefaultRepositoryLayoutProvider(Collections.singletonMap(
                 Maven2RepositoryLayoutFactory.NAME,
                 new Maven2RepositoryLayoutFactory(
                         checksumsSelector(), new DefaultArtifactPredicateFactory(checksumsSelector()))));
-        return new PrefixesRemoteRepositoryFilterSource(() -> metadataResolver, layoutProvider);
+        return new PrefixesRemoteRepositoryFilterSource(
+                () -> metadataResolver, () -> remoteRepositoryManager, layoutProvider);
     }
 
     @Override
@@ -82,8 +85,7 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
             Files.createDirectories(prefixes.getParent());
             Files.write(
                     prefixes,
-                    (PrefixesRemoteRepositoryFilterSource.PREFIX_FIRST_LINE + "\n"
-                                    + artifact.getGroupId().replaceAll("\\.", "/"))
+                    ("## repository-prefixes/2.0\n" + artifact.getGroupId().replaceAll("\\.", "/"))
                             .getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
