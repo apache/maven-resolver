@@ -83,17 +83,14 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     /**
      * Configuration to enable the GroupId filter (enabled by default). Can be fine-tuned per repository using
      * repository ID suffixes.
-     * <p>
      * <strong>Important:</strong> For this filter to take effect, you must provide configuration files. Without
      * configuration files, the enabled filter remains dormant and does not interfere with resolution.
-     * <p>
      * <strong>Configuration Files:</strong>
      * <ul>
      * <li>Location: Directory specified by {@link #CONFIG_PROP_BASEDIR} (defaults to {@code $LOCAL_REPO/.remoteRepositoryFilters})</li>
      * <li>Naming: {@code groupId-$(repository.id).txt}</li>
      * <li>Content: One groupId per line to allow/block from the repository</li>
      * </ul>
-     * <p>
      * <strong>Recommended Setup (Per-Project):</strong>
      * Use project-specific configuration to avoid repository ID clashes. Add to {@code .mvn/maven.config}:
      * <pre>
