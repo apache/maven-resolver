@@ -120,11 +120,11 @@ public class TestFileUtils {
         return (parentDir != null && (mkdirs(parentDir) || parentDir.exists()) && canonDir.mkdir());
     }
 
-    @Deprecated
     /**
      * @throws IOException if an I/O error occurs
-     * @deprecated use @TempDir (JUnit 5} Or TemporaryFolder (JUnit 4) instead
+     * @deprecated use @TempDir (JUnit 5) Or TemporaryFolder (JUnit 4) instead
      */
+    @Deprecated
     public static File createTempFile(String contents) throws IOException {
         return createTempFile(contents.getBytes(StandardCharsets.UTF_8), 1);
     }
@@ -132,7 +132,7 @@ public class TestFileUtils {
     @Deprecated
     /**
      * @throws IOException if an I/O error occurs
-     * @deprecated use @TempDir (JUnit 5} Or TemporaryFolder (JUnit 4) instead
+     * @deprecated use @TempDir (JUnit 5) Or TemporaryFolder (JUnit 4) instead
      */
     public static File createTempFile(byte[] pattern, int repeat) throws IOException {
         mkdirs(TMP);
@@ -146,7 +146,7 @@ public class TestFileUtils {
      *
      * @return the temporary directory
      * @throws IOException if an I/O error occurs
-     * @deprecated use @TempDir (JUnit 5} Or TemporaryFolder (JUnit 4) instead
+     * @deprecated use @TempDir (JUnit 5) Or TemporaryFolder (JUnit 4) instead
      */
     @Deprecated
     public static File createTempDir() throws IOException {
@@ -158,7 +158,7 @@ public class TestFileUtils {
      *
      * @return the temporary directory
      * @throws IOException if an I/O error occurs
-     * @deprecated use {@code @TempDir) (JUnit 5} Or {@code TemporaryFolder} (JUnit 4) instead
+     * @deprecated use {@code @TempDir) (JUnit 5) Or {@code TemporaryFolder} (JUnit 4) instead
      */
     @Deprecated
     public static File createTempDir(String suffix) throws IOException {
