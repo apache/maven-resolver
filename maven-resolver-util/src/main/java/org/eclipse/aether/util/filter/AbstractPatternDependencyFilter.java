@@ -36,7 +36,6 @@ import org.eclipse.aether.version.VersionScheme;
 
 import static java.util.Objects.requireNonNull;
 
-
 class AbstractPatternDependencyFilter implements DependencyFilter {
 
     private final Set<String> patterns = new HashSet<>();
