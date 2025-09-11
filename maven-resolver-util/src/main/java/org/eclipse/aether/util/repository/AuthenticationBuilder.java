@@ -44,7 +44,7 @@ public final class AuthenticationBuilder {
      * Builds a new authentication object from the current data of this builder. The state of the builder itself remains
      * unchanged.
      *
-     * @return The authentication or {@code null} if no authentication data was supplied to the builder.
+     * @return the authentication or {@code null} if no authentication data was supplied to the builder
      */
     public Authentication build() {
         if (authentications.isEmpty()) {
@@ -59,8 +59,8 @@ public final class AuthenticationBuilder {
     /**
      * Adds username data to the authentication.
      *
-     * @param username The username, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param username the username, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addUsername(String username) {
         return addString(AuthenticationContext.USERNAME, username);
@@ -69,8 +69,8 @@ public final class AuthenticationBuilder {
     /**
      * Adds password data to the authentication.
      *
-     * @param password The password, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param password the password, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addPassword(String password) {
         return addSecret(AuthenticationContext.PASSWORD, password);
@@ -80,8 +80,8 @@ public final class AuthenticationBuilder {
      * Adds password data to the authentication. The resulting authentication object uses an encrypted copy of the
      * supplied character data and callers are advised to clear the input array soon after this method returns.
      *
-     * @param password The password, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param password the password, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addPassword(char[] password) {
         return addSecret(AuthenticationContext.PASSWORD, password);
@@ -90,9 +90,9 @@ public final class AuthenticationBuilder {
     /**
      * Adds NTLM data to the authentication.
      *
-     * @param workstation The NTLM workstation name, may be {@code null}.
-     * @param domain The NTLM domain name, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param workstation the NTLM workstation name, may be {@code null}
+     * @param domain the NTLM domain name, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addNtlm(String workstation, String domain) {
         addString(AuthenticationContext.NTLM_WORKSTATION, workstation);
@@ -102,9 +102,9 @@ public final class AuthenticationBuilder {
     /**
      * Adds private key data to the authentication.
      *
-     * @param pathname The (absolute) path to the private key file, may be {@code null}.
-     * @param passphrase The passphrase protecting the private key, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param pathname the (absolute) path to the private key file, may be {@code null}
+     * @param passphrase the passphrase protecting the private key, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addPrivateKey(String pathname, String passphrase) {
         if (pathname != null) {
@@ -118,9 +118,9 @@ public final class AuthenticationBuilder {
      * Adds private key data to the authentication. The resulting authentication object uses an encrypted copy of the
      * supplied character data and callers are advised to clear the input array soon after this method returns.
      *
-     * @param pathname The (absolute) path to the private key file, may be {@code null}.
-     * @param passphrase The passphrase protecting the private key, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param pathname the (absolute) path to the private key file, may be {@code null}
+     * @param passphrase the passphrase protecting the private key, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addPrivateKey(String pathname, char[] passphrase) {
         if (pathname != null) {
@@ -136,8 +136,8 @@ public final class AuthenticationBuilder {
      * runtime type and not on any configuration. For verifiers that do not fit this assumption, use
      * {@link #addCustom(Authentication)} with a suitable implementation instead.
      *
-     * @param verifier The hostname verifier, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param verifier the hostname verifier, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addHostnameVerifier(HostnameVerifier verifier) {
         if (verifier != null) {
@@ -150,9 +150,9 @@ public final class AuthenticationBuilder {
      * Adds custom string data to the authentication. <em>Note:</em> If the string data is confidential, use
      * {@link #addSecret(String, char[])} instead.
      *
-     * @param key The key for the authentication data, must not be {@code null}.
-     * @param value The value for the authentication data, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param key the key for the authentication data, must not be {@code null}
+     * @param value the value for the authentication data, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addString(String key, String value) {
         if (value != null) {
@@ -164,9 +164,9 @@ public final class AuthenticationBuilder {
     /**
      * Adds sensitive custom string data to the authentication.
      *
-     * @param key The key for the authentication data, must not be {@code null}.
-     * @param value The value for the authentication data, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param key the key for the authentication data, must not be {@code null}
+     * @param value the value for the authentication data, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addSecret(String key, String value) {
         if (value != null) {
@@ -180,9 +180,9 @@ public final class AuthenticationBuilder {
      * copy of the supplied character data and callers are advised to clear the input array soon after this method
      * returns.
      *
-     * @param key The key for the authentication data, must not be {@code null}.
-     * @param value The value for the authentication data, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param key the key for the authentication data, must not be {@code null}
+     * @param value the value for the authentication data, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addSecret(String key, char[] value) {
         if (value != null) {
@@ -194,8 +194,8 @@ public final class AuthenticationBuilder {
     /**
      * Adds custom authentication data to the authentication.
      *
-     * @param authentication The authentication to add, may be {@code null}.
-     * @return This builder for chaining, never {@code null}.
+     * @param authentication the authentication to add, may be {@code null}
+     * @return this builder for chaining, never {@code null}
      */
     public AuthenticationBuilder addCustom(Authentication authentication) {
         if (authentication != null) {

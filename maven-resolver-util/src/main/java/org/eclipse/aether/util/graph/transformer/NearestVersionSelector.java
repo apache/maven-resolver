@@ -41,7 +41,7 @@ import static java.util.Objects.requireNonNull;
  * A version selector for use with {@link ConflictResolver} that resolves version conflicts using a nearest-wins
  * strategy. If there is no single node that satisfies all encountered version ranges, the selector will fail.
  *
- * @deprecated Use {@link ConfigurableVersionSelector} instead.
+ * @deprecated use {@link ConfigurableVersionSelector} instead
  */
 @Deprecated
 public final class NearestVersionSelector extends VersionSelector {

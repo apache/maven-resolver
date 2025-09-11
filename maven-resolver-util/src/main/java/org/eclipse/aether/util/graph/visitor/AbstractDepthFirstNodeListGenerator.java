@@ -46,8 +46,7 @@ import org.eclipse.aether.graph.DependencyVisitor;
  * is not used in Resolver and is kept only for backward compatibility reasons.
  *
  * @see AbstractDependencyNodeConsumerVisitor
- *
- * @deprecated See {@link AbstractDependencyNodeConsumerVisitor} that is more versatile.
+ * @deprecated see {@link AbstractDependencyNodeConsumerVisitor} that is more versatile
  */
 @Deprecated
 abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor {
@@ -64,7 +63,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
     /**
      * Gets the list of dependency nodes that was generated during the graph traversal.
      *
-     * @return The list of dependency nodes, never {@code null}.
+     * @return the list of dependency nodes, never {@code null}
      */
     public List<DependencyNode> getNodes() {
         return nodes;
@@ -73,8 +72,8 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
     /**
      * Gets the dependencies seen during the graph traversal.
      *
-     * @param includeUnresolved Whether unresolved dependencies shall be included in the result or not.
-     * @return The list of dependencies, never {@code null}.
+     * @param includeUnresolved whether unresolved dependencies shall be included in the result or not
+     * @return the list of dependencies, never {@code null}
      */
     public List<Dependency> getDependencies(boolean includeUnresolved) {
         return NodeListGenerator.getDependencies(getNodes(), includeUnresolved);
@@ -83,8 +82,8 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
     /**
      * Gets the artifacts associated with the list of dependency nodes generated during the graph traversal.
      *
-     * @param includeUnresolved Whether unresolved artifacts shall be included in the result or not.
-     * @return The list of artifacts, never {@code null}.
+     * @param includeUnresolved whether unresolved artifacts shall be included in the result or not
+     * @return the list of artifacts, never {@code null}
      */
     public List<Artifact> getArtifacts(boolean includeUnresolved) {
         return NodeListGenerator.getArtifacts(getNodes(), includeUnresolved);
@@ -93,7 +92,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
     /**
      * Gets the files of resolved artifacts seen during the graph traversal.
      *
-     * @return The list of artifact files, never {@code null}.
+     * @return the list of artifact files, never {@code null}
      */
     public List<File> getFiles() {
         return NodeListGenerator.getFiles(getNodes());
@@ -103,7 +102,7 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
      * Gets a class path by concatenating the artifact files of the visited dependency nodes. Nodes with unresolved
      * artifacts are automatically skipped.
      *
-     * @return The class path, using the platform-specific path separator, never {@code null}.
+     * @return the class path, using the platform-specific path separator, never {@code null}
      */
     public String getClassPath() {
         return NodeListGenerator.getClassPath(getNodes());
@@ -112,8 +111,8 @@ abstract class AbstractDepthFirstNodeListGenerator implements DependencyVisitor 
     /**
      * Marks the specified node as being visited and determines whether the node has been visited before.
      *
-     * @param node The node being visited, must not be {@code null}.
-     * @return {@code true} if the node has not been visited before, {@code false} if the node was already visited.
+     * @param node the node being visited, must not be {@code null}
+     * @return {@code true} if the node has not been visited before, {@code false} if the node was already visited
      */
     protected boolean setVisited(DependencyNode node) {
         return visitedNodes.put(node, Boolean.TRUE) == null;

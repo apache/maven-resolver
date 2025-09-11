@@ -43,9 +43,9 @@ public class ChainedTransferListener extends AbstractTransferListener {
      * factory method will avoid creating an actual chained listener if one of the specified readers is actually
      * {@code null}.
      *
-     * @param listener1 The first listener, may be {@code null}.
-     * @param listener2 The second listener, may be {@code null}.
-     * @return The chained listener or {@code null} if no listener was supplied.
+     * @param listener1 the first listener, may be {@code null}
+     * @param listener2 the second listener, may be {@code null}
+     * @return the chained listener or {@code null} if no listener was supplied
      */
     public static TransferListener newInstance(TransferListener listener1, TransferListener listener2) {
         if (listener1 == null) {
@@ -59,7 +59,7 @@ public class ChainedTransferListener extends AbstractTransferListener {
     /**
      * Creates a new multicast listener that delegates to the specified listeners.
      *
-     * @param listeners The listeners to delegate to, may be {@code null} or empty.
+     * @param listeners the listeners to delegate to, may be {@code null} or empty
      */
     public ChainedTransferListener(TransferListener... listeners) {
         if (listeners != null) {
@@ -70,7 +70,7 @@ public class ChainedTransferListener extends AbstractTransferListener {
     /**
      * Creates a new multicast listener that delegates to the specified listeners.
      *
-     * @param listeners The listeners to delegate to, may be {@code null} or empty.
+     * @param listeners the listeners to delegate to, may be {@code null} or empty
      */
     public ChainedTransferListener(Collection<? extends TransferListener> listeners) {
         add(listeners);
@@ -79,7 +79,7 @@ public class ChainedTransferListener extends AbstractTransferListener {
     /**
      * Adds the specified listeners to the end of the multicast chain.
      *
-     * @param listeners The listeners to add, may be {@code null} or empty.
+     * @param listeners the listeners to add, may be {@code null} or empty
      */
     public void add(Collection<? extends TransferListener> listeners) {
         if (listeners != null) {
@@ -92,7 +92,7 @@ public class ChainedTransferListener extends AbstractTransferListener {
     /**
      * Adds the specified listener to the end of the multicast chain.
      *
-     * @param listener The listener to add, may be {@code null}.
+     * @param listener the listener to add, may be {@code null}
      */
     public void add(TransferListener listener) {
         if (listener != null) {
@@ -103,7 +103,7 @@ public class ChainedTransferListener extends AbstractTransferListener {
     /**
      * Removes the specified listener from the multicast chain. Trying to remove a non-existing listener has no effect.
      *
-     * @param listener The listener to remove, may be {@code null}.
+     * @param listener the listener to remove, may be {@code null}
      */
     public void remove(TransferListener listener) {
         if (listener != null) {

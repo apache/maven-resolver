@@ -98,10 +98,10 @@ public final class PathConflictResolver extends ConflictResolver {
     /**
      * Creates a new conflict resolver instance with the specified hooks.
      *
-     * @param versionSelector The version selector to use, must not be {@code null}.
-     * @param scopeSelector The scope selector to use, must not be {@code null}.
-     * @param optionalitySelector The optionality selector ot use, must not be {@code null}.
-     * @param scopeDeriver The scope deriver to use, must not be {@code null}.
+     * @param versionSelector the version selector to use, must not be {@code null}
+     * @param scopeSelector the scope selector to use, must not be {@code null}
+     * @param optionalitySelector the optionality selector ot use, must not be {@code null}
+     * @param scopeDeriver the scope deriver to use, must not be {@code null}
      */
     public PathConflictResolver(
             ConflictResolver.VersionSelector versionSelector,
@@ -608,7 +608,7 @@ public final class PathConflictResolver extends ConflictResolver {
      *
      * @see ConflictResolver.ScopeDeriver
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
-     *                change without notice and only exists to enable unit testing.
+     *                change without notice and only exists to enable unit testing
      */
     private static final class ScopeContext extends ConflictResolver.ScopeContext {
         private final String parentScope;
@@ -618,10 +618,10 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Creates a new scope context with the specified properties.
          *
-         * @param parentScope The scope of the parent dependency, may be {@code null}.
-         * @param childScope The scope of the child dependency, may be {@code null}.
+         * @param parentScope the scope of the parent dependency, may be {@code null}
+         * @param childScope the scope of the child dependency, may be {@code null}
          * @noreference This class is not intended to be instantiated by clients in production code, the constructor may
-         *              change without notice and only exists to enable unit testing.
+         *              change without notice and only exists to enable unit testing
          */
         private ScopeContext(String parentScope, String childScope) {
             this.parentScope = (parentScope != null) ? parentScope : "";
@@ -633,7 +633,7 @@ public final class PathConflictResolver extends ConflictResolver {
          * Gets the scope of the parent dependency. This is usually the scope that was derived by earlier invocations of
          * the scope deriver.
          *
-         * @return The scope of the parent dependency, never {@code null}.
+         * @return the scope of the parent dependency, never {@code null}
          */
         public String getParentScope() {
             return parentScope;
@@ -643,7 +643,7 @@ public final class PathConflictResolver extends ConflictResolver {
          * Gets the original scope of the child dependency. This is the scope that was declared in the artifact
          * descriptor of the parent dependency.
          *
-         * @return The original scope of the child dependency, never {@code null}.
+         * @return the original scope of the child dependency, never {@code null}
          */
         public String getChildScope() {
             return childScope;
@@ -653,7 +653,7 @@ public final class PathConflictResolver extends ConflictResolver {
          * Gets the derived scope of the child dependency. This is initially equal to {@link #getChildScope()} until the
          * scope deriver makes changes.
          *
-         * @return The derived scope of the child dependency, never {@code null}.
+         * @return the derived scope of the child dependency, never {@code null}
          */
         public String getDerivedScope() {
             return derivedScope;
@@ -662,7 +662,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Sets the derived scope of the child dependency.
          *
-         * @param derivedScope The derived scope of the dependency, may be {@code null}.
+         * @param derivedScope the derived scope of the dependency, may be {@code null}
          */
         public void setDerivedScope(String derivedScope) {
             this.derivedScope = (derivedScope != null) ? derivedScope : "";
@@ -673,7 +673,7 @@ public final class PathConflictResolver extends ConflictResolver {
      * A conflicting dependency.
      *
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
-     *                change without notice and only exists to enable unit testing.
+     *                change without notice and only exists to enable unit testing
      */
     private static final class ConflictItem extends ConflictResolver.ConflictItem {
         private final Path path;
@@ -713,8 +713,8 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Determines whether the specified conflict item is a sibling of this item.
          *
-         * @param item The other conflict item, must not be {@code null}.
-         * @return {@code true} if the given item has the same parent as this item, {@code false} otherwise.
+         * @param item the other conflict item, must not be {@code null}
+         * @return {@code true} if the given item has the same parent as this item, {@code false} otherwise
          */
         @Override
         public boolean isSibling(ConflictResolver.ConflictItem item) {
@@ -724,7 +724,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Gets the dependency node involved in the conflict.
          *
-         * @return The involved dependency node, never {@code null}.
+         * @return the involved dependency node, never {@code null}
          */
         @Override
         public DependencyNode getNode() {
@@ -734,7 +734,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Gets the dependency involved in the conflict, short for {@code getNode.getDependency()}.
          *
-         * @return The involved dependency, never {@code null}.
+         * @return the involved dependency, never {@code null}
          */
         @Override
         public Dependency getDependency() {
@@ -746,7 +746,7 @@ public final class PathConflictResolver extends ConflictResolver {
          * number of parent nodes. If actually multiple paths lead to the node, the return value denotes the smallest
          * possible depth.
          *
-         * @return The zero-based depth of the node in the graph.
+         * @return the zero-based depth of the node in the graph
          */
         @Override
         public int getDepth() {
@@ -757,8 +757,8 @@ public final class PathConflictResolver extends ConflictResolver {
          * Gets the derived scopes of the dependency. In general, the same dependency node could be reached via
          * different paths and each path might result in a different derived scope.
          *
+         * @return the (read-only) set of derived scopes of the dependency, never {@code null}
          * @see ConflictResolver.ScopeDeriver
-         * @return The (read-only) set of derived scopes of the dependency, never {@code null}.
          */
         @Override
         public Collection<String> getScopes() {
@@ -769,9 +769,9 @@ public final class PathConflictResolver extends ConflictResolver {
          * Gets the derived optionalities of the dependency. In general, the same dependency node could be reached via
          * different paths and each path might result in a different derived optionality.
          *
-         * @return A bit field consisting of {@link PathConflictResolver.ConflictItem#OPTIONAL_FALSE} and/or
+         * @return a bit field consisting of {@link PathConflictResolver.ConflictItem#OPTIONAL_FALSE} and/or
          *         {@link PathConflictResolver.ConflictItem#OPTIONAL_TRUE} indicating the derived optionalities the
-         *         dependency was encountered with.
+         *         dependency was encountered with
          */
         @Override
         public int getOptionalities() {
@@ -790,7 +790,7 @@ public final class PathConflictResolver extends ConflictResolver {
      * @see ConflictResolver.VersionSelector
      * @see ConflictResolver.ScopeSelector
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
-     *                change without notice and only exists to enable unit testing.
+     *                change without notice and only exists to enable unit testing
      */
     private static final class ConflictContext extends ConflictResolver.ConflictContext {
         private final DependencyNode root;
@@ -817,7 +817,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Gets the root node of the dependency graph being transformed.
          *
-         * @return The root node of the dependency graph, never {@code null}.
+         * @return the root node of the dependency graph, never {@code null}
          */
         @Override
         public DependencyNode getRoot() {
@@ -827,8 +827,8 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Determines whether the specified dependency node belongs to this conflict context.
          *
-         * @param node The dependency node to check, must not be {@code null}.
-         * @return {@code true} if the given node belongs to this conflict context, {@code false} otherwise.
+         * @param node the dependency node to check, must not be {@code null}
+         * @return {@code true} if the given node belongs to this conflict context, {@code false} otherwise
          */
         @Override
         public boolean isIncluded(DependencyNode node) {
@@ -838,7 +838,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Gets the collection of conflict items in this context.
          *
-         * @return The (read-only) collection of conflict items in this context, never {@code null}.
+         * @return the (read-only) collection of conflict items in this context, never {@code null}
          */
         @Override
         public Collection<ConflictResolver.ConflictItem> getItems() {
@@ -848,7 +848,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Gets the conflict item which has been selected as the winner among the conflicting dependencies.
          *
-         * @return The winning conflict item or {@code null} if not set yet.
+         * @return the winning conflict item or {@code null} if not set yet
          */
         @Override
         public ConflictResolver.ConflictItem getWinner() {
@@ -858,7 +858,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Sets the conflict item which has been selected as the winner among the conflicting dependencies.
          *
-         * @param winner The winning conflict item, may be {@code null}.
+         * @param winner the winning conflict item, may be {@code null}
          */
         @Override
         public void setWinner(ConflictResolver.ConflictItem winner) {
@@ -868,7 +868,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Gets the effective scope of the winning dependency.
          *
-         * @return The effective scope of the winning dependency or {@code null} if none.
+         * @return the effective scope of the winning dependency or {@code null} if none
          */
         @Override
         public String getScope() {
@@ -878,7 +878,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Sets the effective scope of the winning dependency.
          *
-         * @param scope The effective scope, may be {@code null}.
+         * @param scope the effective scope, may be {@code null}
          */
         @Override
         public void setScope(String scope) {
@@ -888,7 +888,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Gets the effective optional flag of the winning dependency.
          *
-         * @return The effective optional flag or {@code null} if none.
+         * @return the effective optional flag or {@code null} if none
          */
         @Override
         public Boolean getOptional() {
@@ -898,7 +898,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Sets the effective optional flag of the winning dependency.
          *
-         * @param optional The effective optional flag, may be {@code null}.
+         * @param optional the effective optional flag, may be {@code null}
          */
         @Override
         public void setOptional(Boolean optional) {

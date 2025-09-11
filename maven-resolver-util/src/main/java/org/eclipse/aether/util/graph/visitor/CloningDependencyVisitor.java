@@ -50,7 +50,7 @@ public class CloningDependencyVisitor implements DependencyVisitor {
     /**
      * Gets the root node of the cloned dependency graph.
      *
-     * @return The root node of the cloned dependency graph or {@code null}.
+     * @return the root node of the cloned dependency graph or {@code null}
      */
     public final DependencyNode getRootNode() {
         return root;
@@ -59,8 +59,8 @@ public class CloningDependencyVisitor implements DependencyVisitor {
     /**
      * Creates a clone of the specified node.
      *
-     * @param node The node to clone, must not be {@code null}.
-     * @return The cloned node, never {@code null}.
+     * @param node the node to clone, must not be {@code null}
+     * @return the cloned node, never {@code null}
      */
     protected DependencyNode clone(DependencyNode node) {
         return new DefaultDependencyNode(node);

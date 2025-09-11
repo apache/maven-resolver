@@ -43,9 +43,9 @@ public final class DefaultProxySelector implements ProxySelector {
      * Adds the specified proxy definition to the selector. Proxy definitions are ordered, the first matching proxy for
      * a given repository will be used.
      *
-     * @param proxy The proxy definition to add, must not be {@code null}.
-     * @param nonProxyHosts The list of (case-insensitive) host names to exclude from proxying, may be {@code null}.
-     * @return This proxy selector for chaining, never {@code null}.
+     * @param proxy the proxy definition to add, must not be {@code null}
+     * @param nonProxyHosts the list of (case-insensitive) host names to exclude from proxying, may be {@code null}
+     * @return this proxy selector for chaining, never {@code null}
      */
     public DefaultProxySelector add(Proxy proxy, String nonProxyHosts) {
         requireNonNull(proxy, "proxy cannot be null");

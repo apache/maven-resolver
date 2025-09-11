@@ -42,8 +42,8 @@ final class GenericVersionRange implements VersionRange {
     /**
      * Creates a version range from the specified range specification.
      *
-     * @param range The range specification to parse, must not be {@code null}.
-     * @throws InvalidVersionSpecificationException If the range could not be parsed.
+     * @param range the range specification to parse, must not be {@code null}
+     * @throws InvalidVersionSpecificationException if the range could not be parsed
      */
     GenericVersionRange(VersionScheme versionScheme, String range) throws InvalidVersionSpecificationException {
         this.versionScheme = requireNonNull(versionScheme, "versionScheme cannot be null");

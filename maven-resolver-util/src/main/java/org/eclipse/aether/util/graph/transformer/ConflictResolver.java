@@ -236,10 +236,10 @@ public class ConflictResolver implements DependencyGraphTransformer {
      * Creates a new conflict resolver instance with the specified hooks that delegates to configured conflict resolver
      * dynamically.
      *
-     * @param versionSelector The version selector to use, must not be {@code null}.
-     * @param scopeSelector The scope selector to use, must not be {@code null}.
-     * @param optionalitySelector The optionality selector ot use, must not be {@code null}.
-     * @param scopeDeriver The scope deriver to use, must not be {@code null}.
+     * @param versionSelector the version selector to use, must not be {@code null}
+     * @param scopeSelector the scope selector to use, must not be {@code null}
+     * @param optionalitySelector the optionality selector ot use, must not be {@code null}
+     * @param scopeDeriver the scope deriver to use, must not be {@code null}
      */
     public ConflictResolver(
             VersionSelector versionSelector,
@@ -274,14 +274,14 @@ public class ConflictResolver implements DependencyGraphTransformer {
      *
      * @see ScopeDeriver
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
-     *                change without notice and only exists to enable unit testing.
+     *                change without notice and only exists to enable unit testing
      */
     public abstract static class ScopeContext {
         /**
          * Gets the scope of the parent dependency. This is usually the scope that was derived by earlier invocations of
          * the scope deriver.
          *
-         * @return The scope of the parent dependency, never {@code null}.
+         * @return the scope of the parent dependency, never {@code null}
          */
         public abstract String getParentScope();
 
@@ -289,7 +289,7 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * Gets the original scope of the child dependency. This is the scope that was declared in the artifact
          * descriptor of the parent dependency.
          *
-         * @return The original scope of the child dependency, never {@code null}.
+         * @return the original scope of the child dependency, never {@code null}
          */
         public abstract String getChildScope();
 
@@ -297,14 +297,14 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * Gets the derived scope of the child dependency. This is initially equal to {@link #getChildScope()} until the
          * scope deriver makes changes.
          *
-         * @return The derived scope of the child dependency, never {@code null}.
+         * @return the derived scope of the child dependency, never {@code null}
          */
         public abstract String getDerivedScope();
 
         /**
          * Sets the derived scope of the child dependency.
          *
-         * @param derivedScope The derived scope of the dependency, may be {@code null}.
+         * @param derivedScope the derived scope of the dependency, may be {@code null}
          */
         public abstract void setDerivedScope(String derivedScope);
     }
@@ -313,28 +313,28 @@ public class ConflictResolver implements DependencyGraphTransformer {
      * A conflicting dependency.
      *
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
-     *                change without notice and only exists to enable unit testing.
+     *                change without notice and only exists to enable unit testing
      */
     public abstract static class ConflictItem {
         /**
          * Determines whether the specified conflict item is a sibling of this item.
          *
-         * @param item The other conflict item, must not be {@code null}.
-         * @return {@code true} if the given item has the same parent as this item, {@code false} otherwise.
+         * @param item the other conflict item, must not be {@code null}
+         * @return {@code true} if the given item has the same parent as this item, {@code false} otherwise
          */
         public abstract boolean isSibling(ConflictItem item);
 
         /**
          * Gets the dependency node involved in the conflict.
          *
-         * @return The involved dependency node, never {@code null}.
+         * @return the involved dependency node, never {@code null}
          */
         public abstract DependencyNode getNode();
 
         /**
          * Gets the dependency involved in the conflict, short for {@code getNode.getDependency()}.
          *
-         * @return The involved dependency, never {@code null}.
+         * @return the involved dependency, never {@code null}
          */
         public abstract Dependency getDependency();
 
@@ -343,7 +343,7 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * number of parent nodes. If actually multiple paths lead to the node, the return value denotes the smallest
          * possible depth.
          *
-         * @return The zero-based depth of the node in the graph.
+         * @return the zero-based depth of the node in the graph
          */
         public abstract int getDepth();
 
@@ -351,8 +351,8 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * Gets the derived scopes of the dependency. In general, the same dependency node could be reached via
          * different paths and each path might result in a different derived scope.
          *
+         * @return the (read-only) set of derived scopes of the dependency, never {@code null}
          * @see ScopeDeriver
-         * @return The (read-only) set of derived scopes of the dependency, never {@code null}.
          */
         public abstract Collection<String> getScopes();
 
@@ -370,9 +370,9 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * Gets the derived optionalities of the dependency. In general, the same dependency node could be reached via
          * different paths and each path might result in a different derived optionality.
          *
-         * @return A bit field consisting of {@link ConflictResolver.ConflictItem#OPTIONAL_FALSE} and/or
+         * @return a bit field consisting of {@link ConflictResolver.ConflictItem#OPTIONAL_FALSE} and/or
          *         {@link ConflictResolver.ConflictItem#OPTIONAL_TRUE} indicating the derived optionalities the
-         *         dependency was encountered with.
+         *         dependency was encountered with
          */
         public abstract int getOptionalities();
     }
@@ -383,70 +383,70 @@ public class ConflictResolver implements DependencyGraphTransformer {
      * @see VersionSelector
      * @see ScopeSelector
      * @noinstantiate This class is not intended to be instantiated by clients in production code, the constructor may
-     *                change without notice and only exists to enable unit testing.
+     *                change without notice and only exists to enable unit testing
      */
     public abstract static class ConflictContext {
         /**
          * Gets the root node of the dependency graph being transformed.
          *
-         * @return The root node of the dependency graph, never {@code null}.
+         * @return the root node of the dependency graph, never {@code null}
          */
         public abstract DependencyNode getRoot();
 
         /**
          * Determines whether the specified dependency node belongs to this conflict context.
          *
-         * @param node The dependency node to check, must not be {@code null}.
-         * @return {@code true} if the given node belongs to this conflict context, {@code false} otherwise.
+         * @param node the dependency node to check, must not be {@code null}
+         * @return {@code true} if the given node belongs to this conflict context, {@code false} otherwise
          */
         public abstract boolean isIncluded(DependencyNode node);
 
         /**
          * Gets the collection of conflict items in this context.
          *
-         * @return The (read-only) collection of conflict items in this context, never {@code null}.
+         * @return the (read-only) collection of conflict items in this context, never {@code null}
          */
         public abstract Collection<ConflictItem> getItems();
 
         /**
          * Gets the conflict item which has been selected as the winner among the conflicting dependencies.
          *
-         * @return The winning conflict item or {@code null} if not set yet.
+         * @return the winning conflict item or {@code null} if not set yet
          */
         public abstract ConflictItem getWinner();
 
         /**
          * Sets the conflict item which has been selected as the winner among the conflicting dependencies.
          *
-         * @param winner The winning conflict item, may be {@code null}.
+         * @param winner the winning conflict item, may be {@code null}
          */
         public abstract void setWinner(ConflictItem winner);
 
         /**
          * Gets the effective scope of the winning dependency.
          *
-         * @return The effective scope of the winning dependency or {@code null} if none.
+         * @return the effective scope of the winning dependency or {@code null} if none
          */
         public abstract String getScope();
 
         /**
          * Sets the effective scope of the winning dependency.
          *
-         * @param scope The effective scope, may be {@code null}.
+         * @param scope the effective scope, may be {@code null}
          */
         public abstract void setScope(String scope);
 
         /**
          * Gets the effective optional flag of the winning dependency.
          *
-         * @return The effective optional flag or {@code null} if none.
+         * @return the effective optional flag or {@code null} if none
          */
         public abstract Boolean getOptional();
 
         /**
          * Sets the effective optional flag of the winning dependency.
          *
-         * @param optional The effective optional flag, may be {@code null}.
+         * @param optional the effective optional flag, may be {@code null}
          */
         public abstract void setOptional(Boolean optional);
     }
@@ -470,10 +470,10 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * default implementation simply returns the current instance which is appropriate for implementations which do
          * not require auxiliary data.
          *
-         * @param root The root node of the (possibly cyclic!) graph to transform, must not be {@code null}.
-         * @param context The graph transformation context, must not be {@code null}.
-         * @return The scope deriver to use for the given graph transformation, never {@code null}.
-         * @throws RepositoryException If the instance could not be retrieved.
+         * @param root the root node of the (possibly cyclic!) graph to transform, must not be {@code null}
+         * @param context the graph transformation context, must not be {@code null}
+         * @return the scope deriver to use for the given graph transformation, never {@code null}
+         * @throws RepositoryException if the instance could not be retrieved
          */
         public VersionSelector getInstance(DependencyNode root, DependencyGraphTransformationContext context)
                 throws RepositoryException {
@@ -486,8 +486,8 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * {@link ConflictContext#setWinner(ConflictResolver.ConflictItem)} to deliver the winner. Failure to select a
          * winner will automatically fail the entire conflict resolution.
          *
-         * @param context The conflict context, must not be {@code null}.
-         * @throws RepositoryException If the version selection failed.
+         * @param context the conflict context, must not be {@code null}
+         * @throws RepositoryException if the version selection failed
          */
         public abstract void selectVersion(ConflictContext context) throws RepositoryException;
     }
@@ -510,10 +510,10 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * default implementation simply returns the current instance which is appropriate for implementations which do
          * not require auxiliary data.
          *
-         * @param root The root node of the (possibly cyclic!) graph to transform, must not be {@code null}.
-         * @param context The graph transformation context, must not be {@code null}.
-         * @return The scope selector to use for the given graph transformation, never {@code null}.
-         * @throws RepositoryException If the instance could not be retrieved.
+         * @param root the root node of the (possibly cyclic!) graph to transform, must not be {@code null}
+         * @param context the graph transformation context, must not be {@code null}
+         * @return the scope selector to use for the given graph transformation, never {@code null}
+         * @throws RepositoryException if the instance could not be retrieved
          */
         public ScopeSelector getInstance(DependencyNode root, DependencyGraphTransformationContext context)
                 throws RepositoryException {
@@ -526,8 +526,8 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * {@link ConflictItem#getScopes()} and eventually call {@link ConflictContext#setScope(String)} to deliver the
          * effective scope.
          *
-         * @param context The conflict context, must not be {@code null}.
-         * @throws RepositoryException If the scope selection failed.
+         * @param context the conflict context, must not be {@code null}
+         * @throws RepositoryException if the scope selection failed
          */
         public abstract void selectScope(ConflictContext context) throws RepositoryException;
     }
@@ -549,10 +549,10 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * default implementation simply returns the current instance which is appropriate for implementations which do
          * not require auxiliary data.
          *
-         * @param root The root node of the (possibly cyclic!) graph to transform, must not be {@code null}.
-         * @param context The graph transformation context, must not be {@code null}.
-         * @return The scope deriver to use for the given graph transformation, never {@code null}.
-         * @throws RepositoryException If the instance could not be retrieved.
+         * @param root the root node of the (possibly cyclic!) graph to transform, must not be {@code null}
+         * @param context the graph transformation context, must not be {@code null}
+         * @return the scope deriver to use for the given graph transformation, never {@code null}
+         * @throws RepositoryException if the instance could not be retrieved
          */
         public ScopeDeriver getInstance(DependencyNode root, DependencyGraphTransformationContext context)
                 throws RepositoryException {
@@ -564,8 +564,8 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * {@link ScopeContext#setDerivedScope(String)} to deliver the result of their calculation. If said method is
          * not invoked, the conflict resolver will assume the scope of the child dependency remains unchanged.
          *
-         * @param context The scope context, must not be {@code null}.
-         * @throws RepositoryException If the scope deriviation failed.
+         * @param context the scope context, must not be {@code null}
+         * @throws RepositoryException if the scope deriviation failed
          */
         public abstract void deriveScope(ScopeContext context) throws RepositoryException;
     }
@@ -588,10 +588,10 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * default implementation simply returns the current instance which is appropriate for implementations which do
          * not require auxiliary data.
          *
-         * @param root The root node of the (possibly cyclic!) graph to transform, must not be {@code null}.
-         * @param context The graph transformation context, must not be {@code null}.
-         * @return The optionality selector to use for the given graph transformation, never {@code null}.
-         * @throws RepositoryException If the instance could not be retrieved.
+         * @param root the root node of the (possibly cyclic!) graph to transform, must not be {@code null}
+         * @param context the graph transformation context, must not be {@code null}
+         * @return the optionality selector to use for the given graph transformation, never {@code null}
+         * @throws RepositoryException if the instance could not be retrieved
          */
         public OptionalitySelector getInstance(DependencyNode root, DependencyGraphTransformationContext context)
                 throws RepositoryException {
@@ -604,8 +604,8 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * {@link ConflictItem#getOptionalities()} and eventually call {@link ConflictContext#setOptional(Boolean)} to
          * deliver the effective optional flag.
          *
-         * @param context The conflict context, must not be {@code null}.
-         * @throws RepositoryException If the optionality selection failed.
+         * @param context the conflict context, must not be {@code null}
+         * @throws RepositoryException if the optionality selection failed
          */
         public abstract void selectOptionality(ConflictContext context) throws RepositoryException;
     }

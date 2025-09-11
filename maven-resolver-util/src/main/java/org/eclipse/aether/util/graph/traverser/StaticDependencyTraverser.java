@@ -34,7 +34,7 @@ public final class StaticDependencyTraverser implements DependencyTraverser {
     /**
      * Creates a new traverser with the specified traversal behavior.
      *
-     * @param traverse {@code true} to traverse all dependencies, {@code false} to never traverse.
+     * @param traverse {@code true} to traverse all dependencies, {@code false} to never traverse
      */
     public StaticDependencyTraverser(boolean traverse) {
         this.traverse = traverse;

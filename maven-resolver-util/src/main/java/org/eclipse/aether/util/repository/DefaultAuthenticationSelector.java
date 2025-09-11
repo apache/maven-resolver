@@ -37,9 +37,9 @@ public final class DefaultAuthenticationSelector implements AuthenticationSelect
     /**
      * Adds the specified authentication info for the given repository identifier.
      *
-     * @param id The identifier of the repository to add the authentication for, must not be {@code null}.
-     * @param auth The authentication to add, may be {@code null}.
-     * @return This selector for chaining, never {@code null}.
+     * @param id the identifier of the repository to add the authentication for, must not be {@code null}
+     * @param auth the authentication to add, may be {@code null}
+     * @return this selector for chaining, never {@code null}
      */
     public DefaultAuthenticationSelector add(String id, Authentication auth) {
         if (auth != null) {

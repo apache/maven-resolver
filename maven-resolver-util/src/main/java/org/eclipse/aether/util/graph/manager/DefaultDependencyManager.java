@@ -42,7 +42,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
     /**
      * Creates a new dependency manager without any management information.
      *
-     * @deprecated Use constructor that provides consumer application specific predicate.
+     * @deprecated use constructor that provides consumer application specific predicate
      */
     @Deprecated
     public DefaultDependencyManager() {

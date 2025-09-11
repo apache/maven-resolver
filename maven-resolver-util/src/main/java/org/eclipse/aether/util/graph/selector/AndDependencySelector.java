@@ -45,7 +45,7 @@ public final class AndDependencySelector implements DependencySelector {
      * Creates a new selector from the specified selectors. Prefer
      * {@link #newInstance(DependencySelector, DependencySelector)} if any of the input selectors might be {@code null}.
      *
-     * @param selectors The selectors to combine, may be {@code null} but must not contain {@code null} elements.
+     * @param selectors the selectors to combine, may be {@code null} but must not contain {@code null} elements
      */
     public AndDependencySelector(DependencySelector... selectors) {
         if (selectors != null && selectors.length > 0) {
@@ -58,7 +58,7 @@ public final class AndDependencySelector implements DependencySelector {
     /**
      * Creates a new selector from the specified selectors.
      *
-     * @param selectors The selectors to combine, may be {@code null} but must not contain {@code null} elements.
+     * @param selectors the selectors to combine, may be {@code null} but must not contain {@code null} elements
      */
     public AndDependencySelector(Collection<? extends DependencySelector> selectors) {
         if (selectors != null && !selectors.isEmpty()) {
@@ -79,9 +79,9 @@ public final class AndDependencySelector implements DependencySelector {
     /**
      * Creates a new selector from the specified selectors.
      *
-     * @param selector1 The first selector to combine, may be {@code null}.
-     * @param selector2 The second selector to combine, may be {@code null}.
-     * @return The combined selector or {@code null} if both selectors were {@code null}.
+     * @param selector1 the first selector to combine, may be {@code null}
+     * @param selector2 the second selector to combine, may be {@code null}
+     * @return the combined selector or {@code null} if both selectors were {@code null}
      */
     public static DependencySelector newInstance(DependencySelector selector1, DependencySelector selector2) {
         if (selector1 == null) {
