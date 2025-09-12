@@ -33,7 +33,7 @@ public class OverlayArtifactTypeRegistry extends SimpleArtifactTypeRegistry {
      * Creates a new artifact type registry with initially no registered artifact types and the specified fallback
      * registry. Use {@link #add(ArtifactType)} to populate the registry.
      *
-     * @param delegate The artifact type registry to fall back to, may be {@code null}.
+     * @param delegate the artifact type registry to fall back to, may be {@code null}
      */
     public OverlayArtifactTypeRegistry(ArtifactTypeRegistry delegate) {
         this.delegate = delegate;
@@ -42,8 +42,8 @@ public class OverlayArtifactTypeRegistry extends SimpleArtifactTypeRegistry {
     /**
      * Adds the specified artifact type to the registry.
      *
-     * @param type The artifact type to add, must not be {@code null}.
-     * @return This registry for chaining, never {@code null}.
+     * @param type the artifact type to add, must not be {@code null}
+     * @return this registry for chaining, never {@code null}
      */
     @Override
     public OverlayArtifactTypeRegistry add(ArtifactType type) {

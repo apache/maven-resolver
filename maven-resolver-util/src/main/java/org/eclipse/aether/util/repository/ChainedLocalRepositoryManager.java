@@ -92,11 +92,11 @@ public final class ChainedLocalRepositoryManager implements LocalRepositoryManag
     /**
      * Warning: this is experimental feature of chained, is not recommended to be used/integrated into plain Maven.
      *
-     * @param head The head LRM
-     * @param tail The tail LRMs
-     * @param ignoreTailAvailability Whether tail availability should be ignored (usually you do want this)
-     * @param installTarget The installation LRM index, integer from 0 to size of tail.
-     * @param cacheTarget The cache LRM index, integer from 0 to size of tail.
+     * @param head the head LRM
+     * @param tail the tail LRMs
+     * @param ignoreTailAvailability whether tail availability should be ignored (usually you do want this)
+     * @param installTarget the installation LRM index, integer from 0 to size of tail
+     * @param cacheTarget the cache LRM index, integer from 0 to size of tail
      * @since 2.0.5
      */
     public ChainedLocalRepositoryManager(

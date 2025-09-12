@@ -245,7 +245,7 @@ public class DependencyGraphDumper implements DependencyVisitor {
     /**
      * Creates instance with given consumer.
      *
-     * @param consumer The string consumer, must not be {@code null}.
+     * @param consumer the string consumer, must not be {@code null}
      */
     public DependencyGraphDumper(Consumer<String> consumer) {
         this(consumer, DEFAULT_DECORATORS);
@@ -254,8 +254,8 @@ public class DependencyGraphDumper implements DependencyVisitor {
     /**
      * Creates instance with given consumer and decorators.
      *
-     * @param consumer The string consumer, must not be {@code null}.
-     * @param decorators The decorators to apply, must not be {@code null}.
+     * @param consumer the string consumer, must not be {@code null}
+     * @param decorators the decorators to apply, must not be {@code null}
      * @since 2.0.0
      */
     public DependencyGraphDumper(Consumer<String> consumer, Collection<Function<DependencyNode, String>> decorators) {

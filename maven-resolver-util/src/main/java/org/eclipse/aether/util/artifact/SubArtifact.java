@@ -50,9 +50,9 @@ public final class SubArtifact extends AbstractArtifact {
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
      *
-     * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
-     * @param classifier The classifier for this artifact, may be {@code null} if none.
-     * @param extension The extension for this artifact, may be {@code null} if none.
+     * @param mainArtifact the artifact from which to derive the identity, must not be {@code null}
+     * @param classifier the classifier for this artifact, may be {@code null} if none
+     * @param extension the extension for this artifact, may be {@code null} if none
      */
     public SubArtifact(Artifact mainArtifact, String classifier, String extension) {
         this(mainArtifact, classifier, extension, (File) null);
@@ -64,10 +64,10 @@ public final class SubArtifact extends AbstractArtifact {
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
      *
-     * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
-     * @param classifier The classifier for this artifact, may be {@code null} if none.
-     * @param extension The extension for this artifact, may be {@code null} if none.
-     * @param file The file for this artifact, may be {@code null} if unresolved.
+     * @param mainArtifact the artifact from which to derive the identity, must not be {@code null}
+     * @param classifier the classifier for this artifact, may be {@code null} if none
+     * @param extension the extension for this artifact, may be {@code null} if none
+     * @param file the file for this artifact, may be {@code null} if unresolved
      */
     public SubArtifact(Artifact mainArtifact, String classifier, String extension, File file) {
         this(mainArtifact, classifier, extension, null, file);
@@ -79,10 +79,10 @@ public final class SubArtifact extends AbstractArtifact {
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
      *
-     * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
-     * @param classifier The classifier for this artifact, may be {@code null} if none.
-     * @param extension The extension for this artifact, may be {@code null} if none.
-     * @param path The file for this artifact, may be {@code null} if unresolved.
+     * @param mainArtifact the artifact from which to derive the identity, must not be {@code null}
+     * @param classifier the classifier for this artifact, may be {@code null} if none
+     * @param extension the extension for this artifact, may be {@code null} if none
+     * @param path the file for this artifact, may be {@code null} if unresolved
      * @since 2.0.0
      */
     public SubArtifact(Artifact mainArtifact, String classifier, String extension, Path path) {
@@ -95,10 +95,10 @@ public final class SubArtifact extends AbstractArtifact {
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
      *
-     * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
-     * @param classifier The classifier for this artifact, may be {@code null} if none.
-     * @param extension The extension for this artifact, may be {@code null} if none.
-     * @param properties The properties of the artifact, may be {@code null}.
+     * @param mainArtifact the artifact from which to derive the identity, must not be {@code null}
+     * @param classifier the classifier for this artifact, may be {@code null} if none
+     * @param extension the extension for this artifact, may be {@code null} if none
+     * @param properties the properties of the artifact, may be {@code null}
      */
     public SubArtifact(Artifact mainArtifact, String classifier, String extension, Map<String, String> properties) {
         this(mainArtifact, classifier, extension, properties, (Path) null);
@@ -110,11 +110,11 @@ public final class SubArtifact extends AbstractArtifact {
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
      *
-     * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
-     * @param classifier The classifier for this artifact, may be {@code null} if none.
-     * @param extension The extension for this artifact, may be {@code null} if none.
-     * @param properties The properties of the artifact, may be {@code null}.
-     * @param file The file for this artifact, may be {@code null} if unresolved.
+     * @param mainArtifact the artifact from which to derive the identity, must not be {@code null}
+     * @param classifier the classifier for this artifact, may be {@code null} if none
+     * @param extension the extension for this artifact, may be {@code null} if none
+     * @param properties the properties of the artifact, may be {@code null}
+     * @param file the file for this artifact, may be {@code null} if unresolved
      */
     public SubArtifact(
             Artifact mainArtifact, String classifier, String extension, Map<String, String> properties, File file) {
@@ -127,11 +127,11 @@ public final class SubArtifact extends AbstractArtifact {
      * "*-sources" can be used to refer to the source attachment of an artifact. Likewise, the extension "*.asc" can be
      * used to refer to the GPG signature of an artifact.
      *
-     * @param mainArtifact The artifact from which to derive the identity, must not be {@code null}.
-     * @param classifier The classifier for this artifact, may be {@code null} if none.
-     * @param extension The extension for this artifact, may be {@code null} if none.
-     * @param properties The properties of the artifact, may be {@code null}.
-     * @param path The file for this artifact, may be {@code null} if unresolved.
+     * @param mainArtifact the artifact from which to derive the identity, must not be {@code null}
+     * @param classifier the classifier for this artifact, may be {@code null} if none
+     * @param extension the extension for this artifact, may be {@code null} if none
+     * @param properties the properties of the artifact, may be {@code null}
+     * @param path the file for this artifact, may be {@code null} if unresolved
      * @since 2.0.0
      */
     public SubArtifact(

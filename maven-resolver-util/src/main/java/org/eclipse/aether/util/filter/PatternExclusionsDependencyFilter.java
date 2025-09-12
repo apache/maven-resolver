@@ -43,7 +43,7 @@ public final class PatternExclusionsDependencyFilter extends AbstractPatternDepe
     /**
      * Creates a new filter using the specified patterns.
      *
-     * @param patterns The exclude patterns, may be {@code null} or empty to exclude no artifacts.
+     * @param patterns the exclude patterns, may be {@code null} or empty to exclude no artifacts
      */
     public PatternExclusionsDependencyFilter(final String... patterns) {
         super(patterns);
@@ -52,9 +52,9 @@ public final class PatternExclusionsDependencyFilter extends AbstractPatternDepe
     /**
      * Creates a new filter using the specified patterns.
      *
-     * @param versionScheme To be used for parsing versions/version ranges. If {@code null} and pattern specifies a
+     * @param versionScheme to be used for parsing versions/version ranges. If {@code null} and pattern specifies a
      *            range no artifact will be excluded.
-     * @param patterns The exclude patterns, may be {@code null} or empty to exclude no artifacts.
+     * @param patterns the exclude patterns, may be {@code null} or empty to exclude no artifacts
      */
     public PatternExclusionsDependencyFilter(final VersionScheme versionScheme, final String... patterns) {
         super(versionScheme, patterns);
@@ -63,7 +63,7 @@ public final class PatternExclusionsDependencyFilter extends AbstractPatternDepe
     /**
      * Creates a new filter using the specified patterns.
      *
-     * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
+     * @param patterns the include patterns, may be {@code null} or empty to include no artifacts
      */
     public PatternExclusionsDependencyFilter(final Collection<String> patterns) {
         super(patterns);
@@ -72,9 +72,9 @@ public final class PatternExclusionsDependencyFilter extends AbstractPatternDepe
     /**
      * Creates a new filter using the specified patterns and {@link VersionScheme} .
      *
-     * @param versionScheme To be used for parsing versions/version ranges. If {@code null} and pattern specifies a
+     * @param versionScheme to be used for parsing versions/version ranges. If {@code null} and pattern specifies a
      *            range no artifact will be excluded.
-     * @param patterns The exclude patterns, may be {@code null} or empty to exclude no artifacts.
+     * @param patterns the exclude patterns, may be {@code null} or empty to exclude no artifacts
      */
     public PatternExclusionsDependencyFilter(final VersionScheme versionScheme, final Collection<String> patterns) {
         super(versionScheme, patterns);

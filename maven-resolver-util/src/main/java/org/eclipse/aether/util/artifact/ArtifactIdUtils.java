@@ -36,8 +36,8 @@ public final class ArtifactIdUtils {
     /**
      * Creates an artifact identifier of the form {@code <groupId>:<artifactId>:<extension>[:<classifier>]:<version>}.
      *
-     * @param artifact The artifact to create an identifer for, may be {@code null}.
-     * @return The artifact identifier or {@code null} if the input was {@code null}.
+     * @param artifact the artifact to create an identifer for, may be {@code null}
+     * @return the artifact identifier or {@code null} if the input was {@code null}
      */
     public static String toId(Artifact artifact) {
         String id = null;
@@ -55,12 +55,12 @@ public final class ArtifactIdUtils {
     /**
      * Creates an artifact identifier of the form {@code <groupId>:<artifactId>:<extension>[:<classifier>]:<version>}.
      *
-     * @param groupId The group id, may be {@code null}.
-     * @param artifactId The artifact id, may be {@code null}.
-     * @param extension The file extensiion, may be {@code null}.
-     * @param classifier The classifier, may be {@code null}.
-     * @param version The version, may be {@code null}.
-     * @return The artifact identifier, never {@code null}.
+     * @param groupId the group id, may be {@code null}
+     * @param artifactId the artifact id, may be {@code null}
+     * @param extension the file extensiion, may be {@code null}
+     * @param classifier the classifier, may be {@code null}
+     * @param version the version, may be {@code null}
+     * @return the artifact identifier, never {@code null}
      */
     public static String toId(String groupId, String artifactId, String extension, String classifier, String version) {
         StringBuilder buffer = concat(groupId, artifactId, extension, classifier);
@@ -75,8 +75,8 @@ public final class ArtifactIdUtils {
      * Creates an artifact identifier of the form
      * {@code <groupId>:<artifactId>:<extension>[:<classifier>]:<baseVersion>}.
      *
-     * @param artifact The artifact to create an identifer for, may be {@code null}.
-     * @return The artifact identifier or {@code null} if the input was {@code null}.
+     * @param artifact the artifact to create an identifer for, may be {@code null}
+     * @return the artifact identifier or {@code null} if the input was {@code null}
      */
     public static String toBaseId(Artifact artifact) {
         String id = null;
@@ -94,8 +94,8 @@ public final class ArtifactIdUtils {
     /**
      * Creates an artifact identifier of the form {@code <groupId>:<artifactId>:<extension>[:<classifier>]}.
      *
-     * @param artifact The artifact to create an identifer for, may be {@code null}.
-     * @return The artifact identifier or {@code null} if the input was {@code null}.
+     * @param artifact the artifact to create an identifer for, may be {@code null}
+     * @return the artifact identifier or {@code null} if the input was {@code null}
      */
     public static String toVersionlessId(Artifact artifact) {
         String id = null;
@@ -109,11 +109,11 @@ public final class ArtifactIdUtils {
     /**
      * Creates an artifact identifier of the form {@code <groupId>:<artifactId>:<extension>[:<classifier>]}.
      *
-     * @param groupId The group id, may be {@code null}.
-     * @param artifactId The artifact id, may be {@code null}.
-     * @param extension The file extensiion, may be {@code null}.
-     * @param classifier The classifier, may be {@code null}.
-     * @return The artifact identifier, never {@code null}.
+     * @param groupId the group id, may be {@code null}
+     * @param artifactId the artifact id, may be {@code null}
+     * @param extension the file extensiion, may be {@code null}
+     * @param classifier the classifier, may be {@code null}
+     * @return the artifact identifier, never {@code null}
      */
     public static String toVersionlessId(String groupId, String artifactId, String extension, String classifier) {
         return concat(groupId, artifactId, extension, classifier).toString();
@@ -145,9 +145,9 @@ public final class ArtifactIdUtils {
      * {@link String#equals(Object)} on the return values from {@link #toId(Artifact)} for the artifacts but does not
      * incur the overhead of creating temporary strings.
      *
-     * @param artifact1 The first artifact, may be {@code null}.
-     * @param artifact2 The second artifact, may be {@code null}.
-     * @return {@code true} if both artifacts are not {@code null} and have equal ids, {@code false} otherwise.
+     * @param artifact1 the first artifact, may be {@code null}
+     * @param artifact2 the second artifact, may be {@code null}
+     * @return {@code true} if both artifacts are not {@code null} and have equal ids, {@code false} otherwise
      */
     public static boolean equalsId(Artifact artifact1, Artifact artifact2) {
         if (artifact1 == null || artifact2 == null) {
@@ -173,9 +173,9 @@ public final class ArtifactIdUtils {
      * {@link String#equals(Object)} on the return values from {@link #toBaseId(Artifact)} for the artifacts but does
      * not incur the overhead of creating temporary strings.
      *
-     * @param artifact1 The first artifact, may be {@code null}.
-     * @param artifact2 The second artifact, may be {@code null}.
-     * @return {@code true} if both artifacts are not {@code null} and have equal base ids, {@code false} otherwise.
+     * @param artifact1 the first artifact, may be {@code null}
+     * @param artifact2 the second artifact, may be {@code null}
+     * @return {@code true} if both artifacts are not {@code null} and have equal base ids, {@code false} otherwise
      */
     public static boolean equalsBaseId(Artifact artifact1, Artifact artifact2) {
         if (artifact1 == null || artifact2 == null) {
@@ -201,10 +201,10 @@ public final class ArtifactIdUtils {
      * {@link String#equals(Object)} on the return values from {@link #toVersionlessId(Artifact)} for the artifacts but
      * does not incur the overhead of creating temporary strings.
      *
-     * @param artifact1 The first artifact, may be {@code null}.
-     * @param artifact2 The second artifact, may be {@code null}.
+     * @param artifact1 the first artifact, may be {@code null}
+     * @param artifact2 the second artifact, may be {@code null}
      * @return {@code true} if both artifacts are not {@code null} and have equal versionless ids, {@code false}
-     *         otherwise.
+     *         otherwise
      */
     public static boolean equalsVersionlessId(Artifact artifact1, Artifact artifact2) {
         if (artifact1 == null || artifact2 == null) {

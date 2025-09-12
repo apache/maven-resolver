@@ -45,8 +45,8 @@ abstract class AbstractDependencyNodeConsumerVisitor implements DependencyVisito
     /**
      * Marks the specified node as being visited and determines whether the node has been visited before.
      *
-     * @param node The node being visited, must not be {@code null}.
-     * @return {@code true} if the node has not been visited before, {@code false} if the node was already visited.
+     * @param node the node being visited, must not be {@code null}
+     * @return {@code true} if the node has not been visited before, {@code false} if the node was already visited
      */
     protected boolean setVisited(DependencyNode node) {
         return visitedNodes.put(node, Boolean.TRUE) == null;

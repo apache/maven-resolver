@@ -31,7 +31,7 @@ import org.eclipse.aether.util.ConfigUtils;
  * Utilities for executors and sizing them.
  *
  * @since 1.9.5
- * @deprecated For removal. Nothing is using this class within Resolver.
+ * @deprecated for removal. Nothing is using this class within Resolver.
  */
 @Deprecated
 public final class ExecutorUtils {
@@ -82,7 +82,7 @@ public final class ExecutorUtils {
      * Retrieves and validates requested thread count based on session and specified keys, or if none provided, the
      * provided default value. This method validates result on top of what {@link ConfigUtils} does.
      *
-     * @throws IllegalArgumentException if default value is less than 1.
+     * @throws IllegalArgumentException if default value is less than 1
      * @see ConfigUtils#getInteger(RepositorySystemSession, int, String...)
      */
     public static int threadCount(RepositorySystemSession session, int defaultValue, String... keys) {

@@ -48,7 +48,7 @@ public final class SimpleResolutionErrorPolicy implements ResolutionErrorPolicy 
     /**
      * Creates a new error policy with the specified bit mask for both artifacts and metadata.
      *
-     * @param policy The bit mask describing the policy for artifacts and metadata.
+     * @param policy the bit mask describing the policy for artifacts and metadata
      */
     public SimpleResolutionErrorPolicy(int policy) {
         this(policy, policy);
@@ -57,8 +57,8 @@ public final class SimpleResolutionErrorPolicy implements ResolutionErrorPolicy 
     /**
      * Creates a new error policy with the specified bit masks for artifacts and metadata.
      *
-     * @param artifactPolicy The bit mask describing the policy for artifacts.
-     * @param metadataPolicy The bit mask describing the policy for metadata.
+     * @param artifactPolicy the bit mask describing the policy for artifacts
+     * @param metadataPolicy the bit mask describing the policy for metadata
      */
     public SimpleResolutionErrorPolicy(int artifactPolicy, int metadataPolicy) {
         this.artifactPolicy = artifactPolicy;

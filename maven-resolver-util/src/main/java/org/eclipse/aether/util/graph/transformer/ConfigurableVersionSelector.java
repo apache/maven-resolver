@@ -110,7 +110,7 @@ public class ConfigurableVersionSelector extends VersionSelector {
     /**
      * Creates a new instance of this version selector using passed in selection strategy always.
      *
-     * @param selectionStrategy The winner selection strategy, must not be {@code null}. Maven3
+     * @param selectionStrategy the winner selection strategy, must not be {@code null}. Maven3
      *                          used {@link Nearest} strategy.
      */
     public ConfigurableVersionSelector(SelectionStrategy selectionStrategy) {

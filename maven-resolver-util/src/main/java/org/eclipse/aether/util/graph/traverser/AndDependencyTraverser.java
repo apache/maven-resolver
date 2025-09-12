@@ -45,7 +45,7 @@ public final class AndDependencyTraverser implements DependencyTraverser {
      * {@link #newInstance(DependencyTraverser, DependencyTraverser)} if any of the input traversers might be
      * {@code null}.
      *
-     * @param traversers The traversers to combine, may be {@code null} but must not contain {@code null} elements.
+     * @param traversers the traversers to combine, may be {@code null} but must not contain {@code null} elements
      */
     public AndDependencyTraverser(DependencyTraverser... traversers) {
         if (traversers != null && traversers.length > 0) {
@@ -58,7 +58,7 @@ public final class AndDependencyTraverser implements DependencyTraverser {
     /**
      * Creates a new traverser from the specified traversers.
      *
-     * @param traversers The traversers to combine, may be {@code null} but must not contain {@code null} elements.
+     * @param traversers the traversers to combine, may be {@code null} but must not contain {@code null} elements
      */
     public AndDependencyTraverser(Collection<? extends DependencyTraverser> traversers) {
         if (traversers != null && !traversers.isEmpty()) {
@@ -79,9 +79,9 @@ public final class AndDependencyTraverser implements DependencyTraverser {
     /**
      * Creates a new traverser from the specified traversers.
      *
-     * @param traverser1 The first traverser to combine, may be {@code null}.
-     * @param traverser2 The second traverser to combine, may be {@code null}.
-     * @return The combined traverser or {@code null} if both traversers were {@code null}.
+     * @param traverser1 the first traverser to combine, may be {@code null}
+     * @param traverser2 the second traverser to combine, may be {@code null}
+     * @return the combined traverser or {@code null} if both traversers were {@code null}
      */
     public static DependencyTraverser newInstance(DependencyTraverser traverser1, DependencyTraverser traverser2) {
         if (traverser1 == null) {

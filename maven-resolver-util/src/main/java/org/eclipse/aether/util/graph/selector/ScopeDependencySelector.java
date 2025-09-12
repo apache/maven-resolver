@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
  * In particular, the filter is not aware of scopes that logically include other scopes.
  *
  * @see Dependency#getScope()
- * @deprecated This class is deprecated. Use same named class from impl module instead.
+ * @deprecated this class is deprecated. Use same named class from impl module instead.
  */
 @Deprecated
 public final class ScopeDependencySelector implements DependencySelector {
@@ -51,8 +51,8 @@ public final class ScopeDependencySelector implements DependencySelector {
     /**
      * Creates a new selector using the specified includes and excludes.
      *
-     * @param included The set of scopes to include, may be {@code null} or empty to include any scope.
-     * @param excluded The set of scopes to exclude, may be {@code null} or empty to exclude no scope.
+     * @param included the set of scopes to include, may be {@code null} or empty to include any scope
+     * @param excluded the set of scopes to exclude, may be {@code null} or empty to exclude no scope
      */
     public ScopeDependencySelector(Collection<String> included, Collection<String> excluded) {
         transitive = false;
@@ -78,7 +78,7 @@ public final class ScopeDependencySelector implements DependencySelector {
     /**
      * Creates a new selector using the specified excludes.
      *
-     * @param excluded The set of scopes to exclude, may be {@code null} or empty to exclude no scope.
+     * @param excluded the set of scopes to exclude, may be {@code null} or empty to exclude no scope
      */
     public ScopeDependencySelector(String... excluded) {
         this(null, (excluded != null) ? Arrays.asList(excluded) : null);

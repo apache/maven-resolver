@@ -50,9 +50,9 @@ public final class SmartExecutorUtils {
      * {@code tasks} parameter is given should not be cached (like in a session) as they may return {@link #DIRECT}
      * executor for one call and a pool for subsequent call, based on value of tasks.
      *
-     * @param tasks The amount of tasks, if known, {@code null} otherwise.
-     * @param maxConcurrentTasks The maximum concurrency caller wants.
-     * @param namePrefix The thread name prefixes, must not be {@code null).}
+     * @param tasks the amount of tasks, if known, {@code null} otherwise
+     * @param maxConcurrentTasks the maximum concurrency caller wants
+     * @param namePrefix the thread name prefixes, must not be {@code null).}
      */
     public static SmartExecutor newSmartExecutor(Integer tasks, int maxConcurrentTasks, String namePrefix) {
         if (maxConcurrentTasks < 1) {

@@ -64,6 +64,5 @@
  *     <li>Using "min" or "max" special segments as a non-trailing segment. This yields in "undefined" behaviour and should be avoided.</li>
  *     <li>Having a non-number as the first segment of a version. Versions are expected (but not enforced) to start with numbers.</li>
  * </ul>
- *
  */
 package org.eclipse.aether.util.version;

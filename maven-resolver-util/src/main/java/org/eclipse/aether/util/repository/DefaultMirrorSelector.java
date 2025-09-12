@@ -43,19 +43,19 @@ public final class DefaultMirrorSelector implements MirrorSelector {
     /**
      * Adds the specified mirror to this selector.
      *
-     * @param id The identifier of the mirror, must not be {@code null}.
-     * @param url The URL of the mirror, must not be {@code null}.
-     * @param type The content type of the mirror, must not be {@code null}.
-     * @param repositoryManager A flag whether the mirror is a repository manager or a simple server.
-     * @param blocked A flag whether the mirror is blocked from performing any download requests.
-     * @param mirrorOfIds The identifier(s) of remote repositories to mirror, must not be {@code null}. Multiple
+     * @param id the identifier of the mirror, must not be {@code null}
+     * @param url the URL of the mirror, must not be {@code null}
+     * @param type the content type of the mirror, must not be {@code null}
+     * @param repositoryManager a flag whether the mirror is a repository manager or a simple server
+     * @param blocked a flag whether the mirror is blocked from performing any download requests
+     * @param mirrorOfIds the identifier(s) of remote repositories to mirror, must not be {@code null}. Multiple
      *            identifiers can be separated by comma and additionally the wildcards "*", "external:http:*" and
      *            "external:*" can be used to match all (external) repositories, prefixing a repo id with an
      *            exclamation mark allows to express an exclusion. For example "external:*,!central".
-     * @param mirrorOfTypes The content type(s) of remote repositories to mirror, may be {@code null} or empty to match
+     * @param mirrorOfTypes the content type(s) of remote repositories to mirror, may be {@code null} or empty to match
      *            any content type. Similar to the repo id specification, multiple types can be comma-separated, the
      *            wildcard "*" and the "!" negation syntax are supported. For example "*,!p2".
-     * @return This selector for chaining, never {@code null}.
+     * @return this selector for chaining, never {@code null}
      */
     public DefaultMirrorSelector add(
             String id,
@@ -129,9 +129,9 @@ public final class DefaultMirrorSelector implements MirrorSelector {
      * <li>{@code *,!repo1} = everything except {@code repo1}.</li>
      * </ul>
      *
-     * @param repository to compare for a match.
-     * @param pattern used for match.
-     * @return true if the repository is a match to this pattern.
+     * @param repository to compare for a match
+     * @param pattern used for match
+     * @return true if the repository is a match to this pattern
      */
     static boolean matchPattern(RemoteRepository repository, String pattern) {
         boolean result = false;
@@ -178,8 +178,8 @@ public final class DefaultMirrorSelector implements MirrorSelector {
     /**
      * Checks the URL to see if this repository refers to an external repository.
      *
-     * @param repository The repository to check, must not be {@code null}.
-     * @return {@code true} if external, {@code false} otherwise.
+     * @param repository the repository to check, must not be {@code null}
+     * @return {@code true} if external, {@code false} otherwise
      */
     static boolean isExternalRepo(RemoteRepository repository) {
         boolean local = isLocal(repository.getHost()) || "file".equalsIgnoreCase(repository.getProtocol());
@@ -193,8 +193,8 @@ public final class DefaultMirrorSelector implements MirrorSelector {
     /**
      * Checks the URL to see if this repository refers to a non-localhost repository using HTTP.
      *
-     * @param repository The repository to check, must not be {@code null}.
-     * @return {@code true} if external, {@code false} otherwise.
+     * @param repository the repository to check, must not be {@code null}
+     * @return {@code true} if external, {@code false} otherwise
      */
     static boolean isExternalHttpRepo(RemoteRepository repository) {
         return ("http".equalsIgnoreCase(repository.getProtocol())
@@ -207,10 +207,10 @@ public final class DefaultMirrorSelector implements MirrorSelector {
     /**
      * Checks whether the types configured for a mirror match with the type of the repository.
      *
-     * @param repoType The type of the repository, may be {@code null}.
-     * @param mirrorType The types supported by the mirror, may be {@code null}.
+     * @param repoType the type of the repository, may be {@code null}
+     * @param mirrorType the types supported by the mirror, may be {@code null}
      * @return {@code true} if the types associated with the mirror match the type of the original repository,
-     *         {@code false} otherwise.
+     *         {@code false} otherwise
      */
     static boolean matchesType(String repoType, String mirrorType) {
         boolean result = false;

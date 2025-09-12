@@ -54,11 +54,11 @@ public final class DirectoryUtils {
      * Resulting path is being checked is a directory, and if not, it will be created if {@code mayCreate} is
      * {@code true}. If resulting path exist but is not a directory, this method will throw.
      *
-     * @param name      The name to create directory with, cannot be {@code null}.
-     * @param base      The base {@link Path} to resolve name, if it is relative path, cannot be {@code null}.
-     * @param mayCreate If resulting path does not exist, should it create?
-     * @return The {@link Path} instance that is resolved and backed by existing directory.
-     * @throws IOException If some IO related errors happens.
+     * @param name      the name to create directory with, cannot be {@code null}
+     * @param base      the base {@link Path} to resolve name, if it is relative path, cannot be {@code null}
+     * @param mayCreate if resulting path does not exist, should it create?
+     * @return the {@link Path} instance that is resolved and backed by existing directory
+     * @throws IOException if some IO related errors happens
      */
     public static Path resolveDirectory(String name, Path base, boolean mayCreate) throws IOException {
         requireNonNull(name, "name is null");
@@ -88,12 +88,12 @@ public final class DirectoryUtils {
      * For this method to work, {@link LocalRepository#getBasePath()} must return
      * non-{@code null} value, otherwise {@link NullPointerException} is thrown.
      *
-     * @param session     The session, may not be {@code null}.
-     * @param defaultName The default value if not present in session configuration, may not be {@code null}.
-     * @param nameKey     The key to look up for in session configuration to obtain user set value.
-     * @param mayCreate   If resulting path does not exist, should it create?
-     * @return The {@link Path} instance that is resolved and backed by existing directory.
-     * @throws IOException If some IO related errors happens.
+     * @param session     the session, may not be {@code null}
+     * @param defaultName the default value if not present in session configuration, may not be {@code null}
+     * @param nameKey     the key to look up for in session configuration to obtain user set value
+     * @param mayCreate   if resulting path does not exist, should it create?
+     * @return the {@link Path} instance that is resolved and backed by existing directory
+     * @throws IOException if some IO related errors happens
      * @see #resolveDirectory(String, Path, boolean)
      */
     public static Path resolveDirectory(

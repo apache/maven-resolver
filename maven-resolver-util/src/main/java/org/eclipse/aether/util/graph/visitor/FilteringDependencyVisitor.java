@@ -41,8 +41,8 @@ public final class FilteringDependencyVisitor implements DependencyVisitor {
     /**
      * Creates a new visitor that delegates traversal of nodes matching the given filter to the specified visitor.
      *
-     * @param visitor The visitor to delegate to, must not be {@code null}.
-     * @param filter The filter to apply, may be {@code null} to not filter.
+     * @param visitor the visitor to delegate to, must not be {@code null}
+     * @param filter the filter to apply, may be {@code null} to not filter
      */
     public FilteringDependencyVisitor(DependencyVisitor visitor, DependencyFilter filter) {
         this.visitor = requireNonNull(visitor, "dependency visitor delegate cannot be null");
@@ -54,7 +54,7 @@ public final class FilteringDependencyVisitor implements DependencyVisitor {
     /**
      * Gets the visitor to which this visitor delegates to.
      *
-     * @return The visitor being delegated to, never {@code null}.
+     * @return the visitor being delegated to, never {@code null}
      */
     public DependencyVisitor getVisitor() {
         return visitor;
@@ -63,7 +63,7 @@ public final class FilteringDependencyVisitor implements DependencyVisitor {
     /**
      * Gets the filter being applied before delegation.
      *
-     * @return The filter being applied or {@code null} if none.
+     * @return the filter being applied or {@code null} if none
      */
     public DependencyFilter getFilter() {
         return filter;

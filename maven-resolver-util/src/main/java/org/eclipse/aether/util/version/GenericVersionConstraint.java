@@ -40,7 +40,7 @@ final class GenericVersionConstraint implements VersionConstraint {
     /**
      * Creates a version constraint from the specified version range.
      *
-     * @param range The version range, must not be {@code null}.
+     * @param range the version range, must not be {@code null}
      */
     GenericVersionConstraint(VersionRange range) {
         this.range = requireNonNull(range, "version range cannot be null");
@@ -50,7 +50,7 @@ final class GenericVersionConstraint implements VersionConstraint {
     /**
      * Creates a version constraint from the specified version.
      *
-     * @param version The version, must not be {@code null}.
+     * @param version the version, must not be {@code null}
      */
     GenericVersionConstraint(Version version) {
         this.version = requireNonNull(version, "version cannot be null");

@@ -34,7 +34,7 @@ public final class StaticDependencySelector implements DependencySelector {
     /**
      * Creates a new selector with the specified selection behavior.
      *
-     * @param select {@code true} to select all dependencies, {@code false} to exclude all dependencies.
+     * @param select {@code true} to select all dependencies, {@code false} to exclude all dependencies
      */
     public StaticDependencySelector(boolean select) {
         this.select = select;

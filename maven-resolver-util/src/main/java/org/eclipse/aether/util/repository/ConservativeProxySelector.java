@@ -35,7 +35,7 @@ public final class ConservativeProxySelector implements ProxySelector {
     /**
      * Creates a new selector that delegates to the specified selector.
      *
-     * @param selector The selector to delegate to in case a repository has no proxy yet, must not be {@code null}.
+     * @param selector the selector to delegate to in case a repository has no proxy yet, must not be {@code null}
      */
     public ConservativeProxySelector(ProxySelector selector) {
         this.selector = requireNonNull(selector, "proxy selector cannot be null");

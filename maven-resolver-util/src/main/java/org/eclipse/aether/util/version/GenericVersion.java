@@ -45,7 +45,7 @@ final class GenericVersion implements Version {
     /**
      * Creates a generic version from the specified string.
      *
-     * @param version The version string, must not be {@code null}.
+     * @param version the version string, must not be {@code null}
      */
     GenericVersion(String version) {
         this.version = requireNonNull(version, "version cannot be null");

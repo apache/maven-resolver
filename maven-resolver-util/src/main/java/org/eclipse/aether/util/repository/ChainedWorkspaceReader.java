@@ -43,7 +43,7 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
     /**
      * Creates a new workspace reader by chaining the specified readers.
      *
-     * @param readers The readers to chain, may be {@code null}.
+     * @param readers the readers to chain, may be {@code null}
      * @see #newInstance(WorkspaceReader, WorkspaceReader)
      */
     public ChainedWorkspaceReader(WorkspaceReader... readers) {
@@ -66,9 +66,9 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
      * Creates a new workspace reader by chaining the specified readers. In contrast to the constructor, this factory
      * method will avoid creating an actual chained reader if one of the specified readers is actually {@code null}.
      *
-     * @param reader1 The first workspace reader, may be {@code null}.
-     * @param reader2 The second workspace reader, may be {@code null}.
-     * @return The chained reader or {@code null} if no workspace reader was supplied.
+     * @param reader1 the first workspace reader, may be {@code null}
+     * @param reader2 the second workspace reader, may be {@code null}
+     * @return the chained reader or {@code null} if no workspace reader was supplied
      */
     public static WorkspaceReader newInstance(WorkspaceReader reader1, WorkspaceReader reader2) {
         if (reader1 == null) {

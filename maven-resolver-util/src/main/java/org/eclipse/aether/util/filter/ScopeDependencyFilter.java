@@ -43,8 +43,8 @@ public final class ScopeDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter using the specified includes and excludes.
      *
-     * @param included The set of scopes to include, may be {@code null} or empty to include any scope.
-     * @param excluded The set of scopes to exclude, may be {@code null} or empty to exclude no scope.
+     * @param included the set of scopes to include, may be {@code null} or empty to include any scope
+     * @param excluded the set of scopes to exclude, may be {@code null} or empty to exclude no scope
      */
     public ScopeDependencyFilter(Collection<String> included, Collection<String> excluded) {
         if (included != null) {
@@ -58,7 +58,7 @@ public final class ScopeDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter using the specified excludes.
      *
-     * @param excluded The set of scopes to exclude, may be {@code null} or empty to exclude no scope.
+     * @param excluded the set of scopes to exclude, may be {@code null} or empty to exclude no scope
      */
     public ScopeDependencyFilter(String... excluded) {
         if (excluded != null) {

@@ -38,8 +38,8 @@ public final class WorkerThreadFactory implements ThreadFactory {
     /**
      * Creates a new thread factory whose threads will have names using the specified prefix.
      *
-     * @param namePrefix The prefix for the thread names, may be {@code null} or empty to derive the prefix from the
-     *            caller's simple class name.
+     * @param namePrefix the prefix for the thread names, may be {@code null} or empty to derive the prefix from the
+     *            caller's simple class name
      */
     public WorkerThreadFactory(String namePrefix) {
         this.factory = Executors.defaultThreadFactory();

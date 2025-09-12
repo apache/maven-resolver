@@ -36,11 +36,10 @@ import static java.util.stream.Collectors.toList;
  * Node list generator usable with different traversing strategies. It is wrapped {@link List}{@code <DependencyNode>} but
  * offers several transformations, that are handy.
  *
- * @since 2.0.0
- *
  * @see PreorderDependencyNodeConsumerVisitor
  * @see PostorderDependencyNodeConsumerVisitor
  * @see LevelOrderDependencyNodeConsumerVisitor
+ * @since 2.0.0
  */
 public final class NodeListGenerator implements Consumer<DependencyNode> {
 
@@ -58,7 +57,7 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
     /**
      * Gets the list of dependency nodes that was generated during the graph traversal.
      *
-     * @return The list of dependency nodes, never {@code null}.
+     * @return the list of dependency nodes, never {@code null}
      */
     public List<DependencyNode> getNodes() {
         return nodes;
@@ -68,7 +67,7 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
      * Gets the list of dependency nodes that was generated during the graph traversal and have {@code non-null}
      * {@link DependencyNode#getDependency()}.
      *
-     * @return The list of dependency nodes having dependency, never {@code null}.
+     * @return the list of dependency nodes having dependency, never {@code null}
      */
     public List<DependencyNode> getNodesWithDependencies() {
         return getNodesWithDependencies(getNodes());
@@ -77,8 +76,8 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
     /**
      * Gets the dependencies seen during the graph traversal.
      *
-     * @param includeUnresolved Whether unresolved dependencies shall be included in the result or not.
-     * @return The list of dependencies, never {@code null}.
+     * @param includeUnresolved whether unresolved dependencies shall be included in the result or not
+     * @return the list of dependencies, never {@code null}
      */
     public List<Dependency> getDependencies(boolean includeUnresolved) {
         return getDependencies(getNodes(), includeUnresolved);
@@ -87,8 +86,8 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
     /**
      * Gets the artifacts associated with the list of dependency nodes generated during the graph traversal.
      *
-     * @param includeUnresolved Whether unresolved artifacts shall be included in the result or not.
-     * @return The list of artifacts, never {@code null}.
+     * @param includeUnresolved whether unresolved artifacts shall be included in the result or not
+     * @return the list of artifacts, never {@code null}
      */
     public List<Artifact> getArtifacts(boolean includeUnresolved) {
         return getArtifacts(getNodes(), includeUnresolved);
@@ -97,8 +96,8 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
     /**
      * Gets the files of resolved artifacts seen during the graph traversal.
      *
-     * @return The list of artifact files, never {@code null}.
-     * @deprecated Use {@link #getPaths()} instead.
+     * @return the list of artifact files, never {@code null}
+     * @deprecated use {@link #getPaths()} instead
      */
     @Deprecated
     public List<File> getFiles() {
@@ -108,7 +107,7 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
     /**
      * Gets the files of resolved artifacts seen during the graph traversal.
      *
-     * @return The list of artifact files, never {@code null}.
+     * @return the list of artifact files, never {@code null}
      * @since 2.0.0
      */
     public List<Path> getPaths() {
@@ -119,7 +118,7 @@ public final class NodeListGenerator implements Consumer<DependencyNode> {
      * Gets a class path by concatenating the artifact files of the visited dependency nodes. Nodes with unresolved
      * artifacts are automatically skipped.
      *
-     * @return The class path, using the platform-specific path separator, never {@code null}.
+     * @return the class path, using the platform-specific path separator, never {@code null}
      */
     public String getClassPath() {
         return getClassPath(getNodes());

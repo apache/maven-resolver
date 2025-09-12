@@ -22,8 +22,7 @@ package org.eclipse.aether.util.artifact;
  * The dependency scopes used for Java dependencies.
  *
  * @see org.eclipse.aether.graph.Dependency#getScope()
- *
- * @deprecated Definition and semantics of the scopes should be defined by consumer project.
+ * @deprecated definition and semantics of the scopes should be defined by consumer project
  */
 @Deprecated
 public final class JavaScopes {

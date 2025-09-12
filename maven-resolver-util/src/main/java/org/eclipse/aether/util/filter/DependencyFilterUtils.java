@@ -38,8 +38,8 @@ public final class DependencyFilterUtils {
     /**
      * Creates a new filter that negates the specified filter.
      *
-     * @param filter The filter to negate, must not be {@code null}.
-     * @return The new filter, never {@code null}.
+     * @param filter the filter to negate, must not be {@code null}
+     * @return the new filter, never {@code null}
      */
     public static DependencyFilter notFilter(DependencyFilter filter) {
         return new NotDependencyFilter(filter);
@@ -49,8 +49,8 @@ public final class DependencyFilterUtils {
      * Creates a new filter that combines the specified filters using a logical {@code AND}. If no filters are
      * specified, the resulting filter accepts everything.
      *
-     * @param filters The filters to combine, may be {@code null}.
-     * @return The new filter, never {@code null}.
+     * @param filters the filters to combine, may be {@code null}
+     * @return the new filter, never {@code null}
      */
     public static DependencyFilter andFilter(DependencyFilter... filters) {
         if (filters != null && filters.length == 1) {
@@ -64,8 +64,8 @@ public final class DependencyFilterUtils {
      * Creates a new filter that combines the specified filters using a logical {@code AND}. If no filters are
      * specified, the resulting filter accepts everything.
      *
-     * @param filters The filters to combine, may be {@code null}.
-     * @return The new filter, never {@code null}.
+     * @param filters the filters to combine, may be {@code null}
+     * @return the new filter, never {@code null}
      */
     public static DependencyFilter andFilter(Collection<DependencyFilter> filters) {
         if (filters != null && filters.size() == 1) {
@@ -79,8 +79,8 @@ public final class DependencyFilterUtils {
      * Creates a new filter that combines the specified filters using a logical {@code OR}. If no filters are specified,
      * the resulting filter accepts nothing.
      *
-     * @param filters The filters to combine, may be {@code null}.
-     * @return The new filter, never {@code null}.
+     * @param filters the filters to combine, may be {@code null}
+     * @return the new filter, never {@code null}
      */
     public static DependencyFilter orFilter(DependencyFilter... filters) {
         if (filters != null && filters.length == 1) {
@@ -94,8 +94,8 @@ public final class DependencyFilterUtils {
      * Creates a new filter that combines the specified filters using a logical {@code OR}. If no filters are specified,
      * the resulting filter accepts nothing.
      *
-     * @param filters The filters to combine, may be {@code null}.
-     * @return The new filter, never {@code null}.
+     * @param filters the filters to combine, may be {@code null}
+     * @return the new filter, never {@code null}
      */
     public static DependencyFilter orFilter(Collection<DependencyFilter> filters) {
         if (filters != null && filters.size() == 1) {
@@ -109,11 +109,10 @@ public final class DependencyFilterUtils {
      * Creates a new filter that selects dependencies whose scope matches one or more of the specified classpath types.
      * A classpath type is a set of scopes separated by either {@code ','} or {@code '+'}.
      *
-     * @param classpathTypes The classpath types, may be {@code null} or empty to match no dependency.
-     * @return The new filter, never {@code null}.
+     * @param classpathTypes the classpath types, may be {@code null} or empty to match no dependency
+     * @return the new filter, never {@code null}
      * @see JavaScopes
-     *
-     * @deprecated Resolver is oblivious about "scopes", it is consumer project which needs to lay these down and
+     * @deprecated resolver is oblivious about "scopes", it is consumer project which needs to lay these down and
      * also assign proper semantics. Moreover, Resolver is oblivious about notions of "classpath", "modulepath", and
      * any other similar uses. These should be handled by consumer project.
      */
@@ -126,11 +125,10 @@ public final class DependencyFilterUtils {
      * Creates a new filter that selects dependencies whose scope matches one or more of the specified classpath types.
      * A classpath type is a set of scopes separated by either {@code ','} or {@code '+'}.
      *
-     * @param classpathTypes The classpath types, may be {@code null} or empty to match no dependency.
-     * @return The new filter, never {@code null}.
+     * @param classpathTypes the classpath types, may be {@code null} or empty to match no dependency
+     * @return the new filter, never {@code null}
      * @see JavaScopes
-     *
-     * @deprecated Resolver is oblivious about "scopes", it is consumer project which needs to lay these down and
+     * @deprecated resolver is oblivious about "scopes", it is consumer project which needs to lay these down and
      * also assign proper semantics. Moreover, Resolver is oblivious about notions of "classpath", "modulepath", and
      * any other similar uses. These should be handled by consumer project.
      */

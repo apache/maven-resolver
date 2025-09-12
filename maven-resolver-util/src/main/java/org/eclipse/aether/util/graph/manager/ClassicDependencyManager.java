@@ -38,7 +38,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
     /**
      * Creates a new dependency manager without any management information.
      *
-     * @deprecated Use constructor that provides consumer application specific predicate.
+     * @deprecated use constructor that provides consumer application specific predicate
      */
     @Deprecated
     public ClassicDependencyManager() {
@@ -52,10 +52,9 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
     /**
      * Creates a new dependency manager without any management information.
      *
-     * @param transitive If true, this manager will collect (derive) until last node on graph. If false,
+     * @param transitive if true, this manager will collect (derive) until last node on graph. If false,
      *                   it will work as original Maven 3 "classic" dependency manager, collect only up to
      *                   depth of 2.
-     *
      * @since 2.0.0
      */
     public ClassicDependencyManager(boolean transitive, ScopeManager scopeManager) {

@@ -36,8 +36,6 @@ import org.eclipse.aether.version.VersionScheme;
 
 import static java.util.Objects.requireNonNull;
 
-/**
- */
 class AbstractPatternDependencyFilter implements DependencyFilter {
 
     private final Set<String> patterns = new HashSet<>();
@@ -47,7 +45,7 @@ class AbstractPatternDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter using the specified patterns.
      *
-     * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
+     * @param patterns the include patterns, may be {@code null} or empty to include no artifacts
      */
     AbstractPatternDependencyFilter(final String... patterns) {
         this(null, patterns);
@@ -56,9 +54,9 @@ class AbstractPatternDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter using the specified patterns.
      *
-     * @param versionScheme To be used for parsing versions/version ranges. If {@code null} and pattern specifies a
+     * @param versionScheme to be used for parsing versions/version ranges. If {@code null} and pattern specifies a
      *            range no artifact will be included.
-     * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
+     * @param patterns the include patterns, may be {@code null} or empty to include no artifacts
      */
     AbstractPatternDependencyFilter(final VersionScheme versionScheme, final String... patterns) {
         this(versionScheme, patterns == null ? null : Arrays.asList(patterns));
@@ -67,7 +65,7 @@ class AbstractPatternDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter using the specified patterns.
      *
-     * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
+     * @param patterns the include patterns, may be {@code null} or empty to include no artifacts
      */
     AbstractPatternDependencyFilter(final Collection<String> patterns) {
         this(null, patterns);
@@ -76,9 +74,9 @@ class AbstractPatternDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter using the specified patterns and {@link VersionScheme} .
      *
-     * @param versionScheme To be used for parsing versions/version ranges. If {@code null} and pattern specifies a
+     * @param versionScheme to be used for parsing versions/version ranges. If {@code null} and pattern specifies a
      *            range no artifact will be included.
-     * @param patterns The include patterns, may be {@code null} or empty to include no artifacts.
+     * @param patterns the include patterns, may be {@code null} or empty to include no artifacts
      */
     AbstractPatternDependencyFilter(final VersionScheme versionScheme, final Collection<String> patterns) {
         if (patterns != null) {

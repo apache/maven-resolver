@@ -42,8 +42,8 @@ class SimpleArtifactTypeRegistry implements ArtifactTypeRegistry {
     /**
      * Adds the specified artifact type to the registry.
      *
-     * @param type The artifact type to add, must not be {@code null}.
-     * @return This registry for chaining, never {@code null}.
+     * @param type the artifact type to add, must not be {@code null}
+     * @return this registry for chaining, never {@code null}
      */
     public SimpleArtifactTypeRegistry add(ArtifactType type) {
         types.put(type.getId(), type);

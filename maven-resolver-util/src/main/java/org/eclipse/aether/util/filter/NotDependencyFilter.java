@@ -35,7 +35,7 @@ public final class NotDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter negatint the specified filter.
      *
-     * @param filter The filter to negate, must not be {@code null}.
+     * @param filter the filter to negate, must not be {@code null}
      */
     public NotDependencyFilter(DependencyFilter filter) {
         this.filter = requireNonNull(filter, "dependency filter cannot be null");

@@ -42,7 +42,7 @@ public final class UnionVersionRange implements VersionRange {
     /**
      * Creates union {@link VersionRange}s out of passed in {@link VersionRange} instances.
      *
-     * @param ranges The ranges, may be empty array or even {@code null}.
+     * @param ranges the ranges, may be empty array or even {@code null}
      */
     public static VersionRange from(VersionRange... ranges) {
         if (ranges == null || ranges.length == 0) {
@@ -54,7 +54,7 @@ public final class UnionVersionRange implements VersionRange {
     /**
      * Creates union {@link VersionRange}s out of passed in {@link VersionRange} collection.
      *
-     * @param ranges The ranges, may be empty collection or even {@code null}.
+     * @param ranges the ranges, may be empty collection or even {@code null}
      */
     public static VersionRange from(Collection<? extends VersionRange> ranges) {
         if (ranges != null && ranges.size() == 1) {

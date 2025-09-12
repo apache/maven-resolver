@@ -42,7 +42,7 @@ public final class TreeDependencyVisitor implements DependencyVisitor {
     /**
      * Creates a new visitor that delegates to the specified visitor.
      *
-     * @param visitor The visitor to delegate to, must not be {@code null}.
+     * @param visitor the visitor to delegate to, must not be {@code null}
      */
     public TreeDependencyVisitor(DependencyVisitor visitor) {
         this.visitor = requireNonNull(visitor, "dependency visitor delegate cannot be null");

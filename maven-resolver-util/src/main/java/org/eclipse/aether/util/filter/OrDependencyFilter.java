@@ -37,7 +37,7 @@ public final class OrDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter from the specified filters.
      *
-     * @param filters The filters to combine, may be {@code null}.
+     * @param filters the filters to combine, may be {@code null}
      */
     public OrDependencyFilter(DependencyFilter... filters) {
         if (filters != null) {
@@ -48,7 +48,7 @@ public final class OrDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter from the specified filters.
      *
-     * @param filters The filters to combine, may be {@code null}.
+     * @param filters the filters to combine, may be {@code null}
      */
     public OrDependencyFilter(Collection<DependencyFilter> filters) {
         if (filters != null) {
@@ -59,9 +59,9 @@ public final class OrDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter from the specified filters.
      *
-     * @param filter1 The first filter to combine, may be {@code null}.
-     * @param filter2 The first filter to combine, may be {@code null}.
-     * @return The combined filter or {@code null} if both filter were {@code null}.
+     * @param filter1 the first filter to combine, may be {@code null}
+     * @param filter2 the first filter to combine, may be {@code null}
+     * @return the combined filter or {@code null} if both filter were {@code null}
      */
     public static DependencyFilter newInstance(DependencyFilter filter1, DependencyFilter filter2) {
         if (filter1 == null) {

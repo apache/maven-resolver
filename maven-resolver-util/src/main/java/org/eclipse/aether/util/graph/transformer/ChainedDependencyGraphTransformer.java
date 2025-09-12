@@ -35,7 +35,7 @@ public final class ChainedDependencyGraphTransformer implements DependencyGraphT
     /**
      * Creates a new transformer that chains the specified transformers.
      *
-     * @param transformers The transformers to chain, may be {@code null} or empty.
+     * @param transformers the transformers to chain, may be {@code null} or empty
      */
     public ChainedDependencyGraphTransformer(DependencyGraphTransformer... transformers) {
         if (transformers == null) {
@@ -49,9 +49,9 @@ public final class ChainedDependencyGraphTransformer implements DependencyGraphT
      * Creates a new transformer that chains the specified transformers or simply returns one of them if the other one
      * is {@code null}.
      *
-     * @param transformer1 The first transformer of the chain, may be {@code null}.
-     * @param transformer2 The second transformer of the chain, may be {@code null}.
-     * @return The chained transformer or {@code null} if both input transformers are {@code null}.
+     * @param transformer1 the first transformer of the chain, may be {@code null}
+     * @param transformer2 the second transformer of the chain, may be {@code null}
+     * @return the chained transformer or {@code null} if both input transformers are {@code null}
      */
     public static DependencyGraphTransformer newInstance(
             DependencyGraphTransformer transformer1, DependencyGraphTransformer transformer2) {
