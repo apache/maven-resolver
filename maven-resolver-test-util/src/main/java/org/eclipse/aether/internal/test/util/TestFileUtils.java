@@ -55,6 +55,7 @@ public class TestFileUtils {
         // hide constructor
     }
 
+    @Deprecated
     public static void deleteTempFiles() throws IOException {
         deleteFile(TMP);
     }
@@ -95,6 +96,7 @@ public class TestFileUtils {
         return false;
     }
 
+    @Deprecated
     public static boolean mkdirs(File directory) {
         if (directory == null) {
             return false;
@@ -118,10 +120,20 @@ public class TestFileUtils {
         return (parentDir != null && (mkdirs(parentDir) || parentDir.exists()) && canonDir.mkdir());
     }
 
+    /**
+     * @throws IOException if an I/O error occurs
+     * @deprecated use @TempDir (JUnit 5) Or TemporaryFolder (JUnit 4) instead
+     */
+    @Deprecated
     public static File createTempFile(String contents) throws IOException {
         return createTempFile(contents.getBytes(StandardCharsets.UTF_8), 1);
     }
 
+    @Deprecated
+    /**
+     * @throws IOException if an I/O error occurs
+     * @deprecated use @TempDir (JUnit 5) Or TemporaryFolder (JUnit 4) instead
+     */
     public static File createTempFile(byte[] pattern, int repeat) throws IOException {
         mkdirs(TMP);
         File tmpFile = File.createTempFile("tmpfile-", ".data", TMP);
@@ -134,7 +146,7 @@ public class TestFileUtils {
      *
      * @return the temporary directory
      * @throws IOException if an I/O error occurs
-     * @deprecated use @TempDir (JUnit 5} Or TemporaryFolder (JUnit 4) instead
+     * @deprecated use @TempDir (JUnit 5) Or TemporaryFolder (JUnit 4) instead
      */
     @Deprecated
     public static File createTempDir() throws IOException {
@@ -146,7 +158,7 @@ public class TestFileUtils {
      *
      * @return the temporary directory
      * @throws IOException if an I/O error occurs
-     * @deprecated use {@code @TempDir) (JUnit 5} Or {@code TemporaryFolder} (JUnit 4) instead
+     * @deprecated use {@code @TempDir) (JUnit 5) Or {@code TemporaryFolder} (JUnit 4) instead
      */
     @Deprecated
     public static File createTempDir(String suffix) throws IOException {
@@ -235,6 +247,7 @@ public class TestFileUtils {
         }
     }
 
+    @Deprecated
     public static void writeBytes(File file, byte[] pattern, int repeat) throws IOException {
         file.deleteOnExit();
         file.getParentFile().mkdirs();
@@ -262,10 +275,12 @@ public class TestFileUtils {
         return new String(content, StandardCharsets.UTF_8);
     }
 
+    @Deprecated
     public static void writeString(File file, String content) throws IOException {
         writeBytes(file, content.getBytes(StandardCharsets.UTF_8), 1);
     }
 
+    @Deprecated
     public static void writeString(File file, String content, long timestamp) throws IOException {
         writeBytes(file, content.getBytes(StandardCharsets.UTF_8), 1);
         file.setLastModified(timestamp);
