@@ -366,6 +366,7 @@ public final class PathConflictResolver extends ConflictResolver {
         private final Path parent;
         private final int depth;
         private final List<Path> children;
+        private final List<DependencyNode> cycles;
         private String scope;
         private boolean optional;
 
@@ -376,6 +377,7 @@ public final class PathConflictResolver extends ConflictResolver {
             this.parent = parent;
             this.depth = parent != null ? parent.depth + 1 : 0;
             this.children = new ArrayList<>();
+            this.cycles = new ArrayList<>();
             pull(0);
 
             this.state
@@ -464,6 +466,11 @@ public final class PathConflictResolver extends ConflictResolver {
                                 this.dn.getDependency().getOptional());
                         this.dn.setScope(this.scope);
                         this.dn.setOptional(this.optional);
+
+                        // unless FULL, kill off cycles
+                        if (state.verbosity != Verbosity.FULL) {
+                            this.dn.getChildren().removeAll(this.cycles);
+                        }
                     }
                 } else {
                     // loser; move out of scope
@@ -579,6 +586,8 @@ public final class PathConflictResolver extends ConflictResolver {
                     this.children.add(c);
                     c.derive(0, false);
                     added.add(c);
+                } else {
+                    this.cycles.add(child);
                 }
             }
             return added;
