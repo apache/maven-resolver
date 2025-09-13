@@ -694,16 +694,6 @@ public final class PathConflictResolver extends ConflictResolver {
         private final String scope;
         private final int optionalities;
 
-        /**
-         * Bit flag indicating whether one or more paths consider the dependency non-optional.
-         */
-        public static final int OPTIONAL_FALSE = 0x01;
-
-        /**
-         * Bit flag indicating whether one or more paths consider the dependency optional.
-         */
-        public static final int OPTIONAL_TRUE = 0x02;
-
         private ConflictItem(Path path) {
             this.path = path;
             if (path.parent != null) {
