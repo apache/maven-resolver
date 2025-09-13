@@ -468,7 +468,7 @@ public final class PathConflictResolver extends ConflictResolver {
                         this.dn.setOptional(this.optional);
 
                         // unless FULL, kill off cycles
-                        if (state.verbosity != Verbosity.FULL) {
+                        if (this.state.verbosity != Verbosity.FULL) {
                             this.dn.getChildren().removeAll(this.cycles);
                         }
                     }
@@ -485,16 +485,17 @@ public final class PathConflictResolver extends ConflictResolver {
                             this.children.clear();
                             break;
                         case STANDARD:
-                            // leave this dn; remove children
                             String artifactId = ArtifactIdUtils.toId(this.dn.getArtifact());
                             String winnerArtifactId = ArtifactIdUtils.toId(winner.dn.getArtifact());
                             if (!Objects.equals(artifactId, winnerArtifactId)
                                     && relatedSiblingsCount(this.dn.getArtifact(), this.parent) > 1) {
+                                // is redundant dn (version range); remove it
                                 this.parent.children.remove(this);
                                 this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
                                 this.parent.dn.getChildren().remove(this.dn);
                                 this.children.clear();
                             } else {
+                                // leave this dn; remove children
                                 this.children.clear();
                                 this.dn.setChildren(Collections.emptyList());
                                 markLoser = true;
