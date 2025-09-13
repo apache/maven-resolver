@@ -42,12 +42,12 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
     private static Stream<Arguments> conflictResolverSource() {
         return Stream.of(
                 Arguments.of(new ClassicConflictResolver(
-                        new NearestVersionSelector(),
+                        new ConfigurableVersionSelector(),
                         new JavaScopeSelector(),
                         new SimpleOptionalitySelector(),
                         new JavaScopeDeriver())),
                 Arguments.of(new PathConflictResolver(
-                        new NearestVersionSelector(),
+                        new ConfigurableVersionSelector(),
                         new JavaScopeSelector(),
                         new SimpleOptionalitySelector(),
                         new JavaScopeDeriver())));
@@ -451,14 +451,31 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
 
     @ParameterizedTest
     @MethodSource("conflictResolverSource")
-    void cyclesAreKilledFromWinners(ConflictResolver conflictResolver) throws RepositoryException {
-        // Foo -> bar -> baz -> bar
+    void cyclesAreKilledFromWinners0(ConflictResolver conflictResolver) throws RepositoryException {
+        // foo -> bar -> foo
+        DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
+        fooNode.setChildren(mutableList(barNode));
+        barNode.setChildren(mutableList(fooNode));
+
+        DependencyNode transformedNode = transform(conflictResolver, fooNode);
+
+        assertSame(fooNode, transformedNode);
+        assertEquals(1, fooNode.getChildren().size());
+        assertSame(barNode, fooNode.getChildren().get(0));
+        assertEquals(0, barNode.getChildren().size());
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void cyclesAreKilledFromWinners1(ConflictResolver conflictResolver) throws RepositoryException {
+        // foo -> bar -> baz -> foo
         DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
         DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
         DependencyNode bazNode = makeDependencyNode("some-group", "baz", "1.0");
         fooNode.setChildren(mutableList(barNode));
         barNode.setChildren(mutableList(bazNode));
-        bazNode.setChildren(mutableList(barNode));
+        bazNode.setChildren(mutableList(fooNode));
 
         DependencyNode transformedNode = transform(conflictResolver, fooNode);
 
@@ -468,6 +485,31 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertEquals(1, barNode.getChildren().size());
         assertSame(bazNode, barNode.getChildren().get(0));
         assertEquals(0, bazNode.getChildren().size());
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void cyclesAreKilledFromWinners2(ConflictResolver conflictResolver) throws RepositoryException {
+        // foo -> bar -> baz -> bam -> foo
+        DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
+        DependencyNode bazNode = makeDependencyNode("some-group", "baz", "1.0");
+        DependencyNode bamNode = makeDependencyNode("some-group", "bam", "1.0");
+        fooNode.setChildren(mutableList(barNode));
+        barNode.setChildren(mutableList(bazNode));
+        bazNode.setChildren(mutableList(bamNode));
+        bamNode.setChildren(mutableList(fooNode));
+
+        DependencyNode transformedNode = transform(conflictResolver, fooNode);
+
+        assertSame(fooNode, transformedNode);
+        assertEquals(1, fooNode.getChildren().size());
+        assertSame(barNode, fooNode.getChildren().get(0));
+        assertEquals(1, barNode.getChildren().size());
+        assertSame(bazNode, barNode.getChildren().get(0));
+        assertEquals(1, bazNode.getChildren().size());
+        assertSame(bamNode, bazNode.getChildren().get(0));
+        assertEquals(0, bamNode.getChildren().size());
     }
 
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
