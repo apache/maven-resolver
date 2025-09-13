@@ -449,6 +449,27 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertSame(jazNode, barNode.getChildren().get(0));
     }
 
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void cyclesAreKilledFromWinners(ConflictResolver conflictResolver) throws RepositoryException {
+        // Foo -> bar -> baz -> bar
+        DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
+        DependencyNode bazNode = makeDependencyNode("some-group", "baz", "1.0");
+        fooNode.setChildren(mutableList(barNode));
+        barNode.setChildren(mutableList(bazNode));
+        bazNode.setChildren(mutableList(barNode));
+
+        DependencyNode transformedNode = transform(conflictResolver, fooNode);
+
+        assertSame(fooNode, transformedNode);
+        assertEquals(1, fooNode.getChildren().size());
+        assertSame(barNode, fooNode.getChildren().get(0));
+        assertEquals(1, barNode.getChildren().size());
+        assertSame(bazNode, barNode.getChildren().get(0));
+        assertEquals(0, bazNode.getChildren().size());
+    }
+
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
         return makeDependencyNode(groupId, artifactId, version, "compile");
     }
