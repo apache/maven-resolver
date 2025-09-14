@@ -203,9 +203,11 @@ public final class PathConflictResolver extends ConflictResolver {
 
             // loop over considered paths and apply selection results; note: node may remove itself from iterated list
             for (Path path : new ArrayList<>(paths)) {
-                // apply selected inherited properties scope/optional to all (winner carries version; others are losers)
-                path.scope = ctx.scope;
-                path.optional = ctx.optional;
+                // apply selected properties scope/optional to winner (winner carries version; others are losers)
+                if (path == winnerPath) {
+                    path.scope = ctx.scope;
+                    path.optional = ctx.optional;
+                }
 
                 // reset children as inheritance may be affected by this node scope/optionality change
                 path.children.forEach(c -> c.pull(0));
