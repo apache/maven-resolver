@@ -449,6 +449,41 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertSame(jazNode, barNode.getChildren().get(0));
     }
 
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void winnerCycleRemoved(ConflictResolver conflictResolver) throws RepositoryException {
+        // reproducer for MENFORCER-408:
+        // - foo1 and foo2 are different instances of same dep (foo2 was managed into foo1 during collection)
+        // - foo2 parent baz has more than one child
+        // - baz on being declared winner leaves foo2, and hence cycle as well
+        // Layout:
+        //  root -> foo1 -> bar
+        //            \---> baz -> foo2
+        //                   \---> bam
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode foo1 = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode foo2 = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode bar = makeDependencyNode("some-group", "bar", "1.0");
+        DependencyNode baz = makeDependencyNode("some-group", "baz", "1.0");
+        DependencyNode bam = makeDependencyNode("some-group", "bam", "1.0");
+        root.setChildren(mutableList(foo1));
+        foo1.setChildren(mutableList(bar, baz));
+        baz.setChildren(mutableList(foo2, bam));
+        foo2.setChildren(foo1.getChildren());
+
+        DependencyNode transformed = transform(conflictResolver, root);
+
+        assertSame(transformed, root);
+        assertEquals(1, transformed.getChildren().size());
+        assertSame(foo1, transformed.getChildren().get(0));
+        assertEquals(2, foo1.getChildren().size());
+        assertSame(bar, foo1.getChildren().get(0));
+        assertSame(baz, foo1.getChildren().get(1));
+        assertEquals(0, bar.getChildren().size());
+        assertEquals(1, baz.getChildren().size());
+        assertSame(bam, baz.getChildren().get(0));
+    }
+
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
         return makeDependencyNode(groupId, artifactId, version, "compile");
     }
