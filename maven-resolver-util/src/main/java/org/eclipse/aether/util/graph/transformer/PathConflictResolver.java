@@ -366,6 +366,7 @@ public final class PathConflictResolver extends ConflictResolver {
         private final Path parent;
         private final int depth;
         private final List<Path> children;
+        private final List<DependencyNode> cycles;
         private String scope;
         private boolean optional;
 
@@ -376,6 +377,7 @@ public final class PathConflictResolver extends ConflictResolver {
             this.parent = parent;
             this.depth = parent != null ? parent.depth + 1 : 0;
             this.children = new ArrayList<>();
+            this.cycles = new ArrayList<>();
             pull(0);
 
             this.state
@@ -478,18 +480,18 @@ public final class PathConflictResolver extends ConflictResolver {
                             this.children.clear();
                             break;
                         case STANDARD:
-                            // leave this dn; remove children
                             String artifactId = ArtifactIdUtils.toId(this.dn.getArtifact());
                             String winnerArtifactId = ArtifactIdUtils.toId(winner.dn.getArtifact());
                             if (!Objects.equals(artifactId, winnerArtifactId)
                                     && relatedSiblingsCount(this.dn.getArtifact(), this.parent) > 1) {
+                                // is redundant dn (version range); remove this dn
                                 this.parent.children.remove(this);
                                 this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
                                 this.parent.dn.getChildren().remove(this.dn);
                                 this.children.clear();
                             } else {
+                                // leave this dn; remove children
                                 this.children.clear();
-                                this.dn.setChildren(Collections.emptyList());
                                 markLoser = true;
                             }
                             break;
@@ -513,7 +515,7 @@ public final class PathConflictResolver extends ConflictResolver {
                         dnCopy.setScope(this.scope);
                         dnCopy.setOptional(this.optional);
                         if (ConflictResolver.Verbosity.FULL != state.verbosity) {
-                            dnCopy.getChildren().clear();
+                            dnCopy.setChildren(Collections.emptyList());
                         }
 
                         // swap it out in DN graph
@@ -525,16 +527,18 @@ public final class PathConflictResolver extends ConflictResolver {
                     }
                 }
             }
-            if (!this.children.isEmpty()) {
-                int newLevels = levels - 1;
-                if (newLevels >= 0) {
-                    // child may remove itself from iterated list
-                    for (Path child : new ArrayList<>(children)) {
-                        child.push(newLevels);
-                    }
+
+            int newLevels = levels - 1;
+            if (newLevels >= 0 && !this.children.isEmpty()) {
+                // child may remove itself from iterated list
+                for (Path child : new ArrayList<>(children)) {
+                    child.push(newLevels);
                 }
-            } else if (!this.dn.getChildren().isEmpty()) {
-                this.dn.setChildren(Collections.emptyList());
+            }
+
+            // unless FULL, kill off cycles
+            if (this.state.verbosity != Verbosity.FULL) {
+                this.dn.getChildren().removeAll(this.cycles);
             }
         }
 
@@ -579,6 +583,8 @@ public final class PathConflictResolver extends ConflictResolver {
                     this.children.add(c);
                     c.derive(0, false);
                     added.add(c);
+                } else {
+                    this.cycles.add(child);
                 }
             }
             return added;
@@ -683,16 +689,6 @@ public final class PathConflictResolver extends ConflictResolver {
         private final int depth;
         private final String scope;
         private final int optionalities;
-
-        /**
-         * Bit flag indicating whether one or more paths consider the dependency non-optional.
-         */
-        public static final int OPTIONAL_FALSE = 0x01;
-
-        /**
-         * Bit flag indicating whether one or more paths consider the dependency optional.
-         */
-        public static final int OPTIONAL_TRUE = 0x02;
 
         private ConflictItem(Path path) {
             this.path = path;
