@@ -171,6 +171,11 @@ public class ConflictResolver implements DependencyGraphTransformer {
          * {@link ConflictResolver} in this mode will not remove any collected node nor cycle, in turn it will record
          * on all eliminated nodes the conflicting information. Obviously, the resulting dependency tree is not suitable
          * for artifact resolution unless a filter is employed to exclude the duplicate dependencies and possible cycles.
+         * Because of left in cycles, user of this verbosity level should ensure that graph post-processing does not
+         * contain elements that would explode on them. In other words, session should be modified with proper
+         * graph transformers.
+         *
+         * @see RepositorySystemSession#getDependencyGraphTransformer()
          */
         FULL
     }
