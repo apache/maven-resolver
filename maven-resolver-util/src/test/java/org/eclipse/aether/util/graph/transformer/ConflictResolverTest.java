@@ -460,28 +460,52 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         //  root -> foo1 -> bar
         //            \---> baz -> foo2
         //                   \---> bam
-        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
-        DependencyNode foo1 = makeDependencyNode("some-group", "foo", "1.0");
-        DependencyNode foo2 = makeDependencyNode("some-group", "foo", "1.0");
-        DependencyNode bar = makeDependencyNode("some-group", "bar", "1.0");
-        DependencyNode baz = makeDependencyNode("some-group", "baz", "1.0");
-        DependencyNode bam = makeDependencyNode("some-group", "bam", "1.0");
-        root.setChildren(mutableList(foo1));
-        foo1.setChildren(mutableList(bar, baz));
-        baz.setChildren(mutableList(foo2, bam));
-        foo2.setChildren(foo1.getChildren());
 
-        DependencyNode transformed = transform(conflictResolver, root);
+        // another issue: "classic" CR does NOT leave all cycles in place when verbosity is FULL
+        // the "path" CR does obey FULL verbosity
+        for (ConflictResolver.Verbosity verbosity : ConflictResolver.Verbosity.values()) {
+            DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+            DependencyNode foo1 = makeDependencyNode("some-group", "foo", "1.0");
+            DependencyNode foo2 = makeDependencyNode("some-group", "foo", "1.0");
+            DependencyNode bar = makeDependencyNode("some-group", "bar", "1.0");
+            DependencyNode baz = makeDependencyNode("some-group", "baz", "1.0");
+            DependencyNode bam = makeDependencyNode("some-group", "bam", "1.0");
+            root.setChildren(mutableList(foo1));
+            foo1.setChildren(mutableList(bar, baz));
+            baz.setChildren(mutableList(foo2, bam));
+            foo2.setChildren(foo1.getChildren());
 
-        assertSame(transformed, root);
-        assertEquals(1, transformed.getChildren().size());
-        assertSame(foo1, transformed.getChildren().get(0));
-        assertEquals(2, foo1.getChildren().size());
-        assertSame(bar, foo1.getChildren().get(0));
-        assertSame(baz, foo1.getChildren().get(1));
-        assertEquals(0, bar.getChildren().size());
-        assertEquals(1, baz.getChildren().size());
-        assertSame(bam, baz.getChildren().get(0));
+            boolean cyclesLeftInPlace = verbosity == ConflictResolver.Verbosity.FULL;
+            setVerbosity(verbosity);
+            DependencyNode transformed = transform(conflictResolver, root);
+            System.out.println("CR=" + conflictResolver.getClass().getSimpleName() + "; verbosity=" + verbosity.name());
+            if (!cyclesLeftInPlace) {
+                transformed.accept(DUMPER_SOUT);
+            }
+
+            assertSame(transformed, root);
+            assertEquals(1, transformed.getChildren().size());
+            assertSame(foo1, transformed.getChildren().get(0));
+            assertEquals(2, foo1.getChildren().size());
+            assertSame(bar, foo1.getChildren().get(0));
+            assertSame(baz, foo1.getChildren().get(1));
+            assertEquals(0, bar.getChildren().size());
+            if (conflictResolver.getClass().equals(PathConflictResolver.class)) {
+                if (cyclesLeftInPlace) {
+                    assertEquals(2, baz.getChildren().size());
+                    assertSame(foo2, baz.getChildren().get(0));
+                    assertSame(bam, baz.getChildren().get(1));
+                } else {
+                    assertEquals(1, baz.getChildren().size());
+                    assertSame(bam, baz.getChildren().get(0));
+                }
+            } else if (conflictResolver.getClass().equals(ClassicConflictResolver.class)) {
+                assertEquals(1, baz.getChildren().size());
+                assertSame(bam, baz.getChildren().get(0));
+            } else {
+                fail("Unknown conflict resolver");
+            }
+        }
     }
 
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
