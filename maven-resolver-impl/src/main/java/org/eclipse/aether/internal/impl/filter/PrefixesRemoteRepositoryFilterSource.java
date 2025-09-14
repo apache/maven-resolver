@@ -248,7 +248,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                             prefixesSource.message());
                 }
             }
-            logger.debug("Prefix file for remote repository {} not found at '{}'", remoteRepository, filePath);
+            logger.debug("Prefix file for remote repository {} not available", remoteRepository);
             return PrefixTree.SENTINEL;
         }
         logger.debug("Prefix file for remote repository {} disabled", remoteRepository);

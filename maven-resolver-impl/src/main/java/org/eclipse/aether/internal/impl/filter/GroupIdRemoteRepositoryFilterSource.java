@@ -232,7 +232,10 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                     throw new UncheckedIOException(e);
                 }
             }
+            logger.debug("Group rules file for remote repository {} not available", remoteRepository);
+            return GroupTree.SENTINEL;
         }
+        logger.debug("Group rules file for remote repository {} disabled", remoteRepository);
         return GroupTree.SENTINEL;
     }
 
