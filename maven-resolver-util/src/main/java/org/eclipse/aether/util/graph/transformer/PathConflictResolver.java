@@ -505,7 +505,7 @@ public final class PathConflictResolver extends ConflictResolver {
                             throw new IllegalArgumentException("Unknown " + state.verbosity);
                     }
                     if (markLoser) {
-                        // copy dn
+                        // copy dn (w/o children)
                         DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
                         dnCopy.setData(ConflictResolver.NODE_DATA_WINNER, winner.dn);
                         dnCopy.setData(
@@ -516,8 +516,9 @@ public final class PathConflictResolver extends ConflictResolver {
                                 this.dn.getDependency().getOptional());
                         dnCopy.setScope(this.scope);
                         dnCopy.setOptional(this.optional);
-                        if (ConflictResolver.Verbosity.FULL != state.verbosity) {
-                            dnCopy.setChildren(Collections.emptyList());
+                        // keep children if FULL verbosity
+                        if (ConflictResolver.Verbosity.FULL == state.verbosity) {
+                            dnCopy.setChildren(new ArrayList<>(this.dn.getChildren()));
                         }
 
                         // swap it out in DN graph
