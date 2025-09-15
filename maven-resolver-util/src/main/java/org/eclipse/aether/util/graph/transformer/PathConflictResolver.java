@@ -27,12 +27,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 import static java.util.Objects.requireNonNull;
@@ -89,6 +92,23 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.11
  */
 public final class PathConflictResolver extends ConflictResolver {
+    /**
+     * This implementation of conflict resolver is able to show more precise information regarding cycles in standard
+     * verbose mode. But, to make it really drop-in-replacement, we "tame down" this information. Still, users needing it
+     * may want to enable this for easier cycle detection, but in that case this conflict resolver will provide "extra nodes"
+     * not present on "standard verbosity level" with "classic" conflict resolver, that may lead to IT issues down the
+     * stream. Hence, the default is to provide as much information as much verbose "classic" does.
+     *
+     * @since 2.0.12
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_SHOW_CYCLES_IN_STANDARD_VERBOSITY}
+     */
+    public static final String CONFIG_PROP_SHOW_CYCLES_IN_STANDARD_VERBOSITY = ConfigurationProperties.PREFIX_AETHER
+            + "conflictResolver." + ConflictResolver.PATH_CONFLICT_RESOLVER + ".showCyclesInStandardVerbosity";
+
+    public static final boolean DEFAULT_SHOW_CYCLES_IN_STANDARD_VERBOSITY = false;
+
     private final ConflictResolver.VersionSelector versionSelector;
     private final ConflictResolver.ScopeSelector scopeSelector;
     private final ConflictResolver.ScopeDeriver scopeDeriver;
@@ -146,6 +166,10 @@ public final class PathConflictResolver extends ConflictResolver {
 
         State state = new State(
                 ConflictResolver.getVerbosity(context.getSession()),
+                ConfigUtils.getBoolean(
+                        context.getSession(),
+                        DEFAULT_SHOW_CYCLES_IN_STANDARD_VERBOSITY,
+                        CONFIG_PROP_SHOW_CYCLES_IN_STANDARD_VERBOSITY),
                 versionSelector.getInstance(node, context),
                 scopeSelector.getInstance(node, context),
                 scopeDeriver.getInstance(node, context),
@@ -228,6 +252,12 @@ public final class PathConflictResolver extends ConflictResolver {
         private final ConflictResolver.Verbosity verbosity;
 
         /**
+         * Whether to show nodes entering cycles, for easier identification. If this is enabled, this implementation
+         * of conflict resolver will show more data than classic.
+         */
+        private final boolean showCyclesInStandardVerbosity;
+
+        /**
          * The {@link ConflictResolver.VersionSelector} to use.
          */
         private final ConflictResolver.VersionSelector versionSelector;
@@ -266,12 +296,14 @@ public final class PathConflictResolver extends ConflictResolver {
         @SuppressWarnings("checkstyle:ParameterNumber")
         private State(
                 ConflictResolver.Verbosity verbosity,
+                boolean showCyclesInStandardVerbosity,
                 ConflictResolver.VersionSelector versionSelector,
                 ConflictResolver.ScopeSelector scopeSelector,
                 ConflictResolver.ScopeDeriver scopeDeriver,
                 ConflictResolver.OptionalitySelector optionalitySelector,
                 Map<DependencyNode, String> conflictIds) {
             this.verbosity = verbosity;
+            this.showCyclesInStandardVerbosity = showCyclesInStandardVerbosity;
             this.versionSelector = versionSelector;
             this.scopeSelector = scopeSelector;
             this.scopeDeriver = scopeDeriver;
@@ -459,9 +491,16 @@ public final class PathConflictResolver extends ConflictResolver {
                         case STANDARD:
                             String artifactId = ArtifactIdUtils.toId(this.dn.getArtifact());
                             String winnerArtifactId = ArtifactIdUtils.toId(winner.dn.getArtifact());
-                            if (!Objects.equals(artifactId, winnerArtifactId)
-                                    && relatedSiblingsCount(this.dn.getArtifact(), this.parent) > 1) {
-                                // is redundant dn (version range); remove dn
+                            // is redundant if:
+                            // - is not same as winner, and has related siblings (version range)
+                            // - same instance of DN is direct dependency on path leading here
+                            boolean isRedundant = (!Objects.equals(artifactId, winnerArtifactId)
+                                    && relatedSiblingsCount(this.dn.getArtifact(), this.parent) > 1);
+                            if (!this.state.showCyclesInStandardVerbosity) {
+                                isRedundant = isRedundant || this.parent.isDirectDependencyOnPathToRoot(artifactId);
+                            }
+                            if (isRedundant) {
+                                // is redundant dn; remove dn
                                 this.parent.children.remove(this);
                                 this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
                                 this.parent.dn.getChildren().remove(this.dn);
@@ -471,7 +510,7 @@ public final class PathConflictResolver extends ConflictResolver {
                                 DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
                                 dnCopy.setChildren(Collections.emptyList());
 
-                                // swap it out in DN graph; in case of loops this may happen more than once, hence if
+                                // swap it out in DN graph; in case of cycles this may happen more than once
                                 int idx = this.parent.dn.getChildren().indexOf(this.dn);
                                 if (idx >= 0) {
                                     this.parent.dn.getChildren().set(idx, dnCopy);
@@ -487,7 +526,7 @@ public final class PathConflictResolver extends ConflictResolver {
                             DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
                             dnCopy.setChildren(new ArrayList<>(this.dn.getChildren()));
 
-                            // swap it out in DN graph; in case of loops this may happen more than once, hence if
+                            // swap it out in DN graph; in case of cycles this may happen more than once
                             int idx = this.parent.dn.getChildren().indexOf(this.dn);
                             if (idx >= 0) {
                                 this.parent.dn.getChildren().set(idx, dnCopy);
@@ -519,6 +558,26 @@ public final class PathConflictResolver extends ConflictResolver {
                 for (Path child : new ArrayList<>(children)) {
                     child.push(newLevels);
                 }
+            }
+        }
+
+        /**
+         * Returns {@code true} if given artifactId is direct dependency on the path leading from this toward root.
+         * For some reason "classic" conflict resolver removes these.
+         * <p>
+         * Note: this check and use of this method is ONLY present to make this conflict resolver produce SAME output
+         * as {@link ClassicConflictResolver} does, but IMHO this rule here is very arbitrary, moreover, in "standard"
+         * (where it is only used) verbosity it in facts HIDES the trace of possible cycles.
+         *
+         * @see #CONFIG_PROP_SHOW_CYCLES_IN_STANDARD_VERBOSITY
+         */
+        private boolean isDirectDependencyOnPathToRoot(String artifactId) {
+            if (this.depth == 1 && ArtifactIdUtils.toId(this.dn.getArtifact()).equals(artifactId)) {
+                return true;
+            } else if (this.parent != null) {
+                return parent.isDirectDependencyOnPathToRoot(artifactId);
+            } else {
+                return false;
             }
         }
 

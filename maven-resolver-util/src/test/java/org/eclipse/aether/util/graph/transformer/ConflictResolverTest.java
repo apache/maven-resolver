@@ -477,6 +477,8 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
 
             boolean cyclesLeftInPlace = verbosity == ConflictResolver.Verbosity.FULL;
             setVerbosity(verbosity);
+            session.setConfigProperty(
+                    PathConflictResolver.CONFIG_PROP_SHOW_CYCLES_IN_STANDARD_VERBOSITY, String.valueOf(true));
             DependencyNode transformed = transform(conflictResolver, root);
             System.out.println("CR=" + conflictResolver.getClass().getSimpleName() + "; verbosity=" + verbosity.name());
             if (!cyclesLeftInPlace) {
