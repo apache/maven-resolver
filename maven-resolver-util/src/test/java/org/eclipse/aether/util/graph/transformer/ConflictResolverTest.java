@@ -455,7 +455,7 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         // reproducer for MENFORCER-408:
         // - foo1 and foo2 are different instances of same dep (foo2 was managed into foo1 during collection)
         // - foo2 parent baz has more than one child
-        // - baz on being declared winner leaves foo2, and hence cycle as well
+        // - bug was: baz on being declared winner left foo2 in place (and hence cycle as well)
         // Layout:
         //  root -> foo1 -> bar
         //            \---> baz -> foo2
@@ -491,13 +491,25 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
             assertSame(baz, foo1.getChildren().get(1));
             assertEquals(0, bar.getChildren().size());
             if (conflictResolver.getClass().equals(PathConflictResolver.class)) {
-                if (cyclesLeftInPlace) {
-                    assertEquals(2, baz.getChildren().size());
-                    assertSame(foo2, baz.getChildren().get(0));
-                    assertSame(bam, baz.getChildren().get(1));
-                } else {
-                    assertEquals(1, baz.getChildren().size());
-                    assertSame(bam, baz.getChildren().get(0));
+                switch (verbosity) {
+                    case NONE:
+                        assertEquals(1, baz.getChildren().size());
+                        assertSame(bam, baz.getChildren().get(0));
+                        break;
+                    case STANDARD:
+                        assertEquals(2, baz.getChildren().size());
+                        assertConflictedButSameAsOriginal(
+                                foo2, baz.getChildren().get(0)); // was copied; not same
+                        assertEquals(0, baz.getChildren().get(0).getChildren().size()); // cycle removed
+                        assertSame(bam, baz.getChildren().get(1));
+                        break;
+                    case FULL:
+                        assertEquals(2, baz.getChildren().size());
+                        assertConflictedButSameAsOriginal(
+                                foo2, baz.getChildren().get(0)); // was copied; not same
+                        assertEquals(2, baz.getChildren().get(0).getChildren().size()); // cycle remains
+                        assertSame(bam, baz.getChildren().get(1));
+                        break;
                 }
             } else if (conflictResolver.getClass().equals(ClassicConflictResolver.class)) {
                 assertEquals(1, baz.getChildren().size());

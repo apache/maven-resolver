@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -145,28 +144,18 @@ public final class PathConflictResolver extends ConflictResolver {
             throw new RepositoryException("conflict groups have not been identified");
         }
 
-        Map<String, Collection<String>> cyclicPredecessors = new HashMap<>();
-        for (Collection<String> cycle : conflictIdCycles) {
-            for (String conflictId : cycle) {
-                Collection<String> predecessors = cyclicPredecessors.computeIfAbsent(conflictId, k -> new HashSet<>());
-                predecessors.addAll(cycle);
-            }
-        }
-
         State state = new State(
                 ConflictResolver.getVerbosity(context.getSession()),
                 versionSelector.getInstance(node, context),
                 scopeSelector.getInstance(node, context),
                 scopeDeriver.getInstance(node, context),
                 optionalitySelector.getInstance(node, context),
-                sortedConflictIds,
-                conflictIds,
-                cyclicPredecessors);
+                conflictIds);
 
         state.build(node);
 
         // loop over topographically sorted conflictIds
-        for (String conflictId : state.sortedConflictIds) {
+        for (String conflictId : sortedConflictIds) {
             // paths in given conflict group to consider
             List<Path> paths = state.partitions.get(conflictId);
             if (paths.isEmpty()) {
@@ -259,21 +248,9 @@ public final class PathConflictResolver extends ConflictResolver {
         private final ConflictResolver.OptionalitySelector optionalitySelector;
 
         /**
-         * Topologically sorted conflictIds from {@link ConflictIdSorter}.
-         */
-        private final List<String> sortedConflictIds;
-
-        /**
          * The node to conflictId mapping from {@link ConflictMarker}.
          */
         private final Map<DependencyNode, String> conflictIds;
-
-        /**
-         * The map of conflictIds which could apply to ancestors of nodes with the key conflict id, used to avoid
-         * recursion early on. This is basically a superset of the key set of resolvedIds, the additional ids account
-         * for cyclic dependencies. From {@link ConflictIdSorter}.
-         */
-        private final Map<String, Collection<String>> cyclicPredecessors;
 
         /**
          * A mapping from conflictId to paths represented as {@link Path}s that exist for each conflictId. In other
@@ -293,29 +270,25 @@ public final class PathConflictResolver extends ConflictResolver {
                 ConflictResolver.ScopeSelector scopeSelector,
                 ConflictResolver.ScopeDeriver scopeDeriver,
                 ConflictResolver.OptionalitySelector optionalitySelector,
-                List<String> sortedConflictIds,
-                Map<DependencyNode, String> conflictIds,
-                Map<String, Collection<String>> cyclicPredecessors) {
+                Map<DependencyNode, String> conflictIds) {
             this.verbosity = verbosity;
             this.versionSelector = versionSelector;
             this.scopeSelector = scopeSelector;
             this.scopeDeriver = scopeDeriver;
             this.optionalitySelector = optionalitySelector;
-            this.sortedConflictIds = sortedConflictIds;
             this.conflictIds = conflictIds;
-            this.cyclicPredecessors = cyclicPredecessors;
             this.partitions = new HashMap<>();
             this.resolvedIds = new HashMap<>();
         }
 
         /**
          * Consumes the dirty graph and builds internal structures out of {@link Path} instances that is always a
-         * tree.
+         * tree. As a side effect, {@link #partitions} are being filled up as well, that combined with topo
+         * sorted conflictIds can serve as a starting to point to walk the graph.
          */
-        private Path build(DependencyNode node) throws RepositoryException {
-            Path root = new Path(this, node, null);
+        private void build(DependencyNode node) throws RepositoryException {
+            Path root = new Path(this, node, null, false);
             gatherCRNodes(root);
-            return root;
         }
 
         /**
@@ -327,7 +300,9 @@ public final class PathConflictResolver extends ConflictResolver {
                 // add children; we will get back those really added (not causing cycles)
                 List<Path> added = node.addChildren(children);
                 for (Path child : added) {
-                    gatherCRNodes(child);
+                    if (!child.cycle) {
+                        gatherCRNodes(child);
+                    }
                 }
             }
         }
@@ -366,20 +341,20 @@ public final class PathConflictResolver extends ConflictResolver {
         private DependencyNode dn;
         private final String conflictId;
         private final Path parent;
+        private final boolean cycle;
         private final int depth;
         private final List<Path> children;
-        private final List<DependencyNode> cycles;
         private String scope;
         private boolean optional;
 
-        private Path(State state, DependencyNode dn, Path parent) {
+        private Path(State state, DependencyNode dn, Path parent, boolean cycle) {
             this.state = state;
             this.dn = dn;
             this.conflictId = state.conflictIds.get(dn);
             this.parent = parent;
+            this.cycle = cycle;
             this.depth = parent != null ? parent.depth + 1 : 0;
             this.children = new ArrayList<>();
-            this.cycles = new ArrayList<>();
             pull(0);
 
             this.state
@@ -475,7 +450,7 @@ public final class PathConflictResolver extends ConflictResolver {
                     boolean markLoser = false;
                     switch (state.verbosity) {
                         case NONE:
-                            // remove this dn
+                            // remove loser dn
                             this.parent.children.remove(this);
                             this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
                             this.parent.dn.getChildren().remove(this.dn);
@@ -486,47 +461,54 @@ public final class PathConflictResolver extends ConflictResolver {
                             String winnerArtifactId = ArtifactIdUtils.toId(winner.dn.getArtifact());
                             if (!Objects.equals(artifactId, winnerArtifactId)
                                     && relatedSiblingsCount(this.dn.getArtifact(), this.parent) > 1) {
-                                // is redundant dn (version range); remove this dn
+                                // is redundant dn (version range); remove dn
                                 this.parent.children.remove(this);
                                 this.parent.dn.setChildren(new ArrayList<>(this.parent.dn.getChildren()));
                                 this.parent.dn.getChildren().remove(this.dn);
                                 this.children.clear();
                             } else {
-                                // leave this dn; remove children
+                                // copy loser dn; without children
+                                DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
+                                dnCopy.setChildren(Collections.emptyList());
+
+                                // swap it out in DN graph; in case of loops this may happen more than once, hence if
+                                int idx = this.parent.dn.getChildren().indexOf(this.dn);
+                                if (idx >= 0) {
+                                    this.parent.dn.getChildren().set(idx, dnCopy);
+                                }
+                                this.dn = dnCopy;
+
                                 this.children.clear();
                                 markLoser = true;
                             }
                             break;
                         case FULL:
-                            // leave all in place (even cycles)
+                            // copy loser dn; with children
+                            DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
+                            dnCopy.setChildren(new ArrayList<>(this.dn.getChildren()));
+
+                            // swap it out in DN graph; in case of loops this may happen more than once, hence if
+                            int idx = this.parent.dn.getChildren().indexOf(this.dn);
+                            if (idx >= 0) {
+                                this.parent.dn.getChildren().set(idx, dnCopy);
+                            }
+                            this.dn = dnCopy;
+
                             markLoser = true;
                             break;
                         default:
                             throw new IllegalArgumentException("Unknown " + state.verbosity);
                     }
                     if (markLoser) {
-                        // copy dn (w/o children)
-                        DependencyNode dnCopy = new DefaultDependencyNode(this.dn);
-                        dnCopy.setData(ConflictResolver.NODE_DATA_WINNER, winner.dn);
-                        dnCopy.setData(
+                        this.dn.setData(ConflictResolver.NODE_DATA_WINNER, winner.dn);
+                        this.dn.setData(
                                 ConflictResolver.NODE_DATA_ORIGINAL_SCOPE,
                                 this.dn.getDependency().getScope());
-                        dnCopy.setData(
+                        this.dn.setData(
                                 ConflictResolver.NODE_DATA_ORIGINAL_OPTIONALITY,
                                 this.dn.getDependency().getOptional());
-                        dnCopy.setScope(this.scope);
-                        dnCopy.setOptional(this.optional);
-                        // keep children if FULL verbosity
-                        if (ConflictResolver.Verbosity.FULL == state.verbosity) {
-                            dnCopy.setChildren(new ArrayList<>(this.dn.getChildren()));
-                        }
-
-                        // swap it out in DN graph
-                        this.parent
-                                .dn
-                                .getChildren()
-                                .set(this.parent.dn.getChildren().indexOf(this.dn), dnCopy);
-                        this.dn = dnCopy;
+                        this.dn.setScope(this.scope);
+                        this.dn.setOptional(this.optional);
                     }
                 }
             }
@@ -537,11 +519,6 @@ public final class PathConflictResolver extends ConflictResolver {
                 for (Path child : new ArrayList<>(children)) {
                     child.push(newLevels);
                 }
-            }
-
-            // unless FULL, kill off cycles
-            if (this.state.verbosity != Verbosity.FULL) {
-                this.dn.getChildren().removeAll(this.cycles);
             }
         }
 
@@ -574,21 +551,15 @@ public final class PathConflictResolver extends ConflictResolver {
          * Method will return really added ones, as this class avoids cycles.
          */
         private List<Path> addChildren(List<DependencyNode> children) throws RepositoryException {
-            Collection<String> thisCyclicPredecessors =
-                    this.state.cyclicPredecessors.getOrDefault(this.conflictId, Collections.emptySet());
-
             ArrayList<Path> added = new ArrayList<>(children.size());
             for (DependencyNode child : children) {
                 String childConflictId = this.state.conflictIds.get(child);
-                if (!this.state.partitions.containsKey(childConflictId)
-                        || !thisCyclicPredecessors.contains(childConflictId)) {
-                    Path c = new Path(this.state, child, this);
-                    this.children.add(c);
-                    c.derive(0, false);
-                    added.add(c);
-                } else {
-                    this.cycles.add(child);
-                }
+                boolean cycle = this.state.partitions.getOrDefault(childConflictId, Collections.emptyList()).stream()
+                        .anyMatch(p -> p.dn.equals(child));
+                Path c = new Path(this.state, child, this, cycle);
+                this.children.add(c);
+                c.derive(0, false);
+                added.add(c);
             }
             return added;
         }
