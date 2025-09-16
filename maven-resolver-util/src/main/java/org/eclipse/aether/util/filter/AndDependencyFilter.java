@@ -41,7 +41,7 @@ public final class AndDependencyFilter implements DependencyFilter {
      * Creates a new filter from the specified filters. Prefer {@link #newInstance(DependencyFilter, DependencyFilter)}
      * if any of the input filters might be {@code null}.
      *
-     * @param filters The filters to combine, may be {@code null} but must not contain {@code null} elements.
+     * @param filters the filters to combine, may be {@code null} but must not contain {@code null} elements
      */
     public AndDependencyFilter(DependencyFilter... filters) {
         if (filters != null) {
@@ -52,7 +52,7 @@ public final class AndDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter from the specified filters.
      *
-     * @param filters The filters to combine, may be {@code null} but must not contain {@code null} elements.
+     * @param filters the filters to combine, may be {@code null} but must not contain {@code null} elements
      */
     public AndDependencyFilter(Collection<DependencyFilter> filters) {
         if (filters != null) {
@@ -63,9 +63,9 @@ public final class AndDependencyFilter implements DependencyFilter {
     /**
      * Creates a new filter from the specified filters.
      *
-     * @param filter1 The first filter to combine, may be {@code null}.
-     * @param filter2 The second filter to combine, may be {@code null}.
-     * @return The combined filter or {@code null} if both filter were {@code null}.
+     * @param filter1 the first filter to combine, may be {@code null}
+     * @param filter2 the second filter to combine, may be {@code null}
+     * @return the combined filter or {@code null} if both filter were {@code null}
      */
     public static DependencyFilter newInstance(DependencyFilter filter1, DependencyFilter filter2) {
         if (filter1 == null) {

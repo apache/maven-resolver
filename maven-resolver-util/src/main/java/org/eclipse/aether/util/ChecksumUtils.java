@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * A utility class to assist in the verification and generation of checksums.
  *
- * @deprecated The use of class should be avoided, see {@link StringDigestUtil} and file processor in SPI module.
+ * @deprecated the use of class should be avoided, see {@link StringDigestUtil} and file processor in SPI module
  */
 @Deprecated
 public final class ChecksumUtils {
@@ -47,10 +47,10 @@ public final class ChecksumUtils {
     /**
      * Extracts the checksum from the specified file.
      *
-     * @param checksumFile The path to the checksum file, must not be {@code null}.
-     * @return The checksum stored in the file, never {@code null}.
-     * @throws IOException If the checksum does not exist or could not be read for other reasons.
-     * @deprecated Use SPI FileProcessor to read and write checksum files.
+     * @param checksumFile the path to the checksum file, must not be {@code null}
+     * @return the checksum stored in the file, never {@code null}
+     * @throws IOException if the checksum does not exist or could not be read for other reasons
+     * @deprecated use SPI FileProcessor to read and write checksum files
      */
     @Deprecated
     public static String read(File checksumFile) throws IOException {
@@ -87,13 +87,13 @@ public final class ChecksumUtils {
     /**
      * Calculates checksums for the specified file.
      *
-     * @param dataFile The file for which to calculate checksums, must not be {@code null}.
-     * @param algos The names of checksum algorithms (cf. {@link MessageDigest#getInstance(String)} to use, must not be
+     * @param dataFile the file for which to calculate checksums, must not be {@code null}
+     * @param algos the names of checksum algorithms (cf. {@link MessageDigest#getInstance(String)} to use, must not be
      *            {@code null}.
-     * @return The calculated checksums, indexed by algorithm name, or the exception that occurred while trying to
-     *         calculate it, never {@code null}.
-     * @throws IOException If the data file could not be read.
-     * @deprecated Use SPI checksum selector instead.
+     * @return the calculated checksums, indexed by algorithm name, or the exception that occurred while trying to
+     *         calculate it, never {@code null}
+     * @throws IOException if the data file could not be read
+     * @deprecated use SPI checksum selector instead
      */
     @Deprecated
     public static Map<String, Object> calc(File dataFile, Collection<String> algos) throws IOException {
@@ -101,7 +101,7 @@ public final class ChecksumUtils {
     }
 
     /**
-     * @deprecated Use SPI checksum selector instead.
+     * @deprecated use SPI checksum selector instead
      */
     @Deprecated
     public static Map<String, Object> calc(byte[] dataBytes, Collection<String> algos) throws IOException {
@@ -145,8 +145,8 @@ public final class ChecksumUtils {
      * Creates a hexadecimal representation of the specified bytes. Each byte is converted into a two-digit hex number
      * and appended to the result with no separator between consecutive bytes.
      *
-     * @param bytes The bytes to represent in hex notation, may be be {@code null}.
-     * @return The hexadecimal representation of the input or {@code null} if the input was {@code null}.
+     * @param bytes the bytes to represent in hex notation, may be be {@code null}
+     * @return the hexadecimal representation of the input or {@code null} if the input was {@code null}
      */
     public static String toHexString(byte[] bytes) {
         return StringDigestUtil.toHexString(bytes);
@@ -156,8 +156,8 @@ public final class ChecksumUtils {
      * Creates a byte array out of hexadecimal representation of the specified bytes. If input string is {@code null},
      * {@code null} is returned. Input value must have even length (due hex encoding = 2 chars one byte).
      *
-     * @param hexString The hexString to convert to byte array, may be {@code null}.
-     * @return The byte array of the input or {@code null} if the input was {@code null}.
+     * @param hexString the hexString to convert to byte array, may be {@code null}
+     * @return the byte array of the input or {@code null} if the input was {@code null}
      * @since 1.8.0
      */
     public static byte[] fromHexString(String hexString) {

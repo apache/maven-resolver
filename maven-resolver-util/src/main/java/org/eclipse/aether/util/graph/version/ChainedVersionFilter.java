@@ -38,9 +38,9 @@ public class ChainedVersionFilter implements VersionFilter {
     /**
      * Chains the specified version filters.
      *
-     * @param filter1 The first version filter, may be {@code null}.
-     * @param filter2 The second version filter, may be {@code null}.
-     * @return The chained version filter or {@code null} if both input filters are {@code null}.
+     * @param filter1 the first version filter, may be {@code null}
+     * @param filter2 the second version filter, may be {@code null}
+     * @return the chained version filter or {@code null} if both input filters are {@code null}
      */
     public static VersionFilter newInstance(VersionFilter filter1, VersionFilter filter2) {
         if (filter1 == null) {
@@ -55,8 +55,8 @@ public class ChainedVersionFilter implements VersionFilter {
     /**
      * Chains the specified version filters.
      *
-     * @param filters The version filters to chain, must not be {@code null} or contain {@code null}.
-     * @return The chained version filter or {@code null} if the input array is empty.
+     * @param filters the version filters to chain, must not be {@code null} or contain {@code null}
+     * @return the chained version filter or {@code null} if the input array is empty
      */
     public static VersionFilter newInstance(VersionFilter... filters) {
         if (filters.length <= 1) {
@@ -71,8 +71,8 @@ public class ChainedVersionFilter implements VersionFilter {
     /**
      * Chains the specified version filters.
      *
-     * @param filters The version filters to chain, must not be {@code null} or contain {@code null}.
-     * @return The chained version filter or {@code null} if the input collection is empty.
+     * @param filters the version filters to chain, must not be {@code null} or contain {@code null}
+     * @return the chained version filter or {@code null} if the input collection is empty
      */
     public static VersionFilter newInstance(Collection<? extends VersionFilter> filters) {
         if (filters.size() <= 1) {

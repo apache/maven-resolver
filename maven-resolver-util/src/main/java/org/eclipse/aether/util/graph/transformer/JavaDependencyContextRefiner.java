@@ -33,8 +33,7 @@ import static java.util.Objects.requireNonNull;
  * assigned the request context "project/compile".
  *
  * @see DependencyNode#getRequestContext()
- *
- * @deprecated This class belongs to consumer project. Resolver should have no notion of scopes.
+ * @deprecated this class belongs to consumer project. Resolver should have no notion of scopes.
  */
 @Deprecated
 public final class JavaDependencyContextRefiner implements DependencyGraphTransformer {

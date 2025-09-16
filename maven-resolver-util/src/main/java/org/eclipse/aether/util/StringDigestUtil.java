@@ -84,8 +84,8 @@ public final class StringDigestUtil {
      * Creates a hexadecimal representation of the specified bytes. Each byte is converted into a two-digit hex number
      * and appended to the result with no separator between consecutive bytes.
      *
-     * @param bytes The bytes to represent in hex notation, may be {@code null}.
-     * @return The hexadecimal representation of the input or {@code null} if the input was {@code null}.
+     * @param bytes the bytes to represent in hex notation, may be {@code null}
+     * @return the hexadecimal representation of the input or {@code null} if the input was {@code null}
      * @since 2.0.0
      */
     public static String toHexString(byte[] bytes) {
@@ -110,8 +110,8 @@ public final class StringDigestUtil {
      * Creates a byte array out of hexadecimal representation of the specified bytes. If input string is {@code null},
      * {@code null} is returned. Input value must have even length (due hex encoding = 2 chars one byte).
      *
-     * @param hexString The hexString to convert to byte array, may be {@code null}.
-     * @return The byte array of the input or {@code null} if the input was {@code null}.
+     * @param hexString the hexString to convert to byte array, may be {@code null}
+     * @return the byte array of the input or {@code null} if the input was {@code null}
      * @since 2.0.0
      */
     public static byte[] fromHexString(String hexString) {

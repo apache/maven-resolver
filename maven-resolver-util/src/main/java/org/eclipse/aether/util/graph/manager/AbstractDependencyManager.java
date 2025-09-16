@@ -469,7 +469,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     /**
      * Wrapper class for collection to memoize hash code.
      *
-     * @param <T> The collection type.
+     * @param <T> the collection type
      */
     protected static class Holder<T> {
         private final T value;

@@ -38,7 +38,7 @@ public abstract class DelegatingArtifact extends AbstractArtifact {
     /**
      * Creates a new artifact instance that delegates to the specified artifact.
      *
-     * @param delegate The artifact to delegate to, must not be {@code null}.
+     * @param delegate the artifact to delegate to, must not be {@code null}
      */
     protected DelegatingArtifact(Artifact delegate) {
         this.delegate = requireNonNull(delegate, "delegate artifact cannot be null");
@@ -48,8 +48,8 @@ public abstract class DelegatingArtifact extends AbstractArtifact {
      * Creates a new artifact instance that delegates to the specified artifact. Subclasses should use this hook to
      * instantiate themselves, taking along any data from the current instance that was added.
      *
-     * @param delegate The artifact to delegate to, must not be {@code null}.
-     * @return The new delegating artifact, never {@code null}.
+     * @param delegate the artifact to delegate to, must not be {@code null}
+     * @return the new delegating artifact, never {@code null}
      */
     protected abstract DelegatingArtifact newInstance(Artifact delegate);
 

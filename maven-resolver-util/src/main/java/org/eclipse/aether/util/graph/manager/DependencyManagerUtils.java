@@ -82,10 +82,9 @@ public final class DependencyManagerUtils {
      * Gets the version or version range of the specified dependency node before dependency management was applied (if
      * any).
      *
-     * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
-     *
-     * @return The node's dependency version before dependency management or {@code null} if the version was not managed
-     *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * @param node the dependency node to retrieve the premanaged data for, must not be {@code null}
+     * @return the node's dependency version before dependency management or {@code null} if the version was not managed
+     *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled
      */
     public static String getPremanagedVersion(DependencyNode node) {
         if ((node.getManagedBits() & DependencyNode.MANAGED_VERSION) == 0) {
@@ -97,10 +96,9 @@ public final class DependencyManagerUtils {
     /**
      * Gets the scope of the specified dependency node before dependency management was applied (if any).
      *
-     * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
-     *
-     * @return The node's dependency scope before dependency management or {@code null} if the scope was not managed or
-     *         if {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * @param node the dependency node to retrieve the premanaged data for, must not be {@code null}
+     * @return the node's dependency scope before dependency management or {@code null} if the scope was not managed or
+     *         if {@link #CONFIG_PROP_VERBOSE} was not enabled
      */
     public static String getPremanagedScope(DependencyNode node) {
         if ((node.getManagedBits() & DependencyNode.MANAGED_SCOPE) == 0) {
@@ -112,10 +110,9 @@ public final class DependencyManagerUtils {
     /**
      * Gets the optional flag of the specified dependency node before dependency management was applied (if any).
      *
-     * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
-     *
-     * @return The node's optional flag before dependency management or {@code null} if the flag was not managed or if
-     *         {@link #CONFIG_PROP_VERBOSE} was not enabled.
+     * @param node the dependency node to retrieve the premanaged data for, must not be {@code null}
+     * @return the node's optional flag before dependency management or {@code null} if the flag was not managed or if
+     *         {@link #CONFIG_PROP_VERBOSE} was not enabled
      */
     public static Boolean getPremanagedOptional(DependencyNode node) {
         if ((node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) == 0) {
@@ -127,11 +124,9 @@ public final class DependencyManagerUtils {
     /**
      * Gets the {@code Exclusion}s of the specified dependency node before dependency management was applied (if any).
      *
-     * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
-     *
-     * @return The nodes' {@code Exclusion}s before dependency management or {@code null} if exclusions were not managed
-     *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled.
-     *
+     * @param node the dependency node to retrieve the premanaged data for, must not be {@code null}
+     * @return the nodes' {@code Exclusion}s before dependency management or {@code null} if exclusions were not managed
+     *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled
      * @since 1.1.0
      */
     @SuppressWarnings("unchecked")
@@ -145,11 +140,9 @@ public final class DependencyManagerUtils {
     /**
      * Gets the properties of the specified dependency node before dependency management was applied (if any).
      *
-     * @param node The dependency node to retrieve the premanaged data for, must not be {@code null}.
-     *
-     * @return The nodes' properties before dependency management or {@code null} if properties were not managed or if
-     *         {@link #CONFIG_PROP_VERBOSE} was not enabled.
-     *
+     * @param node the dependency node to retrieve the premanaged data for, must not be {@code null}
+     * @return the nodes' properties before dependency management or {@code null} if properties were not managed or if
+     *         {@link #CONFIG_PROP_VERBOSE} was not enabled
      * @since 1.1.0
      */
     @SuppressWarnings("unchecked")

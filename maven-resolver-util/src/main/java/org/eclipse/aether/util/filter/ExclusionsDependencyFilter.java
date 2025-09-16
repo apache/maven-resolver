@@ -40,7 +40,7 @@ public final class ExclusionsDependencyFilter implements DependencyFilter {
      * Creates a new filter using the specified exclude patterns. A pattern can either be of the form
      * {@code groupId:artifactId} (recommended) or just {@code artifactId} (deprecated).
      *
-     * @param excludes The exclude patterns, may be {@code null} or empty to exclude no artifacts.
+     * @param excludes the exclude patterns, may be {@code null} or empty to exclude no artifacts
      */
     public ExclusionsDependencyFilter(Collection<String> excludes) {
         if (excludes != null) {

@@ -53,7 +53,7 @@ public final class ExclusionDependencySelector implements DependencySelector {
     /**
      * Creates a new selector with the specified exclusions.
      *
-     * @param exclusions The exclusions, may be {@code null}.
+     * @param exclusions the exclusions, may be {@code null}
      */
     public ExclusionDependencySelector(Collection<Exclusion> exclusions) {
         if (exclusions != null && !exclusions.isEmpty()) {

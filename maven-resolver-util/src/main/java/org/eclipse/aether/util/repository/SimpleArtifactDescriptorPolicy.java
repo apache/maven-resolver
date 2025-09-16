@@ -34,8 +34,8 @@ public final class SimpleArtifactDescriptorPolicy implements ArtifactDescriptorP
     /**
      * Creates a new error policy with the specified behavior.
      *
-     * @param ignoreMissing {@code true} to ignore missing descriptors, {@code false} to fail resolution.
-     * @param ignoreInvalid {@code true} to ignore invalid descriptors, {@code false} to fail resolution.
+     * @param ignoreMissing {@code true} to ignore missing descriptors, {@code false} to fail resolution
+     * @param ignoreInvalid {@code true} to ignore invalid descriptors, {@code false} to fail resolution
      */
     public SimpleArtifactDescriptorPolicy(boolean ignoreMissing, boolean ignoreInvalid) {
         this((ignoreMissing ? IGNORE_MISSING : 0) | (ignoreInvalid ? IGNORE_INVALID : 0));
@@ -44,7 +44,7 @@ public final class SimpleArtifactDescriptorPolicy implements ArtifactDescriptorP
     /**
      * Creates a new error policy with the specified bit mask.
      *
-     * @param policy The bit mask describing the policy.
+     * @param policy the bit mask describing the policy
      */
     public SimpleArtifactDescriptorPolicy(int policy) {
         this.policy = policy;

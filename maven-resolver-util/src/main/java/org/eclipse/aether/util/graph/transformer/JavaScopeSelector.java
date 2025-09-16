@@ -33,7 +33,7 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver.ScopeSelector;
  * this selector picks the widest scope present among conflicting dependencies where e.g. "compile" is wider than
  * "runtime" which is wider than "test". If however a direct dependency is involved, its scope is selected.
  *
- * @deprecated This class belongs to consumer project. Resolver should have no notion of scopes.
+ * @deprecated this class belongs to consumer project. Resolver should have no notion of scopes.
  */
 @Deprecated
 public final class JavaScopeSelector extends ScopeSelector {
