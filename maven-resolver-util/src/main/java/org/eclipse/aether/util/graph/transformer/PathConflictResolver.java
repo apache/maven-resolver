@@ -497,7 +497,8 @@ public final class PathConflictResolver extends ConflictResolver {
                             boolean isRedundant = (!Objects.equals(artifactId, winnerArtifactId)
                                     && relatedSiblingsCount(this.dn.getArtifact(), this.parent) > 1);
                             if (!this.state.showCyclesInStandardVerbosity) {
-                                isRedundant = isRedundant || this.parent.isDirectDependencyOnPathToRoot(artifactId);
+                                isRedundant = isRedundant
+                                        || this.parent.isDirectDependencyOnPathToRoot(this.dn.getArtifact());
                             }
                             if (isRedundant) {
                                 // is redundant dn; remove dn
@@ -571,11 +572,13 @@ public final class PathConflictResolver extends ConflictResolver {
          *
          * @see #CONFIG_PROP_SHOW_CYCLES_IN_STANDARD_VERBOSITY
          */
-        private boolean isDirectDependencyOnPathToRoot(String artifactId) {
-            if (this.depth == 1 && ArtifactIdUtils.toId(this.dn.getArtifact()).equals(artifactId)) {
+        private boolean isDirectDependencyOnPathToRoot(Artifact artifact) {
+            if (this.depth == 1
+                    && ArtifactIdUtils.toVersionlessId(this.dn.getArtifact())
+                            .equals(ArtifactIdUtils.toVersionlessId(artifact))) {
                 return true;
             } else if (this.parent != null) {
-                return parent.isDirectDependencyOnPathToRoot(artifactId);
+                return parent.isDirectDependencyOnPathToRoot(artifact);
             } else {
                 return false;
             }
