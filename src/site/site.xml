@@ -43,6 +43,7 @@ under the License.
       <item name="Creating a RepositorySystemSession" href="creating-a-repository-system-session.html"/>
       <item name="Resolving Dependencies" href="resolving-dependencies.html"/>
       <item name="Common Misconceptions" href="common-misconceptions.html"/>
+      <item name="Artifact Deployment" href="deployment.html"/>
     </menu>
     <menu name="Reference">
       <item name="Configuration" href="configuration.html"/>
