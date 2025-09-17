@@ -263,20 +263,22 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 managedVersions.put(key, version);
             }
 
-            String scope = managedDependency.getScope();
-            if (!scope.isEmpty() && !containsManagedScope(key)) {
-                if (managedScopes == null) {
-                    managedScopes = MMap.emptyNotDone();
+            if (isInheritedDerived()) {
+                String scope = managedDependency.getScope();
+                if (!scope.isEmpty() && !containsManagedScope(key)) {
+                    if (managedScopes == null) {
+                        managedScopes = MMap.emptyNotDone();
+                    }
+                    managedScopes.put(key, scope);
                 }
-                managedScopes.put(key, scope);
-            }
 
-            Boolean optional = managedDependency.getOptional();
-            if (optional != null && !containsManagedOptional(key)) {
-                if (managedOptionals == null) {
-                    managedOptionals = MMap.emptyNotDone();
+                Boolean optional = managedDependency.getOptional();
+                if (optional != null && !containsManagedOptional(key)) {
+                    if (managedOptionals == null) {
+                        managedOptionals = MMap.emptyNotDone();
+                    }
+                    managedOptionals.put(key, optional);
                 }
-                managedOptionals.put(key, optional);
             }
 
             String localPath = systemDependencyScope == null
@@ -399,6 +401,16 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      */
     protected boolean isDerived() {
         return depth < deriveUntil;
+    }
+
+    /**
+     * Returns {@code true} if current context should be factored in (collected/derived) for inherited properties.
+     * The inherited properties are "scope" and "optional", as they are vertically inherited from parent nodes,
+     * UNLESS user have management entries for them, which are mandatory to apply.
+     * Note: level 0 is root node. Basically the POM in case of Maven.
+     */
+    protected boolean isInheritedDerived() {
+        return depth < 1;
     }
 
     /**
