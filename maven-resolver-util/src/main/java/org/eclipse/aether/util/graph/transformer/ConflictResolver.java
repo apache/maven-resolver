@@ -151,26 +151,31 @@ public class ConflictResolver implements DependencyGraphTransformer {
      */
     public enum Verbosity {
         /**
-         * Verbosity level to be used in all "common" resolving use cases (ie. dependencies to build class path). The
+         * Verbosity level to be used in all "common" resolving use cases (ie dependencies to build class path). The
          * {@link ConflictResolver} in this mode will trim down the graph to the barest minimum: will not leave
          * any conflicting node in place, hence no conflicts will be present in transformed graph either.
          */
         NONE,
 
         /**
-         * Verbosity level to be used in "analyze" resolving use cases (ie. dependency convergence calculations). The
-         * {@link ConflictResolver} in this mode will remove any redundant collected nodes, in turn it will leave one
-         * with recorded conflicting information. This mode corresponds to "classic verbose" mode when
+         * Verbosity level to be used in "analyze" resolving use cases (ie dependency convergence calculations). The
+         * {@link ConflictResolver} in this mode will remove any redundant collected nodes and cycles, in turn it will
+         * leave one with recorded conflicting information. This mode corresponds to "classic verbose" mode when
          * {@link #CONFIG_PROP_VERBOSE} was set to {@code true}. Obviously, the resulting dependency tree is not
          * suitable for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
          */
         STANDARD,
 
         /**
-         * Verbosity level to be used in "analyze" resolving use cases (ie. dependency convergence calculations). The
-         * {@link ConflictResolver} in this mode will not remove any collected node, in turn it will record on all
-         * eliminated nodes the conflicting information. Obviously, the resulting dependency tree is not suitable
-         * for artifact resolution unless a filter is employed to exclude the duplicate dependencies.
+         * Verbosity level to be used in "analyze" resolving use cases (ie dependency convergence calculations). The
+         * {@link ConflictResolver} in this mode will not remove any collected node nor cycle, in turn it will record
+         * on all eliminated nodes the conflicting information. Obviously, the resulting dependency tree is not suitable
+         * for artifact resolution unless a filter is employed to exclude the duplicate dependencies and possible cycles.
+         * Because of left in cycles, user of this verbosity level should ensure that graph post-processing does not
+         * contain elements that would explode on them. In other words, session should be modified with proper
+         * graph transformers.
+         *
+         * @see RepositorySystemSession#getDependencyGraphTransformer()
          */
         FULL
     }

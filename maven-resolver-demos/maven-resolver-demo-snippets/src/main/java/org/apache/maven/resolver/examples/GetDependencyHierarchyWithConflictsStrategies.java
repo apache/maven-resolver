@@ -54,16 +54,36 @@ public class GetDependencyHierarchyWithConflictsStrategies {
         System.out.println("------------------------------------------------------------");
         System.out.println(GetDependencyHierarchyWithConflictsStrategies.class.getSimpleName());
 
-        runItWithStrategy(args, ConfigurableVersionSelector.NEAREST_SELECTION_STRATEGY);
-        runItWithStrategy(args, ConfigurableVersionSelector.HIGHEST_SELECTION_STRATEGY);
+        CollectRequest collectRequest;
+
+        // okttp cleanly shows difference between nearest/closest
+        collectRequest = new CollectRequest();
+        collectRequest.setRootArtifact(new DefaultArtifact("demo:demo:1.0"));
+        collectRequest.setDependencies(
+                List.of(new Dependency(new DefaultArtifact("com.squareup.okhttp3:okhttp:jar:4.12.0"), "compile")));
+        runItWithStrategy(args, ConfigurableVersionSelector.NEAREST_SELECTION_STRATEGY, collectRequest);
+        runItWithStrategy(args, ConfigurableVersionSelector.HIGHEST_SELECTION_STRATEGY, collectRequest);
+
+        // MENFORCER-408 inspired
+        collectRequest = new CollectRequest();
+        collectRequest.setRootArtifact(new DefaultArtifact("demo:demo:1.0"));
+        collectRequest.setDependencies(List.of(
+                new Dependency(new DefaultArtifact("org.seleniumhq.selenium:selenium-java:jar:3.0.1"), "test")));
+        collectRequest.setManagedDependencies(List.of(
+                new Dependency(new DefaultArtifact("org.seleniumhq.selenium:selenium-java:jar:3.0.1"), "test"),
+                new Dependency(new DefaultArtifact("org.seleniumhq.selenium:selenium-remote-driver:jar:3.0.1"), "test"),
+                new Dependency(new DefaultArtifact("com.codeborne:phantomjsdriver:jar:1.3.0"), "test")));
+        runItWithStrategy(args, ConfigurableVersionSelector.NEAREST_SELECTION_STRATEGY, collectRequest);
+        runItWithStrategy(args, ConfigurableVersionSelector.HIGHEST_SELECTION_STRATEGY, collectRequest);
     }
 
-    private static void runItWithStrategy(String[] args, String selectionStrategy) throws Exception {
+    private static void runItWithStrategy(String[] args, String selectionStrategy, CollectRequest collectRequest)
+            throws Exception {
         System.out.println();
         System.out.println(selectionStrategy);
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
             SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
-            sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, ConflictResolver.Verbosity.FULL);
+            sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, ConflictResolver.Verbosity.STANDARD);
             sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
             sessionBuilder.setConfigProperty(
                     ConfigurableVersionSelector.CONFIG_PROP_SELECTION_STRATEGY, selectionStrategy);
@@ -81,10 +101,6 @@ public class GetDependencyHierarchyWithConflictsStrategies {
                     .setTransferListener(null)
                     .build()) {
 
-                CollectRequest collectRequest = new CollectRequest();
-                collectRequest.setRootArtifact(new DefaultArtifact("demo:demo:1.0"));
-                collectRequest.setDependencies(List.of(
-                        new Dependency(new DefaultArtifact("com.squareup.okhttp3:okhttp:jar:4.12.0"), "compile")));
                 collectRequest.setRepositories(Booter.newRepositories(system, session));
 
                 CollectResult result = system.collectDependencies(session, collectRequest);

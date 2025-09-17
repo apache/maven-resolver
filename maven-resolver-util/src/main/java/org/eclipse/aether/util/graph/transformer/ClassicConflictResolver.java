@@ -806,16 +806,6 @@ public final class ClassicConflictResolver extends ConflictResolver {
         // bit field of OPTIONAL_FALSE and OPTIONAL_TRUE
         int optionalities;
 
-        /**
-         * Bit flag indicating whether one or more paths consider the dependency non-optional.
-         */
-        public static final int OPTIONAL_FALSE = 0x01;
-
-        /**
-         * Bit flag indicating whether one or more paths consider the dependency optional.
-         */
-        public static final int OPTIONAL_TRUE = 0x02;
-
         private ConflictItem(DependencyNode parent, DependencyNode node, String scope, boolean optional) {
             if (parent != null) {
                 this.parent = parent.getChildren();

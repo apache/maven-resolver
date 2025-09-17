@@ -449,6 +449,79 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertSame(jazNode, barNode.getChildren().get(0));
     }
 
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void winnerCycleRemoved(ConflictResolver conflictResolver) throws RepositoryException {
+        // reproducer for MENFORCER-408:
+        // - foo1 and foo2 are different instances of same dep (foo2 was managed into foo1 during collection)
+        // - foo2 parent baz has more than one child
+        // - bug was: baz on being declared winner left foo2 in place (and hence cycle as well)
+        // Layout:
+        //  root -> foo1 -> bar
+        //            \---> baz -> foo2
+        //                   \---> bam
+
+        // another issue: "classic" CR does NOT leave all cycles in place when verbosity is FULL
+        // the "path" CR does obey FULL verbosity
+        for (ConflictResolver.Verbosity verbosity : ConflictResolver.Verbosity.values()) {
+            DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+            DependencyNode foo1 = makeDependencyNode("some-group", "foo", "1.0");
+            DependencyNode foo2 = makeDependencyNode("some-group", "foo", "1.0");
+            DependencyNode bar = makeDependencyNode("some-group", "bar", "1.0");
+            DependencyNode baz = makeDependencyNode("some-group", "baz", "1.0");
+            DependencyNode bam = makeDependencyNode("some-group", "bam", "1.0");
+            root.setChildren(mutableList(foo1));
+            foo1.setChildren(mutableList(bar, baz));
+            baz.setChildren(mutableList(foo2, bam));
+            foo2.setChildren(foo1.getChildren());
+
+            boolean cyclesLeftInPlace = verbosity == ConflictResolver.Verbosity.FULL;
+            setVerbosity(verbosity);
+            session.setConfigProperty(
+                    PathConflictResolver.CONFIG_PROP_SHOW_CYCLES_IN_STANDARD_VERBOSITY, String.valueOf(true));
+            DependencyNode transformed = transform(conflictResolver, root);
+            System.out.println("CR=" + conflictResolver.getClass().getSimpleName() + "; verbosity=" + verbosity.name());
+            if (!cyclesLeftInPlace) {
+                transformed.accept(DUMPER_SOUT);
+            }
+
+            assertSame(transformed, root);
+            assertEquals(1, transformed.getChildren().size());
+            assertSame(foo1, transformed.getChildren().get(0));
+            assertEquals(2, foo1.getChildren().size());
+            assertSame(bar, foo1.getChildren().get(0));
+            assertSame(baz, foo1.getChildren().get(1));
+            assertEquals(0, bar.getChildren().size());
+            if (conflictResolver.getClass().equals(PathConflictResolver.class)) {
+                switch (verbosity) {
+                    case NONE:
+                        assertEquals(1, baz.getChildren().size());
+                        assertSame(bam, baz.getChildren().get(0));
+                        break;
+                    case STANDARD:
+                        assertEquals(2, baz.getChildren().size());
+                        assertConflictedButSameAsOriginal(
+                                foo2, baz.getChildren().get(0)); // was copied; not same
+                        assertEquals(0, baz.getChildren().get(0).getChildren().size()); // cycle removed
+                        assertSame(bam, baz.getChildren().get(1));
+                        break;
+                    case FULL:
+                        assertEquals(2, baz.getChildren().size());
+                        assertConflictedButSameAsOriginal(
+                                foo2, baz.getChildren().get(0)); // was copied; not same
+                        assertEquals(2, baz.getChildren().get(0).getChildren().size()); // cycle remains
+                        assertSame(bam, baz.getChildren().get(1));
+                        break;
+                }
+            } else if (conflictResolver.getClass().equals(ClassicConflictResolver.class)) {
+                assertEquals(1, baz.getChildren().size());
+                assertSame(bam, baz.getChildren().get(0));
+            } else {
+                fail("Unknown conflict resolver");
+            }
+        }
+    }
+
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
         return makeDependencyNode(groupId, artifactId, version, "compile");
     }
