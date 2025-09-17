@@ -29,6 +29,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.MetadataResolver;
@@ -221,34 +222,39 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     private PrefixTree loadPrefixTree(
             RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
         if (isRepositoryFilteringEnabled(session, remoteRepository)) {
+            String origin = "user-provided";
             Path filePath = resolvePrefixesFromLocalConfiguration(session, baseDir, remoteRepository);
             if (filePath == null) {
+                origin = "auto-discovered";
                 filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
             }
             if (filePath != null) {
                 PrefixesSource prefixesSource = PrefixesSource.of(remoteRepository, filePath);
                 if (prefixesSource.valid()) {
                     logger.debug(
-                            "Loaded prefixes for remote repository {} from file '{}'",
+                            "Loaded prefixes for remote repository {} from {} file '{}'",
                             prefixesSource.origin().getId(),
+                            origin,
                             prefixesSource.path());
                     PrefixTree prefixTree = new PrefixTree("");
                     int rules = prefixTree.loadNodes(prefixesSource.entries().stream());
                     logger.info(
-                            "Loaded {} prefixes for remote repository {} ({})",
+                            "Loaded {} {} prefixes for remote repository {} ({})",
                             rules,
+                            origin,
                             prefixesSource.origin().getId(),
                             prefixesSource.path().getFileName());
                     return prefixTree;
                 } else {
                     logger.info(
-                            "Rejected prefixes for remote repository {} ({}): {}",
+                            "Rejected {} prefixes for remote repository {} ({}): {}",
+                            origin,
                             prefixesSource.origin().getId(),
                             prefixesSource.path().getFileName(),
                             prefixesSource.message());
                 }
             }
-            logger.debug("Prefix file for remote repository {} not found at '{}'", remoteRepository, filePath);
+            logger.debug("Prefix file for remote repository {} not available", remoteRepository);
             return PrefixTree.SENTINEL;
         }
         logger.debug("Prefix file for remote repository {} disabled", remoteRepository);
@@ -284,12 +290,13 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             Supplier<Path> supplier = () -> {
                 MetadataRequest request =
                         new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
-                // use unique repository; this will result in prefix (repository metadata) cached under unique
-                // id
+                // use unique repository; this will result in prefix (repository metadata) cached under unique id
                 request.setRepository(unique);
                 request.setDeleteLocalCopyIfMissing(true);
                 request.setFavorLocalRepository(true);
-                MetadataResult result = mr.resolveMetadata(session, Collections.singleton(request))
+                MetadataResult result = mr.resolveMetadata(
+                                new DefaultRepositorySystemSession(session).setTransferListener(null),
+                                Collections.singleton(request))
                         .get(0);
                 if (result.isResolved()) {
                     return result.getMetadata().getPath();
