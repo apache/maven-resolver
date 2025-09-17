@@ -405,7 +405,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     /**
      * Returns {@code true} if current context should be factored in (collected/derived) for inherited properties.
-     * The inherited properties are "scope" and "optional", as they are vertically inherited from parent nodes.
+     * The inherited properties are "scope" and "optional", as they are vertically inherited from parent nodes,
+     * UNLESS user have management entries for them, which are mandatory to apply.
      * <p>
      * Defaults to {@link #isDerived()}.
      */
