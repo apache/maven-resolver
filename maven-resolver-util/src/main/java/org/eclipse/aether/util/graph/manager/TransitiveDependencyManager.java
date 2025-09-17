@@ -75,6 +75,20 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 systemDependencyScope);
     }
 
+    /**
+     * Returns {@code true} if current context should be factored in (collected/derived) for inherited properties.
+     * The inherited properties are "scope" and "optional", as they are vertically inherited from parent nodes,
+     * UNLESS user have management entries for them, which are mandatory to apply.
+     * Note: level 0 is root node. Basically the POM in case of Maven.
+     * <p>
+     * Given this implementation is transitive (derives manager always), the two inherited properties needs special
+     * care: do not derive them.
+     */
+    @Override
+    protected boolean isInheritedDerived() {
+        return depth < 1;
+    }
+
     @Override
     protected DependencyManager newInstance(
             MMap<Key, String> managedVersions,
