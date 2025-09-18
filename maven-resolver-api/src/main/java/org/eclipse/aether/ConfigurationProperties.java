@@ -524,7 +524,7 @@ public final class ConfigurationProperties {
      * @since 2.0.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_SYSTEM_DEPENDENCY_VISITOR}
      * @configurationRepoIdSuffix No
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR = PREFIX_SYSTEM + "dependencyVisitor";
@@ -550,6 +550,14 @@ public final class ConfigurationProperties {
      * @since 2.0.0
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER = "levelOrder";
+
+    /**
+     * The default visitor strategy.
+     *
+     * @since 2.0.12
+     */
+    public static final String DEFAULT_REPOSITORY_SYSTEM_DEPENDENCY_VISITOR =
+            REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER;
 
     /**
      * A flag indicating whether version scheme cache statistics should be printed on JVM shutdown.

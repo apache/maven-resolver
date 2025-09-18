@@ -340,7 +340,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
             RepositorySystemSession session, Consumer<DependencyNode> nodeConsumer) {
         String strategy = ConfigUtils.getString(
                 session,
-                ConfigurationProperties.REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER,
+                ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_DEPENDENCY_VISITOR,
                 ConfigurationProperties.REPOSITORY_SYSTEM_DEPENDENCY_VISITOR);
         switch (strategy) {
             case PreorderDependencyNodeConsumerVisitor.NAME:
