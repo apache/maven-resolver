@@ -132,7 +132,7 @@ public final class FileUtils {
                     if (IS_WINDOWS) {
                         copy(tempFile, file);
                     } else {
-                        Files.move(tempFile, file, StandardCopyOption.REPLACE_EXISTING);
+                        Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
                     }
                 }
                 Files.deleteIfExists(tempFile);
