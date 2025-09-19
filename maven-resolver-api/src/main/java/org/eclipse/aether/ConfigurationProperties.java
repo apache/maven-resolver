@@ -515,7 +515,7 @@ public final class ConfigurationProperties {
     public static final String HTTPS_SECURITY_MODE_INSECURE = "insecure";
 
     /**
-     * A flag indicating which visitor should be used to "flatten" the dependency graph into list. In Resolver 2
+     * A flag indicating which visitor should be used to "flatten" the dependency graph into list. In Maven 4
      * the default is new "levelOrder", while Maven 3 used "preOrder". This property accepts values
      * "preOrder", "postOrder" and "levelOrder".
      *
