@@ -20,6 +20,7 @@ package org.eclipse.aether.util.graph.visitor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -68,7 +69,10 @@ public final class LevelOrderDependencyNodeConsumerVisitor extends AbstractDepen
         boolean visited = !setVisited(node);
         visits.push(visited);
         if (!visited) {
-            nodesPerLevel.computeIfAbsent(visits.size(), k -> new ArrayList<>()).add(node);
+            List<DependencyNode> nodesOnLevel = nodesPerLevel.computeIfAbsent(visits.size(), k -> new ArrayList<>());
+            if (acceptNode(node)) {
+                nodesOnLevel.add(node);
+            }
         }
         return !visited;
     }
@@ -81,7 +85,7 @@ public final class LevelOrderDependencyNodeConsumerVisitor extends AbstractDepen
         }
         if (visits.isEmpty()) {
             for (int l = 1; nodesPerLevel.containsKey(l); l++) {
-                nodesPerLevel.get(l).forEach(this::mayConsume);
+                nodesPerLevel.get(l).forEach(this::consumeNode);
             }
         }
         return true;

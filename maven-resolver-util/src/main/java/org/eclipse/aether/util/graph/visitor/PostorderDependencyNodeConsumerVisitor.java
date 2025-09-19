@@ -71,7 +71,9 @@ public final class PostorderDependencyNodeConsumerVisitor extends AbstractDepend
         if (visited) {
             return true;
         }
-        mayConsume(node);
+        if (acceptNode(node)) {
+            consumeNode(node);
+        }
         return true;
     }
 }

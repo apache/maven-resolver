@@ -60,7 +60,9 @@ public final class PreorderDependencyNodeConsumerVisitor extends AbstractDepende
         if (!setVisited(node)) {
             return false;
         }
-        mayConsume(node);
+        if (acceptNode(node)) {
+            consumeNode(node);
+        }
         return true;
     }
 
