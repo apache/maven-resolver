@@ -37,14 +37,24 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public final class FileUtils {
-    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we "atomic move" or not
+    /**
+     * Logic borrowed from Commons-Lang3: we really need only this, to decide do we NIO2 file ops or not.
+     * For some reason non-NIO2 works better on Windows.
+     */
     private static final boolean IS_WINDOWS =
             System.getProperty("os.name", "unknown").startsWith("Windows");
+
+    /**
+     * Escape hatch if atomic move is not desired on system we run on.
+     *
+     * @since 2.0.12
+     */
+    private static final boolean ATOMIC_MOVE =
+            Boolean.parseBoolean(System.getProperty(FileUtils.class.getName() + "ATOMIC_MOVE", "true"));
 
     private FileUtils() {
         // hide constructor
     }
-
     /**
      * A temporary file, that is removed when closed.
      */
@@ -115,6 +125,8 @@ public final class FileUtils {
                 + Long.toUnsignedString(ThreadLocalRandom.current().nextLong()) + ".tmp");
         return new CollocatedTempFile() {
             private final AtomicBoolean wantsMove = new AtomicBoolean(false);
+            private final StandardCopyOption copyOption =
+                    FileUtils.ATOMIC_MOVE ? StandardCopyOption.ATOMIC_MOVE : StandardCopyOption.REPLACE_EXISTING;
 
             @Override
             public Path getPath() {
@@ -132,7 +144,7 @@ public final class FileUtils {
                     if (IS_WINDOWS) {
                         copy(tempFile, file);
                     } else {
-                        Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
+                        Files.move(tempFile, file, copyOption);
                     }
                 }
                 Files.deleteIfExists(tempFile);
