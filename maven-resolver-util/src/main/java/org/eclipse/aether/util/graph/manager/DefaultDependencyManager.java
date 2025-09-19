@@ -33,7 +33,11 @@ import org.eclipse.aether.scope.SystemDependencyScope;
  * implementation applies management also on the first level. This is considered the resolver's default behaviour.
  * It ignores all management overrides supported by the {@code MavenModelBuilder}.
  * <p>
- * This manager has {@code deriveUntil=Integer.MAX_VALUE} and {@code applyFrom=0}.
+ * This manager has {@code deriveUntil=Integer.MAX_VALUE} and {@code applyFrom=0}, essentially always derives
+ * and always applies.
+ * <p>
+ * Use of this dependency manager is not recommended in Maven or Maven-like use cases, as it interferes with model
+ * builder, rewriting the models that model builder already produced in correct way.
  *
  * @author Christian Schulte
  * @since 1.4.0

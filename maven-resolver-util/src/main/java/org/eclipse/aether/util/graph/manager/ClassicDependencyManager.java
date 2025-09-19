@@ -28,37 +28,34 @@ import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.scope.SystemDependencyScope;
 
 /**
- * A dependency manager that mimics the way Maven 2.x works. This manager was used throughout all Maven 3.x versions.
+ * A dependency manager that mimics the way Maven 2.x works. This manager was used throughout all Maven 3.x versions as
+ * well for backward compatibility reasons. The biggest difference between this manager and others is that this
+ * ignores exclusions introduced by direct dependencies. To see differences in action, check out
+ * {@code MavenITmng4720DependencyManagementExclusionMergeTest} IT class.
  * <p>
- * This manager has {@code deriveUntil=2} and {@code applyFrom=2}.
- * <p>
- * Note regarding transitivity: it is broken, and should not be used.
+ * This manager has {@code deriveUntil=2} and {@code applyFrom=2} with "hop" on {@code depth=1} (ignores context from that level).
+ * This manager obeys only root management and nothing else, and applies them from {@code depth=2} and below.
  */
 public final class ClassicDependencyManager extends AbstractDependencyManager {
     /**
      * Creates a new dependency manager without any management information.
      *
-     * @deprecated use constructor that provides consumer application specific predicate
+     * @deprecated use constructor that provides consumer application specific scope manager
      */
     @Deprecated
     public ClassicDependencyManager() {
         this(null);
     }
 
-    public ClassicDependencyManager(ScopeManager scopeManager) {
-        this(false, scopeManager);
-    }
-
     /**
      * Creates a new dependency manager without any management information.
      *
-     * @param transitive if true, this manager will collect (derive) until last node on graph. If false,
-     *                   it will work as original Maven 3 "classic" dependency manager, collect only up to
-     *                   depth of 2.
-     * @since 2.0.0
+     * @param scopeManager application specific scope manager
+     *
+     * @since 2.0.12
      */
-    public ClassicDependencyManager(boolean transitive, ScopeManager scopeManager) {
-        super(transitive ? Integer.MAX_VALUE : 2, 2, scopeManager);
+    public ClassicDependencyManager(ScopeManager scopeManager) {
+        super(2, 2, scopeManager);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -91,6 +88,7 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
         // MNG-4720: Maven2 backward compatibility
         // Removing this IF makes one IT fail here (read comment above):
         // https://github.com/apache/maven-integration-testing/blob/b4e8fd52b99a058336f9c7c5ec44fdbc1427759c/core-it-suite/src/test/java/org/apache/maven/it/MavenITmng4720DependencyManagementExclusionMergeTest.java#L67
+        // Skipping level=1 (maven2 compatibility); see MavenITmng4720DependencyManagementExclusionMergeTest
         if (depth == 1) {
             return newInstance(managedVersions, managedScopes, managedOptionals, managedLocalPaths, managedExclusions);
         }

@@ -93,7 +93,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     }
 
     protected DependencyManager getDependencyManager() {
-        return new ClassicDependencyManager(false, scopeManager);
+        return new ClassicDependencyManager(scopeManager);
     }
 
     protected DependencySelector getDependencySelector() {

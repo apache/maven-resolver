@@ -29,8 +29,11 @@ import org.eclipse.aether.scope.SystemDependencyScope;
 /**
  * A dependency manager managing transitive dependencies supporting transitive dependency management.
  * <p>
- * This manager is similar to "classic", it has {@code deriveUntil=Integer.MAX_VALUE} (unlike 2 as in "classic") and
- * {@code applyFrom=2}.
+ * This manager applies proper "transitive dependency management", and produces more precise results regarding
+ * versions (as it obeys transitive management unless managed higher).
+ * <p>
+ * This manager derives always and applies from {@code depth=2} with special care for two "scope" and "optional" that are
+ * having applied inheritance in dependency graph in later step, during graph transformation.
  *
  * @author Christian Schulte
  * @since 1.4.0
@@ -75,17 +78,6 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 systemDependencyScope);
     }
 
-    /**
-     * Given this implementation is transitive (derives manager always), the two inherited properties needs special
-     * care: do not derive them transitively, obey only root.
-     * <p>
-     * Note: level 0 is root, basically the POM in case of Maven.
-     */
-    @Override
-    protected boolean isInheritedDerived() {
-        return depth < 1;
-    }
-
     @Override
     protected DependencyManager newInstance(
             MMap<Key, String> managedVersions,
@@ -106,5 +98,20 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 managedLocalPaths,
                 managedExclusions,
                 systemDependencyScope);
+    }
+
+    /**
+     * The "scope" and "optional" are special: because in dependency graph these two properties are subject to inheritance
+     * (which is out of scope for model builder), the "scope" and "optional" is derived only from the root.
+     * <p>
+     * Hence, collection of "scope" and "optional" stops on root (the "scope" has special case for "system" scope)
+     * as if we would manage these from management sources below root (that would mean we would mark nodes "managed"
+     * in dependency graph), we would prevent proper application of inheritance later on graph transformation, as
+     * "managed" flag means "do not touch it, it is as it should be", making those nodes end up in wrong "scopes" or
+     * "optional" states.
+     */
+    @Override
+    protected boolean isInheritedDerived() {
+        return depth == 0;
     }
 }

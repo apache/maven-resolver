@@ -56,11 +56,28 @@ import static java.util.Objects.requireNonNull;
  * reason explained above.
  * <p>
  * Implementation note for all managers extending this class: this class maintains "path" (list of parent managers)
- * and "depth". Depth {@code 0} is basically used as "factory" on session; is the instance created during session
- * creation and is usually empty (just parameterized). Depth 1 is the current collection "root", depth 2
- * are direct dependencies, depth 3 first level of transitive dependencies of direct dependencies and so on. Hence, on
- * depth 1 (the collection root, initialized with management possibly as well) parent will be always the empty "factory"
- * instance, and we need special handling: "apply onto itself". This does not stand on depth > 1.
+ * and "depth". Depth {@code 0} is used as "empty factory" on session; is the instance created during session
+ * creation and is just parameterized. Collection begins with "derive" operation using root context, ending with new
+ * manager instance having depth 1 and root management information. Using this instance first level dependencies are
+ * processed, then again, each first level dependency "derives" instance with own context, to process their own second
+ * level dependencies and so on.
+ * <p>
+ * Depth 1 is special for "version", "scope" and "optional" properties, as at that level we do "apply onto itself"
+ * to ensure root defined rules are being applied to first level siblings (which, if are managed by model builder will
+ * be same, hence work will be no-op). Below depth 1 this does not stand, as "apply onto itself" is not in effect anymore
+ * but only "apply below" is used.
+ * <p>
+ * The rules are keyed by dependency management entry coordinates ({@code GACE}, see {@link Key}) and are recorded only, if
+ * previously a rule for same key did not exist yet. This implements the "nearer (to root) management wins" rule,
+ * while root management overrides all.
+ * <p>
+ * Worth mentioning, that if a {@link org.eclipse.aether.graph.DependencyNode} becomes "managed" by any property
+ * provided from this manager, the {@link org.eclipse.aether.graph.DependencyNode#getManagedBits()} will
+ * carry this information for given property, and later on, graph transformation will abstain modifying these properties
+ * of marked nodes in any way (assuming the node "is having already set property to what it should have"). Sometimes,
+ * this is unwanted, especially for properties that in graph needs to be inherited (value is derived from parent-child
+ * context of actual node, like "scope" or "optional" is).
+ *
  *
  * @since 2.0.0
  */
@@ -404,11 +421,21 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     /**
-     * Returns {@code true} if current context should be factored in (collected/derived) for inherited properties.
-     * The inherited properties are "scope" and "optional", as they are vertically inherited from parent nodes,
-     * UNLESS user have management entries for them, which are mandatory to apply.
+     * Manager manages properties as "version", "scope" (with special care to "system" scope), "optional", "local path"
+     * (which are properties applied to node having "system" scope to align all paths to same artifact) and "exclusions".
      * <p>
-     * Defaults to {@link #isDerived()}.
+     * Out of these, "version" is following {@link #isDerived()} and managed with care to not interfere with model
+     * builder (management is applied only from higher level). The "local path" is managed only if "scope"
+     * was or is managed to "system", while "exclusions" are collected through whole path (from root to current level) and
+     * accumulated (additive).
+     * <p>
+     * The "scope" and "optional" are special: because in dependency graph these two properties are subject to inheritance
+     * (which is out of scope for model builder), the "scope" and "optional" is derived only from the root. The actual
+     * manager should decide how to handle them.
+     * <p>
+     * Defaults to {@link #isDerived()}, as this is same how "classic" worked (due {@code deriveUntil=2}).
+     * For any kind of transitivity management, it is recommended to override this method, or, make sure that
+     * inherited properties that are/were managed are handled in some alternative way on graph transformation.
      */
     protected boolean isInheritedDerived() {
         return isDerived();
