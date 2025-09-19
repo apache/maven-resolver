@@ -36,57 +36,116 @@ import org.eclipse.aether.scope.SystemDependencyScope;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A dependency manager support class.
+ * A dependency manager support class for Maven-specific dependency graph management.
+ *
+ * <h2>Overview</h2>
  * <p>
- * This implementation is Maven specific, as it works hand-in-hand along with Maven ModelBuilder. While model builder
- * handles dependency management in the context of single POM (inheritance, imports, etc.), this implementation carries
- * in-lineage modifications based on previously recorded dependency management rules sourced from ascendants while
- * building the dependency graph. Root sourced management rules are special, in a way they are always applied, while
- * en-route collected ones are carefully applied to proper descendants only, to not override work done by model
- * builder already.
+ * This implementation works in conjunction with Maven ModelBuilder to handle dependency
+ * management across the dependency graph. While ModelBuilder manages dependencies within
+ * a single POM context (inheritance, imports), this class applies lineage-based modifications
+ * based on previously recorded dependency management rules sourced from ancestors while
+ * building the dependency graph. Root-sourced management rules are special, in that they are
+ * always applied, while rules collected during traversal are carefully applied to proper
+ * descendants only, to not override work done by ModelBuilder already.
+ * </p>
+ *
+ * <h2>Managed Properties</h2>
+ * <ul>
+ * <li><strong>Version & Scope:</strong> Handled by ModelBuilder for own dependency management
+ *     (think "effective POM"). This implementation ensures these are not applied to the same
+ *     node that provided the rules, to not override ModelBuilder's work.</li>
+ * <li><strong>Optional:</strong> Not handled by ModelBuilder; managed here.</li>
+ * <li><strong>System Paths:</strong> Aligned across the entire graph, ensuring the same
+ *     system path is used by the same dependency.</li>
+ * <li><strong>Exclusions:</strong> Always applied as additional information (not effective
+ *     or applied in the same POM).</li>
+ * </ul>
+ *
+ * <h2>Depth-Based Rule Application</h2>
  * <p>
- * Details: Model builder handles version, scope from own dependency management (think "effective POM"). On the other
- * hand it does not handle optional for example. System paths are aligned across whole graph, making sure there is
- * same system path used by same dependency. Finally, exclusions (exclusions are additional information not effective
- * or applied in same POM) are always applied. This implementation makes sure, that version and scope are not applied
- * onto same node that actually provided the rules, to no override work that ModelBuilder did. It achieves this goal
- * by tracking "depth" for each collected rule and ignoring rules coming from same depth as processed dependency node is.
+ * This implementation achieves proper rule application by tracking "depth" for each collected
+ * rule and ignoring rules coming from the same depth as the processed dependency node.
+ * </p>
+ * <ul>
+ * <li><strong>Depth 0:</strong> Factory instance created during session initialization and
+ *     parameterized. Collection begins with "derive" operation using root context.</li>
+ * <li><strong>Depth 1:</strong> Special case for "version", "scope" and "optional" properties.
+ *     At this level, "apply onto itself" ensures root-defined rules are applied to first-level
+ *     siblings (which, if managed by ModelBuilder, will be the same, making this a no-op).</li>
+ * <li><strong>Depth > 1:</strong> "Apply onto itself" is not in effect; only "apply below" is used.</li>
+ * </ul>
+ *
+ * <h2>Rule Precedence</h2>
  * <p>
- * Note for future: the field {@code managedLocalPaths} is <em>intentionally left out of hash/equals</em>, with
- * reason explained above.
+ * Rules are keyed by dependency management entry coordinates (GACE: Group, Artifact, Classifier,
+ * Extension - see {@link Key}) and are recorded only if a rule for the same key did not exist
+ * previously. This implements the "nearer (to root) management wins" rule, while root management
+ * overrides all.
+ * </p>
+ *
+ * <h2>Managed Bits and Graph Transformations</h2>
  * <p>
- * Implementation note for all managers extending this class: this class maintains "path" (list of parent managers)
- * and "depth". Depth {@code 0} is basically used as "factory" on session; is the instance created during session
- * creation and is usually empty (just parameterized). Depth 1 is the current collection "root", depth 2
- * are direct dependencies, depth 3 first level of transitive dependencies of direct dependencies and so on. Hence, on
- * depth 1 (the collection root, initialized with management possibly as well) parent will be always the empty "factory"
- * instance, and we need special handling: "apply onto itself". This does not stand on depth > 1.
+ * When a {@link org.eclipse.aether.graph.DependencyNode} becomes "managed" by any property
+ * provided from this manager, {@link org.eclipse.aether.graph.DependencyNode#getManagedBits()}
+ * will carry this information for the given property. Later graph transformations will abstain
+ * from modifying these properties of marked nodes (assuming the node already has the property
+ * set to what it should have). Sometimes this is unwanted, especially for properties that need
+ * to be inherited in the graph (values derived from parent-child context of the actual node,
+ * like "scope" or "optional").
+ * </p>
+ *
+ * <h2>Implementation Notes</h2>
+ * <ul>
+ * <li>This class maintains a "path" (list of parent managers) and "depth".</li>
+ * <li>The field {@code managedLocalPaths} is <em>intentionally left out of hash/equals</em>.</li>
+ * <li>Each dependency "derives" an instance with its own context to process second-level
+ *     dependencies and so on.</li>
+ * </ul>
  *
  * @since 2.0.0
  */
 public abstract class AbstractDependencyManager implements DependencyManager {
+    /** The path of parent managers from root to current level. */
     protected final ArrayList<AbstractDependencyManager> path;
 
+    /** The current depth in the dependency graph (0 = factory, 1 = root, 2+ = descendants). */
     protected final int depth;
 
+    /** Maximum depth for rule derivation (exclusive). */
     protected final int deriveUntil;
 
+    /** Minimum depth for rule application (inclusive). */
     protected final int applyFrom;
 
+    /** Managed version rules keyed by dependency coordinates. */
     protected final MMap<Key, String> managedVersions;
 
+    /** Managed scope rules keyed by dependency coordinates. */
     protected final MMap<Key, String> managedScopes;
 
+    /** Managed optional flags keyed by dependency coordinates. */
     protected final MMap<Key, Boolean> managedOptionals;
 
+    /** Managed local paths for system dependencies (intentionally excluded from equals/hashCode). */
     protected final MMap<Key, String> managedLocalPaths;
 
+    /** Managed exclusions keyed by dependency coordinates. */
     protected final MMap<Key, Holder<Collection<Exclusion>>> managedExclusions;
 
+    /** System dependency scope handler, may be null if no system scope is defined. */
     protected final SystemDependencyScope systemDependencyScope;
 
+    /** Pre-computed hash code (excludes managedLocalPaths). */
     private final int hashCode;
 
+    /**
+     * Creates a new dependency manager with the specified derivation and application parameters.
+     *
+     * @param deriveUntil the maximum depth for rule derivation (exclusive), must be >= 0
+     * @param applyFrom the minimum depth for rule application (inclusive), must be >= 0
+     * @param scopeManager the scope manager for handling system dependencies, may be null
+     * @throws IllegalArgumentException if deriveUntil or applyFrom are negative
+     */
     protected AbstractDependencyManager(int deriveUntil, int applyFrom, ScopeManager scopeManager) {
         this(
                 new ArrayList<>(),
@@ -210,6 +269,13 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedLocalPaths != null && managedLocalPaths.containsKey(key);
     }
 
+    /**
+     * Gets the managed local path for system dependencies.
+     * Note: Local paths don't follow the depth=1 special rule like versions/scopes.
+     *
+     * @param key the dependency key
+     * @return the managed local path, or null if not managed
+     */
     private String getManagedLocalPath(Key key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
@@ -223,7 +289,12 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     /**
-     * Merges all way down.
+     * Merges exclusions from all levels in the dependency path.
+     * Unlike other managed properties, exclusions are accumulated additively
+     * from root to current level throughout the entire dependency path.
+     *
+     * @param key the dependency key
+     * @return merged collection of exclusions, or null if none exist
      */
     private Collection<Exclusion> getManagedExclusions(Key key) {
         ArrayList<Exclusion> result = new ArrayList<>();
@@ -263,20 +334,22 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 managedVersions.put(key, version);
             }
 
-            String scope = managedDependency.getScope();
-            if (!scope.isEmpty() && !containsManagedScope(key)) {
-                if (managedScopes == null) {
-                    managedScopes = MMap.emptyNotDone();
+            if (isInheritedDerived()) {
+                String scope = managedDependency.getScope();
+                if (!scope.isEmpty() && !containsManagedScope(key)) {
+                    if (managedScopes == null) {
+                        managedScopes = MMap.emptyNotDone();
+                    }
+                    managedScopes.put(key, scope);
                 }
-                managedScopes.put(key, scope);
-            }
 
-            Boolean optional = managedDependency.getOptional();
-            if (optional != null && !containsManagedOptional(key)) {
-                if (managedOptionals == null) {
-                    managedOptionals = MMap.emptyNotDone();
+                Boolean optional = managedDependency.getOptional();
+                if (optional != null && !containsManagedOptional(key)) {
+                    if (managedOptionals == null) {
+                        managedOptionals = MMap.emptyNotDone();
+                    }
+                    managedOptionals.put(key, optional);
                 }
-                managedOptionals.put(key, optional);
             }
 
             String localPath = systemDependencyScope == null
@@ -402,6 +475,34 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     /**
+     * Manages dependency properties including "version", "scope", "optional", "local path", and "exclusions".
+     * <p>
+     * Property management behavior:
+     * <ul>
+     * <li><strong>Version:</strong> Follows {@link #isDerived()} pattern. Management is applied only at higher
+     *     levels to avoid interference with the model builder.</li>
+     * <li><strong>Scope:</strong> Derived from root only due to inheritance in dependency graphs. Special handling
+     *     for "system" scope to align artifact paths.</li>
+     * <li><strong>Optional:</strong> Derived from root only due to inheritance in dependency graphs.</li>
+     * <li><strong>Local path:</strong> Managed only when scope is or was set to "system" to ensure consistent
+     *     artifact path alignment.</li>
+     * <li><strong>Exclusions:</strong> Accumulated additively from root to current level throughout the entire
+     *     dependency path.</li>
+     * </ul>
+     * <p>
+     * <strong>Inheritance handling:</strong> Since "scope" and "optional" properties inherit through dependency
+     * graphs (beyond model builder scope), they are derived only from the root node. The actual manager
+     * implementation determines specific handling behavior.
+     * <p>
+     * <strong>Default behavior:</strong> Defaults to {@link #isDerived()} to maintain compatibility with
+     * "classic" behavior (equivalent to {@code deriveUntil=2}). For custom transitivity management, override
+     * this method or ensure inherited managed properties are handled during graph transformation.
+     */
+    protected boolean isInheritedDerived() {
+        return isDerived();
+    }
+
+    /**
      * Returns {@code true} if current dependency should be managed according to so far collected/derived rules.
      */
     protected boolean isApplied() {
@@ -431,10 +532,19 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return hashCode;
     }
 
+    /**
+     * Key class for dependency management rules based on GACE coordinates.
+     * GACE = Group, Artifact, Classifier, Extension (excludes version for management purposes).
+     */
     protected static class Key {
         private final Artifact artifact;
         private final int hashCode;
 
+        /**
+         * Creates a new key from the given artifact's GACE coordinates.
+         *
+         * @param artifact the artifact to create a key for
+         */
         Key(Artifact artifact) {
             this.artifact = artifact;
             this.hashCode = Objects.hash(

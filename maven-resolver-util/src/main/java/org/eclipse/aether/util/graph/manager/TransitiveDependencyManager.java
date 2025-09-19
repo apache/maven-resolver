@@ -27,25 +27,74 @@ import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.scope.SystemDependencyScope;
 
 /**
- * A dependency manager managing transitive dependencies supporting transitive dependency management.
+ * A dependency manager that provides proper transitive dependency management for modern Maven usage.
+ *
+ * <h2>Overview</h2>
  * <p>
- * This manager is similar to "classic", it has {@code deriveUntil=Integer.MAX_VALUE} (unlike 2 as in "classic") and
- * {@code applyFrom=2}.
+ * This manager implements proper "transitive dependency management" that works harmoniously
+ * with Maven's ModelBuilder. It produces more precise results regarding versions by respecting
+ * transitive management rules while allowing higher-level management to override lower-level rules.
+ * </p>
+ *
+ * <h2>Key Characteristics</h2>
+ * <ul>
+ * <li><strong>Transitive Management:</strong> {@code deriveUntil=Integer.MAX_VALUE}, {@code applyFrom=2}</li>
+ * <li><strong>ModelBuilder Friendly:</strong> Works in conjunction with, not against, ModelBuilder</li>
+ * <li><strong>Inheritance Aware:</strong> Special handling for scope and optional properties</li>
+ * <li><strong>Precise Versioning:</strong> Obeys transitive management unless managed at higher levels</li>
+ * </ul>
+ *
+ * <h2>Inheritance Handling</h2>
+ * <p>
+ * This manager provides special care for "scope" and "optional" properties that are subject
+ * to inheritance in the dependency graph during later graph transformation steps. These
+ * properties are only derived from the root to prevent interference with inheritance logic.
+ * </p>
+ *
+ * <h2>When to Use</h2>
+ * <p>
+ * This is the <strong>recommended manager for modern Maven projects</strong> that need proper
+ * transitive dependency management while maintaining compatibility with Maven's ModelBuilder.
+ * </p>
+ *
+ * <h2>Comparison with Other Managers</h2>
+ * <ul>
+ * <li>{@link ClassicDependencyManager}: Maven 2.x compatibility, limited transitive support</li>
+ * <li>{@link DefaultDependencyManager}: Aggressive but interferes with ModelBuilder</li>
+ * <li><strong>This manager:</strong> Modern, transitive, ModelBuilder-compatible (recommended)</li>
+ * </ul>
  *
  * @author Christian Schulte
  * @since 1.4.0
+ * @see ClassicDependencyManager
+ * @see DefaultDependencyManager
  */
 public final class TransitiveDependencyManager extends AbstractDependencyManager {
     /**
      * Creates a new dependency manager without any management information.
      *
-     * @deprecated use constructor that provides consumer application specific predicate
+     * @deprecated Use {@link #TransitiveDependencyManager(ScopeManager)} instead to provide
+     *             application-specific scope management. This constructor uses legacy system
+     *             dependency scope handling.
      */
     @Deprecated
     public TransitiveDependencyManager() {
         this(null);
     }
 
+    /**
+     * Creates a new transitive dependency manager with ModelBuilder-compatible behavior.
+     * <p>
+     * This constructor initializes the manager with settings optimized for modern Maven usage:
+     * <ul>
+     * <li>deriveUntil = Integer.MAX_VALUE (collect management rules at all levels)</li>
+     * <li>applyFrom = 2 (apply management starting from depth 2, respecting ModelBuilder)</li>
+     * <li>Special inheritance handling for scope and optional properties</li>
+     * </ul>
+     *
+     * @param scopeManager application-specific scope manager for handling system dependencies,
+     *                     may be null to use legacy system dependency scope handling
+     */
     public TransitiveDependencyManager(ScopeManager scopeManager) {
         super(Integer.MAX_VALUE, 2, scopeManager);
     }
@@ -95,5 +144,31 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 managedLocalPaths,
                 managedExclusions,
                 systemDependencyScope);
+    }
+
+    /**
+     * Controls inheritance-based property derivation for scope and optional properties.
+     * <p>
+     * <strong>Why scope and optional are special:</strong> In dependency graphs, these two properties
+     * are subject to inheritance during graph transformation (which is outside ModelBuilder's scope).
+     * Therefore, scope and optional are derived only from the root to prevent interference with
+     * inheritance logic.
+     * </p>
+     * <p>
+     * <strong>The inheritance problem:</strong> If we managed scope/optional from sources below the root,
+     * we would mark nodes as "managed" in the dependency graph. The "managed" flag means "do not touch it,
+     * it is as it should be", which would prevent proper inheritance application during later graph
+     * transformation, causing nodes to end up with incorrect scope or optional states.
+     * </p>
+     * <p>
+     * <strong>Special case:</strong> The "system" scope has special handling due to its unique path requirements.
+     * </p>
+     *
+     * @return true only at depth 0 (root level) to ensure inheritance-based properties are only
+     *         derived from the root, false otherwise
+     */
+    @Override
+    protected boolean isInheritedDerived() {
+        return depth == 0;
     }
 }

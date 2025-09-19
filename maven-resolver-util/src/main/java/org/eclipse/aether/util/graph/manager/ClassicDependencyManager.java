@@ -28,37 +28,68 @@ import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.scope.SystemDependencyScope;
 
 /**
- * A dependency manager that mimics the way Maven 2.x works. This manager was used throughout all Maven 3.x versions.
+ * A dependency manager that mimics the way Maven 2.x works for backward compatibility.
+ *
+ * <h2>Overview</h2>
  * <p>
- * This manager has {@code deriveUntil=2} and {@code applyFrom=2}.
+ * This manager was used throughout all Maven 3.x versions for backward compatibility reasons.
+ * It provides the exact same dependency management behavior as Maven 2.x, which differs
+ * significantly from modern dependency management approaches.
+ * </p>
+ *
+ * <h2>Key Characteristics</h2>
+ * <ul>
+ * <li><strong>Exclusion Handling:</strong> Ignores exclusions introduced by direct dependencies</li>
+ * <li><strong>Management Scope:</strong> Only obeys root management, ignoring intermediate management</li>
+ * <li><strong>Depth Behavior:</strong> {@code deriveUntil=2}, {@code applyFrom=2} with special "hop" at {@code depth=1}</li>
+ * <li><strong>Level 1 Skip:</strong> Ignores context from depth=1 for Maven 2.x compatibility</li>
+ * </ul>
+ *
+ * <h2>When to Use</h2>
  * <p>
- * Note regarding transitivity: it is broken, and should not be used.
+ * Use this manager when you need exact Maven 2.x compatibility behavior or when working
+ * with legacy projects that depend on Maven 2.x dependency resolution semantics.
+ * </p>
+ *
+ * <h2>Comparison with Other Managers</h2>
+ * <p>
+ * Unlike {@link TransitiveDependencyManager} and {@link DefaultDependencyManager}, this manager
+ * deliberately ignores certain dependency management rules to maintain backward compatibility.
+ * See {@code MavenITmng4720DependencyManagementExclusionMergeTest} for behavioral differences.
+ * </p>
+ *
+ * @see TransitiveDependencyManager
+ * @see DefaultDependencyManager
  */
 public final class ClassicDependencyManager extends AbstractDependencyManager {
     /**
      * Creates a new dependency manager without any management information.
      *
-     * @deprecated use constructor that provides consumer application specific predicate
+     * @deprecated Use {@link #ClassicDependencyManager(ScopeManager)} instead to provide
+     *             application-specific scope management. This constructor uses legacy system
+     *             dependency scope handling which may not be appropriate for all use cases.
      */
     @Deprecated
     public ClassicDependencyManager() {
         this(null);
     }
 
-    public ClassicDependencyManager(ScopeManager scopeManager) {
-        this(false, scopeManager);
-    }
-
     /**
      * Creates a new dependency manager without any management information.
+     * <p>
+     * This constructor initializes the manager with Maven 2.x compatible behavior:
+     * <ul>
+     * <li>deriveUntil = 2 (collect rules only from root level)</li>
+     * <li>applyFrom = 2 (apply rules starting from depth 2)</li>
+     * <li>Special depth=1 handling for backward compatibility</li>
+     * </ul>
      *
-     * @param transitive if true, this manager will collect (derive) until last node on graph. If false,
-     *                   it will work as original Maven 3 "classic" dependency manager, collect only up to
-     *                   depth of 2.
-     * @since 2.0.0
+     * @param scopeManager application-specific scope manager for handling system dependencies,
+     *                     may be null to use legacy system dependency scope handling
+     * @since 2.0.12
      */
-    public ClassicDependencyManager(boolean transitive, ScopeManager scopeManager) {
-        super(transitive ? Integer.MAX_VALUE : 2, 2, scopeManager);
+    public ClassicDependencyManager(ScopeManager scopeManager) {
+        super(2, 2, scopeManager);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -86,11 +117,29 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
                 systemDependencyScope);
     }
 
+    /**
+     * Derives a child manager with Maven 2.x compatibility behavior.
+     * <p>
+     * <strong>Critical Maven 2.x Compatibility:</strong> This method implements a special
+     * "hop" at depth=1 that skips dependency management collection at that level. This
+     * behavior is essential for Maven 2.x compatibility and is verified by integration tests.
+     * </p>
+     * <p>
+     * <strong>Why the depth=1 skip is necessary:</strong> Maven 2.x did not collect dependency
+     * management from first-level dependencies, only from the root. Removing this skip would
+     * break backward compatibility with Maven 2.x projects.
+     * </p>
+     *
+     * @param context the dependency collection context
+     * @return a new child manager or the current instance with passed-through management
+     * @see <a href="https://github.com/apache/maven-integration-testing/blob/master/core-it-suite/src/test/java/org/apache/maven/it/MavenITmng4720DependencyManagementExclusionMergeTest.java">MNG-4720 Integration Test</a>
+     */
     @Override
     public DependencyManager deriveChildManager(DependencyCollectionContext context) {
         // MNG-4720: Maven2 backward compatibility
         // Removing this IF makes one IT fail here (read comment above):
         // https://github.com/apache/maven-integration-testing/blob/b4e8fd52b99a058336f9c7c5ec44fdbc1427759c/core-it-suite/src/test/java/org/apache/maven/it/MavenITmng4720DependencyManagementExclusionMergeTest.java#L67
+        // Skipping level=1 (maven2 compatibility); see MavenITmng4720DependencyManagementExclusionMergeTest
         if (depth == 1) {
             return newInstance(managedVersions, managedScopes, managedOptionals, managedLocalPaths, managedExclusions);
         }

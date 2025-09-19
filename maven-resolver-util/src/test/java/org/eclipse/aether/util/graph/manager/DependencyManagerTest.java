@@ -131,66 +131,6 @@ public class DependencyManagerTest {
     }
 
     @Test
-    void testClassicTransitive() {
-        DependencyManager manager = new ClassicDependencyManager(true, null);
-        DependencyManagement mngt;
-
-        // depth=1: only exclusion applied, nothing more
-        manager = manager.deriveChildManager(newContext(
-                new Dependency(A2, null, null),
-                new Dependency(B, null, true),
-                new Dependency(C1, "newscope", null),
-                new Dependency(D1, null, null, Collections.singleton(EXCLUSION))));
-        mngt = manager.manageDependency(new Dependency(A1, null));
-        assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(B1, null));
-        assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(C1, null));
-        assertNull(mngt);
-        mngt = manager.manageDependency(new Dependency(D1, null));
-        assertNotNull(mngt);
-        assertEquals(mngt.getExclusions(), Collections.singleton(EXCLUSION));
-        mngt = manager.manageDependency(new Dependency(E1, null));
-        assertNull(mngt);
-
-        // depth=2: all applied (new ones ignored)
-        manager = manager.deriveChildManager(newContext(new Dependency(B2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
-        assertNotNull(mngt);
-        assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
-        assertNotNull(mngt);
-        assertEquals(Boolean.TRUE, mngt.getOptional());
-        assertNull(mngt.getVersion());
-        mngt = manager.manageDependency(new Dependency(C1, null));
-        assertNotNull(mngt);
-        assertEquals("newscope", mngt.getScope());
-        mngt = manager.manageDependency(new Dependency(D1, null));
-        assertNotNull(mngt);
-        assertEquals(Collections.singleton(EXCLUSION), mngt.getExclusions());
-        mngt = manager.manageDependency(new Dependency(E1, null));
-        assertNull(mngt);
-
-        // depth=3: all existing applied, new depMgt processed, carried on
-        manager = manager.deriveChildManager(newContext(new Dependency(E2, null, null)));
-        mngt = manager.manageDependency(new Dependency(A1, null));
-        assertNotNull(mngt);
-        assertEquals(mngt.getVersion(), A2.getVersion());
-        mngt = manager.manageDependency(new Dependency(B1, null));
-        assertNotNull(mngt);
-        assertEquals(Boolean.TRUE, mngt.getOptional());
-        mngt = manager.manageDependency(new Dependency(C1, null));
-        assertNotNull(mngt);
-        assertEquals("newscope", mngt.getScope());
-        mngt = manager.manageDependency(new Dependency(D1, null));
-        assertNotNull(mngt);
-        assertEquals(Collections.singleton(EXCLUSION), mngt.getExclusions());
-        mngt = manager.manageDependency(new Dependency(E1, null));
-        // DO NOT APPLY ONTO ITSELF
-        assertNull(mngt);
-    }
-
-    @Test
     void testTransitive() {
         DependencyManager manager = new TransitiveDependencyManager(null);
         DependencyManagement mngt;
