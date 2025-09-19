@@ -21,12 +21,16 @@ package org.eclipse.aether.util.graph.visitor;
 import java.util.function.Consumer;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
  * Processes dependency graph by traversing the graph in preorder. This visitor visits each node exactly once
  * regardless how many paths within the dependency graph lead to the node such that the resulting node sequence is
  * free of duplicates.
+ * <p>
+ * <strong>Instances of this class cannot be embedded into {@link FilteringDependencyVisitor}</strong>, pass in the
+ * filter {@link DependencyFilter} into  constructor instead.
  *
  * @see NodeListGenerator
  * @since 2.0.0
@@ -39,20 +43,29 @@ public final class PreorderDependencyNodeConsumerVisitor extends AbstractDepende
      * Creates a new preorder list generator.
      */
     public PreorderDependencyNodeConsumerVisitor(Consumer<DependencyNode> nodeConsumer) {
-        super(nodeConsumer);
+        this(nodeConsumer, null);
+    }
+
+    /**
+     * Creates a new preorder list generator.
+     *
+     * @since 2.0.12
+     */
+    public PreorderDependencyNodeConsumerVisitor(Consumer<DependencyNode> nodeConsumer, DependencyFilter filter) {
+        super(nodeConsumer, filter);
     }
 
     @Override
-    public boolean visitEnter(DependencyNode node) {
+    protected boolean doVisitEnter(DependencyNode node) {
         if (!setVisited(node)) {
             return false;
         }
-        nodeConsumer.accept(node);
+        mayConsume(node);
         return true;
     }
 
     @Override
-    public boolean visitLeave(DependencyNode node) {
+    protected boolean doVisitLeave(DependencyNode node) {
         return true;
     }
 }

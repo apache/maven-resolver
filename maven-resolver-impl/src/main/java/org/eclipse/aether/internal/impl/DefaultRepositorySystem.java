@@ -92,7 +92,6 @@ import org.eclipse.aether.spi.artifact.decorator.ArtifactDecorator;
 import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.graph.visitor.FilteringDependencyVisitor;
 import org.eclipse.aether.util.graph.visitor.LevelOrderDependencyNodeConsumerVisitor;
 import org.eclipse.aether.util.graph.visitor.PostorderDependencyNodeConsumerVisitor;
 import org.eclipse.aether.util.graph.visitor.PreorderDependencyNodeConsumerVisitor;
@@ -328,27 +327,24 @@ public class DefaultRepositorySystem implements RepositorySystem {
             RepositorySystemSession session, DependencyNode root, DependencyFilter dependencyFilter) {
         final ArrayList<DependencyNode> dependencyNodes = new ArrayList<>();
         if (root != null) {
-            DependencyVisitor builder = getDependencyVisitor(session, dependencyNodes::add);
-            DependencyVisitor visitor =
-                    (dependencyFilter != null) ? new FilteringDependencyVisitor(builder, dependencyFilter) : builder;
-            root.accept(visitor);
+            root.accept(getDependencyVisitor(session, dependencyNodes::add, dependencyFilter));
         }
         return dependencyNodes;
     }
 
     private DependencyVisitor getDependencyVisitor(
-            RepositorySystemSession session, Consumer<DependencyNode> nodeConsumer) {
+            RepositorySystemSession session, Consumer<DependencyNode> nodeConsumer, DependencyFilter dependencyFilter) {
         String strategy = ConfigUtils.getString(
                 session,
                 ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_DEPENDENCY_VISITOR,
                 ConfigurationProperties.REPOSITORY_SYSTEM_DEPENDENCY_VISITOR);
         switch (strategy) {
             case PreorderDependencyNodeConsumerVisitor.NAME:
-                return new PreorderDependencyNodeConsumerVisitor(nodeConsumer);
+                return new PreorderDependencyNodeConsumerVisitor(nodeConsumer, dependencyFilter);
             case PostorderDependencyNodeConsumerVisitor.NAME:
-                return new PostorderDependencyNodeConsumerVisitor(nodeConsumer);
+                return new PostorderDependencyNodeConsumerVisitor(nodeConsumer, dependencyFilter);
             case LevelOrderDependencyNodeConsumerVisitor.NAME:
-                return new LevelOrderDependencyNodeConsumerVisitor(nodeConsumer);
+                return new LevelOrderDependencyNodeConsumerVisitor(nodeConsumer, dependencyFilter);
             default:
                 throw new IllegalArgumentException("Invalid dependency visitor strategy: " + strategy);
         }
