@@ -218,4 +218,40 @@ public class NodeListGeneratorTest {
         assertEquals(3, nodeListGenerator.getFiles().size());
         assertEquals(fileNames, classPathNames);
     }
+
+    @Test
+    void testPreOrderDuplicateSuppressionWithFilteringSimple() throws Exception {
+        DependencyNode root = parse("simple.txt");
+
+        NodeListGenerator nodeListGenerator = new NodeListGenerator();
+        PreorderDependencyNodeConsumerVisitor visitor = new PreorderDependencyNodeConsumerVisitor(
+                nodeListGenerator, (d, p) -> !"a".equals(d.getArtifact().getArtifactId()));
+        root.accept(visitor);
+
+        assertSequence(nodeListGenerator.getNodes(), "b", "c", "d", "e");
+    }
+
+    @Test
+    void testPostOrderDuplicateSuppressionWithFilteringSimple() throws Exception {
+        DependencyNode root = parse("simple.txt");
+
+        NodeListGenerator nodeListGenerator = new NodeListGenerator();
+        PostorderDependencyNodeConsumerVisitor visitor = new PostorderDependencyNodeConsumerVisitor(
+                nodeListGenerator, (d, p) -> !"a".equals(d.getArtifact().getArtifactId()));
+        root.accept(visitor);
+
+        assertSequence(nodeListGenerator.getNodes(), "c", "b", "e", "d");
+    }
+
+    @Test
+    void testLevelOrderDuplicateSuppressionWithFilteringSimple() throws Exception {
+        DependencyNode root = parse("simple.txt");
+
+        NodeListGenerator nodeListGenerator = new NodeListGenerator();
+        LevelOrderDependencyNodeConsumerVisitor visitor = new LevelOrderDependencyNodeConsumerVisitor(
+                nodeListGenerator, (d, p) -> !"a".equals(d.getArtifact().getArtifactId()));
+        root.accept(visitor);
+
+        assertSequence(nodeListGenerator.getNodes(), "b", "d", "c", "e");
+    }
 }

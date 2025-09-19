@@ -22,6 +22,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
 
@@ -29,16 +30,27 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Abstract base class for dependency tree traverses that feed {@link Consumer<DependencyNode>}.
+ * <p>
+ * <strong>Implementations derived from this class cannot be embedded into {@link FilteringDependencyVisitor}</strong>,
+ * this is why these classes accept {@link DependencyFilter} in constructor instead.
  *
  * @since 2.0.0
  */
 abstract class AbstractDependencyNodeConsumerVisitor implements DependencyVisitor {
-    protected final Consumer<DependencyNode> nodeConsumer;
+    private static final DependencyFilter ACCEPT_ALL = (d, p) -> true;
+
+    private final Consumer<DependencyNode> nodeConsumer;
+
+    private final DependencyFilter filter;
+
+    private final Stack<DependencyNode> path;
 
     private final Map<DependencyNode, Object> visitedNodes;
 
-    protected AbstractDependencyNodeConsumerVisitor(Consumer<DependencyNode> nodeConsumer) {
+    protected AbstractDependencyNodeConsumerVisitor(Consumer<DependencyNode> nodeConsumer, DependencyFilter filter) {
         this.nodeConsumer = requireNonNull(nodeConsumer);
+        this.filter = filter == null ? ACCEPT_ALL : filter;
+        this.path = new Stack<>();
         this.visitedNodes = new IdentityHashMap<>(512);
     }
 
@@ -53,8 +65,26 @@ abstract class AbstractDependencyNodeConsumerVisitor implements DependencyVisito
     }
 
     @Override
-    public abstract boolean visitEnter(DependencyNode node);
+    public final boolean visitEnter(DependencyNode node) {
+        path.push(node);
+        return doVisitEnter(node);
+    }
+
+    protected abstract boolean doVisitEnter(DependencyNode node);
 
     @Override
-    public abstract boolean visitLeave(DependencyNode node);
+    public final boolean visitLeave(DependencyNode node) {
+        path.pop();
+        return doVisitLeave(node);
+    }
+
+    protected abstract boolean doVisitLeave(DependencyNode node);
+
+    protected boolean acceptNode(DependencyNode node) {
+        return filter.accept(node, path);
+    }
+
+    protected void consumeNode(DependencyNode node) {
+        nodeConsumer.accept(node);
+    }
 }

@@ -515,8 +515,9 @@ public final class ConfigurationProperties {
     public static final String HTTPS_SECURITY_MODE_INSECURE = "insecure";
 
     /**
-     * A flag indicating which visitor should be used to "flatten" the dependency graph into list. Default is
-     * same as in older resolver versions "preOrder", while it can accept values like "postOrder" and "levelOrder".
+     * A flag indicating which visitor should be used to "flatten" the dependency graph into list. In Maven 4
+     * the default is new "levelOrder", while Maven 3 used "preOrder". This property accepts values
+     * "preOrder", "postOrder" and "levelOrder".
      *
      * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER
      * @see #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_POSTORDER
@@ -524,7 +525,7 @@ public final class ConfigurationProperties {
      * @since 2.0.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_PREORDER}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_SYSTEM_DEPENDENCY_VISITOR}
      * @configurationRepoIdSuffix No
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR = PREFIX_SYSTEM + "dependencyVisitor";
@@ -550,6 +551,14 @@ public final class ConfigurationProperties {
      * @since 2.0.0
      */
     public static final String REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER = "levelOrder";
+
+    /**
+     * The default visitor strategy.
+     *
+     * @since 2.0.12
+     */
+    public static final String DEFAULT_REPOSITORY_SYSTEM_DEPENDENCY_VISITOR =
+            REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER;
 
     /**
      * A flag indicating whether version scheme cache statistics should be printed on JVM shutdown.
