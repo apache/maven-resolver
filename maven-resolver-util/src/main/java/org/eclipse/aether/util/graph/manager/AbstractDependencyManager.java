@@ -150,8 +150,8 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         this(
                 new ArrayList<>(),
                 0,
-                validateNonNegative(deriveUntil, "deriveUntil"),
-                validateNonNegative(applyFrom, "applyFrom"),
+                deriveUntil,
+                applyFrom,
                 null,
                 null,
                 null,
@@ -160,21 +160,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 scopeManager != null
                         ? scopeManager.getSystemDependencyScope().orElse(null)
                         : SystemDependencyScope.LEGACY);
-    }
-
-    /**
-     * Validates that a parameter is non-negative.
-     *
-     * @param value the value to validate
-     * @param paramName the parameter name for error messages
-     * @return the validated value
-     * @throws IllegalArgumentException if the value is negative
-     */
-    private static int validateNonNegative(int value, String paramName) {
-        if (value < 0) {
-            throw new IllegalArgumentException(paramName + " must be >= 0, got: " + value);
-        }
-        return value;
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
@@ -212,41 +197,13 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             MMap<Key, String> managedLocalPaths,
             MMap<Key, Holder<Collection<Exclusion>>> managedExclusions);
 
-    /**
-     * Checks if a managed property exists for the given key in the ancestor path or current manager.
-     *
-     * @param key the dependency key to check
-     * @param propertyMap the property map to check (versions, scopes, or optionals)
-     * @return true if the property is managed, false otherwise
-     */
-    private boolean containsManagedProperty(Key key, MMap<Key, ?> propertyMap) {
+    private boolean containsManagedVersion(Key key) {
         for (AbstractDependencyManager ancestor : path) {
-            MMap<Key, ?> ancestorMap = getPropertyMap(ancestor, propertyMap);
-            if (ancestorMap != null && ancestorMap.containsKey(key)) {
+            if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
                 return true;
             }
         }
-        return propertyMap != null && propertyMap.containsKey(key);
-    }
-
-    /**
-     * Gets the appropriate property map from an ancestor manager based on the property type.
-     */
-    private MMap<Key, ?> getPropertyMap(AbstractDependencyManager manager, MMap<Key, ?> referenceMap) {
-        if (referenceMap == managedVersions) {
-            return manager.managedVersions;
-        } else if (referenceMap == managedScopes) {
-            return manager.managedScopes;
-        } else if (referenceMap == managedOptionals) {
-            return manager.managedOptionals;
-        } else if (referenceMap == managedLocalPaths) {
-            return manager.managedLocalPaths;
-        }
-        return null;
-    }
-
-    private boolean containsManagedVersion(Key key) {
-        return containsManagedProperty(key, managedVersions);
+        return managedVersions != null && managedVersions.containsKey(key);
     }
 
     private String getManagedVersion(Key key) {
@@ -262,7 +219,12 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     private boolean containsManagedScope(Key key) {
-        return containsManagedProperty(key, managedScopes);
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
+                return true;
+            }
+        }
+        return managedScopes != null && managedScopes.containsKey(key);
     }
 
     private String getManagedScope(Key key) {
@@ -278,7 +240,12 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     private boolean containsManagedOptional(Key key) {
-        return containsManagedProperty(key, managedOptionals);
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
+                return true;
+            }
+        }
+        return managedOptionals != null && managedOptionals.containsKey(key);
     }
 
     private Boolean getManagedOptional(Key key) {
@@ -294,7 +261,12 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     private boolean containsManagedLocalPath(Key key) {
-        return containsManagedProperty(key, managedLocalPaths);
+        for (AbstractDependencyManager ancestor : path) {
+            if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
+                return true;
+            }
+        }
+        return managedLocalPaths != null && managedLocalPaths.containsKey(key);
     }
 
     /**
