@@ -109,7 +109,6 @@
               <includeArtifactIds>maven-resolver-transport-jdk-8</includeArtifactIds>
               <excludeClassifiers>sources</excludeClassifiers>
               <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-              <includes>**/*.class</includes>
             </configuration>
           </execution>
           <execution>
@@ -123,26 +122,6 @@
               <excludeClassifiers>sources</excludeClassifiers>
               <outputDirectory>${project.build.outputDirectory}/META-INF/versions/11</outputDirectory>
               <includes>**/*.class</includes>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-resource</id>
-            <goals>
-              <goal>add-resource</goal>
-            </goals>
-            <phase>prepare-package</phase>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>${project.build.directory}/generated-resources</directory>
-                </resource>
-              </resources>
             </configuration>
           </execution>
         </executions>
