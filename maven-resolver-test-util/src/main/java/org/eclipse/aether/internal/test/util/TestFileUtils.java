@@ -158,7 +158,7 @@ public class TestFileUtils {
      *
      * @return the temporary directory
      * @throws IOException if an I/O error occurs
-     * @deprecated use {@code @TempDir) (JUnit 5) Or {@code TemporaryFolder} (JUnit 4) instead
+     * @deprecated use {@code @TempDir} (JUnit 5) or {@code TemporaryFolder} (JUnit 4) instead
      */
     @Deprecated
     public static File createTempDir(String suffix) throws IOException {
