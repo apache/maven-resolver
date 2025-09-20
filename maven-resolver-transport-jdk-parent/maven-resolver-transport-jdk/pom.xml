@@ -109,6 +109,7 @@
               <includeArtifactIds>maven-resolver-transport-jdk-8</includeArtifactIds>
               <excludeClassifiers>sources</excludeClassifiers>
               <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+              <excludes>META-INF/maven/**</excludes>
             </configuration>
           </execution>
           <execution>
