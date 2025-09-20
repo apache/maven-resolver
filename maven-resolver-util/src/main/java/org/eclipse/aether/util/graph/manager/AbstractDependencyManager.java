@@ -51,7 +51,7 @@ import static java.util.Objects.requireNonNull;
  *
  * <h2>Managed Properties</h2>
  * <ul>
- * <li><strong>Version & Scope:</strong> Handled by ModelBuilder for own dependency management
+ * <li><strong>Version &amp; Scope:</strong> Handled by ModelBuilder for own dependency management
  *     (think "effective POM"). This implementation ensures these are not applied to the same
  *     node that provided the rules, to not override ModelBuilder's work.</li>
  * <li><strong>Optional:</strong> Not handled by ModelBuilder; managed here.</li>
