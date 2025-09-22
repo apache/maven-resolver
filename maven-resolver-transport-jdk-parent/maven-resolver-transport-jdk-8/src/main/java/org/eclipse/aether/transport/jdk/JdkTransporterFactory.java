@@ -44,7 +44,7 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporterFactory.class);
 
-    private float priority = 10.0f;
+    private float priority = 5.0f;
 
     @Inject
     public JdkTransporterFactory(ChecksumExtractor checksumExtractor, PathProcessor pathProcessor) {
