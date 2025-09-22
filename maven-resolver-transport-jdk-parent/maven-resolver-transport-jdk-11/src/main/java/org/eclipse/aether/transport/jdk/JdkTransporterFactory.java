@@ -40,7 +40,7 @@ import static java.util.Objects.requireNonNull;
 public final class JdkTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "jdk";
 
-    private float priority = 10.0f;
+    private float priority = 5.0f;
 
     private final ChecksumExtractor checksumExtractor;
 
