@@ -79,12 +79,6 @@
   </dependencies>
 
   <build>
-    <resources>
-      <resource>
-        <filtering>false</filtering>
-        <directory>${project.build.directory}/generated-resources</directory>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -110,10 +104,11 @@
             <goals>
               <goal>unpack-dependencies</goal>
             </goals>
-            <phase>generate-resources</phase>
+            <phase>prepare-package</phase>
             <configuration>
               <includeArtifactIds>maven-resolver-transport-jdk-8</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
+              <excludeClassifiers>sources</excludeClassifiers>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
               <excludes>META-INF/maven/**</excludes>
             </configuration>
           </execution>
@@ -122,10 +117,11 @@
             <goals>
               <goal>unpack-dependencies</goal>
             </goals>
-            <phase>generate-resources</phase>
+            <phase>prepare-package</phase>
             <configuration>
               <includeArtifactIds>maven-resolver-transport-jdk-11</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/generated-resources/META-INF/versions/11</outputDirectory>
+              <excludeClassifiers>sources</excludeClassifiers>
+              <outputDirectory>${project.build.outputDirectory}/META-INF/versions/11</outputDirectory>
               <includes>**/*.class</includes>
             </configuration>
           </execution>
@@ -133,4 +129,60 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>apache-release</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.maven.resolver</groupId>
+          <artifactId>maven-resolver-transport-jdk-11</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>java11-sources</id>
+                <goals>
+                  <goal>unpack-dependencies</goal>
+                </goals>
+                <phase>prepare-package</phase>
+                <configuration>
+                  <includeArtifactIds>maven-resolver-transport-jdk-11</includeArtifactIds>
+                  <includeClassifiers>sources</includeClassifiers>
+                  <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
+                  <includes>**/*.java</includes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-source</id>
+                <goals>
+                  <goal>add-source</goal>
+                </goals>
+                <phase>prepare-package</phase>
+                <configuration>
+                  <sources>
+                    <source>${project.build.directory}/generated-sources</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
