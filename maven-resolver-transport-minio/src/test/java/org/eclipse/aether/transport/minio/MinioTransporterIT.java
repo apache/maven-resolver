@@ -59,7 +59,6 @@ class MinioTransporterIT {
     private static final String OBJECT_CONTENT = "content";
 
     private MinIOContainer minioContainer;
-    private MinioClient minioClient;
     private RepositorySystemSession session;
     private ObjectNameMapperFactory objectNameMapperFactory;
 
@@ -69,19 +68,19 @@ class MinioTransporterIT {
 
         minioContainer = new MinIOContainer("minio/minio:latest");
         minioContainer.start();
-        minioClient = MinioClient.builder()
+        try (MinioClient minioClient = MinioClient.builder()
                 .endpoint(minioContainer.getS3URL())
                 .credentials(minioContainer.getUserName(), minioContainer.getPassword())
-                .build();
-
-        minioClient.makeBucket(MakeBucketArgs.builder().bucket(BUCKET_NAME).build());
-        try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
-            Files.write(tempFile.getPath(), OBJECT_CONTENT.getBytes(StandardCharsets.UTF_8));
-            minioClient.uploadObject(UploadObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(OBJECT_NAME)
-                    .filename(tempFile.getPath().toString())
-                    .build());
+                .build()) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(BUCKET_NAME).build());
+            try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
+                Files.write(tempFile.getPath(), OBJECT_CONTENT.getBytes(StandardCharsets.UTF_8));
+                minioClient.uploadObject(UploadObjectArgs.builder()
+                        .bucket(BUCKET_NAME)
+                        .object(OBJECT_NAME)
+                        .filename(tempFile.getPath().toString())
+                        .build());
+            }
         }
 
         session = new DefaultRepositorySystemSession(h -> true);
@@ -135,7 +134,7 @@ class MinioTransporterIT {
                 fail("Should throw");
             } catch (Exception e) {
                 assertInstanceOf(ErrorResponseException.class, e);
-                assertEquals(transporter.classify(e), Transporter.ERROR_OTHER);
+                assertEquals(Transporter.ERROR_OTHER, transporter.classify(e));
             }
         }
     }
@@ -149,7 +148,7 @@ class MinioTransporterIT {
                 fail("Should throw");
             } catch (Exception e) {
                 assertInstanceOf(ErrorResponseException.class, e);
-                assertEquals(transporter.classify(e), Transporter.ERROR_NOT_FOUND);
+                assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(e));
             }
         }
     }
@@ -172,7 +171,7 @@ class MinioTransporterIT {
                 fail("Should throw");
             } catch (Exception e) {
                 assertInstanceOf(ErrorResponseException.class, e);
-                assertEquals(transporter.classify(e), Transporter.ERROR_NOT_FOUND);
+                assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(e));
             }
         }
     }
