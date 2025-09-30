@@ -42,8 +42,8 @@ public class GetDependencyTree {
         System.out.println(GetDependencyTree.class.getSimpleName());
 
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
-                CloseableSession session =
-                        Booter.newRepositorySystemSession(system).build()) {
+                CloseableSession session = Booter.newRepositorySystemSession(system, Booter.selectFs(args))
+                        .build()) {
             Artifact artifact = new DefaultArtifact("org.apache.maven:maven-resolver-provider:3.6.1");
 
             CollectRequest collectRequest = new CollectRequest();

@@ -52,7 +52,7 @@ public class GetDependencyHierarchy {
         System.out.println(GetDependencyHierarchy.class.getSimpleName());
 
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
-            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
+            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system, Booter.selectFs(args));
             sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
             sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
             try (CloseableSession session = sessionBuilder.build()) {

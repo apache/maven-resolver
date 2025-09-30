@@ -41,8 +41,8 @@ public class FindNewestVersion {
         System.out.println(FindNewestVersion.class.getSimpleName());
 
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
-                CloseableSession session =
-                        Booter.newRepositorySystemSession(system).build()) {
+                CloseableSession session = Booter.newRepositorySystemSession(system, Booter.selectFs(args))
+                        .build()) {
             Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:[0,)");
 
             VersionRangeRequest rangeRequest = new VersionRangeRequest();

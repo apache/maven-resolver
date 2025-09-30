@@ -43,8 +43,8 @@ public class InstallArtifacts {
         System.out.println(InstallArtifacts.class.getSimpleName());
 
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
-                CloseableSession session =
-                        Booter.newRepositorySystemSession(system).build()) {
+                CloseableSession session = Booter.newRepositorySystemSession(system, Booter.selectFs(args))
+                        .build()) {
             Artifact jarArtifact =
                     new DefaultArtifact("test", "org.apache.maven.resolver.examples", "", "jar", "0.1-SNAPSHOT");
             jarArtifact = jarArtifact.setPath(new File("src/main/data/demo.jar").toPath());

@@ -53,7 +53,7 @@ public class DependencyHierarchyWithRanges {
         System.out.println(DependencyHierarchyWithRanges.class.getSimpleName());
 
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
-            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
+            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system, Booter.selectFs(args));
             sessionBuilder.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_IGNORE); // to not bother with checksums
             sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
             sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);

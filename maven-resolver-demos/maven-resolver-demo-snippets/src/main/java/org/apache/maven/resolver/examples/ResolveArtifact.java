@@ -46,8 +46,8 @@ public class ResolveArtifact {
             ArtifactRequest artifactRequest;
             ArtifactResult artifactResult;
 
-            try (CloseableSession session =
-                    Booter.newRepositorySystemSession(system).build()) {
+            try (CloseableSession session = Booter.newRepositorySystemSession(system, Booter.selectFs(args))
+                    .build()) {
                 artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:1.3.3");
 
                 artifactRequest = new ArtifactRequest();
@@ -62,7 +62,7 @@ public class ResolveArtifact {
             }
 
             // signature
-            try (CloseableSession session = Booter.newRepositorySystemSession(system)
+            try (CloseableSession session = Booter.newRepositorySystemSession(system, Booter.selectFs(args))
                     .setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_FAIL)
                     .build()) {
                 artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-util:jar.asc:1.3.3");
