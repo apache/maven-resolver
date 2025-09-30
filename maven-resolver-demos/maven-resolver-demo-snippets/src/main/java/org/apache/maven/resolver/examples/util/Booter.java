@@ -18,12 +18,16 @@
  */
 package org.apache.maven.resolver.examples.util;
 
+import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
@@ -63,9 +67,12 @@ public class Booter {
     }
 
     public static SessionBuilder newRepositorySystemSession(RepositorySystem system) {
+        FileSystem jimfs = Jimfs.newFileSystem(Configuration.unix());
+        Path baseDirectory = jimfs.getPath("/demo");
+        // Path baseDirectory = Path.of("target/example-snippets-repo");
         SessionBuilder result = new SessionBuilderSupplier(system)
                 .get()
-                .withLocalRepositoryBaseDirectories(Path.of("target/example-snippets-repo"))
+                .withLocalRepositoryBaseDirectories(baseDirectory)
                 .setRepositoryListener(new ConsoleRepositoryListener())
                 .setTransferListener(new ConsoleTransferListener())
                 .setConfigProperty("aether.generator.gpg.enabled", Boolean.TRUE.toString())
@@ -73,11 +80,18 @@ public class Booter {
                         "aether.generator.gpg.keyFilePath",
                         Paths.get("src/main/resources/alice.key")
                                 .toAbsolutePath()
-                                .toString())
-                .setConfigProperty("aether.syncContext.named.factory", "noop");
+                                .toString());
 
         // uncomment to generate dirty trees
         // session.setDependencyGraphTransformer( null );
+
+        result.addOnSessionEndedHandler(() -> {
+            try {
+                jimfs.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
         return result;
     }

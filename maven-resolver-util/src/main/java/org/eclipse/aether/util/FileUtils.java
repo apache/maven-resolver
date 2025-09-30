@@ -125,8 +125,9 @@ public final class FileUtils {
                 + Long.toUnsignedString(ThreadLocalRandom.current().nextLong()) + ".tmp");
         return new CollocatedTempFile() {
             private final AtomicBoolean wantsMove = new AtomicBoolean(false);
-            private final StandardCopyOption copyOption =
-                    FileUtils.ATOMIC_MOVE ? StandardCopyOption.ATOMIC_MOVE : StandardCopyOption.REPLACE_EXISTING;
+            private final StandardCopyOption[] copyOption = FileUtils.ATOMIC_MOVE
+                    ? new StandardCopyOption[] {StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING}
+                    : new StandardCopyOption[] {StandardCopyOption.REPLACE_EXISTING};
 
             @Override
             public Path getPath() {
