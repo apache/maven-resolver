@@ -82,7 +82,7 @@ public class GetDependencyHierarchyWithConflictsStrategies {
         System.out.println();
         System.out.println(selectionStrategy);
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
-            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system);
+            SessionBuilder sessionBuilder = Booter.newRepositorySystemSession(system, Booter.selectFs(args));
             sessionBuilder.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, ConflictResolver.Verbosity.STANDARD);
             sessionBuilder.setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true);
             sessionBuilder.setConfigProperty(

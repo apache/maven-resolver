@@ -45,7 +45,7 @@ public class ReverseDependencyTree {
         System.out.println(ReverseDependencyTree.class.getSimpleName());
 
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args))) {
-            try (CloseableSession session = Booter.newRepositorySystemSession(system)
+            try (CloseableSession session = Booter.newRepositorySystemSession(system, Booter.selectFs(args))
                     .withRepositoryListener(new ReverseTreeRepositoryListener())
                     .setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true)
                     .setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true)

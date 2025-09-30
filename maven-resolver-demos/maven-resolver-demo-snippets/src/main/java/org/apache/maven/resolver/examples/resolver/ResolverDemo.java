@@ -21,7 +21,6 @@ package org.apache.maven.resolver.examples.resolver;
 import java.io.File;
 import java.util.List;
 
-import org.apache.maven.resolver.examples.util.Booter;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeploymentException;
@@ -38,8 +37,7 @@ public class ResolverDemo {
         System.out.println("------------------------------------------------------------");
         System.out.println(ResolverDemo.class.getSimpleName());
 
-        Resolver resolver = new Resolver(
-                Booter.selectFactory(args), "https://repo.maven.apache.org/maven2/", "target/resolver-demo-repo");
+        Resolver resolver = new Resolver(args, "https://repo.maven.apache.org/maven2/", "target/resolver-demo-repo");
         ResolverResult result = resolver.resolve("junit", "junit", "4.13.2");
 
         System.out.println("Result:");
@@ -48,9 +46,9 @@ public class ResolverDemo {
         System.out.println("root=" + result.getRoot());
     }
 
-    public void resolve(final String factory) throws DependencyResolutionException {
+    public void resolve(String[] args) throws DependencyResolutionException {
         Resolver resolver =
-                new Resolver(factory, "http://localhost:8081/nexus/content/groups/public", "target/aether-repo");
+                new Resolver(args, "http://localhost:8081/nexus/content/groups/public", "target/aether-repo");
 
         ResolverResult result = resolver.resolve("com.mycompany.app", "super-app", "1.0");
 
@@ -67,9 +65,9 @@ public class ResolverDemo {
         String classpath = result.getResolvedClassPath();
     }
 
-    public void installAndDeploy(final String factory) throws InstallationException, DeploymentException {
+    public void installAndDeploy(String[] args) throws InstallationException, DeploymentException {
         Resolver resolver =
-                new Resolver(factory, "http://localhost:8081/nexus/content/groups/public", "target/aether-repo");
+                new Resolver(args, "http://localhost:8081/nexus/content/groups/public", "target/aether-repo");
 
         Artifact artifact = new DefaultArtifact("com.mycompany.super", "super-core", "jar", "0.1-SNAPSHOT");
         artifact = artifact.setFile(new File("jar-from-whatever-process.jar"));

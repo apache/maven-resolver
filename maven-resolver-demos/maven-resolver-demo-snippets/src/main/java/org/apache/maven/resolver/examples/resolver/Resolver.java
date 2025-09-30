@@ -20,7 +20,6 @@ package org.apache.maven.resolver.examples.resolver;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.maven.resolver.examples.util.Booter;
@@ -48,20 +47,23 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
 /**
  */
 public class Resolver {
+    private final String[] args;
+
     private final String remoteRepository;
 
     private final RepositorySystem repositorySystem;
 
     private final LocalRepository localRepository;
 
-    public Resolver(String factory, String remoteRepository, String localRepository) {
+    public Resolver(String[] args, String remoteRepository, String localRepository) {
+        this.args = args;
         this.remoteRepository = remoteRepository;
-        this.repositorySystem = Booter.newRepositorySystem(factory);
+        this.repositorySystem = Booter.newRepositorySystem(Booter.selectFactory(args));
         this.localRepository = new LocalRepository(localRepository);
     }
 
     private RepositorySystemSession newSession() {
-        return Booter.newRepositorySystemSession(repositorySystem)
+        return Booter.newRepositorySystemSession(repositorySystem, Booter.selectFs(args))
                 .withLocalRepositories(localRepository)
                 .setRepositoryListener(null)
                 .setTransferListener(null)
@@ -123,13 +125,9 @@ public class Resolver {
     }
 
     private void displayTree(DependencyNode node, StringBuilder sb) {
-        try {
-            ByteArrayOutputStream os = new ByteArrayOutputStream(1024);
-            PrintStream ps = new PrintStream(os, true, StandardCharsets.UTF_8.name());
-            node.accept(new DependencyGraphDumper(ps::println));
-            sb.append(os);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        ByteArrayOutputStream os = new ByteArrayOutputStream(1024);
+        PrintStream ps = new PrintStream(os, true, StandardCharsets.UTF_8);
+        node.accept(new DependencyGraphDumper(ps::println));
+        sb.append(os);
     }
 }

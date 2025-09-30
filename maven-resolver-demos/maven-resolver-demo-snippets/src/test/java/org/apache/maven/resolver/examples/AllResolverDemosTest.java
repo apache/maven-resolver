@@ -18,20 +18,26 @@
  */
 package org.apache.maven.resolver.examples;
 
+import java.util.stream.Stream;
+
 import org.apache.maven.resolver.examples.util.Booter;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Runs all demos at once as part of UT.
  */
 public class AllResolverDemosTest {
-    @Test
-    void supplier() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.SUPPLIER});
+    private static Stream<Arguments> arguments() {
+        return Stream.of(
+                Arguments.of(Booter.FACTORY_SUPPLIER, Booter.FS_DEFAULT),
+                Arguments.of(Booter.FACTORY_SISU, Booter.FS_JIMFS));
     }
 
-    @Test
-    void sisu() throws Exception {
-        AllResolverDemos.main(new String[] {Booter.SISU});
+    @ParameterizedTest
+    @MethodSource("arguments")
+    void runDemos(String factory, String fs) throws Exception {
+        AllResolverDemos.main(new String[] {factory, fs});
     }
 }
