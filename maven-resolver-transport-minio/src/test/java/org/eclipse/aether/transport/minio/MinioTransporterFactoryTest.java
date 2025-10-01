@@ -28,6 +28,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transport.minio.internal.FixedBucketObjectNameMapperFactory;
 import org.eclipse.aether.transport.minio.internal.RepositoryIdObjectNameMapperFactory;
@@ -55,7 +56,7 @@ class MinioTransporterFactoryTest {
         factories.put(RepositoryIdObjectNameMapperFactory.NAME, new RepositoryIdObjectNameMapperFactory());
         factories.put(FixedBucketObjectNameMapperFactory.NAME, new FixedBucketObjectNameMapperFactory());
 
-        factory = new MinioTransporterFactory(factories);
+        factory = new MinioTransporterFactory(factories, new PathProcessorSupport());
         session = new DefaultRepositorySystemSession(h -> true);
         repository = new RemoteRepository.Builder("repo", "default", "minio+http://localhost")
                 .setAuthentication(new AuthenticationBuilder()

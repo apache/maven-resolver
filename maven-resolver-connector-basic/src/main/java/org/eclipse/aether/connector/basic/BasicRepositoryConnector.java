@@ -54,13 +54,13 @@ import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.ChecksumProcessor;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.FileUtils;
 import org.eclipse.aether.util.concurrency.RunnableErrorForwarder;
 import org.eclipse.aether.util.concurrency.SmartExecutor;
 import org.eclipse.aether.util.concurrency.SmartExecutorUtils;
@@ -86,6 +86,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicRepositoryConnector.class);
 
     private final Map<String, ProvidedChecksumsSource> providedChecksumsSources;
+
+    private final PathProcessor pathProcessor;
 
     private final ChecksumProcessor checksumProcessor;
 
@@ -113,12 +115,14 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     private final AtomicBoolean closed;
 
+    @SuppressWarnings("checkstyle:parameternumber")
     BasicRepositoryConnector(
             RepositorySystemSession session,
             RemoteRepository repository,
             TransporterProvider transporterProvider,
             RepositoryLayoutProvider layoutProvider,
             ChecksumPolicyProvider checksumPolicyProvider,
+            PathProcessor pathProcessor,
             ChecksumProcessor checksumProcessor,
             Map<String, ProvidedChecksumsSource> providedChecksumsSources)
             throws NoRepositoryConnectorException {
@@ -140,6 +144,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         this.session = session;
         this.repository = repository;
         this.checksumProcessor = checksumProcessor;
+        this.pathProcessor = pathProcessor;
         this.providedChecksumsSources = providedChecksumsSources;
         this.executors = new ConcurrentHashMap<>();
         this.closed = new AtomicBoolean(false);
@@ -496,6 +501,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
             checksumValidator = new ChecksumValidator(
                     file,
                     checksumAlgorithmFactories,
+                    pathProcessor,
                     checksumProcessor,
                     this,
                     checksumPolicy,
@@ -518,7 +524,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
         @Override
         protected void runTask() throws Exception {
-            try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(file)) {
+            try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(file)) {
                 final Path tmp = tempFile.getPath();
                 listener.setChecksumCalculator(checksumValidator.newChecksumCalculator(tmp));
                 for (int firstTrial = 0, lastTrial = 1, trial = firstTrial; ; trial++) {

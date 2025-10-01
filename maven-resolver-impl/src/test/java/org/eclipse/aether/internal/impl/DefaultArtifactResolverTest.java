@@ -38,7 +38,9 @@ import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.filter.Filters;
-import org.eclipse.aether.internal.test.util.*;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
@@ -61,6 +63,7 @@ import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
@@ -110,7 +113,7 @@ public class DefaultArtifactResolverTest {
     private DefaultArtifactResolver setupArtifactResolver(
             VersionResolver versionResolver, UpdateCheckManager updateCheckManager) {
         return new DefaultArtifactResolver(
-                new TestPathProcessor(),
+                new PathProcessorSupport(),
                 new StubRepositoryEventDispatcher(),
                 versionResolver,
                 updateCheckManager,

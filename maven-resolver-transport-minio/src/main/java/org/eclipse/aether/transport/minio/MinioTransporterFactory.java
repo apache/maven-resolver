@@ -27,6 +27,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -47,9 +48,13 @@ public final class MinioTransporterFactory implements TransporterFactory {
 
     private final Map<String, ObjectNameMapperFactory> objectNameMapperFactories;
 
+    private final PathProcessor pathProcessor;
+
     @Inject
-    public MinioTransporterFactory(Map<String, ObjectNameMapperFactory> objectNameMapperFactories) {
+    public MinioTransporterFactory(
+            Map<String, ObjectNameMapperFactory> objectNameMapperFactories, PathProcessor pathProcessor) {
         this.objectNameMapperFactories = requireNonNull(objectNameMapperFactories, "objectNameMapperFactories");
+        this.pathProcessor = requireNonNull(pathProcessor, "pathProcessor");
     }
 
     @Override
@@ -96,6 +101,6 @@ public final class MinioTransporterFactory implements TransporterFactory {
             throw new IllegalArgumentException("Unknown object name mapper configured '" + objectNameMapperConf
                     + "' for repository " + repository.getId());
         }
-        return new MinioTransporter(session, adjusted, objectNameMapperFactory);
+        return new MinioTransporter(session, adjusted, objectNameMapperFactory, pathProcessor);
     }
 }

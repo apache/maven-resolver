@@ -36,6 +36,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -189,6 +190,7 @@ public class ChecksumValidatorTest {
         return new ChecksumValidator(
                 dataFile.toPath(),
                 checksumAlgorithmFactories,
+                new PathProcessorSupport(),
                 new TestChecksumProcessor(),
                 fetcher,
                 policy,
