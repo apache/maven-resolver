@@ -31,6 +31,7 @@ import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -42,7 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport {
     @Override
     protected FileTrustedChecksumsSourceSupport prepareSubject(RepositorySystemLifecycle lifecycle) {
-        return new SummaryFileTrustedChecksumsSource(new DefaultLocalPathComposer(), lifecycle);
+        return new SummaryFileTrustedChecksumsSource(
+                new DefaultLocalPathComposer(), lifecycle, new PathProcessorSupport());
     }
 
     @Override

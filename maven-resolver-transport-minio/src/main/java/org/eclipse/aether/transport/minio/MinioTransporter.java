@@ -44,9 +44,11 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.FileUtils;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A transporter for S3 backed by MinIO Java.
@@ -62,10 +64,13 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
 
     private final ObjectNameMapper objectNameMapper;
 
+    private final PathProcessor pathProcessor;
+
     MinioTransporter(
             RepositorySystemSession session,
             RemoteRepository repository,
-            ObjectNameMapperFactory objectNameMapperFactory)
+            ObjectNameMapperFactory objectNameMapperFactory,
+            PathProcessor pathProcessor)
             throws NoTransporterException {
         try {
             URI uri = new URI(repository.getUrl()).parseServerAuthority();
@@ -121,6 +126,7 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
                 .credentialsProvider(credentialsProvider)
                 .build();
         this.objectNameMapper = objectNameMapperFactory.create(session, repository, client, headers);
+        this.pathProcessor = requireNonNull(pathProcessor);
     }
 
     @Override
@@ -158,7 +164,7 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
             if (dataFile == null) {
                 utilGet(task, stream, true, -1, false);
             } else {
-                try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile)) {
+                try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
                     task.setDataPath(tempFile.getPath(), false);
                     utilGet(task, stream, true, -1, false);
                     tempFile.move();
@@ -176,7 +182,7 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
         task.getListener().transportStarted(0, task.getDataLength());
         final Path dataFile = task.getDataPath();
         if (dataFile == null) {
-            try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
+            try (PathProcessor.TempFile tempFile = pathProcessor.newTempFile()) {
                 Files.copy(task.newInputStream(), tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
                 client.uploadObject(UploadObjectArgs.builder()
                         .bucket(objectName.getBucket())

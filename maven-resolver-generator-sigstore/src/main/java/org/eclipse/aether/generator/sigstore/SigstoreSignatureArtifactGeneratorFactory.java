@@ -31,6 +31,7 @@ import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.spi.artifact.ArtifactPredicateFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.util.ConfigUtils;
 
 @Singleton
@@ -40,10 +41,13 @@ public final class SigstoreSignatureArtifactGeneratorFactory implements Artifact
     public static final String NAME = "sigstore";
 
     private final ArtifactPredicateFactory artifactPredicateFactory;
+    private final PathProcessor pathProcessor;
 
     @Inject
-    public SigstoreSignatureArtifactGeneratorFactory(ArtifactPredicateFactory artifactPredicateFactory) {
+    public SigstoreSignatureArtifactGeneratorFactory(
+            ArtifactPredicateFactory artifactPredicateFactory, PathProcessor pathProcessor) {
         this.artifactPredicateFactory = artifactPredicateFactory;
+        this.pathProcessor = pathProcessor;
     }
 
     @Override
@@ -68,7 +72,7 @@ public final class SigstoreSignatureArtifactGeneratorFactory implements Artifact
                 SigstoreConfigurationKeys.CONFIG_PROP_PUBLIC_STAGING);
 
         return new SigstoreSignatureArtifactGenerator(
-                artifacts, artifactPredicateFactory.newInstance(session)::hasChecksums, publicStaging);
+                pathProcessor, artifacts, artifactPredicateFactory.newInstance(session)::hasChecksums, publicStaging);
     }
 
     @Override

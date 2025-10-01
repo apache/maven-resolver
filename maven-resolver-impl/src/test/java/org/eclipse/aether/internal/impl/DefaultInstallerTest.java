@@ -32,10 +32,13 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.installation.InstallResult;
 import org.eclipse.aether.installation.InstallationException;
-import org.eclipse.aether.internal.test.util.*;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
+import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -84,7 +87,7 @@ public class DefaultInstallerTest {
         localArtifactFile = new File(session.getLocalRepository().getBasedir(), localArtifactPath);
 
         installer = new DefaultInstaller(
-                new TestPathProcessor(),
+                new PathProcessorSupport(),
                 new StubRepositoryEventDispatcher(),
                 Collections.emptyMap(),
                 Collections.emptyMap(),

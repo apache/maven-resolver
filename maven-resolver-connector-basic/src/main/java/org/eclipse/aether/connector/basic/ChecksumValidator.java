@@ -31,8 +31,8 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.ChecksumLocation;
 import org.eclipse.aether.spi.io.ChecksumProcessor;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.ChecksumFailureException;
-import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +56,8 @@ final class ChecksumValidator {
 
     private final Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories;
 
+    private final PathProcessor pathProcessor;
+
     private final ChecksumProcessor checksumProcessor;
 
     private final ChecksumFetcher checksumFetcher;
@@ -68,9 +70,11 @@ final class ChecksumValidator {
 
     private final Map<Path, String> checksumExpectedValues;
 
+    @SuppressWarnings("checkstyle:parameternumber")
     ChecksumValidator(
             Path dataPath,
             Collection<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
+            PathProcessor pathProcessor,
             ChecksumProcessor checksumProcessor,
             ChecksumFetcher checksumFetcher,
             ChecksumPolicy checksumPolicy,
@@ -78,6 +82,7 @@ final class ChecksumValidator {
             Collection<ChecksumLocation> checksumLocations) {
         this.dataPath = dataPath;
         this.checksumAlgorithmFactories = checksumAlgorithmFactories;
+        this.pathProcessor = pathProcessor;
         this.checksumProcessor = checksumProcessor;
         this.checksumFetcher = checksumFetcher;
         this.checksumPolicy = checksumPolicy;
@@ -156,7 +161,7 @@ final class ChecksumValidator {
                 continue;
             }
             Path checksumFile = getChecksumPath(checksumLocation.getChecksumAlgorithmFactory());
-            try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
+            try (PathProcessor.TempFile tempFile = pathProcessor.newTempFile()) {
                 Path tmp = tempFile.getPath();
                 try {
                     if (!checksumFetcher.fetchChecksum(checksumLocation.getLocation(), tmp)) {

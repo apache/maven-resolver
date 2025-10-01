@@ -32,6 +32,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.io.ChecksumProcessor;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 
 import static java.util.Objects.requireNonNull;
@@ -50,6 +51,8 @@ public final class BasicRepositoryConnectorFactory implements RepositoryConnecto
 
     private final ChecksumPolicyProvider checksumPolicyProvider;
 
+    private final PathProcessor pathProcessor;
+
     private final ChecksumProcessor checksumProcessor;
 
     private final Map<String, ProvidedChecksumsSource> providedChecksumsSources;
@@ -61,11 +64,13 @@ public final class BasicRepositoryConnectorFactory implements RepositoryConnecto
             TransporterProvider transporterProvider,
             RepositoryLayoutProvider layoutProvider,
             ChecksumPolicyProvider checksumPolicyProvider,
+            PathProcessor pathProcessor,
             ChecksumProcessor checksumProcessor,
             Map<String, ProvidedChecksumsSource> providedChecksumsSources) {
         this.transporterProvider = requireNonNull(transporterProvider, "transporter provider cannot be null");
         this.layoutProvider = requireNonNull(layoutProvider, "repository layout provider cannot be null");
         this.checksumPolicyProvider = requireNonNull(checksumPolicyProvider, "checksum policy provider cannot be null");
+        this.pathProcessor = requireNonNull(pathProcessor, "path processor cannot be null");
         this.checksumProcessor = requireNonNull(checksumProcessor, "checksum processor cannot be null");
         this.providedChecksumsSources =
                 requireNonNull(providedChecksumsSources, "provided checksum sources cannot be null");
@@ -99,6 +104,7 @@ public final class BasicRepositoryConnectorFactory implements RepositoryConnecto
                 transporterProvider,
                 layoutProvider,
                 checksumPolicyProvider,
+                pathProcessor,
                 checksumProcessor,
                 providedChecksumsSources);
     }

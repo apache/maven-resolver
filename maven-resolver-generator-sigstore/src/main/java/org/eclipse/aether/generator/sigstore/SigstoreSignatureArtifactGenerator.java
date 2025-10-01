@@ -37,7 +37,7 @@ import dev.sigstore.encryption.certificates.Certificates;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.generator.sigstore.internal.FulcioOidHelper;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
-import org.eclipse.aether.util.FileUtils;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.util.artifact.SubArtifact;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,13 +45,18 @@ import org.slf4j.LoggerFactory;
 final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
     private static final String ARTIFACT_EXTENSION = ".sigstore.json";
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final PathProcessor pathProcessor;
     private final ArrayList<Artifact> artifacts;
     private final Predicate<Artifact> signableArtifactPredicate;
     private final boolean publicStaging;
     private final ArrayList<Path> signatureTempFiles;
 
     SigstoreSignatureArtifactGenerator(
-            Collection<Artifact> artifacts, Predicate<Artifact> signableArtifactPredicate, boolean publicStaging) {
+            PathProcessor pathProcessor,
+            Collection<Artifact> artifacts,
+            Predicate<Artifact> signableArtifactPredicate,
+            boolean publicStaging) {
+        this.pathProcessor = pathProcessor;
         this.artifacts = new ArrayList<>(artifacts);
         this.signableArtifactPredicate = signableArtifactPredicate;
         this.publicStaging = publicStaging;
@@ -107,7 +112,7 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
                                 + FulcioOidHelper.getIssuerV2(cert)
                                 + " IdP)");
 
-                        FileUtils.writeFile(signatureTempFile, p -> Files.writeString(p, bundle.toJson()));
+                        pathProcessor.write(signatureTempFile, bundle.toJson());
 
                         long duration = System.currentTimeMillis() - start;
                         logger.debug("  > Rekor entry "

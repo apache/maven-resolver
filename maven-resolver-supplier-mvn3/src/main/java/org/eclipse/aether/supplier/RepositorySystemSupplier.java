@@ -519,7 +519,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         HashMap<String, RemoteRepositoryFilterSource> result = new HashMap<>();
         result.put(
                 GroupIdRemoteRepositoryFilterSource.NAME,
-                new GroupIdRemoteRepositoryFilterSource(getRepositorySystemLifecycle()));
+                new GroupIdRemoteRepositoryFilterSource(getRepositorySystemLifecycle(), getPathProcessor()));
         result.put(
                 PrefixesRemoteRepositoryFilterSource.NAME,
                 new PrefixesRemoteRepositoryFilterSource(
@@ -586,7 +586,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 new SparseDirectoryTrustedChecksumsSource(getChecksumProcessor(), getLocalPathComposer()));
         result.put(
                 SummaryFileTrustedChecksumsSource.NAME,
-                new SummaryFileTrustedChecksumsSource(getLocalPathComposer(), getRepositorySystemLifecycle()));
+                new SummaryFileTrustedChecksumsSource(
+                        getLocalPathComposer(), getRepositorySystemLifecycle(), getPathProcessor()));
         return result;
     }
 
@@ -687,6 +688,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 getTransporterProvider(),
                 getRepositoryLayoutProvider(),
                 getChecksumPolicyProvider(),
+                getPathProcessor(),
                 getChecksumProcessor(),
                 getProvidedChecksumsSources());
     }

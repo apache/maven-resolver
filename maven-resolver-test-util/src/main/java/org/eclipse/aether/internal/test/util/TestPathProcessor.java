@@ -18,46 +18,12 @@
  */
 package org.eclipse.aether.internal.test.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileTime;
-
-import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 
 /**
  * A simple file processor implementation to help satisfy component requirements during tests.
+ *
+ * @deprecated This class is deprecated and is unused in Resolver. Use {@link PathProcessorSupport} instead.
  */
-public class TestPathProcessor implements PathProcessor {
-
-    private final TestFileProcessor testFileProcessor = new TestFileProcessor();
-
-    @Override
-    public void setLastModified(Path path, long value) throws IOException {
-        Files.setLastModifiedTime(path, FileTime.fromMillis(value));
-    }
-
-    public void mkdirs(Path directory) {
-        if (directory == null) {
-            return;
-        }
-        testFileProcessor.mkdirs(directory.toFile());
-    }
-
-    public void write(Path file, String data) throws IOException {
-        testFileProcessor.write(file.toFile(), data);
-    }
-
-    public void write(Path target, InputStream source) throws IOException {
-        testFileProcessor.write(target.toFile(), source);
-    }
-
-    public long copy(Path source, Path target, ProgressListener listener) throws IOException {
-        return testFileProcessor.copy(source.toFile(), target.toFile(), null);
-    }
-
-    public void move(Path source, Path target) throws IOException {
-        testFileProcessor.move(source.toFile(), target.toFile());
-    }
-}
+@Deprecated
+public class TestPathProcessor extends PathProcessorSupport {}

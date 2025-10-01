@@ -34,9 +34,10 @@ import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transport.minio.internal.RepositoryIdObjectNameMapperFactory;
-import org.eclipse.aether.util.FileUtils;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +59,7 @@ class MinioTransporterIT {
     private static final String OBJECT_NAME = "dir/file.txt";
     private static final String OBJECT_CONTENT = "content";
 
+    private PathProcessor pathProcessor;
     private MinIOContainer minioContainer;
     private RepositorySystemSession session;
     private ObjectNameMapperFactory objectNameMapperFactory;
@@ -66,6 +68,7 @@ class MinioTransporterIT {
     void startSuite() throws Exception {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
 
+        pathProcessor = new PathProcessorSupport();
         minioContainer = new MinIOContainer("minio/minio:latest");
         minioContainer.start();
         try (MinioClient minioClient = MinioClient.builder()
@@ -73,7 +76,7 @@ class MinioTransporterIT {
                 .credentials(minioContainer.getUserName(), minioContainer.getPassword())
                 .build()) {
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(BUCKET_NAME).build());
-            try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
+            try (PathProcessor.TempFile tempFile = pathProcessor.newTempFile()) {
                 Files.write(tempFile.getPath(), OBJECT_CONTENT.getBytes(StandardCharsets.UTF_8));
                 minioClient.uploadObject(UploadObjectArgs.builder()
                         .bucket(BUCKET_NAME)
@@ -118,7 +121,7 @@ class MinioTransporterIT {
     @Test
     void peekWithoutAuth() throws NoTransporterException {
         try {
-            new MinioTransporter(session, newRepo(RepositoryAuth.WITHOUT), objectNameMapperFactory);
+            new MinioTransporter(session, newRepo(RepositoryAuth.WITHOUT), objectNameMapperFactory, pathProcessor);
             fail("Should throw");
         } catch (IllegalStateException e) {
             assertTrue(e.getMessage().contains("No accessKey and/or secretKey provided"));
@@ -128,7 +131,7 @@ class MinioTransporterIT {
     @Test
     void peekWithWrongAuth() throws NoTransporterException {
         try (MinioTransporter transporter =
-                new MinioTransporter(session, newRepo(RepositoryAuth.WRONG), objectNameMapperFactory)) {
+                new MinioTransporter(session, newRepo(RepositoryAuth.WRONG), objectNameMapperFactory, pathProcessor)) {
             try {
                 transporter.peek(new PeekTask(URI.create("test")));
                 fail("Should throw");
@@ -142,7 +145,7 @@ class MinioTransporterIT {
     @Test
     void peekNonexistent() throws NoTransporterException {
         try (MinioTransporter transporter =
-                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory, pathProcessor)) {
             try {
                 transporter.peek(new PeekTask(URI.create("test")));
                 fail("Should throw");
@@ -156,7 +159,7 @@ class MinioTransporterIT {
     @Test
     void peekExistent() throws Exception {
         try (MinioTransporter transporter =
-                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory, pathProcessor)) {
             transporter.peek(new PeekTask(URI.create(OBJECT_NAME)));
             // Should not throw
         }
@@ -165,7 +168,7 @@ class MinioTransporterIT {
     @Test
     void getNonexistent() throws NoTransporterException {
         try (MinioTransporter transporter =
-                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory, pathProcessor)) {
             try {
                 transporter.get(new GetTask(URI.create("test")));
                 fail("Should throw");
@@ -179,7 +182,7 @@ class MinioTransporterIT {
     @Test
     void getExistent() throws Exception {
         try (MinioTransporter transporter =
-                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory, pathProcessor)) {
             GetTask task = new GetTask(URI.create(OBJECT_NAME));
             transporter.get(task);
             assertEquals(OBJECT_CONTENT, new String(task.getDataBytes(), StandardCharsets.UTF_8));
@@ -189,7 +192,7 @@ class MinioTransporterIT {
     @Test
     void putNonexistent() throws Exception {
         try (MinioTransporter transporter =
-                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory, pathProcessor)) {
             URI uri = URI.create("test");
             transporter.put(new PutTask(uri).setDataBytes(OBJECT_CONTENT.getBytes(StandardCharsets.UTF_8)));
             GetTask task = new GetTask(uri);
@@ -201,7 +204,7 @@ class MinioTransporterIT {
     @Test
     void putExistent() throws Exception {
         try (MinioTransporter transporter =
-                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory)) {
+                new MinioTransporter(session, newRepo(RepositoryAuth.WITH), objectNameMapperFactory, pathProcessor)) {
             URI uri = URI.create(OBJECT_NAME);
             GetTask task = new GetTask(uri);
             transporter.get(task);
