@@ -38,6 +38,16 @@ import org.eclipse.aether.version.VersionConstraint;
  * @noextend This interface is not intended to be extended by clients.
  */
 public interface DependencyNode {
+    /**
+     * Enums for attributes being managed.
+     */
+    enum ManagedSubject {
+        VERSION, SCOPE, OPTIONAL, PROPERTIES, EXCLUSIONS
+    }
+
+    enum ManagementKind {
+        ADJUSTING, ENFORCING
+    }
 
     /**
      * A bit flag indicating the dependency version was subject to dependency management
