@@ -70,6 +70,36 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
+    void prefixMetadata() {
+        DefaultMetadata metadata =
+                new DefaultMetadata("", "", ".meta/prefixes-central.txt", Metadata.Nature.RELEASE_OR_SNAPSHOT);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
+        assertEquals(1, names.size());
+        assertEquals(
+                ".meta~metadata~prefixes-central.txt.lock",
+                names.iterator().next().name());
+    }
+
+    @Test
+    void rootSomeMetadata() {
+        DefaultMetadata metadata = new DefaultMetadata("", "", "something.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
+        assertEquals(1, names.size());
+        assertEquals("metadata~something.xml.lock", names.iterator().next().name());
+    }
+
+    @Test
+    void nonRootSomeMetadata() {
+        DefaultMetadata metadata =
+                new DefaultMetadata("groupId", "artifactId", "something.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
+        assertEquals(1, names.size());
+        assertEquals(
+                "metadata~groupId~artifactId~something.xml.lock",
+                names.iterator().next().name());
+    }
+
+    @Test
     void oneAndOne() {
         DefaultArtifact artifact = new DefaultArtifact("agroup:artifact:1.0");
         DefaultMetadata metadata =
