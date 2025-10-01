@@ -39,7 +39,7 @@ import static java.util.Objects.requireNonNull;
 public final class ApacheTransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "apache";
 
-    private float priority = 10.0f;
+    private float priority = 5.0f;
 
     private final ChecksumExtractor checksumExtractor;
 
