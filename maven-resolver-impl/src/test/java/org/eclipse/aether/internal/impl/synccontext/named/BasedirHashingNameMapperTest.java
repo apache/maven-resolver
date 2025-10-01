@@ -31,12 +31,13 @@ import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BasedirNameMapperTest extends NameMapperTestSupport {
+public class BasedirHashingNameMapperTest extends NameMapperTestSupport {
     private final String PS = "/"; // we work with URIs now, not OS file paths
 
-    BasedirNameMapper mapper = new BasedirNameMapper(GAVNameMapper.fileGav());
+    BasedirNameMapper mapper = new BasedirNameMapper(new HashingNameMapper(GAVNameMapper.gav()));
 
     @Test
     void nullsAndEmptyInputs() {
@@ -63,8 +64,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/artifact~group~artifact~1.0.lock",
-                names.iterator().next().name());
+                names.iterator().next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
@@ -75,8 +76,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/my/locks/artifact~group~artifact~1.0.lock",
-                names.iterator().next().name());
+                names.iterator().next().name(),
+                basedir.toUri() + PS + "my" + PS + "locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
@@ -90,9 +91,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(1, names.size());
-        assertEquals(
-                "file:///my/locks/artifact~group~artifact~1.0.lock",
-                names.iterator().next().name());
+        assertEquals(names.iterator().next().name(), customBaseDir + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
@@ -103,8 +102,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/artifact~group~artifact~1.0.lock",
-                names.iterator().next().name());
+                names.iterator().next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "46e98183d232f1e16f863025080c7f2b9797fd10");
     }
 
     @Test
@@ -116,8 +115,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/metadata~group~artifact.lock",
-                names.iterator().next().name());
+                names.iterator().next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "293b3990971f4b4b02b220620d2538eaac5f221b");
     }
 
     @Test
@@ -129,8 +128,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/.meta~metadata~prefixes-central.txt.lock",
-                names.iterator().next().name());
+                names.iterator().next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "9db0329a628e4c74539c04d3f624b76b78bf5ff3");
     }
 
     @Test
@@ -141,8 +140,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/metadata~something.xml.lock",
-                names.iterator().next().name());
+                names.iterator().next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "e75ca04110613537eeb805ac3cc3a3bb4b3b999a");
     }
 
     @Test
@@ -154,8 +153,8 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/metadata~groupId~artifactId~something.xml.lock",
-                names.iterator().next().name());
+                names.iterator().next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "3ebd7051578a145a78fc67adeaccdcdc5a914b28");
     }
 
     @Test
@@ -167,15 +166,15 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
                 new DefaultMetadata("bgroup", "artifact", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), singletonList(metadata));
 
-        assertEquals(2, names.size());
+        assertEquals(names.size(), 2);
         Iterator<NamedLockKey> namesIterator = names.iterator();
 
         // they are sorted as well
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/artifact~agroup~artifact~1.0.lock",
-                namesIterator.next().name());
+                namesIterator.next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "d36504431d00d1c6e4d1c34258f2bf0a004de085");
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/metadata~bgroup~artifact.lock",
-                namesIterator.next().name());
+                namesIterator.next().name(),
+                basedir.toUri() + PS + ".locks" + PS + "fbcebba60d7eb931eca634f6ca494a8a1701b638");
     }
 }
