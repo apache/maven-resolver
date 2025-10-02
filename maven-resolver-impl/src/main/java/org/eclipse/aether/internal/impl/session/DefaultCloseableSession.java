@@ -37,6 +37,7 @@ import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
+import org.eclipse.aether.platform.PlatformManager;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -101,6 +102,8 @@ public final class DefaultCloseableSession implements CloseableSession {
 
     private final DependencyManager dependencyManager;
 
+    private final PlatformManager platformManager;
+
     private final DependencySelector dependencySelector;
 
     private final VersionFilter versionFilter;
@@ -141,6 +144,7 @@ public final class DefaultCloseableSession implements CloseableSession {
             ArtifactTypeRegistry artifactTypeRegistry,
             DependencyTraverser dependencyTraverser,
             DependencyManager dependencyManager,
+            PlatformManager platformManager,
             DependencySelector dependencySelector,
             VersionFilter versionFilter,
             DependencyGraphTransformer dependencyGraphTransformer,
@@ -171,6 +175,7 @@ public final class DefaultCloseableSession implements CloseableSession {
         this.artifactTypeRegistry = requireNonNull(artifactTypeRegistry);
         this.dependencyTraverser = dependencyTraverser;
         this.dependencyManager = dependencyManager;
+        this.platformManager = platformManager;
         this.dependencySelector = dependencySelector;
         this.versionFilter = versionFilter;
         this.dependencyGraphTransformer = dependencyGraphTransformer;
@@ -311,6 +316,11 @@ public final class DefaultCloseableSession implements CloseableSession {
     @Override
     public DependencyManager getDependencyManager() {
         return dependencyManager;
+    }
+
+    @Override
+    public PlatformManager getPlatformManager() {
+        return platformManager;
     }
 
     @Override

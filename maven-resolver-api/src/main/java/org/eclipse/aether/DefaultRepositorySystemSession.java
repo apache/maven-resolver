@@ -30,6 +30,7 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.collection.VersionFilter;
+import org.eclipse.aether.platform.PlatformManager;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.LocalRepository;
@@ -116,6 +117,8 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     private DependencyManager dependencyManager;
 
+    private PlatformManager platformManager;
+
     private DependencySelector dependencySelector;
 
     private VersionFilter versionFilter;
@@ -200,6 +203,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         setArtifactTypeRegistry(session.getArtifactTypeRegistry());
         setDependencyTraverser(session.getDependencyTraverser());
         setDependencyManager(session.getDependencyManager());
+        setPlatformManager(session.getPlatformManager());
         setDependencySelector(session.getDependencySelector());
         setVersionFilter(session.getVersionFilter());
         setDependencyGraphTransformer(session.getDependencyGraphTransformer());
@@ -711,6 +715,24 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     public DefaultRepositorySystemSession setDependencyManager(DependencyManager dependencyManager) {
         verifyStateForMutation();
         this.dependencyManager = dependencyManager;
+        return this;
+    }
+
+    @Override
+    public PlatformManager getPlatformManager() {
+        return platformManager;
+    }
+
+    /**
+     * Sets the platform manager to use for building dependency graphs.
+     *
+     * @param platformManager The platform manager to use for building dependency graphs, may be {@code null}.
+     * @return This session for chaining, never {@code null}.
+     * @since 2.0.13
+     */
+    public DefaultRepositorySystemSession setPlatformManager(PlatformManager platformManager) {
+        verifyStateForMutation();
+        this.platformManager = platformManager;
         return this;
     }
 

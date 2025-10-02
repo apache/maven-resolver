@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.spi.platform;
+package org.eclipse.aether.platform;
 
 import java.util.Collection;
 import java.util.Map;

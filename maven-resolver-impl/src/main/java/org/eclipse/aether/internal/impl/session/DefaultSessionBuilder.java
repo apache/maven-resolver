@@ -41,6 +41,7 @@ import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
+import org.eclipse.aether.platform.PlatformManager;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -120,6 +121,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     private DependencyTraverser dependencyTraverser;
 
     private DependencyManager dependencyManager;
+
+    private PlatformManager platformManager;
 
     private DependencySelector dependencySelector;
 
@@ -323,6 +326,12 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     }
 
     @Override
+    public DefaultSessionBuilder setPlatformManager(PlatformManager platformManager) {
+        this.platformManager = platformManager;
+        return this;
+    }
+
+    @Override
     public DefaultSessionBuilder setDependencySelector(DependencySelector dependencySelector) {
         this.dependencySelector = dependencySelector;
         return this;
@@ -446,6 +455,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
         setArtifactTypeRegistry(session.getArtifactTypeRegistry());
         setDependencyTraverser(session.getDependencyTraverser());
         setDependencyManager(session.getDependencyManager());
+        setPlatformManager(session.getPlatformManager());
         setDependencySelector(session.getDependencySelector());
         setVersionFilter(session.getVersionFilter());
         setDependencyGraphTransformer(session.getDependencyGraphTransformer());
@@ -479,6 +489,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 artifactTypeRegistry,
                 dependencyTraverser,
                 dependencyManager,
+                platformManager,
                 dependencySelector,
                 versionFilter,
                 dependencyGraphTransformer,

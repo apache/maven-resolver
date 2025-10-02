@@ -30,6 +30,7 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.collection.VersionFilter;
+import org.eclipse.aether.platform.PlatformManager;
 import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -350,6 +351,15 @@ public interface RepositorySystemSession {
          * @return This session for chaining, never {@code null}.
          */
         SessionBuilder setDependencyManager(DependencyManager dependencyManager);
+
+        /**
+         * Sets the platform manager to use for building dependency graphs.
+         *
+         * @param platformManager The platform manager to use for building dependency graphs, may be {@code null}.
+         * @return This session for chaining, never {@code null}.
+         * @since 2.0.13
+         */
+        SessionBuilder setPlatformManager(PlatformManager platformManager);
 
         /**
          * Sets the dependency selector to use for building dependency graphs.
@@ -722,6 +732,15 @@ public interface RepositorySystemSession {
      *         not performed.
      */
     DependencyManager getDependencyManager();
+
+    /**
+     * Gets the platform manager to use for building dependency graphs.
+     *
+     * @return The platform manager to use for building dependency graphs or {@code null} if dependency management is
+     *         not performed.
+     * @since 2.0.13
+     */
+    PlatformManager getPlatformManager();
 
     /**
      * Gets the dependency selector to use for building dependency graphs.

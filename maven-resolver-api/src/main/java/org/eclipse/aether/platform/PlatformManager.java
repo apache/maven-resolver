@@ -16,19 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.spi.platform;
+package org.eclipse.aether.platform;
+
+import org.eclipse.aether.artifact.Artifact;
 
 import java.util.Optional;
 
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.platform.Platform;
-
 /**
- * A platform locator.
+ * A platform manager.
  */
-public interface PlatformLocator {
-    /**
-     * Locates platform for given artifact.
-     */
+public interface PlatformManager {
     Optional<Platform> locatePlatform(Artifact artifact);
 }
