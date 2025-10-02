@@ -104,7 +104,19 @@ public final class DefaultDependencyNode implements DependencyNode {
         children = new ArrayList<>(0);
         setAliases(node.getAliases());
         setRequestContext(node.getRequestContext());
-        setManagedSubjects(node.getManagedSubjects());
+
+        HashMap<DependencyManagementSubject, Boolean> managedSubjects = new HashMap<>();
+        for (DependencyManagementSubject subject : DependencyManagementSubject.values()) {
+            if (node.isManagedSubject(subject)) {
+                managedSubjects.put(subject, node.isManagedSubjectEnforced(subject));
+            }
+        }
+        if (managedSubjects.isEmpty()) {
+            setManagedSubjects(null);
+        } else {
+            setManagedSubjects(managedSubjects);
+        }
+
         setRelocations(node.getRelocations());
         setRepositories(node.getRepositories());
         setVersion(node.getVersion());

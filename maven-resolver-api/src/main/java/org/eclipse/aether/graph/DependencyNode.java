@@ -185,13 +185,6 @@ public interface DependencyNode {
     int getManagedBits();
 
     /**
-     * Returns what kind of management was applied to this node.
-     *
-     * @since 2.0.13
-     */
-    Map<DependencyManagementSubject, Boolean> getManagedSubjects();
-
-    /**
      * Returns {@code true} if given subject is managed.
      *
      * @see DependencyManagementRule#isEnforcing()
