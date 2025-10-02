@@ -34,6 +34,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyManagementSubject;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
@@ -423,12 +424,12 @@ public final class PathConflictResolver extends ConflictResolver {
         private void derive(int levels, boolean winner) throws RepositoryException {
             if (!winner) {
                 if (this.parent != null) {
-                    if ((dn.getManagedBits() & DependencyNode.MANAGED_SCOPE) == 0) {
+                    if (!dn.isManagedSubjectEnforced(DependencyManagementSubject.SCOPE)) {
                         ScopeContext context = new ScopeContext(this.parent.scope, this.scope);
                         state.scopeDeriver.deriveScope(context);
                         this.scope = context.derivedScope;
                     }
-                    if ((dn.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) == 0) {
+                    if (!dn.isManagedSubjectEnforced(DependencyManagementSubject.OPTIONAL)) {
                         if (!this.optional && this.parent.optional) {
                             this.optional = true;
                         }

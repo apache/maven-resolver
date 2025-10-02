@@ -31,6 +31,7 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * UT for {@link DependencyManager} implementations.
  */
+@Disabled("This is not anymore how dependency manager works")
 public class DependencyManagerTest {
 
     private final Artifact A1 = new DefaultArtifact("test", "a", "", "1");

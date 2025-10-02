@@ -19,9 +19,13 @@
 package org.eclipse.aether.collection;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
+import org.eclipse.aether.graph.DependencyManagementRule;
 import org.eclipse.aether.graph.Exclusion;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The management updates to apply to a dependency.
@@ -29,6 +33,7 @@ import org.eclipse.aether.graph.Exclusion;
  * @see DependencyManager#manageDependency(org.eclipse.aether.graph.Dependency)
  */
 public final class DependencyManagement {
+    private final List<DependencyManagementRule<?>> rules;
 
     private String version;
 
@@ -42,9 +47,27 @@ public final class DependencyManagement {
 
     /**
      * Creates an empty management update.
+     *
+     * @deprecated
      */
+    @Deprecated
     public DependencyManagement() {
         // enables default constructor
+        this.rules = null;
+    }
+
+    /**
+     * Creates instance with given rules.
+     */
+    public DependencyManagement(List<DependencyManagementRule<?>> rules) {
+        this.rules = requireNonNull(rules);
+    }
+
+    /**
+     * Returns the {@link DependencyManagementRule} or {@code null}.
+     */
+    public List<DependencyManagementRule<?>> getRules() {
+        return rules;
     }
 
     /**
@@ -53,6 +76,7 @@ public final class DependencyManagement {
      * @return The new version or {@code null} if the version is not managed and the existing dependency version should
      *         remain unchanged.
      */
+    @Deprecated
     public String getVersion() {
         return version;
     }
@@ -63,6 +87,7 @@ public final class DependencyManagement {
      * @param version The new version, may be {@code null} if the version is not managed.
      * @return This management update for chaining, never {@code null}.
      */
+    @Deprecated
     public DependencyManagement setVersion(String version) {
         this.version = version;
         return this;
@@ -74,6 +99,7 @@ public final class DependencyManagement {
      * @return The new scope or {@code null} if the scope is not managed and the existing dependency scope should remain
      *         unchanged.
      */
+    @Deprecated
     public String getScope() {
         return scope;
     }
@@ -84,6 +110,7 @@ public final class DependencyManagement {
      * @param scope The new scope, may be {@code null} if the scope is not managed.
      * @return This management update for chaining, never {@code null}.
      */
+    @Deprecated
     public DependencyManagement setScope(String scope) {
         this.scope = scope;
         return this;
@@ -95,6 +122,7 @@ public final class DependencyManagement {
      * @return The new optional flag or {@code null} if the flag is not managed and the existing optional flag of the
      *         dependency should remain unchanged.
      */
+    @Deprecated
     public Boolean getOptional() {
         return optional;
     }
@@ -105,6 +133,7 @@ public final class DependencyManagement {
      * @param optional The optional flag, may be {@code null} if the flag is not managed.
      * @return This management update for chaining, never {@code null}.
      */
+    @Deprecated
     public DependencyManagement setOptional(Boolean optional) {
         this.optional = optional;
         return this;
@@ -118,6 +147,7 @@ public final class DependencyManagement {
      * @return The new exclusions or {@code null} if the exclusions are not managed and the existing dependency
      *         exclusions should remain unchanged.
      */
+    @Deprecated
     public Collection<Exclusion> getExclusions() {
         return exclusions;
     }
@@ -130,6 +160,7 @@ public final class DependencyManagement {
      * @param exclusions The new exclusions, may be {@code null} if the exclusions are not managed.
      * @return This management update for chaining, never {@code null}.
      */
+    @Deprecated
     public DependencyManagement setExclusions(Collection<Exclusion> exclusions) {
         this.exclusions = exclusions;
         return this;
@@ -143,6 +174,7 @@ public final class DependencyManagement {
      * @return The new artifact properties or {@code null} if the properties are not managed and the existing properties
      *         should remain unchanged.
      */
+    @Deprecated
     public Map<String, String> getProperties() {
         return properties;
     }
@@ -155,6 +187,7 @@ public final class DependencyManagement {
      * @param properties The new artifact properties, may be {@code null} if the properties are not managed.
      * @return This management update for chaining, never {@code null}.
      */
+    @Deprecated
     public DependencyManagement setProperties(Map<String, String> properties) {
         this.properties = properties;
         return this;

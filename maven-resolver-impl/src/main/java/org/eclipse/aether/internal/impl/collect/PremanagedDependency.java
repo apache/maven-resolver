@@ -29,7 +29,8 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyManagementRule;
+import org.eclipse.aether.graph.DependencyManagementSubject;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 
@@ -54,7 +55,10 @@ public class PremanagedDependency {
      */
     final Map<String, String> premanagedProperties;
 
-    final int managedBits;
+    /**
+     * @since 2.0.13
+     */
+    final Map<DependencyManagementSubject, Boolean> managedSubjects;
 
     final Dependency managedDependency;
 
@@ -67,7 +71,7 @@ public class PremanagedDependency {
             Boolean premanagedOptional,
             Collection<Exclusion> premanagedExclusions,
             Map<String, String> premanagedProperties,
-            int managedBits,
+            Map<DependencyManagementSubject, Boolean> managedSubjects,
             Dependency managedDependency,
             boolean premanagedState) {
         this.premanagedVersion = premanagedVersion;
@@ -80,7 +84,7 @@ public class PremanagedDependency {
         this.premanagedProperties =
                 premanagedProperties != null ? Collections.unmodifiableMap(new HashMap<>(premanagedProperties)) : null;
 
-        this.managedBits = managedBits;
+        this.managedSubjects = managedSubjects;
         this.managedDependency = managedDependency;
         this.premanagedState = premanagedState;
     }
@@ -90,51 +94,78 @@ public class PremanagedDependency {
             Dependency dependency,
             boolean disableVersionManagement,
             boolean premanagedState) {
-        DependencyManagement depMngt = depManager != null ? depManager.manageDependency(dependency) : null;
+        DependencyManagement management = depManager != null ? depManager.manageDependency(dependency) : null;
 
-        int managedBits = 0;
+        Map<DependencyManagementSubject, Boolean> managedSubjects = new HashMap<>();
         String premanagedVersion = null;
         String premanagedScope = null;
         Boolean premanagedOptional = null;
         Collection<Exclusion> premanagedExclusions = null;
         Map<String, String> premanagedProperties = null;
 
-        if (depMngt != null) {
-            if (depMngt.getVersion() != null && !disableVersionManagement) {
-                Artifact artifact = dependency.getArtifact();
-                premanagedVersion = artifact.getVersion();
-                dependency = dependency.setArtifact(artifact.setVersion(depMngt.getVersion()));
-                managedBits |= DependencyNode.MANAGED_VERSION;
-            }
-            if (depMngt.getProperties() != null) {
-                Artifact artifact = dependency.getArtifact();
-                premanagedProperties = artifact.getProperties();
-                dependency = dependency.setArtifact(artifact.setProperties(depMngt.getProperties()));
-                managedBits |= DependencyNode.MANAGED_PROPERTIES;
-            }
-            if (depMngt.getScope() != null) {
-                premanagedScope = dependency.getScope();
-                dependency = dependency.setScope(depMngt.getScope());
-                managedBits |= DependencyNode.MANAGED_SCOPE;
-            }
-            if (depMngt.getOptional() != null) {
-                premanagedOptional = dependency.isOptional();
-                dependency = dependency.setOptional(depMngt.getOptional());
-                managedBits |= DependencyNode.MANAGED_OPTIONAL;
-            }
-            if (depMngt.getExclusions() != null) {
-                premanagedExclusions = dependency.getExclusions();
-                dependency = dependency.setExclusions(depMngt.getExclusions());
-                managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
+        if (management != null) {
+            if (management.getRules() != null) {
+                for (DependencyManagementRule<?> rule : management.getRules()) {
+                    DependencyManagementSubject subject = rule.getSubject();
+                    if (subject == DependencyManagementSubject.VERSION) {
+                        if (disableVersionManagement) {
+                            continue;
+                        }
+                        premanagedVersion = dependency.getArtifact().getVersion();
+                    } else if (subject == DependencyManagementSubject.SCOPE) {
+                        premanagedScope = dependency.getScope();
+                    } else if (subject == DependencyManagementSubject.OPTIONAL) {
+                        premanagedOptional = dependency.isOptional();
+                    } else if (subject == DependencyManagementSubject.PROPERTIES) {
+                        premanagedProperties = dependency.getArtifact().getProperties();
+                    } else if (subject == DependencyManagementSubject.EXCLUSIONS) {
+                        premanagedExclusions = dependency.getExclusions();
+                    } else {
+                        throw new IllegalArgumentException("unknown subject " + subject);
+                    }
+                    dependency = rule.apply(dependency);
+                    managedSubjects.put(subject, rule.isEnforcing());
+                }
+            } else {
+                // legacy path: here there are no means to distinguish "management" as enforced or advised (so all are
+                // enforced)
+                if (management.getVersion() != null && !disableVersionManagement) {
+                    Artifact artifact = dependency.getArtifact();
+                    premanagedVersion = artifact.getVersion();
+                    dependency = dependency.setArtifact(artifact.setVersion(management.getVersion()));
+                    managedSubjects.put(DependencyManagementSubject.VERSION, true);
+                }
+                if (management.getProperties() != null) {
+                    Artifact artifact = dependency.getArtifact();
+                    premanagedProperties = artifact.getProperties();
+                    dependency = dependency.setArtifact(artifact.setProperties(management.getProperties()));
+                    managedSubjects.put(DependencyManagementSubject.PROPERTIES, true);
+                }
+                if (management.getScope() != null) {
+                    premanagedScope = dependency.getScope();
+                    dependency = dependency.setScope(management.getScope());
+                    managedSubjects.put(DependencyManagementSubject.SCOPE, true);
+                }
+                if (management.getOptional() != null) {
+                    premanagedOptional = dependency.isOptional();
+                    dependency = dependency.setOptional(management.getOptional());
+                    managedSubjects.put(DependencyManagementSubject.OPTIONAL, true);
+                }
+                if (management.getExclusions() != null) {
+                    premanagedExclusions = dependency.getExclusions();
+                    dependency = dependency.setExclusions(management.getExclusions());
+                    managedSubjects.put(DependencyManagementSubject.EXCLUSIONS, true);
+                }
             }
         }
+
         return new PremanagedDependency(
                 premanagedVersion,
                 premanagedScope,
                 premanagedOptional,
                 premanagedExclusions,
                 premanagedProperties,
-                managedBits,
+                managedSubjects,
                 dependency,
                 premanagedState);
     }
@@ -144,7 +175,7 @@ public class PremanagedDependency {
     }
 
     public void applyTo(DefaultDependencyNode child) {
-        child.setManagedBits(managedBits);
+        child.setManagedSubjects(managedSubjects);
         if (premanagedState) {
             child.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion);
             child.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope);
