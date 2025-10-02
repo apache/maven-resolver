@@ -51,7 +51,7 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     private Version version;
 
-    private Map<DependencyManagementSubject, Boolean> managedSubjects = new HashMap<>();
+    private Map<DependencyManagementSubject, Boolean> managedSubjects = Collections.emptyMap();
 
     private List<RemoteRepository> repositories;
 
@@ -229,19 +229,19 @@ public final class DefaultDependencyNode implements DependencyNode {
     @Override
     public int getManagedBits() {
         byte res = 0;
-        if (managedSubjects.containsKey(DependencyManagementSubject.VERSION)) {
+        if (isManagedSubject(DependencyManagementSubject.VERSION)) {
             res |= DependencyNode.MANAGED_VERSION;
         }
-        if (managedSubjects.containsKey(DependencyManagementSubject.SCOPE)) {
+        if (isManagedSubject(DependencyManagementSubject.SCOPE)) {
             res |= DependencyNode.MANAGED_SCOPE;
         }
-        if (managedSubjects.containsKey(DependencyManagementSubject.OPTIONAL)) {
+        if (isManagedSubject(DependencyManagementSubject.OPTIONAL)) {
             res |= DependencyNode.MANAGED_OPTIONAL;
         }
-        if (managedSubjects.containsKey(DependencyManagementSubject.PROPERTIES)) {
+        if (isManagedSubject(DependencyManagementSubject.PROPERTIES)) {
             res |= DependencyNode.MANAGED_PROPERTIES;
         }
-        if (managedSubjects.containsKey(DependencyManagementSubject.EXCLUSIONS)) {
+        if (isManagedSubject(DependencyManagementSubject.EXCLUSIONS)) {
             res |= DependencyNode.MANAGED_EXCLUSIONS;
         }
         return res;
@@ -253,12 +253,21 @@ public final class DefaultDependencyNode implements DependencyNode {
     }
 
     public void setManagedSubjects(Map<DependencyManagementSubject, Boolean> managedSubjects) {
-        this.managedSubjects = managedSubjects;
+        if (managedSubjects == null) {
+            this.managedSubjects = Collections.emptyMap();
+        } else {
+            this.managedSubjects = managedSubjects;
+        }
     }
 
     @Override
     public Map<DependencyManagementSubject, Boolean> getManagedSubjects() {
         return managedSubjects;
+    }
+
+    @Override
+    public boolean isManagedSubject(DependencyManagementSubject subject) {
+        return managedSubjects.containsKey(subject);
     }
 
     @Override

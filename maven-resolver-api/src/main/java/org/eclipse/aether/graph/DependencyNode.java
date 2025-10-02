@@ -192,8 +192,15 @@ public interface DependencyNode {
     Map<DependencyManagementSubject, Boolean> getManagedSubjects();
 
     /**
+     * Returns {@code true} if given subject is managed.
+     *
+     * @see DependencyManagementRule#isEnforcing()
+     * @since 2.0.13
+     */
+    boolean isManagedSubject(DependencyManagementSubject subject);
+
+    /**
      * Returns {@code true} if given subject is managed with {@link DependencyManagementRule#isEnforcing()} on this node.
-     * That is, this method is
      *
      * @see DependencyManagementRule#isEnforcing()
      * @since 2.0.13
