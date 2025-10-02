@@ -16,30 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.spi.platform;
-
-import java.util.Collection;
-
-import org.eclipse.aether.version.Version;
+package org.eclipse.aether.graph;
 
 /**
- * A definition of platform group; holds multiple {@link Platform} having same key but different version.
+ * Represents a dependency management subject, a managed attribute of dependency.
+ *
+ * @since 2.0.13
  */
-public interface PlatformGroup {
-    /**
-     * The common key of this platform.
-     */
-    String getKey();
-
-    /**
-     * The versions this group contains.
-     */
-    Collection<Version> getVersions();
-
-    /**
-     *
-     * @param version
-     * @return
-     */
-    Platform getPlatformForVersion(Version version);
+public enum DependencyManagementSubject {
+    VERSION,
+    SCOPE,
+    OPTIONAL,
+    PROPERTIES,
+    EXCLUSIONS
 }

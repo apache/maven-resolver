@@ -20,15 +20,18 @@ package org.eclipse.aether.util.graph.manager;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyManagementRule;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.scope.SystemDependencyScope;
@@ -206,14 +209,14 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedVersions != null && managedVersions.containsKey(key);
     }
 
-    private String getManagedVersion(Key key) {
+    private AbstractDependencyManager getManagedVersion(Key key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
-                return ancestor.managedVersions.get(key);
+                return ancestor;
             }
         }
         if (depth == 1 && managedVersions != null && managedVersions.containsKey(key)) {
-            return managedVersions.get(key);
+            return this;
         }
         return null;
     }
@@ -227,14 +230,14 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedScopes != null && managedScopes.containsKey(key);
     }
 
-    private String getManagedScope(Key key) {
+    private AbstractDependencyManager getManagedScope(Key key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
-                return ancestor.managedScopes.get(key);
+                return ancestor;
             }
         }
         if (depth == 1 && managedScopes != null && managedScopes.containsKey(key)) {
-            return managedScopes.get(key);
+            return this;
         }
         return null;
     }
@@ -248,14 +251,14 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedOptionals != null && managedOptionals.containsKey(key);
     }
 
-    private Boolean getManagedOptional(Key key) {
+    private AbstractDependencyManager getManagedOptional(Key key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
-                return ancestor.managedOptionals.get(key);
+                return ancestor;
             }
         }
         if (depth == 1 && managedOptionals != null && managedOptionals.containsKey(key)) {
-            return managedOptionals.get(key);
+            return this;
         }
         return null;
     }
@@ -276,14 +279,14 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      * @param key the dependency key
      * @return the managed local path, or null if not managed
      */
-    private String getManagedLocalPath(Key key) {
+    private AbstractDependencyManager getManagedLocalPath(Key key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
-                return ancestor.managedLocalPaths.get(key);
+                return ancestor;
             }
         }
         if (managedLocalPaths != null && managedLocalPaths.containsKey(key)) {
-            return managedLocalPaths.get(key);
+            return this;
         }
         return null;
     }
@@ -334,22 +337,20 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 managedVersions.put(key, version);
             }
 
-            if (isInheritedDerived()) {
-                String scope = managedDependency.getScope();
-                if (!scope.isEmpty() && !containsManagedScope(key)) {
-                    if (managedScopes == null) {
-                        managedScopes = MMap.emptyNotDone();
-                    }
-                    managedScopes.put(key, scope);
+            String scope = managedDependency.getScope();
+            if (!scope.isEmpty() && !containsManagedScope(key)) {
+                if (managedScopes == null) {
+                    managedScopes = MMap.emptyNotDone();
                 }
+                managedScopes.put(key, scope);
+            }
 
-                Boolean optional = managedDependency.getOptional();
-                if (optional != null && !containsManagedOptional(key)) {
-                    if (managedOptionals == null) {
-                        managedOptionals = MMap.emptyNotDone();
-                    }
-                    managedOptionals.put(key, optional);
+            Boolean optional = managedDependency.getOptional();
+            if (optional != null && !containsManagedOptional(key)) {
+                if (managedOptionals == null) {
+                    managedOptionals = MMap.emptyNotDone();
                 }
+                managedOptionals.put(key, optional);
             }
 
             String localPath = systemDependencyScope == null
@@ -390,62 +391,52 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     @Override
     public DependencyManagement manageDependency(Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
-        DependencyManagement management = null;
+        ArrayList<DependencyManagementRule<?>> rules = new ArrayList<>();
         Key key = new Key(dependency.getArtifact());
 
         if (isApplied()) {
-            String version = getManagedVersion(key);
+            AbstractDependencyManager versionOwner = getManagedVersion(key);
             // is managed locally by model builder
             // apply only rules coming from "higher" levels
-            if (version != null) {
-                management = new DependencyManagement();
-                management.setVersion(version);
+            if (versionOwner != null) {
+                rules.add(DependencyManagementRule.managedVersion(
+                        versionOwner.managedVersions.get(key), versionOwner.path.isEmpty()));
             }
 
-            String scope = getManagedScope(key);
+            AbstractDependencyManager scopeOwner = getManagedScope(key);
             // is managed locally by model builder
             // apply only rules coming from "higher" levels
-            if (scope != null) {
-                if (management == null) {
-                    management = new DependencyManagement();
-                }
-                management.setScope(scope);
+            if (scopeOwner != null) {
+                String managedScope = scopeOwner.managedScopes.get(key);
+                rules.add(DependencyManagementRule.managedScope(managedScope, scopeOwner.path.isEmpty()));
 
                 if (systemDependencyScope != null
-                        && !systemDependencyScope.is(scope)
+                        && !systemDependencyScope.is(managedScope)
                         && systemDependencyScope.getSystemPath(dependency.getArtifact()) != null) {
-                    HashMap<String, String> properties =
-                            new HashMap<>(dependency.getArtifact().getProperties());
-                    systemDependencyScope.setSystemPath(properties, null);
-                    management.setProperties(properties);
+                    rules.add(DependencyManagementRule.managedPropertiesRemove(
+                            Collections.singleton(ArtifactProperties.LOCAL_PATH), false));
                 }
             }
 
             // system scope paths always applied to have them aligned
             // (same artifact == same path) in whole graph
             if (systemDependencyScope != null
-                    && (scope != null && systemDependencyScope.is(scope)
-                            || (scope == null && systemDependencyScope.is(dependency.getScope())))) {
-                String localPath = getManagedLocalPath(key);
-                if (localPath != null) {
-                    if (management == null) {
-                        management = new DependencyManagement();
-                    }
-                    HashMap<String, String> properties =
-                            new HashMap<>(dependency.getArtifact().getProperties());
-                    systemDependencyScope.setSystemPath(properties, localPath);
-                    management.setProperties(properties);
+                    && (scopeOwner != null && systemDependencyScope.is(scopeOwner.managedScopes.get(key))
+                            || (scopeOwner == null && systemDependencyScope.is(dependency.getScope())))) {
+                AbstractDependencyManager localPathOwner = getManagedLocalPath(key);
+                if (localPathOwner != null) {
+                    HashMap<String, String> properties = new HashMap<>();
+                    properties.put(ArtifactProperties.LOCAL_PATH, localPathOwner.managedLocalPaths.get(key));
+                    rules.add(DependencyManagementRule.managedPropertiesPut(properties, false));
                 }
             }
 
             // optional is not managed by model builder
             // apply only rules coming from "higher" levels
-            Boolean optional = getManagedOptional(key);
-            if (optional != null) {
-                if (management == null) {
-                    management = new DependencyManagement();
-                }
-                management.setOptional(optional);
+            AbstractDependencyManager optionalOwner = getManagedOptional(key);
+            if (optionalOwner != null) {
+                rules.add(DependencyManagementRule.managedOptional(
+                        optionalOwner.managedOptionals.get(key), optionalOwner.path.isEmpty()));
             }
         }
 
@@ -456,15 +447,15 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // so we merge it here even from same level
         Collection<Exclusion> exclusions = getManagedExclusions(key);
         if (exclusions != null) {
-            if (management == null) {
-                management = new DependencyManagement();
-            }
             Collection<Exclusion> result = new LinkedHashSet<>(dependency.getExclusions());
             result.addAll(exclusions);
-            management.setExclusions(result);
+            rules.add(DependencyManagementRule.managedExclusions(result, false));
         }
 
-        return management;
+        if (rules.isEmpty()) {
+            return null;
+        }
+        return new DependencyManagement(rules);
     }
 
     /**
@@ -472,34 +463,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      */
     protected boolean isDerived() {
         return depth < deriveUntil;
-    }
-
-    /**
-     * Manages dependency properties including "version", "scope", "optional", "local path", and "exclusions".
-     * <p>
-     * Property management behavior:
-     * <ul>
-     * <li><strong>Version:</strong> Follows {@link #isDerived()} pattern. Management is applied only at higher
-     *     levels to avoid interference with the model builder.</li>
-     * <li><strong>Scope:</strong> Derived from root only due to inheritance in dependency graphs. Special handling
-     *     for "system" scope to align artifact paths.</li>
-     * <li><strong>Optional:</strong> Derived from root only due to inheritance in dependency graphs.</li>
-     * <li><strong>Local path:</strong> Managed only when scope is or was set to "system" to ensure consistent
-     *     artifact path alignment.</li>
-     * <li><strong>Exclusions:</strong> Accumulated additively from root to current level throughout the entire
-     *     dependency path.</li>
-     * </ul>
-     * <p>
-     * <strong>Inheritance handling:</strong> Since "scope" and "optional" properties inherit through dependency
-     * graphs (beyond model builder scope), they are derived only from the root node. The actual manager
-     * implementation determines specific handling behavior.
-     * <p>
-     * <strong>Default behavior:</strong> Defaults to {@link #isDerived()} to maintain compatibility with
-     * "classic" behavior (equivalent to {@code deriveUntil=2}). For custom transitivity management, override
-     * this method or ensure inherited managed properties are handled during graph transformation.
-     */
-    protected boolean isInheritedDerived() {
-        return isDerived();
     }
 
     /**

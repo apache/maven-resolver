@@ -145,30 +145,4 @@ public final class TransitiveDependencyManager extends AbstractDependencyManager
                 managedExclusions,
                 systemDependencyScope);
     }
-
-    /**
-     * Controls inheritance-based property derivation for scope and optional properties.
-     * <p>
-     * <strong>Why scope and optional are special:</strong> In dependency graphs, these two properties
-     * are subject to inheritance during graph transformation (which is outside ModelBuilder's scope).
-     * Therefore, scope and optional are derived only from the root to prevent interference with
-     * inheritance logic.
-     * </p>
-     * <p>
-     * <strong>The inheritance problem:</strong> If we managed scope/optional from sources below the root,
-     * we would mark nodes as "managed" in the dependency graph. The "managed" flag means "do not touch it,
-     * it is as it should be", which would prevent proper inheritance application during later graph
-     * transformation, causing nodes to end up with incorrect scope or optional states.
-     * </p>
-     * <p>
-     * <strong>Special case:</strong> The "system" scope has special handling due to its unique path requirements.
-     * </p>
-     *
-     * @return true only at depth 0 (root level) to ensure inheritance-based properties are only
-     *         derived from the root, false otherwise
-     */
-    @Override
-    protected boolean isInheritedDerived() {
-        return depth == 0;
-    }
 }

@@ -33,7 +33,6 @@ import org.eclipse.aether.graph.Dependency;
  *      CollectRequest)
  */
 public interface DependencyManager {
-
     /**
      * Applies dependency management to the specified dependency.
      *

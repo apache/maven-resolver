@@ -21,20 +21,18 @@ package org.eclipse.aether.graph;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents a dependency management rule, a managed value of given attribute.
+ * Represents a dependency management rule, a managed value of given {@link DependencyManagementSubject}.
  *
+ * @param <T> the type of subject rule operates on.
  * @since 2.0.13
  */
 public class DependencyManagementRule<T> implements UnaryOperator<Dependency> {
-    public enum Kind {
-        VERSION, SCOPE, OPTIONAL, PROPERTIES, EXCLUSIONS
-    }
-
     public static ManagedVersion managedVersion(String version, boolean enforcing) {
         return new ManagedVersion(version, enforcing);
     }
@@ -47,8 +45,12 @@ public class DependencyManagementRule<T> implements UnaryOperator<Dependency> {
         return new ManagedOptional(optional, enforcing);
     }
 
-    public static ManagedProperties managedProperties(Map<String, String> properties, boolean enforcing) {
-        return new ManagedProperties(properties, enforcing);
+    public static ManagedPropertiesPut managedPropertiesPut(Map<String, String> properties, boolean enforcing) {
+        return new ManagedPropertiesPut(properties, enforcing);
+    }
+
+    public static ManagedPropertiesRemove managedPropertiesRemove(Collection<String> keys, boolean enforcing) {
+        return new ManagedPropertiesRemove(keys, enforcing);
     }
 
     public static ManagedExclusions managedExclusions(Collection<Exclusion> exclusions, boolean enforcing) {
@@ -57,25 +59,30 @@ public class DependencyManagementRule<T> implements UnaryOperator<Dependency> {
 
     private final T value;
 
-    private final Kind kind;
+    private final DependencyManagementSubject subject;
 
     private final boolean enforcing;
 
     private final UnaryOperator<Dependency> operator;
 
-    protected DependencyManagementRule(T value, Kind kind, boolean enforcing, UnaryOperator<Dependency> operator) {
+    private final int hashCode;
+
+    protected DependencyManagementRule(
+            T value, DependencyManagementSubject subject, boolean enforcing, UnaryOperator<Dependency> operator) {
         this.value = requireNonNull(value);
-        this.kind = requireNonNull(kind);
+        this.subject = requireNonNull(subject);
         this.enforcing = enforcing;
         this.operator = requireNonNull(operator);
+
+        this.hashCode = Objects.hash(value, subject, enforcing);
     }
 
     public T getValue() {
         return value;
     }
 
-    public Kind getKind() {
-        return kind;
+    public DependencyManagementSubject getSubject() {
+        return subject;
     }
 
     public boolean isEnforcing() {
@@ -88,29 +95,59 @@ public class DependencyManagementRule<T> implements UnaryOperator<Dependency> {
         return operator.apply(dependency);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof DependencyManagementRule)) {
+            return false;
+        }
+        DependencyManagementRule<?> that = (DependencyManagementRule<?>) o;
+        return enforcing == that.enforcing && Objects.equals(value, that.value) && subject == that.subject;
+    }
+
+    @Override
+    public int hashCode() {
+        return hashCode;
+    }
+
     public static final class ManagedVersion extends DependencyManagementRule<String> {
         private ManagedVersion(String value, boolean enforcing) {
-            super(value, Kind.VERSION, enforcing, d -> d.setArtifact(d.getArtifact().setVersion(value)));
+            super(
+                    value,
+                    DependencyManagementSubject.VERSION,
+                    enforcing,
+                    d -> d.setArtifact(d.getArtifact().setVersion(value)));
         }
     }
 
     public static final class ManagedScope extends DependencyManagementRule<String> {
         private ManagedScope(String value, boolean enforcing) {
-            super(value, Kind.SCOPE, enforcing, d -> d.setScope(value));
+            super(value, DependencyManagementSubject.SCOPE, enforcing, d -> d.setScope(value));
         }
     }
 
     public static final class ManagedOptional extends DependencyManagementRule<Boolean> {
         private ManagedOptional(Boolean value, boolean enforcing) {
-            super(value, Kind.OPTIONAL, enforcing, d -> d.setOptional(value));
+            super(value, DependencyManagementSubject.OPTIONAL, enforcing, d -> d.setOptional(value));
         }
     }
 
-    public static final class ManagedProperties extends DependencyManagementRule<Map<String, String>> {
-        private ManagedProperties(Map<String, String> value, boolean enforcing) {
-            super(value, Kind.PROPERTIES, enforcing, d -> {
-                HashMap<String, String> properties = new HashMap<>(d.getArtifact().getProperties());
+    public static final class ManagedPropertiesPut extends DependencyManagementRule<Map<String, String>> {
+        private ManagedPropertiesPut(Map<String, String> value, boolean enforcing) {
+            super(value, DependencyManagementSubject.PROPERTIES, enforcing, d -> {
+                HashMap<String, String> properties =
+                        new HashMap<>(d.getArtifact().getProperties());
                 properties.putAll(value);
+                return d.setArtifact(d.getArtifact().setProperties(properties));
+            });
+        }
+    }
+
+    public static final class ManagedPropertiesRemove extends DependencyManagementRule<Collection<String>> {
+        private ManagedPropertiesRemove(Collection<String> value, boolean enforcing) {
+            super(value, DependencyManagementSubject.PROPERTIES, enforcing, d -> {
+                HashMap<String, String> properties =
+                        new HashMap<>(d.getArtifact().getProperties());
+                value.forEach(properties::remove);
                 return d.setArtifact(d.getArtifact().setProperties(properties));
             });
         }
@@ -118,7 +155,7 @@ public class DependencyManagementRule<T> implements UnaryOperator<Dependency> {
 
     public static final class ManagedExclusions extends DependencyManagementRule<Collection<Exclusion>> {
         private ManagedExclusions(Collection<Exclusion> value, boolean enforcing) {
-            super(value, Kind.EXCLUSIONS, enforcing, d -> d.setExclusions(value));
+            super(value, DependencyManagementSubject.EXCLUSIONS, enforcing, d -> d.setExclusions(value));
         }
     }
 }

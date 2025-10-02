@@ -39,49 +39,48 @@ import org.eclipse.aether.version.VersionConstraint;
  */
 public interface DependencyNode {
     /**
-     * Enums for attributes being managed.
-     */
-    enum ManagedSubject {
-        VERSION, SCOPE, OPTIONAL, PROPERTIES, EXCLUSIONS
-    }
-
-    enum ManagementKind {
-        ADJUSTING, ENFORCING
-    }
-
-    /**
      * A bit flag indicating the dependency version was subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated
      */
+    @Deprecated
     int MANAGED_VERSION = 0x01;
 
     /**
      * A bit flag indicating the dependency scope was subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated
      */
+    @Deprecated
     int MANAGED_SCOPE = 0x02;
 
     /**
      * A bit flag indicating the optional flag was subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated
      */
+    @Deprecated
     int MANAGED_OPTIONAL = 0x04;
 
     /**
      * A bit flag indicating the artifact properties were subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated
      */
+    @Deprecated
     int MANAGED_PROPERTIES = 0x08;
 
     /**
      * A bit flag indicating the exclusions were subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated
      */
+    @Deprecated
     int MANAGED_EXCLUSIONS = 0x10;
 
     /**
@@ -180,8 +179,26 @@ public interface DependencyNode {
      * @return A bit field containing any of the bits {@link #MANAGED_VERSION}, {@link #MANAGED_SCOPE},
      *         {@link #MANAGED_OPTIONAL}, {@link #MANAGED_PROPERTIES} and {@link #MANAGED_EXCLUSIONS} if the
      *         corresponding attribute was set via dependency management.
+     * @deprecated
      */
+    @Deprecated
     int getManagedBits();
+
+    /**
+     * Returns what kind of management was applied to this node.
+     *
+     * @since 2.0.13
+     */
+    Map<DependencyManagementSubject, Boolean> getManagedSubjects();
+
+    /**
+     * Returns {@code true} if given subject is managed with {@link DependencyManagementRule#isEnforcing()} on this node.
+     * That is, this method is
+     *
+     * @see DependencyManagementRule#isEnforcing()
+     * @since 2.0.13
+     */
+    boolean isManagedSubjectEnforced(DependencyManagementSubject subject);
 
     /**
      * Gets the remote repositories from which this node's artifact shall be resolved.

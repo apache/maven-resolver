@@ -18,10 +18,10 @@
  */
 package org.eclipse.aether.spi.platform;
 
+import java.util.List;
+
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.version.Version;
-
-import java.util.List;
 
 /**
  * A definition of platform; it can span multiple "levels", from "what BOM offers" to (optionally) much more.
@@ -61,7 +61,6 @@ public interface Platform {
      * The version of this platform.
      */
     Version getPlatformVersion();
-
 
     /**
      * The managed dependencies this platform contains.

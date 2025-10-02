@@ -18,12 +18,9 @@
  */
 package org.eclipse.aether.spi.platform;
 
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.version.Version;
-
-import java.util.Collection;
 import java.util.Optional;
+
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * The platform manager.
