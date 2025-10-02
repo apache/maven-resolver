@@ -29,6 +29,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManagement;
+import org.eclipse.aether.collection.DependencyManagementKey;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyManagementRule;
@@ -82,7 +83,7 @@ import static java.util.Objects.requireNonNull;
  * <h2>Rule Precedence</h2>
  * <p>
  * Rules are keyed by dependency management entry coordinates (GACE: Group, Artifact, Classifier,
- * Extension - see {@link Key}) and are recorded only if a rule for the same key did not exist
+ * Extension - see {@link DependencyManagementKey}) and are recorded only if a rule for the same key did not exist
  * previously. This implements the "nearer (to root) management wins" rule, while root management
  * overrides all.
  * </p>
@@ -123,19 +124,19 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     protected final int applyFrom;
 
     /** Managed version rules keyed by dependency coordinates. */
-    protected final MMap<Key, String> managedVersions;
+    protected final MMap<DependencyManagementKey, String> managedVersions;
 
     /** Managed scope rules keyed by dependency coordinates. */
-    protected final MMap<Key, String> managedScopes;
+    protected final MMap<DependencyManagementKey, String> managedScopes;
 
     /** Managed optional flags keyed by dependency coordinates. */
-    protected final MMap<Key, Boolean> managedOptionals;
+    protected final MMap<DependencyManagementKey, Boolean> managedOptionals;
 
     /** Managed local paths for system dependencies (intentionally excluded from equals/hashCode). */
-    protected final MMap<Key, String> managedLocalPaths;
+    protected final MMap<DependencyManagementKey, String> managedLocalPaths;
 
     /** Managed exclusions keyed by dependency coordinates. */
-    protected final MMap<Key, Holder<Collection<Exclusion>>> managedExclusions;
+    protected final MMap<DependencyManagementKey, Holder<Collection<Exclusion>>> managedExclusions;
 
     /** System dependency scope handler, may be null if no system scope is defined. */
     protected final SystemDependencyScope systemDependencyScope;
@@ -173,11 +174,11 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             int depth,
             int deriveUntil,
             int applyFrom,
-            MMap<Key, String> managedVersions,
-            MMap<Key, String> managedScopes,
-            MMap<Key, Boolean> managedOptionals,
-            MMap<Key, String> managedLocalPaths,
-            MMap<Key, Holder<Collection<Exclusion>>> managedExclusions,
+            MMap<DependencyManagementKey, String> managedVersions,
+            MMap<DependencyManagementKey, String> managedScopes,
+            MMap<DependencyManagementKey, Boolean> managedOptionals,
+            MMap<DependencyManagementKey, String> managedLocalPaths,
+            MMap<DependencyManagementKey, Holder<Collection<Exclusion>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
         this.path = path;
         this.depth = depth;
@@ -196,13 +197,13 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     protected abstract DependencyManager newInstance(
-            MMap<Key, String> managedVersions,
-            MMap<Key, String> managedScopes,
-            MMap<Key, Boolean> managedOptionals,
-            MMap<Key, String> managedLocalPaths,
-            MMap<Key, Holder<Collection<Exclusion>>> managedExclusions);
+            MMap<DependencyManagementKey, String> managedVersions,
+            MMap<DependencyManagementKey, String> managedScopes,
+            MMap<DependencyManagementKey, Boolean> managedOptionals,
+            MMap<DependencyManagementKey, String> managedLocalPaths,
+            MMap<DependencyManagementKey, Holder<Collection<Exclusion>>> managedExclusions);
 
-    private boolean containsManagedVersion(Key key) {
+    private boolean containsManagedVersion(DependencyManagementKey key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
                 return true;
@@ -211,7 +212,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedVersions != null && managedVersions.containsKey(key);
     }
 
-    private AbstractDependencyManager getManagedVersion(Key key) {
+    private AbstractDependencyManager getManagedVersion(DependencyManagementKey key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
                 return ancestor;
@@ -223,7 +224,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return null;
     }
 
-    private boolean containsManagedScope(Key key) {
+    private boolean containsManagedScope(DependencyManagementKey key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
                 return true;
@@ -232,7 +233,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedScopes != null && managedScopes.containsKey(key);
     }
 
-    private AbstractDependencyManager getManagedScope(Key key) {
+    private AbstractDependencyManager getManagedScope(DependencyManagementKey key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
                 return ancestor;
@@ -244,7 +245,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return null;
     }
 
-    private boolean containsManagedOptional(Key key) {
+    private boolean containsManagedOptional(DependencyManagementKey key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
                 return true;
@@ -253,7 +254,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedOptionals != null && managedOptionals.containsKey(key);
     }
 
-    private AbstractDependencyManager getManagedOptional(Key key) {
+    private AbstractDependencyManager getManagedOptional(DependencyManagementKey key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
                 return ancestor;
@@ -265,7 +266,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return null;
     }
 
-    private boolean containsManagedLocalPath(Key key) {
+    private boolean containsManagedLocalPath(DependencyManagementKey key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
                 return true;
@@ -281,7 +282,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      * @param key the dependency key
      * @return the managed local path, or null if not managed
      */
-    private AbstractDependencyManager getManagedLocalPath(Key key) {
+    private AbstractDependencyManager getManagedLocalPath(DependencyManagementKey key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
                 return ancestor;
@@ -301,7 +302,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      * @param key the dependency key
      * @return merged collection of exclusions, or null if none exist
      */
-    private Collection<Exclusion> getManagedExclusions(Key key) {
+    private Collection<Exclusion> getManagedExclusions(DependencyManagementKey key) {
         ArrayList<Exclusion> result = new ArrayList<>();
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedExclusions != null && ancestor.managedExclusions.containsKey(key)) {
@@ -321,15 +322,15 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             return this;
         }
 
-        MMap<Key, String> managedVersions = null;
-        MMap<Key, String> managedScopes = null;
-        MMap<Key, Boolean> managedOptionals = null;
-        MMap<Key, String> managedLocalPaths = null;
-        MMap<Key, Holder<Collection<Exclusion>>> managedExclusions = null;
+        MMap<DependencyManagementKey, String> managedVersions = null;
+        MMap<DependencyManagementKey, String> managedScopes = null;
+        MMap<DependencyManagementKey, Boolean> managedOptionals = null;
+        MMap<DependencyManagementKey, String> managedLocalPaths = null;
+        MMap<DependencyManagementKey, Holder<Collection<Exclusion>>> managedExclusions = null;
 
         for (Dependency managedDependency : context.getManagedDependencies()) {
             Artifact artifact = managedDependency.getArtifact();
-            Key key = new Key(artifact);
+            DependencyManagementKey key = new DependencyManagementKey(artifact);
 
             String version = artifact.getVersion();
             if (!version.isEmpty() && !containsManagedVersion(key)) {
@@ -394,7 +395,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     public DependencyManagement manageDependency(Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
         ArrayList<DependencyManagementRule<?>> rules = new ArrayList<>();
-        Key key = new Key(dependency.getArtifact());
+        DependencyManagementKey key = new DependencyManagementKey(dependency.getArtifact());
 
         if (isApplied()) {
             AbstractDependencyManager versionOwner = getManagedVersion(key);
@@ -495,50 +496,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     @Override
     public int hashCode() {
         return hashCode;
-    }
-
-    /**
-     * Key class for dependency management rules based on GACE coordinates.
-     * GACE = Group, Artifact, Classifier, Extension (excludes version for management purposes).
-     */
-    protected static class Key {
-        private final Artifact artifact;
-        private final int hashCode;
-
-        /**
-         * Creates a new key from the given artifact's GACE coordinates.
-         *
-         * @param artifact the artifact to create a key for
-         */
-        Key(Artifact artifact) {
-            this.artifact = artifact;
-            this.hashCode = Objects.hash(
-                    artifact.getArtifactId(), artifact.getGroupId(), artifact.getExtension(), artifact.getClassifier());
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
-            } else if (!(obj instanceof Key)) {
-                return false;
-            }
-            Key that = (Key) obj;
-            return artifact.getArtifactId().equals(that.artifact.getArtifactId())
-                    && artifact.getGroupId().equals(that.artifact.getGroupId())
-                    && artifact.getExtension().equals(that.artifact.getExtension())
-                    && artifact.getClassifier().equals(that.artifact.getClassifier());
-        }
-
-        @Override
-        public int hashCode() {
-            return hashCode;
-        }
-
-        @Override
-        public String toString() {
-            return String.valueOf(artifact);
-        }
     }
 
     /**

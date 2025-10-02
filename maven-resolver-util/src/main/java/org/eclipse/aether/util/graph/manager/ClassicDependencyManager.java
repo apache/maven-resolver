@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
+import org.eclipse.aether.collection.DependencyManagementKey;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.scope.ScopeManager;
@@ -98,11 +99,11 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
             int depth,
             int deriveUntil,
             int applyFrom,
-            MMap<Key, String> managedVersions,
-            MMap<Key, String> managedScopes,
-            MMap<Key, Boolean> managedOptionals,
-            MMap<Key, String> managedLocalPaths,
-            MMap<Key, Holder<Collection<Exclusion>>> managedExclusions,
+            MMap<DependencyManagementKey, String> managedVersions,
+            MMap<DependencyManagementKey, String> managedScopes,
+            MMap<DependencyManagementKey, Boolean> managedOptionals,
+            MMap<DependencyManagementKey, String> managedLocalPaths,
+            MMap<DependencyManagementKey, Holder<Collection<Exclusion>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
         super(
                 path,
@@ -148,11 +149,11 @@ public final class ClassicDependencyManager extends AbstractDependencyManager {
 
     @Override
     protected DependencyManager newInstance(
-            MMap<Key, String> managedVersions,
-            MMap<Key, String> managedScopes,
-            MMap<Key, Boolean> managedOptionals,
-            MMap<Key, String> managedLocalPaths,
-            MMap<Key, Holder<Collection<Exclusion>>> managedExclusions) {
+            MMap<DependencyManagementKey, String> managedVersions,
+            MMap<DependencyManagementKey, String> managedScopes,
+            MMap<DependencyManagementKey, Boolean> managedOptionals,
+            MMap<DependencyManagementKey, String> managedLocalPaths,
+            MMap<DependencyManagementKey, Holder<Collection<Exclusion>>> managedExclusions) {
         ArrayList<AbstractDependencyManager> path = new ArrayList<>(this.path);
         path.add(this);
         return new ClassicDependencyManager(
