@@ -273,11 +273,6 @@ public final class DefaultDependencyNode implements DependencyNode {
     }
 
     @Override
-    public Map<DependencyManagementSubject, Boolean> getManagedSubjects() {
-        return managedSubjects;
-    }
-
-    @Override
     public boolean isManagedSubject(DependencyManagementSubject subject) {
         return managedSubjects.containsKey(subject);
     }
