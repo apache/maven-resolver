@@ -32,6 +32,7 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyManagementRule;
+import org.eclipse.aether.graph.DependencyManagementSubject;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.scope.SystemDependencyScope;
@@ -89,9 +90,10 @@ import static java.util.Objects.requireNonNull;
  * <h2>Managed Bits and Graph Transformations</h2>
  * <p>
  * When a {@link org.eclipse.aether.graph.DependencyNode} becomes "managed" by any property
- * provided from this manager, {@link org.eclipse.aether.graph.DependencyNode#getManagedBits()}
+ * provided from this manager, {@link org.eclipse.aether.graph.DependencyNode#isManagedSubject(DependencyManagementSubject)}
+ * and {@link org.eclipse.aether.graph.DependencyNode#isManagedSubjectEnforced(DependencyManagementSubject)}
  * will carry this information for the given property. Later graph transformations will abstain
- * from modifying these properties of marked nodes (assuming the node already has the property
+ * from modifying these properties of marked enforced nodes (assuming the node already has the property
  * set to what it should have). Sometimes this is unwanted, especially for properties that need
  * to be inherited in the graph (values derived from parent-child context of the actual node,
  * like "scope" or "optional").
