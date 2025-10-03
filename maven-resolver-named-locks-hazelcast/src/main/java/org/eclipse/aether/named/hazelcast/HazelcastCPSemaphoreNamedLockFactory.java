@@ -27,7 +27,10 @@ import com.hazelcast.core.HazelcastInstance;
 
 /**
  * {@link HazelcastSemaphoreNamedLockFactory} using {@link DirectHazelcastSemaphoreProvider} full Hazelcast member.
+ *
+ * @deprecated Hazelcast support will be dropped.
  */
+@Deprecated
 @Singleton
 @Named(HazelcastCPSemaphoreNamedLockFactory.NAME)
 public class HazelcastCPSemaphoreNamedLockFactory extends HazelcastSemaphoreNamedLockFactory {

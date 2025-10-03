@@ -26,7 +26,10 @@ import org.eclipse.aether.named.NamedLockKey;
  * Direct provider of {@link ISemaphore} instances: it simply uses the passed in lock name to create semaphore name out
  * of it. This implies, that as many lock names are requested from it, this class will create as many semaphores in
  * Hazelcast.
+ *
+ * @deprecated Hazelcast support will be dropped.
  */
+@Deprecated
 public class DirectHazelcastSemaphoreProvider extends HazelcastSemaphoreProvider {
     @Override
     public ISemaphore acquireSemaphore(HazelcastInstance hazelcastInstance, NamedLockKey key) {

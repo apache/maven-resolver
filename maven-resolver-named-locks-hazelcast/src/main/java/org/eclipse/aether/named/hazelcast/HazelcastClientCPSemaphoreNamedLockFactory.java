@@ -28,7 +28,10 @@ import com.hazelcast.core.HazelcastInstance;
 /**
  * {@link HazelcastSemaphoreNamedLockFactory} using {@link DirectHazelcastSemaphoreProvider} and Hazelcast client. The
  * client must be configured to connect to some existing cluster (w/ proper configuration applied).
+ *
+ * @deprecated Hazelcast support will be dropped.
  */
+@Deprecated
 @Singleton
 @Named(HazelcastClientCPSemaphoreNamedLockFactory.NAME)
 public class HazelcastClientCPSemaphoreNamedLockFactory extends HazelcastSemaphoreNamedLockFactory {
