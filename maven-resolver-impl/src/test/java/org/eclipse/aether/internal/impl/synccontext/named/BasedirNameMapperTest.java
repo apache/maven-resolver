@@ -41,11 +41,11 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
     private String getPrefix() throws IOException {
         Path basedir = DirectoryUtils.resolveDirectory(
                 session, BasedirNameMapper.DEFAULT_LOCKS_DIR, BasedirNameMapper.CONFIG_PROP_LOCKS_DIR, false);
-        String basedirPath = basedir.toAbsolutePath().toString();
+        String basedirPath = basedir.toAbsolutePath().toUri().toASCIIString();
         if (!basedirPath.endsWith("/")) {
             basedirPath = basedirPath + "/";
         }
-        return "file://" + basedirPath;
+        return basedirPath;
     }
 
     @Test
