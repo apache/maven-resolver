@@ -129,7 +129,7 @@ public class BasedirHashingNameMapperTest extends NameMapperTestSupport {
         assertEquals(1, names.size());
         assertEquals(
                 names.iterator().next().name(),
-                basedir.toUri() + PS + ".locks" + PS + "35d0f75862d98c112ff7c69340c2edb941ab84c0");
+                basedir.toUri() + PS + ".locks" + PS + "520e2ba3a365db8cd804bcc40df38e1a52987e0f");
     }
 
     @Test

@@ -76,7 +76,7 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                "metadata~.meta_prefixes-central.txt.lock",
+                "metadata~.meta-SLASH-prefixes-central.txt.lock",
                 names.iterator().next().name());
     }
 
