@@ -21,9 +21,7 @@ package org.eclipse.aether.util.repository;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -31,6 +29,7 @@ import java.util.function.Predicate;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.PathUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 
 import static java.util.Objects.requireNonNull;
@@ -41,26 +40,11 @@ import static java.util.Objects.requireNonNull;
  * POMs out there that somehow define repositories with unsafe characters in their id. The problem affects mostly
  * {@link RemoteRepository} instances, as all other implementations have fixed ids that are path safe.
  *
+ * @see PathUtils
  * @since 2.0.11
  */
 public final class RepositoryIdHelper {
     private RepositoryIdHelper() {}
-
-    private static final Map<String, String> ILLEGAL_REPO_ID_REPLACEMENTS;
-
-    static {
-        HashMap<String, String> illegalRepoIdReplacements = new HashMap<>();
-        illegalRepoIdReplacements.put("\\", "-BACKSLASH-");
-        illegalRepoIdReplacements.put("/", "-SLASH-");
-        illegalRepoIdReplacements.put(":", "-COLON-");
-        illegalRepoIdReplacements.put("\"", "-QUOTE-");
-        illegalRepoIdReplacements.put("<", "-LT-");
-        illegalRepoIdReplacements.put(">", "-GT-");
-        illegalRepoIdReplacements.put("|", "-PIPE-");
-        illegalRepoIdReplacements.put("?", "-QMARK-");
-        illegalRepoIdReplacements.put("*", "-ASTERISK-");
-        ILLEGAL_REPO_ID_REPLACEMENTS = Collections.unmodifiableMap(illegalRepoIdReplacements);
-    }
 
     private static final String CENTRAL_REPOSITORY_ID = "central";
     private static final Collection<String> CENTRAL_URLS = Collections.unmodifiableList(Arrays.asList(
@@ -164,23 +148,12 @@ public final class RepositoryIdHelper {
      * <p>
      * This method is simplistic on purpose, and if frequently used, best if results are cached (per session),
      * see {@link #cachedIdToPathSegment(RepositorySystemSession)} method.
-     * <p>
-     * This method is visible for testing only, should not be used in any other scenarios.
      *
      * @see #cachedIdToPathSegment(RepositorySystemSession)
      */
-    static String idToPathSegment(ArtifactRepository repository) {
+    private static String idToPathSegment(ArtifactRepository repository) {
         if (repository instanceof RemoteRepository) {
-            StringBuilder result = new StringBuilder(repository.getId());
-            for (Map.Entry<String, String> entry : ILLEGAL_REPO_ID_REPLACEMENTS.entrySet()) {
-                String illegal = entry.getKey();
-                int pos = result.indexOf(illegal);
-                while (pos >= 0) {
-                    result.replace(pos, pos + illegal.length(), entry.getValue());
-                    pos = result.indexOf(illegal);
-                }
-            }
-            return result.toString();
+            return PathUtils.stringToPathSegment(repository.getId());
         } else {
             return repository.getId();
         }

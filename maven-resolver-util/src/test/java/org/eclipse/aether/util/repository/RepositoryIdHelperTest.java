@@ -33,33 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class RepositoryIdHelperTest {
     @Test
-    void fixes() {
-        Function<RemoteRepository, String> safeId = RepositoryIdHelper::idToPathSegment;
-        RemoteRepository good = new RemoteRepository.Builder("good", "default", "https://somewhere.com").build();
-        RemoteRepository bad = new RemoteRepository.Builder("bad:id", "default", "https://somewhere.com").build();
-
-        String goodId = good.getId();
-        String goodFixedId = safeId.apply(good);
-        assertEquals(goodId, goodFixedId);
-
-        String badId = bad.getId();
-        String badFixedId = safeId.apply(bad);
-        assertNotEquals(badId, badFixedId);
-        assertEquals("bad-COLON-id", badFixedId);
-    }
-
-    @Test
-    void allCharsBad() {
-        // hopefully we have no such IDs
-        RemoteRepository veryBad =
-                new RemoteRepository.Builder("\\/:\"<>|?*", "default", "https://somewhere.com").build();
-        String badId = veryBad.getId();
-        String badFixedId = RepositoryIdHelper.idToPathSegment(veryBad);
-        assertNotEquals(badId, badFixedId);
-        assertEquals("-BACKSLASH--SLASH--COLON--QUOTE--LT--GT--PIPE--QMARK--ASTERISK-", badFixedId);
-    }
-
-    @Test
     void caching() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(s -> false);
         session.setCache(new DefaultRepositoryCache()); // session has cache set
