@@ -24,7 +24,6 @@ import java.util.TreeSet;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLockKey;
 
@@ -107,43 +106,28 @@ public class GAVNameMapper implements NameMapper {
     private static final String MAVEN_METADATA = "maven-metadata.xml";
 
     private static String getMetadataName(Metadata metadata, String prefix, String separator, String suffix) {
-        if (metadata.getType().contains("/")) {
-            String metadataType = metadata.getType();
-            int slash = metadataType.indexOf('/');
-            return metadataType.substring(0, slash)
-                    + separator
-                    + getMetadataName(
-                            new DefaultMetadata(
-                                    metadata.getGroupId(),
-                                    metadata.getArtifactId(),
-                                    metadata.getVersion(),
-                                    metadataType.substring(slash + 1),
-                                    metadata.getNature(),
-                                    metadata.getProperties(),
-                                    metadata.getPath()),
-                            prefix,
-                            separator,
-                            suffix);
-        } else {
-            String name = prefix;
-            if (!metadata.getGroupId().isEmpty()) {
-                name += metadata.getGroupId();
-                if (!metadata.getArtifactId().isEmpty()) {
-                    name += separator + metadata.getArtifactId();
-                    if (!metadata.getVersion().isEmpty()) {
-                        name += separator + metadata.getVersion();
-                    }
-                }
-                if (!MAVEN_METADATA.equals(metadata.getType())) {
-                    name += separator + metadata.getType();
-                }
-            } else {
-                if (!MAVEN_METADATA.equals(metadata.getType())) {
-                    name += metadata.getType();
+        String type = metadata.getType();
+        if (type.contains("/")) {
+            type = type.replaceAll("/", "_");
+        }
+        String name = prefix;
+        if (!metadata.getGroupId().isEmpty()) {
+            name += metadata.getGroupId();
+            if (!metadata.getArtifactId().isEmpty()) {
+                name += separator + metadata.getArtifactId();
+                if (!metadata.getVersion().isEmpty()) {
+                    name += separator + metadata.getVersion();
                 }
             }
-            return name + suffix;
+            if (!MAVEN_METADATA.equals(type)) {
+                name += separator + type;
+            }
+        } else {
+            if (!MAVEN_METADATA.equals(type)) {
+                name += type;
+            }
         }
+        return name + suffix;
     }
 
     public static NameMapper gav() {

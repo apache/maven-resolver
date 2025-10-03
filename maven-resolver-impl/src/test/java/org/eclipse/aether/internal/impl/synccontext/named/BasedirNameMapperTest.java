@@ -139,7 +139,7 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                getPrefix() + ".meta~metadata~prefixes-central.txt.lock",
+                getPrefix() + "metadata~.meta_prefixes-central.txt.lock",
                 names.iterator().next().name());
     }
 
