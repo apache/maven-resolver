@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -27,6 +28,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLockKey;
+import org.eclipse.aether.util.DirectoryUtils;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.emptyList;
@@ -34,9 +36,17 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BasedirNameMapperTest extends NameMapperTestSupport {
-    private final String PS = "/"; // we work with URIs now, not OS file paths
+    private final BasedirNameMapper mapper = new BasedirNameMapper(GAVNameMapper.fileGav());
 
-    BasedirNameMapper mapper = new BasedirNameMapper(GAVNameMapper.fileGav());
+    private String getPrefix() throws IOException {
+        Path basedir = DirectoryUtils.resolveDirectory(
+                session, BasedirNameMapper.DEFAULT_LOCKS_DIR, BasedirNameMapper.CONFIG_PROP_LOCKS_DIR, false);
+        String basedirPath = basedir.toAbsolutePath().toString();
+        if (!basedirPath.endsWith("/")) {
+            basedirPath = basedirPath + "/";
+        }
+        return "file://" + basedirPath;
+    }
 
     @Test
     void nullsAndEmptyInputs() {
@@ -56,26 +66,26 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
     }
 
     @Test
-    void defaultLocksDir() {
+    void defaultLocksDir() throws IOException {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         configProperties.put("aether.syncContext.named.basedir.locksDir", null);
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/artifact~group~artifact~1.0.lock",
+                getPrefix() + "artifact~group~artifact~1.0.lock",
                 names.iterator().next().name());
     }
 
     @Test
-    void relativeLocksDir() {
+    void relativeLocksDir() throws IOException {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
         configProperties.put("aether.syncContext.named.basedir.locksDir", "my/locks");
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/my/locks/artifact~group~artifact~1.0.lock",
+                getPrefix() + "artifact~group~artifact~1.0.lock",
                 names.iterator().next().name());
     }
 
@@ -91,24 +101,24 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(1, names.size());
         assertEquals(
-                "file:///my/locks/artifact~group~artifact~1.0.lock",
+                getPrefix() + "artifact~group~artifact~1.0.lock",
                 names.iterator().next().name());
     }
 
     @Test
-    void singleArtifact() {
+    void singleArtifact() throws IOException {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
         Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/artifact~group~artifact~1.0.lock",
+                getPrefix() + "artifact~group~artifact~1.0.lock",
                 names.iterator().next().name());
     }
 
     @Test
-    void singleMetadata() {
+    void singleMetadata() throws IOException {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultMetadata metadata =
@@ -116,12 +126,12 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/metadata~group~artifact.lock",
+                getPrefix() + "metadata~group~artifact.lock",
                 names.iterator().next().name());
     }
 
     @Test
-    void prefixMetadata() {
+    void prefixMetadata() throws IOException {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultMetadata metadata =
@@ -129,24 +139,24 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/.meta~metadata~prefixes-central.txt.lock",
+                getPrefix() + ".meta~metadata~prefixes-central.txt.lock",
                 names.iterator().next().name());
     }
 
     @Test
-    void rootSomeMetadata() {
+    void rootSomeMetadata() throws IOException {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultMetadata metadata = new DefaultMetadata("", "", "something.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/metadata~something.xml.lock",
+                getPrefix() + "metadata~something.xml.lock",
                 names.iterator().next().name());
     }
 
     @Test
-    void nonRootSomeMetadata() {
+    void nonRootSomeMetadata() throws IOException {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultMetadata metadata =
@@ -154,12 +164,12 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
         assertEquals(1, names.size());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/metadata~groupId~artifactId~something.xml.lock",
+                getPrefix() + "metadata~groupId~artifactId~something.xml.lock",
                 names.iterator().next().name());
     }
 
     @Test
-    void oneAndOne() {
+    void oneAndOne() throws IOException {
         configProperties.put("aether.syncContext.named.hashing.depth", "0");
 
         DefaultArtifact artifact = new DefaultArtifact("agroup:artifact:1.0");
@@ -172,10 +182,10 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
 
         // they are sorted as well
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/artifact~agroup~artifact~1.0.lock",
+                getPrefix() + "artifact~agroup~artifact~1.0.lock",
                 namesIterator.next().name());
         assertEquals(
-                "file:///home/maven/.m2/repository/.locks/metadata~bgroup~artifact.lock",
+                getPrefix() + "metadata~bgroup~artifact.lock",
                 namesIterator.next().name());
     }
 }
