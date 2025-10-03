@@ -36,7 +36,10 @@ import static java.util.Objects.requireNonNull;
  * Factory of {@link AdaptedSemaphoreNamedLock} instances, using adapted Hazelcast {@link ISemaphore}. It delegates
  * most the work to {@link HazelcastSemaphoreProvider} and this class just adapts the returned semaphore to named lock
  * and caches {@link ISemaphore} instances, as recommended by Hazelcast.
+ *
+ * @deprecated Hazelcast support will be dropped.
  */
+@Deprecated
 public class HazelcastSemaphoreNamedLockFactory extends NamedLockFactorySupport {
     protected final HazelcastInstance hazelcastInstance;
 

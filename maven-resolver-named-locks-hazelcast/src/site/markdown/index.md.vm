@@ -19,6 +19,8 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+**Warning: Hazelcast support is deprecated; will be removed in next minor release.**
+
 This module implement named locks using Hazelcast. It provides two implementations, using members or clients and
 rely on Hazelcast ISemaphore instances.
 
