@@ -36,9 +36,9 @@ import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyManagementSubject;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.VersionScheme;
@@ -292,13 +292,13 @@ public class DependencyGraphParser {
             DefaultArtifact artifact = new DefaultArtifact(def.coords, def.properties);
             Dependency dependency = new Dependency(artifact, def.scope, def.optional);
             node = new DefaultDependencyNode(dependency);
-            Map<DependencyManagementSubject, Boolean> managedSubjects = new HashMap<>();
+            Map<DependencyManagement.Subject, Boolean> managedSubjects = new HashMap<>();
             if (def.premanagedScope != null) {
-                managedSubjects.put(DependencyManagementSubject.SCOPE, true);
+                managedSubjects.put(DependencyManagement.Subject.SCOPE, true);
                 node.setData("premanaged.scope", def.premanagedScope);
             }
             if (def.premanagedVersion != null) {
-                managedSubjects.put(DependencyManagementSubject.VERSION, true);
+                managedSubjects.put(DependencyManagement.Subject.VERSION, true);
                 node.setData("premanaged.version", def.premanagedVersion);
             }
             node.setManagedSubjects(managedSubjects);

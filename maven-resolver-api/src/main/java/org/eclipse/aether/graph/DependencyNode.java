@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
@@ -187,18 +188,18 @@ public interface DependencyNode {
     /**
      * Returns {@code true} if given subject is managed.
      *
-     * @see DependencyManagementRule#isEnforcing()
+     * @see org.eclipse.aether.collection.DependencyManagement.Subject
      * @since 2.0.13
      */
-    boolean isManagedSubject(DependencyManagementSubject subject);
+    boolean isManagedSubject(DependencyManagement.Subject subject);
 
     /**
-     * Returns {@code true} if given subject is managed with {@link DependencyManagementRule#isEnforcing()} on this node.
+     * Returns {@code true} if given subject is managed with enforcing modality on this node.
      *
-     * @see DependencyManagementRule#isEnforcing()
+     * @see org.eclipse.aether.collection.DependencyManagement.Subject
      * @since 2.0.13
      */
-    boolean isManagedSubjectEnforced(DependencyManagementSubject subject);
+    boolean isManagedSubjectEnforced(DependencyManagement.Subject subject);
 
     /**
      * Gets the remote repositories from which this node's artifact shall be resolved.

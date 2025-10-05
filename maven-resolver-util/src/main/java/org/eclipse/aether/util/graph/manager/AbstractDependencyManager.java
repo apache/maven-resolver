@@ -20,19 +20,15 @@ package org.eclipse.aether.util.graph.manager;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyManagementRule;
-import org.eclipse.aether.graph.DependencyManagementSubject;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.scope.SystemDependencyScope;
@@ -393,7 +389,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     @Override
     public DependencyManagement manageDependency(Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
-        ArrayList<DependencyManagementRule<?>> rules = new ArrayList<>();
+        DependencyManagement management = null;
         Key key = new Key(dependency.getArtifact());
 
         if (isApplied()) {
@@ -401,22 +397,27 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             // is managed locally by model builder
             // apply only rules coming from "higher" levels
             if (versionOwner != null) {
-                rules.add(DependencyManagementRule.managedVersion(
-                        versionOwner.managedVersions.get(key), versionOwner.path.isEmpty()));
+                management = new DependencyManagement();
+                management.setVersion(versionOwner.managedVersions.get(key), versionOwner.path.isEmpty());
             }
 
             AbstractDependencyManager scopeOwner = getManagedScope(key);
             // is managed locally by model builder
             // apply only rules coming from "higher" levels
             if (scopeOwner != null) {
+                if (management == null) {
+                    management = new DependencyManagement();
+                }
                 String managedScope = scopeOwner.managedScopes.get(key);
-                rules.add(DependencyManagementRule.managedScope(managedScope, scopeOwner.path.isEmpty()));
+                management.setScope(managedScope, scopeOwner.path.isEmpty());
 
                 if (systemDependencyScope != null
                         && !systemDependencyScope.is(managedScope)
                         && systemDependencyScope.getSystemPath(dependency.getArtifact()) != null) {
-                    rules.add(DependencyManagementRule.managedPropertiesRemove(
-                            Collections.singleton(ArtifactProperties.LOCAL_PATH), false));
+                    HashMap<String, String> properties =
+                            new HashMap<>(dependency.getArtifact().getProperties());
+                    systemDependencyScope.setSystemPath(properties, null);
+                    management.setProperties(properties, false);
                 }
             }
 
@@ -427,9 +428,13 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                             || (scopeOwner == null && systemDependencyScope.is(dependency.getScope())))) {
                 AbstractDependencyManager localPathOwner = getManagedLocalPath(key);
                 if (localPathOwner != null) {
-                    HashMap<String, String> properties = new HashMap<>();
-                    properties.put(ArtifactProperties.LOCAL_PATH, localPathOwner.managedLocalPaths.get(key));
-                    rules.add(DependencyManagementRule.managedPropertiesPut(properties, false));
+                    if (management == null) {
+                        management = new DependencyManagement();
+                    }
+                    HashMap<String, String> properties =
+                            new HashMap<>(dependency.getArtifact().getProperties());
+                    systemDependencyScope.setSystemPath(properties, localPathOwner.managedLocalPaths.get(key));
+                    management.setProperties(properties, false);
                 }
             }
 
@@ -437,8 +442,10 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             // apply only rules coming from "higher" levels
             AbstractDependencyManager optionalOwner = getManagedOptional(key);
             if (optionalOwner != null) {
-                rules.add(DependencyManagementRule.managedOptional(
-                        optionalOwner.managedOptionals.get(key), optionalOwner.path.isEmpty()));
+                if (management == null) {
+                    management = new DependencyManagement();
+                }
+                management.setOptional(optionalOwner.managedOptionals.get(key), optionalOwner.path.isEmpty());
             }
         }
 
@@ -449,15 +456,15 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // so we merge it here even from same level
         Collection<Exclusion> exclusions = getManagedExclusions(key);
         if (exclusions != null) {
+            if (management == null) {
+                management = new DependencyManagement();
+            }
             Collection<Exclusion> result = new LinkedHashSet<>(dependency.getExclusions());
             result.addAll(exclusions);
-            rules.add(DependencyManagementRule.managedExclusions(result, false));
+            management.setExclusions(result, false);
         }
 
-        if (rules.isEmpty()) {
-            return null;
-        }
-        return new DependencyManagement(rules);
+        return management;
     }
 
     /**

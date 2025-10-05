@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
@@ -51,7 +52,7 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     private Version version;
 
-    private Map<DependencyManagementSubject, Boolean> managedSubjects = Collections.emptyMap();
+    private Map<DependencyManagement.Subject, Boolean> managedSubjects = Collections.emptyMap();
 
     private List<RemoteRepository> repositories;
 
@@ -105,8 +106,8 @@ public final class DefaultDependencyNode implements DependencyNode {
         setAliases(node.getAliases());
         setRequestContext(node.getRequestContext());
 
-        HashMap<DependencyManagementSubject, Boolean> managedSubjects = new HashMap<>();
-        for (DependencyManagementSubject subject : DependencyManagementSubject.values()) {
+        HashMap<DependencyManagement.Subject, Boolean> managedSubjects = new HashMap<>();
+        for (DependencyManagement.Subject subject : DependencyManagement.Subject.values()) {
             if (node.isManagedSubject(subject)) {
                 managedSubjects.put(subject, node.isManagedSubjectEnforced(subject));
             }
@@ -241,19 +242,19 @@ public final class DefaultDependencyNode implements DependencyNode {
     @Override
     public int getManagedBits() {
         byte res = 0;
-        if (isManagedSubject(DependencyManagementSubject.VERSION)) {
+        if (isManagedSubject(DependencyManagement.Subject.VERSION)) {
             res |= DependencyNode.MANAGED_VERSION;
         }
-        if (isManagedSubject(DependencyManagementSubject.SCOPE)) {
+        if (isManagedSubject(DependencyManagement.Subject.SCOPE)) {
             res |= DependencyNode.MANAGED_SCOPE;
         }
-        if (isManagedSubject(DependencyManagementSubject.OPTIONAL)) {
+        if (isManagedSubject(DependencyManagement.Subject.OPTIONAL)) {
             res |= DependencyNode.MANAGED_OPTIONAL;
         }
-        if (isManagedSubject(DependencyManagementSubject.PROPERTIES)) {
+        if (isManagedSubject(DependencyManagement.Subject.PROPERTIES)) {
             res |= DependencyNode.MANAGED_PROPERTIES;
         }
-        if (isManagedSubject(DependencyManagementSubject.EXCLUSIONS)) {
+        if (isManagedSubject(DependencyManagement.Subject.EXCLUSIONS)) {
             res |= DependencyNode.MANAGED_EXCLUSIONS;
         }
         return res;
@@ -264,7 +265,7 @@ public final class DefaultDependencyNode implements DependencyNode {
         throw new IllegalArgumentException("bits are not supported");
     }
 
-    public void setManagedSubjects(Map<DependencyManagementSubject, Boolean> managedSubjects) {
+    public void setManagedSubjects(Map<DependencyManagement.Subject, Boolean> managedSubjects) {
         if (managedSubjects == null) {
             this.managedSubjects = Collections.emptyMap();
         } else {
@@ -273,12 +274,12 @@ public final class DefaultDependencyNode implements DependencyNode {
     }
 
     @Override
-    public boolean isManagedSubject(DependencyManagementSubject subject) {
+    public boolean isManagedSubject(DependencyManagement.Subject subject) {
         return managedSubjects.containsKey(subject);
     }
 
     @Override
-    public boolean isManagedSubjectEnforced(DependencyManagementSubject subject) {
+    public boolean isManagedSubjectEnforced(DependencyManagement.Subject subject) {
         return managedSubjects.getOrDefault(subject, false);
     }
 
