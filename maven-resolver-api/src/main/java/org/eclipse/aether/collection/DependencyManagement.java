@@ -32,6 +32,8 @@ import org.eclipse.aether.graph.Exclusion;
 public final class DependencyManagement {
     /**
      * Enumeration of manageable attributes, attributes that can be subjected to dependency management.
+     *
+     * @since 2.0.13
      */
     public enum Subject {
         VERSION,
@@ -52,6 +54,11 @@ public final class DependencyManagement {
         this.managedEnforced = new HashMap<>();
     }
 
+    /**
+     * Returns {@code true} if passed in subject is managed and is enforced.
+     *
+     * @since 2.0.13
+     */
     public boolean isSubjectEnforced(Subject subject) {
         return managedEnforced.getOrDefault(subject, false);
     }
@@ -84,6 +91,7 @@ public final class DependencyManagement {
      * @param version The new version, may be {@code null} if the version is not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
+     * @since 2.0.13
      */
     public DependencyManagement setVersion(String version, boolean enforced) {
         if (version == null) {
@@ -111,6 +119,7 @@ public final class DependencyManagement {
      *
      * @param scope The new scope, may be {@code null} if the scope is not managed.
      * @return This management update for chaining, never {@code null}.
+     * @deprecated Use {@link #setScope(String, boolean)} instead.
      */
     @Deprecated
     public DependencyManagement setScope(String scope) {
@@ -123,6 +132,7 @@ public final class DependencyManagement {
      * @param scope The new scope, may be {@code null} if the scope is not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
+     * @since 2.0.13
      */
     public DependencyManagement setScope(String scope, boolean enforced) {
         if (scope == null) {
@@ -150,6 +160,7 @@ public final class DependencyManagement {
      *
      * @param optional The optional flag, may be {@code null} if the flag is not managed.
      * @return This management update for chaining, never {@code null}.
+     * @deprecated Use {@link #setOptional(Boolean, boolean)} instead.
      */
     @Deprecated
     public DependencyManagement setOptional(Boolean optional) {
@@ -162,6 +173,7 @@ public final class DependencyManagement {
      * @param optional The optional flag, may be {@code null} if the flag is not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
+     * @since 2.0.13
      */
     public DependencyManagement setOptional(Boolean optional, boolean enforced) {
         if (optional == null) {
@@ -194,6 +206,7 @@ public final class DependencyManagement {
      *
      * @param exclusions The new exclusions, may be {@code null} if the exclusions are not managed.
      * @return This management update for chaining, never {@code null}.
+     * @deprecated Use {@link #setExclusions(Collection, boolean)} instead.
      */
     @Deprecated
     public DependencyManagement setExclusions(Collection<Exclusion> exclusions) {
@@ -208,6 +221,7 @@ public final class DependencyManagement {
      * @param exclusions The new exclusions, may be {@code null} if the exclusions are not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
+     * @since 2.0.13
      */
     public DependencyManagement setExclusions(Collection<Exclusion> exclusions, boolean enforced) {
         if (exclusions == null) {
@@ -240,6 +254,7 @@ public final class DependencyManagement {
      *
      * @param properties The new artifact properties, may be {@code null} if the properties are not managed.
      * @return This management update for chaining, never {@code null}.
+     * @deprecated Use {@link #setProperties(Map, boolean)} instead.
      */
     @Deprecated
     public DependencyManagement setProperties(Map<String, String> properties) {
@@ -254,6 +269,7 @@ public final class DependencyManagement {
      * @param properties The new artifact properties, may be {@code null} if the properties are not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
+     * @since 2.0.13
      */
     public DependencyManagement setProperties(Map<String, String> properties, boolean enforced) {
         if (properties == null) {

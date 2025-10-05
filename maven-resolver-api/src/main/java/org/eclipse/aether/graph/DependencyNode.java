@@ -43,7 +43,7 @@ public interface DependencyNode {
      * A bit flag indicating the dependency version was subject to dependency management
      *
      * @see #getManagedBits()
-     * @deprecated
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
     @Deprecated
     int MANAGED_VERSION = 0x01;
@@ -52,7 +52,7 @@ public interface DependencyNode {
      * A bit flag indicating the dependency scope was subject to dependency management
      *
      * @see #getManagedBits()
-     * @deprecated
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
     @Deprecated
     int MANAGED_SCOPE = 0x02;
@@ -61,7 +61,7 @@ public interface DependencyNode {
      * A bit flag indicating the optional flag was subject to dependency management
      *
      * @see #getManagedBits()
-     * @deprecated
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
     @Deprecated
     int MANAGED_OPTIONAL = 0x04;
@@ -70,7 +70,7 @@ public interface DependencyNode {
      * A bit flag indicating the artifact properties were subject to dependency management
      *
      * @see #getManagedBits()
-     * @deprecated
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
     @Deprecated
     int MANAGED_PROPERTIES = 0x08;
@@ -79,7 +79,7 @@ public interface DependencyNode {
      * A bit flag indicating the exclusions were subject to dependency management
      *
      * @see #getManagedBits()
-     * @deprecated
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
     @Deprecated
     int MANAGED_EXCLUSIONS = 0x10;
@@ -180,7 +180,7 @@ public interface DependencyNode {
      * @return A bit field containing any of the bits {@link #MANAGED_VERSION}, {@link #MANAGED_SCOPE},
      *         {@link #MANAGED_OPTIONAL}, {@link #MANAGED_PROPERTIES} and {@link #MANAGED_EXCLUSIONS} if the
      *         corresponding attribute was set via dependency management.
-     * @deprecated
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
     @Deprecated
     int getManagedBits();
