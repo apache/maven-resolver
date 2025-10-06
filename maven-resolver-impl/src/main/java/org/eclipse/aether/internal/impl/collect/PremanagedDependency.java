@@ -92,7 +92,7 @@ public class PremanagedDependency {
             Dependency dependency,
             boolean disableVersionManagement,
             boolean premanagedState) {
-        DependencyManagement management = depManager != null ? depManager.manageDependency(dependency) : null;
+        DependencyManagement depMngt = depManager != null ? depManager.manageDependency(dependency) : null;
 
         Map<DependencyManagement.Subject, Boolean> managedSubjects = new HashMap<>();
         String premanagedVersion = null;
@@ -101,43 +101,43 @@ public class PremanagedDependency {
         Collection<Exclusion> premanagedExclusions = null;
         Map<String, String> premanagedProperties = null;
 
-        if (management != null) {
-            if (management.getVersion() != null && !disableVersionManagement) {
+        if (depMngt != null) {
+            if (depMngt.getVersion() != null && !disableVersionManagement) {
                 Artifact artifact = dependency.getArtifact();
                 premanagedVersion = artifact.getVersion();
-                dependency = dependency.setArtifact(artifact.setVersion(management.getVersion()));
+                dependency = dependency.setArtifact(artifact.setVersion(depMngt.getVersion()));
                 managedSubjects.put(
                         DependencyManagement.Subject.VERSION,
-                        management.isSubjectEnforced(DependencyManagement.Subject.VERSION));
+                        depMngt.isSubjectEnforced(DependencyManagement.Subject.VERSION));
             }
-            if (management.getProperties() != null) {
+            if (depMngt.getProperties() != null) {
                 Artifact artifact = dependency.getArtifact();
                 premanagedProperties = artifact.getProperties();
-                dependency = dependency.setArtifact(artifact.setProperties(management.getProperties()));
+                dependency = dependency.setArtifact(artifact.setProperties(depMngt.getProperties()));
                 managedSubjects.put(
                         DependencyManagement.Subject.PROPERTIES,
-                        management.isSubjectEnforced(DependencyManagement.Subject.PROPERTIES));
+                        depMngt.isSubjectEnforced(DependencyManagement.Subject.PROPERTIES));
             }
-            if (management.getScope() != null) {
+            if (depMngt.getScope() != null) {
                 premanagedScope = dependency.getScope();
-                dependency = dependency.setScope(management.getScope());
+                dependency = dependency.setScope(depMngt.getScope());
                 managedSubjects.put(
                         DependencyManagement.Subject.SCOPE,
-                        management.isSubjectEnforced(DependencyManagement.Subject.SCOPE));
+                        depMngt.isSubjectEnforced(DependencyManagement.Subject.SCOPE));
             }
-            if (management.getOptional() != null) {
+            if (depMngt.getOptional() != null) {
                 premanagedOptional = dependency.isOptional();
-                dependency = dependency.setOptional(management.getOptional());
+                dependency = dependency.setOptional(depMngt.getOptional());
                 managedSubjects.put(
                         DependencyManagement.Subject.OPTIONAL,
-                        management.isSubjectEnforced(DependencyManagement.Subject.OPTIONAL));
+                        depMngt.isSubjectEnforced(DependencyManagement.Subject.OPTIONAL));
             }
-            if (management.getExclusions() != null) {
+            if (depMngt.getExclusions() != null) {
                 premanagedExclusions = dependency.getExclusions();
-                dependency = dependency.setExclusions(management.getExclusions());
+                dependency = dependency.setExclusions(depMngt.getExclusions());
                 managedSubjects.put(
                         DependencyManagement.Subject.EXCLUSIONS,
-                        management.isSubjectEnforced(DependencyManagement.Subject.EXCLUSIONS));
+                        depMngt.isSubjectEnforced(DependencyManagement.Subject.EXCLUSIONS));
             }
         }
 
