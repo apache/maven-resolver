@@ -189,7 +189,7 @@ public interface DependencyNode {
      * Returns {@code true} if given subject is managed.
      *
      * @see org.eclipse.aether.collection.DependencyManagement.Subject
-     * @since 2.0.13
+     * @since 2.0.14
      */
     boolean isManagedSubject(DependencyManagement.Subject subject);
 
@@ -197,7 +197,7 @@ public interface DependencyNode {
      * Returns {@code true} if given subject is managed with enforcing modality on this node.
      *
      * @see org.eclipse.aether.collection.DependencyManagement.Subject
-     * @since 2.0.13
+     * @since 2.0.14
      */
     boolean isManagedSubjectEnforced(DependencyManagement.Subject subject);
 

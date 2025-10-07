@@ -33,7 +33,7 @@ public final class DependencyManagement {
     /**
      * Enumeration of manageable attributes, attributes that can be subjected to dependency management.
      *
-     * @since 2.0.13
+     * @since 2.0.14
      */
     public enum Subject {
         VERSION,
@@ -55,12 +55,21 @@ public final class DependencyManagement {
     }
 
     /**
+     * Returns {@code true} if passed in subject is managed.
+     *
+     * @since 2.0.14
+     */
+    public boolean isManagedSubject(Subject subject) {
+        return managedValues.containsKey(subject);
+    }
+
+    /**
      * Returns {@code true} if passed in subject is managed and is enforced.
      *
-     * @since 2.0.13
+     * @since 2.0.14
      */
-    public boolean isSubjectEnforced(Subject subject) {
-        return managedEnforced.getOrDefault(subject, false);
+    public boolean isManagedSubjectEnforced(Subject subject) {
+        return isManagedSubject(subject) && managedEnforced.getOrDefault(subject, false);
     }
 
     /**
@@ -91,7 +100,7 @@ public final class DependencyManagement {
      * @param version The new version, may be {@code null} if the version is not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.13
+     * @since 2.0.14
      */
     public DependencyManagement setVersion(String version, boolean enforced) {
         if (version == null) {
@@ -132,7 +141,7 @@ public final class DependencyManagement {
      * @param scope The new scope, may be {@code null} if the scope is not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.13
+     * @since 2.0.14
      */
     public DependencyManagement setScope(String scope, boolean enforced) {
         if (scope == null) {
@@ -173,7 +182,7 @@ public final class DependencyManagement {
      * @param optional The optional flag, may be {@code null} if the flag is not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.13
+     * @since 2.0.14
      */
     public DependencyManagement setOptional(Boolean optional, boolean enforced) {
         if (optional == null) {
@@ -221,7 +230,7 @@ public final class DependencyManagement {
      * @param exclusions The new exclusions, may be {@code null} if the exclusions are not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.13
+     * @since 2.0.14
      */
     public DependencyManagement setExclusions(Collection<Exclusion> exclusions, boolean enforced) {
         if (exclusions == null) {
@@ -269,7 +278,7 @@ public final class DependencyManagement {
      * @param properties The new artifact properties, may be {@code null} if the properties are not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.13
+     * @since 2.0.14
      */
     public DependencyManagement setProperties(Map<String, String> properties, boolean enforced) {
         if (properties == null) {
