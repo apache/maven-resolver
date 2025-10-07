@@ -28,8 +28,8 @@
 
   <artifactId>maven-resolver-named-locks-hazelcast</artifactId>
 
-  <name>Maven Artifact Resolver Named Locks using Hazelcast</name>
-  <description>A synchronization utility implementation using Hazelcast.</description>
+  <name>Maven Artifact Resolver Named Locks using Hazelcast (deprecated)</name>
+  <description>A synchronization utility implementation using Hazelcast (deprecated).</description>
 
   <dependencies>
     <dependency>
