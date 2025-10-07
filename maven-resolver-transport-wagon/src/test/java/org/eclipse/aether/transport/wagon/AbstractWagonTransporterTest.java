@@ -39,6 +39,7 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
@@ -99,7 +100,8 @@ public abstract class AbstractWagonTransporterTest {
                     public void configure(Wagon wagon, Object configuration) {
                         ((Configurable) wagon).setConfiguration(configuration);
                     }
-                });
+                },
+                new PathProcessorSupport());
         id = UUID.randomUUID().toString().replace("-", "");
         fs = MemWagonUtils.getFilesystem(id);
         fs.put("file.txt", "test");

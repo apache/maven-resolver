@@ -26,6 +26,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLockKey;
+import org.eclipse.aether.util.PathUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -103,6 +104,8 @@ public class GAVNameMapper implements NameMapper {
                 + suffix;
     }
 
+    private static final String MAVEN_METADATA = "maven-metadata.xml";
+
     private static String getMetadataName(Metadata metadata, String prefix, String separator, String suffix) {
         String name = prefix;
         if (!metadata.getGroupId().isEmpty()) {
@@ -112,6 +115,13 @@ public class GAVNameMapper implements NameMapper {
                 if (!metadata.getVersion().isEmpty()) {
                     name += separator + metadata.getVersion();
                 }
+            }
+            if (!MAVEN_METADATA.equals(metadata.getType())) {
+                name += separator + PathUtils.stringToPathSegment(metadata.getType());
+            }
+        } else {
+            if (!MAVEN_METADATA.equals(metadata.getType())) {
+                name += PathUtils.stringToPathSegment(metadata.getType());
             }
         }
         return name + suffix;

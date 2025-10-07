@@ -35,7 +35,9 @@ import static java.util.Objects.requireNonNull;
  * A utility class to write files.
  *
  * @since 1.9.0
+ * @deprecated Do not use this class; is not used in Resolver (see corresponding processor components in {@code org.eclipse.aether.spi.io} package).
  */
+@Deprecated
 public final class FileUtils {
     /**
      * Logic borrowed from Commons-Lang3: we really need only this, to decide do we NIO2 file ops or not.
@@ -55,6 +57,7 @@ public final class FileUtils {
     private FileUtils() {
         // hide constructor
     }
+
     /**
      * A temporary file, that is removed when closed.
      */

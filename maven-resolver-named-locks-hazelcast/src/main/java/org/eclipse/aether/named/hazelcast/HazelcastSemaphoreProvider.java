@@ -24,7 +24,10 @@ import org.eclipse.aether.named.NamedLockKey;
 
 /**
  * Support class for providers of {@link ISemaphore} instances.
+ *
+ * @deprecated Hazelcast support will be dropped.
  */
+@Deprecated
 public abstract class HazelcastSemaphoreProvider {
     /**
      * Name prefix recommended using for simpler configuration of Hazelcast.

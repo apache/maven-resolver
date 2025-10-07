@@ -53,9 +53,9 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +74,8 @@ final class WagonTransporter implements Transporter {
     private final RemoteRepository repository;
 
     private final RepositorySystemSession session;
+
+    private final PathProcessor pathProcessor;
 
     private final AuthenticationContext repoAuthContext;
 
@@ -101,12 +103,14 @@ final class WagonTransporter implements Transporter {
             WagonProvider wagonProvider,
             WagonConfigurator wagonConfigurator,
             RemoteRepository repository,
-            RepositorySystemSession session)
+            RepositorySystemSession session,
+            PathProcessor pathProcessor)
             throws NoTransporterException {
         this.wagonProvider = wagonProvider;
         this.wagonConfigurator = wagonConfigurator;
         this.repository = repository;
         this.session = session;
+        this.pathProcessor = pathProcessor;
 
         wagonRepo = new Repository(repository.getId(), repository.getUrl());
         wagonRepo.setPermissions(getPermissions(repository.getId(), session));
@@ -340,12 +344,12 @@ final class WagonTransporter implements Transporter {
 
     @Override
     public void get(GetTask task) throws Exception {
-        execute(task, new GetTaskRunner(task));
+        execute(task, new GetTaskRunner(pathProcessor, task));
     }
 
     @Override
     public void put(PutTask task) throws Exception {
-        execute(task, new PutTaskRunner(task));
+        execute(task, new PutTaskRunner(pathProcessor, task));
     }
 
     private void execute(TransportTask task, TaskRunner runner) throws Exception {
@@ -407,9 +411,12 @@ final class WagonTransporter implements Transporter {
 
     private static class GetTaskRunner implements TaskRunner {
 
+        private final PathProcessor pathProcessor;
+
         private final GetTask task;
 
-        GetTaskRunner(GetTask task) {
+        GetTaskRunner(PathProcessor pathProcessor, GetTask task) {
+            this.pathProcessor = pathProcessor;
             this.task = task;
         }
 
@@ -423,8 +430,8 @@ final class WagonTransporter implements Transporter {
                 }
             } else {
                 // if file == null -> $TMP used, otherwise we place tmp file next to file
-                try (FileUtils.TempFile tempFile =
-                        file == null ? FileUtils.newTempFile() : FileUtils.newTempFile(file.toPath())) {
+                try (PathProcessor.TempFile tempFile =
+                        file == null ? pathProcessor.newTempFile() : pathProcessor.newTempFile(file.toPath())) {
                     File dst = tempFile.getPath().toFile();
                     wagon.get(src, dst);
                     /*
@@ -437,7 +444,7 @@ final class WagonTransporter implements Transporter {
                     }
 
                     if (file != null) {
-                        ((FileUtils.CollocatedTempFile) tempFile).move();
+                        ((PathProcessor.CollocatedTempFile) tempFile).move();
                     } else {
                         try (OutputStream outputStream = task.newOutputStream()) {
                             Files.copy(dst.toPath(), outputStream);
@@ -450,9 +457,12 @@ final class WagonTransporter implements Transporter {
 
     private static class PutTaskRunner implements TaskRunner {
 
+        private final PathProcessor pathProcessor;
+
         private final PutTask task;
 
-        PutTaskRunner(PutTask task) {
+        PutTaskRunner(PathProcessor pathProcessor, PutTask task) {
+            this.pathProcessor = pathProcessor;
             this.task = task;
         }
 
@@ -466,7 +476,7 @@ final class WagonTransporter implements Transporter {
                     ((StreamingWagon) wagon).putFromStream(src, dst, task.getDataLength(), -1);
                 }
             } else if (file == null) {
-                try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
+                try (PathProcessor.TempFile tempFile = pathProcessor.newTempFile()) {
                     try (InputStream inputStream = task.newInputStream()) {
                         Files.copy(inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
                     }

@@ -76,7 +76,6 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -335,7 +334,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     utilGet(task, is, true, length, downloadResumed);
                 }
             } else {
-                try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile)) {
+                try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
                     task.setDataPath(tempFile.getPath(), downloadResumed);
                     if (downloadResumed && Files.isRegularFile(dataFile)) {
                         try (InputStream inputStream = new BufferedInputStream(Files.newInputStream(dataFile))) {
@@ -395,7 +394,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request = request.expectContinue(expectContinue);
         }
         headers.forEach(request::setHeader);
-        try (FileUtils.TempFile tempFile = FileUtils.newTempFile()) {
+        try (PathProcessor.TempFile tempFile = pathProcessor.newTempFile()) {
             utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
             request.PUT(HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
 

@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.aether.MultiRuntimeException;
@@ -45,9 +46,9 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.FileUtils;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,6 +137,8 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
+    private final PathProcessor pathProcessor;
+
     private final ConcurrentHashMap<RemoteRepository, GroupTree> rules;
 
     private final ConcurrentHashMap<RemoteRepository, Path> ruleFiles;
@@ -145,8 +148,10 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     private final AtomicBoolean onShutdownHandlerRegistered;
 
     @Inject
-    public GroupIdRemoteRepositoryFilterSource(RepositorySystemLifecycle repositorySystemLifecycle) {
+    public GroupIdRemoteRepositoryFilterSource(
+            RepositorySystemLifecycle repositorySystemLifecycle, PathProcessor pathProcessor) {
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
+        this.pathProcessor = requireNonNull(pathProcessor);
         this.rules = new ConcurrentHashMap<>();
         this.ruleFiles = new ConcurrentHashMap<>();
         this.recordedRules = new ConcurrentHashMap<>();
@@ -299,7 +304,8 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                     result.add("# Recorded entries");
                     result.addAll(recorded);
                     logger.info("Saving {} groupIds to '{}'", result.size(), entry.getValue());
-                    FileUtils.writeFileWithBackup(entry.getValue(), p -> Files.write(p, result));
+                    pathProcessor.writeWithBackup(
+                            entry.getValue(), result.stream().collect(Collectors.joining(System.lineSeparator())));
                 } catch (IOException e) {
                     exceptions.add(e);
                 }

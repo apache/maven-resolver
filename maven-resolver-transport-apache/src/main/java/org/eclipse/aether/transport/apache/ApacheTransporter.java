@@ -100,7 +100,6 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -683,7 +682,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                     extractChecksums(response);
                 }
             } else {
-                try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(dataFile)) {
+                try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
                     task.setDataPath(tempFile.getPath(), resume);
                     if (resume && Files.isRegularFile(dataFile)) {
                         try (InputStream inputStream = Files.newInputStream(dataFile)) {

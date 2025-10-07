@@ -34,6 +34,7 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.spi.artifact.ArtifactPredicate;
 import org.eclipse.aether.spi.artifact.ArtifactPredicateFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +58,7 @@ public class SigstoreSignerFactoryTest {
         when(artifactPredicateFactory.newInstance(any(RepositorySystemSession.class)))
                 .thenReturn(artifactPredicate);
 
-        return new SigstoreSignatureArtifactGeneratorFactory(artifactPredicateFactory);
+        return new SigstoreSignatureArtifactGeneratorFactory(artifactPredicateFactory, new PathProcessorSupport());
     }
 
     private RepositorySystemSession createSession() {

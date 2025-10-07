@@ -27,11 +27,11 @@ import org.apache.http.pool.PoolStats;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.internal.test.util.TestPathProcessor;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.internal.test.util.http.RecordingTransportListener;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ApacheTransporterTest extends HttpTransporterTest {
 
     public ApacheTransporterTest() {
-        super(() -> new ApacheTransporterFactory(standardChecksumExtractor(), new TestPathProcessor()));
+        super(() -> new ApacheTransporterFactory(standardChecksumExtractor(), new PathProcessorSupport()));
     }
 
     @Override
