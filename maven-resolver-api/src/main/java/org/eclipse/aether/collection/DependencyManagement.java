@@ -39,8 +39,8 @@ public final class DependencyManagement {
         VERSION,
         SCOPE,
         OPTIONAL,
-        PROPERTIES,
-        EXCLUSIONS
+        EXCLUSIONS,
+        PROPERTIES
     }
 
     private final Map<Subject, Object> managedValues;
