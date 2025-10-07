@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.transport.jetty;
 
-import org.eclipse.aether.internal.test.util.TestPathProcessor;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
+import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -59,6 +59,6 @@ class JettyTransporterTest extends HttpTransporterTest {
     protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() {}
 
     public JettyTransporterTest() {
-        super(() -> new JettyTransporterFactory(standardChecksumExtractor(), new TestPathProcessor()));
+        super(() -> new JettyTransporterFactory(standardChecksumExtractor(), new PathProcessorSupport()));
     }
 }

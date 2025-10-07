@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
@@ -44,14 +45,13 @@ import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.FileUtils;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Compact file {@link FileTrustedChecksumsSourceSupport} implementation that use specified directory as base
@@ -132,6 +132,8 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
+    private final PathProcessor pathProcessor;
+
     private final ConcurrentHashMap<Path, ConcurrentHashMap<String, String>> checksums;
 
     private final ConcurrentHashMap<Path, Boolean> changedChecksums;
@@ -140,9 +142,12 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
 
     @Inject
     public SummaryFileTrustedChecksumsSource(
-            LocalPathComposer localPathComposer, RepositorySystemLifecycle repositorySystemLifecycle) {
+            LocalPathComposer localPathComposer,
+            RepositorySystemLifecycle repositorySystemLifecycle,
+            PathProcessor pathProcessor) {
         this.localPathComposer = requireNonNull(localPathComposer);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
+        this.pathProcessor = requireNonNull(pathProcessor);
         this.checksums = new ConcurrentHashMap<>();
         this.changedChecksums = new ConcurrentHashMap<>();
         this.onShutdownHandlerRegistered = new AtomicBoolean(false);
@@ -325,14 +330,12 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                     result.putAll(recordedLines);
 
                     LOGGER.info("Saving {} checksums to '{}'", result.size(), summaryFile);
-                    FileUtils.writeFileWithBackup(
+                    pathProcessor.writeWithBackup(
                             summaryFile,
-                            p -> Files.write(
-                                    p,
-                                    result.entrySet().stream()
-                                            .sorted(Map.Entry.comparingByKey())
-                                            .map(e -> e.getValue() + "  " + e.getKey())
-                                            .collect(toList())));
+                            result.entrySet().stream()
+                                    .sorted(Map.Entry.comparingByKey())
+                                    .map(e -> e.getValue() + "  " + e.getKey())
+                                    .collect(Collectors.joining(System.lineSeparator())));
                 } catch (IOException e) {
                     exceptions.add(e);
                 }

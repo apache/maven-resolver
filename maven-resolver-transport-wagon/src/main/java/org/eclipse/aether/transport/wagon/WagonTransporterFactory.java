@@ -25,6 +25,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 
 import static java.util.Objects.requireNonNull;
@@ -42,12 +43,16 @@ public final class WagonTransporterFactory implements TransporterFactory {
 
     private final WagonConfigurator wagonConfigurator;
 
+    private final PathProcessor pathProcessor;
+
     private float priority = -1.0f;
 
     @Inject
-    public WagonTransporterFactory(WagonProvider wagonProvider, WagonConfigurator wagonConfigurator) {
+    public WagonTransporterFactory(
+            WagonProvider wagonProvider, WagonConfigurator wagonConfigurator, PathProcessor pathProcessor) {
         this.wagonProvider = wagonProvider;
         this.wagonConfigurator = wagonConfigurator;
+        this.pathProcessor = pathProcessor;
     }
 
     @Override
@@ -72,6 +77,6 @@ public final class WagonTransporterFactory implements TransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        return new WagonTransporter(wagonProvider, wagonConfigurator, repository, session);
+        return new WagonTransporter(wagonProvider, wagonConfigurator, repository, session, pathProcessor);
     }
 }
