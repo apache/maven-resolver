@@ -54,7 +54,7 @@ public class PremanagedDependency {
     final Map<String, String> premanagedProperties;
 
     /**
-     * @since 2.0.13
+     * @since 2.0.14
      */
     final Map<DependencyManagement.Subject, Boolean> managedSubjects;
 
