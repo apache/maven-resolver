@@ -424,9 +424,7 @@ public class HttpServer {
                 if (HttpMethod.HEAD.is(req.getMethod())) {
                     return;
                 }
-                FileInputStream is = null;
-                try {
-                    is = new FileInputStream(file);
+                try (FileInputStream is = new FileInputStream(file)) {
                     if (offset > 0L) {
                         long skipped = is.skip(offset);
                         while (skipped < offset && is.read() >= 0) {
@@ -434,16 +432,6 @@ public class HttpServer {
                         }
                     }
                     IO.copy(is, response.getOutputStream());
-                    is.close();
-                    is = null;
-                } finally {
-                    try {
-                        if (is != null) {
-                            is.close();
-                        }
-                    } catch (final IOException e) {
-                        // Suppressed due to an exception already thrown in the try block.
-                    }
                 }
             } else if (HttpMethod.PUT.is(req.getMethod())) {
                 if (!webDav) {
@@ -451,20 +439,8 @@ public class HttpServer {
                 }
                 if (file.getParentFile().exists()) {
                     try {
-                        FileOutputStream os = null;
-                        try {
-                            os = new FileOutputStream(file);
+                        try (FileOutputStream os = new FileOutputStream(file)) {
                             IO.copy(request.getInputStream(), os);
-                            os.close();
-                            os = null;
-                        } finally {
-                            try {
-                                if (os != null) {
-                                    os.close();
-                                }
-                            } catch (final IOException e) {
-                                // Suppressed due to an exception already thrown in the try block.
-                            }
                         }
                     } catch (IOException e) {
                         file.delete();

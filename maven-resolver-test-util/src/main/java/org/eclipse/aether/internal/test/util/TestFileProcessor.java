@@ -63,23 +63,9 @@ public class TestFileProcessor implements FileProcessor {
     public void write(File file, String data) throws IOException {
         mkdirs(file.getParentFile());
 
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(file);
-
+        try (FileOutputStream fos = new FileOutputStream(file)) {
             if (data != null) {
                 fos.write(data.getBytes(StandardCharsets.UTF_8));
-            }
-
-            fos.close();
-            fos = null;
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
             }
         }
     }
@@ -87,22 +73,8 @@ public class TestFileProcessor implements FileProcessor {
     public void write(File target, InputStream source) throws IOException {
         mkdirs(target.getAbsoluteFile().getParentFile());
 
-        OutputStream fos = null;
-        try {
-            fos = new BufferedOutputStream(new FileOutputStream(target));
-
+        try (OutputStream fos = new BufferedOutputStream(new FileOutputStream(target))) {
             copy(fos, source, null);
-
-            fos.close();
-            fos = null;
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
-            }
         }
     }
 
@@ -113,38 +85,11 @@ public class TestFileProcessor implements FileProcessor {
     public long copy(File source, File target, ProgressListener listener) throws IOException {
         long total = 0;
 
-        InputStream fis = null;
-        OutputStream fos = null;
-        try {
-            fis = new FileInputStream(source);
+        try (InputStream fis = new FileInputStream(source);
+                OutputStream fos = new BufferedOutputStream(new FileOutputStream(target))) {
 
             mkdirs(target.getAbsoluteFile().getParentFile());
-
-            fos = new BufferedOutputStream(new FileOutputStream(target));
-
             total = copy(fos, fis, listener);
-
-            fos.close();
-            fos = null;
-
-            fis.close();
-            fis = null;
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
-            } finally {
-                try {
-                    if (fis != null) {
-                        fis.close();
-                    }
-                } catch (final IOException e) {
-                    // Suppressed due to an exception already thrown in the try block.
-                }
-            }
         }
 
         return total;
