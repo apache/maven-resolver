@@ -52,6 +52,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
@@ -79,6 +80,7 @@ import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.ACCEPT_ENCODING;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CACHE_CONTROL;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_LENGTH;
@@ -134,6 +136,12 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     private final Boolean expectContinue;
 
     private final Semaphore maxConcurrentRequests;
+
+    private boolean preemptivePutAuth;
+
+    private boolean preemptiveAuth;
+
+    private PasswordAuthentication serverAuthentication;
 
     JdkTransporter(
             RepositorySystemSession session,
@@ -227,6 +235,17 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 CONFIG_PROP_MAX_CONCURRENT_REQUESTS + "." + repository.getId(),
                 CONFIG_PROP_MAX_CONCURRENT_REQUESTS));
 
+        this.preemptiveAuth = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
+                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
+                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
+        this.preemptivePutAuth = ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH,
+                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH + "." + repository.getId(),
+                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH);
+
         this.headers = headers;
         this.client = createClient(session, repository, insecure);
     }
@@ -255,6 +274,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         HttpRequest.Builder request =
                 HttpRequest.newBuilder().uri(resolve(task)).method("HEAD", HttpRequest.BodyPublishers.noBody());
         headers.forEach(request::setHeader);
+
+        prepare(request);
         try {
             HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
@@ -286,6 +307,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     request.header(ACCEPT_ENCODING, "identity");
                 }
 
+                prepare(request);
                 try {
                     response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
@@ -398,6 +420,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
             request.PUT(HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
 
+            prepare(request);
             try {
                 HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
                 if (response.statusCode() >= MULTIPLE_CHOICES) {
@@ -407,6 +430,24 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 throw enhance(e);
             }
         }
+    }
+
+    private void prepare(HttpRequest.Builder requestBuilder) {
+        if (serverAuthentication != null
+                && (preemptiveAuth
+                        || (preemptivePutAuth && requestBuilder.build().method().equals("PUT")))) {
+            // https://stackoverflow.com/a/58612586
+            requestBuilder.setHeader(
+                    "Authorization",
+                    getBasicAuthValue(serverAuthentication.getUserName(), serverAuthentication.getPassword()));
+        }
+    }
+
+    static String getBasicAuthValue(String username, char[] password) {
+        StringBuilder sb = new StringBuilder(128);
+        sb.append(username).append(':').append(password);
+        // Java's HTTP client uses ISO-8859-1 for Basic auth encoding
+        return "Basic " + Base64.getEncoder().encodeToString(sb.toString().getBytes(ISO_8859_1));
     }
 
     private <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
@@ -437,10 +478,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
                 String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                 String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
-
-                authentications.put(
-                        Authenticator.RequestorType.SERVER,
-                        new PasswordAuthentication(username, password.toCharArray()));
+                serverAuthentication = new PasswordAuthentication(username, password.toCharArray());
+                authentications.put(Authenticator.RequestorType.SERVER, serverAuthentication);
             }
         }
 

@@ -29,7 +29,10 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnJre;
+import org.junit.jupiter.api.condition.JRE;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -50,14 +53,22 @@ class JdkTransporterTest extends HttpTransporterTest {
     protected void testPut_ProxyUnauthenticated() {}
 
     @Override
-    @Disabled
+    @DisabledOnJre(
+            value = {JRE.JAVA_17, JRE.JAVA_21},
+            disabledReason = "JDK-8326949")
     @Test
-    protected void testAuthSchemePreemptive() {}
+    protected void testAuthSchemePreemptive() throws Exception {
+        super.testAuthSchemePreemptive();
+    }
 
     @Override
-    @Disabled
+    @DisabledOnJre(
+            value = {JRE.JAVA_17, JRE.JAVA_21},
+            disabledReason = "JDK-8326949")
     @Test
-    protected void testPut_AuthCache_Preemptive() {}
+    protected void testPut_AuthCache_Preemptive() throws Exception {
+        super.testPut_AuthCache_Preemptive();
+    }
 
     @Override
     @Disabled
@@ -65,9 +76,13 @@ class JdkTransporterTest extends HttpTransporterTest {
     protected void testPut_Unauthenticated() {}
 
     @Override
-    @Disabled
+    @DisabledOnJre(
+            value = {JRE.JAVA_17, JRE.JAVA_21},
+            disabledReason = "JDK-8326949")
     @Test
-    protected void testPut_PreemptiveIsDefault() {}
+    protected void testPut_PreemptiveIsDefault() throws Exception {
+        super.testPut_PreemptiveIsDefault();
+    }
 
     @Override
     @Disabled
@@ -112,5 +127,12 @@ class JdkTransporterTest extends HttpTransporterTest {
         } catch (Exception e) {
             fail("We expect ConnectException");
         }
+    }
+
+    @Test
+    void testGetBasicAuthValue() {
+        assertEquals(
+                "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
+                JdkTransporter.getBasicAuthValue("Aladdin", "open sesame".toCharArray()));
     }
 }
