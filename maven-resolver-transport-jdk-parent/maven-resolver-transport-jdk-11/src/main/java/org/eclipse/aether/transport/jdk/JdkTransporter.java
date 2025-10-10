@@ -62,6 +62,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
+import com.github.mizosoft.methanol.Methanol;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -524,7 +525,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             }
         }
 
-        HttpClient.Builder builder = HttpClient.newBuilder()
+        HttpClient.Builder builder = Methanol.newBuilder()
                 .version(HttpClient.Version.valueOf(ConfigUtils.getString(
                         session,
                         DEFAULT_HTTP_VERSION,
