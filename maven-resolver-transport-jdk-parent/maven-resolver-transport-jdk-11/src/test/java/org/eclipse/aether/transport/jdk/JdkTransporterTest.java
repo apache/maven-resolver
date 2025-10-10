@@ -89,11 +89,6 @@ class JdkTransporterTest extends HttpTransporterTest {
     @Test
     protected void testRequestTimeout() throws Exception {}
 
-    @Override
-    @Disabled("https://github.com/apache/maven-resolver/issues/1620")
-    @Test
-    protected void testGet_CompressionUsedWithPom() throws Exception {}
-
     public JdkTransporterTest() {
         super(() -> new JdkTransporterFactory(standardChecksumExtractor(), new DefaultPathProcessor()));
     }
