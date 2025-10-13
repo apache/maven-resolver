@@ -533,6 +533,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         CONFIG_PROP_HTTP_VERSION)))
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofMillis(connectTimeout))
+                // this only considers the time until the response header is received, see
+                // https://bugs.openjdk.org/browse/JDK-8208693
+                // but better than nothing
+                .requestTimeout(Duration.ofMillis(requestTimeout))
                 .sslContext(sslContext);
 
         if (insecure) {
