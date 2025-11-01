@@ -19,6 +19,7 @@
 package org.eclipse.aether.util.graph.visitor;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -105,6 +106,30 @@ public class NodeListGeneratorTest {
     }
 
     @Test
+    void testLevelOrderWithFilterDirect() throws Exception {
+        DependencyNode root = parse("simple.txt");
+
+        NodeListGenerator nodeListGenerator = new NodeListGenerator();
+        LevelOrderDependencyNodeConsumerVisitor visitor =
+                new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator, (n, p) -> p.size() <= 1);
+        root.accept(visitor);
+
+        assertSequence(nodeListGenerator.getNodes(), "a", "b", "d");
+    }
+
+    @Test
+    void testLevelOrderWithFilterIndirect() throws Exception {
+        DependencyNode root = parse("simple.txt");
+
+        NodeListGenerator nodeListGenerator = new NodeListGenerator();
+        LevelOrderDependencyNodeConsumerVisitor visitor =
+                new LevelOrderDependencyNodeConsumerVisitor(nodeListGenerator, (n, p) -> p.size() <= 2);
+        root.accept(visitor);
+
+        assertSequence(nodeListGenerator.getNodes(), "a", "b", "d", "c", "e");
+    }
+
+    @Test
     void testLevelOrderDuplicateSuppression() throws Exception {
         DependencyNode root = parse("cycles.txt");
 
@@ -130,7 +155,7 @@ public class NodeListGeneratorTest {
         assertEquals(5, nodeListGenerator.getDependencies(true).size());
         assertEquals(0, nodeListGenerator.getArtifacts(false).size());
         assertEquals(5, nodeListGenerator.getArtifacts(true).size());
-        assertEquals(0, nodeListGenerator.getFiles().size());
+        assertEquals(0, nodeListGenerator.getPaths().size());
         assertEquals("", nodeListGenerator.getClassPath());
     }
 
@@ -141,7 +166,7 @@ public class NodeListGeneratorTest {
             @Override
             public boolean visitEnter(DependencyNode node) {
                 node.setArtifact(node.getArtifact()
-                        .setFile(new File(node.getDependency().getArtifact().getArtifactId())));
+                        .setPath(new File(node.getDependency().getArtifact().getArtifactId()).toPath()));
                 return true;
             }
 
@@ -158,9 +183,9 @@ public class NodeListGeneratorTest {
         root.accept(visitor);
 
         Set<String> fileNames = nodeListGenerator.getNodes().stream()
-                .map(n -> n.getArtifact().getFile())
+                .map(n -> n.getArtifact().getPath())
                 .filter(Objects::nonNull)
-                .map(File::getName)
+                .map(Path::toString)
                 .collect(Collectors.toSet());
         String classPath = nodeListGenerator.getClassPath();
         String[] splitClassPath = classPath.split(File.pathSeparator);
@@ -172,7 +197,7 @@ public class NodeListGeneratorTest {
         assertEquals(5, nodeListGenerator.getDependencies(true).size());
         assertEquals(5, nodeListGenerator.getArtifacts(false).size());
         assertEquals(5, nodeListGenerator.getArtifacts(true).size());
-        assertEquals(5, nodeListGenerator.getFiles().size());
+        assertEquals(5, nodeListGenerator.getPaths().size());
         assertEquals(fileNames, classPathNames);
     }
 
@@ -188,7 +213,7 @@ public class NodeListGeneratorTest {
                 if (alternator.get()) {
                     String fileName = node.getDependency().getArtifact().getArtifactId();
                     fileNames.add(fileName);
-                    node.setArtifact(node.getArtifact().setFile(new File(fileName)));
+                    node.setArtifact(node.getArtifact().setPath(new File(fileName).toPath()));
                 }
                 return true;
             }
@@ -215,7 +240,7 @@ public class NodeListGeneratorTest {
         assertEquals(5, nodeListGenerator.getDependencies(true).size());
         assertEquals(3, nodeListGenerator.getArtifacts(false).size());
         assertEquals(5, nodeListGenerator.getArtifacts(true).size());
-        assertEquals(3, nodeListGenerator.getFiles().size());
+        assertEquals(3, nodeListGenerator.getPaths().size());
         assertEquals(fileNames, classPathNames);
     }
 

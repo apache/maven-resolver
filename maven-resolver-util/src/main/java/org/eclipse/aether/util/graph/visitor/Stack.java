@@ -19,6 +19,8 @@
 package org.eclipse.aether.util.graph.visitor;
 
 import java.util.AbstractList;
+import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 
@@ -68,5 +70,16 @@ class Stack<E> extends AbstractList<E> implements RandomAccess {
     @Override
     public int size() {
         return size;
+    }
+
+    /**
+     * Returns a view as list sans top element.
+     */
+    public List<E> head() {
+        if (size < 2) {
+            return Collections.emptyList();
+        } else {
+            return subList(0, size - 1);
+        }
     }
 }
