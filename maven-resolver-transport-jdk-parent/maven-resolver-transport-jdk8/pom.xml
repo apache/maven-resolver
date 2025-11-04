@@ -26,7 +26,7 @@
     <version>2.0.14-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-transport-jdk-8</artifactId>
+  <artifactId>maven-resolver-transport-jdk8</artifactId>
   <packaging>jar</packaging>
 
   <name>Maven Artifact Resolver Transport JDK 8</name>
