@@ -264,7 +264,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         }
 
         if (request.getResolutionScope() != null) {
-            return scopeManager.postProcess(request.getResolutionScope(), result);
+            return scopeManager.postProcess(session, request.getResolutionScope(), result);
         } else {
             return result;
         }
@@ -312,8 +312,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         ResolutionScope resolutionScope = collectRequest.getResolutionScope();
         if (resolutionScope != null) {
             requireNonNull(scopeManager, "ScopeManager is not set on session");
-            optimized.setDependencySelector(scopeManager.getDependencySelector(resolutionScope));
-            optimized.setDependencyGraphTransformer(scopeManager.getDependencyGraphTransformer(resolutionScope));
+            optimized.setDependencySelector(scopeManager.getDependencySelector(session, resolutionScope));
         }
         return optimized;
     }

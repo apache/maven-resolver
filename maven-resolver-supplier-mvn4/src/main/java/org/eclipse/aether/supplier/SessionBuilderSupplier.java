@@ -95,8 +95,8 @@ public class SessionBuilderSupplier {
 
     public DependencyManager getDependencyManager(boolean transitive) {
         return transitive
-                ? new TransitiveDependencyManager(this.getScopeManager())
-                : new ClassicDependencyManager(this.scopeManager);
+                ? new TransitiveDependencyManager(getScopeManager())
+                : new ClassicDependencyManager(getScopeManager());
     }
 
     protected DependencySelector getDependencySelector() {
@@ -112,10 +112,10 @@ public class SessionBuilderSupplier {
         return new ChainedDependencyGraphTransformer(
                 new ConflictResolver(
                         new ConfigurableVersionSelector(),
-                        new ManagedScopeSelector(this.getScopeManager()),
+                        new ManagedScopeSelector(getScopeManager()),
                         new SimpleOptionalitySelector(),
-                        new ManagedScopeDeriver(this.getScopeManager())),
-                new ManagedDependencyContextRefiner(this.getScopeManager()));
+                        new ManagedScopeDeriver(getScopeManager())),
+                new ManagedDependencyContextRefiner(getScopeManager()));
     }
 
     protected ArtifactTypeRegistry getArtifactTypeRegistry() {
