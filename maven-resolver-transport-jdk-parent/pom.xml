@@ -37,4 +37,14 @@
     <module>maven-resolver-transport-jdk11</module>
     <module>maven-resolver-transport-jdk</module>
   </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.github.mizosoft.methanol</groupId>
+        <artifactId>methanol</artifactId>
+        <version>1.8.4</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 </project>
