@@ -21,10 +21,9 @@ package org.eclipse.aether.impl.scope;
 import java.util.Collection;
 import java.util.Optional;
 
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.CollectResult;
-import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencySelector;
-import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.scope.DependencyScope;
 import org.eclipse.aether.scope.ResolutionScope;
 import org.eclipse.aether.scope.ScopeManager;
@@ -58,25 +57,14 @@ public interface InternalScopeManager extends ScopeManager {
      * Resolver specific: dependency selector to be used to support this scope (with its dependency
      * and resolution scopes).
      */
-    DependencySelector getDependencySelector(ResolutionScope resolutionScope);
-
-    /**
-     * Resolver specific: dependency graph transformer to be used to support this scope (with its dependency
-     * and resolution scopes).
-     */
-    DependencyGraphTransformer getDependencyGraphTransformer(ResolutionScope resolutionScope);
+    DependencySelector getDependencySelector(RepositorySystemSession session, ResolutionScope resolutionScope);
 
     /**
      * Resolver specific: post-processing to be used to support this scope (with its dependency
      * and resolution scopes).
      */
-    CollectResult postProcess(ResolutionScope resolutionScope, CollectResult collectResult);
-
-    /**
-     * Resolver specific: dependency filter to be used to support this scope (with its dependency
-     * and resolution scopes).
-     */
-    DependencyFilter getDependencyFilter(ResolutionScope resolutionScope);
+    CollectResult postProcess(
+            RepositorySystemSession session, ResolutionScope resolutionScope, CollectResult collectResult);
 
     /**
      * The mode of resolution scope: eliminate (remove all occurrences) or just remove.
