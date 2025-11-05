@@ -33,8 +33,18 @@
   <description>Maven Artifact Transport JDK Java 11+ parent.</description>
 
   <modules>
-    <module>maven-resolver-transport-jdk-8</module>
-    <module>maven-resolver-transport-jdk-11</module>
+    <module>maven-resolver-transport-jdk8</module>
+    <module>maven-resolver-transport-jdk11</module>
     <module>maven-resolver-transport-jdk</module>
   </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.github.mizosoft.methanol</groupId>
+        <artifactId>methanol</artifactId>
+        <version>1.8.4</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 </project>

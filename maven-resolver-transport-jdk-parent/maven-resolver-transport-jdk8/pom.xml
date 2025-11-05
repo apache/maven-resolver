@@ -26,14 +26,14 @@
     <version>2.0.14-SNAPSHOT</version>
   </parent>
 
-  <artifactId>maven-resolver-transport-jdk-11</artifactId>
+  <artifactId>maven-resolver-transport-jdk8</artifactId>
   <packaging>jar</packaging>
 
-  <name>Maven Artifact Resolver Transport JDK 11</name>
+  <name>Maven Artifact Resolver Transport JDK 8</name>
   <description>Maven Artifact Transport JDK Java 11+.</description>
 
   <properties>
-    <javaVersion>11</javaVersion>
+    <javaVersion>8</javaVersion>
   </properties>
 
   <dependencies>
@@ -54,41 +54,10 @@
       <artifactId>maven-resolver-util</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.github.mizosoft.methanol</groupId>
-      <artifactId>methanol</artifactId>
-      <version>1.8.4</version>
-    </dependency>
-    <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-test-util</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-test-http</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-impl</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 

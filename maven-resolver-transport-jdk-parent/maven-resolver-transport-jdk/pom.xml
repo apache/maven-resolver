@@ -43,17 +43,21 @@
     <!-- These dependencies are actually included in this multi-release JAR -->
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-transport-jdk-8</artifactId>
+      <artifactId>maven-resolver-transport-jdk8</artifactId>
       <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-transport-jdk-11</artifactId>
+      <artifactId>maven-resolver-transport-jdk11</artifactId>
       <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
 
+    <dependency>
+      <groupId>com.github.mizosoft.methanol</groupId>
+      <artifactId>methanol</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -104,9 +108,9 @@
             <goals>
               <goal>unpack-dependencies</goal>
             </goals>
-            <phase>prepare-package</phase>
+            <phase>generate-resources</phase>
             <configuration>
-              <includeArtifactIds>maven-resolver-transport-jdk-8</includeArtifactIds>
+              <includeArtifactIds>maven-resolver-transport-jdk8</includeArtifactIds>
               <excludeClassifiers>sources</excludeClassifiers>
               <outputDirectory>${project.build.outputDirectory}</outputDirectory>
               <excludes>META-INF/maven/**</excludes>
@@ -117,9 +121,9 @@
             <goals>
               <goal>unpack-dependencies</goal>
             </goals>
-            <phase>prepare-package</phase>
+            <phase>generate-resources</phase>
             <configuration>
-              <includeArtifactIds>maven-resolver-transport-jdk-11</includeArtifactIds>
+              <includeArtifactIds>maven-resolver-transport-jdk11</includeArtifactIds>
               <excludeClassifiers>sources</excludeClassifiers>
               <outputDirectory>${project.build.outputDirectory}/META-INF/versions/11</outputDirectory>
               <includes>**/*.class</includes>
