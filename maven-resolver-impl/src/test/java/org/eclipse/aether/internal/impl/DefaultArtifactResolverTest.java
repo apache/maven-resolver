@@ -20,6 +20,9 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +41,6 @@ import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.filter.Filters;
-import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestLocalRepositoryManager;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.Metadata;
@@ -67,9 +69,9 @@ import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -91,6 +93,9 @@ public class DefaultArtifactResolverTest {
     private HashMap<String, RemoteRepositoryFilterSource> remoteRepositoryFilterSources;
 
     private DefaultRemoteRepositoryFilterManager remoteRepositoryFilterManager;
+
+    @TempDir
+    private Path tempPath;
 
     @BeforeEach
     void setup() {
@@ -125,18 +130,12 @@ public class DefaultArtifactResolverTest {
                 remoteRepositoryFilterManager);
     }
 
-    @AfterEach
-    void teardown() throws Exception {
-        if (session.getLocalRepository() != null) {
-            TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
-        }
-    }
-
     @Test
     void testResolveLocalArtifactSuccessful() throws IOException, ArtifactResolutionException {
-        File tmpFile = TestFileUtils.createTempFile("tmp");
         Map<String, String> properties = new HashMap<>();
-        properties.put(ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath());
+        properties.put(
+                ArtifactProperties.LOCAL_PATH,
+                Files.createTempFile(tempPath, "", "").toAbsolutePath().toString());
         artifact = artifact.setProperties(properties);
 
         ArtifactRequest request = new ArtifactRequest(artifact, null, "");
@@ -153,12 +152,12 @@ public class DefaultArtifactResolverTest {
 
     @Test
     void testResolveLocalArtifactUnsuccessful() throws IOException {
-        File tmpFile = TestFileUtils.createTempFile("tmp");
+        Path testPath = Files.createTempFile(tempPath, "", "").toAbsolutePath();
         Map<String, String> properties = new HashMap<>();
-        properties.put(ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath());
+        properties.put(ArtifactProperties.LOCAL_PATH, testPath.toString());
         artifact = artifact.setProperties(properties);
 
-        tmpFile.delete();
+        Files.deleteIfExists(testPath);
 
         ArtifactRequest request = new ArtifactRequest(artifact, null, "");
 
@@ -393,8 +392,9 @@ public class DefaultArtifactResolverTest {
             connector.assertSeenExpected();
         }
 
-        TestFileUtils.writeString(
-                new File(lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact(artifact2)), "artifact");
+        Files.write(
+                new File(lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact(artifact2)).toPath(),
+                "artifact".getBytes(StandardCharsets.UTF_8));
         lrm.setArtifactAvailability(artifact2, false);
 
         DefaultUpdateCheckManagerTest.resetSessionData(session);
@@ -427,7 +427,9 @@ public class DefaultArtifactResolverTest {
 
             public File findArtifact(Artifact artifact) {
                 try {
-                    return TestFileUtils.createTempFile(artifact.toString());
+                    Path path = Files.createTempFile(tempPath, "", "");
+                    Files.write(path, artifact.toString().getBytes(StandardCharsets.UTF_8));
+                    return path.toFile();
                 } catch (IOException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
@@ -445,7 +447,9 @@ public class DefaultArtifactResolverTest {
         Artifact resolved = result.getArtifact();
         assertNotNull(resolved.getFile());
 
-        assertEquals(resolved.toString(), TestFileUtils.readString(resolved.getFile()));
+        assertEquals(
+                resolved.toString(),
+                new String(Files.readAllBytes(resolved.getFile().toPath()), StandardCharsets.UTF_8));
 
         resolved = resolved.setFile(null);
         assertEquals(artifact, resolved);
@@ -494,10 +498,10 @@ public class DefaultArtifactResolverTest {
     void testRepositoryEventsSuccessfulLocal() throws ArtifactResolutionException, IOException {
         RecordingRepositoryListener listener = new RecordingRepositoryListener();
         session.setRepositoryListener(listener);
-
-        File tmpFile = TestFileUtils.createTempFile("tmp");
         Map<String, String> properties = new HashMap<>();
-        properties.put(ArtifactProperties.LOCAL_PATH, tmpFile.getAbsolutePath());
+        properties.put(
+                ArtifactProperties.LOCAL_PATH,
+                Files.createTempFile(tempPath, "", "").toAbsolutePath().toString());
         artifact = artifact.setProperties(properties);
 
         ArtifactRequest request = new ArtifactRequest(artifact, null, "");
@@ -731,7 +735,7 @@ public class DefaultArtifactResolverTest {
                 LocalArtifactResult result = new LocalArtifactResult(request);
                 result.setAvailable(true);
                 try {
-                    result.setFile(TestFileUtils.createTempFile(""));
+                    result.setFile(Files.createTempFile(tempPath, "", "").toFile());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -743,7 +747,7 @@ public class DefaultArtifactResolverTest {
             public LocalMetadataResult find(RepositorySystemSession session, LocalMetadataRequest request) {
                 LocalMetadataResult result = new LocalMetadataResult(request);
                 try {
-                    result.setFile(TestFileUtils.createTempFile(""));
+                    result.setFile(Files.createTempFile(tempPath, "", "").toFile());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -772,7 +776,7 @@ public class DefaultArtifactResolverTest {
         session.setLocalRepositoryManager(new LocalRepositoryManager() {
 
             public LocalRepository getRepository() {
-                return new LocalRepository(new File(""));
+                return new LocalRepository(tempPath.toFile());
             }
 
             public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
@@ -796,7 +800,7 @@ public class DefaultArtifactResolverTest {
                 LocalArtifactResult result = new LocalArtifactResult(request);
                 result.setAvailable(false);
                 try {
-                    result.setFile(TestFileUtils.createTempFile(""));
+                    result.setFile(Files.createTempFile(tempPath, "", "").toFile());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -841,7 +845,7 @@ public class DefaultArtifactResolverTest {
         session.setLocalRepositoryManager(new LocalRepositoryManager() {
 
             public LocalRepository getRepository() {
-                return new LocalRepository(new File(""));
+                return new LocalRepository(tempPath.toFile());
             }
 
             public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
@@ -865,7 +869,7 @@ public class DefaultArtifactResolverTest {
                 LocalArtifactResult result = new LocalArtifactResult(request);
                 result.setAvailable(false);
                 try {
-                    result.setFile(TestFileUtils.createTempFile(""));
+                    result.setFile(Files.createTempFile(tempPath, "", "").toFile());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
