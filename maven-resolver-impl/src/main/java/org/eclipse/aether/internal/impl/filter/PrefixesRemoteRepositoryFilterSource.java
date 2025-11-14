@@ -105,9 +105,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
      * <strong>Initial setup:</strong> Don't provide any files - rely on auto-discovery as repositories are accessed.
      * <strong>Override when needed:</strong> Create {@code prefixes-myrepoId.txt} files in {@code .mvn/rrf/} and
      * commit to version control.
-     * <strong>Caching:</strong> Auto-discovered prefix files are cached in the local repository with unique IDs
-     * (using {@link RepositoryIdHelper#remoteRepositoryUniqueId(RemoteRepository)}) to prevent conflicts that
-     * could cause build failures.
+     * <strong>Caching:</strong> Auto-discovered prefix files are cached in the local repository.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
