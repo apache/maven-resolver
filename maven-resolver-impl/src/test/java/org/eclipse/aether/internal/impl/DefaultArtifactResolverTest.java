@@ -761,7 +761,7 @@ public class DefaultArtifactResolverTest {
         session.setLocalRepositoryManager(new LocalRepositoryManager() {
 
             public LocalRepository getRepository() {
-                return new LocalRepository(new File(""));
+                return new LocalRepository(lrm.getRepository().getBasedir());
             }
 
             public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
@@ -828,7 +828,7 @@ public class DefaultArtifactResolverTest {
         session.setLocalRepositoryManager(new LocalRepositoryManager() {
 
             public LocalRepository getRepository() {
-                return new LocalRepository(new File(""));
+                return new LocalRepository(lrm.getRepository().getBasedir());
             }
 
             public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
