@@ -61,6 +61,7 @@ public interface SyncContext extends Closeable {
      *
      * @param artifacts The artifacts to acquire, may be {@code null} or empty if none.
      * @param metadatas The metadatas to acquire, may be {@code null} or empty if none.
+     * @throws FailedToAcquireLockException if method calls to acquire lock within configured time.
      */
     void acquire(Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas);
 
@@ -69,4 +70,28 @@ public interface SyncContext extends Closeable {
      * synchronization context has already been closed, this method does nothing.
      */
     void close();
+
+    /**
+     * Specific exception thrown by {@link #acquire(Collection, Collection)} method when it cannot acquire the lock.
+     *
+     * @since 2.0.14
+     */
+    final class FailedToAcquireLockException extends IllegalStateException {
+        private final boolean shared;
+
+        /**
+         * Constructor.
+         */
+        public FailedToAcquireLockException(boolean shared, String message) {
+            super(message);
+            this.shared = shared;
+        }
+
+        /**
+         * Returns {@code true} for shared and {@code false} for exclusive sync contexts.
+         */
+        public boolean isShared() {
+            return shared;
+        }
+    }
 }

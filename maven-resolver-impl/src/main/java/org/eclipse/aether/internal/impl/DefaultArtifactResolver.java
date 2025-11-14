@@ -105,7 +105,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
      */
     public static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = CONFIG_PROPS_PREFIX + "snapshotNormalization";
 
-    public static final boolean DEFAULT_SNAPSHOT_NORMALIZATION = true;
+    public static final boolean DEFAULT_SNAPSHOT_NORMALIZATION = false;
 
     /**
      * Configuration to enable "interoperability" with Simple LRM, but this breaks RRF feature, hence this configuration
