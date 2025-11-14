@@ -78,7 +78,7 @@ public final class RepositoryIdHelper {
      * <p>
      * <em>Important:</em>Do not use this method, or at least <em>do consider when do you want to use it</em>, as it
      * totally disconnects repositories used in session. This method may be used under some special circumstances
-     * (ie reporting), but <em></em>must not be used within Resolver (and Maven) session for "usual" resolution and
+     * (ie reporting), but <em>must not be used within Resolver (and Maven) session for "usual" resolution and
      * deployment use cases</em>.
      */
     public static String remoteRepositoryUniqueId(RemoteRepository repository) {
