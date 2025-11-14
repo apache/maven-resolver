@@ -353,6 +353,4 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private static final RemoteRepositoryFilter.Result NOT_PRESENT_RESULT =
             new SimpleResult(true, "Prefix file not present");
-
-    private static final RemoteRepositoryFilter.Result SKIPPED_RESULT = new SimpleResult(true, "Prefix filter skipped");
 }

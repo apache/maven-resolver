@@ -24,7 +24,6 @@ import javax.inject.Singleton;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -49,18 +48,20 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public final class DefaultRemoteRepositoryFilterManager implements RemoteRepositoryFilterManager {
+    private static final String INSTANCE_KEY = DefaultRemoteRepositoryFilterManager.class.getName() + ".instance";
+
     private final Map<String, RemoteRepositoryFilterSource> sources;
-    private final Map<RepositorySystemSession, RemoteRepositoryFilter> usedFilters;
 
     @Inject
     public DefaultRemoteRepositoryFilterManager(Map<String, RemoteRepositoryFilterSource> sources) {
         this.sources = requireNonNull(sources);
-        this.usedFilters = Collections.synchronizedMap(new IdentityHashMap<>());
     }
 
     @Override
     public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
-        return usedFilters.computeIfAbsent(session, k -> {
+        // use session specific key to distinguish between "derived" sessions
+        String instanceSpecificKey = INSTANCE_KEY + "." + session.hashCode();
+        return (RemoteRepositoryFilter) session.getData().computeIfAbsent(instanceSpecificKey, () -> {
             HashMap<String, RemoteRepositoryFilter> filters = new HashMap<>();
             for (Map.Entry<String, RemoteRepositoryFilterSource> entry : sources.entrySet()) {
                 RemoteRepositoryFilter filter = entry.getValue().getRemoteRepositoryFilter(session);
@@ -69,7 +70,6 @@ public final class DefaultRemoteRepositoryFilterManager implements RemoteReposit
                 }
             }
             if (!filters.isEmpty()) {
-                session.addOnSessionEndedHandler(() -> usedFilters.remove(session));
                 return new Participants(filters);
             } else {
                 return null;
