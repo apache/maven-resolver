@@ -69,7 +69,9 @@ public final class DefaultRemoteRepositoryFilterManager implements RemoteReposit
 
     @Override
     public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
-        return (RemoteRepositoryFilter) session.getData().computeIfAbsent(INSTANCE_KEY, () -> {
+        // use session specific key to distinguish between "derived" sessions
+        String instanceSpecificKey = INSTANCE_KEY + "." + session.hashCode();
+        return (RemoteRepositoryFilter) session.getData().computeIfAbsent(instanceSpecificKey, () -> {
             HashMap<String, RemoteRepositoryFilter> filters = new HashMap<>();
             for (Map.Entry<String, RemoteRepositoryFilterSource> entry : sources.entrySet()) {
                 RemoteRepositoryFilter filter = entry.getValue().getRemoteRepositoryFilter(session);
