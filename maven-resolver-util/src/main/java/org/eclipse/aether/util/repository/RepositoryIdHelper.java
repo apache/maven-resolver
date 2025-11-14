@@ -75,7 +75,11 @@ public final class RepositoryIdHelper {
      * different string id. The checksum and update policies are not participating in key creation.
      * <p>
      * This method is costly, so should be invoked sparingly, or cache results if needed.
+     *
+     * @deprecated Do not use this method, as it totally disconnects repositories used in session. This method
+     * MAY be used under some special circumstances, but NOT within a Resolver (and Maven) session.
      */
+    @Deprecated
     public static String remoteRepositoryUniqueId(RemoteRepository repository) {
         if (CENTRAL_DIRECT_ONLY.test(repository)) {
             return CENTRAL_REPOSITORY_ID;
