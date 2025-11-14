@@ -30,4 +30,4 @@ jobs:
       ff-site-run: false
       maven4-enabled: true
       verify-fail-fast: false
-
+      jdk-matrix: '[ "21", "25" ]'
