@@ -74,7 +74,7 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
      */
     protected boolean isEnabled(RepositorySystemSession session) {
         return ConfigUtils.getBoolean(session, false, CONFIG_PROP_PREFIX + this.name)
-                && ConfigUtils.getBoolean(session, false, CONFIG_PROP_PREFIX + this.name + ".skipped");
+                && !ConfigUtils.getBoolean(session, false, CONFIG_PROP_PREFIX + this.name + ".skipped");
     }
 
     /**
