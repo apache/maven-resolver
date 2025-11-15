@@ -63,12 +63,14 @@ public interface SyncContext extends Closeable {
      * @param metadatas The metadatas to acquire, may be {@code null} or empty if none.
      * @throws FailedToAcquireLockException if method calls to acquire lock within configured time.
      */
-    void acquire(Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas);
+    void acquire(Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas)
+            throws FailedToAcquireLockException;
 
     /**
      * Releases all previously acquired artifacts/metadatas. If no resources have been acquired before or if this
      * synchronization context has already been closed, this method does nothing.
      */
+    @Override
     void close();
 
     /**
