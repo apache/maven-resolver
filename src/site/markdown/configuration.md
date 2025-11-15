@@ -114,7 +114,7 @@ To modify this file, edit the template and regenerate.
 | `"aether.syncContext.named.redisson.configFile"` | `String` | Path to a Redisson configuration file in YAML format. Read official documentation for details. |  -  | 1.7.0 |  No  | Java System Properties |
 | `"aether.syncContext.named.retry"` | `Integer` | The amount of retries on time-out. |  `1`  | 1.7.0 |  No  | Session Configuration |
 | `"aether.syncContext.named.retry.wait"` | `Long` | The amount of milliseconds to wait between retries on time-out. |  `200l`  | 1.7.0 |  No  | Session Configuration |
-| `"aether.syncContext.named.time"` | `Long` | The maximum of time amount to be blocked to obtain lock. |  `300l`  | 1.7.0 |  No  | Session Configuration |
+| `"aether.syncContext.named.time"` | `Long` | The maximum of time amount to be blocked to obtain lock. |  `900l`  | 1.7.0 |  No  | Session Configuration |
 | `"aether.syncContext.named.time.unit"` | `String` | The unit of maximum time amount to be blocked to obtain lock. Use TimeUnit enum names. |  `"SECONDS"`  | 1.7.0 |  No  | Session Configuration |
 | `"aether.system.dependencyVisitor"` | `String` | A flag indicating which visitor should be used to "flatten" the dependency graph into list. In Maven 4 the default is new "levelOrder", while Maven 3 used "preOrder". This property accepts values "preOrder", "postOrder" and "levelOrder". |  `"levelOrder"`  | 2.0.0 |  No  | Session Configuration |
 | `"aether.transport.apache.followRedirects"` | `Boolean` | If enabled, Apache HttpClient will follow HTTP redirects. |  `true`  | 2.0.2 |  Yes  | Session Configuration |

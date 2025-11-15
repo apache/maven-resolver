@@ -54,7 +54,7 @@ public final class NamedLockFactoryAdapter {
      */
     public static final String CONFIG_PROP_TIME = CONFIG_PROPS_PREFIX + "time";
 
-    public static final long DEFAULT_TIME = 300L;
+    public static final long DEFAULT_TIME = 900L;
 
     /**
      * The unit of maximum time amount to be blocked to obtain lock. Use TimeUnit enum names.
