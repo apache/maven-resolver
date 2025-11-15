@@ -43,7 +43,7 @@ import static java.util.Objects.requireNonNull;
 public final class NamedLockFactoryAdapter {
     public static final String TIME_KEY = "aether.syncContext.named.time";
 
-    public static final long DEFAULT_TIME = 30L;
+    public static final long DEFAULT_TIME = 900L;
 
     public static final String TIME_UNIT_KEY = "aether.syncContext.named.time.unit";
 
@@ -216,7 +216,7 @@ public final class NamedLockFactoryAdapter {
                 }
             }
             if (!illegalStateExceptions.isEmpty()) {
-                IllegalStateException ex = new IllegalStateException("Could not acquire lock(s)");
+                FailedToAcquireLockException ex = new FailedToAcquireLockException(shared, "Could not acquire lock(s)");
                 illegalStateExceptions.forEach(ex::addSuppressed);
                 throw namedLockFactory.onFailure(ex);
             }
