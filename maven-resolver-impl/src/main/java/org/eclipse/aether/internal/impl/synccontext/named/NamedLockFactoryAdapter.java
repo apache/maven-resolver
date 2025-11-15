@@ -57,18 +57,6 @@ public final class NamedLockFactoryAdapter {
     public static final long DEFAULT_TIME = 300L;
 
     /**
-     * The maximum of time amount to be blocked to obtain exclusive lock (keep it low).
-     *
-     * @since 2.0.14
-     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.Long}
-     * @configurationDefaultValue {@link #DEFAULT_TIME_EXCLUSIVE}
-     */
-    public static final String CONFIG_PROP_TIME_EXCLUSIVE = CONFIG_PROPS_PREFIX + "exclusiveTime";
-
-    public static final long DEFAULT_TIME_EXCLUSIVE = 5L;
-
-    /**
      * The unit of maximum time amount to be blocked to obtain lock. Use TimeUnit enum names.
      *
      * @since 1.7.0
@@ -154,9 +142,7 @@ public final class NamedLockFactoryAdapter {
 
         private final NamedLockFactory namedLockFactory;
 
-        private final long sharedTime;
-
-        private final long exclusiveTime;
+        private final long time;
 
         private final TimeUnit timeUnit;
 
@@ -175,18 +161,14 @@ public final class NamedLockFactoryAdapter {
             this.shared = shared;
             this.lockNaming = lockNaming;
             this.namedLockFactory = namedLockFactory;
-            this.sharedTime = getTime(session, DEFAULT_TIME, CONFIG_PROP_TIME);
-            this.exclusiveTime = getTime(session, DEFAULT_TIME_EXCLUSIVE, CONFIG_PROP_TIME_EXCLUSIVE, CONFIG_PROP_TIME);
+            this.time = getTime(session, DEFAULT_TIME, CONFIG_PROP_TIME);
             this.timeUnit = getTimeUnit(session);
             this.retry = getRetry(session);
             this.retryWait = getRetryWait(session);
             this.locks = new ArrayDeque<>();
 
-            if (sharedTime < 0L) {
+            if (time < 0L) {
                 throw new IllegalArgumentException(CONFIG_PROP_TIME + " value cannot be negative");
-            }
-            if (exclusiveTime < 0L) {
-                throw new IllegalArgumentException(CONFIG_PROP_TIME_EXCLUSIVE + " value cannot be negative");
             }
             if (retry < 0L) {
                 throw new IllegalArgumentException(CONFIG_PROP_RETRY + " value cannot be negative");
@@ -219,7 +201,7 @@ public final class NamedLockFactoryAdapter {
                 return;
             }
 
-            final String timeStr = (shared ? sharedTime : exclusiveTime) + " " + timeUnit;
+            final String timeStr = time + " " + timeUnit;
             final String lockKind = shared ? "shared" : "exclusive";
             final NamedLock namedLock = namedLockFactory.getLock(keys);
             if (LOGGER.isTraceEnabled()) {
@@ -245,9 +227,9 @@ public final class NamedLockFactoryAdapter {
                     }
                     boolean locked;
                     if (shared) {
-                        locked = namedLock.lockShared(sharedTime, timeUnit);
+                        locked = namedLock.lockShared(time, timeUnit);
                     } else {
-                        locked = namedLock.lockExclusively(exclusiveTime, timeUnit);
+                        locked = namedLock.lockExclusively(time, timeUnit);
                     }
 
                     if (locked) {

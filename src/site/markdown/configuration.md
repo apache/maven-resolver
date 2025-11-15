@@ -107,7 +107,6 @@ To modify this file, edit the template and regenerate.
 | `"aether.syncContext.named.basedir.locksDir"` | `String` | The location of the directory toi use for locks. If relative path, it is resolved from the local repository root. |  `".locks"`  | 1.9.0 |  No  | Session Configuration |
 | `"aether.syncContext.named.discriminating.discriminator"` | `String` | Configuration property to pass in discriminator, if needed. If not present, it is auto-calculated. |  -  | 1.7.0 |  No  | Session Configuration |
 | `"aether.syncContext.named.discriminating.hostname"` | `String` | Configuration property to pass in hostname, if needed. If not present, hostname as reported by system will be used. |  -  | 1.7.0 |  No  | Session Configuration |
-| `"aether.syncContext.named.exclusiveTime"` | `Long` | The maximum of time amount to be blocked to obtain exclusive lock (keep it low). |  `5l`  | 2.0.14 |  No  | Session Configuration |
 | `"aether.syncContext.named.factory"` | `String` | Name of the lock factory to use in session. |  `"file-lock"`  | 1.9.1 |  No  | Session Configuration |
 | `"aether.syncContext.named.hashing.depth"` | `Integer` | The depth how many levels should adapter create. Acceptable values are 0-4 (inclusive). |  `2`  | 1.9.0 |  No  | Session Configuration |
 | `"aether.syncContext.named.nameMapper"` | `String` | Name of the name mapper to use in session. Out of the box supported ones are "static", "gav", "file-gav", "file-hgav", "file-static" and "discriminating". |  `"file-gav"`  | 1.9.1 |  No  | Session Configuration |
