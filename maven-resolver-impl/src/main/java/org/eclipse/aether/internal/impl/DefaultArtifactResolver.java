@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
@@ -186,35 +187,52 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             throws ArtifactResolutionException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-        try (SyncContext shared = syncContextFactory.newInstance(session, true);
-                SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
-            Collection<Artifact> artifacts = new ArrayList<>(requests.size());
-            SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
-            for (ArtifactRequest request : requests) {
-                if (systemDependencyScope != null
-                        && systemDependencyScope.getSystemPath(request.getArtifact()) != null) {
-                    continue;
-                }
-                artifacts.add(request.getArtifact());
-            }
 
-            return resolve(shared, exclusive, artifacts, session, requests);
+        Collection<Artifact> artifacts = new ArrayList<>(requests.size());
+        SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
+        for (ArtifactRequest request : requests) {
+            if (systemDependencyScope != null && systemDependencyScope.getSystemPath(request.getArtifact()) != null) {
+                continue;
+            }
+            artifacts.add(request.getArtifact());
         }
+
+        return resolve(
+                () -> syncContextFactory.newInstance(session, true),
+                () -> syncContextFactory.newInstance(session, false),
+                artifacts,
+                session,
+                requests);
     }
 
     @SuppressWarnings("checkstyle:methodlength")
     private List<ArtifactResult> resolve(
-            SyncContext shared,
-            SyncContext exclusive,
+            Supplier<SyncContext> sharedSupplier,
+            Supplier<SyncContext> exclusiveSupplier,
             Collection<Artifact> subjects,
             RepositorySystemSession session,
             Collection<? extends ArtifactRequest> requests)
             throws ArtifactResolutionException {
         SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
-        SyncContext current = shared;
+        boolean firstAttempt = true; // controls eventing; must happen only once
+        boolean currentShared = true;
+        SyncContext current = sharedSupplier.get();
         try {
             while (true) {
-                current.acquire(subjects, null);
+                try {
+                    current.acquire(subjects, null);
+                } catch (SyncContext.FailedToAcquireLockException e) {
+                    if (currentShared) {
+                        // we have to give up; timeout on shared lock acquire
+                        throw e;
+                    } else {
+                        // assume "someone else is working on this"; swap back to shared and retry
+                        current.close();
+                        current = sharedSupplier.get();
+                        currentShared = true;
+                        continue;
+                    }
+                }
 
                 boolean failures = false;
                 final List<ArtifactResult> results = new ArrayList<>(requests.size());
@@ -234,7 +252,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
 
                     Artifact artifact = request.getArtifact();
 
-                    if (current == shared) {
+                    if (firstAttempt) {
                         artifactResolving(session, trace, artifact);
                     }
 
@@ -389,9 +407,11 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                     }
                 }
 
-                if (!groups.isEmpty() && current == shared) {
+                if (!groups.isEmpty() && currentShared) {
+                    firstAttempt = false; // all "resolving" events fired, no more of them
                     current.close();
-                    current = exclusive;
+                    currentShared = false;
+                    current = exclusiveSupplier.get();
                     continue;
                 }
 
