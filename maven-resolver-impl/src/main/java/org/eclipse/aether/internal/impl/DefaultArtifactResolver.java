@@ -98,7 +98,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
      * Configuration to enable "snapshot normalization", downloaded snapshots from remote with timestamped file names
      * will have file names converted back to baseVersion. It replaces the timestamped snapshot file name with a
      * filename containing the SNAPSHOT qualifier only. This only affects resolving/retrieving artifacts but not
-     * uploading those.
+     * uploading those. Provides Maven 2 compatibility.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
@@ -111,6 +111,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
     /**
      * Configuration to enable "interoperability" with Simple LRM, but this breaks RRF feature, hence this configuration
      * is IGNORED when RRF is used, and is warmly recommended to leave it disabled even if no RRF is being used.
+     * Provides Maven 2 compatibility.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
