@@ -49,12 +49,12 @@ public class ResolveTransitiveDependenciesParallel {
         System.out.println("------------------------------------------------------------");
         System.out.println(ResolveTransitiveDependencies.class.getSimpleName());
 
-        System.setProperty("aether.syncContext.named.time", "3");
-
         RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
 
         DefaultRepositorySystemSession session = Booter.newRepositorySystemSession(system);
+        session.setConfigProperty("aether.syncContext.named.time", "3");
         session.setTransferListener(null);
+        session.setRepositoryListener(null);
 
         Artifact bigArtifact1 = new DefaultArtifact("org.bytedeco:llvm:jar:linux-arm64:16.0.4-1.5.9");
         Artifact bigArtifact2 = new DefaultArtifact("org.bytedeco:llvm:jar:linux-armhf:16.0.4-1.5.9");
@@ -162,6 +162,7 @@ public class ResolveTransitiveDependenciesParallel {
 
         latch.await();
 
+        System.out.println("=====");
         System.out.println("TOTAL success=" + success.get() + "; fail=" + fail.get());
     }
 
