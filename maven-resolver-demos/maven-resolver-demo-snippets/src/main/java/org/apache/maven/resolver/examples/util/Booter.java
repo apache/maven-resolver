@@ -70,6 +70,7 @@ public class Booter {
 
     public static DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+        session.setSystemProperties(System.getProperties());
 
         LocalRepository localRepo = new LocalRepository("target/local-repo");
         session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));

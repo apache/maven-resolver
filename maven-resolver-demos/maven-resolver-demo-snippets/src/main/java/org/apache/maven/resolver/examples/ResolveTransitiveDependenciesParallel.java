@@ -20,8 +20,10 @@ package org.apache.maven.resolver.examples;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.maven.resolver.examples.util.Booter;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -51,7 +53,8 @@ public class ResolveTransitiveDependenciesParallel {
 
         RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
 
-        RepositorySystemSession session = Booter.newRepositorySystemSession(system);
+        DefaultRepositorySystemSession session = Booter.newRepositorySystemSession(system);
+        session.setTransferListener(null);
 
         Artifact bigArtifact1 = new DefaultArtifact("org.bytedeco:llvm:jar:linux-arm64:16.0.4-1.5.9");
         Artifact bigArtifact2 = new DefaultArtifact("org.bytedeco:llvm:jar:linux-armhf:16.0.4-1.5.9");
@@ -60,13 +63,17 @@ public class ResolveTransitiveDependenciesParallel {
         Artifact bigArtifact5 = new DefaultArtifact("org.bytedeco:llvm:jar:linux-x86_64:16.0.4-1.5.9");
         Artifact bigArtifact6 = new DefaultArtifact("org.bytedeco:llvm:jar:macosx-arm64:16.0.4-1.5.9");
         Artifact bigArtifact7 = new DefaultArtifact("org.bytedeco:llvm:jar:macosx-x86_64:16.0.4-1.5.9");
-        Artifact bigArtifact8 = new DefaultArtifact("org.bytedeco:llvm:jar:windows_x86:16.0.4-1.5.9");
-        Artifact bigArtifact9 = new DefaultArtifact("org.bytedeco:llvm:jar:windows_x86)64:16.0.4-1.5.9");
+        Artifact bigArtifact8 = new DefaultArtifact("org.bytedeco:llvm:jar:windows-x86:16.0.4-1.5.9");
+        Artifact bigArtifact9 = new DefaultArtifact("org.bytedeco:llvm:jar:windows-x86_64:16.0.4-1.5.9");
 
         CountDownLatch latch = new CountDownLatch(8);
+        AtomicInteger success = new AtomicInteger(0);
+        AtomicInteger fail = new AtomicInteger(0);
 
         Thread thread1 = new Thread(resolveWithDependencies(
                 latch,
+                success,
+                fail,
                 system,
                 session,
                 Booter.newRepositories(system, session),
@@ -75,6 +82,8 @@ public class ResolveTransitiveDependenciesParallel {
                 bigArtifact2));
         Thread thread2 = new Thread(resolveWithDependencies(
                 latch,
+                success,
+                fail,
                 system,
                 session,
                 Booter.newRepositories(system, session),
@@ -83,6 +92,8 @@ public class ResolveTransitiveDependenciesParallel {
                 bigArtifact3));
         Thread thread3 = new Thread(resolveWithDependencies(
                 latch,
+                success,
+                fail,
                 system,
                 session,
                 Booter.newRepositories(system, session),
@@ -91,6 +102,8 @@ public class ResolveTransitiveDependenciesParallel {
                 bigArtifact4));
         Thread thread4 = new Thread(resolveWithDependencies(
                 latch,
+                success,
+                fail,
                 system,
                 session,
                 Booter.newRepositories(system, session),
@@ -99,6 +112,8 @@ public class ResolveTransitiveDependenciesParallel {
                 bigArtifact5));
         Thread thread5 = new Thread(resolveWithDependencies(
                 latch,
+                success,
+                fail,
                 system,
                 session,
                 Booter.newRepositories(system, session),
@@ -107,6 +122,8 @@ public class ResolveTransitiveDependenciesParallel {
                 bigArtifact6));
         Thread thread6 = new Thread(resolveWithDependencies(
                 latch,
+                success,
+                fail,
                 system,
                 session,
                 Booter.newRepositories(system, session),
@@ -115,6 +132,8 @@ public class ResolveTransitiveDependenciesParallel {
                 bigArtifact7));
         Thread thread7 = new Thread(resolveWithDependencies(
                 latch,
+                success,
+                fail,
                 system,
                 session,
                 Booter.newRepositories(system, session),
@@ -123,6 +142,8 @@ public class ResolveTransitiveDependenciesParallel {
                 bigArtifact8));
         Thread thread8 = new Thread(resolveWithDependencies(
                 latch,
+                success,
+                fail,
                 system,
                 session,
                 Booter.newRepositories(system, session),
@@ -140,10 +161,14 @@ public class ResolveTransitiveDependenciesParallel {
         thread8.start();
 
         latch.await();
+
+        System.out.println("TOTAL success=" + success.get() + "; fail=" + fail.get());
     }
 
     private static Runnable resolveWithDependencies(
             CountDownLatch latch,
+            AtomicInteger success,
+            AtomicInteger fail,
             RepositorySystem system,
             RepositorySystemSession session,
             List<RemoteRepository> repositories,
@@ -169,9 +194,11 @@ public class ResolveTransitiveDependenciesParallel {
                         fails++;
                     }
                 }
-                System.out.println(gav + ": resolved " + resolved + "; failed " + fails);
+                System.out.println("DONE " + gav + ": resolved " + resolved + "; failed " + fails);
+                success.getAndIncrement();
             } catch (Exception e) {
-                e.printStackTrace(System.out);
+                System.out.println("FAILED " + gav + ": " + e.getMessage());
+                fail.getAndIncrement();
             } finally {
                 latch.countDown();
             }
