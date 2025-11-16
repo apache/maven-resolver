@@ -167,6 +167,7 @@ public class ResolveTransitiveDependenciesParallel {
         System.out.println("TOTAL success=" + success.get() + "; fail=" + fail.get());
     }
 
+    @SuppressWarnings("checkstyle:parameternumber")
     private static Runnable resolveWithDependencies(
             CountDownLatch latch,
             AtomicInteger success,
