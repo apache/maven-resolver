@@ -110,6 +110,21 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     public static final boolean DEFAULT_ENABLED = true;
 
     /**
+     * Configuration to skip the GroupId filter for given request. This configuration is evaluated and if {@code true}
+     * the GroupId remote filter will not kick in.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_SKIPPED}
+     */
+    public static final String CONFIG_PROP_SKIPPED =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".skipped";
+
+    public static final boolean DEFAULT_SKIPPED = false;
+
+    /**
      * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -160,15 +175,22 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
 
     @Override
     protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_ENABLED, CONFIG_PROP_ENABLED);
+        return ConfigUtils.getBoolean(session, DEFAULT_ENABLED, CONFIG_PROP_ENABLED)
+                && !ConfigUtils.getBoolean(session, DEFAULT_SKIPPED, CONFIG_PROP_SKIPPED);
     }
 
     private boolean isRepositoryFilteringEnabled(RepositorySystemSession session, RemoteRepository remoteRepository) {
         if (isEnabled(session)) {
             return ConfigUtils.getBoolean(
-                    session,
-                    ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + ".*"),
-                    CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
+                            session,
+                            DEFAULT_ENABLED,
+                            CONFIG_PROP_ENABLED + "." + remoteRepository.getId(),
+                            CONFIG_PROP_ENABLED + ".*")
+                    && !ConfigUtils.getBoolean(
+                            session,
+                            DEFAULT_SKIPPED,
+                            CONFIG_PROP_SKIPPED + "." + remoteRepository.getId(),
+                            CONFIG_PROP_SKIPPED + ".*");
         }
         return false;
     }
