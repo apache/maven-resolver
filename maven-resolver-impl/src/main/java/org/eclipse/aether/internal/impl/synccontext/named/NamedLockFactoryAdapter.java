@@ -49,7 +49,7 @@ public final class NamedLockFactoryAdapter {
 
     public static final String EXCLUSIVE_TIME_KEY = "aether.syncContext.named.exclusiveTime";
 
-    public static final long DEFAULT_EXCLUSIVE_TIME = 5L;
+    public static final long DEFAULT_EXCLUSIVE_TIME = 10L;
 
     public static final String TIME_UNIT_KEY = "aether.syncContext.named.time.unit";
 
