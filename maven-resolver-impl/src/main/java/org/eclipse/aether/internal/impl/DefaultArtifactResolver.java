@@ -33,7 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
@@ -98,7 +97,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
      * Configuration to enable "snapshot normalization", downloaded snapshots from remote with timestamped file names
      * will have file names converted back to baseVersion. It replaces the timestamped snapshot file name with a
      * filename containing the SNAPSHOT qualifier only. This only affects resolving/retrieving artifacts but not
-     * uploading those. Provides Maven 2 compatibility.
+     * uploading those.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
@@ -106,12 +105,11 @@ public class DefaultArtifactResolver implements ArtifactResolver {
      */
     public static final String CONFIG_PROP_SNAPSHOT_NORMALIZATION = CONFIG_PROPS_PREFIX + "snapshotNormalization";
 
-    public static final boolean DEFAULT_SNAPSHOT_NORMALIZATION = false;
+    public static final boolean DEFAULT_SNAPSHOT_NORMALIZATION = true;
 
     /**
      * Configuration to enable "interoperability" with Simple LRM, but this breaks RRF feature, hence this configuration
      * is IGNORED when RRF is used, and is warmly recommended to leave it disabled even if no RRF is being used.
-     * Provides Maven 2 compatibility.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
@@ -188,52 +186,35 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             throws ArtifactResolutionException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-
-        Collection<Artifact> artifacts = new ArrayList<>(requests.size());
-        SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
-        for (ArtifactRequest request : requests) {
-            if (systemDependencyScope != null && systemDependencyScope.getSystemPath(request.getArtifact()) != null) {
-                continue;
+        try (SyncContext shared = syncContextFactory.newInstance(session, true);
+                SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
+            Collection<Artifact> artifacts = new ArrayList<>(requests.size());
+            SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
+            for (ArtifactRequest request : requests) {
+                if (systemDependencyScope != null
+                        && systemDependencyScope.getSystemPath(request.getArtifact()) != null) {
+                    continue;
+                }
+                artifacts.add(request.getArtifact());
             }
-            artifacts.add(request.getArtifact());
-        }
 
-        return resolve(
-                () -> syncContextFactory.newInstance(session, true),
-                () -> syncContextFactory.newInstance(session, false),
-                artifacts,
-                session,
-                requests);
+            return resolve(shared, exclusive, artifacts, session, requests);
+        }
     }
 
     @SuppressWarnings("checkstyle:methodlength")
     private List<ArtifactResult> resolve(
-            Supplier<SyncContext> sharedSupplier,
-            Supplier<SyncContext> exclusiveSupplier,
+            SyncContext shared,
+            SyncContext exclusive,
             Collection<Artifact> subjects,
             RepositorySystemSession session,
             Collection<? extends ArtifactRequest> requests)
             throws ArtifactResolutionException {
         SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
-        boolean firstAttempt = true; // controls eventing; must happen only once
-        boolean currentShared = true;
-        SyncContext current = sharedSupplier.get();
+        SyncContext current = shared;
         try {
             while (true) {
-                try {
-                    current.acquire(subjects, null);
-                } catch (SyncContext.FailedToAcquireLockException e) {
-                    if (currentShared) {
-                        // we have to give up; timeout on shared lock acquire
-                        throw e;
-                    } else {
-                        // assume "someone else is working on this"; swap back to shared and retry
-                        current.close();
-                        current = sharedSupplier.get();
-                        currentShared = true;
-                        continue;
-                    }
-                }
+                current.acquire(subjects, null);
 
                 boolean failures = false;
                 final List<ArtifactResult> results = new ArrayList<>(requests.size());
@@ -253,7 +234,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
 
                     Artifact artifact = request.getArtifact();
 
-                    if (firstAttempt) {
+                    if (current == shared) {
                         artifactResolving(session, trace, artifact);
                     }
 
@@ -408,11 +389,9 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                     }
                 }
 
-                if (!groups.isEmpty() && currentShared) {
-                    firstAttempt = false; // all "resolving" events fired, no more of them
+                if (!groups.isEmpty() && current == shared) {
                     current.close();
-                    currentShared = false;
-                    current = exclusiveSupplier.get();
+                    current = exclusive;
                     continue;
                 }
 
