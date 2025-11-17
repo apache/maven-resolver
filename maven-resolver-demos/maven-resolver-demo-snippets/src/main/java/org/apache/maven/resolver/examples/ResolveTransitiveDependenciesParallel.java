@@ -18,6 +18,9 @@
  */
 package org.apache.maven.resolver.examples;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,8 +39,9 @@ import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 /**
- * Resolves the transitive (compile) dependencies of an artifact.
- */
+ * Resolves the transitive (compile) LARGE dependencies of an imaginary artifact in parallel.
+ * This is the reproducer for locking issues: <a href="https://github.com/apache/maven-resolver/issues/1644>GH-1644</a>
+ * This code does NOT run as part of build/tests, it is meant to be ad-hoc run from IDE or alike. */
 public class ResolveTransitiveDependenciesParallel {
 
     /**
@@ -49,11 +53,34 @@ public class ResolveTransitiveDependenciesParallel {
         System.out.println("------------------------------------------------------------");
         System.out.println(ResolveTransitiveDependenciesParallel.class.getSimpleName());
 
+        // note: these numbers below are not "universal", they stand for one given WS with one given network,
+        // and they may need change with time if anything changes in relation (even remote like Central!)
+        //
+        // cstamas (DK HW+net) 17. 11. 2025 (w/ empty local repo)
+        // One job is done in 20 sec
+        // BUT other must wait as they are serialized (time adds up)
+        // reproducer to succeed: 210 sec
+        // my run:
+        // DONE (21 sec): org.example:test:1: resolved 11; failed 0
+        // DONE (37 sec): org.example:test:6: resolved 11; failed 0
+        // DONE (60 sec): org.example:test:4: resolved 11; failed 0
+        // DONE (60 sec): org.example:test:5: resolved 11; failed 0
+        // DONE (170 sec): org.example:test:8: resolved 11; failed 0
+        // DONE (181 sec): org.example:test:3: resolved 11; failed 0
+        // DONE (181 sec): org.example:test:7: resolved 11; failed 0
+        // DONE (181 sec): org.example:test:2: resolved 11; failed 0
+        // =====
+        // TOTAL success=8; fail=0
+        //
+        // Pattern: as said above, one job does in 20 sec, BUT subsequent one will do it in cca 40 sec (waiting 20 sec)
+        // and so on, the times are adding up. Each subsequent job with start by waiting for previous jobs to finish
+        // due (intentional) artifact overlaps.
+
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
                 CloseableSession session = Booter.newRepositorySystemSession(system, Booter.selectFs(args))
                         .setTransferListener(null)
                         .setRepositoryListener(null)
-                        .setConfigProperty("aether.syncContext.named.time", "3")
+                        .setConfigProperty("aether.syncContext.named.time", "210")
                         .build()) {
             Artifact bigArtifact1 = new DefaultArtifact("org.bytedeco:llvm:jar:linux-arm64:16.0.4-1.5.9");
             Artifact bigArtifact2 = new DefaultArtifact("org.bytedeco:llvm:jar:linux-armhf:16.0.4-1.5.9");
@@ -178,6 +205,7 @@ public class ResolveTransitiveDependenciesParallel {
             Artifact... deps) {
         return () -> {
             try {
+                Instant now = Instant.now();
                 CollectRequest collectRequest = new CollectRequest();
                 collectRequest.setRootArtifact(new DefaultArtifact(gav));
                 for (Artifact dep : deps) {
@@ -196,7 +224,8 @@ public class ResolveTransitiveDependenciesParallel {
                         fails++;
                     }
                 }
-                System.out.println("DONE " + gav + ": resolved " + resolved + "; failed " + fails);
+                String dur = Duration.between(now, Instant.now()).get(ChronoUnit.SECONDS) + " sec";
+                System.out.println("DONE (" + dur + "): " + gav + ": resolved " + resolved + "; failed " + fails);
                 success.getAndIncrement();
             } catch (Exception e) {
                 System.out.println("FAILED " + gav + ": " + e.getMessage());
