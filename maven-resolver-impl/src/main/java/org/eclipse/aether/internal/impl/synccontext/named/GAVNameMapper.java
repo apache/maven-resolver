@@ -112,7 +112,8 @@ public class GAVNameMapper implements NameMapper {
             }
         }
         if (!MAVEN_METADATA.equals(metadata.getType())) {
-            name += fieldSeparator + (fileSystemFriendly ? PathUtils.stringToPathSegment(metadata.getType()) : metadata.getType());
+            name += fieldSeparator
+                    + (fileSystemFriendly ? PathUtils.stringToPathSegment(metadata.getType()) : metadata.getType());
         }
         return name + metadataSuffix;
     }
