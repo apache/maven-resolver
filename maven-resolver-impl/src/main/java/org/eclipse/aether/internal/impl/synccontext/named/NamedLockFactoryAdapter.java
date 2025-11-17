@@ -222,7 +222,7 @@ public final class NamedLockFactoryAdapter {
                         + lockSubjects(artifacts, metadatas) + " in " + time + " " + timeUnit;
                 if (shared) {
                     message += "; consider using '" + TIME_KEY
-                            + "' property to increase lock timeout value that fits your environment";
+                            + "' property to increase lock timeout to a value that fits your environment";
                 }
                 FailedToAcquireLockException ex = new FailedToAcquireLockException(shared, message);
                 illegalStateExceptions.forEach(ex::addSuppressed);
