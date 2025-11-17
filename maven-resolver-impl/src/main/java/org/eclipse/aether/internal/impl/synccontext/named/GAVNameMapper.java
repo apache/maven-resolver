@@ -24,6 +24,7 @@ import java.util.TreeSet;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.util.PathUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -97,6 +98,8 @@ public class GAVNameMapper implements NameMapper {
                 + artifactSuffix;
     }
 
+    private static final String MAVEN_METADATA = "maven-metadata.xml";
+
     private String getMetadataName(Metadata metadata) {
         String name = metadataPrefix;
         if (!metadata.getGroupId().isEmpty()) {
@@ -106,6 +109,14 @@ public class GAVNameMapper implements NameMapper {
                 if (!metadata.getVersion().isEmpty()) {
                     name += fieldSeparator + metadata.getVersion();
                 }
+            }
+            if (!MAVEN_METADATA.equals(metadata.getType())) {
+                name += fieldSeparator
+                        + (fileSystemFriendly ? PathUtils.stringToPathSegment(metadata.getType()) : metadata.getType());
+            }
+        } else {
+            if (!MAVEN_METADATA.equals(metadata.getType())) {
+                name += (fileSystemFriendly ? PathUtils.stringToPathSegment(metadata.getType()) : metadata.getType());
             }
         }
         return name + metadataSuffix;
