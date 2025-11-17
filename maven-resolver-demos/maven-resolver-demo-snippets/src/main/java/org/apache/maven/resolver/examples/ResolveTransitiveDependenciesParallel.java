@@ -18,6 +18,9 @@
  */
 package org.apache.maven.resolver.examples;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,8 +54,27 @@ public class ResolveTransitiveDependenciesParallel {
 
         RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
 
+        // note: these numbers below are not "universal", they stand for one given WS with one given network,
+        // and they may need change with time if anything changes in relation (even remote like Central!)
+        //
+        // cstamas (DK HW+net) 17. 11. 2025 (w/ empty local repo)
+        // One job is done in 20 sec
+        // BUT other must wait as they are serialized (time adds up)
+        // reproducer to succeed: 210 sec
+        // my run:
+        // DONE (21 sec): org.example:test:1: resolved 11; failed 0
+        // DONE (37 sec): org.example:test:6: resolved 11; failed 0
+        // DONE (60 sec): org.example:test:4: resolved 11; failed 0
+        // DONE (60 sec): org.example:test:5: resolved 11; failed 0
+        // DONE (170 sec): org.example:test:8: resolved 11; failed 0
+        // DONE (181 sec): org.example:test:3: resolved 11; failed 0
+        // DONE (181 sec): org.example:test:7: resolved 11; failed 0
+        // DONE (181 sec): org.example:test:2: resolved 11; failed 0
+        // =====
+        // TOTAL success=8; fail=0
+
         DefaultRepositorySystemSession session = Booter.newRepositorySystemSession(system);
-        session.setConfigProperty("aether.syncContext.named.time", "3");
+        session.setConfigProperty("aether.syncContext.named.time", "210");
         session.setTransferListener(null);
         session.setRepositoryListener(null);
 
@@ -178,6 +200,7 @@ public class ResolveTransitiveDependenciesParallel {
             Artifact... deps) {
         return () -> {
             try {
+                Instant now = Instant.now();
                 CollectRequest collectRequest = new CollectRequest();
                 collectRequest.setRootArtifact(new DefaultArtifact(gav));
                 for (Artifact dep : deps) {
@@ -196,7 +219,8 @@ public class ResolveTransitiveDependenciesParallel {
                         fails++;
                     }
                 }
-                System.out.println("DONE " + gav + ": resolved " + resolved + "; failed " + fails);
+                String dur = Duration.between(now, Instant.now()).get(ChronoUnit.SECONDS) + " sec";
+                System.out.println("DONE (" + dur + "): " + gav + ": resolved " + resolved + "; failed " + fails);
                 success.getAndIncrement();
             } catch (Exception e) {
                 System.out.println("FAILED " + gav + ": " + e.getMessage());
