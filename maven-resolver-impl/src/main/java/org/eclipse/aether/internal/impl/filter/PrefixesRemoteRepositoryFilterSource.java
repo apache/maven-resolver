@@ -25,7 +25,6 @@ import javax.inject.Singleton;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -221,28 +220,12 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     }
 
     /**
-     * We use remote repositories as keys, but they may fly in as "bare" or as "equipped" (w/ auth and proxy) if caller
-     * used {@link org.eclipse.aether.RepositorySystem#newResolutionRepositories(RepositorySystemSession, List)} beforehand.
-     * The hash/equalTo method factors in all these as well, but from our perspective, they do not matter. So we make all
-     * key remote repositories back to "bare".
-     */
-    private RemoteRepository normalizeRemoteRepository(
-            RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return new RemoteRepository.Builder(remoteRepository)
-                .setProxy(null)
-                .setAuthentication(null)
-                .setMirroredRepositories(null)
-                .setRepositoryManager(false)
-                .build();
-    }
-
-    /**
      * Caches layout instances for remote repository. In case of unknown layout it returns {@code null}.
      *
      * @return the layout instance of {@code null} if layout not supported.
      */
     private RepositoryLayout cacheLayout(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return layouts.computeIfAbsent(remoteRepository, r -> {
+        return layouts.computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> {
             try {
                 return repositoryLayoutProvider.newRepositoryLayout(session, remoteRepository);
             } catch (NoRepositoryLayoutException e) {
@@ -253,8 +236,9 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private PrefixTree cachePrefixTree(
             RepositorySystemSession session, Path basedir, RemoteRepository remoteRepository) {
-        RemoteRepository normalized = normalizeRemoteRepository(session, remoteRepository);
-        return prefixes.computeIfAbsent(normalized, r -> loadPrefixTree(session, basedir, remoteRepository));
+        return prefixes.computeIfAbsent(
+                normalizeRemoteRepository(session, remoteRepository),
+                r -> loadPrefixTree(session, basedir, remoteRepository));
     }
 
     private PrefixTree loadPrefixTree(

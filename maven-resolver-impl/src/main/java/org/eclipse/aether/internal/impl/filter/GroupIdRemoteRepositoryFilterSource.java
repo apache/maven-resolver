@@ -215,10 +215,11 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                     if (isRepositoryFilteringEnabled(session, remoteRepository)) {
                         ruleFile(session, remoteRepository); // populate it; needed for save
                         String line = "=" + artifactResult.getArtifact().getGroupId();
+                        RemoteRepository normalized = normalizeRemoteRepository(session, remoteRepository);
                         recordedRules
-                                .computeIfAbsent(remoteRepository, k -> new TreeSet<>())
+                                .computeIfAbsent(normalized, k -> new TreeSet<>())
                                 .add(line);
-                        rules.compute(remoteRepository, (k, v) -> {
+                        rules.compute(normalized, (k, v) -> {
                                     if (v == null || v == GroupTree.SENTINEL) {
                                         v = new GroupTree("");
                                     }
@@ -232,7 +233,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private Path ruleFile(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return ruleFiles.computeIfAbsent(remoteRepository, r -> getBasedir(
+        return ruleFiles.computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> getBasedir(
                         session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
                 .resolve(GROUP_ID_FILE_PREFIX
                         + RepositoryIdHelper.cachedIdToPathSegment(session).apply(remoteRepository)
@@ -240,7 +241,8 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private GroupTree cacheRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return rules.computeIfAbsent(remoteRepository, r -> loadRepositoryRules(session, r));
+        return rules.computeIfAbsent(
+                normalizeRemoteRepository(session, remoteRepository), r -> loadRepositoryRules(session, r));
     }
 
     private GroupTree loadRepositoryRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
