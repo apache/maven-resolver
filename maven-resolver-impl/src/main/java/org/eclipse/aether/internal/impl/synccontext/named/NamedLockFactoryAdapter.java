@@ -219,11 +219,9 @@ public final class NamedLockFactoryAdapter {
             }
             if (!illegalStateExceptions.isEmpty()) {
                 String message = "Could not acquire " + (shared ? "read" : "write") + " lock for "
-                        + lockSubjects(artifacts, metadatas) + " in " + time + " " + timeUnit;
-                if (shared) {
-                    message += "; consider using '" + TIME_KEY
-                            + "' property to increase lock timeout to a value that fits your environment";
-                }
+                        + lockSubjects(artifacts, metadatas) + " in " + time + " " + timeUnit
+                        + "; consider using '" + TIME_KEY
+                        + "' property to increase lock timeout to a value that fits your environment";
                 FailedToAcquireLockException ex = new FailedToAcquireLockException(shared, message);
                 illegalStateExceptions.forEach(ex::addSuppressed);
                 throw namedLockFactory.onFailure(ex);
@@ -251,12 +249,12 @@ public final class NamedLockFactoryAdapter {
             String name = "";
             if (!metadata.getGroupId().isEmpty()) {
                 name += metadata.getGroupId();
-            }
-            if (!metadata.getArtifactId().isEmpty()) {
-                name += (name.isEmpty() ? "" : ":") + metadata.getArtifactId();
-            }
-            if (!metadata.getVersion().isEmpty()) {
-                name += (name.isEmpty() ? "" : ":") + metadata.getVersion();
+                if (!metadata.getArtifactId().isEmpty()) {
+                    name += ":" + metadata.getArtifactId();
+                    if (!metadata.getVersion().isEmpty()) {
+                        name += ":" + metadata.getVersion();
+                    }
+                }
             }
             if (!metadata.getType().isEmpty()) {
                 name += (name.isEmpty() ? "" : ":") + metadata.getType();
