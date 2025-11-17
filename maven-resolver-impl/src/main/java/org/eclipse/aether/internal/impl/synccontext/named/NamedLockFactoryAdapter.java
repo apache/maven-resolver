@@ -251,12 +251,15 @@ public final class NamedLockFactoryAdapter {
             String name = "";
             if (!metadata.getGroupId().isEmpty()) {
                 name += metadata.getGroupId();
-                if (!metadata.getArtifactId().isEmpty()) {
-                    name += "." + metadata.getArtifactId();
-                    if (!metadata.getVersion().isEmpty()) {
-                        name += "." + metadata.getVersion();
-                    }
-                }
+            }
+            if (!metadata.getArtifactId().isEmpty()) {
+                name += (name.isEmpty() ? "" : ":") + metadata.getArtifactId();
+            }
+            if (!metadata.getVersion().isEmpty()) {
+                name += (name.isEmpty() ? "" : ":") + metadata.getVersion();
+            }
+            if (!metadata.getType().isEmpty()) {
+                name += (name.isEmpty() ? "" : ":") + metadata.getType();
             }
             return name;
         }
