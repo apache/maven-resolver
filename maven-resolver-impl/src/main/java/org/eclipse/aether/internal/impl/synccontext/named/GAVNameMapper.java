@@ -88,7 +88,7 @@ public class GAVNameMapper implements NameMapper {
             for (Metadata metadata : metadatas) {
                 keys.add(NamedLockKey.of(
                         getMetadataName(metadata, fileSystemFriendly, metadataPrefix, fieldSeparator, metadataSuffix),
-                        getMetadataName(metadata, false,"", ":", "")));
+                        getMetadataName(metadata, false, "", ":", "")));
             }
         }
         return keys;
@@ -106,7 +106,8 @@ public class GAVNameMapper implements NameMapper {
 
     private static final String MAVEN_METADATA = "maven-metadata.xml";
 
-    private static String getMetadataName(Metadata metadata, boolean fileSystemFriendly, String prefix, String separator, String suffix) {
+    private static String getMetadataName(
+            Metadata metadata, boolean fileSystemFriendly, String prefix, String separator, String suffix) {
         String name = prefix;
         if (!metadata.getGroupId().isEmpty()) {
             name += metadata.getGroupId();
@@ -118,7 +119,8 @@ public class GAVNameMapper implements NameMapper {
             }
         }
         if (!MAVEN_METADATA.equals(metadata.getType())) {
-            name += separator + (fileSystemFriendly ? PathUtils.stringToPathSegment(metadata.getType()) : metadata.getType());
+            name += separator
+                    + (fileSystemFriendly ? PathUtils.stringToPathSegment(metadata.getType()) : metadata.getType());
         }
         return name + suffix;
     }
