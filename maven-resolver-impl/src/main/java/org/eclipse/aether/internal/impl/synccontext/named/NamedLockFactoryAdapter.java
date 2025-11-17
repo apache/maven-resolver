@@ -22,6 +22,7 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -33,6 +34,7 @@ import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -255,12 +257,46 @@ public final class NamedLockFactoryAdapter {
             }
             // if we are here, means all attempts were unsuccessful: fail
             close();
-            FailedToAcquireLockException ex = new FailedToAcquireLockException(
-                    shared,
-                    "Could not acquire " + lockKind + " lock for "
-                            + namedLock.key().resources() + " using lock "
-                            + namedLock.key().name() + " in " + timeStr);
+            String message = "Could not acquire " + lockKind + " lock for "
+                    + lockSubjects(artifacts, metadatas) + " in " + timeStr
+                    + "; consider using '" + CONFIG_PROP_TIME
+                    + "' property to increase lock timeout to a value that fits your environment";
+            FailedToAcquireLockException ex = new FailedToAcquireLockException(shared, message);
             throw namedLockFactory.onFailure(ex);
+        }
+
+        private String lockSubjects(
+                Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas) {
+            StringBuilder builder = new StringBuilder();
+            if (artifacts != null && !artifacts.isEmpty()) {
+                builder.append("artifacts: ")
+                        .append(artifacts.stream().map(ArtifactIdUtils::toId).collect(Collectors.joining(", ")));
+            }
+            if (metadatas != null && !metadatas.isEmpty()) {
+                if (builder.length() != 0) {
+                    builder.append("; ");
+                }
+                builder.append("metadata: ")
+                        .append(metadatas.stream().map(this::metadataSubjects).collect(Collectors.joining(", ")));
+            }
+            return builder.toString();
+        }
+
+        private String metadataSubjects(Metadata metadata) {
+            String name = "";
+            if (!metadata.getGroupId().isEmpty()) {
+                name += metadata.getGroupId();
+                if (!metadata.getArtifactId().isEmpty()) {
+                    name += ":" + metadata.getArtifactId();
+                    if (!metadata.getVersion().isEmpty()) {
+                        name += ":" + metadata.getVersion();
+                    }
+                }
+            }
+            if (!metadata.getType().isEmpty()) {
+                name += (name.isEmpty() ? "" : ":") + metadata.getType();
+            }
+            return name;
         }
 
         @Override

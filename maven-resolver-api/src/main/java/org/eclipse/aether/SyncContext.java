@@ -76,7 +76,7 @@ public interface SyncContext extends Closeable {
     /**
      * Specific exception thrown by {@link #acquire(Collection, Collection)} method when it cannot acquire the lock.
      *
-     * @since 2.0.14
+     * @since 1.9.25
      */
     final class FailedToAcquireLockException extends IllegalStateException {
         private final boolean shared;
