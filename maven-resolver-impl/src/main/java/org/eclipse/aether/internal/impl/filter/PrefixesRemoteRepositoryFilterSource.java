@@ -263,7 +263,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             String origin = "user-provided";
             Path filePath = resolvePrefixesFromLocalConfiguration(session, baseDir, remoteRepository);
             if (filePath == null) {
-                if (!shouldAttemptResolvePrefixesForRemoteRepository(session, remoteRepository)) {
+                if (!supportedResolvePrefixesForRemoteRepository(session, remoteRepository)) {
                     origin = "unsupported";
                 } else {
                     origin = "auto-discovered";
@@ -315,8 +315,9 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         }
     }
 
-    private boolean shouldAttemptResolvePrefixesForRemoteRepository(
+    private boolean supportedResolvePrefixesForRemoteRepository(
             RepositorySystemSession session, RemoteRepository remoteRepository) {
+        // TODO: RemoteRepository.isRepositoryManager() is still unused in Maven; once used, factor it in
         return remoteRepository.getMirroredRepositories().isEmpty()
                 || ConfigUtils.getBoolean(
                         session, DEFAULT_USE_MIRRORED_REPOSITORIES, CONFIG_PROP_USE_MIRRORED_REPOSITORIES);
