@@ -135,6 +135,23 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     public static final boolean DEFAULT_SKIPPED = false;
 
     /**
+     * Configuration to allow Prefixes filter to auto-discover prefixes from mirrored repositories as well. For this to
+     * work <em>Maven should be aware</em> that given remote repository is mirror and is usually backed by MRM. Given
+     * multiple MRM implementations messes up prefixes file, is better to just skip these. In other case, one may use
+     * {@link #CONFIG_PROP_ENABLED} with repository ID suffix.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_USE_MIRRORED_REPOSITORIES}
+     */
+    public static final String CONFIG_PROP_USE_MIRRORED_REPOSITORIES =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".useMirroredRepositories";
+
+    public static final boolean DEFAULT_USE_MIRRORED_REPOSITORIES = false;
+
+    /**
      * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -236,7 +253,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private PrefixTree cachePrefixTree(
             RepositorySystemSession session, Path basedir, RemoteRepository remoteRepository) {
-        return prefixes.computeIfAbsent(remoteRepository, r -> loadPrefixTree(session, basedir, remoteRepository));
+        RemoteRepository normalized = normalizeRemoteRepository(session, remoteRepository);
+        return prefixes.computeIfAbsent(normalized, r -> loadPrefixTree(session, basedir, remoteRepository));
     }
 
     private PrefixTree loadPrefixTree(
@@ -245,8 +263,12 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             String origin = "user-provided";
             Path filePath = resolvePrefixesFromLocalConfiguration(session, baseDir, remoteRepository);
             if (filePath == null) {
-                origin = "auto-discovered";
-                filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
+                if (!shouldAttemptResolvePrefixesForRemoteRepository(session, remoteRepository)) {
+                    origin = "unsupported";
+                } else {
+                    origin = "auto-discovered";
+                    filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
+                }
             }
             if (filePath != null) {
                 PrefixesSource prefixesSource = PrefixesSource.of(remoteRepository, filePath);
@@ -293,6 +315,13 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         }
     }
 
+    private boolean shouldAttemptResolvePrefixesForRemoteRepository(
+            RepositorySystemSession session, RemoteRepository remoteRepository) {
+        return remoteRepository.getMirroredRepositories().isEmpty()
+                || ConfigUtils.getBoolean(
+                        session, DEFAULT_USE_MIRRORED_REPOSITORIES, CONFIG_PROP_USE_MIRRORED_REPOSITORIES);
+    }
+
     private Path resolvePrefixesFromRemoteRepository(
             RepositorySystemSession session, RemoteRepository remoteRepository) {
         MetadataResolver mr = metadataResolver.get();
@@ -302,10 +331,9 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             RemoteRepository prepared = rm.aggregateRepositories(
                             session, Collections.emptyList(), Collections.singletonList(remoteRepository), true)
                     .get(0);
-            // supplier for path
+            // retrieve prefix as metadata from repository
             MetadataRequest request =
                     new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
-            // use unique repository; this will result in prefix (repository metadata) cached under unique id
             request.setRepository(prepared);
             request.setDeleteLocalCopyIfMissing(true);
             request.setFavorLocalRepository(true);
@@ -335,24 +363,24 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
         @Override
         public Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
-            RemoteRepository repository = normalizeRemoteRepository(session, remoteRepository);
-            RepositoryLayout repositoryLayout = cacheLayout(session, repository);
+            RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
             if (repositoryLayout == null) {
-                return new SimpleResult(true, "Unsupported layout: " + repository);
+                return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
             }
             return acceptPrefix(
-                    repository, repositoryLayout.getLocation(artifact, false).getPath());
+                    remoteRepository,
+                    repositoryLayout.getLocation(artifact, false).getPath());
         }
 
         @Override
         public Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
-            RemoteRepository repository = normalizeRemoteRepository(session, remoteRepository);
-            RepositoryLayout repositoryLayout = cacheLayout(session, repository);
+            RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
             if (repositoryLayout == null) {
-                return new SimpleResult(true, "Unsupported layout: " + repository);
+                return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
             }
             return acceptPrefix(
-                    repository, repositoryLayout.getLocation(metadata, false).getPath());
+                    remoteRepository,
+                    repositoryLayout.getLocation(metadata, false).getPath());
         }
 
         private Result acceptPrefix(RemoteRepository repository, String path) {
