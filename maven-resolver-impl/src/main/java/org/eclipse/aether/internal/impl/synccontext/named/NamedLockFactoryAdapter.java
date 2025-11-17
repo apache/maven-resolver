@@ -218,7 +218,7 @@ public final class NamedLockFactoryAdapter {
                 }
             }
             if (!illegalStateExceptions.isEmpty()) {
-                String message = "Could not acquire " + (shared ? "read" : "write") + " lock for "
+                String message = "Could not acquire " + (shared ? "shared" : "exclusive") + " lock for "
                         + lockSubjects(artifacts, metadatas) + " in " + time + " " + timeUnit
                         + "; consider using '" + TIME_KEY
                         + "' property to increase lock timeout to a value that fits your environment";
