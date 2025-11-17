@@ -83,7 +83,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     private static final String CONFIG_PROPS_PREFIX =
             RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
 
-    private static final String PREFIX_FILE_PATH = ".meta/prefixes.txt";
+    private static final String PREFIX_FILE_TYPE = ".meta/prefixes.txt";
 
     /**
      * Configuration to enable the Prefixes filter (enabled by default). Can be fine-tuned per repository using
@@ -289,7 +289,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             // supplier for path
             Supplier<Path> supplier = () -> {
                 MetadataRequest request =
-                        new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
+                        new MetadataRequest(new DefaultMetadata(PREFIX_FILE_TYPE, Metadata.Nature.RELEASE_OR_SNAPSHOT));
                 // use unique repository; this will result in prefix (repository metadata) cached under unique id
                 request.setRepository(unique);
                 request.setDeleteLocalCopyIfMissing(true);
