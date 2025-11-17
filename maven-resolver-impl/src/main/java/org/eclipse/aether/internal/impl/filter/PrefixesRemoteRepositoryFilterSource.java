@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -203,6 +204,22 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     }
 
     /**
+     * We use remote repositories as keys, but they may fly in as "bare" or as "equipped" (w/ auth and proxy) if caller
+     * used {@link org.eclipse.aether.RepositorySystem#newResolutionRepositories(RepositorySystemSession, List)} beforehand.
+     * The hash/equalTo method factors in all these as well, but from our perspective, they do not matter. So we make all
+     * key remote repositories back to "bare".
+     */
+    private RemoteRepository normalizeRemoteRepository(
+            RepositorySystemSession session, RemoteRepository remoteRepository) {
+        return new RemoteRepository.Builder(remoteRepository)
+                .setProxy(null)
+                .setAuthentication(null)
+                .setMirroredRepositories(null)
+                .setRepositoryManager(false)
+                .build();
+    }
+
+    /**
      * Caches layout instances for remote repository. In case of unknown layout it returns {@code null}.
      *
      * @return the layout instance of {@code null} if layout not supported.
@@ -318,35 +335,35 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
         @Override
         public Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
-            RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
+            RemoteRepository repository = normalizeRemoteRepository(session, remoteRepository);
+            RepositoryLayout repositoryLayout = cacheLayout(session, repository);
             if (repositoryLayout == null) {
-                return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
+                return new SimpleResult(true, "Unsupported layout: " + repository);
             }
             return acceptPrefix(
-                    remoteRepository,
-                    repositoryLayout.getLocation(artifact, false).getPath());
+                    repository, repositoryLayout.getLocation(artifact, false).getPath());
         }
 
         @Override
         public Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
-            RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
+            RemoteRepository repository = normalizeRemoteRepository(session, remoteRepository);
+            RepositoryLayout repositoryLayout = cacheLayout(session, repository);
             if (repositoryLayout == null) {
-                return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
+                return new SimpleResult(true, "Unsupported layout: " + repository);
             }
             return acceptPrefix(
-                    remoteRepository,
-                    repositoryLayout.getLocation(metadata, false).getPath());
+                    repository, repositoryLayout.getLocation(metadata, false).getPath());
         }
 
-        private Result acceptPrefix(RemoteRepository remoteRepository, String path) {
-            PrefixTree prefixTree = cachePrefixTree(session, basedir, remoteRepository);
+        private Result acceptPrefix(RemoteRepository repository, String path) {
+            PrefixTree prefixTree = cachePrefixTree(session, basedir, repository);
             if (PrefixTree.SENTINEL == prefixTree) {
                 return NOT_PRESENT_RESULT;
             }
             if (prefixTree.acceptedPath(path)) {
-                return new SimpleResult(true, "Path " + path + " allowed from " + remoteRepository);
+                return new SimpleResult(true, "Path " + path + " allowed from " + repository);
             } else {
-                return new SimpleResult(false, "Prefix " + path + " NOT allowed from " + remoteRepository);
+                return new SimpleResult(false, "Path " + path + " NOT allowed from " + repository);
             }
         }
     }
