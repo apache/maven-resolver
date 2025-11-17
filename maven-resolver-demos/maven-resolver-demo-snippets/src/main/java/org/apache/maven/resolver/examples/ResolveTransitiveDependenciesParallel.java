@@ -74,6 +74,10 @@ public class ResolveTransitiveDependenciesParallel {
         // DONE (181 sec): org.example:test:2: resolved 11; failed 0
         // =====
         // TOTAL success=8; fail=0
+        //
+        // Pattern: as said above, one job does in 20 sec, BUT subsequent one will do it in cca 40 sec (waiting 20 sec)
+        // and so on, the times are adding up. Each subsequent job with start by waiting for previous jobs to finish
+        // due (intentional) artifact overlaps.
 
         DefaultRepositorySystemSession session = Booter.newRepositorySystemSession(system);
         session.setConfigProperty("aether.syncContext.named.time", "210");
