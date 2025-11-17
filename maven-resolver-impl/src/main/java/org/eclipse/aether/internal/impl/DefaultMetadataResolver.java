@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -170,28 +171,42 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
             RepositorySystemSession session, Collection<? extends MetadataRequest> requests) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-        try (SyncContext shared = syncContextFactory.newInstance(session, true);
-                SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
-            Collection<Metadata> metadata = new ArrayList<>(requests.size());
-            for (MetadataRequest request : requests) {
-                metadata.add(request.getMetadata());
-            }
-
-            return resolve(shared, exclusive, metadata, session, requests);
+        Collection<Metadata> metadata = new ArrayList<>(requests.size());
+        for (MetadataRequest request : requests) {
+            metadata.add(request.getMetadata());
         }
+
+        return resolve(
+                () -> syncContextFactory.newInstance(session, true),
+                () -> syncContextFactory.newInstance(session, false),
+                metadata,
+                session,
+                requests);
     }
 
     @SuppressWarnings("checkstyle:methodlength")
     private List<MetadataResult> resolve(
-            SyncContext shared,
-            SyncContext exclusive,
+            Supplier<SyncContext> sharedSupplier,
+            Supplier<SyncContext> exclusiveSupplier,
             Collection<Metadata> subjects,
             RepositorySystemSession session,
             Collection<? extends MetadataRequest> requests) {
-        SyncContext current = shared;
+        boolean firstAttempt = true;
+        boolean shared = true;
+        SyncContext current = sharedSupplier.get();
         try {
             while (true) {
-                current.acquire(null, subjects);
+                try {
+                    current.acquire(null, subjects);
+                } catch (SyncContext.FailedToAcquireLockException e) {
+                    if (e.isShared()) {
+                        throw e;
+                    } else {
+                        current.close();
+                        shared = true;
+                        current = sharedSupplier.get();
+                    }
+                }
 
                 final List<MetadataResult> results = new ArrayList<>(requests.size());
                 final List<ResolveTask> tasks = new ArrayList<>(requests.size());
@@ -212,7 +227,9 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                         LocalRepository localRepo =
                                 session.getLocalRepositoryManager().getRepository();
 
-                        metadataResolving(session, trace, metadata, localRepo);
+                        if (firstAttempt) {
+                            metadataResolving(session, trace, metadata, localRepo);
+                        }
 
                         File localFile = getLocalFile(session, metadata);
 
@@ -223,7 +240,9 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                             result.setException(new MetadataNotFoundException(metadata, localRepo));
                         }
 
-                        metadataResolved(session, trace, metadata, localRepo, result.getException());
+                        if (firstAttempt) {
+                            metadataResolved(session, trace, metadata, localRepo, result.getException());
+                        }
                         continue;
                     }
 
@@ -244,7 +263,10 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                         continue;
                     }
 
-                    metadataResolving(session, trace, metadata, repository);
+                    if (firstAttempt) {
+                        metadataResolving(session, trace, metadata, repository);
+                    }
+
                     LocalRepositoryManager lrm = session.getLocalRepositoryManager();
                     LocalMetadataRequest localRequest =
                             new LocalMetadataRequest(metadata, repository, request.getRequestContext());
@@ -265,7 +287,9 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                             result.setException(new MetadataNotFoundException(metadata, repository, msg, e));
                         }
 
-                        metadataResolved(session, trace, metadata, repository, result.getException());
+                        if (firstAttempt) {
+                            metadataResolved(session, trace, metadata, repository, result.getException());
+                        }
                         continue;
                     }
 
@@ -328,13 +352,17 @@ public class DefaultMetadataResolver implements MetadataResolver, Service {
                             metadata = metadata.setFile(metadataFile);
                             result.setMetadata(metadata);
                         }
-                        metadataResolved(session, trace, metadata, repository, result.getException());
+                        if (firstAttempt) {
+                            metadataResolved(session, trace, metadata, repository, result.getException());
+                        }
                     }
                 }
 
-                if (!tasks.isEmpty() && current == shared) {
+                if (!tasks.isEmpty() && shared) {
+                    firstAttempt = false;
                     current.close();
-                    current = exclusive;
+                    current = exclusiveSupplier.get();
+                    shared = false;
                     continue;
                 }
 

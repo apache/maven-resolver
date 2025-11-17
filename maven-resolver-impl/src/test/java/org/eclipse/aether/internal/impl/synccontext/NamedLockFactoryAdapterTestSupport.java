@@ -92,6 +92,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         when(session.getLocalRepository()).thenReturn(localRepository);
         HashMap<String, Object> config = new HashMap<>();
         config.put(NamedLockFactoryAdapter.TIME_KEY, String.valueOf(ADAPTER_TIME));
+        config.put(NamedLockFactoryAdapter.EXCLUSIVE_TIME_KEY, String.valueOf(ADAPTER_TIME));
         config.put(NamedLockFactoryAdapter.TIME_UNIT_KEY, ADAPTER_TIME_UNIT.name());
         when(session.getConfigProperties()).thenReturn(config);
     }

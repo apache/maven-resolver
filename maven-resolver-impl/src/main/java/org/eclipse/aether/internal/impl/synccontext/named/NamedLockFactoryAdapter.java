@@ -47,6 +47,10 @@ public final class NamedLockFactoryAdapter {
 
     public static final long DEFAULT_TIME = 900L;
 
+    public static final String EXCLUSIVE_TIME_KEY = "aether.syncContext.named.exclusiveTime";
+
+    public static final long DEFAULT_EXCLUSIVE_TIME = 5L;
+
     public static final String TIME_UNIT_KEY = "aether.syncContext.named.time.unit";
 
     public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.SECONDS;
@@ -111,6 +115,8 @@ public final class NamedLockFactoryAdapter {
 
         private final long time;
 
+        private final long exclusiveTime;
+
         private final TimeUnit timeUnit;
 
         private final int retry;
@@ -128,7 +134,8 @@ public final class NamedLockFactoryAdapter {
             this.shared = shared;
             this.lockNaming = lockNaming;
             this.namedLockFactory = namedLockFactory;
-            this.time = getTime(session);
+            this.time = getTime(session, DEFAULT_TIME, TIME_KEY);
+            this.exclusiveTime = getTime(session, DEFAULT_EXCLUSIVE_TIME, EXCLUSIVE_TIME_KEY);
             this.timeUnit = getTimeUnit(session);
             this.retry = getRetry(session);
             this.retryWait = getRetryWait(session);
@@ -136,6 +143,9 @@ public final class NamedLockFactoryAdapter {
 
             if (time < 0L) {
                 throw new IllegalArgumentException(TIME_KEY + " value cannot be negative");
+            }
+            if (exclusiveTime < 0L) {
+                throw new IllegalArgumentException(EXCLUSIVE_TIME_KEY + " value cannot be negative");
             }
             if (retry < 0L) {
                 throw new IllegalArgumentException(RETRY_KEY + " value cannot be negative");
@@ -145,8 +155,8 @@ public final class NamedLockFactoryAdapter {
             }
         }
 
-        private long getTime(final RepositorySystemSession session) {
-            return ConfigUtils.getLong(session, DEFAULT_TIME, TIME_KEY);
+        private long getTime(final RepositorySystemSession session, long defaultValue, String... keys) {
+            return ConfigUtils.getLong(session, defaultValue, keys);
         }
 
         private TimeUnit getTimeUnit(final RepositorySystemSession session) {
@@ -168,11 +178,13 @@ public final class NamedLockFactoryAdapter {
                 return;
             }
 
+            final String lockKindString = shared ? "shared" : "exclusive";
+            final String lockTimeoutString = (shared ? time : exclusiveTime) + " " + timeUnit;
+
             final int attempts = retry + 1;
             final ArrayList<IllegalStateException> illegalStateExceptions = new ArrayList<>();
             for (int attempt = 1; attempt <= attempts; attempt++) {
-                LOGGER.trace(
-                        "Attempt {}: Need {} {} lock(s) for {}", attempt, keys.size(), shared ? "read" : "write", keys);
+                LOGGER.trace("Attempt {}: Need {} {} lock(s) for {}", attempt, keys.size(), lockKindString, keys);
                 int acquiredLockCount = 0;
                 try {
                     if (attempt > 1) {
@@ -180,28 +192,24 @@ public final class NamedLockFactoryAdapter {
                     }
                     for (String key : keys) {
                         NamedLock namedLock = namedLockFactory.getLock(key);
-                        LOGGER.trace("Acquiring {} lock for '{}'", shared ? "read" : "write", key);
+                        LOGGER.trace("Acquiring {} lock for '{}'", lockKindString, key);
 
                         boolean locked;
                         if (shared) {
                             locked = namedLock.lockShared(time, timeUnit);
                         } else {
-                            locked = namedLock.lockExclusively(time, timeUnit);
+                            locked = namedLock.lockExclusively(exclusiveTime, timeUnit);
                         }
 
                         if (!locked) {
-                            String timeStr = time + " " + timeUnit;
                             LOGGER.trace(
-                                    "Failed to acquire {} lock for '{}' in {}",
-                                    shared ? "read" : "write",
-                                    key,
-                                    timeStr);
+                                    "Failed to acquire {} lock for '{}' in {}", lockKindString, key, lockTimeoutString);
 
                             namedLock.close();
                             closeAll();
                             illegalStateExceptions.add(new IllegalStateException(
-                                    "Attempt " + attempt + ": Could not acquire " + (shared ? "read" : "write")
-                                            + " lock for '" + namedLock.name() + "' in " + timeStr));
+                                    "Attempt " + attempt + ": Could not acquire " + lockKindString + " lock for '"
+                                            + namedLock.name() + "' in " + lockTimeoutString));
                             break;
                         } else {
                             locks.push(namedLock);
@@ -218,10 +226,10 @@ public final class NamedLockFactoryAdapter {
                 }
             }
             if (!illegalStateExceptions.isEmpty()) {
-                String message = "Could not acquire " + (shared ? "shared" : "exclusive") + " lock for "
-                        + lockSubjects(artifacts, metadatas) + " in " + time + " " + timeUnit
+                String message = "Could not acquire " + lockKindString + " lock for "
+                        + lockSubjects(artifacts, metadatas) + " in " + lockTimeoutString
                         + "; consider using '" + TIME_KEY
-                        + "' property to increase lock timeout to a value that fits your environment";
+                        + "' property to increase shared lock timeout to a value that fits your environment";
                 FailedToAcquireLockException ex = new FailedToAcquireLockException(shared, message);
                 illegalStateExceptions.forEach(ex::addSuppressed);
                 throw namedLockFactory.onFailure(ex);
