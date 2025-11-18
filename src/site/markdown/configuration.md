@@ -109,7 +109,7 @@ To modify this file, edit the template and regenerate.
 | `"aether.syncContext.named.discriminating.hostname"` | `String` | Configuration property to pass in hostname, if needed. If not present, hostname as reported by system will be used. |  -  | 1.7.0 |  No  | Session Configuration |
 | `"aether.syncContext.named.factory"` | `String` | Name of the lock factory to use in session. |  `"file-lock"`  | 1.9.1 |  No  | Session Configuration |
 | `"aether.syncContext.named.hashing.depth"` | `Integer` | The depth how many levels should adapter create. Acceptable values are 0-4 (inclusive). |  `2`  | 1.9.0 |  No  | Session Configuration |
-| `"aether.syncContext.named.nameMapper"` | `String` | Name of the name mapper to use in session. Out of the box supported ones are "static", "gav", "file-gav", "file-hgav", "file-static" and "discriminating". |  `"file-gav"`  | 1.9.1 |  No  | Session Configuration |
+| `"aether.syncContext.named.nameMapper"` | `String` | Name of the name mapper to use in session. Out of the box supported ones are "static", "gav", "file-gav", "file-hgav", "file-static" and "discriminating". |  `"file-gaecv"`  | 1.9.1 |  No  | Session Configuration |
 | `"aether.syncContext.named.redisson.address"` | `String` | Address of the Redis instance. Optional. |  `"redis://localhost:6379"`  | 2.0.0 |  No  | Java System Properties |
 | `"aether.syncContext.named.redisson.configFile"` | `String` | Path to a Redisson configuration file in YAML format. Read official documentation for details. |  -  | 1.7.0 |  No  | Java System Properties |
 | `"aether.syncContext.named.retry"` | `Integer` | The amount of retries on time-out. |  `1`  | 1.7.0 |  No  | Session Configuration |
