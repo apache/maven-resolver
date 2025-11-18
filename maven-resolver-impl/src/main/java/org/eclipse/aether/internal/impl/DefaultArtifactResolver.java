@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -274,19 +275,24 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
             Collection<? extends ArtifactRequest> requests)
             throws ArtifactResolutionException {
         boolean firstAttempt = true;
-        boolean shared = true;
-        SyncContext current = sharedSupplier.get();
+        HashSet<Artifact> needsShared = new HashSet<>(subjects);
+        HashSet<Artifact> needsExclusive = new HashSet<>(subjects.size());
+        SyncContext shared = sharedSupplier.get();
+        SyncContext exclusive = exclusiveSupplier.get();
+        boolean relock = false;
         try {
             while (true) {
                 try {
-                    current.acquire(subjects, null);
+                    shared.acquire(needsShared, null);
+                    exclusive.acquire(needsExclusive, null);
                 } catch (SyncContext.FailedToAcquireLockException e) {
                     if (e.isShared()) {
                         throw e;
                     } else {
-                        current.close();
-                        shared = true;
-                        current = sharedSupplier.get();
+                        shared.close();
+                        exclusive.close();
+                        shared = sharedSupplier.get();
+                        exclusive = exclusiveSupplier.get();
                     }
                 }
 
@@ -450,15 +456,21 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
                             groups.add(group);
                             groupIt = Collections.emptyIterator();
                         }
+                        if (needsExclusive.add(artifact)) {
+                            needsShared.remove(artifact);
+                            relock = true;
+                        }
                         group.items.add(new ResolutionItem(trace, artifact, resolved, result, local, repo));
                     }
                 }
 
-                if (!groups.isEmpty() && shared) {
+                if (!groups.isEmpty() && relock) {
                     firstAttempt = false;
-                    current.close();
-                    current = exclusiveSupplier.get();
-                    shared = false;
+                    relock = false;
+                    shared.close();
+                    exclusive.close();
+                    shared = sharedSupplier.get();
+                    exclusive = exclusiveSupplier.get();
                     continue;
                 }
 
@@ -493,7 +505,8 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
                 return results;
             }
         } finally {
-            current.close();
+            exclusive.close();
+            shared.close();
         }
     }
 
