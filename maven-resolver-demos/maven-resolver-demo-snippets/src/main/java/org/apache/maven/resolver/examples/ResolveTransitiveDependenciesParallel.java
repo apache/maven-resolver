@@ -216,7 +216,7 @@ public class ResolveTransitiveDependenciesParallel {
                 DependencyRequest dependencyRequest = new DependencyRequest(collectRequest, null);
                 List<ArtifactResult> artifactResults =
                         system.resolveDependencies(session, dependencyRequest).getArtifactResults();
-                int resolved = 9;
+                int resolved = 0;
                 int fails = 0;
                 for (ArtifactResult artifactResult : artifactResults) {
                     if (artifactResult.isResolved()) {
