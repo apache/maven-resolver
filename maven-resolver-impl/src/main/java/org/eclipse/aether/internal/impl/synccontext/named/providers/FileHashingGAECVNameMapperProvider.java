@@ -16,17 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.impl.synccontext;
+package org.eclipse.aether.internal.impl.synccontext.named.providers;
 
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
-import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
-import org.junit.BeforeClass;
 
-public class FileLockAdapterTest extends NamedLockFactoryAdapterTestSupport {
-    @BeforeClass
-    public static void createNamedLockFactory() {
-        nameMapper = NameMappers.fileGavNameMapper();
-        namedLockFactory = new FileLockNamedLockFactory();
-        createAdapter();
+/**
+ * The "file-hgaecv" name mapper provider.
+ *
+ * @since 1.9.25
+ */
+@Singleton
+@Named(NameMappers.FILE_HGAECV_NAME)
+public class FileHashingGAECVNameMapperProvider implements Provider<NameMapper> {
+    private final NameMapper mapper;
+
+    public FileHashingGAECVNameMapperProvider() {
+        this.mapper = NameMappers.fileHashingGaecvNameMapper();
+    }
+
+    @Override
+    public NameMapper get() {
+        return mapper;
     }
 }

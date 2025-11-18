@@ -60,7 +60,7 @@ import static java.util.Objects.requireNonNull;
 public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapterFactory, Service {
     private static final String DEFAULT_FACTORY_NAME = LocalReadWriteLockNamedLockFactory.NAME;
 
-    private static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.GAV_NAME;
+    private static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.GAECV_NAME;
 
     private static Map<String, NamedLockFactory> getManuallyCreatedFactories() {
         HashMap<String, NamedLockFactory> factories = new HashMap<>();
@@ -75,9 +75,12 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
         HashMap<String, NameMapper> mappers = new HashMap<>();
         mappers.put(NameMappers.STATIC_NAME, NameMappers.staticNameMapper());
         mappers.put(NameMappers.GAV_NAME, NameMappers.gavNameMapper());
+        mappers.put(NameMappers.GAECV_NAME, NameMappers.gaecvNameMapper());
         mappers.put(NameMappers.DISCRIMINATING_NAME, NameMappers.discriminatingNameMapper());
         mappers.put(NameMappers.FILE_GAV_NAME, NameMappers.fileGavNameMapper());
+        mappers.put(NameMappers.FILE_GAECV_NAME, NameMappers.fileGaecvNameMapper());
         mappers.put(NameMappers.FILE_HGAV_NAME, NameMappers.fileHashingGavNameMapper());
+        mappers.put(NameMappers.FILE_HGAECV_NAME, NameMappers.fileHashingGaecvNameMapper());
         return Collections.unmodifiableMap(mappers);
     }
 

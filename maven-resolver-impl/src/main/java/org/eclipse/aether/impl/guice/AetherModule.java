@@ -95,8 +95,11 @@ import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactory;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactoryImpl;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.FileGAECVNameMapperProvider;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.FileGAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.FileHashingGAECVNameMapperProvider;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.FileHashingGAVNameMapperProvider;
+import org.eclipse.aether.internal.impl.synccontext.named.providers.GAECVNameMapperProvider;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.GAVNameMapperProvider;
 import org.eclipse.aether.internal.impl.synccontext.named.providers.StaticNameMapperProvider;
 import org.eclipse.aether.named.NamedLockFactory;
@@ -283,6 +286,10 @@ public class AetherModule extends AbstractModule {
                 .toProvider(GAVNameMapperProvider.class)
                 .in(Singleton.class);
         bind(NameMapper.class)
+                .annotatedWith(Names.named(NameMappers.GAECV_NAME))
+                .toProvider(GAECVNameMapperProvider.class)
+                .in(Singleton.class);
+        bind(NameMapper.class)
                 .annotatedWith(Names.named(NameMappers.DISCRIMINATING_NAME))
                 .toProvider(DiscriminatingNameMapperProvider.class)
                 .in(Singleton.class);
@@ -291,8 +298,16 @@ public class AetherModule extends AbstractModule {
                 .toProvider(FileGAVNameMapperProvider.class)
                 .in(Singleton.class);
         bind(NameMapper.class)
+                .annotatedWith(Names.named(NameMappers.FILE_GAECV_NAME))
+                .toProvider(FileGAECVNameMapperProvider.class)
+                .in(Singleton.class);
+        bind(NameMapper.class)
                 .annotatedWith(Names.named(NameMappers.FILE_HGAV_NAME))
                 .toProvider(FileHashingGAVNameMapperProvider.class)
+                .in(Singleton.class);
+        bind(NameMapper.class)
+                .annotatedWith(Names.named(NameMappers.FILE_HGAECV_NAME))
+                .toProvider(FileHashingGAECVNameMapperProvider.class)
                 .in(Singleton.class);
 
         bind(NamedLockFactory.class)
@@ -393,20 +408,27 @@ public class AetherModule extends AbstractModule {
         return Collections.unmodifiableMap(result);
     }
 
+    @SuppressWarnings("checkstyle:parameternumber")
     @Provides
     @Singleton
     Map<String, NameMapper> provideNameMappers(
             @Named(NameMappers.STATIC_NAME) NameMapper staticNameMapper,
             @Named(NameMappers.GAV_NAME) NameMapper gavNameMapper,
+            @Named(NameMappers.GAECV_NAME) NameMapper gaecvNameMapper,
             @Named(NameMappers.DISCRIMINATING_NAME) NameMapper discriminatingNameMapper,
             @Named(NameMappers.FILE_GAV_NAME) NameMapper fileGavNameMapper,
-            @Named(NameMappers.FILE_HGAV_NAME) NameMapper fileHashingGavNameMapper) {
+            @Named(NameMappers.FILE_GAECV_NAME) NameMapper fileGaecvNameMapper,
+            @Named(NameMappers.FILE_HGAV_NAME) NameMapper fileHashingGavNameMapper,
+            @Named(NameMappers.FILE_HGAECV_NAME) NameMapper fileHashingGaecvNameMapper) {
         Map<String, NameMapper> result = new HashMap<>();
         result.put(NameMappers.STATIC_NAME, staticNameMapper);
         result.put(NameMappers.GAV_NAME, gavNameMapper);
+        result.put(NameMappers.GAECV_NAME, gaecvNameMapper);
         result.put(NameMappers.DISCRIMINATING_NAME, discriminatingNameMapper);
         result.put(NameMappers.FILE_GAV_NAME, fileGavNameMapper);
+        result.put(NameMappers.FILE_GAECV_NAME, fileGaecvNameMapper);
         result.put(NameMappers.FILE_HGAV_NAME, fileHashingGavNameMapper);
+        result.put(NameMappers.FILE_HGAECV_NAME, fileHashingGaecvNameMapper);
         return Collections.unmodifiableMap(result);
     }
 
