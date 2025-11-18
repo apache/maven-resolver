@@ -27,6 +27,8 @@ package org.eclipse.aether.internal.impl.synccontext.named;
  * @since 1.9.4
  */
 public final class NameMappers {
+    private NameMappers() {}
+
     public static final String STATIC_NAME = "static";
 
     public static final String GAV_NAME = "gav";
