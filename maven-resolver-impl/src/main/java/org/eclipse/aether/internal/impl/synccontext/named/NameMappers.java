@@ -67,6 +67,9 @@ public final class NameMappers {
         return gavNameMapper(false);
     }
 
+    /**
+     * @since 1.9.25
+     */
     public static NameMapper gavNameMapper(boolean fileSystemFriendly) {
         if (fileSystemFriendly) {
             return new GAVNameMapper(true, "artifact~", ".lock", "metadata~", ".lock", "~");
