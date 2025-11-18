@@ -61,10 +61,13 @@ For the `aether.syncContext.named.factory` property following values are allowed
 
 For the `aether.syncContext.named.nameMapper` property following values are allowed:
 
-- `discriminating` (default), uses hostname + local repo + GAV to create unique lock names for artifacts.
+- `discriminating`, uses hostname + local repo + GAV to create unique lock names for artifacts.
 - `gav` uses GAV to create unique lock names for artifacts and metadata. Is not unique if multiple local repositories are involved.
 - `file-gav` uses GAV and session to create absolute file paths (to be used with `file-lock` factory)
 - `file-hgav` uses more compact layout than `file-gav` by SHA-1 digest, similar to git (to be used with `file-lock` factory)
+- `gaecv` (default) uses GAECV to create unique lock names for artifacts and metadata. Is not unique if multiple local repositories are involved.
+- `file-gaecv` uses GAECV and session to create absolute file paths (to be used with `file-lock` factory)
+- `file-hgaecv` uses more compact layout than `file-gaecv` by SHA-1 digest, similar to git (to be used with `file-lock` factory)
 - `static` uses static (same) string as lock name for any input. Effectively providing functionality same as old
   "global" locking SyncContextFactory. Mostly for testing/experimental purposes.
 - `file-static` same as `static` but to be used with `file-lock` factory. Mostly for testing/experimental purposes.

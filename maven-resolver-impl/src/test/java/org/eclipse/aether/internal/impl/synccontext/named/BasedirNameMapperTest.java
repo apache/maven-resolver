@@ -38,7 +38,7 @@ import static org.hamcrest.Matchers.hasSize;
 public class BasedirNameMapperTest extends NameMapperTestSupport {
     private static final String PS = File.separator;
 
-    BasedirNameMapper mapper = new BasedirNameMapper(new HashingNameMapper(GAVNameMapper.gav()));
+    NameMapper mapper = NameMappers.fileHashingGavNameMapper();
 
     @Test
     public void nullsAndEmptyInputs() {

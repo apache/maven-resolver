@@ -34,7 +34,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 public class HashingNameMapperTest extends NameMapperTestSupport {
-    HashingNameMapper mapper = new HashingNameMapper(GAVNameMapper.gav());
+    HashingNameMapper mapper = new HashingNameMapper(NameMappers.gavNameMapper(false));
 
     @Test
     public void nullsAndEmptyInputs() {

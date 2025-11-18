@@ -30,21 +30,24 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Artifact GAV {@link NameMapper}, uses artifact and metadata coordinates to name their corresponding locks. Is not
- * considering local repository, only the artifact coordinates. May use custom prefixes and sufixes and separators,
+ * considering local repository, only the artifact coordinates. May use custom prefixes and suffixes and separators,
  * hence this instance may or may not be filesystem friendly (depends on strings used).
+ * <p>
+ * Note: in earlier Resolver 1.9.x versions this mapper was the default, but it changed to {@link GAECVNameMapper}
+ * in 1.9.25.
  */
 public class GAVNameMapper implements NameMapper {
-    private final boolean fileSystemFriendly;
+    protected final boolean fileSystemFriendly;
 
-    private final String artifactPrefix;
+    protected final String artifactPrefix;
 
-    private final String artifactSuffix;
+    protected final String artifactSuffix;
 
-    private final String metadataPrefix;
+    protected final String metadataPrefix;
 
-    private final String metadataSuffix;
+    protected final String metadataSuffix;
 
-    private final String fieldSeparator;
+    protected final String fieldSeparator;
 
     public GAVNameMapper(
             boolean fileSystemFriendly,
@@ -88,7 +91,7 @@ public class GAVNameMapper implements NameMapper {
         return keys;
     }
 
-    private String getArtifactName(Artifact artifact) {
+    protected String getArtifactName(Artifact artifact) {
         return artifactPrefix
                 + artifact.getGroupId()
                 + fieldSeparator
@@ -98,9 +101,9 @@ public class GAVNameMapper implements NameMapper {
                 + artifactSuffix;
     }
 
-    private static final String MAVEN_METADATA = "maven-metadata.xml";
+    protected static final String MAVEN_METADATA = "maven-metadata.xml";
 
-    private String getMetadataName(Metadata metadata) {
+    protected String getMetadataName(Metadata metadata) {
         String name = metadataPrefix;
         if (!metadata.getGroupId().isEmpty()) {
             name += metadata.getGroupId();
@@ -122,10 +125,18 @@ public class GAVNameMapper implements NameMapper {
         return name + metadataSuffix;
     }
 
+    /**
+     * @deprecated Use {@link NameMappers} to create name mappers instead.
+     */
+    @Deprecated
     public static NameMapper gav() {
         return new GAVNameMapper(false, "artifact:", "", "metadata:", "", ":");
     }
 
+    /**
+     * @deprecated Use {@link NameMappers} to create name mappers instead.
+     */
+    @Deprecated
     public static NameMapper fileGav() {
         return new GAVNameMapper(true, "artifact~", ".lock", "metadata~", ".lock", "~");
     }
