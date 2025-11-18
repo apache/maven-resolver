@@ -32,6 +32,9 @@ import static java.util.Objects.requireNonNull;
  * Artifact GAV {@link NameMapper}, uses artifact and metadata coordinates to name their corresponding locks. Is not
  * considering local repository, only the artifact coordinates. May use custom prefixes and suffixes and separators,
  * hence this instance may or may not be filesystem friendly (depends on strings used).
+ * <p>
+ * Note: in earlier Resolver 1.9.x versions this mapper was the default, but it changed to {@link GAECVNameMapper}
+ * in 1.9.25.
  */
 public class GAVNameMapper implements NameMapper {
     protected final boolean fileSystemFriendly;

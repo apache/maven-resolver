@@ -21,9 +21,8 @@ package org.eclipse.aether.internal.impl.synccontext.named;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * Artifact GAECV {@link NameMapper}, uses artifact and metadata coordinates to name their corresponding locks. Is not
- * considering local repository, only the artifact coordinates. May use custom prefixes and suffixes and separators,
- * hence this instance may or may not be filesystem friendly (depends on strings used).
+ * Artifact GAECV {@link NameMapper} extends {@link GAVNameMapper} and improves artifact name mapping selectivity by
+ * using all coordinates.
  *
  * @since 1.9.25
  */
