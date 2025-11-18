@@ -77,7 +77,7 @@ public final class NameMappers {
      * @since 1.9.25
      */
     public static NameMapper gaecvNameMapper() {
-        return new GAECVNameMapper(false, "artifact:", "", "metadata:", "", ":");
+        return gaecvNameMapper(false);
     }
 
     /**
