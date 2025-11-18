@@ -21,7 +21,8 @@ package org.eclipse.aether.internal.impl.synccontext.named;
 /**
  * As end-user "mappers" are actually configurations/compositions and are constructed from several NameMapper
  * implementations, this helper class constructing them. This class also holds "names" used by service locator and
- * Guice/Sisu as well.
+ * Guice/Sisu as well. Ideally, name mapper you want should exist here, constructing name mappers should not be
+ * needed (unless some very specific case or testing).
  *
  * @since 1.9.4
  */
@@ -35,6 +36,21 @@ public final class NameMappers {
     public static final String FILE_HGAV_NAME = "file-hgav";
 
     /**
+     * @since 1.9.25
+     */
+    public static final String GAECV_NAME = "gaecv";
+
+    /**
+     * @since 1.9.25
+     */
+    public static final String FILE_GAECV_NAME = "file-gaecv";
+
+    /**
+     * @since 1.9.25
+     */
+    public static final String FILE_HGAECV_NAME = "file-hgaecv";
+
+    /**
      * @since 1.9.6
      */
     public static final String FILE_STATIC_NAME = "file-static";
@@ -46,11 +62,44 @@ public final class NameMappers {
     }
 
     public static NameMapper gavNameMapper() {
-        return GAVNameMapper.gav();
+        return gavNameMapper(false);
+    }
+
+    public static NameMapper gavNameMapper(boolean fileSystemFriendly) {
+        if (fileSystemFriendly) {
+            return new GAVNameMapper(true, "artifact~", ".lock", "metadata~", ".lock", "~");
+        } else {
+            return new GAVNameMapper(false, "artifact:", "", "metadata:", "", ":");
+        }
+    }
+
+    /**
+     * @since 1.9.25
+     */
+    public static NameMapper gaecvNameMapper() {
+        return new GAECVNameMapper(false, "artifact:", "", "metadata:", "", ":");
+    }
+
+    /**
+     * @since 1.9.25
+     */
+    public static NameMapper gaecvNameMapper(boolean fileSystemFriendly) {
+        if (fileSystemFriendly) {
+            return new GAECVNameMapper(true, "artifact~", ".lock", "metadata~", ".lock", "~");
+        } else {
+            return new GAECVNameMapper(false, "artifact:", "", "metadata:", "", ":");
+        }
     }
 
     public static NameMapper fileGavNameMapper() {
-        return new BasedirNameMapper(GAVNameMapper.fileGav());
+        return new BasedirNameMapper(gavNameMapper(true));
+    }
+
+    /**
+     * @since 1.9.25
+     */
+    public static NameMapper fileGaecvNameMapper() {
+        return new BasedirNameMapper(gaecvNameMapper(true));
     }
 
     /**
@@ -61,10 +110,17 @@ public final class NameMappers {
     }
 
     public static NameMapper fileHashingGavNameMapper() {
-        return new BasedirNameMapper(new HashingNameMapper(GAVNameMapper.gav()));
+        return new BasedirNameMapper(new HashingNameMapper(gavNameMapper(false)));
+    }
+
+    /**
+     * @since 1.9.25
+     */
+    public static NameMapper fileHashingGaecvNameMapper() {
+        return new BasedirNameMapper(new HashingNameMapper(gaecvNameMapper(false)));
     }
 
     public static NameMapper discriminatingNameMapper() {
-        return new DiscriminatingNameMapper(GAVNameMapper.gav());
+        return new DiscriminatingNameMapper(gavNameMapper(false));
     }
 }
