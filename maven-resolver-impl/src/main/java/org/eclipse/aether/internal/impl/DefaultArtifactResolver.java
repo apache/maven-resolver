@@ -27,12 +27,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -250,51 +248,32 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
             throws ArtifactResolutionException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-        Collection<Artifact> artifacts = new ArrayList<>(requests.size());
-        for (ArtifactRequest request : requests) {
-            if (request.getArtifact().getProperty(ArtifactProperties.LOCAL_PATH, null) != null) {
-                continue;
+        try (SyncContext shared = syncContextFactory.newInstance(session, true);
+                SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
+            Collection<Artifact> artifacts = new ArrayList<>(requests.size());
+            for (ArtifactRequest request : requests) {
+                if (request.getArtifact().getProperty(ArtifactProperties.LOCAL_PATH, null) != null) {
+                    continue;
+                }
+                artifacts.add(request.getArtifact());
             }
-            artifacts.add(request.getArtifact());
-        }
 
-        return resolve(
-                () -> syncContextFactory.newInstance(session, true),
-                () -> syncContextFactory.newInstance(session, false),
-                artifacts,
-                session,
-                requests);
+            return resolve(shared, exclusive, artifacts, session, requests);
+        }
     }
 
     @SuppressWarnings("checkstyle:methodlength")
     private List<ArtifactResult> resolve(
-            Supplier<SyncContext> sharedSupplier,
-            Supplier<SyncContext> exclusiveSupplier,
+            SyncContext shared,
+            SyncContext exclusive,
             Collection<Artifact> subjects,
             RepositorySystemSession session,
             Collection<? extends ArtifactRequest> requests)
             throws ArtifactResolutionException {
-        boolean firstAttempt = true;
-        HashSet<Artifact> needsShared = new HashSet<>(subjects);
-        HashSet<Artifact> needsExclusive = new HashSet<>(subjects.size());
-        SyncContext shared = sharedSupplier.get();
-        SyncContext exclusive = exclusiveSupplier.get();
-        boolean relock = false;
+        SyncContext current = shared;
         try {
             while (true) {
-                try {
-                    shared.acquire(needsShared, null);
-                    exclusive.acquire(needsExclusive, null);
-                } catch (SyncContext.FailedToAcquireLockException e) {
-                    if (e.isShared()) {
-                        throw e;
-                    } else {
-                        shared.close();
-                        exclusive.close();
-                        shared = sharedSupplier.get();
-                        exclusive = exclusiveSupplier.get();
-                    }
-                }
+                current.acquire(subjects, null);
 
                 boolean failures = false;
                 final List<ArtifactResult> results = new ArrayList<>(requests.size());
@@ -313,7 +292,7 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
 
                     Artifact artifact = request.getArtifact();
 
-                    if (firstAttempt) {
+                    if (current == shared) {
                         artifactResolving(session, trace, artifact);
                     }
 
@@ -456,21 +435,13 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
                             groups.add(group);
                             groupIt = Collections.emptyIterator();
                         }
-                        if (needsExclusive.add(artifact)) {
-                            needsShared.remove(artifact);
-                            relock = true;
-                        }
                         group.items.add(new ResolutionItem(trace, artifact, resolved, result, local, repo));
                     }
                 }
 
-                if (!groups.isEmpty() && relock) {
-                    firstAttempt = false;
-                    relock = false;
-                    shared.close();
-                    exclusive.close();
-                    shared = sharedSupplier.get();
-                    exclusive = exclusiveSupplier.get();
+                if (!groups.isEmpty() && current == shared) {
+                    current.close();
+                    current = exclusive;
                     continue;
                 }
 
@@ -505,8 +476,7 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
                 return results;
             }
         } finally {
-            exclusive.close();
-            shared.close();
+            current.close();
         }
     }
 
