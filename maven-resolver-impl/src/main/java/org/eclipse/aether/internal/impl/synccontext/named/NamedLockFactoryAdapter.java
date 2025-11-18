@@ -45,11 +45,9 @@ import static java.util.Objects.requireNonNull;
 public final class NamedLockFactoryAdapter {
     public static final String TIME_KEY = "aether.syncContext.named.time";
 
-    public static final long DEFAULT_TIME = 900L;
-
     public static final String EXCLUSIVE_TIME_KEY = "aether.syncContext.named.exclusiveTime";
 
-    public static final long DEFAULT_EXCLUSIVE_TIME = 10L;
+    public static final long DEFAULT_TIME = 900L;
 
     public static final String TIME_UNIT_KEY = "aether.syncContext.named.time.unit";
 
@@ -135,7 +133,7 @@ public final class NamedLockFactoryAdapter {
             this.lockNaming = lockNaming;
             this.namedLockFactory = namedLockFactory;
             this.time = getTime(session, DEFAULT_TIME, TIME_KEY);
-            this.exclusiveTime = getTime(session, DEFAULT_EXCLUSIVE_TIME, EXCLUSIVE_TIME_KEY);
+            this.exclusiveTime = getTime(session, DEFAULT_TIME, EXCLUSIVE_TIME_KEY);
             this.timeUnit = getTimeUnit(session);
             this.retry = getRetry(session);
             this.retryWait = getRetryWait(session);
