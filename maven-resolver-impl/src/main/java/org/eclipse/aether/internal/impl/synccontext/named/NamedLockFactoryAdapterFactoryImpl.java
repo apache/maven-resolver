@@ -56,7 +56,8 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
     public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.FILE_GAECV_NAME;
 
     /**
-     * Name of the lock factory to use in session.
+     * Name of the lock factory to use in session. Out of the box supported ones are "file-lock", "rwlock-local",
+     * "semaphore-local", "noop". By adding extensions one can extend available lock factories (for example IPC locking).
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
