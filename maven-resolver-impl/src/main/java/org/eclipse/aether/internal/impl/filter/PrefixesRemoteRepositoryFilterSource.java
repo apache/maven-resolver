@@ -151,6 +151,24 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     public static final boolean DEFAULT_USE_MIRRORED_REPOSITORIES = false;
 
     /**
+     * Configuration to allow Prefixes filter to auto-discover prefixes from repository managers as well. For this to
+     * work <em>Maven should be aware</em> that given remote repository is backed by repository manager.
+     * Given multiple MRM implementations messes up prefixes file, is better to just skip these. In other case, one may use
+     * {@link #CONFIG_PROP_ENABLED} with repository ID suffix.
+     * <em>Note: as of today, nothing sets this on remote repositories, but is added for future.</em>
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_USE_REPOSITORY_MANAGERS}
+     */
+    public static final String CONFIG_PROP_USE_REPOSITORY_MANAGERS =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".useRepositoryManagers";
+
+    public static final boolean DEFAULT_USE_REPOSITORY_MANAGERS = false;
+
+    /**
      * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -301,10 +319,14 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private boolean supportedResolvePrefixesForRemoteRepository(
             RepositorySystemSession session, RemoteRepository remoteRepository) {
-        // TODO: RemoteRepository.isRepositoryManager() is still unused in Maven; once used, factor it in
-        return remoteRepository.getMirroredRepositories().isEmpty()
-                || ConfigUtils.getBoolean(
-                        session, DEFAULT_USE_MIRRORED_REPOSITORIES, CONFIG_PROP_USE_MIRRORED_REPOSITORIES);
+        if (remoteRepository.isRepositoryManager()) {
+            return ConfigUtils.getBoolean(
+                    session, DEFAULT_USE_REPOSITORY_MANAGERS, CONFIG_PROP_USE_REPOSITORY_MANAGERS);
+        } else {
+            return remoteRepository.getMirroredRepositories().isEmpty()
+                    || ConfigUtils.getBoolean(
+                            session, DEFAULT_USE_MIRRORED_REPOSITORIES, CONFIG_PROP_USE_MIRRORED_REPOSITORIES);
+        }
     }
 
     private Path resolvePrefixesFromRemoteRepository(
