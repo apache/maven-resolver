@@ -89,15 +89,21 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     private final LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
 
+    /**
+     * Method that based on configuration returns the "repository key function". Used by {@link EnhancedLocalRepositoryManagerFactory}
+     * and {@link LocalPathPrefixComposerFactory}.
+     *
+     * @since 2.0.14
+     */
     static Function<ArtifactRepository, String> repositoryKeyFunction(RepositorySystemSession session) {
         Function<ArtifactRepository, String> idToPathSegmentFunction =
                 RepositoryIdHelper.cachedIdToPathSegment(session);
         Function<ArtifactRepository, String> repositoryKeyFunction = idToPathSegmentFunction;
         boolean globallyUniqueRepositoryKeys = ConfigUtils.getBoolean(
                 session, DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS, CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS);
-        Function<RemoteRepository, String> globallyUniqueRepositoryKeyFunction =
-                RepositoryIdHelper.cachedRemoteRepositoryUniqueId(session);
         if (globallyUniqueRepositoryKeys) {
+            Function<RemoteRepository, String> globallyUniqueRepositoryKeyFunction =
+                    RepositoryIdHelper.cachedRemoteRepositoryUniqueId(session);
             repositoryKeyFunction = r -> {
                 if (r instanceof RemoteRepository) {
                     return globallyUniqueRepositoryKeyFunction.apply((RemoteRepository) r);
