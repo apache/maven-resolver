@@ -85,7 +85,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
     @Override
     public String getPathForLocalMetadata(Metadata metadata) {
         requireNonNull(metadata, "metadata cannot be null");
-        return localPathComposer.getPathForMetadata(metadata, "local");
+        return localPathComposer.getPathForMetadata(metadata, LocalRepository.ID);
     }
 
     @Override

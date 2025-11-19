@@ -25,7 +25,8 @@ import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.ArtifactRepository;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
+
+import static org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory.repositoryKeyFunction;
 
 /**
  * Default local path prefix composer factory: it fully reuses {@link LocalPathPrefixComposerFactorySupport} class
@@ -48,7 +49,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 isSplitRemoteRepositoryLast(session),
                 getReleasesPrefix(session),
                 getSnapshotsPrefix(session),
-                RepositoryIdHelper.cachedIdToPathSegment(session));
+                repositoryKeyFunction(session));
     }
 
     /**

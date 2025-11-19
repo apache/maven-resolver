@@ -220,6 +220,13 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
                 session, DEFAULT_SNAPSHOTS_PREFIX, CONFIG_PROP_SNAPSHOTS_PREFIX, R1_CONF_PROP_SNAPSHOTS_PREFIX);
     }
 
+    protected boolean isGloballyUniqueRepositoryKeys(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(
+                session,
+                EnhancedLocalRepositoryManagerFactory.DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS,
+                EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS);
+    }
+
     /**
      * Support class for composers: it defines protected members for all the predefined configuration values and
      * provides default implementation for methods. Implementors may change it's behaviour by overriding methods.

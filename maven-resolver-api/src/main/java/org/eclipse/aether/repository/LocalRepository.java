@@ -31,6 +31,7 @@ import java.util.Objects;
  * the repository.
  */
 public final class LocalRepository implements ArtifactRepository {
+    public static final String ID = "local";
 
     private final Path basePath;
 
@@ -108,7 +109,7 @@ public final class LocalRepository implements ArtifactRepository {
 
     @Override
     public String getId() {
-        return "local";
+        return ID;
     }
 
     /**

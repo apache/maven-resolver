@@ -68,6 +68,39 @@ public final class RepositoryIdHelper {
                     && !remoteRepository.isBlocked();
 
     /**
+     * Returns same instance of (session cached) function for session.
+     *
+     * @since 2.0.14
+     */
+    @SuppressWarnings("unchecked")
+    public static Function<RemoteRepository, String> cachedRemoteRepositoryUniqueId(RepositorySystemSession session) {
+        requireNonNull(session, "session");
+        return (Function<RemoteRepository, String>) session.getData()
+                .computeIfAbsent(
+                        RepositoryIdHelper.class.getSimpleName() + "-remoteRepositoryUniqueIdFunction",
+                        () -> cachedRemoteRepositoryUniqueIdFunction(session));
+    }
+
+    /**
+     * Returns new instance of function backed by cached or uncached (if session has no cache set)
+     * {@link #remoteRepositoryUniqueId(RemoteRepository)} method call.
+     */
+    @SuppressWarnings("unchecked")
+    private static Function<RemoteRepository, String> cachedRemoteRepositoryUniqueIdFunction(
+            RepositorySystemSession session) {
+        if (session.getCache() != null) {
+            return repository -> ((ConcurrentHashMap<RemoteRepository, String>) session.getCache()
+                            .computeIfAbsent(
+                                    session,
+                                    RepositoryIdHelper.class.getSimpleName() + "-remoteRepositoryUniqueIdCache",
+                                    ConcurrentHashMap::new))
+                    .computeIfAbsent(repository, id -> remoteRepositoryUniqueId(repository));
+        } else {
+            return RepositoryIdHelper::remoteRepositoryUniqueId; // uncached
+        }
+    }
+
+    /**
      * Creates unique repository id for given {@link RemoteRepository}. For Maven Central this method will return
      * string "central", while for any other remote repository it will return string created as
      * {@code $(repository.id)-sha1(repository-aspects)}. The key material contains all relevant aspects
@@ -96,7 +129,10 @@ public final class RepositoryIdHelper {
                 buffer.append(", disabled");
             }
             if (repository.isRepositoryManager()) {
-                buffer.append(", managed(");
+                buffer.append(", managed");
+            }
+            if (!repository.getMirroredRepositories().isEmpty()) {
+                buffer.append(", mirrorOf(");
                 for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
                     buffer.append(remoteRepositoryUniqueId(mirroredRepo));
                 }

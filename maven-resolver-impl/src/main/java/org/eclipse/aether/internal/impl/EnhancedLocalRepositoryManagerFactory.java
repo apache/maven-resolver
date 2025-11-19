@@ -22,11 +22,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.function.Function;
+
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
@@ -58,6 +62,25 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     public static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
 
+    /**
+     * Make enhanced repository use "globally unique repository keys" (repository keys are used for designating
+     * cached metadata, artifact availability tracking and split repository prefix production). By default, this
+     * option is disabled. If enabled, repository keys produced by enhanced repository will be <em>way different
+     * that those produced with previous versions or without this option enabled</em>. Ideally, you may want to
+     * use empty local repository to populate with new repository key contained metadata, Interoperability between
+     * enabled and disabled affects only metadata and split repository (ie. split repository may not find existing
+     * caches, and may opt to re-download them).
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS}
+     */
+    public static final String CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS =
+            CONFIG_PROPS_PREFIX + "globallyUniqueRepositoryKeys";
+
+    public static final boolean DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS = false;
+
     private float priority = 10.0f;
 
     private final LocalPathComposer localPathComposer;
@@ -65,6 +88,26 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     private final TrackingFileManager trackingFileManager;
 
     private final LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
+
+    static Function<ArtifactRepository, String> repositoryKeyFunction(RepositorySystemSession session) {
+        Function<ArtifactRepository, String> idToPathSegmentFunction =
+                RepositoryIdHelper.cachedIdToPathSegment(session);
+        Function<ArtifactRepository, String> repositoryKeyFunction = idToPathSegmentFunction;
+        boolean globallyUniqueRepositoryKeys = ConfigUtils.getBoolean(
+                session, DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS, CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS);
+        Function<RemoteRepository, String> globallyUniqueRepositoryKeyFunction =
+                RepositoryIdHelper.cachedRemoteRepositoryUniqueId(session);
+        if (globallyUniqueRepositoryKeys) {
+            repositoryKeyFunction = r -> {
+                if (r instanceof RemoteRepository) {
+                    return globallyUniqueRepositoryKeyFunction.apply((RemoteRepository) r);
+                } else {
+                    return idToPathSegmentFunction.apply(r);
+                }
+            };
+        }
+        return repositoryKeyFunction;
+    }
 
     @Inject
     public EnhancedLocalRepositoryManagerFactory(
@@ -94,7 +137,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
             return new EnhancedLocalRepositoryManager(
                     repository.getBasePath(),
                     localPathComposer,
-                    RepositoryIdHelper.cachedIdToPathSegment(session),
+                    repositoryKeyFunction(session),
                     trackingFilename,
                     trackingFileManager,
                     localPathPrefixComposerFactory.createComposer(session));
