@@ -46,27 +46,6 @@ import static java.util.Objects.requireNonNull;
 public final class RepositoryIdHelper {
     private RepositoryIdHelper() {}
 
-    private static final String CENTRAL_REPOSITORY_ID = "central";
-    private static final Collection<String> CENTRAL_URLS = Collections.unmodifiableList(Arrays.asList(
-            "https://repo.maven.apache.org/maven2",
-            "https://repo1.maven.org/maven2",
-            "https://maven-central.storage-download.googleapis.com/maven2"));
-    private static final Predicate<RemoteRepository> CENTRAL_DIRECT_ONLY =
-            remoteRepository -> CENTRAL_REPOSITORY_ID.equals(remoteRepository.getId())
-                    && "https".equals(remoteRepository.getProtocol().toLowerCase(Locale.ENGLISH))
-                    && CENTRAL_URLS.stream().anyMatch(remoteUrl -> {
-                        String rurl = remoteRepository.getUrl().toLowerCase(Locale.ENGLISH);
-                        if (rurl.endsWith("/")) {
-                            rurl = rurl.substring(0, rurl.length() - 1);
-                        }
-                        return rurl.equals(remoteUrl);
-                    })
-                    && remoteRepository.getPolicy(false).isEnabled()
-                    && !remoteRepository.getPolicy(true).isEnabled()
-                    && remoteRepository.getMirroredRepositories().isEmpty()
-                    && !remoteRepository.isRepositoryManager()
-                    && !remoteRepository.isBlocked();
-
     /**
      * Returns same instance of (session cached) function for session.
      *
@@ -110,40 +89,36 @@ public final class RepositoryIdHelper {
      * This method is costly, so should be invoked sparingly, or cache results if needed.
      */
     public static String remoteRepositoryUniqueId(RemoteRepository repository) {
-        if (CENTRAL_DIRECT_ONLY.test(repository)) {
-            return CENTRAL_REPOSITORY_ID;
+        StringBuilder buffer = new StringBuilder(256);
+        buffer.append(repository.getId());
+        buffer.append(" (").append(repository.getUrl());
+        buffer.append(", ").append(repository.getContentType());
+        boolean r = repository.getPolicy(false).isEnabled(),
+                s = repository.getPolicy(true).isEnabled();
+        if (r && s) {
+            buffer.append(", releases+snapshots");
+        } else if (r) {
+            buffer.append(", releases");
+        } else if (s) {
+            buffer.append(", snapshots");
         } else {
-            StringBuilder buffer = new StringBuilder(256);
-            buffer.append(repository.getId());
-            buffer.append(" (").append(repository.getUrl());
-            buffer.append(", ").append(repository.getContentType());
-            boolean r = repository.getPolicy(false).isEnabled(),
-                    s = repository.getPolicy(true).isEnabled();
-            if (r && s) {
-                buffer.append(", releases+snapshots");
-            } else if (r) {
-                buffer.append(", releases");
-            } else if (s) {
-                buffer.append(", snapshots");
-            } else {
-                buffer.append(", disabled");
-            }
-            if (repository.isRepositoryManager()) {
-                buffer.append(", managed");
-            }
-            if (!repository.getMirroredRepositories().isEmpty()) {
-                buffer.append(", mirrorOf(");
-                for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
-                    buffer.append(remoteRepositoryUniqueId(mirroredRepo));
-                }
-                buffer.append(")");
-            }
-            if (repository.isBlocked()) {
-                buffer.append(", blocked");
+            buffer.append(", disabled");
+        }
+        if (repository.isRepositoryManager()) {
+            buffer.append(", managed");
+        }
+        if (!repository.getMirroredRepositories().isEmpty()) {
+            buffer.append(", mirrorOf(");
+            for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
+                buffer.append(remoteRepositoryUniqueId(mirroredRepo));
             }
             buffer.append(")");
-            return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(buffer.toString());
         }
+        if (repository.isBlocked()) {
+            buffer.append(", blocked");
+        }
+        buffer.append(")");
+        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(buffer.toString());
     }
 
     /**
