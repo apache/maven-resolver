@@ -18,7 +18,11 @@
  */
 package org.eclipse.aether.util.repository;
 
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -42,36 +46,47 @@ public final class RepositoryIdHelper {
     private RepositoryIdHelper() {}
 
     /**
-     * Returns same instance of (session cached) function for session.
+     * Simple {@code repositoryKey} function (classic). Returns {@link RemoteRepository#getId()}, unless
+     * {@link RemoteRepository#isRepositoryManager()} returns {@code true}, in which case this method creates
+     * unique identifier based on ID and current configuration of the remote repository (as it may change).
      *
      * @since 2.0.14
-     */
-    @SuppressWarnings("unchecked")
-    public static Function<RemoteRepository, String> cachedRemoteRepositoryUniqueId(RepositorySystemSession session) {
-        requireNonNull(session, "session");
-        return (Function<RemoteRepository, String>) session.getData()
-                .computeIfAbsent(
-                        RepositoryIdHelper.class.getSimpleName() + "-remoteRepositoryUniqueIdFunction",
-                        () -> cachedRemoteRepositoryUniqueIdFunction(session));
+     **/
+    public static String simpleRepositoryKey(RemoteRepository repository, String context) {
+        String key;
+        if (repository.isRepositoryManager()) {
+            StringBuilder buffer = new StringBuilder(128);
+            buffer.append(idToPathSegment(repository));
+            buffer.append('-');
+            SortedSet<String> subKeys = new TreeSet<>();
+            for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
+                subKeys.add(mirroredRepo.getId());
+            }
+            StringDigestUtil sha1 = StringDigestUtil.sha1();
+            sha1.update(context);
+            for (String subKey : subKeys) {
+                sha1.update(subKey);
+            }
+            buffer.append(sha1.digest());
+            key = buffer.toString();
+        } else {
+            key = idToPathSegment(repository);
+        }
+        return key;
     }
 
     /**
-     * Returns new instance of function backed by cached or uncached (if session has no cache set)
-     * {@link #remoteRepositoryUniqueId(RemoteRepository)} method call.
-     */
-    @SuppressWarnings("unchecked")
-    private static Function<RemoteRepository, String> cachedRemoteRepositoryUniqueIdFunction(
-            RepositorySystemSession session) {
-        if (session.getCache() != null) {
-            return repository -> ((ConcurrentHashMap<RemoteRepository, String>) session.getCache()
-                            .computeIfAbsent(
-                                    session,
-                                    RepositoryIdHelper.class.getSimpleName() + "-remoteRepositoryUniqueIdCache",
-                                    ConcurrentHashMap::new))
-                    .computeIfAbsent(repository, id -> remoteRepositoryUniqueId(repository));
-        } else {
-            return RepositoryIdHelper::remoteRepositoryUniqueId; // uncached
+     * Globally unique {@code repositoryKey} function.
+     *
+     * @since 2.0.14
+     **/
+    public static String globallyUniqueRepositoryKey(RemoteRepository repository, String context) {
+        String id = idToPathSegment(repository);
+        String description = remoteRepositoryDescription(repository);
+        if (context != null && !context.isEmpty()) {
+            description += context;
         }
+        return id + "-" + StringDigestUtil.sha1(description);
     }
 
     /**
@@ -84,6 +99,31 @@ public final class RepositoryIdHelper {
      * This method is costly, so should be invoked sparingly, or cache results if needed.
      */
     public static String remoteRepositoryUniqueId(RemoteRepository repository) {
+        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(remoteRepositoryDescription(repository));
+    }
+
+    /**
+     * This method returns the passed in {@link ArtifactRepository#getId()} value, modifying it if needed, making sure that
+     * returned repository ID is "path segment" safe. Ideally, this method should never modify repository ID, as
+     * Maven validation prevents use of illegal FS characters in them, but we found in Maven Central several POMs that
+     * define remote repositories with illegal FS characters in their ID.
+     */
+    private static String idToPathSegment(ArtifactRepository repository) {
+        if (repository instanceof RemoteRepository) {
+            return PathUtils.stringToPathSegment(repository.getId());
+        } else {
+            return repository.getId();
+        }
+    }
+
+    /**
+     * Creates unique string for given {@link RemoteRepository}. Ignores following properties:
+     * <ul>
+     *     <li>{@link RemoteRepository#getAuthentication()}</li>
+     *     <li>{@link RemoteRepository#getProxy()}</li>
+     * </ul>
+     */
+    private static String remoteRepositoryDescription(RemoteRepository repository) {
         StringBuilder buffer = new StringBuilder(256);
         buffer.append(repository.getId());
         buffer.append(" (").append(repository.getUrl());
@@ -105,7 +145,7 @@ public final class RepositoryIdHelper {
         if (!repository.getMirroredRepositories().isEmpty()) {
             buffer.append(", mirrorOf(");
             for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
-                buffer.append(remoteRepositoryUniqueId(mirroredRepo));
+                buffer.append(remoteRepositoryDescription(mirroredRepo));
             }
             buffer.append(")");
         }
@@ -113,55 +153,6 @@ public final class RepositoryIdHelper {
             buffer.append(", blocked");
         }
         buffer.append(")");
-        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(buffer.toString());
-    }
-
-    /**
-     * Returns same instance of (session cached) function for session.
-     */
-    @SuppressWarnings("unchecked")
-    public static Function<ArtifactRepository, String> cachedIdToPathSegment(RepositorySystemSession session) {
-        requireNonNull(session, "session");
-        return (Function<ArtifactRepository, String>) session.getData()
-                .computeIfAbsent(
-                        RepositoryIdHelper.class.getSimpleName() + "-idToPathSegmentFunction",
-                        () -> cachedIdToPathSegmentFunction(session));
-    }
-
-    /**
-     * Returns new instance of function backed by cached or uncached (if session has no cache set)
-     * {@link #idToPathSegment(ArtifactRepository)} method call.
-     */
-    @SuppressWarnings("unchecked")
-    private static Function<ArtifactRepository, String> cachedIdToPathSegmentFunction(RepositorySystemSession session) {
-        if (session.getCache() != null) {
-            return repository -> ((ConcurrentHashMap<String, String>) session.getCache()
-                            .computeIfAbsent(
-                                    session,
-                                    RepositoryIdHelper.class.getSimpleName() + "-idToPathSegmentCache",
-                                    ConcurrentHashMap::new))
-                    .computeIfAbsent(repository.getId(), id -> idToPathSegment(repository));
-        } else {
-            return RepositoryIdHelper::idToPathSegment; // uncached
-        }
-    }
-
-    /**
-     * This method returns the passed in {@link ArtifactRepository#getId()} value, modifying it if needed, making sure that
-     * returned repository ID is "path segment" safe. Ideally, this method should never modify repository ID, as
-     * Maven validation prevents use of illegal FS characters in them, but we found in Maven Central several POMs that
-     * define remote repositories with illegal FS characters in their ID.
-     * <p>
-     * This method is simplistic on purpose, and if frequently used, best if results are cached (per session),
-     * see {@link #cachedIdToPathSegment(RepositorySystemSession)} method.
-     *
-     * @see #cachedIdToPathSegment(RepositorySystemSession)
-     */
-    private static String idToPathSegment(ArtifactRepository repository) {
-        if (repository instanceof RemoteRepository) {
-            return PathUtils.stringToPathSegment(repository.getId());
-        } else {
-            return repository.getId();
-        }
+        return buffer.toString();
     }
 }

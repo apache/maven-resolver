@@ -22,6 +22,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -95,24 +96,14 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      *
      * @since 2.0.14
      */
-    static Function<ArtifactRepository, String> repositoryKeyFunction(RepositorySystemSession session) {
-        Function<ArtifactRepository, String> idToPathSegmentFunction =
-                RepositoryIdHelper.cachedIdToPathSegment(session);
-        Function<ArtifactRepository, String> repositoryKeyFunction = idToPathSegmentFunction;
+    static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(RepositorySystemSession session) {
         boolean globallyUniqueRepositoryKeys = ConfigUtils.getBoolean(
                 session, DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS, CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS);
         if (globallyUniqueRepositoryKeys) {
-            Function<RemoteRepository, String> globallyUniqueRepositoryKeyFunction =
-                    RepositoryIdHelper.cachedRemoteRepositoryUniqueId(session);
-            repositoryKeyFunction = r -> {
-                if (r instanceof RemoteRepository) {
-                    return globallyUniqueRepositoryKeyFunction.apply((RemoteRepository) r);
-                } else {
-                    return idToPathSegmentFunction.apply(r);
-                }
-            };
+            return RepositoryIdHelper::globallyUniqueRepositoryKey;
+        } else {
+            return RepositoryIdHelper::simpleRepositoryKey;
         }
-        return repositoryKeyFunction;
     }
 
     @Inject

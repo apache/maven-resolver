@@ -65,7 +65,7 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
                     repository.getBasePath(),
                     "simple",
                     localPathComposer,
-                    RepositoryIdHelper.cachedIdToPathSegment(session));
+                    RepositoryIdHelper::simpleRepositoryKey);
         } else {
             throw new NoLocalRepositoryManagerException(repository);
         }

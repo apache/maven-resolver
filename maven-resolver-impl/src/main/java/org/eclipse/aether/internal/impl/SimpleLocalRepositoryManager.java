@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
@@ -51,17 +52,17 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
     private final LocalPathComposer localPathComposer;
 
-    private final Function<ArtifactRepository, String> idToPathSegmentFunction;
+    private final BiFunction<RemoteRepository, String, String> repositoryKeyFunction;
 
     SimpleLocalRepositoryManager(
             Path basePath,
             String type,
             LocalPathComposer localPathComposer,
-            Function<ArtifactRepository, String> idToPathSegmentFunction) {
+            BiFunction<RemoteRepository, String, String> repositoryKeyFunction) {
         requireNonNull(basePath, "base directory cannot be null");
         repository = new LocalRepository(basePath.toAbsolutePath(), type);
         this.localPathComposer = requireNonNull(localPathComposer);
-        this.idToPathSegmentFunction = requireNonNull(idToPathSegmentFunction);
+        this.repositoryKeyFunction = requireNonNull(repositoryKeyFunction);
     }
 
     @Override
@@ -101,35 +102,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
      * of the remote repository (as it may change).
      */
     protected String getRepositoryKey(RemoteRepository repository, String context) {
-        String key;
-
-        if (repository.isRepositoryManager()) {
-            // repository serves dynamic contents, take request parameters into account for key
-
-            StringBuilder buffer = new StringBuilder(128);
-
-            buffer.append(idToPathSegmentFunction.apply(repository));
-
-            buffer.append('-');
-
-            SortedSet<String> subKeys = new TreeSet<>();
-            for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
-                subKeys.add(mirroredRepo.getId());
-            }
-
-            StringDigestUtil sha1 = StringDigestUtil.sha1();
-            sha1.update(context);
-            for (String subKey : subKeys) {
-                sha1.update(subKey);
-            }
-            buffer.append(sha1.digest());
-
-            key = buffer.toString();
-        } else {
-            key = idToPathSegmentFunction.apply(repository);
-        }
-
-        return key;
+        return repositoryKeyFunction.apply(repository, context);
     }
 
     @Override
