@@ -79,10 +79,7 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
     }
 
     /**
-     * We use remote repositories as keys, but they may fly in as "bare" or as "equipped" (w/ auth and proxy) if caller
-     * used {@link org.eclipse.aether.RepositorySystem#newResolutionRepositories(RepositorySystemSession, List)} beforehand.
-     * The hash/equalTo method factors in all these as well, but from our perspective, they do not matter. So we make all
-     * key remote repositories back to "bare".
+     * We use remote repositories as keys, so normalize them.
      *
      * @see RemoteRepository#toBareRemoteRepository()
      */
