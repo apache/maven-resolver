@@ -326,6 +326,8 @@ public final class RemoteRepository implements ArtifactRepository {
      * </ul>
      * These properties are managed by repository system, based on configuration. See {@link org.eclipse.aether.RepositorySystem}
      * and (internal component) {@code org.eclipse.aether.impl.RemoteRepositoryManager}.
+     *
+     * @since 2.0.14
      */
     public RemoteRepository toBareRemoteRepository() {
         return new Builder(this)
