@@ -20,9 +20,9 @@ package org.eclipse.aether.transport.apache;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -39,11 +39,11 @@ final class DeferredCredentialsProvider implements CredentialsProvider {
 
     private final CredentialsProvider delegate;
 
-    private final Map<AuthScope, Factory> factories;
+    private final ConcurrentHashMap<AuthScope, Factory> factories;
 
     DeferredCredentialsProvider() {
         delegate = new BasicCredentialsProvider();
-        factories = new HashMap<>();
+        factories = new ConcurrentHashMap<>();
     }
 
     public void setCredentials(AuthScope authScope, Factory factory) {
