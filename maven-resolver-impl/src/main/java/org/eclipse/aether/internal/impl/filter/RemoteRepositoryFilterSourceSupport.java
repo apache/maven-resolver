@@ -83,6 +83,13 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
      * used {@link org.eclipse.aether.RepositorySystem#newResolutionRepositories(RepositorySystemSession, List)} beforehand.
      * The hash/equalTo method factors in all these as well, but from our perspective, they do not matter. So we make all
      * key remote repositories back to "bare".
+     * Ignored properties of normalized repositories:
+     * <ul>
+     *     <li>proxy - is environment dependent</li>
+     *     <li>authentication - is environment and/or user dependent</li>
+     *     <li>mirrored repositories - is environment dependent (within same session does not change)</li>
+     *     <li>repository manager - is environment dependent (within same session does not change)</li>
+     * </ul>
      */
     protected RemoteRepository normalizeRemoteRepository(
             RepositorySystemSession session, RemoteRepository remoteRepository) {
