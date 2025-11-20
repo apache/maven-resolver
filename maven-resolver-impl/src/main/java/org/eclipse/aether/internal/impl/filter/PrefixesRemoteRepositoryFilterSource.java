@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -191,10 +192,6 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private final RepositoryLayoutProvider repositoryLayoutProvider;
 
-    private final ConcurrentHashMap<RemoteRepository, PrefixTree> prefixes;
-
-    private final ConcurrentHashMap<RemoteRepository, RepositoryLayout> layouts;
-
     @Inject
     public PrefixesRemoteRepositoryFilterSource(
             Supplier<MetadataResolver> metadataResolver,
@@ -203,8 +200,18 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         this.metadataResolver = requireNonNull(metadataResolver);
         this.remoteRepositoryManager = requireNonNull(remoteRepositoryManager);
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);
-        this.prefixes = new ConcurrentHashMap<>();
-        this.layouts = new ConcurrentHashMap<>();
+    }
+
+    @SuppressWarnings("unchecked")
+    private ConcurrentMap<RemoteRepository, PrefixTree> prefixes(RepositorySystemSession session) {
+        return (ConcurrentMap<RemoteRepository, PrefixTree>)
+                session.getData().computeIfAbsent(getClass().getName() + ".prefixes", ConcurrentHashMap::new);
+    }
+
+    @SuppressWarnings("unchecked")
+    private ConcurrentMap<RemoteRepository, RepositoryLayout> layouts(RepositorySystemSession session) {
+        return (ConcurrentMap<RemoteRepository, RepositoryLayout>)
+                session.getData().computeIfAbsent(getClass().getName() + ".layouts", ConcurrentHashMap::new);
     }
 
     @Override
@@ -243,7 +250,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
      * @return the layout instance of {@code null} if layout not supported.
      */
     private RepositoryLayout cacheLayout(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return layouts.computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> {
+        return layouts(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> {
             try {
                 return repositoryLayoutProvider.newRepositoryLayout(session, remoteRepository);
             } catch (NoRepositoryLayoutException e) {
@@ -254,9 +261,10 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private PrefixTree cachePrefixTree(
             RepositorySystemSession session, Path basedir, RemoteRepository remoteRepository) {
-        return prefixes.computeIfAbsent(
-                normalizeRemoteRepository(session, remoteRepository),
-                r -> loadPrefixTree(session, basedir, remoteRepository));
+        return prefixes(session)
+                .computeIfAbsent(
+                        normalizeRemoteRepository(session, remoteRepository),
+                        r -> loadPrefixTree(session, basedir, remoteRepository));
     }
 
     private PrefixTree loadPrefixTree(
