@@ -38,29 +38,29 @@ public class GAECVNameMapper extends GAVNameMapper {
     }
 
     @Override
-    protected String getArtifactName(Artifact artifact, String prefix, String separator, String suffix) {
+    protected String getArtifactName(Artifact artifact) {
         if (artifact.getClassifier().isEmpty()) {
-            return prefix
+            return artifactPrefix
                     + artifact.getGroupId()
-                    + separator
+                    + fieldSeparator
                     + artifact.getArtifactId()
-                    + separator
+                    + fieldSeparator
                     + artifact.getExtension()
-                    + separator
+                    + fieldSeparator
                     + artifact.getBaseVersion()
-                    + suffix;
+                    + artifactSuffix;
         } else {
-            return prefix
+            return artifactPrefix
                     + artifact.getGroupId()
-                    + separator
+                    + fieldSeparator
                     + artifact.getArtifactId()
-                    + separator
+                    + fieldSeparator
                     + artifact.getExtension()
-                    + separator
+                    + fieldSeparator
                     + artifact.getClassifier()
-                    + separator
+                    + fieldSeparator
                     + artifact.getBaseVersion()
-                    + suffix;
+                    + artifactSuffix;
         }
     }
 }
