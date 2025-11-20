@@ -21,7 +21,6 @@ package org.eclipse.aether.internal.impl.filter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.List;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
