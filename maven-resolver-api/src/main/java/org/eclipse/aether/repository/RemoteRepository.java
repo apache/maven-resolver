@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.repository;
 
-import org.eclipse.aether.RepositorySystemSession;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,6 +30,8 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A repository on a remote server.
+ * <p>
+ * If use of instances of this class are meant to be used as keys, see {@link #toBareRemoteRepository()} method.
  */
 public final class RemoteRepository implements ArtifactRepository {
     /**
@@ -315,14 +315,25 @@ public final class RemoteRepository implements ArtifactRepository {
     }
 
     /**
-     * Makes "bare" repository out of this instance, usable as keys within one single session. Cross session use
-     * of these is not recommended, instead see other means.
+     * Makes "bare" repository out of this instance, usable as keys within one single session, by applying following
+     * changes to repository (returns new instance):
+     * <ul>
+     *     <li>sets intent to {@link Intent#BARE}</li>
+     *     <li>nullifies proxy</li>
+     *     <li>nullifies authentication</li>
+     *     <li>nullifies mirrors</li>
+     *     <li>sets repositoryManager to {@code false}</li>
+     * </ul>
+     * These properties are managed by repository system, based on configuration. See {@link org.eclipse.aether.RepositorySystem}
+     * and (internal component) {@code org.eclipse.aether.impl.RemoteRepositoryManager}.
      */
     public RemoteRepository toBareRemoteRepository() {
         return new Builder(this)
                 .setIntent(Intent.BARE)
                 .setProxy(null)
                 .setAuthentication(null)
+                .setMirroredRepositories(null)
+                .setRepositoryManager(false)
                 .build();
     }
 
