@@ -339,16 +339,15 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                             session, Collections.emptyList(), Collections.singletonList(remoteRepository), true)
                     .get(0);
             // retrieve prefix as metadata from repository
-            MetadataRequest request =
-                    new MetadataRequest(new DefaultMetadata(PREFIX_FILE_TYPE, Metadata.Nature.RELEASE_OR_SNAPSHOT));
-            request.setRepository(prepared);
-            request.setDeleteLocalCopyIfMissing(true);
-            request.setFavorLocalRepository(true);
             MetadataResult result = mr.resolveMetadata(
                             new DefaultRepositorySystemSession(session)
                                     .setTransferListener(null)
                                     .setConfigProperty(CONFIG_PROP_SKIPPED, Boolean.TRUE.toString()),
-                            Collections.singleton(request))
+                            Collections.singleton(new MetadataRequest(
+                                            new DefaultMetadata(PREFIX_FILE_TYPE, Metadata.Nature.RELEASE_OR_SNAPSHOT))
+                                    .setRepository(prepared)
+                                    .setDeleteLocalCopyIfMissing(true)
+                                    .setFavorLocalRepository(true)))
                     .get(0);
             if (result.isResolved()) {
                 return result.getMetadata().getPath();
