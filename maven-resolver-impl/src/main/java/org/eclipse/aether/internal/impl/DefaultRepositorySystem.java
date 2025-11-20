@@ -455,6 +455,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
         builder.setAuthentication(auth);
         Proxy proxy = session.getProxySelector().getProxy(repository);
         builder.setProxy(proxy);
+        builder.setIntent(RemoteRepository.Intent.DEPLOYMENT);
         return builder.build();
     }
 

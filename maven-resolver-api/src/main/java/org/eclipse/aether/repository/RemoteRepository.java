@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.repository;
 
+import org.eclipse.aether.RepositorySystemSession;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,6 +34,28 @@ import static java.util.Objects.requireNonNull;
  * A repository on a remote server.
  */
 public final class RemoteRepository implements ArtifactRepository {
+    /**
+     * The intent this repository is to be used for. Newly created repositories are usually "bare", and before
+     * their actual use (caller or repository system) adapts them, equip with auth/proxy info and even mirrors, if
+     * environment is configured for them. Note: "bare" does not always mean "without authentication", as client
+     * code may create with all required properties, but {@link org.eclipse.aether.RepositorySystem} will process
+     * them anyway, marking their "intent".
+     * <p>
+     * <em>Important consequence:</em> the change of {@link Intent} on repository may affect the use cases when
+     * they are used as keys (they are suitable for that). To use {@link RemoteRepository} instances as key,
+     * you should use instances returned by method {@link #toBareRemoteRepository()}, that returns "normalized"
+     * repository instances usable as keys. Also, in "key usage case" two instances of remote repository are
+     * considered equal if following stands: {@code Objects.equals(r1.toBareRemoteRepository(), r2.toBareRemoteRepository())}.
+     *
+     * @see org.eclipse.aether.RepositorySystem#newResolutionRepositories(RepositorySystemSession, List)
+     * @see org.eclipse.aether.RepositorySystem#newDeploymentRepository(RepositorySystemSession, RemoteRepository)
+     * @since 2.0.14
+     */
+    public enum Intent {
+        BARE,
+        RESOLUTION,
+        DEPLOYMENT
+    }
 
     private static final Pattern URL_PATTERN =
             Pattern.compile("([^:/]+(:[^:/]{2,}+(?=://))?):(//([^@/]*@)?([^/:]+))?.*");
@@ -60,6 +84,10 @@ public final class RemoteRepository implements ArtifactRepository {
 
     private final boolean blocked;
 
+    private final Intent intent;
+
+    private final int hashCode;
+
     RemoteRepository(Builder builder) {
         if (builder.prototype != null) {
             id = (builder.delta & Builder.ID) != 0 ? builder.id : builder.prototype.id;
@@ -80,6 +108,7 @@ public final class RemoteRepository implements ArtifactRepository {
             mirroredRepositories = (builder.delta & Builder.MIRRORED) != 0
                     ? copy(builder.mirroredRepositories)
                     : builder.prototype.mirroredRepositories;
+            intent = (builder.delta & Builder.INTENT) != 0 ? builder.intent : builder.prototype.intent;
         } else {
             id = builder.id;
             type = builder.type;
@@ -91,17 +120,31 @@ public final class RemoteRepository implements ArtifactRepository {
             repositoryManager = builder.repositoryManager;
             blocked = builder.blocked;
             mirroredRepositories = copy(builder.mirroredRepositories);
+            intent = builder.intent;
         }
 
         Matcher m = URL_PATTERN.matcher(url);
         if (m.matches()) {
-            protocol = m.group(1);
-            String host = m.group(5);
-            this.host = (host != null) ? host : "";
+            String h = m.group(5);
+            this.host = (h != null) ? h : "";
+            this.protocol = m.group(1);
         } else {
-            protocol = "";
-            host = "";
+            this.host = "";
+            this.protocol = "";
         }
+
+        this.hashCode = Objects.hash(
+                id,
+                type,
+                url, // host, protocol derived from url
+                releasePolicy,
+                snapshotPolicy,
+                proxy,
+                authentication,
+                mirroredRepositories,
+                repositoryManager,
+                blocked,
+                intent);
     }
 
     private static List<RemoteRepository> copy(List<RemoteRepository> repos) {
@@ -111,10 +154,12 @@ public final class RemoteRepository implements ArtifactRepository {
         return Collections.unmodifiableList(Arrays.asList(repos.toArray(new RemoteRepository[0])));
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
+    @Override
     public String getContentType() {
         return type;
     }
@@ -203,6 +248,16 @@ public final class RemoteRepository implements ArtifactRepository {
         return blocked;
     }
 
+    /**
+     * Returns the intent this repository is prepared for.
+     *
+     * @return The intent this repository is prepared for.
+     * @since 2.0.14
+     */
+    public Intent getIntent() {
+        return intent;
+    }
+
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder(256);
@@ -225,6 +280,7 @@ public final class RemoteRepository implements ArtifactRepository {
         if (isBlocked()) {
             buffer.append(", blocked");
         }
+        buffer.append(", ").append(getIntent().name()).append(")");
         buffer.append(")");
         return buffer.toString();
     }
@@ -248,26 +304,26 @@ public final class RemoteRepository implements ArtifactRepository {
                 && Objects.equals(proxy, that.proxy)
                 && Objects.equals(authentication, that.authentication)
                 && Objects.equals(mirroredRepositories, that.mirroredRepositories)
-                && repositoryManager == that.repositoryManager;
+                && repositoryManager == that.repositoryManager
+                && blocked == that.blocked
+                && intent == that.intent;
     }
 
     @Override
     public int hashCode() {
-        int hash = 17;
-        hash = hash * 31 + hash(url);
-        hash = hash * 31 + hash(type);
-        hash = hash * 31 + hash(id);
-        hash = hash * 31 + hash(releasePolicy);
-        hash = hash * 31 + hash(snapshotPolicy);
-        hash = hash * 31 + hash(proxy);
-        hash = hash * 31 + hash(authentication);
-        hash = hash * 31 + hash(mirroredRepositories);
-        hash = hash * 31 + (repositoryManager ? 1 : 0);
-        return hash;
+        return hashCode;
     }
 
-    private static int hash(Object obj) {
-        return obj != null ? obj.hashCode() : 0;
+    /**
+     * Makes "bare" repository out of this instance, usable as keys within one single session. Cross session use
+     * of these is not recommended, instead see other means.
+     */
+    public RemoteRepository toBareRemoteRepository() {
+        return new Builder(this)
+                .setIntent(Intent.BARE)
+                .setProxy(null)
+                .setAuthentication(null)
+                .build();
     }
 
     /**
@@ -286,7 +342,8 @@ public final class RemoteRepository implements ArtifactRepository {
                 AUTH = 0x0040,
                 MIRRORED = 0x0080,
                 REPOMAN = 0x0100,
-                BLOCKED = 0x0200;
+                BLOCKED = 0x0200,
+                INTENT = 0x0400;
 
         int delta;
 
@@ -311,6 +368,8 @@ public final class RemoteRepository implements ArtifactRepository {
         boolean repositoryManager;
 
         boolean blocked;
+
+        Intent intent = Intent.BARE;
 
         /**
          * Creates a new repository builder.
@@ -542,6 +601,21 @@ public final class RemoteRepository implements ArtifactRepository {
             this.blocked = blocked;
             if (prototype != null) {
                 delta(BLOCKED, this.blocked, prototype.isBlocked());
+            }
+            return this;
+        }
+
+        /**
+         * Marks the intent for this repository.
+         *
+         * @param intent the intent with this remote repository.
+         * @return This builder for chaining, never {@code null}.
+         * @since 2.0.14
+         */
+        public Builder setIntent(Intent intent) {
+            this.intent = intent;
+            if (prototype != null) {
+                delta(INTENT, this.intent, prototype.intent);
             }
             return this;
         }

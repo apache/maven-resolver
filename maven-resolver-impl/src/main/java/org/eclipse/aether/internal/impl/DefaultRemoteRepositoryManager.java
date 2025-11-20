@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
@@ -160,7 +161,11 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             result.add(repository);
         }
 
-        return result;
+        return result.stream()
+                .map(r -> new RemoteRepository.Builder(r)
+                        .setIntent(RemoteRepository.Intent.RESOLUTION)
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private void logMirror(RepositorySystemSession session, RemoteRepository original, RemoteRepository mirror) {
