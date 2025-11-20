@@ -280,7 +280,6 @@ public final class RemoteRepository implements ArtifactRepository {
         if (isBlocked()) {
             buffer.append(", blocked");
         }
-        buffer.append(", ").append(getIntent().name()).append(")");
         buffer.append(")");
         return buffer.toString();
     }
