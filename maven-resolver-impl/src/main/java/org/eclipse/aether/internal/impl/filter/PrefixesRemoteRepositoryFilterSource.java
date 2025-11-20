@@ -22,10 +22,13 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -40,6 +43,7 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
@@ -191,10 +195,6 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private final RepositoryLayoutProvider repositoryLayoutProvider;
 
-    private final ConcurrentHashMap<RemoteRepository, PrefixTree> prefixes;
-
-    private final ConcurrentHashMap<RemoteRepository, RepositoryLayout> layouts;
-
     @Inject
     public PrefixesRemoteRepositoryFilterSource(
             Supplier<MetadataResolver> metadataResolver,
@@ -203,8 +203,18 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         this.metadataResolver = requireNonNull(metadataResolver);
         this.remoteRepositoryManager = requireNonNull(remoteRepositoryManager);
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);
-        this.prefixes = new ConcurrentHashMap<>();
-        this.layouts = new ConcurrentHashMap<>();
+    }
+
+    @SuppressWarnings("unchecked")
+    private ConcurrentMap<RemoteRepository, PrefixTree> prefixes(RepositorySystemSession session) {
+        return (ConcurrentMap<RemoteRepository, PrefixTree>)
+                session.getData().computeIfAbsent(getClass().getName() + ".prefixes", ConcurrentHashMap::new);
+    }
+
+    @SuppressWarnings("unchecked")
+    private ConcurrentMap<RemoteRepository, RepositoryLayout> layouts(RepositorySystemSession session) {
+        return (ConcurrentMap<RemoteRepository, RepositoryLayout>)
+                session.getData().computeIfAbsent(getClass().getName() + ".layouts", ConcurrentHashMap::new);
     }
 
     @Override
@@ -238,25 +248,26 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     }
 
     /**
-     * Caches layout instances for remote repository. In case of unknown layout it returns {@code null}.
+     * Caches layout instances for remote repository. In case of unknown layout it returns {@link #NOT_SUPPORTED}.
      *
-     * @return the layout instance of {@code null} if layout not supported.
+     * @return the layout instance or {@link #NOT_SUPPORTED} if layout not supported.
      */
     private RepositoryLayout cacheLayout(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return layouts.computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> {
+        return layouts(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> {
             try {
                 return repositoryLayoutProvider.newRepositoryLayout(session, remoteRepository);
             } catch (NoRepositoryLayoutException e) {
-                return null;
+                return NOT_SUPPORTED;
             }
         });
     }
 
     private PrefixTree cachePrefixTree(
             RepositorySystemSession session, Path basedir, RemoteRepository remoteRepository) {
-        return prefixes.computeIfAbsent(
-                normalizeRemoteRepository(session, remoteRepository),
-                r -> loadPrefixTree(session, basedir, remoteRepository));
+        return prefixes(session)
+                .computeIfAbsent(
+                        normalizeRemoteRepository(session, remoteRepository),
+                        r -> loadPrefixTree(session, basedir, remoteRepository));
     }
 
     private PrefixTree loadPrefixTree(
@@ -339,16 +350,15 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                             session, Collections.emptyList(), Collections.singletonList(remoteRepository), true)
                     .get(0);
             // retrieve prefix as metadata from repository
-            MetadataRequest request =
-                    new MetadataRequest(new DefaultMetadata(PREFIX_FILE_TYPE, Metadata.Nature.RELEASE_OR_SNAPSHOT));
-            request.setRepository(prepared);
-            request.setDeleteLocalCopyIfMissing(true);
-            request.setFavorLocalRepository(true);
             MetadataResult result = mr.resolveMetadata(
                             new DefaultRepositorySystemSession(session)
                                     .setTransferListener(null)
                                     .setConfigProperty(CONFIG_PROP_SKIPPED, Boolean.TRUE.toString()),
-                            Collections.singleton(request))
+                            Collections.singleton(new MetadataRequest(
+                                            new DefaultMetadata(PREFIX_FILE_TYPE, Metadata.Nature.RELEASE_OR_SNAPSHOT))
+                                    .setRepository(prepared)
+                                    .setDeleteLocalCopyIfMissing(true)
+                                    .setFavorLocalRepository(true)))
                     .get(0);
             if (result.isResolved()) {
                 return result.getMetadata().getPath();
@@ -371,7 +381,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         @Override
         public Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
             RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
-            if (repositoryLayout == null) {
+            if (repositoryLayout == NOT_SUPPORTED) {
                 return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
             }
             return acceptPrefix(
@@ -382,7 +392,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         @Override
         public Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
             RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
-            if (repositoryLayout == null) {
+            if (repositoryLayout == NOT_SUPPORTED) {
                 return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
             }
             return acceptPrefix(
@@ -392,7 +402,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
         private Result acceptPrefix(RemoteRepository repository, String path) {
             PrefixTree prefixTree = cachePrefixTree(session, basedir, repository);
-            if (PrefixTree.SENTINEL == prefixTree) {
+            if (prefixTree == PrefixTree.SENTINEL) {
                 return NOT_PRESENT_RESULT;
             }
             if (prefixTree.acceptedPath(path)) {
@@ -405,4 +415,36 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private static final RemoteRepositoryFilter.Result NOT_PRESENT_RESULT =
             new SimpleResult(true, "Prefix file not present");
+
+    private static final RepositoryLayout NOT_SUPPORTED = new RepositoryLayout() {
+        @Override
+        public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean hasChecksums(Artifact artifact) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public URI getLocation(Artifact artifact, boolean upload) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public URI getLocation(Metadata metadata, boolean upload) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<ChecksumLocation> getChecksumLocations(Artifact artifact, boolean upload, URI location) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<ChecksumLocation> getChecksumLocations(Metadata metadata, boolean upload, URI location) {
+            throw new UnsupportedOperationException();
+        }
+    };
 }
