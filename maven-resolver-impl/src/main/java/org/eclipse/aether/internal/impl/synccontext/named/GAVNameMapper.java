@@ -27,6 +27,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.util.PathUtils;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -34,19 +35,22 @@ import static java.util.Objects.requireNonNull;
  * Artifact GAV {@link NameMapper}, uses artifact and metadata coordinates to name their corresponding locks. Is not
  * considering local repository, only the artifact coordinates. May use custom prefixes and suffixes and separators,
  * hence this instance may or may not be filesystem friendly (depends on strings used).
+ * <p>
+ * Note: in earlier Resolver 1.9.x versions this mapper was the default, but it changed to {@link GAECVNameMapper}
+ * in 1.9.25.
  */
 public class GAVNameMapper implements NameMapper {
-    private final boolean fileSystemFriendly;
+    protected final boolean fileSystemFriendly;
 
-    private final String artifactPrefix;
+    protected final String artifactPrefix;
 
-    private final String artifactSuffix;
+    protected final String artifactSuffix;
 
-    private final String metadataPrefix;
+    protected final String metadataPrefix;
 
-    private final String metadataSuffix;
+    protected final String metadataSuffix;
 
-    private final String fieldSeparator;
+    protected final String fieldSeparator;
 
     public GAVNameMapper(
             boolean fileSystemFriendly,
@@ -78,47 +82,42 @@ public class GAVNameMapper implements NameMapper {
         TreeSet<NamedLockKey> keys = new TreeSet<>(Comparator.comparing(NamedLockKey::name));
         if (artifacts != null) {
             for (Artifact artifact : artifacts) {
-                keys.add(NamedLockKey.of(
-                        getArtifactName(artifact, artifactPrefix, fieldSeparator, artifactSuffix),
-                        getArtifactName(artifact, "", ":", "")));
+                keys.add(NamedLockKey.of(getArtifactName(artifact), ArtifactIdUtils.toBaseId(artifact)));
             }
         }
 
         if (metadatas != null) {
             for (Metadata metadata : metadatas) {
-                keys.add(NamedLockKey.of(
-                        getMetadataName(metadata, fileSystemFriendly, metadataPrefix, fieldSeparator, metadataSuffix),
-                        getMetadataName(metadata, false, "", ":", "")));
+                keys.add(NamedLockKey.of(getMetadataName(metadata), toMetadataId(metadata)));
             }
         }
         return keys;
     }
 
-    private static String getArtifactName(Artifact artifact, String prefix, String separator, String suffix) {
-        return prefix
+    protected String getArtifactName(Artifact artifact) {
+        return artifactPrefix
                 + artifact.getGroupId()
-                + separator
+                + fieldSeparator
                 + artifact.getArtifactId()
-                + separator
+                + fieldSeparator
                 + artifact.getBaseVersion()
-                + suffix;
+                + artifactSuffix;
     }
 
-    private static final String MAVEN_METADATA = "maven-metadata.xml";
+    protected static final String MAVEN_METADATA = "maven-metadata.xml";
 
-    private static String getMetadataName(
-            Metadata metadata, boolean fileSystemFriendly, String prefix, String separator, String suffix) {
-        String name = prefix;
+    protected String getMetadataName(Metadata metadata) {
+        String name = metadataPrefix;
         if (!metadata.getGroupId().isEmpty()) {
             name += metadata.getGroupId();
             if (!metadata.getArtifactId().isEmpty()) {
-                name += separator + metadata.getArtifactId();
+                name += fieldSeparator + metadata.getArtifactId();
                 if (!metadata.getVersion().isEmpty()) {
-                    name += separator + metadata.getVersion();
+                    name += fieldSeparator + metadata.getVersion();
                 }
             }
             if (!MAVEN_METADATA.equals(metadata.getType())) {
-                name += separator
+                name += fieldSeparator
                         + (fileSystemFriendly ? PathUtils.stringToPathSegment(metadata.getType()) : metadata.getType());
             }
         } else {
@@ -126,13 +125,38 @@ public class GAVNameMapper implements NameMapper {
                 name += (fileSystemFriendly ? PathUtils.stringToPathSegment(metadata.getType()) : metadata.getType());
             }
         }
-        return name + suffix;
+        return name + metadataSuffix;
     }
 
+    protected String toMetadataId(Metadata metadata) {
+        String name = "";
+        if (!metadata.getGroupId().isEmpty()) {
+            name += metadata.getGroupId();
+            if (!metadata.getArtifactId().isEmpty()) {
+                name += ":" + metadata.getArtifactId();
+                if (!metadata.getVersion().isEmpty()) {
+                    name += ":" + metadata.getVersion();
+                }
+            }
+        }
+        if (!metadata.getType().isEmpty()) {
+            name += (name.isEmpty() ? "" : ":") + metadata.getType();
+        }
+        return name;
+    }
+
+    /**
+     * @deprecated Use {@link NameMappers} to create name mappers instead.
+     */
+    @Deprecated
     public static NameMapper gav() {
         return new GAVNameMapper(false, "artifact:", "", "metadata:", "", ":");
     }
 
+    /**
+     * @deprecated Use {@link NameMappers} to create name mappers instead.
+     */
+    @Deprecated
     public static NameMapper fileGav() {
         return new GAVNameMapper(true, "artifact~", ".lock", "metadata~", ".lock", "~");
     }
