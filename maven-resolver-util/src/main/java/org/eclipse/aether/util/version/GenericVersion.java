@@ -176,27 +176,30 @@ final class GenericVersion implements Version {
 
     static final class Tokenizer {
 
-        private static final Integer QUALIFIER_ALPHA = -5;
-
-        private static final Integer QUALIFIER_BETA = -4;
-
-        private static final Integer QUALIFIER_MILESTONE = -3;
-
         private static final Map<String, Integer> QUALIFIERS;
+
+        private static final Map<String, String> ALIASES;
 
         static {
             QUALIFIERS = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            QUALIFIERS.put("alpha", QUALIFIER_ALPHA);
-            QUALIFIERS.put("beta", QUALIFIER_BETA);
-            QUALIFIERS.put("milestone", QUALIFIER_MILESTONE);
-            QUALIFIERS.put("cr", -2);
-            QUALIFIERS.put("rc", -2);
+            // PRE RELEASE
+            QUALIFIERS.put("dev", -1);
             QUALIFIERS.put("snapshot", -1);
-            QUALIFIERS.put("ga", 0);
-            QUALIFIERS.put("final", 0);
-            QUALIFIERS.put("release", 0);
+            // RELEASE
             QUALIFIERS.put("", 0);
+            QUALIFIERS.put("final", 0);
+            QUALIFIERS.put("ga", 0);
+            QUALIFIERS.put("release", 0);
+            // POST RELEASE
             QUALIFIERS.put("sp", 1);
+
+            // ALIASES
+            ALIASES = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            ALIASES.put("a", "alpha");
+            ALIASES.put("b", "beta");
+            ALIASES.put("m", "milestone");
+            ALIASES.put("mr", "milestone");
+            ALIASES.put("cr", "rc");
         }
 
         private final String version;
@@ -230,7 +233,7 @@ final class GenericVersion implements Version {
             for (; index < versionLength; index++) {
                 char c = version.charAt(index);
 
-                if (c == '.' || c == '-' || c == '_') {
+                if (c == '.' || c == '-' || c == '_' || c == '+') {
                     end = index;
                     index++;
                     break;
@@ -292,25 +295,18 @@ final class GenericVersion implements Version {
                         return Item.MAX;
                     }
                 }
-                if (terminatedByNumber && token.length() == 1) {
-                    switch (token.charAt(0)) {
-                        case 'a':
-                        case 'A':
-                            return new Item(Item.KIND_QUALIFIER, QUALIFIER_ALPHA);
-                        case 'b':
-                        case 'B':
-                            return new Item(Item.KIND_QUALIFIER, QUALIFIER_BETA);
-                        case 'm':
-                        case 'M':
-                            return new Item(Item.KIND_QUALIFIER, QUALIFIER_MILESTONE);
-                        default:
-                    }
+                if (!terminatedByNumber && token.length() == 1) {
+                    return new Item(Item.KIND_POST_RELEASE, token);
+                }
+                String alias = ALIASES.get(token);
+                if (alias != null) {
+                    token = alias;
                 }
                 Integer qualifier = QUALIFIERS.get(token);
                 if (qualifier != null) {
                     return new Item(Item.KIND_QUALIFIER, qualifier);
                 } else {
-                    return new Item(Item.KIND_STRING, token.toLowerCase(Locale.ENGLISH));
+                    return new Item(Item.KIND_PRE_RELEASE, token.toLowerCase(Locale.ENGLISH));
                 }
             }
         }
@@ -318,17 +314,19 @@ final class GenericVersion implements Version {
 
     static final class Item {
 
-        static final int KIND_MAX = 8;
+        static final int KIND_MAX = 4;
 
-        static final int KIND_BIGINT = 5;
+        static final int KIND_BIGINT = 3;
 
-        static final int KIND_INT = 4;
+        static final int KIND_INT = 2;
 
-        static final int KIND_STRING = 3;
+        static final int KIND_POST_RELEASE = 1;
 
-        static final int KIND_QUALIFIER = 2;
+        static final int KIND_QUALIFIER = 0;
 
-        static final int KIND_MIN = 0;
+        static final int KIND_PRE_RELEASE = -1;
+
+        static final int KIND_MIN = -2;
 
         static final Item MAX = new Item(KIND_MAX, "max");
 
@@ -344,7 +342,7 @@ final class GenericVersion implements Version {
         }
 
         public boolean isNumber() {
-            return (kind & KIND_QUALIFIER) == 0; // i.e. kind != string/qualifier
+            return kind != KIND_QUALIFIER && kind != KIND_PRE_RELEASE;
         }
 
         public int compareTo(Item that) {
@@ -352,12 +350,13 @@ final class GenericVersion implements Version {
             if (that == null) {
                 // null in this context denotes the pad item (0 or "ga")
                 switch (kind) {
+                    case KIND_PRE_RELEASE:
                     case KIND_MIN:
                         rel = -1;
                         break;
+                    case KIND_POST_RELEASE:
                     case KIND_MAX:
                     case KIND_BIGINT:
-                    case KIND_STRING:
                         rel = 1;
                         break;
                     case KIND_INT:
@@ -371,6 +370,7 @@ final class GenericVersion implements Version {
                 rel = kind - that.kind;
                 if (rel == 0) {
                     switch (kind) {
+                        case KIND_POST_RELEASE:
                         case KIND_MAX:
                         case KIND_MIN:
                             break;
@@ -381,7 +381,7 @@ final class GenericVersion implements Version {
                         case KIND_QUALIFIER:
                             rel = ((Integer) value).compareTo((Integer) that.value);
                             break;
-                        case KIND_STRING:
+                        case KIND_PRE_RELEASE:
                             rel = ((String) value).compareToIgnoreCase((String) that.value);
                             break;
                         default:
