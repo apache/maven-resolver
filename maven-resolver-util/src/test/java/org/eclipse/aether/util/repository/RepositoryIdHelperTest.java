@@ -28,15 +28,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class RepositoryIdHelperTest {
     @Test
-    void caching() {
+    void idToPathSegment() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(s -> false);
         session.setCache(new DefaultRepositoryCache()); // session has cache set
-        Function<ArtifactRepository, String> safeId = RepositoryIdHelper.cachedIdToPathSegment(session);
+        Function<ArtifactRepository, String> safeId = RepositoryIdHelper::idToPathSegment;
 
         RemoteRepository good = new RemoteRepository.Builder("good", "default", "https://somewhere.com").build();
         RemoteRepository bad = new RemoteRepository.Builder("bad/id", "default", "https://somewhere.com").build();
@@ -44,33 +42,10 @@ public class RepositoryIdHelperTest {
         String goodId = good.getId();
         String goodFixedId = safeId.apply(good);
         assertEquals(goodId, goodFixedId);
-        assertSame(goodFixedId, safeId.apply(good));
 
         String badId = bad.getId();
         String badFixedId = safeId.apply(bad);
         assertNotEquals(badId, badFixedId);
         assertEquals("bad-SLASH-id", badFixedId);
-        assertSame(badFixedId, safeId.apply(bad));
-    }
-
-    @Test
-    void nonCaching() {
-        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(s -> false);
-        session.setCache(null); // session has no cache set
-        Function<ArtifactRepository, String> safeId = RepositoryIdHelper.cachedIdToPathSegment(session);
-
-        RemoteRepository good = new RemoteRepository.Builder("good", "default", "https://somewhere.com").build();
-        RemoteRepository bad = new RemoteRepository.Builder("bad/id", "default", "https://somewhere.com").build();
-
-        String goodId = good.getId();
-        String goodFixedId = safeId.apply(good);
-        assertEquals(goodId, goodFixedId);
-        assertNotSame(goodFixedId, safeId.apply(good));
-
-        String badId = bad.getId();
-        String badFixedId = safeId.apply(bad);
-        assertNotEquals(badId, badFixedId);
-        assertEquals("bad-SLASH-id", badFixedId);
-        assertNotSame(badFixedId, safeId.apply(bad));
     }
 }

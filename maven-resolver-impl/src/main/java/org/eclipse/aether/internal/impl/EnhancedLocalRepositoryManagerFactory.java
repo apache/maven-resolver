@@ -22,12 +22,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
@@ -96,11 +96,21 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      *
      * @since 2.0.14
      */
+    @SuppressWarnings("unchecked")
     static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(RepositorySystemSession session) {
-        boolean globallyUniqueRepositoryKeys = ConfigUtils.getBoolean(
-                session, DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS, CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS);
-        if (globallyUniqueRepositoryKeys) {
-            return RepositoryIdHelper::globallyUniqueRepositoryKey;
+        if (ConfigUtils.getBoolean(
+                session, DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS, CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS)) {
+            // this is expensive method; cache it in session (repo -> context -> ID)
+            return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
+                            session.getData()
+                                    .computeIfAbsent(
+                                            EnhancedLocalRepositoryManagerFactory.class.getName()
+                                                    + ".repositoryKeyFunction",
+                                            ConcurrentHashMap::new))
+                    .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(
+                            context == null ? "" : context,
+                            k2 -> RepositoryIdHelper.globallyUniqueRepositoryKey(repository, context));
         } else {
             return RepositoryIdHelper::simpleRepositoryKey;
         }

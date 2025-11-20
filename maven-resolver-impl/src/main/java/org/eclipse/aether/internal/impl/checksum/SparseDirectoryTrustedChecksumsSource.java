@@ -34,11 +34,11 @@ import java.util.function.Function;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
+import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +134,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
                 Path checksumPath = basedir.resolve(calculateArtifactPath(
                         originAware,
                         artifact,
-                        RepositoryIdHelper.cachedIdToPathSegment(session).apply(artifactRepository),
+                        Utils.cachedIdToPathSegment(session, artifactRepository),
                         checksumAlgorithmFactory));
 
                 if (!Files.isRegularFile(checksumPath)) {
@@ -167,7 +167,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
         return new SparseDirectoryWriter(
                 getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
                 isOriginAware(session),
-                RepositoryIdHelper.cachedIdToPathSegment(session));
+                r -> Utils.cachedIdToPathSegment(session, r));
     }
 
     private String calculateArtifactPath(

@@ -62,10 +62,7 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
 
         if ("".equals(repository.getContentType()) || "simple".equals(repository.getContentType())) {
             return new SimpleLocalRepositoryManager(
-                    repository.getBasePath(),
-                    "simple",
-                    localPathComposer,
-                    RepositoryIdHelper::simpleRepositoryKey);
+                    repository.getBasePath(), "simple", localPathComposer, RepositoryIdHelper::simpleRepositoryKey);
         } else {
             throw new NoLocalRepositoryManagerException(repository);
         }

@@ -19,12 +19,10 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 

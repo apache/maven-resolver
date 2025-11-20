@@ -20,24 +20,20 @@ package org.eclipse.aether.util.repository;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.PathUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 
-import static java.util.Objects.requireNonNull;
-
 /**
- * Helper class for {@link ArtifactRepository#getId()} handling. This class provides  helper function (cached or uncached)
- * to get id of repository as it was originally envisioned: as path safe. While POMs are validated by Maven, there are
- * POMs out there that somehow define repositories with unsafe characters in their id. The problem affects mostly
+ * Helper class for {@link ArtifactRepository#getId()} handling. This class provides  helper methods
+ * to get id of repository as it was originally envisioned: as path safe, unique, etc. While POMs are validated by Maven,
+ * there are POMs out there that somehow define repositories with unsafe characters in their id. The problem affects mostly
  * {@link RemoteRepository} instances, as all other implementations have fixed ids that are path safe.
+ * <p>
+ * <em>Important:</em> multiple of these provided methods are not trivial processing-wise, and some sort of
+ * caching is warmly recommended.
  *
  * @see PathUtils
  * @since 2.0.11
@@ -49,6 +45,7 @@ public final class RepositoryIdHelper {
      * Simple {@code repositoryKey} function (classic). Returns {@link RemoteRepository#getId()}, unless
      * {@link RemoteRepository#isRepositoryManager()} returns {@code true}, in which case this method creates
      * unique identifier based on ID and current configuration of the remote repository (as it may change).
+     * This was the default method in Maven 3.
      *
      * @since 2.0.14
      **/
@@ -76,25 +73,26 @@ public final class RepositoryIdHelper {
     }
 
     /**
-     * Globally unique {@code repositoryKey} function.
+     * Globally unique {@code repositoryKey} function. This repository key method returns same results as
+     * {@link #remoteRepositoryUniqueId(RemoteRepository)} if parameter context is {@code null} or empty string.
      *
+     * @see #remoteRepositoryUniqueId(RemoteRepository)
      * @since 2.0.14
      **/
     public static String globallyUniqueRepositoryKey(RemoteRepository repository, String context) {
-        String id = idToPathSegment(repository);
         String description = remoteRepositoryDescription(repository);
         if (context != null && !context.isEmpty()) {
             description += context;
         }
-        return id + "-" + StringDigestUtil.sha1(description);
+        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(description);
     }
 
     /**
-     * Creates unique repository id for given {@link RemoteRepository}. For Maven Central this method will return
-     * string "central", while for any other remote repository it will return string created as
-     * {@code $(repository.id)-sha1(repository-aspects)}. The key material contains all relevant aspects
-     * of remote repository, so repository with same ID even if just policy changes (enabled/disabled), will map to
-     * different string id. The checksum and update policies are not participating in key creation.
+     * Creates unique repository id for given {@link RemoteRepository}.
+     * For any remote repository it will return string created as {@code $(repository.id)-sha1(repository-aspects)}.
+     * The key material contains all relevant aspects of remote repository, so repository with same ID even if just
+     * policy changes (enabled/disabled), will map to different string id. The checksum and update policies are not
+     * participating in key creation.
      * <p>
      * This method is costly, so should be invoked sparingly, or cache results if needed.
      * <p>
@@ -113,7 +111,7 @@ public final class RepositoryIdHelper {
      * Maven validation prevents use of illegal FS characters in them, but we found in Maven Central several POMs that
      * define remote repositories with illegal FS characters in their ID.
      */
-    private static String idToPathSegment(ArtifactRepository repository) {
+    public static String idToPathSegment(ArtifactRepository repository) {
         if (repository instanceof RemoteRepository) {
             return PathUtils.stringToPathSegment(repository.getId());
         } else {
@@ -128,7 +126,7 @@ public final class RepositoryIdHelper {
      *     <li>{@link RemoteRepository#getProxy()}</li>
      * </ul>
      */
-    private static String remoteRepositoryDescription(RemoteRepository repository) {
+    public static String remoteRepositoryDescription(RemoteRepository repository) {
         StringBuilder buffer = new StringBuilder(256);
         buffer.append(repository.getId());
         buffer.append(" (").append(repository.getUrl());
@@ -157,7 +155,7 @@ public final class RepositoryIdHelper {
         if (repository.isBlocked()) {
             buffer.append(", blocked");
         }
-        buffer.append(")");
+        buffer.append(", ").append(repository.getIntent().name()).append(")");
         return buffer.toString();
     }
 }

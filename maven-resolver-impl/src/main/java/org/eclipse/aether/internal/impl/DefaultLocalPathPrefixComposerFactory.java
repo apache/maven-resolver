@@ -22,10 +22,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 
 import static org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory.repositoryKeyFunction;

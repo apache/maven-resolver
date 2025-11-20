@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -31,6 +33,7 @@ import org.eclipse.aether.impl.MetadataGeneratorFactory;
 import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicyRequest;
@@ -39,6 +42,7 @@ import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
+import org.eclipse.aether.util.repository.RepositoryIdHelper;
 
 /**
  * Internal utility methods.
@@ -206,5 +210,15 @@ public final class Utils {
         if (session.isOffline()) {
             offlineController.checkOffline(session, repository);
         }
+    }
+
+    /**
+     * Shared and cached {@link RepositoryIdHelper#idToPathSegment(ArtifactRepository)} method,
+     */
+    @SuppressWarnings("unchecked")
+    public static String cachedIdToPathSegment(RepositorySystemSession session, ArtifactRepository artifactRepository) {
+        return ((ConcurrentMap<ArtifactRepository, String>) session.getData()
+                        .computeIfAbsent(Utils.class.getName() + ".cachedIdToPathSegment", ConcurrentHashMap::new))
+                .computeIfAbsent(artifactRepository, RepositoryIdHelper::idToPathSegment);
     }
 }

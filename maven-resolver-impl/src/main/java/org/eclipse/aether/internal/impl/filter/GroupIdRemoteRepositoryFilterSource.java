@@ -42,6 +42,7 @@ import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
+import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.internal.impl.filter.ruletree.GroupTree;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -50,7 +51,6 @@ import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -249,7 +249,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
         return ruleFiles(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> getBasedir(
                         session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
                 .resolve(GROUP_ID_FILE_PREFIX
-                        + RepositoryIdHelper.cachedIdToPathSegment(session).apply(remoteRepository)
+                        + Utils.cachedIdToPathSegment(session, remoteRepository)
                         + GROUP_ID_FILE_SUFFIX));
     }
 

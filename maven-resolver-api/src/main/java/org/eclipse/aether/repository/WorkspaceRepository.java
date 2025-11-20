@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.repository;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -32,6 +33,8 @@ public final class WorkspaceRepository implements ArtifactRepository {
     private final String type;
 
     private final Object key;
+
+    private final int hashCode;
 
     /**
      * Creates a new workspace repository of type {@code "workspace"} and a random key.
@@ -59,6 +62,7 @@ public final class WorkspaceRepository implements ArtifactRepository {
     public WorkspaceRepository(String type, Object key) {
         this.type = (type != null) ? type : "";
         this.key = (key != null) ? key : UUID.randomUUID().toString().replace("-", "");
+        this.hashCode = Objects.hash(type, key);
     }
 
     public String getContentType() {
@@ -100,9 +104,6 @@ public final class WorkspaceRepository implements ArtifactRepository {
 
     @Override
     public int hashCode() {
-        int hash = 17;
-        hash = hash * 31 + getKey().hashCode();
-        hash = hash * 31 + getContentType().hashCode();
-        return hash;
+        return hashCode;
     }
 }

@@ -21,15 +21,11 @@ package org.eclipse.aether.internal.impl;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
@@ -39,7 +35,6 @@ import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.StringDigestUtil;
 
 import static java.util.Objects.requireNonNull;
 
