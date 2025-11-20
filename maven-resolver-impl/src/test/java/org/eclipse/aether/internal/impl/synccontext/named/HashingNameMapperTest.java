@@ -32,7 +32,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HashingNameMapperTest extends NameMapperTestSupport {
-    HashingNameMapper mapper = new HashingNameMapper(GAVNameMapper.gav());
+    HashingNameMapper mapper = new HashingNameMapper(NameMappers.gavNameMapper(false));
 
     @Test
     void nullsAndEmptyInputs() {
