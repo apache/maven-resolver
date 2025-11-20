@@ -25,7 +25,6 @@ import javax.inject.Singleton;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -106,9 +105,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
      * <strong>Initial setup:</strong> Don't provide any files - rely on auto-discovery as repositories are accessed.
      * <strong>Override when needed:</strong> Create {@code prefixes-myrepoId.txt} files in {@code .mvn/rrf/} and
      * commit to version control.
-     * <strong>Caching:</strong> Auto-discovered prefix files are cached in the local repository with unique IDs
-     * (using {@link RepositoryIdHelper#remoteRepositoryUniqueId(RemoteRepository)}) to prevent conflicts that
-     * could cause build failures.
+     * <strong>Caching:</strong> Auto-discovered prefix files are cached in the local repository.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
@@ -118,6 +115,58 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     public static final String CONFIG_PROP_ENABLED = RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME;
 
     public static final boolean DEFAULT_ENABLED = true;
+
+    /**
+     * Configuration to skip the Prefixes filter for given request. This configuration is evaluated and if {@code true}
+     * the prefixes remote filter will not kick in. Main use case is by filter itself, to prevent recursion during
+     * discovery of remote prefixes file, but this also allows other components to control prefix filter discovery, while
+     * leaving configuration like {@link #CONFIG_PROP_ENABLED} still show the "real state".
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_SKIPPED}
+     */
+    public static final String CONFIG_PROP_SKIPPED =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".skipped";
+
+    public static final boolean DEFAULT_SKIPPED = false;
+
+    /**
+     * Configuration to allow Prefixes filter to auto-discover prefixes from mirrored repositories as well. For this to
+     * work <em>Maven should be aware</em> that given remote repository is mirror and is usually backed by MRM. Given
+     * multiple MRM implementations messes up prefixes file, is better to just skip these. In other case, one may use
+     * {@link #CONFIG_PROP_ENABLED} with repository ID suffix.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_USE_MIRRORED_REPOSITORIES}
+     */
+    public static final String CONFIG_PROP_USE_MIRRORED_REPOSITORIES =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".useMirroredRepositories";
+
+    public static final boolean DEFAULT_USE_MIRRORED_REPOSITORIES = false;
+
+    /**
+     * Configuration to allow Prefixes filter to auto-discover prefixes from repository managers as well. For this to
+     * work <em>Maven should be aware</em> that given remote repository is backed by repository manager.
+     * Given multiple MRM implementations messes up prefixes file, is better to just skip these. In other case, one may use
+     * {@link #CONFIG_PROP_ENABLED} with repository ID suffix.
+     * <em>Note: as of today, nothing sets this on remote repositories, but is added for future.</em>
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_USE_REPOSITORY_MANAGERS}
+     */
+    public static final String CONFIG_PROP_USE_REPOSITORY_MANAGERS =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".useRepositoryManagers";
+
+    public static final boolean DEFAULT_USE_REPOSITORY_MANAGERS = false;
 
     /**
      * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
@@ -146,8 +195,6 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private final ConcurrentHashMap<RemoteRepository, RepositoryLayout> layouts;
 
-    private final ConcurrentHashMap<RemoteRepository, Boolean> ongoingUpdates;
-
     @Inject
     public PrefixesRemoteRepositoryFilterSource(
             Supplier<MetadataResolver> metadataResolver,
@@ -158,20 +205,26 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);
         this.prefixes = new ConcurrentHashMap<>();
         this.layouts = new ConcurrentHashMap<>();
-        this.ongoingUpdates = new ConcurrentHashMap<>();
     }
 
     @Override
     protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_ENABLED, CONFIG_PROP_ENABLED);
+        return ConfigUtils.getBoolean(session, DEFAULT_ENABLED, CONFIG_PROP_ENABLED)
+                && !ConfigUtils.getBoolean(session, DEFAULT_SKIPPED, CONFIG_PROP_SKIPPED);
     }
 
     private boolean isRepositoryFilteringEnabled(RepositorySystemSession session, RemoteRepository remoteRepository) {
         if (isEnabled(session)) {
             return ConfigUtils.getBoolean(
-                    session,
-                    ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + ".*"),
-                    CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
+                            session,
+                            DEFAULT_ENABLED,
+                            CONFIG_PROP_ENABLED + "." + remoteRepository.getId(),
+                            CONFIG_PROP_ENABLED + ".*")
+                    && !ConfigUtils.getBoolean(
+                            session,
+                            DEFAULT_SKIPPED,
+                            CONFIG_PROP_SKIPPED + "." + remoteRepository.getId(),
+                            CONFIG_PROP_SKIPPED + ".*");
         }
         return false;
     }
@@ -190,7 +243,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
      * @return the layout instance of {@code null} if layout not supported.
      */
     private RepositoryLayout cacheLayout(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return layouts.computeIfAbsent(remoteRepository, r -> {
+        return layouts.computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> {
             try {
                 return repositoryLayoutProvider.newRepositoryLayout(session, remoteRepository);
             } catch (NoRepositoryLayoutException e) {
@@ -201,22 +254,9 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private PrefixTree cachePrefixTree(
             RepositorySystemSession session, Path basedir, RemoteRepository remoteRepository) {
-        return ongoingUpdatesGuard(
-                remoteRepository,
-                () -> prefixes.computeIfAbsent(
-                        remoteRepository, r -> loadPrefixTree(session, basedir, remoteRepository)),
-                () -> PrefixTree.SENTINEL);
-    }
-
-    private <T> T ongoingUpdatesGuard(RemoteRepository remoteRepository, Supplier<T> unblocked, Supplier<T> blocked) {
-        if (!remoteRepository.isBlocked() && null == ongoingUpdates.putIfAbsent(remoteRepository, Boolean.TRUE)) {
-            try {
-                return unblocked.get();
-            } finally {
-                ongoingUpdates.remove(remoteRepository);
-            }
-        }
-        return blocked.get();
+        return prefixes.computeIfAbsent(
+                normalizeRemoteRepository(session, remoteRepository),
+                r -> loadPrefixTree(session, basedir, remoteRepository));
     }
 
     private PrefixTree loadPrefixTree(
@@ -225,8 +265,12 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             String origin = "user-provided";
             Path filePath = resolvePrefixesFromLocalConfiguration(session, baseDir, remoteRepository);
             if (filePath == null) {
-                origin = "auto-discovered";
-                filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
+                if (!supportedResolvePrefixesForRemoteRepository(session, remoteRepository)) {
+                    origin = "unsupported";
+                } else {
+                    origin = "auto-discovered";
+                    filePath = resolvePrefixesFromRemoteRepository(session, remoteRepository);
+                }
             }
             if (filePath != null) {
                 PrefixesSource prefixesSource = PrefixesSource.of(remoteRepository, filePath);
@@ -273,6 +317,18 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         }
     }
 
+    private boolean supportedResolvePrefixesForRemoteRepository(
+            RepositorySystemSession session, RemoteRepository remoteRepository) {
+        if (remoteRepository.isRepositoryManager()) {
+            return ConfigUtils.getBoolean(
+                    session, DEFAULT_USE_REPOSITORY_MANAGERS, CONFIG_PROP_USE_REPOSITORY_MANAGERS);
+        } else {
+            return remoteRepository.getMirroredRepositories().isEmpty()
+                    || ConfigUtils.getBoolean(
+                            session, DEFAULT_USE_MIRRORED_REPOSITORIES, CONFIG_PROP_USE_MIRRORED_REPOSITORIES);
+        }
+    }
+
     private Path resolvePrefixesFromRemoteRepository(
             RepositorySystemSession session, RemoteRepository remoteRepository) {
         MetadataResolver mr = metadataResolver.get();
@@ -282,35 +338,22 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             RemoteRepository prepared = rm.aggregateRepositories(
                             session, Collections.emptyList(), Collections.singletonList(remoteRepository), true)
                     .get(0);
-            // make it unique
-            RemoteRepository unique = new RemoteRepository.Builder(prepared)
-                    .setId(RepositoryIdHelper.remoteRepositoryUniqueId(remoteRepository))
-                    .build();
-            // supplier for path
-            Supplier<Path> supplier = () -> {
-                MetadataRequest request =
-                        new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
-                // use unique repository; this will result in prefix (repository metadata) cached under unique id
-                request.setRepository(unique);
-                request.setDeleteLocalCopyIfMissing(true);
-                request.setFavorLocalRepository(true);
-                MetadataResult result = mr.resolveMetadata(
-                                new DefaultRepositorySystemSession(session).setTransferListener(null),
-                                Collections.singleton(request))
-                        .get(0);
-                if (result.isResolved()) {
-                    return result.getMetadata().getPath();
-                } else {
-                    return null;
-                }
-            };
-
-            // prevent recursive calls; but we need extra work if not dealing with Central (as in that case outer call
-            // shields us)
-            if (Objects.equals(prepared.getId(), unique.getId())) {
-                return supplier.get();
+            // retrieve prefix as metadata from repository
+            MetadataRequest request =
+                    new MetadataRequest(new DefaultMetadata(PREFIX_FILE_PATH, Metadata.Nature.RELEASE_OR_SNAPSHOT));
+            request.setRepository(prepared);
+            request.setDeleteLocalCopyIfMissing(true);
+            request.setFavorLocalRepository(true);
+            MetadataResult result = mr.resolveMetadata(
+                            new DefaultRepositorySystemSession(session)
+                                    .setTransferListener(null)
+                                    .setConfigProperty(CONFIG_PROP_SKIPPED, Boolean.TRUE.toString()),
+                            Collections.singleton(request))
+                    .get(0);
+            if (result.isResolved()) {
+                return result.getMetadata().getPath();
             } else {
-                return ongoingUpdatesGuard(unique, supplier, () -> null);
+                return null;
             }
         }
         return null;
@@ -347,15 +390,15 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                     repositoryLayout.getLocation(metadata, false).getPath());
         }
 
-        private Result acceptPrefix(RemoteRepository remoteRepository, String path) {
-            PrefixTree prefixTree = cachePrefixTree(session, basedir, remoteRepository);
+        private Result acceptPrefix(RemoteRepository repository, String path) {
+            PrefixTree prefixTree = cachePrefixTree(session, basedir, repository);
             if (PrefixTree.SENTINEL == prefixTree) {
                 return NOT_PRESENT_RESULT;
             }
             if (prefixTree.acceptedPath(path)) {
-                return new SimpleResult(true, "Path " + path + " allowed from " + remoteRepository);
+                return new SimpleResult(true, "Path " + path + " allowed from " + repository);
             } else {
-                return new SimpleResult(false, "Prefix " + path + " NOT allowed from " + remoteRepository);
+                return new SimpleResult(false, "Path " + path + " NOT allowed from " + repository);
             }
         }
     }

@@ -34,15 +34,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * UT helper for {@link RemoteRepositoryFilterSource} UTs.
  */
 public abstract class RemoteRepositoryFilterSourceTestSupport {
-    private final Artifact acceptedArtifact = new DefaultArtifact("org.one:aid:1.0");
+    protected final Artifact acceptedArtifact = new DefaultArtifact("org.one:aid:1.0");
 
-    private final Artifact notAcceptedArtifact = new DefaultArtifact("org.two:aid:1.0");
+    protected final Artifact notAcceptedArtifact = new DefaultArtifact("org.two:aid:1.0");
 
-    private DefaultRepositorySystemSession session;
+    protected DefaultRepositorySystemSession session;
 
-    private RemoteRepository remoteRepository;
+    protected RemoteRepository remoteRepository;
 
-    private RemoteRepositoryFilterSource subject;
+    protected RemoteRepositoryFilterSource subject;
 
     @BeforeEach
     void setup() {
