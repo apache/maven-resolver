@@ -80,6 +80,7 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
     /**
      * We use remote repositories as keys, so normalize them.
      *
+     * @since 2.0.14
      * @see RemoteRepository#toBareRemoteRepository()
      */
     protected RemoteRepository normalizeRemoteRepository(
