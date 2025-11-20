@@ -22,9 +22,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -41,6 +43,7 @@ import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
+import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
@@ -245,16 +248,16 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     }
 
     /**
-     * Caches layout instances for remote repository. In case of unknown layout it returns {@code null}.
+     * Caches layout instances for remote repository. In case of unknown layout it returns {@link #NOT_SUPPORTED}.
      *
-     * @return the layout instance of {@code null} if layout not supported.
+     * @return the layout instance or {@link #NOT_SUPPORTED} if layout not supported.
      */
     private RepositoryLayout cacheLayout(RepositorySystemSession session, RemoteRepository remoteRepository) {
         return layouts(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> {
             try {
                 return repositoryLayoutProvider.newRepositoryLayout(session, remoteRepository);
             } catch (NoRepositoryLayoutException e) {
-                return null;
+                return NOT_SUPPORTED;
             }
         });
     }
@@ -378,7 +381,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         @Override
         public Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
             RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
-            if (repositoryLayout == null) {
+            if (repositoryLayout == NOT_SUPPORTED) {
                 return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
             }
             return acceptPrefix(
@@ -389,7 +392,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         @Override
         public Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
             RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
-            if (repositoryLayout == null) {
+            if (repositoryLayout == NOT_SUPPORTED) {
                 return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
             }
             return acceptPrefix(
@@ -399,7 +402,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
         private Result acceptPrefix(RemoteRepository repository, String path) {
             PrefixTree prefixTree = cachePrefixTree(session, basedir, repository);
-            if (PrefixTree.SENTINEL == prefixTree) {
+            if (prefixTree == PrefixTree.SENTINEL) {
                 return NOT_PRESENT_RESULT;
             }
             if (prefixTree.acceptedPath(path)) {
@@ -412,4 +415,36 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private static final RemoteRepositoryFilter.Result NOT_PRESENT_RESULT =
             new SimpleResult(true, "Prefix file not present");
+
+    private static final RepositoryLayout NOT_SUPPORTED = new RepositoryLayout() {
+        @Override
+        public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean hasChecksums(Artifact artifact) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public URI getLocation(Artifact artifact, boolean upload) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public URI getLocation(Metadata metadata, boolean upload) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<ChecksumLocation> getChecksumLocations(Artifact artifact, boolean upload, URI location) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<ChecksumLocation> getChecksumLocations(Metadata metadata, boolean upload, URI location) {
+            throw new UnsupportedOperationException();
+        }
+    };
 }
