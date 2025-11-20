@@ -441,8 +441,8 @@ public class DefaultRepositorySystem implements RepositorySystem {
         validateSession(session);
         validateRepositories(repositories);
         repositorySystemValidator.validateRemoteRepositories(session, repositories);
-        repositories = remoteRepositoryManager.aggregateRepositories(session, new ArrayList<>(), repositories, true);
-        return repositories;
+
+        return remoteRepositoryManager.aggregateRepositories(session, new ArrayList<>(), repositories, true);
     }
 
     @Override
@@ -450,12 +450,14 @@ public class DefaultRepositorySystem implements RepositorySystem {
         validateSession(session);
         requireNonNull(repository, "repository cannot be null");
         repositorySystemValidator.validateRemoteRepositories(session, Collections.singletonList(repository));
-        RemoteRepository.Builder builder = new RemoteRepository.Builder(repository);
+
         Authentication auth = session.getAuthenticationSelector().getAuthentication(repository);
-        builder.setAuthentication(auth);
         Proxy proxy = session.getProxySelector().getProxy(repository);
-        builder.setProxy(proxy);
-        return builder.build();
+        return new RemoteRepository.Builder(repository)
+                .setAuthentication(auth)
+                .setProxy(proxy)
+                .setIntent(RemoteRepository.Intent.DEPLOYMENT)
+                .build();
     }
 
     @Override
