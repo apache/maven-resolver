@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.transport.apache;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScheme;
@@ -33,11 +33,11 @@ final class SharingAuthCache implements AuthCache {
 
     private final LocalState state;
 
-    private final Map<HttpHost, AuthScheme> authSchemes;
+    private final ConcurrentHashMap<HttpHost, AuthScheme> authSchemes;
 
     SharingAuthCache(LocalState state) {
         this.state = state;
-        authSchemes = new HashMap<>();
+        authSchemes = new ConcurrentHashMap<>();
     }
 
     private static HttpHost toKey(HttpHost host) {
@@ -54,17 +54,20 @@ final class SharingAuthCache implements AuthCache {
         AuthScheme authScheme = authSchemes.get(host);
         if (authScheme == null) {
             authScheme = state.getAuthScheme(host);
-            authSchemes.put(host, authScheme);
+            if (authScheme != null) {
+                authSchemes.put(host, authScheme);
+            }
         }
         return authScheme;
     }
 
     @Override
     public void put(HttpHost host, AuthScheme authScheme) {
+        host = toKey(host);
         if (authScheme != null) {
-            authSchemes.put(toKey(host), authScheme);
+            authSchemes.put(host, authScheme);
         } else {
-            remove(host);
+            authSchemes.remove(host);
         }
     }
 
