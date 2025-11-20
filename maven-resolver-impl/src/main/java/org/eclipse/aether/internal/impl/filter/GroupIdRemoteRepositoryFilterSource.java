@@ -110,6 +110,21 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     public static final boolean DEFAULT_ENABLED = true;
 
     /**
+     * Configuration to skip the GroupId filter for given request. This configuration is evaluated and if {@code true}
+     * the GroupId remote filter will not kick in.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_SKIPPED}
+     */
+    public static final String CONFIG_PROP_SKIPPED =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".skipped";
+
+    public static final boolean DEFAULT_SKIPPED = false;
+
+    /**
      * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -160,15 +175,22 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
 
     @Override
     protected boolean isEnabled(RepositorySystemSession session) {
-        return ConfigUtils.getBoolean(session, DEFAULT_ENABLED, CONFIG_PROP_ENABLED);
+        return ConfigUtils.getBoolean(session, DEFAULT_ENABLED, CONFIG_PROP_ENABLED)
+                && !ConfigUtils.getBoolean(session, DEFAULT_SKIPPED, CONFIG_PROP_SKIPPED);
     }
 
     private boolean isRepositoryFilteringEnabled(RepositorySystemSession session, RemoteRepository remoteRepository) {
         if (isEnabled(session)) {
             return ConfigUtils.getBoolean(
-                    session,
-                    ConfigUtils.getBoolean(session, true, CONFIG_PROP_ENABLED + ".*"),
-                    CONFIG_PROP_ENABLED + "." + remoteRepository.getId());
+                            session,
+                            DEFAULT_ENABLED,
+                            CONFIG_PROP_ENABLED + "." + remoteRepository.getId(),
+                            CONFIG_PROP_ENABLED + ".*")
+                    && !ConfigUtils.getBoolean(
+                            session,
+                            DEFAULT_SKIPPED,
+                            CONFIG_PROP_SKIPPED + "." + remoteRepository.getId(),
+                            CONFIG_PROP_SKIPPED + ".*");
         }
         return false;
     }
@@ -193,10 +215,11 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                     if (isRepositoryFilteringEnabled(session, remoteRepository)) {
                         ruleFile(session, remoteRepository); // populate it; needed for save
                         String line = "=" + artifactResult.getArtifact().getGroupId();
+                        RemoteRepository normalized = normalizeRemoteRepository(session, remoteRepository);
                         recordedRules
-                                .computeIfAbsent(remoteRepository, k -> new TreeSet<>())
+                                .computeIfAbsent(normalized, k -> new TreeSet<>())
                                 .add(line);
-                        rules.compute(remoteRepository, (k, v) -> {
+                        rules.compute(normalized, (k, v) -> {
                                     if (v == null || v == GroupTree.SENTINEL) {
                                         v = new GroupTree("");
                                     }
@@ -210,7 +233,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private Path ruleFile(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return ruleFiles.computeIfAbsent(remoteRepository, r -> getBasedir(
+        return ruleFiles.computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> getBasedir(
                         session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
                 .resolve(GROUP_ID_FILE_PREFIX
                         + RepositoryIdHelper.cachedIdToPathSegment(session).apply(remoteRepository)
@@ -218,7 +241,8 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private GroupTree cacheRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return rules.computeIfAbsent(remoteRepository, r -> loadRepositoryRules(session, r));
+        return rules.computeIfAbsent(
+                normalizeRemoteRepository(session, remoteRepository), r -> loadRepositoryRules(session, r));
     }
 
     private GroupTree loadRepositoryRules(RepositorySystemSession session, RemoteRepository remoteRepository) {

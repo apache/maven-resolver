@@ -21,9 +21,11 @@ package org.eclipse.aether.internal.impl.filter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.util.DirectoryUtils;
@@ -74,6 +76,29 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /**
+     * We use remote repositories as keys, but they may fly in as "bare" or as "equipped" (w/ auth and proxy) if caller
+     * used {@link org.eclipse.aether.RepositorySystem#newResolutionRepositories(RepositorySystemSession, List)} beforehand.
+     * The hash/equalTo method factors in all these as well, but from our perspective, they do not matter. So we make all
+     * key remote repositories back to "bare".
+     * Ignored properties of normalized repositories:
+     * <ul>
+     *     <li>proxy - is environment dependent</li>
+     *     <li>authentication - is environment and/or user dependent</li>
+     *     <li>mirrored repositories - is environment dependent (within same session does not change)</li>
+     *     <li>repository manager - is environment dependent (within same session does not change)</li>
+     * </ul>
+     */
+    protected RemoteRepository normalizeRemoteRepository(
+            RepositorySystemSession session, RemoteRepository remoteRepository) {
+        return new RemoteRepository.Builder(remoteRepository)
+                .setProxy(null)
+                .setAuthentication(null)
+                .setMirroredRepositories(null)
+                .setRepositoryManager(false)
+                .build();
     }
 
     /**
