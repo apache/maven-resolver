@@ -176,26 +176,33 @@ final class GenericVersion implements Version {
 
     static final class Tokenizer {
 
-        private static final Integer QUALIFIER_ALPHA = -5;
+        private static final Integer QUALIFIER_ALPHA = -7;
 
-        private static final Integer QUALIFIER_BETA = -4;
+        private static final Integer QUALIFIER_BETA = -6;
 
-        private static final Integer QUALIFIER_MILESTONE = -3;
+        private static final Integer QUALIFIER_MILESTONE = -5;
 
         private static final Map<String, Integer> QUALIFIERS;
 
         static {
             QUALIFIERS = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            // PRE RELEASE
             QUALIFIERS.put("alpha", QUALIFIER_ALPHA);
             QUALIFIERS.put("beta", QUALIFIER_BETA);
             QUALIFIERS.put("milestone", QUALIFIER_MILESTONE);
-            QUALIFIERS.put("cr", -2);
-            QUALIFIERS.put("rc", -2);
+            QUALIFIERS.put("pr", -4);
+            QUALIFIERS.put("pre", -4);
+            QUALIFIERS.put("preview", -4);
+            QUALIFIERS.put("rc", -3);
+            QUALIFIERS.put("cr", -3);
+            QUALIFIERS.put("dev", -2);
             QUALIFIERS.put("snapshot", -1);
-            QUALIFIERS.put("ga", 0);
-            QUALIFIERS.put("final", 0);
-            QUALIFIERS.put("release", 0);
+            // RELEASE
             QUALIFIERS.put("", 0);
+            QUALIFIERS.put("final", 0);
+            QUALIFIERS.put("ga", 0);
+            QUALIFIERS.put("release", 0);
+            // POST RELEASE
             QUALIFIERS.put("sp", 1);
         }
 

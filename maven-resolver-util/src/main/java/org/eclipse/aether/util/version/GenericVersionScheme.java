@@ -36,8 +36,9 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
  * <p>
  * Numeric segments are compared mathematically, alphabetic segments are compared lexicographically and
  * case-insensitively. However, the following qualifier strings are recognized and treated specially: "alpha" = "a" &lt;
- * "beta" = "b" &lt; "milestone" = "m" &lt; "cr" = "rc" &lt; "snapshot" &lt; "final" = "ga" &lt; "sp". All of those
- * well-known qualifiers are considered smaller/older than other strings. An empty segment/string is equivalent to 0.
+ * "beta" = "b" &lt; "milestone" = "m" &lt; "pr" = "pre" = "preview" &lt; "rc" = "cr" &lt; "dev" &lt; "snapshot" &lt;
+ * "final" = "ga" = "release" &lt; "sp". All of those well-known qualifiers are considered smaller/older than other
+ * strings. An empty segment/string is equivalent to 0.
  * </p>
  * <p>
  * In addition to the above mentioned qualifiers, the tokens "min" and "max" may be used as final version segment to
