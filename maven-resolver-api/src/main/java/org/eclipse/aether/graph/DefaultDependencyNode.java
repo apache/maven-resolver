@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
@@ -51,7 +52,7 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     private Version version;
 
-    private byte managedBits;
+    private Map<DependencyManagement.Subject, Boolean> managedSubjects = Collections.emptyMap();
 
     private List<RemoteRepository> repositories;
 
@@ -104,7 +105,19 @@ public final class DefaultDependencyNode implements DependencyNode {
         children = new ArrayList<>(0);
         setAliases(node.getAliases());
         setRequestContext(node.getRequestContext());
-        setManagedBits(node.getManagedBits());
+
+        HashMap<DependencyManagement.Subject, Boolean> managedSubjects = new HashMap<>();
+        for (DependencyManagement.Subject subject : DependencyManagement.Subject.values()) {
+            if (node.isManagedSubject(subject)) {
+                managedSubjects.put(subject, node.isManagedSubjectEnforced(subject));
+            }
+        }
+        if (managedSubjects.isEmpty()) {
+            setManagedSubjects(null);
+        } else {
+            setManagedSubjects(managedSubjects);
+        }
+
         setRelocations(node.getRelocations());
         setRepositories(node.getRepositories());
         setVersion(node.getVersion());
@@ -113,10 +126,12 @@ public final class DefaultDependencyNode implements DependencyNode {
         setData(data.isEmpty() ? null : new HashMap<>(data));
     }
 
+    @Override
     public List<DependencyNode> getChildren() {
         return children;
     }
 
+    @Override
     public void setChildren(List<DependencyNode> children) {
         if (children == null) {
             this.children = new ArrayList<>(0);
@@ -125,14 +140,17 @@ public final class DefaultDependencyNode implements DependencyNode {
         }
     }
 
+    @Override
     public Dependency getDependency() {
         return dependency;
     }
 
+    @Override
     public Artifact getArtifact() {
         return artifact;
     }
 
+    @Override
     public void setArtifact(Artifact artifact) {
         if (dependency == null) {
             throw new IllegalStateException("node does not have a dependency");
@@ -141,6 +159,7 @@ public final class DefaultDependencyNode implements DependencyNode {
         this.artifact = dependency.getArtifact();
     }
 
+    @Override
     public List<? extends Artifact> getRelocations() {
         return relocations;
     }
@@ -158,6 +177,7 @@ public final class DefaultDependencyNode implements DependencyNode {
         }
     }
 
+    @Override
     public Collection<? extends Artifact> getAliases() {
         return aliases;
     }
@@ -175,6 +195,7 @@ public final class DefaultDependencyNode implements DependencyNode {
         }
     }
 
+    @Override
     public VersionConstraint getVersionConstraint() {
         return versionConstraint;
     }
@@ -188,6 +209,7 @@ public final class DefaultDependencyNode implements DependencyNode {
         this.versionConstraint = versionConstraint;
     }
 
+    @Override
     public Version getVersion() {
         return version;
     }
@@ -201,6 +223,7 @@ public final class DefaultDependencyNode implements DependencyNode {
         this.version = version;
     }
 
+    @Override
     public void setScope(String scope) {
         if (dependency == null) {
             throw new IllegalStateException("node does not have a dependency");
@@ -208,6 +231,7 @@ public final class DefaultDependencyNode implements DependencyNode {
         dependency = dependency.setScope(scope);
     }
 
+    @Override
     public void setOptional(Boolean optional) {
         if (dependency == null) {
             throw new IllegalStateException("node does not have a dependency");
@@ -215,20 +239,51 @@ public final class DefaultDependencyNode implements DependencyNode {
         dependency = dependency.setOptional(optional);
     }
 
+    @Override
     public int getManagedBits() {
-        return managedBits;
+        byte res = 0;
+        if (isManagedSubject(DependencyManagement.Subject.VERSION)) {
+            res |= DependencyNode.MANAGED_VERSION;
+        }
+        if (isManagedSubject(DependencyManagement.Subject.SCOPE)) {
+            res |= DependencyNode.MANAGED_SCOPE;
+        }
+        if (isManagedSubject(DependencyManagement.Subject.OPTIONAL)) {
+            res |= DependencyNode.MANAGED_OPTIONAL;
+        }
+        if (isManagedSubject(DependencyManagement.Subject.PROPERTIES)) {
+            res |= DependencyNode.MANAGED_PROPERTIES;
+        }
+        if (isManagedSubject(DependencyManagement.Subject.EXCLUSIONS)) {
+            res |= DependencyNode.MANAGED_EXCLUSIONS;
+        }
+        return res;
     }
 
-    /**
-     * Sets a bit field indicating which attributes of this node were subject to dependency management.
-     *
-     * @param managedBits The bit field indicating the managed attributes or {@code 0} if dependency management wasn't
-     *            applied.
-     */
+    @Deprecated
     public void setManagedBits(int managedBits) {
-        this.managedBits = (byte) (managedBits & 0x1F);
+        throw new IllegalArgumentException("bits are not supported");
     }
 
+    public void setManagedSubjects(Map<DependencyManagement.Subject, Boolean> managedSubjects) {
+        if (managedSubjects == null) {
+            this.managedSubjects = Collections.emptyMap();
+        } else {
+            this.managedSubjects = managedSubjects;
+        }
+    }
+
+    @Override
+    public boolean isManagedSubject(DependencyManagement.Subject subject) {
+        return managedSubjects.containsKey(subject);
+    }
+
+    @Override
+    public boolean isManagedSubjectEnforced(DependencyManagement.Subject subject) {
+        return managedSubjects.getOrDefault(subject, false);
+    }
+
+    @Override
     public List<RemoteRepository> getRepositories() {
         return repositories;
     }
@@ -246,18 +301,22 @@ public final class DefaultDependencyNode implements DependencyNode {
         }
     }
 
+    @Override
     public String getRequestContext() {
         return context;
     }
 
+    @Override
     public void setRequestContext(String context) {
         this.context = (context != null) ? context.intern() : "";
     }
 
+    @Override
     public Map<Object, Object> getData() {
         return data;
     }
 
+    @Override
     public void setData(Map<Object, Object> data) {
         if (data == null) {
             this.data = Collections.emptyMap();
@@ -266,6 +325,7 @@ public final class DefaultDependencyNode implements DependencyNode {
         }
     }
 
+    @Override
     public void setData(Object key, Object value) {
         requireNonNull(key, "key cannot be null");
 
@@ -285,6 +345,7 @@ public final class DefaultDependencyNode implements DependencyNode {
         }
     }
 
+    @Override
     public boolean accept(DependencyVisitor visitor) {
         if (Thread.currentThread().isInterrupted()) {
             throw new RuntimeException(new InterruptedException("Thread interrupted"));
