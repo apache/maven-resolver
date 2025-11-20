@@ -53,10 +53,11 @@ import static java.util.Objects.requireNonNull;
 public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapterFactory {
     public static final String DEFAULT_FACTORY_NAME = FileLockNamedLockFactory.NAME;
 
-    public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.FILE_GAV_NAME;
+    public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.FILE_GAECV_NAME;
 
     /**
-     * Name of the lock factory to use in session.
+     * Name of the lock factory to use in session. Out of the box supported ones are "file-lock", "rwlock-local",
+     * "semaphore-local", "noop". By adding extensions one can extend available lock factories (for example IPC locking).
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
@@ -65,8 +66,8 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
     public static final String CONFIG_PROP_FACTORY_KEY = NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "factory";
 
     /**
-     * Name of the name mapper to use in session. Out of the box supported ones are "static", "gav", "file-gav",
-     * "file-hgav", "file-static" and "discriminating".
+     * Name of the name mapper to use in session. Out of the box supported ones are "static", "gav", "gaecv", "file-gav",
+     * "file-gaecv", "file-hgav", "file-hgaecv", "file-static" and "discriminating".
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}

@@ -24,6 +24,7 @@ import java.nio.file.Path;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.util.DirectoryUtils;
@@ -74,6 +75,17 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /**
+     * We use remote repositories as keys, so normalize them.
+     *
+     * @since 2.0.14
+     * @see RemoteRepository#toBareRemoteRepository()
+     */
+    protected RemoteRepository normalizeRemoteRepository(
+            RepositorySystemSession session, RemoteRepository remoteRepository) {
+        return remoteRepository.toBareRemoteRepository();
     }
 
     /**

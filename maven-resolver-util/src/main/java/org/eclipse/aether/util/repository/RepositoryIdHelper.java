@@ -97,6 +97,11 @@ public final class RepositoryIdHelper {
      * different string id. The checksum and update policies are not participating in key creation.
      * <p>
      * This method is costly, so should be invoked sparingly, or cache results if needed.
+     * <p>
+     * <em>Important:</em>Do not use this method, or at least <em>do consider when do you want to use it</em>, as it
+     * totally disconnects repositories used in session. This method may be used under some special circumstances
+     * (ie reporting), but <em>must not be used within Resolver (and Maven) session for "usual" resolution and
+     * deployment use cases</em>.
      */
     public static String remoteRepositoryUniqueId(RemoteRepository repository) {
         return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(remoteRepositoryDescription(repository));
