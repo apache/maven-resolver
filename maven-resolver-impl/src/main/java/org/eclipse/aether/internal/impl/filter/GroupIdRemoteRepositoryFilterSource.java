@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.MultiRuntimeException;
@@ -85,19 +86,27 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
 
-    private final ConcurrentHashMap<Path, Set<String>> rules;
-
-    private final ConcurrentHashMap<Path, Boolean> changedRules;
-
-    private final AtomicBoolean onShutdownHandlerRegistered;
-
     @Inject
     public GroupIdRemoteRepositoryFilterSource(RepositorySystemLifecycle repositorySystemLifecycle) {
         super(NAME);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
-        this.rules = new ConcurrentHashMap<>();
-        this.changedRules = new ConcurrentHashMap<>();
-        this.onShutdownHandlerRegistered = new AtomicBoolean(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private ConcurrentMap<Path, Set<String>> rules(RepositorySystemSession session) {
+        return (ConcurrentMap<Path, Set<String>>)
+                session.getData().computeIfAbsent(getClass().getName() + ".rules", ConcurrentHashMap::new);
+    }
+
+    @SuppressWarnings("unchecked")
+    private ConcurrentMap<Path, Boolean> changedRules(RepositorySystemSession session) {
+        return (ConcurrentMap<Path, Boolean>)
+                session.getData().computeIfAbsent(getClass().getName() + ".changedRules", ConcurrentHashMap::new);
+    }
+
+    private AtomicBoolean onShutdownHandlerRegistered(RepositorySystemSession session) {
+        return (AtomicBoolean) session.getData()
+                .computeIfAbsent(getClass().getName() + ".onShutdownHandlerRegistered", AtomicBoolean::new);
     }
 
     @Override
@@ -111,19 +120,19 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     @Override
     public void postProcess(RepositorySystemSession session, List<ArtifactResult> artifactResults) {
         if (isEnabled(session) && isRecord(session)) {
-            if (onShutdownHandlerRegistered.compareAndSet(false, true)) {
-                repositorySystemLifecycle.addOnSystemEndedHandler(this::saveRecordedLines);
+            if (onShutdownHandlerRegistered(session).compareAndSet(false, true)) {
+                repositorySystemLifecycle.addOnSystemEndedHandler(() -> saveRecordedLines(session));
             }
             for (ArtifactResult artifactResult : artifactResults) {
                 if (artifactResult.isResolved() && artifactResult.getRepository() instanceof RemoteRepository) {
                     Path filePath = filePath(
                             getBasedir(session, false),
                             artifactResult.getRepository().getId());
-                    boolean newGroupId = rules.computeIfAbsent(
-                                    filePath, f -> Collections.synchronizedSet(new TreeSet<>()))
+                    boolean newGroupId = rules(session)
+                            .computeIfAbsent(filePath, f -> Collections.synchronizedSet(new TreeSet<>()))
                             .add(artifactResult.getArtifact().getGroupId());
                     if (newGroupId) {
-                        changedRules.put(filePath, Boolean.TRUE);
+                        changedRules(session).put(filePath, Boolean.TRUE);
                     }
                 }
             }
@@ -139,7 +148,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
 
     private Set<String> cacheRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
         Path filePath = filePath(getBasedir(session, false), remoteRepository.getId());
-        return rules.computeIfAbsent(filePath, r -> {
+        return rules(session).computeIfAbsent(filePath, r -> {
             Set<String> rules = loadRepositoryRules(filePath);
             if (rules != NOT_PRESENT) {
                 LOGGER.info("Loaded {} groupId for remote repository {}", rules.size(), remoteRepository.getId());
@@ -212,15 +221,15 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     /**
      * On-close handler that saves recorded rules, if any.
      */
-    private void saveRecordedLines() {
-        if (changedRules.isEmpty()) {
+    private void saveRecordedLines(RepositorySystemSession session) {
+        if (changedRules(session).isEmpty()) {
             return;
         }
 
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (Map.Entry<Path, Set<String>> entry : rules.entrySet()) {
+        for (Map.Entry<Path, Set<String>> entry : rules(session).entrySet()) {
             Path filePath = entry.getKey();
-            if (changedRules.get(filePath) != Boolean.TRUE) {
+            if (changedRules(session).get(filePath) != Boolean.TRUE) {
                 continue;
             }
             Set<String> recordedLines = entry.getValue();
