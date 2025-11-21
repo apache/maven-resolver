@@ -34,6 +34,7 @@ import dev.sigstore.KeylessSigner;
 import dev.sigstore.KeylessSignerException;
 import dev.sigstore.bundle.Bundle;
 import dev.sigstore.encryption.certificates.Certificates;
+import dev.sigstore.trustroot.SigstoreConfigurationException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.generator.sigstore.internal.FulcioOidHelper;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
@@ -134,6 +135,8 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
             }
             logger.info("Signed {} artifacts with Sigstore", result.size());
             return result;
+        } catch (SigstoreConfigurationException e) {
+            throw new IllegalArgumentException("Configuration problem", e);
         } catch (GeneralSecurityException e) {
             throw new IllegalArgumentException("Preparation problem", e);
         } catch (KeylessSignerException e) {
