@@ -35,7 +35,6 @@ import org.eclipse.aether.spi.artifact.ArtifactPredicate;
 import org.eclipse.aether.spi.artifact.ArtifactPredicateFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.spi.io.PathProcessorSupport;
-import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
