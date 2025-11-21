@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.repository;
 
+import java.util.Locale;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.BiFunction;
@@ -26,6 +27,8 @@ import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.PathUtils;
 import org.eclipse.aether.util.StringDigestUtil;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Helper class for {@link ArtifactRepository#getId()} handling. This class provides  helper methods
@@ -75,7 +78,9 @@ public final class RepositoryIdHelper {
     /**
      * Selector method for {@link RepositoryKeyFunction}.
      */
-    public static RepositoryKeyFunction getRepositoryKeyFunction(RepositoryKeyType keyType) {
+    public static RepositoryKeyFunction getRepositoryKeyFunction(String keyTypeString) {
+        requireNonNull(keyTypeString);
+        RepositoryKeyType keyType = RepositoryKeyType.valueOf(keyTypeString.toUpperCase(Locale.ENGLISH));
         switch (keyType) {
             case SIMPLE:
                 return RepositoryIdHelper::simpleRepositoryKey;
