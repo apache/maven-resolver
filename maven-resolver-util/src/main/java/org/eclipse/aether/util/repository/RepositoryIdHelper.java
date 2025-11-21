@@ -20,6 +20,7 @@ package org.eclipse.aether.util.repository;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.BiFunction;
 
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -40,6 +41,52 @@ import org.eclipse.aether.util.StringDigestUtil;
  */
 public final class RepositoryIdHelper {
     private RepositoryIdHelper() {}
+
+    /**
+     * Supported {@code repositoryKey} types.
+     *
+     * @since 2.0.14
+     */
+    public enum RepositoryKeyType {
+        /**
+         * The "simple" repository key, was default in Maven 3.
+         */
+        SIMPLE,
+        /**
+         * Crafts unique repository key using {@link RemoteRepository#getId()} and {@link RemoteRepository#getUrl()}.
+         */
+        ID_URL,
+        /**
+         * Crafts unique repository key using {@link RemoteRepository#getId()} and all the remaining properties of
+         * {@link RemoteRepository}.
+         */
+        GURK
+    }
+
+    /**
+     * The repository key function.
+     */
+    @FunctionalInterface
+    public interface RepositoryKeyFunction extends BiFunction<RemoteRepository, String, String> {
+        @Override
+        String apply(RemoteRepository repository, String context);
+    }
+
+    /**
+     * Selector method for {@link RepositoryKeyFunction}.
+     */
+    public static RepositoryKeyFunction getRepositoryKeyFunction(RepositoryKeyType keyType) {
+        switch (keyType) {
+            case SIMPLE:
+                return RepositoryIdHelper::simpleRepositoryKey;
+            case ID_URL:
+                return RepositoryIdHelper::idAndUrlRepositoryKey;
+            case GURK:
+                return RepositoryIdHelper::globallyUniqueRepositoryKey;
+            default:
+                throw new IllegalArgumentException("Unknown repository key type: " + keyType.name());
+        }
+    }
 
     /**
      * Simple {@code repositoryKey} function (classic). Returns {@link RemoteRepository#getId()}, unless
@@ -72,6 +119,20 @@ public final class RepositoryIdHelper {
     }
 
     /**
+     * The ID and URL {@code repositoryKey} function. This method creates unique identifier based on ID and URL
+     * of the remote repository.
+     *
+     * @since 2.0.14
+     **/
+    private static String idAndUrlRepositoryKey(RemoteRepository repository, String context) {
+        String seed = repository.getUrl();
+        if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
+            seed += context;
+        }
+        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(seed);
+    }
+
+    /**
      * Globally unique {@code repositoryKey} function. This method creates unique identifier based on ID and current
      * configuration of the remote repository. If {@link RemoteRepository#isRepositoryManager()} returns {@code true},
      * the passed in {@code context} string is factored in as well. This repository key method returns same results as
@@ -84,7 +145,7 @@ public final class RepositoryIdHelper {
      * @see #remoteRepositoryUniqueId(RemoteRepository)
      * @since 2.0.14
      **/
-    public static String globallyUniqueRepositoryKey(RemoteRepository repository, String context) {
+    private static String globallyUniqueRepositoryKey(RemoteRepository repository, String context) {
         String description = remoteRepositoryDescription(repository);
         if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
             description += context;

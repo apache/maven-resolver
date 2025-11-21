@@ -64,23 +64,21 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     public static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
 
     /**
-     * Make enhanced repository use "globally unique repository keys" (repository keys are used for designating
-     * cached metadata, artifact availability tracking and split repository prefix production). By default, this
-     * option is disabled. If enabled, repository keys produced by enhanced repository will be <em>way different
+     * Configuration for "repository key" selection.
+     * Note: repository key functions other than "simple" produce repository keys will be <em>way different
      * that those produced with previous versions or without this option enabled</em>. Ideally, you may want to
-     * use empty local repository to populate with new repository key contained metadata, Interoperability between
-     * enabled and disabled affects only metadata and split repository (ie. split repository may not find existing
-     * caches, and may opt to re-download them).
+     * use empty local repository to populate with new repository key contained metadata,
      *
      * @since 2.0.14
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.Boolean}
+     * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS}
      */
     public static final String CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS =
             CONFIG_PROPS_PREFIX + "globallyUniqueRepositoryKeys";
 
-    public static final boolean DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS = false;
+    public static final String DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS =
+            RepositoryIdHelper.RepositoryKeyType.SIMPLE.name();
 
     private float priority = 10.0f;
 
@@ -98,8 +96,11 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      */
     @SuppressWarnings("unchecked")
     static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(RepositorySystemSession session) {
-        final boolean globallyUniqueRepositoryKeys = ConfigUtils.getBoolean(
-                session, DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS, CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS);
+        final RepositoryIdHelper.RepositoryKeyType repositoryKeyType =
+                RepositoryIdHelper.RepositoryKeyType.valueOf(ConfigUtils.getString(
+                        session, DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS, CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS));
+        final RepositoryIdHelper.RepositoryKeyFunction repositoryKeyFunction =
+                RepositoryIdHelper.getRepositoryKeyFunction(repositoryKeyType);
         if (session.getCache() != null) {
             // both are expensive methods; cache it in session (repo -> context -> ID)
             return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
@@ -111,14 +112,9 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                                             ConcurrentHashMap::new))
                     .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
                     .computeIfAbsent(
-                            context == null ? "" : context,
-                            k2 -> globallyUniqueRepositoryKeys
-                                    ? RepositoryIdHelper.globallyUniqueRepositoryKey(repository, context)
-                                    : RepositoryIdHelper.simpleRepositoryKey(repository, context));
+                            context == null ? "" : context, k2 -> repositoryKeyFunction.apply(repository, context));
         } else {
-            return globallyUniqueRepositoryKeys
-                    ? RepositoryIdHelper::globallyUniqueRepositoryKey
-                    : RepositoryIdHelper::simpleRepositoryKey;
+            return repositoryKeyFunction;
         }
     }
 
