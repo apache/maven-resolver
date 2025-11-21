@@ -44,13 +44,13 @@ public final class RepositoryIdHelper {
     /**
      * Simple {@code repositoryKey} function (classic). Returns {@link RemoteRepository#getId()}, unless
      * {@link RemoteRepository#isRepositoryManager()} returns {@code true}, in which case this method creates
-     * unique identifier based on ID and current configuration of the remote repository (as it may change).
-     * This was the default method in Maven 3.
+     * unique identifier based on ID and current configuration of the remote repository and context.
+     * <p>
+     * This was the default {@code repositoryKey} method in Maven 3.
      *
      * @since 2.0.14
      **/
     public static String simpleRepositoryKey(RemoteRepository repository, String context) {
-        String key;
         if (repository.isRepositoryManager()) {
             StringBuilder buffer = new StringBuilder(128);
             buffer.append(idToPathSegment(repository));
@@ -65,23 +65,28 @@ public final class RepositoryIdHelper {
                 sha1.update(subKey);
             }
             buffer.append(sha1.digest());
-            key = buffer.toString();
+            return buffer.toString();
         } else {
-            key = idToPathSegment(repository);
+            return idToPathSegment(repository);
         }
-        return key;
     }
 
     /**
-     * Globally unique {@code repositoryKey} function. This repository key method returns same results as
+     * Globally unique {@code repositoryKey} function. This method creates unique identifier based on ID and current
+     * configuration of the remote repository. If {@link RemoteRepository#isRepositoryManager()} returns {@code true},
+     * the passed in {@code context} string is factored in as well. This repository key method returns same results as
      * {@link #remoteRepositoryUniqueId(RemoteRepository)} if parameter context is {@code null} or empty string.
+     * <p>
+     * <em>Important:</em> this repository key can be considered "stable" for normal remote repositories (where only
+     * ID and URL matters). But, for mirror repositories, the key will change if mirror members change.
+     * TODO: reconsider this?
      *
      * @see #remoteRepositoryUniqueId(RemoteRepository)
      * @since 2.0.14
      **/
     public static String globallyUniqueRepositoryKey(RemoteRepository repository, String context) {
         String description = remoteRepositoryDescription(repository);
-        if (context != null && !context.isEmpty()) {
+        if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
             description += context;
         }
         return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(description);
@@ -124,6 +129,7 @@ public final class RepositoryIdHelper {
      * <ul>
      *     <li>{@link RemoteRepository#getAuthentication()}</li>
      *     <li>{@link RemoteRepository#getProxy()}</li>
+     *     <li>{@link RemoteRepository#getIntent()}</li>
      * </ul>
      */
     public static String remoteRepositoryDescription(RemoteRepository repository) {
@@ -155,7 +161,7 @@ public final class RepositoryIdHelper {
         if (repository.isBlocked()) {
             buffer.append(", blocked");
         }
-        buffer.append(", ").append(repository.getIntent().name()).append(")");
+        buffer.append(")");
         return buffer.toString();
     }
 }
