@@ -53,7 +53,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 1.9.0
  */
-abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSource {
+public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSource {
     protected static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_AETHER + "trustedChecksumsSource.";
 

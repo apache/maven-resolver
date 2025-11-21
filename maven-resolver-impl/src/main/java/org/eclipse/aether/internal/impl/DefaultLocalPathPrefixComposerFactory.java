@@ -21,11 +21,12 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.ArtifactRepository;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
+import org.eclipse.aether.repository.RemoteRepository;
+
+import static org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory.repositoryKeyFunction;
 
 /**
  * Default local path prefix composer factory: it fully reuses {@link LocalPathPrefixComposerFactorySupport} class
@@ -48,7 +49,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 isSplitRemoteRepositoryLast(session),
                 getReleasesPrefix(session),
                 getSnapshotsPrefix(session),
-                RepositoryIdHelper.cachedIdToPathSegment(session));
+                repositoryKeyFunction(session));
     }
 
     /**
@@ -66,7 +67,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 boolean splitRemoteRepositoryLast,
                 String releasesPrefix,
                 String snapshotsPrefix,
-                Function<ArtifactRepository, String> idToPathSegmentFunction) {
+                BiFunction<RemoteRepository, String, String> repositoryKeyFunction) {
             super(
                     split,
                     localPrefix,
@@ -77,7 +78,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                     splitRemoteRepositoryLast,
                     releasesPrefix,
                     snapshotsPrefix,
-                    idToPathSegmentFunction);
+                    repositoryKeyFunction);
         }
     }
 }

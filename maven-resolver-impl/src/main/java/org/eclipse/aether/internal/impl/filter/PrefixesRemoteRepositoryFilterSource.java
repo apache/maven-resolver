@@ -36,6 +36,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.internal.impl.filter.prefixes.PrefixesSource;
 import org.eclipse.aether.internal.impl.filter.ruletree.PrefixTree;
 import org.eclipse.aether.metadata.DefaultMetadata;
@@ -49,7 +50,6 @@ import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -318,9 +318,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private Path resolvePrefixesFromLocalConfiguration(
             RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
-        Path filePath = baseDir.resolve(PREFIXES_FILE_PREFIX
-                + RepositoryIdHelper.cachedIdToPathSegment(session).apply(remoteRepository)
-                + PREFIXES_FILE_SUFFIX);
+        Path filePath = baseDir.resolve(
+                PREFIXES_FILE_PREFIX + Utils.cachedIdToPathSegment(session, remoteRepository) + PREFIXES_FILE_SUFFIX);
         if (Files.isReadable(filePath)) {
             return filePath;
         } else {

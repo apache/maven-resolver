@@ -18,15 +18,11 @@
  */
 package org.eclipse.aether.util.repository;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.BiFunction;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.PathUtils;
@@ -35,10 +31,13 @@ import org.eclipse.aether.util.StringDigestUtil;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Helper class for {@link ArtifactRepository#getId()} handling. This class provides  helper function (cached or uncached)
- * to get id of repository as it was originally envisioned: as path safe. While POMs are validated by Maven, there are
- * POMs out there that somehow define repositories with unsafe characters in their id. The problem affects mostly
+ * Helper class for {@link ArtifactRepository#getId()} handling. This class provides  helper methods
+ * to get id of repository as it was originally envisioned: as path safe, unique, etc. While POMs are validated by Maven,
+ * there are POMs out there that somehow define repositories with unsafe characters in their id. The problem affects mostly
  * {@link RemoteRepository} instances, as all other implementations have fixed ids that are path safe.
+ * <p>
+ * <em>Important:</em> multiple of these provided methods are not trivial processing-wise, and some sort of
+ * caching is warmly recommended.
  *
  * @see PathUtils
  * @since 2.0.11
@@ -46,33 +45,125 @@ import static java.util.Objects.requireNonNull;
 public final class RepositoryIdHelper {
     private RepositoryIdHelper() {}
 
-    private static final String CENTRAL_REPOSITORY_ID = "central";
-    private static final Collection<String> CENTRAL_URLS = Collections.unmodifiableList(Arrays.asList(
-            "https://repo.maven.apache.org/maven2",
-            "https://repo1.maven.org/maven2",
-            "https://maven-central.storage-download.googleapis.com/maven2"));
-    private static final Predicate<RemoteRepository> CENTRAL_DIRECT_ONLY =
-            remoteRepository -> CENTRAL_REPOSITORY_ID.equals(remoteRepository.getId())
-                    && "https".equals(remoteRepository.getProtocol().toLowerCase(Locale.ENGLISH))
-                    && CENTRAL_URLS.stream().anyMatch(remoteUrl -> {
-                        String rurl = remoteRepository.getUrl().toLowerCase(Locale.ENGLISH);
-                        if (rurl.endsWith("/")) {
-                            rurl = rurl.substring(0, rurl.length() - 1);
-                        }
-                        return rurl.equals(remoteUrl);
-                    })
-                    && remoteRepository.getPolicy(false).isEnabled()
-                    && !remoteRepository.getPolicy(true).isEnabled()
-                    && remoteRepository.getMirroredRepositories().isEmpty()
-                    && !remoteRepository.isRepositoryManager()
-                    && !remoteRepository.isBlocked();
+    /**
+     * Supported {@code repositoryKey} types.
+     *
+     * @since 2.0.14
+     */
+    public enum RepositoryKeyType {
+        /**
+         * The "simple" repository key, was default in Maven 3.
+         */
+        SIMPLE,
+        /**
+         * Crafts unique repository key using {@link RemoteRepository#getId()} and {@link RemoteRepository#getUrl()}.
+         */
+        ID_URL,
+        /**
+         * Crafts unique repository key using {@link RemoteRepository#getId()} and all the remaining properties of
+         * {@link RemoteRepository}.
+         */
+        GURK
+    }
 
     /**
-     * Creates unique repository id for given {@link RemoteRepository}. For Maven Central this method will return
-     * string "central", while for any other remote repository it will return string created as
-     * {@code $(repository.id)-sha1(repository-aspects)}. The key material contains all relevant aspects
-     * of remote repository, so repository with same ID even if just policy changes (enabled/disabled), will map to
-     * different string id. The checksum and update policies are not participating in key creation.
+     * The repository key function.
+     */
+    @FunctionalInterface
+    public interface RepositoryKeyFunction extends BiFunction<RemoteRepository, String, String> {
+        @Override
+        String apply(RemoteRepository repository, String context);
+    }
+
+    /**
+     * Selector method for {@link RepositoryKeyFunction}.
+     */
+    public static RepositoryKeyFunction getRepositoryKeyFunction(String keyTypeString) {
+        requireNonNull(keyTypeString);
+        RepositoryKeyType keyType = RepositoryKeyType.valueOf(keyTypeString.toUpperCase(Locale.ENGLISH));
+        switch (keyType) {
+            case SIMPLE:
+                return RepositoryIdHelper::simpleRepositoryKey;
+            case ID_URL:
+                return RepositoryIdHelper::idAndUrlRepositoryKey;
+            case GURK:
+                return RepositoryIdHelper::globallyUniqueRepositoryKey;
+            default:
+                throw new IllegalArgumentException("Unknown repository key type: " + keyType.name());
+        }
+    }
+
+    /**
+     * Simple {@code repositoryKey} function (classic). Returns {@link RemoteRepository#getId()}, unless
+     * {@link RemoteRepository#isRepositoryManager()} returns {@code true}, in which case this method creates
+     * unique identifier based on ID and current configuration of the remote repository and context.
+     * <p>
+     * This was the default {@code repositoryKey} method in Maven 3.
+     *
+     * @since 2.0.14
+     **/
+    public static String simpleRepositoryKey(RemoteRepository repository, String context) {
+        if (repository.isRepositoryManager()) {
+            StringBuilder buffer = new StringBuilder(128);
+            buffer.append(idToPathSegment(repository));
+            buffer.append('-');
+            SortedSet<String> subKeys = new TreeSet<>();
+            for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
+                subKeys.add(mirroredRepo.getId());
+            }
+            StringDigestUtil sha1 = StringDigestUtil.sha1();
+            sha1.update(context);
+            for (String subKey : subKeys) {
+                sha1.update(subKey);
+            }
+            buffer.append(sha1.digest());
+            return buffer.toString();
+        } else {
+            return idToPathSegment(repository);
+        }
+    }
+
+    /**
+     * The ID and URL {@code repositoryKey} function. This method creates unique identifier based on ID and URL
+     * of the remote repository.
+     *
+     * @since 2.0.14
+     **/
+    private static String idAndUrlRepositoryKey(RemoteRepository repository, String context) {
+        String seed = repository.getUrl();
+        if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
+            seed += context;
+        }
+        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(seed);
+    }
+
+    /**
+     * Globally unique {@code repositoryKey} function. This method creates unique identifier based on ID and current
+     * configuration of the remote repository. If {@link RemoteRepository#isRepositoryManager()} returns {@code true},
+     * the passed in {@code context} string is factored in as well. This repository key method returns same results as
+     * {@link #remoteRepositoryUniqueId(RemoteRepository)} if parameter context is {@code null} or empty string.
+     * <p>
+     * <em>Important:</em> this repository key can be considered "stable" for normal remote repositories (where only
+     * ID and URL matters). But, for mirror repositories, the key will change if mirror members change.
+     * TODO: reconsider this?
+     *
+     * @see #remoteRepositoryUniqueId(RemoteRepository)
+     * @since 2.0.14
+     **/
+    private static String globallyUniqueRepositoryKey(RemoteRepository repository, String context) {
+        String description = remoteRepositoryDescription(repository);
+        if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
+            description += context;
+        }
+        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(description);
+    }
+
+    /**
+     * Creates unique repository id for given {@link RemoteRepository}.
+     * For any remote repository it will return string created as {@code $(repository.id)-sha1(repository-aspects)}.
+     * The key material contains all relevant aspects of remote repository, so repository with same ID even if just
+     * policy changes (enabled/disabled), will map to different string id. The checksum and update policies are not
+     * participating in key creation.
      * <p>
      * This method is costly, so should be invoked sparingly, or cache results if needed.
      * <p>
@@ -82,67 +173,7 @@ public final class RepositoryIdHelper {
      * deployment use cases</em>.
      */
     public static String remoteRepositoryUniqueId(RemoteRepository repository) {
-        if (CENTRAL_DIRECT_ONLY.test(repository)) {
-            return CENTRAL_REPOSITORY_ID;
-        } else {
-            StringBuilder buffer = new StringBuilder(256);
-            buffer.append(repository.getId());
-            buffer.append(" (").append(repository.getUrl());
-            buffer.append(", ").append(repository.getContentType());
-            boolean r = repository.getPolicy(false).isEnabled(),
-                    s = repository.getPolicy(true).isEnabled();
-            if (r && s) {
-                buffer.append(", releases+snapshots");
-            } else if (r) {
-                buffer.append(", releases");
-            } else if (s) {
-                buffer.append(", snapshots");
-            } else {
-                buffer.append(", disabled");
-            }
-            if (repository.isRepositoryManager()) {
-                buffer.append(", managed(");
-                for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
-                    buffer.append(remoteRepositoryUniqueId(mirroredRepo));
-                }
-                buffer.append(")");
-            }
-            if (repository.isBlocked()) {
-                buffer.append(", blocked");
-            }
-            buffer.append(")");
-            return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(buffer.toString());
-        }
-    }
-
-    /**
-     * Returns same instance of (session cached) function for session.
-     */
-    @SuppressWarnings("unchecked")
-    public static Function<ArtifactRepository, String> cachedIdToPathSegment(RepositorySystemSession session) {
-        requireNonNull(session, "session");
-        return (Function<ArtifactRepository, String>) session.getData()
-                .computeIfAbsent(
-                        RepositoryIdHelper.class.getSimpleName() + "-idToPathSegmentFunction",
-                        () -> cachedIdToPathSegmentFunction(session));
-    }
-
-    /**
-     * Returns new instance of function backed by cached or uncached (if session has no cache set)
-     * {@link #idToPathSegment(ArtifactRepository)} method call.
-     */
-    @SuppressWarnings("unchecked")
-    private static Function<ArtifactRepository, String> cachedIdToPathSegmentFunction(RepositorySystemSession session) {
-        if (session.getCache() != null) {
-            return repository -> ((ConcurrentHashMap<String, String>) session.getCache()
-                            .computeIfAbsent(
-                                    session,
-                                    RepositoryIdHelper.class.getSimpleName() + "-idToPathSegmentCache",
-                                    ConcurrentHashMap::new))
-                    .computeIfAbsent(repository.getId(), id -> idToPathSegment(repository));
-        } else {
-            return RepositoryIdHelper::idToPathSegment; // uncached
-        }
+        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(remoteRepositoryDescription(repository));
     }
 
     /**
@@ -150,17 +181,53 @@ public final class RepositoryIdHelper {
      * returned repository ID is "path segment" safe. Ideally, this method should never modify repository ID, as
      * Maven validation prevents use of illegal FS characters in them, but we found in Maven Central several POMs that
      * define remote repositories with illegal FS characters in their ID.
-     * <p>
-     * This method is simplistic on purpose, and if frequently used, best if results are cached (per session),
-     * see {@link #cachedIdToPathSegment(RepositorySystemSession)} method.
-     *
-     * @see #cachedIdToPathSegment(RepositorySystemSession)
      */
-    private static String idToPathSegment(ArtifactRepository repository) {
+    public static String idToPathSegment(ArtifactRepository repository) {
         if (repository instanceof RemoteRepository) {
             return PathUtils.stringToPathSegment(repository.getId());
         } else {
             return repository.getId();
         }
+    }
+
+    /**
+     * Creates unique string for given {@link RemoteRepository}. Ignores following properties:
+     * <ul>
+     *     <li>{@link RemoteRepository#getAuthentication()}</li>
+     *     <li>{@link RemoteRepository#getProxy()}</li>
+     *     <li>{@link RemoteRepository#getIntent()}</li>
+     * </ul>
+     */
+    public static String remoteRepositoryDescription(RemoteRepository repository) {
+        StringBuilder buffer = new StringBuilder(256);
+        buffer.append(repository.getId());
+        buffer.append(" (").append(repository.getUrl());
+        buffer.append(", ").append(repository.getContentType());
+        boolean r = repository.getPolicy(false).isEnabled(),
+                s = repository.getPolicy(true).isEnabled();
+        if (r && s) {
+            buffer.append(", releases+snapshots");
+        } else if (r) {
+            buffer.append(", releases");
+        } else if (s) {
+            buffer.append(", snapshots");
+        } else {
+            buffer.append(", disabled");
+        }
+        if (repository.isRepositoryManager()) {
+            buffer.append(", managed");
+        }
+        if (!repository.getMirroredRepositories().isEmpty()) {
+            buffer.append(", mirrorOf(");
+            for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
+                buffer.append(remoteRepositoryDescription(mirroredRepo));
+            }
+            buffer.append(")");
+        }
+        if (repository.isBlocked()) {
+            buffer.append(", blocked");
+        }
+        buffer.append(")");
+        return buffer.toString();
     }
 }

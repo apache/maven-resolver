@@ -43,11 +43,11 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
+import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,7 +177,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                 Path summaryFile = summaryFile(
                         basedir,
                         originAware,
-                        RepositoryIdHelper.cachedIdToPathSegment(session).apply(artifactRepository),
+                        Utils.cachedIdToPathSegment(session, artifactRepository),
                         checksumAlgorithmFactory.getFileExtension());
                 ConcurrentHashMap<String, String> algorithmChecksums =
                         checksums.computeIfAbsent(summaryFile, f -> loadProvidedChecksums(summaryFile));
@@ -199,7 +199,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                 checksums,
                 getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
                 isOriginAware(session),
-                RepositoryIdHelper.cachedIdToPathSegment(session));
+                r -> Utils.cachedIdToPathSegment(session, r));
     }
 
     /**

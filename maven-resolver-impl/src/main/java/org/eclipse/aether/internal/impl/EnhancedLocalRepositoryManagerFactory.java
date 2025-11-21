@@ -22,11 +22,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiFunction;
+
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
@@ -58,6 +63,21 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     public static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
 
+    /**
+     * Configuration for "repository key" function.
+     * Note: repository key functions other than "simple" produce repository keys will be <em>way different
+     * that those produced with previous versions or without this option enabled</em>. Ideally, you may want to
+     * use empty local repository to populate with new repository key contained metadata,
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_KEY_FUNCTION}
+     */
+    public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
+
+    public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "simple";
+
     private float priority = 10.0f;
 
     private final LocalPathComposer localPathComposer;
@@ -65,6 +85,34 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     private final TrackingFileManager trackingFileManager;
 
     private final LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
+
+    /**
+     * Method that based on configuration returns the "repository key function". Used by {@link EnhancedLocalRepositoryManagerFactory}
+     * and {@link LocalPathPrefixComposerFactory}.
+     *
+     * @since 2.0.14
+     */
+    @SuppressWarnings("unchecked")
+    static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(RepositorySystemSession session) {
+        final RepositoryIdHelper.RepositoryKeyFunction repositoryKeyFunction =
+                RepositoryIdHelper.getRepositoryKeyFunction(ConfigUtils.getString(
+                        session, DEFAULT_REPOSITORY_KEY_FUNCTION, CONFIG_PROP_REPOSITORY_KEY_FUNCTION));
+        if (session.getCache() != null) {
+            // both are expensive methods; cache it in session (repo -> context -> ID)
+            return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
+                            session.getCache()
+                                    .computeIfAbsent(
+                                            session,
+                                            EnhancedLocalRepositoryManagerFactory.class.getName()
+                                                    + ".repositoryKeyFunction",
+                                            ConcurrentHashMap::new))
+                    .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(
+                            context == null ? "" : context, k2 -> repositoryKeyFunction.apply(repository, context));
+        } else {
+            return repositoryKeyFunction;
+        }
+    }
 
     @Inject
     public EnhancedLocalRepositoryManagerFactory(
@@ -94,7 +142,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
             return new EnhancedLocalRepositoryManager(
                     repository.getBasePath(),
                     localPathComposer,
-                    RepositoryIdHelper.cachedIdToPathSegment(session),
+                    repositoryKeyFunction(session),
                     trackingFilename,
                     trackingFileManager,
                     localPathPrefixComposerFactory.createComposer(session));

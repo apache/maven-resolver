@@ -33,13 +33,13 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.metadata.Metadata.Nature;
-import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.LocalMetadataRequest;
 import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -108,7 +108,7 @@ public class EnhancedLocalRepositoryManagerTest {
         return new EnhancedLocalRepositoryManager(
                 basedir.toPath(),
                 new DefaultLocalPathComposer(),
-                ArtifactRepository::getId,
+                RepositoryIdHelper::simpleRepositoryKey,
                 "_remote.repositories",
                 trackingFileManager,
                 new DefaultLocalPathPrefixComposerFactory().createComposer(session));
