@@ -98,21 +98,27 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      */
     @SuppressWarnings("unchecked")
     static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(RepositorySystemSession session) {
-        if (ConfigUtils.getBoolean(
-                session, DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS, CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS)) {
-            // this is expensive method; cache it in session (repo -> context -> ID)
+        final boolean globallyUniqueRepositoryKeys = ConfigUtils.getBoolean(
+                session, DEFAULT_GLOBALLY_UNIQUE_REPOSITORY_KEYS, CONFIG_PROP_GLOBALLY_UNIQUE_REPOSITORY_KEYS);
+        if (session.getCache() != null) {
+            // both are expensive methods; cache it in session (repo -> context -> ID)
             return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
-                            session.getData()
+                            session.getCache()
                                     .computeIfAbsent(
+                                            session,
                                             EnhancedLocalRepositoryManagerFactory.class.getName()
                                                     + ".repositoryKeyFunction",
                                             ConcurrentHashMap::new))
                     .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
                     .computeIfAbsent(
                             context == null ? "" : context,
-                            k2 -> RepositoryIdHelper.globallyUniqueRepositoryKey(repository, context));
+                            k2 -> globallyUniqueRepositoryKeys
+                                    ? RepositoryIdHelper.globallyUniqueRepositoryKey(repository, context)
+                                    : RepositoryIdHelper.simpleRepositoryKey(repository, context));
         } else {
-            return RepositoryIdHelper::simpleRepositoryKey;
+            return globallyUniqueRepositoryKeys
+                    ? RepositoryIdHelper::globallyUniqueRepositoryKey
+                    : RepositoryIdHelper::simpleRepositoryKey;
         }
     }
 

@@ -217,8 +217,13 @@ public final class Utils {
      */
     @SuppressWarnings("unchecked")
     public static String cachedIdToPathSegment(RepositorySystemSession session, ArtifactRepository artifactRepository) {
-        return ((ConcurrentMap<ArtifactRepository, String>) session.getData()
-                        .computeIfAbsent(Utils.class.getName() + ".cachedIdToPathSegment", ConcurrentHashMap::new))
-                .computeIfAbsent(artifactRepository, RepositoryIdHelper::idToPathSegment);
+        if (session.getCache() != null) {
+            return ((ConcurrentMap<ArtifactRepository, String>) session.getCache()
+                            .computeIfAbsent(
+                                    session, Utils.class.getName() + ".cachedIdToPathSegment", ConcurrentHashMap::new))
+                    .computeIfAbsent(artifactRepository, RepositoryIdHelper::idToPathSegment);
+        } else {
+            return RepositoryIdHelper.idToPathSegment(artifactRepository);
+        }
     }
 }
