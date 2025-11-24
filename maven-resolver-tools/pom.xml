@@ -33,6 +33,7 @@
 
   <properties>
     <javaVersion>17</javaVersion>
+    <roasterVersion>2.30.3.Final</roasterVersion>
   </properties>
 
   <dependencies>
@@ -121,12 +122,12 @@
     <dependency>
       <groupId>org.jboss.forge.roaster</groupId>
       <artifactId>roaster-api</artifactId>
-      <version>2.30.3.Final</version>
+      <version>${roasterVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.forge.roaster</groupId>
       <artifactId>roaster-jdt</artifactId>
-      <version>2.30.3.Final</version>
+      <version>${roasterVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.ow2.asm</groupId>
