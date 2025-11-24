@@ -64,10 +64,10 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     public static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
 
     /**
-     * Configuration for "repository key" function.
+     * <b>Experimental:</b> Configuration for "repository key" function.
      * Note: repository key functions other than "simple" produce repository keys will be <em>way different
      * that those produced with previous versions or without this option enabled</em>. Ideally, you may want to
-     * use empty local repository to populate with new repository key contained metadata,
+     * use empty local repository to populate with new repository key contained metadata.
      *
      * @since 2.0.14
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}

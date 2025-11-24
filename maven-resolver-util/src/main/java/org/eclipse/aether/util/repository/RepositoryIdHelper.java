@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.util.repository;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -60,6 +62,11 @@ public final class RepositoryIdHelper {
          */
         ID_URL,
         /**
+         * Crafts normalized unique repository key using {@link RemoteRepository#getId()} and all the remaining properties of
+         * {@link RemoteRepository} ignoring actual list of mirrors, if any (but mirrors are split).
+         */
+        NGURK,
+        /**
          * Crafts unique repository key using {@link RemoteRepository#getId()} and all the remaining properties of
          * {@link RemoteRepository}.
          */
@@ -86,6 +93,8 @@ public final class RepositoryIdHelper {
                 return RepositoryIdHelper::simpleRepositoryKey;
             case ID_URL:
                 return RepositoryIdHelper::idAndUrlRepositoryKey;
+            case NGURK:
+                return RepositoryIdHelper::normalizedGloballyUniqueRepositoryKey;
             case GURK:
                 return RepositoryIdHelper::globallyUniqueRepositoryKey;
             default:
@@ -98,7 +107,8 @@ public final class RepositoryIdHelper {
      * {@link RemoteRepository#isRepositoryManager()} returns {@code true}, in which case this method creates
      * unique identifier based on ID and current configuration of the remote repository and context.
      * <p>
-     * This was the default {@code repositoryKey} method in Maven 3.
+     * This was the default {@code repositoryKey} method in Maven 3. Is exposed (others key methods are private) as
+     * it is directly used by "simple" LRM.
      *
      * @since 2.0.14
      **/
@@ -138,42 +148,37 @@ public final class RepositoryIdHelper {
     }
 
     /**
-     * Globally unique {@code repositoryKey} function. This method creates unique identifier based on ID and current
-     * configuration of the remote repository. If {@link RemoteRepository#isRepositoryManager()} returns {@code true},
-     * the passed in {@code context} string is factored in as well. This repository key method returns same results as
-     * {@link #remoteRepositoryUniqueId(RemoteRepository)} if parameter context is {@code null} or empty string.
-     * <p>
-     * <em>Important:</em> this repository key can be considered "stable" for normal remote repositories (where only
-     * ID and URL matters). But, for mirror repositories, the key will change if mirror members change.
-     * TODO: reconsider this?
+     * Normalized globally unique {@code repositoryKey} function. This method creates unique identifier based on ID and current
+     * configuration of the remote repository ignoring mirrors (it records the fact repository is a mirror, but ignores
+     * mirrored repositories). If {@link RemoteRepository#isRepositoryManager()} returns {@code true}, the passed in
+     * {@code context} string is factored in as well.
      *
-     * @see #remoteRepositoryUniqueId(RemoteRepository)
      * @since 2.0.14
      **/
-    private static String globallyUniqueRepositoryKey(RemoteRepository repository, String context) {
-        String description = remoteRepositoryDescription(repository);
+    private static String normalizedGloballyUniqueRepositoryKey(RemoteRepository repository, String context) {
+        String seed = remoteRepositoryDescription(repository, false);
         if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
-            description += context;
+            seed += context;
         }
-        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(description);
+        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(seed);
     }
 
     /**
-     * Creates unique repository id for given {@link RemoteRepository}.
-     * For any remote repository it will return string created as {@code $(repository.id)-sha1(repository-aspects)}.
-     * The key material contains all relevant aspects of remote repository, so repository with same ID even if just
-     * policy changes (enabled/disabled), will map to different string id. The checksum and update policies are not
-     * participating in key creation.
+     * Globally unique {@code repositoryKey} function. This method creates unique identifier based on ID and current
+     * configuration of the remote repository. If {@link RemoteRepository#isRepositoryManager()} returns {@code true},
+     * the passed in {@code context} string is factored in as well.
      * <p>
-     * This method is costly, so should be invoked sparingly, or cache results if needed.
-     * <p>
-     * <em>Important:</em>Do not use this method, or at least <em>do consider when do you want to use it</em>, as it
-     * totally disconnects repositories used in session. This method may be used under some special circumstances
-     * (ie reporting), but <em>must not be used within Resolver (and Maven) session for "usual" resolution and
-     * deployment use cases</em>.
-     */
-    public static String remoteRepositoryUniqueId(RemoteRepository repository) {
-        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(remoteRepositoryDescription(repository));
+     * <em>Important:</em> this repository key can be considered "stable" for normal remote repositories (where only
+     * ID and URL matters). But, for mirror repositories, the key will change if mirror members change.
+     *
+     * @since 2.0.14
+     **/
+    private static String globallyUniqueRepositoryKey(RemoteRepository repository, String context) {
+        String seed = remoteRepositoryDescription(repository, true);
+        if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
+            seed += context;
+        }
+        return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(seed);
     }
 
     /**
@@ -198,7 +203,7 @@ public final class RepositoryIdHelper {
      *     <li>{@link RemoteRepository#getIntent()}</li>
      * </ul>
      */
-    public static String remoteRepositoryDescription(RemoteRepository repository) {
+    private static String remoteRepositoryDescription(RemoteRepository repository, boolean mirrorDetails) {
         StringBuilder buffer = new StringBuilder(256);
         buffer.append(repository.getId());
         buffer.append(" (").append(repository.getUrl());
@@ -218,11 +223,19 @@ public final class RepositoryIdHelper {
             buffer.append(", managed");
         }
         if (!repository.getMirroredRepositories().isEmpty()) {
-            buffer.append(", mirrorOf(");
-            for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
-                buffer.append(remoteRepositoryDescription(mirroredRepo));
+            if (mirrorDetails) {
+                // sort them to make it stable ordering
+                ArrayList<RemoteRepository> mirroredRepositories =
+                        new ArrayList<>(repository.getMirroredRepositories());
+                mirroredRepositories.sort(Comparator.comparing(RemoteRepository::getId));
+                buffer.append(", mirrorOf(");
+                for (RemoteRepository mirroredRepo : mirroredRepositories) {
+                    buffer.append(remoteRepositoryDescription(mirroredRepo, true));
+                }
+                buffer.append(")");
+            } else {
+                buffer.append(", isMirror");
             }
-            buffer.append(")");
         }
         if (repository.isBlocked()) {
             buffer.append(", blocked");
