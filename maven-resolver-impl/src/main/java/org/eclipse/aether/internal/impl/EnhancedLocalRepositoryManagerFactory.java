@@ -93,7 +93,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      * @since 2.0.14
      */
     @SuppressWarnings("unchecked")
-    static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(RepositorySystemSession session) {
+    public static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(RepositorySystemSession session) {
         final RepositoryIdHelper.RepositoryKeyFunction repositoryKeyFunction =
                 RepositoryIdHelper.getRepositoryKeyFunction(ConfigUtils.getString(
                         session, DEFAULT_REPOSITORY_KEY_FUNCTION, CONFIG_PROP_REPOSITORY_KEY_FUNCTION));

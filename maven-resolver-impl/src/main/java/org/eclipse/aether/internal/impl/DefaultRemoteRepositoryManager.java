@@ -26,8 +26,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -40,6 +44,8 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
+import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +56,51 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
+    private static final String CONFIG_PROPS_PREFIX =
+            ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryManager.";
+
+    /**
+     * <b>Experimental:</b> Configuration for "repository key" function.
+     * Note: repository key functions other than "nid" produce repository keys will be <em>way different
+     * that those produced with previous versions or without this option enabled</em>. Manager uses this key to
+     * detect "same" remote repositories, and in case of mirrors, to merge them.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_KEY_FUNCTION}
+     */
+    public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
+
+    public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "nid";
+
+    /**
+     * Method that based on configuration returns the "repository key function". Used by {@link EnhancedLocalRepositoryManagerFactory}
+     * and {@link LocalPathPrefixComposerFactory}.
+     *
+     * @since 2.0.14
+     */
+    @SuppressWarnings("unchecked")
+    private static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(RepositorySystemSession session) {
+        final RepositoryIdHelper.RepositoryKeyFunction repositoryKeyFunction =
+                RepositoryIdHelper.getRepositoryKeyFunction(ConfigUtils.getString(
+                        session, DEFAULT_REPOSITORY_KEY_FUNCTION, CONFIG_PROP_REPOSITORY_KEY_FUNCTION));
+        if (session.getCache() != null) {
+            // both are expensive methods; cache it in session (repo -> context -> ID)
+            return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
+                            session.getCache()
+                                    .computeIfAbsent(
+                                            session,
+                                            EnhancedLocalRepositoryManagerFactory.class.getName()
+                                                    + ".repositoryKeyFunction",
+                                            ConcurrentHashMap::new))
+                    .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(
+                            context == null ? "" : context, k2 -> repositoryKeyFunction.apply(repository, context));
+        } else {
+            return repositoryKeyFunction;
+        }
+    }
 
     private static final class LoggedMirror {
 
@@ -102,6 +153,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             return dominantRepositories;
         }
 
+        BiFunction<RemoteRepository, String, String> repositoryKeyFunction = repositoryKeyFunction(session);
         MirrorSelector mirrorSelector = session.getMirrorSelector();
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();
@@ -121,15 +173,16 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                 }
             }
 
-            String key = getKey(repository);
+            String key = repositoryKeyFunction.apply(repository, null);
 
             for (ListIterator<RemoteRepository> it = result.listIterator(); it.hasNext(); ) {
                 RemoteRepository dominantRepository = it.next();
 
-                if (key.equals(getKey(dominantRepository))) {
+                if (key.equals(repositoryKeyFunction.apply(dominantRepository, null))) {
                     if (!dominantRepository.getMirroredRepositories().isEmpty()
                             && !repository.getMirroredRepositories().isEmpty()) {
-                        RemoteRepository mergedRepository = mergeMirrors(session, dominantRepository, repository);
+                        RemoteRepository mergedRepository =
+                                mergeMirrors(session, repositoryKeyFunction, dominantRepository, repository);
                         if (mergedRepository != dominantRepository) {
                             it.set(mergedRepository);
                         }
@@ -188,21 +241,20 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                 original.getUrl());
     }
 
-    private String getKey(RemoteRepository repository) {
-        return repository.getId();
-    }
-
     private RemoteRepository mergeMirrors(
-            RepositorySystemSession session, RemoteRepository dominant, RemoteRepository recessive) {
+            RepositorySystemSession session,
+            BiFunction<RemoteRepository, String, String> repositoryKeyFunction,
+            RemoteRepository dominant,
+            RemoteRepository recessive) {
         RemoteRepository.Builder merged = null;
         RepositoryPolicy releases = null, snapshots = null;
 
         next:
         for (RemoteRepository rec : recessive.getMirroredRepositories()) {
-            String recKey = getKey(rec);
+            String recKey = repositoryKeyFunction.apply(rec, null);
 
             for (RemoteRepository dom : dominant.getMirroredRepositories()) {
-                if (recKey.equals(getKey(dom))) {
+                if (recKey.equals(repositoryKeyFunction.apply(dom, null))) {
                     continue next;
                 }
             }

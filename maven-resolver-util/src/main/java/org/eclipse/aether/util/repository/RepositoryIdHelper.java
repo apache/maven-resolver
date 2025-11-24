@@ -58,9 +58,17 @@ public final class RepositoryIdHelper {
          */
         SIMPLE,
         /**
-         * Crafts unique repository key using {@link RemoteRepository#getId()} and {@link RemoteRepository#getUrl()}.
+         * Crafts repository key using normalized {@link RemoteRepository#getId()}.
          */
-        ID_URL,
+        NID,
+        /**
+         * Crafts repository key using hashed {@link RemoteRepository#getUrl()}.
+         */
+        HURL,
+        /**
+         * Crafts unique repository key using normalized {@link RemoteRepository#getId()} and hashed {@link RemoteRepository#getUrl()}.
+         */
+        NID_HURL,
         /**
          * Crafts normalized unique repository key using {@link RemoteRepository#getId()} and all the remaining properties of
          * {@link RemoteRepository} ignoring actual list of mirrors, if any (but mirrors are split).
@@ -91,8 +99,12 @@ public final class RepositoryIdHelper {
         switch (keyType) {
             case SIMPLE:
                 return RepositoryIdHelper::simpleRepositoryKey;
-            case ID_URL:
-                return RepositoryIdHelper::idAndUrlRepositoryKey;
+            case NID:
+                return RepositoryIdHelper::nidRepositoryKey;
+            case HURL:
+                return RepositoryIdHelper::hurlRepositoryKey;
+            case NID_HURL:
+                return RepositoryIdHelper::nidAndHurlRepositoryKey;
             case NGURK:
                 return RepositoryIdHelper::normalizedGloballyUniqueRepositoryKey;
             case GURK:
@@ -134,12 +146,30 @@ public final class RepositoryIdHelper {
     }
 
     /**
+     * The ID {@code repositoryKey} function that uses only the {@link RemoteRepository#getId()} value to derive a key.
+     *
+     * @since 2.0.14
+     **/
+    private static String nidRepositoryKey(RemoteRepository repository, String context) {
+        return idToPathSegment(repository);
+    }
+
+    /**
+     * The URL {@code repositoryKey} function that uses only the {@link RemoteRepository#getUrl()} hash to derive a key.
+     *
+     * @since 2.0.14
+     **/
+    private static String hurlRepositoryKey(RemoteRepository repository, String context) {
+        return StringDigestUtil.sha1(repository.getUrl());
+    }
+
+    /**
      * The ID and URL {@code repositoryKey} function. This method creates unique identifier based on ID and URL
      * of the remote repository.
      *
      * @since 2.0.14
      **/
-    private static String idAndUrlRepositoryKey(RemoteRepository repository, String context) {
+    private static String nidAndHurlRepositoryKey(RemoteRepository repository, String context) {
         String seed = repository.getUrl();
         if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
             seed += context;
