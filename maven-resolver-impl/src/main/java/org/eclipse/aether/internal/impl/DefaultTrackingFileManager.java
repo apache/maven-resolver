@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UncheckedIOException;
@@ -60,6 +61,8 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                     Properties props = new Properties();
                     props.load(stream);
                     return props;
+                } catch (FileNotFoundException e) {
+                    return null;
                 } catch (IOException e) {
                     LOGGER.warn("Failed to read tracking file '{}'", file, e);
                     throw new UncheckedIOException(e);

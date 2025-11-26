@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.eclipse.aether.internal.impl.fs.DefaultTrackingTestFile;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.junit.Test;
 
@@ -102,6 +104,13 @@ public class DefaultTrackingFileManagerTest {
             assertNotNull(tfm.update(propFile, updates));
             assertTrue("Leaked file: " + propFile, propFile.delete());
         }
+    }
+
+    @Test
+    public void testFileNotFoundIsIgnoredWhenReadingTrackingFile() {
+        TrackingFileManager tfm = new DefaultTrackingFileManager();
+        Properties properties = tfm.read(new DefaultTrackingTestFile("hello\u0000", Paths.get("")));
+        assertNull(properties);
     }
 
     @Test
