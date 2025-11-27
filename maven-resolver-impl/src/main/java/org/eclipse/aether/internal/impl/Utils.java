@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiFunction;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -33,7 +34,6 @@ import org.eclipse.aether.impl.MetadataGeneratorFactory;
 import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.installation.InstallRequest;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ResolutionErrorPolicy;
 import org.eclipse.aether.resolution.ResolutionErrorPolicyRequest;
@@ -42,7 +42,10 @@ import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Internal utility methods.
@@ -213,17 +216,33 @@ public final class Utils {
     }
 
     /**
-     * Shared and cached {@link RepositoryIdHelper#idToPathSegment(ArtifactRepository)} method,
+     * Method that based on configuration returns the "repository key function". The returned function will be session
+     * cached if session is equipped with cache, otherwise it will be non cached. Method never returns {@code null}.
+     *
+     * @since 2.0.14
      */
     @SuppressWarnings("unchecked")
-    public static String cachedIdToPathSegment(RepositorySystemSession session, ArtifactRepository artifactRepository) {
+    public static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(
+            Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
+        requireNonNull(session);
+        requireNonNull(defaultValue);
+        requireNonNull(configurationKey);
+        final RepositoryIdHelper.RepositoryKeyFunction repositoryKeyFunction =
+                RepositoryIdHelper.getRepositoryKeyFunction(
+                        ConfigUtils.getString(session, defaultValue, configurationKey));
         if (session.getCache() != null) {
-            return ((ConcurrentMap<ArtifactRepository, String>) session.getCache()
-                            .computeIfAbsent(
-                                    session, Utils.class.getName() + ".cachedIdToPathSegment", ConcurrentHashMap::new))
-                    .computeIfAbsent(artifactRepository, RepositoryIdHelper::idToPathSegment);
+            // both are expensive methods; cache it in session (repo -> context -> ID)
+            return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
+                            session.getCache()
+                                    .computeIfAbsent(
+                                            session,
+                                            owner.getName() + ".repositoryKeyFunction",
+                                            ConcurrentHashMap::new))
+                    .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(
+                            context == null ? "" : context, k2 -> repositoryKeyFunction.apply(repository, context));
         } else {
-            return RepositoryIdHelper.idToPathSegment(artifactRepository);
+            return repositoryKeyFunction;
         }
     }
 }

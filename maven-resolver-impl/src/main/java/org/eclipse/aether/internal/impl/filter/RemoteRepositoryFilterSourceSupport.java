@@ -53,6 +53,21 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
             ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryFilter.";
 
     /**
+     * <b>Experimental:</b> Configuration for "repository key" function.
+     * Note: repository key functions other than "nid" produce repository keys will be <em>way different
+     * that those produced with previous versions or without this option enabled</em>. Filter uses this key function to
+     * lay down and look up files to use in filtering.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_KEY_FUNCTION}
+     */
+    public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
+
+    public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "nid";
+
+    /**
      * Returns {@code true} if session configuration contains this name set to {@code true}.
      * <p>
      * Default is {@code true}.

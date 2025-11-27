@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -44,8 +42,6 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
-import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,34 +69,6 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
     public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
 
     public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "nid";
-
-    /**
-     * Method that based on configuration returns the "repository key function". Used by {@link EnhancedLocalRepositoryManagerFactory}
-     * and {@link LocalPathPrefixComposerFactory}.
-     *
-     * @since 2.0.14
-     */
-    @SuppressWarnings("unchecked")
-    private static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(RepositorySystemSession session) {
-        final RepositoryIdHelper.RepositoryKeyFunction repositoryKeyFunction =
-                RepositoryIdHelper.getRepositoryKeyFunction(ConfigUtils.getString(
-                        session, DEFAULT_REPOSITORY_KEY_FUNCTION, CONFIG_PROP_REPOSITORY_KEY_FUNCTION));
-        if (session.getCache() != null) {
-            // both are expensive methods; cache it in session (repo -> context -> ID)
-            return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
-                            session.getCache()
-                                    .computeIfAbsent(
-                                            session,
-                                            EnhancedLocalRepositoryManagerFactory.class.getName()
-                                                    + ".repositoryKeyFunction",
-                                            ConcurrentHashMap::new))
-                    .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
-                    .computeIfAbsent(
-                            context == null ? "" : context, k2 -> repositoryKeyFunction.apply(repository, context));
-        } else {
-            return repositoryKeyFunction;
-        }
-    }
 
     private static final class LoggedMirror {
 
@@ -153,7 +121,11 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             return dominantRepositories;
         }
 
-        BiFunction<RemoteRepository, String, String> repositoryKeyFunction = repositoryKeyFunction(session);
+        BiFunction<RemoteRepository, String, String> repositoryKeyFunction = Utils.repositoryKeyFunction(
+                RemoteRepositoryManager.class,
+                session,
+                DEFAULT_REPOSITORY_KEY_FUNCTION,
+                CONFIG_PROP_REPOSITORY_KEY_FUNCTION);
         MirrorSelector mirrorSelector = session.getMirrorSelector();
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();

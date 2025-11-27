@@ -26,8 +26,6 @@ import java.util.function.BiFunction;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
-import static org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory.repositoryKeyFunction;
-
 /**
  * Default local path prefix composer factory: it fully reuses {@link LocalPathPrefixComposerFactorySupport} class
  * without changing anything from it.
@@ -49,7 +47,11 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 isSplitRemoteRepositoryLast(session),
                 getReleasesPrefix(session),
                 getSnapshotsPrefix(session),
-                repositoryKeyFunction(session));
+                Utils.repositoryKeyFunction(
+                        EnhancedLocalRepositoryManagerFactory.class,
+                        session,
+                        EnhancedLocalRepositoryManagerFactory.DEFAULT_REPOSITORY_KEY_FUNCTION,
+                        EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_REPOSITORY_KEY_FUNCTION));
     }
 
     /**

@@ -27,7 +27,9 @@ import java.util.Map;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.repository.ArtifactRepository;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.util.DirectoryUtils;
@@ -56,6 +58,21 @@ import static java.util.Objects.requireNonNull;
 public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSource {
     protected static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_AETHER + "trustedChecksumsSource.";
+
+    /**
+     * <b>Experimental:</b> Configuration for "repository key" function.
+     * Note: repository key functions other than "nid" produce repository keys will be <em>way different
+     * that those produced with previous versions or without this option enabled</em>. Checksum source uses this key
+     * function to lay down and look up files to use in sources.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_KEY_FUNCTION}
+     */
+    public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
+
+    public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "nid";
 
     /**
      * This implementation will call into underlying code only if enabled, and will enforce non-{@code null} return
@@ -129,6 +146,24 @@ public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecks
             return DirectoryUtils.resolveDirectory(session, defaultValue, configPropKey, mayCreate);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Returns repository key to be used on file system layout.
+     *
+     * @since 2.0.14
+     */
+    protected String repositoryKey(RepositorySystemSession session, ArtifactRepository artifactRepository) {
+        if (artifactRepository instanceof RemoteRepository) {
+            return Utils.repositoryKeyFunction(
+                            FileTrustedChecksumsSourceSupport.class,
+                            session,
+                            DEFAULT_REPOSITORY_KEY_FUNCTION,
+                            CONFIG_PROP_REPOSITORY_KEY_FUNCTION)
+                    .apply((RemoteRepository) artifactRepository, null);
+        } else {
+            return artifactRepository.getId();
         }
     }
 }

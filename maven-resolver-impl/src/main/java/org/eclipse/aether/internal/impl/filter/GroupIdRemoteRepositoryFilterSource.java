@@ -249,7 +249,12 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
         return ruleFiles(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> getBasedir(
                         session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
                 .resolve(GROUP_ID_FILE_PREFIX
-                        + Utils.cachedIdToPathSegment(session, remoteRepository)
+                        + Utils.repositoryKeyFunction(
+                                        RemoteRepositoryFilterSourceSupport.class,
+                                        session,
+                                        DEFAULT_REPOSITORY_KEY_FUNCTION,
+                                        CONFIG_PROP_REPOSITORY_KEY_FUNCTION)
+                                .apply(remoteRepository, null)
                         + GROUP_ID_FILE_SUFFIX));
     }
 

@@ -318,8 +318,14 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private Path resolvePrefixesFromLocalConfiguration(
             RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
-        Path filePath = baseDir.resolve(
-                PREFIXES_FILE_PREFIX + Utils.cachedIdToPathSegment(session, remoteRepository) + PREFIXES_FILE_SUFFIX);
+        Path filePath = baseDir.resolve(PREFIXES_FILE_PREFIX
+                + Utils.repositoryKeyFunction(
+                                RemoteRepositoryFilterSourceSupport.class,
+                                session,
+                                DEFAULT_REPOSITORY_KEY_FUNCTION,
+                                CONFIG_PROP_REPOSITORY_KEY_FUNCTION)
+                        .apply(remoteRepository, null)
+                + PREFIXES_FILE_SUFFIX);
         if (Files.isReadable(filePath)) {
             return filePath;
         } else {

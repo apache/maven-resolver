@@ -30,8 +30,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.PathUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * Helper class for {@link ArtifactRepository#getId()} handling. This class provides  helper methods
  * to get id of repository as it was originally envisioned: as path safe, unique, etc. While POMs are validated by Maven,
@@ -91,10 +89,10 @@ public final class RepositoryIdHelper {
     }
 
     /**
-     * Selector method for {@link RepositoryKeyFunction}.
+     * Selector method for {@link RepositoryKeyFunction} based on string representation of {@link RepositoryKeyType}
+     * enum.
      */
     public static RepositoryKeyFunction getRepositoryKeyFunction(String keyTypeString) {
-        requireNonNull(keyTypeString);
         RepositoryKeyType keyType = RepositoryKeyType.valueOf(keyTypeString.toUpperCase(Locale.ENGLISH));
         switch (keyType) {
             case SIMPLE:
@@ -225,7 +223,7 @@ public final class RepositoryIdHelper {
      * Maven validation prevents use of illegal FS characters in them, but we found in Maven Central several POMs that
      * define remote repositories with illegal FS characters in their ID.
      */
-    public static String idToPathSegment(ArtifactRepository repository) {
+    private static String idToPathSegment(ArtifactRepository repository) {
         if (repository instanceof RemoteRepository) {
             return PathUtils.stringToPathSegment(repository.getId());
         } else {
