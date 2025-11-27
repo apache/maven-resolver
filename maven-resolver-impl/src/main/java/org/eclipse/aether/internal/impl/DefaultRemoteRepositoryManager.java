@@ -29,7 +29,6 @@ import java.util.ListIterator;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -52,23 +51,6 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
-    private static final String CONFIG_PROPS_PREFIX =
-            ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryManager.";
-
-    /**
-     * <b>Experimental:</b> Configuration for "repository key" function.
-     * Note: repository key functions other than "nid" produce repository keys will be <em>way different
-     * that those produced with previous versions or without this option enabled</em>. Manager uses this key to
-     * detect "same" remote repositories, and in case of mirrors, to merge them.
-     *
-     * @since 2.0.14
-     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_KEY_FUNCTION}
-     */
-    public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
-
-    public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "nid";
 
     private static final class LoggedMirror {
 
@@ -121,11 +103,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             return dominantRepositories;
         }
 
-        BiFunction<RemoteRepository, String, String> repositoryKeyFunction = Utils.repositoryKeyFunction(
-                RemoteRepositoryManager.class,
-                session,
-                DEFAULT_REPOSITORY_KEY_FUNCTION,
-                CONFIG_PROP_REPOSITORY_KEY_FUNCTION);
+        BiFunction<RemoteRepository, String, String> repositoryKeyFunction = Utils.systemRepositoryKeyFunction(session);
         MirrorSelector mirrorSelector = session.getMirrorSelector();
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();

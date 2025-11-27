@@ -57,21 +57,6 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     public static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
 
-    /**
-     * <b>Experimental:</b> Configuration for "repository key" function.
-     * Note: repository key functions other than "simple" produce repository keys will be <em>way different
-     * that those produced with previous versions or without this option enabled</em>. Ideally, you may want to
-     * use empty local repository to populate with new repository key contained metadata.
-     *
-     * @since 2.0.14
-     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_KEY_FUNCTION}
-     */
-    public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
-
-    public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "simple";
-
     private float priority = 10.0f;
 
     private final LocalPathComposer localPathComposer;
@@ -108,11 +93,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
             return new EnhancedLocalRepositoryManager(
                     repository.getBasePath(),
                     localPathComposer,
-                    Utils.repositoryKeyFunction(
-                            EnhancedLocalRepositoryManagerFactory.class,
-                            session,
-                            DEFAULT_REPOSITORY_KEY_FUNCTION,
-                            CONFIG_PROP_REPOSITORY_KEY_FUNCTION),
+                    Utils.systemRepositoryKeyFunction(session),
                     trackingFilename,
                     trackingFileManager,
                     localPathPrefixComposerFactory.createComposer(session));

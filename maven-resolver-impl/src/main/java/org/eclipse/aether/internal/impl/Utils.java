@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployRequest;
@@ -213,6 +214,21 @@ public final class Utils {
         if (session.isOffline()) {
             offlineController.checkOffline(session, repository);
         }
+    }
+
+    /**
+     * Returns system-wide repository key function.
+     *
+     * @since 2.0.14
+     * @see #repositoryKeyFunction(Class, RepositorySystemSession, String, String)
+     */
+    public static BiFunction<RemoteRepository, String, String> systemRepositoryKeyFunction(
+            RepositorySystemSession session) {
+        return repositoryKeyFunction(
+                Utils.class,
+                session,
+                ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION,
+                ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION);
     }
 
     /**
