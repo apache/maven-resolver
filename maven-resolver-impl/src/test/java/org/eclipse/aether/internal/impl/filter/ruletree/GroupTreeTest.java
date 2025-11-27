@@ -50,5 +50,59 @@ public class GroupTreeTest {
 
         assertTrue(groupTree.acceptedGroupId("org.apache.baz"));
         assertFalse(groupTree.acceptedGroupId("org.apache.baz.aaa"));
+
+        assertFalse(groupTree.acceptedGroupId("not.in.list.but.uses.default"));
+    }
+
+    @Test
+    void smokeWithPositiveDefault() {
+        GroupTree groupTree = new GroupTree("root");
+        groupTree.loadNodes(Stream.of(
+                "# comment",
+                "",
+                "org.apache.maven",
+                "!=org.apache.maven.foo",
+                "!org.apache.maven.bar",
+                "=org.apache.baz",
+                "*"));
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven"));
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.aaa"));
+
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.foo"));
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.foo.aaa"));
+
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.bar"));
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.bar.aaa"));
+
+        assertTrue(groupTree.acceptedGroupId("org.apache.baz"));
+        assertFalse(groupTree.acceptedGroupId("org.apache.baz.aaa"));
+
+        assertTrue(groupTree.acceptedGroupId("not.in.list.but.uses.default"));
+    }
+
+    @Test
+    void smokeWithNegativeDefault() {
+        GroupTree groupTree = new GroupTree("root");
+        groupTree.loadNodes(Stream.of(
+                "# comment",
+                "",
+                "org.apache.maven",
+                "!=org.apache.maven.foo",
+                "!org.apache.maven.bar",
+                "=org.apache.baz",
+                "!*"));
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven"));
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.aaa"));
+
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.foo"));
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.foo.aaa"));
+
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.bar"));
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.bar.aaa"));
+
+        assertTrue(groupTree.acceptedGroupId("org.apache.baz"));
+        assertFalse(groupTree.acceptedGroupId("org.apache.baz.aaa"));
+
+        assertFalse(groupTree.acceptedGroupId("not.in.list.but.uses.default"));
     }
 }

@@ -36,7 +36,10 @@ import static java.util.stream.Collectors.toList;
  *     <li>a valid Maven groupID ie "org.apache.maven".</li>
  * </ul>
  * By default, a G entry ie {@code org.apache.maven} means "allow {@code org.apache.maven} G and all Gs below
- * (so {@code org.apache.maven.plugins} etc. are all allowed).
+ * (so {@code org.apache.maven.plugins} etc. are all allowed). There is one special entry {@code "*"} (asterisk)
+ * that means "root" and defines the default acceptance: {@code "*"} means "by default accept" and {@code "!*"}
+ * means "by default deny" (same effect as when this character is not present in file). Use of limiter modifier
+ * on "root" like {@code "=*"} has no effect, is simply ignored.
  *
  * Examples:
  * <pre>
@@ -61,6 +64,7 @@ import static java.util.stream.Collectors.toList;
 public class GroupTree extends Node {
     public static final GroupTree SENTINEL = new GroupTree("sentinel");
 
+    private static final String ROOT = "*";
     private static final String MOD_EXCLUSION = "!";
     private static final String MOD_STOP = "=";
 
@@ -95,6 +99,10 @@ public class GroupTree extends Node {
                 stop = true;
                 line = line.substring(MOD_STOP.length());
             }
+            if (ROOT.equals(line)) {
+                this.setAllow(allow);
+                return true;
+            }
             List<String> groupElements = elementsOfGroup(line);
             for (String groupElement : groupElements.subList(0, groupElements.size() - 1)) {
                 currentNode = currentNode.addSibling(groupElement, false, null);
@@ -108,7 +116,7 @@ public class GroupTree extends Node {
     public boolean acceptedGroupId(String groupId) {
         final List<String> current = new ArrayList<>();
         final List<String> groupElements = elementsOfGroup(groupId);
-        Boolean accepted = null;
+        Boolean accepted = isAllow();
         Node currentNode = this;
         for (String groupElement : groupElements) {
             current.add(groupElement);
