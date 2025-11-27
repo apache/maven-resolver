@@ -47,9 +47,9 @@ In certain cases this option is the recommended way, but many times it proves to
 
 Hence, Maven Resolver 2.x introduces notion of "repository key function", which is a function that creates 
 Remote Repository "key", with following properties:
-* can be used to identify a `RemoteRepository`
-* is configurable (see below)
+* is derived from and can be used to identify `RemoteRepository`
 * produced keys are "file system friendly" as well
+* is configurable (see below)
 
 Latest Resolver uses repository key at these places (and these must be aligned; must use same function):
 * `EnhancedLocalRepositoryManager`, the default LRM, where artifact availability is being calculated
