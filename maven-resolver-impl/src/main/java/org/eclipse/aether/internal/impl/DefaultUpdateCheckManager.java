@@ -479,7 +479,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         setUpdated(session, updateKey);
         Properties props = write(touchPath, dataKey, transferKey, check.getException());
 
-        if (!hasErrors(props)) {
+        if (Files.exists(artifactPath) && !hasErrors(props)) {
             trackingFileManager.delete(touchPath);
         }
     }
