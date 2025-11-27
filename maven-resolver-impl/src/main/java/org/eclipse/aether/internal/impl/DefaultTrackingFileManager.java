@@ -63,14 +63,11 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     public Properties read(Path path) {
         if (Files.isReadable(path)) {
             synchronized (mutex(path)) {
-                try {
-                    long fileSize = Files.size(path);
-                    try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-                            FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), true)) {
-                        Properties props = new Properties();
-                        props.load(Channels.newInputStream(fileChannel));
-                        return props;
-                    }
+                try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
+                        FileLock unused = fileLock(fileChannel, Math.max(1, fileChannel.size()), true)) {
+                    Properties props = new Properties();
+                    props.load(Channels.newInputStream(fileChannel));
+                    return props;
                 } catch (NoSuchFileException e) {
                     LOGGER.debug("No such file to read {}: {}", path, e.getMessage());
                 } catch (IOException e) {
@@ -98,38 +95,30 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         }
         Properties props = new Properties();
         synchronized (mutex(path)) {
-            try {
-                long fileSize;
-                try {
-                    fileSize = Files.size(path);
-                } catch (NoSuchFileException e) {
-                    fileSize = 0L;
+            try (FileChannel fileChannel = FileChannel.open(
+                            path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+                    FileLock unused = fileLock(fileChannel, Math.max(1, fileChannel.size()), false)) {
+                if (fileChannel.size() > 0) {
+                    props.load(Channels.newInputStream(fileChannel));
                 }
-                try (FileChannel fileChannel = FileChannel.open(
-                                path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-                        FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), false)) {
-                    if (fileSize > 0) {
-                        props.load(Channels.newInputStream(fileChannel));
-                    }
 
-                    for (Map.Entry<String, String> update : updates.entrySet()) {
-                        if (update.getValue() == null) {
-                            props.remove(update.getKey());
-                        } else {
-                            props.setProperty(update.getKey(), update.getValue());
-                        }
+                for (Map.Entry<String, String> update : updates.entrySet()) {
+                    if (update.getValue() == null) {
+                        props.remove(update.getKey());
+                    } else {
+                        props.setProperty(update.getKey(), update.getValue());
                     }
-
-                    LOGGER.debug("Writing tracking file '{}'", path);
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream(1024 * 2);
-                    props.store(
-                            stream,
-                            "NOTE: This is a Maven Resolver internal implementation file"
-                                    + ", its format can be changed without prior notice.");
-                    fileChannel.position(0);
-                    int written = fileChannel.write(ByteBuffer.wrap(stream.toByteArray()));
-                    fileChannel.truncate(written);
                 }
+
+                LOGGER.debug("Writing tracking file '{}'", path);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream(1024 * 2);
+                props.store(
+                        stream,
+                        "NOTE: This is a Maven Resolver internal implementation file"
+                                + ", its format can be changed without prior notice.");
+                fileChannel.position(0);
+                int written = fileChannel.write(ByteBuffer.wrap(stream.toByteArray()));
+                fileChannel.truncate(written);
             } catch (IOException e) {
                 LOGGER.warn("Failed to write tracking file '{}'", path, e);
                 throw new UncheckedIOException(e);
@@ -147,17 +136,10 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     public boolean delete(Path path) {
         if (Files.isReadable(path)) {
             synchronized (mutex(path)) {
-                try {
-                    long fileSize = Files.size(path);
-                    try (FileChannel fileChannel = FileChannel.open(
-                                    path,
-                                    StandardOpenOption.READ,
-                                    StandardOpenOption.WRITE,
-                                    StandardOpenOption.CREATE);
-                            FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), false)) {
-                        Files.delete(path);
-                        return true;
-                    }
+                try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE);
+                        FileLock unused = fileLock(fileChannel, Math.max(1, fileChannel.size()), false)) {
+                    Files.delete(path);
+                    return true;
                 } catch (NoSuchFileException e) {
                     LOGGER.debug("No such file to delete {}: {}", path, e.getMessage());
                 } catch (IOException e) {
