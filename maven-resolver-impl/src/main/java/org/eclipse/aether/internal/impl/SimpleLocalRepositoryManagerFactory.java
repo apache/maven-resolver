@@ -22,15 +22,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.BiFunction;
-
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
 
@@ -67,21 +62,15 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
         requireNonNull(repository, "repository cannot be null");
 
         if ("".equals(repository.getContentType()) || "simple".equals(repository.getContentType())) {
-            BiFunction<RemoteRepository, String, String> repositoryKeyFunction =
-                    RepositoryIdHelper::simpleRepositoryKey;
-            if (session.getCache() != null) {
-                repositoryKeyFunction = (r, c) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
-                                session.getCache()
-                                        .computeIfAbsent(
-                                                session,
-                                                EnhancedLocalRepositoryManagerFactory.class.getName()
-                                                        + ".repositoryKeyFunction",
-                                                ConcurrentHashMap::new))
-                        .computeIfAbsent(r, k1 -> new ConcurrentHashMap<>())
-                        .computeIfAbsent(c == null ? "" : c, k2 -> RepositoryIdHelper.simpleRepositoryKey(r, c));
-            }
             return new SimpleLocalRepositoryManager(
-                    repository.getBasePath(), "simple", localPathComposer, repositoryKeyFunction);
+                    repository.getBasePath(),
+                    "simple",
+                    localPathComposer,
+                    Utils.repositoryKeyFunction(
+                            SimpleLocalRepositoryManagerFactory.class,
+                            session,
+                            RepositoryIdHelper.RepositoryKeyType.SIMPLE.name(),
+                            null));
         } else {
             throw new NoLocalRepositoryManagerException(repository);
         }

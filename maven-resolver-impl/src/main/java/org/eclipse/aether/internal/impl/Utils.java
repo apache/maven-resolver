@@ -218,6 +218,8 @@ public final class Utils {
     /**
      * Method that based on configuration returns the "repository key function". The returned function will be session
      * cached if session is equipped with cache, otherwise it will be non cached. Method never returns {@code null}.
+     * Only the {@code configurationKey} parameter may be {@code null} in which case no configuration lookup happens
+     * but the {@code defaultValue} is directly used instead.
      *
      * @since 2.0.14
      */
@@ -226,10 +228,11 @@ public final class Utils {
             Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
         requireNonNull(session);
         requireNonNull(defaultValue);
-        requireNonNull(configurationKey);
         final RepositoryIdHelper.RepositoryKeyFunction repositoryKeyFunction =
                 RepositoryIdHelper.getRepositoryKeyFunction(
-                        ConfigUtils.getString(session, defaultValue, configurationKey));
+                        configurationKey != null
+                                ? ConfigUtils.getString(session, defaultValue, configurationKey)
+                                : defaultValue);
         if (session.getCache() != null) {
             // both are expensive methods; cache it in session (repo -> context -> ID)
             return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
