@@ -36,9 +36,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,12 +53,6 @@ import org.slf4j.LoggerFactory;
 public final class DefaultTrackingFileManager implements TrackingFileManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTrackingFileManager.class);
 
-    private final ConcurrentHashMap<Path, Void> paths;
-
-    public DefaultTrackingFileManager() {
-        this.paths = new ConcurrentHashMap<>();
-    }
-
     @Deprecated
     @Override
     public Properties read(File file) {
@@ -70,16 +61,15 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
 
     @Override
     public Properties read(Path path) {
-        AtomicReference<Properties> properties = new AtomicReference<>(null);
         if (Files.isReadable(path)) {
-            paths.compute(path.toAbsolutePath().normalize(), (p, v) -> {
+            synchronized (mutex(path)) {
                 try {
                     long fileSize = Files.size(path);
                     try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
                             FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), true)) {
                         Properties props = new Properties();
                         props.load(Channels.newInputStream(fileChannel));
-                        properties.set(props);
+                        return props;
                     }
                 } catch (NoSuchFileException e) {
                     LOGGER.debug("No such file to read {}: {}", path, e.getMessage());
@@ -87,10 +77,9 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                     LOGGER.warn("Failed to read tracking file '{}'", path, e);
                     throw new UncheckedIOException(e);
                 }
-                return null; // we use map for synchronization only
-            });
+            }
         }
-        return properties.get();
+        return null;
     }
 
     @Deprecated
@@ -108,7 +97,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
             throw new UncheckedIOException(e);
         }
         Properties props = new Properties();
-        paths.compute(path.toAbsolutePath().normalize(), (p, v) -> {
+        synchronized (mutex(path)) {
             try {
                 long fileSize;
                 try {
@@ -145,8 +134,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                 LOGGER.warn("Failed to write tracking file '{}'", path, e);
                 throw new UncheckedIOException(e);
             }
-            return null; // we use map for synchronization only
-        });
+        }
         return props;
     }
 
@@ -157,9 +145,8 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
 
     @Override
     public boolean delete(Path path) {
-        AtomicBoolean result = new AtomicBoolean(false);
         if (Files.isReadable(path)) {
-            paths.compute(path.toAbsolutePath().normalize(), (p, v) -> {
+            synchronized (mutex(path)) {
                 try {
                     long fileSize = Files.size(path);
                     try (FileChannel fileChannel = FileChannel.open(
@@ -169,7 +156,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                                     StandardOpenOption.CREATE);
                             FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), false)) {
                         Files.delete(path);
-                        result.set(true);
+                        return true;
                     }
                 } catch (NoSuchFileException e) {
                     LOGGER.debug("No such file to delete {}: {}", path, e.getMessage());
@@ -177,10 +164,13 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                     LOGGER.warn("Failed to delete tracking file '{}'", path, e);
                     throw new UncheckedIOException(e);
                 }
-                return null; // we use map for synchronization only
-            });
+            }
         }
-        return result.get();
+        return false;
+    }
+
+    private Object mutex(Path path) {
+        return path.toAbsolutePath().normalize().toString().intern();
     }
 
     private FileLock fileLock(FileChannel channel, long size, boolean shared) throws IOException {
