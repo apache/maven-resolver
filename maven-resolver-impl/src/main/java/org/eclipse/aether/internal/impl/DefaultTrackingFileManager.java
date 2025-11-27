@@ -32,6 +32,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.Map;
 import java.util.Properties;
 
@@ -54,12 +55,14 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     @Override
     public Properties read(File file) {
         if (Files.isReadable(file.toPath())) {
-            synchronized (getMutex(file)) {
+            synchronized (mutex(file)) {
                 try (FileInputStream stream = new FileInputStream(file);
                         FileLock unused = fileLock(stream.getChannel(), Math.max(1, file.length()), true)) {
                     Properties props = new Properties();
                     props.load(stream);
                     return props;
+                } catch (NoSuchFileException e) {
+                    LOGGER.debug("No such file to read {}: {}", file, e.getMessage());
                 } catch (IOException e) {
                     LOGGER.warn("Failed to read tracking file '{}'", file, e);
                     throw new UncheckedIOException(e);
@@ -71,16 +74,14 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
 
     @Override
     public Properties update(File file, Map<String, String> updates) {
-        Properties props = new Properties();
-
         try {
             Files.createDirectories(file.getParentFile().toPath());
         } catch (IOException e) {
             LOGGER.warn("Failed to create tracking file parent '{}'", file, e);
             throw new UncheckedIOException(e);
         }
-
-        synchronized (getMutex(file)) {
+        Properties props = new Properties();
+        synchronized (mutex(file)) {
             try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
                     FileLock unused = fileLock(raf.getChannel(), Math.max(1, raf.length()), false)) {
                 if (raf.length() > 0) {
@@ -115,21 +116,29 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         return props;
     }
 
-    private Object getMutex(File file) {
+    @Override
+    public boolean delete(File file) {
+        if (Files.isReadable(file.toPath())) {
+            synchronized (mutex(file)) {
+                try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
+                        FileLock unused = fileLock(raf.getChannel(), Math.max(1, raf.length()), false)) {
+                    Files.delete(file.toPath());
+                    return true;
+                } catch (NoSuchFileException e) {
+                    LOGGER.debug("No such file to delete {}: {}", file, e.getMessage());
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to delete tracking file '{}'", file, e);
+                    throw new UncheckedIOException(e);
+                }
+            }
+        }
+        return false;
+    }
+
+    private Object mutex(File file) {
         // The interned string of path is (mis)used as mutex, to exclude different threads going for same file,
         // as JVM file locking happens on JVM not on Thread level. This is how original code did it  ¯\_(ツ)_/¯
-        /*
-         * NOTE: Locks held by one JVM must not overlap and using the canonical path is our best bet, still another
-         * piece of code might have locked the same file (unlikely though) or the canonical path fails to capture file
-         * identity sufficiently as is the case with Java 1.6 and symlinks on Windows.
-         */
-        try {
-            return file.getCanonicalPath().intern();
-        } catch (IOException e) {
-            LOGGER.warn("Failed to canonicalize path {}", file, e);
-            // TODO This is code smell and deprecated
-            return file.getAbsolutePath().intern();
-        }
+        return file.toPath().toAbsolutePath().normalize().toString().intern();
     }
 
     private FileLock fileLock(FileChannel channel, long size, boolean shared) throws IOException {
