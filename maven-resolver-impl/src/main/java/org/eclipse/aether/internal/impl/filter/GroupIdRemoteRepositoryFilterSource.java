@@ -42,7 +42,6 @@ import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
-import org.eclipse.aether.internal.impl.Utils;
 import org.eclipse.aether.internal.impl.filter.ruletree.GroupTree;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -248,14 +247,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     private Path ruleFile(RepositorySystemSession session, RemoteRepository remoteRepository) {
         return ruleFiles(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> getBasedir(
                         session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
-                .resolve(GROUP_ID_FILE_PREFIX
-                        + Utils.repositoryKeyFunction(
-                                        RemoteRepositoryFilterSourceSupport.class,
-                                        session,
-                                        DEFAULT_REPOSITORY_KEY_FUNCTION,
-                                        CONFIG_PROP_REPOSITORY_KEY_FUNCTION)
-                                .apply(remoteRepository, null)
-                        + GROUP_ID_FILE_SUFFIX));
+                .resolve(GROUP_ID_FILE_PREFIX + repositoryKey(session, remoteRepository) + GROUP_ID_FILE_SUFFIX));
     }
 
     private GroupTree cacheRules(RepositorySystemSession session, RemoteRepository remoteRepository) {

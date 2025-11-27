@@ -24,6 +24,8 @@ import java.nio.file.Path;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.internal.impl.Utils;
+import org.eclipse.aether.internal.impl.checksum.FileTrustedChecksumsSourceSupport;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
@@ -101,6 +103,20 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
     protected RemoteRepository normalizeRemoteRepository(
             RepositorySystemSession session, RemoteRepository remoteRepository) {
         return remoteRepository.toBareRemoteRepository();
+    }
+
+    /**
+     * Returns repository key to be used on file system layout.
+     *
+     * @since 2.0.14
+     */
+    protected String repositoryKey(RepositorySystemSession session, RemoteRepository repository) {
+        return Utils.repositoryKeyFunction(
+                        FileTrustedChecksumsSourceSupport.class,
+                        session,
+                        DEFAULT_REPOSITORY_KEY_FUNCTION,
+                        CONFIG_PROP_REPOSITORY_KEY_FUNCTION)
+                .apply(repository, null);
     }
 
     /**
