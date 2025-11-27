@@ -28,25 +28,30 @@ Known issues that Maven users cannot fight against:
   or `apache.snapshot` (dot vs dash) defined repositories, that all point to same ASF snapshot repository.
 * same IDs for different URLs (two totally disconnected project may define repository `project-releases` in their POM, 
   while in fact those two repositories are not related at all)
-* repository IDs that are [not file-friendly](https://github.com/apache/maven-resolver/issues/1564). This should not 
-  be possible, as Maven validates and does not allow these characters in ID field, but in some cases 
+* repository IDs that are [not file-friendly](https://github.com/apache/maven-resolver/issues/1564). Usually this should 
+  be impossible, as Maven validates and forbids these characters in ID field, but in some cases 
   (ancient or generated POMs) this may happen.
 
-Remote repositories that user cannot "fix" usually enter the build via those POMs that are not authored by users
+Remote repositories that user cannot "fix", usually enter the build via those POMs that are not authored by user
 themselves, so project POM and parent POMs can be safely excluded. In turn, these may come from POMs that are
 being pulled in as third-party plugin or dependency POMs.
 
-For users wanting to fully control used repository Maven 3.9.x line added the `-itr`/`--ignore-transitive-repositories`
-CLI option, but while this 100% solves the problem, it does it by fully delegating the work onto user, to define
-all the needed remote repositories (for dependencies but also for plugins) in project POM. In certain cases this
-option is the recommended way, but many times it proves too burdensome.
+While we don't find the first issue deal-breaker (and we did not provide yet a function for fixing it), the latter two
+may produce various problems with local repository, split local repository and so on, causing a total mix-up of expected
+layout, or even wrongly grouped artifacts.
+
+For those eager to fully control used repositories, Maven 3.9.x line added the `-itr`/`--ignore-transitive-repositories`
+CLI option, but while this solves the problem, it does it by fully delegating the work onto the user itself, to define
+all the needed remote repositories (for dependencies but also for plugins) in project POM that build requires. 
+In certain cases this option is the recommended way, but many times it proves too burdensome.
 
 Hence, Maven Resolver 2.x introduces notion of "repository key function", which is a function that creates 
 Remote Repository "key", with following properties:
+* can be used to identify a `RemoteRepository`
 * is configurable (see below)
-* produced keys are "file system friendly"
+* produced keys are "file system friendly" as well
 
-Latest Resolver uses repository key at these places (and these must be aligned; use same function):
+Latest Resolver uses repository key at these places (and these must be aligned; must use same function):
 * `EnhancedLocalRepositoryManager`, the default LRM, where artifact availability is being calculated
 * `LocalPathPrefixComposer`, in case of "split local repository" to calculate prefix/suffix elements based on artifact originating repository (if enabled)
 * `RemoteRepositoryManager` that consolidates existing and newly discovered repositories (by eliminating them or merging mirrors, as needed)
@@ -61,6 +66,9 @@ Furthermore, repository key function (possibly different one) is used in two com
 
 In these cases, the repository key function only role is to provide "file system friendly" path segments based on
 `RemoteRepository` instances.
+
+**Important implication:** When Resolver/Maven is reconfigured to use alternative repository key function, it is
+worthwhile to start with new, empty local repository (as keys are used in LRM maintained metadata).
 
 ## Implemented Repository Key Functions
 
