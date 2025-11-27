@@ -23,7 +23,6 @@ import javax.inject.Singleton;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -32,11 +31,13 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
@@ -80,6 +81,8 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                         props.load(Channels.newInputStream(fileChannel));
                         properties.set(props);
                     }
+                } catch (NoSuchFileException e) {
+                    LOGGER.debug("No such file to read {}: {}", path, e.getMessage());
                 } catch (IOException e) {
                     LOGGER.warn("Failed to read tracking file '{}'", path, e);
                     throw new UncheckedIOException(e);
@@ -110,7 +113,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                 long fileSize;
                 try {
                     fileSize = Files.size(path);
-                } catch (FileNotFoundException e) {
+                } catch (NoSuchFileException e) {
                     fileSize = 0L;
                 }
                 try (FileChannel fileChannel = FileChannel.open(
@@ -148,21 +151,17 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     }
 
     @Override
-    public void delete(File file) {
-        delete(file.toPath());
+    public boolean delete(File file) {
+        return delete(file.toPath());
     }
 
     @Override
-    public void delete(Path path) {
+    public boolean delete(Path path) {
+        AtomicBoolean result = new AtomicBoolean(false);
         if (Files.isReadable(path)) {
             paths.compute(path.toAbsolutePath().normalize(), (p, v) -> {
                 try {
-                    long fileSize;
-                    try {
-                        fileSize = Files.size(path);
-                    } catch (FileNotFoundException e) {
-                        fileSize = 0L;
-                    }
+                    long fileSize = Files.size(path);
                     try (FileChannel fileChannel = FileChannel.open(
                                     path,
                                     StandardOpenOption.READ,
@@ -170,7 +169,10 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                                     StandardOpenOption.CREATE);
                             FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), false)) {
                         Files.delete(path);
+                        result.set(true);
                     }
+                } catch (NoSuchFileException e) {
+                    LOGGER.debug("No such file to delete {}: {}", path, e.getMessage());
                 } catch (IOException e) {
                     LOGGER.warn("Failed to delete tracking file '{}'", path, e);
                     throw new UncheckedIOException(e);
@@ -178,6 +180,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                 return null; // we use map for synchronization only
             });
         }
+        return result.get();
     }
 
     private FileLock fileLock(FileChannel channel, long size, boolean shared) throws IOException {
