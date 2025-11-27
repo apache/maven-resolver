@@ -151,7 +151,11 @@ public final class RepositoryIdHelper {
      * @since 2.0.14
      **/
     private static String nidRepositoryKey(RemoteRepository repository, String context) {
-        return idToPathSegment(repository);
+        String seed = null;
+        if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
+            seed += context;
+        }
+        return idToPathSegment(repository) + (seed == null ? "" : "-" + StringDigestUtil.sha1(seed));
     }
 
     /**
@@ -160,7 +164,11 @@ public final class RepositoryIdHelper {
      * @since 2.0.14
      **/
     private static String hurlRepositoryKey(RemoteRepository repository, String context) {
-        return StringDigestUtil.sha1(repository.getUrl());
+        String seed = null;
+        if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
+            seed += context;
+        }
+        return StringDigestUtil.sha1(repository.getUrl()) + (seed == null ? "" : "-" + StringDigestUtil.sha1(seed));
     }
 
     /**
