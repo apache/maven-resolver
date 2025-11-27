@@ -114,7 +114,8 @@ These functions are **not recommended for everyday use**, but may prove useful i
 
 This key relies solely on `RemoteRepository#getUrl()`.
 This means that repository URL becomes what repository ID was for equality check. Note: this function does not perform
-any kind of URL "normalization", URL is used as-is.
+any kind of URL "normalization", URL is used as-is. The problem with this function is that it will produce
+"human unfriendly" repository key that is fully disconnected and hard to trace back to origin repository.
 
 ### `gurk`
 
