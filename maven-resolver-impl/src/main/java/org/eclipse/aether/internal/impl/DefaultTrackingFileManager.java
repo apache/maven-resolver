@@ -122,8 +122,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
             synchronized (mutex(file)) {
                 try (RandomAccessFile raf = new RandomAccessFile(file, "rw");
                         FileLock unused = fileLock(raf.getChannel(), Math.max(1, raf.length()), false)) {
-                    Files.delete(file.toPath());
-                    return true;
+                    return file.delete();
                 } catch (NoSuchFileException e) {
                     LOGGER.debug("No such file to delete {}: {}", file, e.getMessage());
                 } catch (IOException e) {
