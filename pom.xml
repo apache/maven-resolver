@@ -107,7 +107,7 @@
     <guiceVersion>5.1.0</guiceVersion>
     <slf4jVersion>2.0.17</slf4jVersion>
     <testcontainersVersion>1.21.3</testcontainersVersion>
-    <bouncycastleVersion>1.82</bouncycastleVersion>
+    <bouncycastleVersion>1.83</bouncycastleVersion>
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
     <jettyVersion>10.0.26</jettyVersion>
