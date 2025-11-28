@@ -54,7 +54,6 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
         this.localPathComposer = requireNonNull(localPathComposer);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public LocalRepositoryManager newInstance(RepositorySystemSession session, LocalRepository repository)
             throws NoLocalRepositoryManagerException {
