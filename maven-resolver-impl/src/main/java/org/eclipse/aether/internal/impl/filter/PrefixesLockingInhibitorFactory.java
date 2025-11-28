@@ -41,6 +41,14 @@ import org.eclipse.aether.spi.locking.LockingInhibitorFactory;
 public class PrefixesLockingInhibitorFactory implements LockingInhibitorFactory, LockingInhibitor {
     public static final String NAME = PrefixesRemoteRepositoryFilterSource.NAME;
 
+    /**
+     * Metadata predicate tailored to RRF prefixes.
+     */
+    private static final Predicate<Metadata> PREFIX_PREDICATE = m -> "".equals(m.getGroupId())
+            && "".equals(m.getArtifactId())
+            && "".equals(m.getVersion())
+            && PrefixesRemoteRepositoryFilterSource.PREFIX_FILE_TYPE.equals(m.getType());
+
     @Override
     public Optional<LockingInhibitor> newInstance(RepositorySystemSession session) {
         return Optional.of(this);
@@ -48,9 +56,6 @@ public class PrefixesLockingInhibitorFactory implements LockingInhibitorFactory,
 
     @Override
     public Optional<Predicate<Metadata>> inhibitMetadataLocking() {
-        return Optional.of(m -> "".equals(m.getGroupId())
-                && "".equals(m.getArtifactId())
-                && "".equals(m.getVersion())
-                && PrefixesRemoteRepositoryFilterSource.PREFIX_FILE_TYPE.equals(m.getType()));
+        return Optional.of(PREFIX_PREDICATE);
     }
 }
