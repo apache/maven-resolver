@@ -93,11 +93,11 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
             LOGGER.warn("Failed to create tracking file parent '{}'", path, e);
             throw new UncheckedIOException(e);
         }
-        Properties props = new Properties();
         synchronized (mutex(path)) {
             try (FileChannel fileChannel = FileChannel.open(
                             path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
                     FileLock unused = fileLock(fileChannel, false)) {
+                Properties props = new Properties();
                 if (fileChannel.size() > 0) {
                     props.load(Channels.newInputStream(fileChannel));
                 }
@@ -119,12 +119,12 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                 fileChannel.position(0);
                 int written = fileChannel.write(ByteBuffer.wrap(stream.toByteArray()));
                 fileChannel.truncate(written);
+                return props;
             } catch (IOException e) {
                 LOGGER.warn("Failed to write tracking file '{}'", path, e);
                 throw new UncheckedIOException(e);
             }
         }
-        return props;
     }
 
     @Override
