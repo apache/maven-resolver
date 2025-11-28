@@ -31,6 +31,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
@@ -61,15 +62,14 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     @Override
     public Properties read(Path path) {
         if (Files.isReadable(path)) {
-            synchronized (getMutex(path)) {
-                try {
-                    long fileSize = Files.size(path);
-                    try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-                            FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), true)) {
-                        Properties props = new Properties();
-                        props.load(Channels.newInputStream(fileChannel));
-                        return props;
-                    }
+            synchronized (mutex(path)) {
+                try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
+                        FileLock unused = fileLock(fileChannel, true)) {
+                    Properties props = new Properties();
+                    props.load(Channels.newInputStream(fileChannel));
+                    return props;
+                } catch (NoSuchFileException e) {
+                    LOGGER.debug("No such file to read {}: {}", path, e.getMessage());
                 } catch (IOException e) {
                     LOGGER.warn("Failed to read tracking file '{}'", path, e);
                     throw new UncheckedIOException(e);
@@ -87,72 +87,79 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
 
     @Override
     public Properties update(Path path, Map<String, String> updates) {
-        Properties props = new Properties();
         try {
             Files.createDirectories(path.getParent());
         } catch (IOException e) {
             LOGGER.warn("Failed to create tracking file parent '{}'", path, e);
             throw new UncheckedIOException(e);
         }
-
-        synchronized (getMutex(path)) {
-            try {
-                long fileSize;
-                try {
-                    fileSize = Files.size(path);
-                } catch (IOException e) {
-                    fileSize = 0L;
+        synchronized (mutex(path)) {
+            try (FileChannel fileChannel = FileChannel.open(
+                            path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+                    FileLock unused = fileLock(fileChannel, false)) {
+                Properties props = new Properties();
+                if (fileChannel.size() > 0) {
+                    props.load(Channels.newInputStream(fileChannel));
                 }
-                try (FileChannel fileChannel = FileChannel.open(
-                                path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-                        FileLock unused = fileLock(fileChannel, Math.max(1, fileSize), false)) {
-                    if (fileSize > 0) {
-                        props.load(Channels.newInputStream(fileChannel));
-                    }
 
-                    for (Map.Entry<String, String> update : updates.entrySet()) {
-                        if (update.getValue() == null) {
-                            props.remove(update.getKey());
-                        } else {
-                            props.setProperty(update.getKey(), update.getValue());
-                        }
+                for (Map.Entry<String, String> update : updates.entrySet()) {
+                    if (update.getValue() == null) {
+                        props.remove(update.getKey());
+                    } else {
+                        props.setProperty(update.getKey(), update.getValue());
                     }
-
-                    LOGGER.debug("Writing tracking file '{}'", path);
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream(1024 * 2);
-                    props.store(
-                            stream,
-                            "NOTE: This is a Maven Resolver internal implementation file"
-                                    + ", its format can be changed without prior notice.");
-                    fileChannel.position(0);
-                    int written = fileChannel.write(ByteBuffer.wrap(stream.toByteArray()));
-                    fileChannel.truncate(written);
                 }
+
+                LOGGER.debug("Writing tracking file '{}'", path);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream(1024 * 2);
+                props.store(
+                        stream,
+                        "NOTE: This is a Maven Resolver internal implementation file"
+                                + ", its format can be changed without prior notice.");
+                fileChannel.position(0);
+                int written = fileChannel.write(ByteBuffer.wrap(stream.toByteArray()));
+                fileChannel.truncate(written);
+                return props;
             } catch (IOException e) {
                 LOGGER.warn("Failed to write tracking file '{}'", path, e);
                 throw new UncheckedIOException(e);
             }
         }
-
-        return props;
     }
 
-    private Object getMutex(Path path) {
-        // The interned string of path is (mis)used as mutex, to exclude different threads going for same file,
-        // as JVM file locking happens on JVM not on Thread level. This is how original code did it  ¯\_(ツ)_/¯
-        /*
-         * NOTE: Locks held by one JVM must not overlap and using the canonical path is our best bet, still another
-         * piece of code might have locked the same file (unlikely though) or the canonical path fails to capture file
-         * identity sufficiently as is the case with Java 1.6 and symlinks on Windows.
-         */
+    @Override
+    public boolean delete(File file) {
+        return delete(file.toPath());
+    }
+
+    @Override
+    public boolean delete(Path path) {
+        if (Files.isReadable(path)) {
+            synchronized (mutex(path)) {
+                try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE);
+                        FileLock unused = fileLock(fileChannel, false)) {
+                    Files.delete(path);
+                    return true;
+                } catch (NoSuchFileException e) {
+                    LOGGER.debug("No such file to delete {}: {}", path, e.getMessage());
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to delete tracking file '{}'", path, e);
+                    throw new UncheckedIOException(e);
+                }
+            }
+        }
+        return false;
+    }
+
+    private Object mutex(Path path) {
         return path.toAbsolutePath().normalize().toString().intern();
     }
 
-    private FileLock fileLock(FileChannel channel, long size, boolean shared) throws IOException {
+    private FileLock fileLock(FileChannel channel, boolean shared) throws IOException {
         FileLock lock = null;
         for (int attempts = 8; attempts >= 0; attempts--) {
             try {
-                lock = channel.lock(0, size, shared);
+                lock = channel.lock(0, Long.MAX_VALUE, shared);
                 break;
             } catch (OverlappingFileLockException e) {
                 if (attempts <= 0) {
