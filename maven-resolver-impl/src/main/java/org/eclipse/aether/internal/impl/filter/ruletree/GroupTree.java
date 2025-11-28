@@ -73,7 +73,7 @@ public class GroupTree extends Node {
     }
 
     public GroupTree(String name) {
-        super(name, false, null);
+        super(name, false, false);
     }
 
     public int loadNodes(Stream<String> linesStream) {
@@ -130,6 +130,7 @@ public class GroupTree extends Node {
                 accepted = currentNode.isAllow();
             }
         }
-        return accepted != null && accepted;
+        // use `accepted`, if defined; otherwise fallback to root (it always has `allow` set)
+        return accepted != null ? accepted : this.isAllow();
     }
 }

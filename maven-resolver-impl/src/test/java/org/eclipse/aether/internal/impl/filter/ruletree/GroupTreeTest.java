@@ -75,8 +75,28 @@ public class GroupTreeTest {
         assertFalse(groupTree.acceptedGroupId("org.apache.maven.bar.aaa"));
 
         assertTrue(groupTree.acceptedGroupId("org.apache.baz"));
-        assertFalse(groupTree.acceptedGroupId("org.apache.baz.aaa"));
+        assertTrue(groupTree.acceptedGroupId("org.apache.baz.aaa"));
 
+        assertTrue(groupTree.acceptedGroupId("not.in.list.but.uses.default"));
+    }
+
+    @Test
+    void smokeWithPositiveDefaultExclusionsOnly() {
+        GroupTree groupTree = new GroupTree("root");
+        groupTree.loadNodes(Stream.of("# comment", "*", "!org.apache.maven.foo", "!=org.apache.maven.bar"));
+        // no applicable rule; root=ALLOW
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven"));
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.aaa"));
+
+        // exclusion rule present (this and below)
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.foo"));
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.foo.aaa"));
+
+        // exclusion+stop rule present (only this)
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.bar"));
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.bar.aaa"));
+
+        // no applicable rule; root=ALLOW
         assertTrue(groupTree.acceptedGroupId("not.in.list.but.uses.default"));
     }
 
