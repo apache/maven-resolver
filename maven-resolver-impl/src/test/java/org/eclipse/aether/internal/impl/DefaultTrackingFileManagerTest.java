@@ -18,29 +18,83 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
-import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.junit.jupiter.api.Test;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- */
 public class DefaultTrackingFileManagerTest {
+    public enum FS {
+        DEFAULT,
+        JIMFS_UNIX,
+        JIMFS_WINDOWS;
 
-    @Test
-    void testRead() throws Exception {
+        @Override
+        public String toString() {
+            return super.name().toLowerCase(Locale.ENGLISH);
+        }
+    }
+
+    private FileSystem fileSystem;
+
+    private Path createTmpFile(FS fs) throws IOException {
+        return createTmpFile(fs, 1);
+    }
+
+    private Path createTmpFile(FS fs, int iterations) throws IOException {
+        byte[] payload = "#COMMENT\nkey1=value1\nkey2 : value2\n".getBytes(StandardCharsets.UTF_8);
+        if (iterations > 1) {
+            int payloadLength = payload.length;
+            byte[] newPayload = new byte[payloadLength * iterations];
+            for (int i = 0; i < iterations; i++) {
+                System.arraycopy(payload, 0, newPayload, i * payloadLength, payloadLength);
+            }
+            payload = newPayload;
+        }
+        Path tempFile;
+        if (fs == FS.DEFAULT) {
+            tempFile = Files.createTempFile(getClass().getSimpleName(), ".tmp");
+        } else if (fs == FS.JIMFS_UNIX || fs == FS.JIMFS_WINDOWS) {
+            fileSystem = Jimfs.newFileSystem(fs == FS.JIMFS_WINDOWS ? Configuration.windows() : Configuration.unix());
+            tempFile = fileSystem.getPath("tmp/file.properties");
+        } else {
+            throw new IllegalStateException("unsupported FS: " + fs);
+        }
+        Files.createDirectories(tempFile.getParent());
+        Files.write(tempFile, payload);
+        return tempFile;
+    }
+
+    @AfterEach
+    void cleanup() throws IOException {
+        if (fileSystem != null) {
+            fileSystem.close();
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testRead(FS fs) throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
-        File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
+        Path propFile = createTmpFile(fs);
         Properties props = tfm.read(propFile);
 
         assertNotNull(props);
@@ -48,30 +102,31 @@ public class DefaultTrackingFileManagerTest {
         assertEquals("value1", props.get("key1"));
         assertEquals("value2", props.get("key2"));
 
-        assertTrue(propFile.delete(), "Leaked file: " + propFile);
+        assertDoesNotThrow(() -> Files.delete(propFile), "Leaked file" + propFile);
 
         props = tfm.read(propFile);
         assertNull(props, String.valueOf(props));
     }
 
-    @Test
-    void testReadNoFileLeak() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testReadNoFileLeak(FS fs) throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         for (int i = 0; i < 1000; i++) {
-            File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
+            Path propFile = createTmpFile(fs);
             assertNotNull(tfm.read(propFile));
-            assertTrue(propFile.delete(), "Leaked file: " + propFile);
+            assertDoesNotThrow(() -> Files.delete(propFile), "Leaked file" + propFile);
         }
     }
 
-    @Test
-    void testUpdate() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testUpdate(FS fs) throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         // NOTE: The excessive repetitions are to check the update properly truncates the file
-        File propFile =
-                TestFileUtils.createTempFile("key1=value1\nkey2 : value2\n".getBytes(StandardCharsets.UTF_8), 1000);
+        Path propFile = createTmpFile(fs, 1000);
 
         Map<String, String> updates = new HashMap<>();
         updates.put("key1", "v");
@@ -87,36 +142,50 @@ public class DefaultTrackingFileManagerTest {
         assertNull(props.get("key2"), String.valueOf(props.get("key2")));
     }
 
-    @Test
-    void testUpdateNoFileLeak() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testUpdateNoFileLeak(FS fs) throws Exception {
         TrackingFileManager tfm = new DefaultTrackingFileManager();
 
         Map<String, String> updates = new HashMap<>();
         updates.put("k", "v");
 
         for (int i = 0; i < 1000; i++) {
-            File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
+            Path propFile = createTmpFile(fs);
             assertNotNull(tfm.update(propFile, updates));
-            assertTrue(propFile.delete(), "Leaked file: " + propFile);
+            assertDoesNotThrow(() -> Files.delete(propFile), "Leaked file" + propFile);
         }
     }
 
-    @Test
-    void testLockingOnCanonicalPath() throws Exception {
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    public void testDeleteFileIsGone(FS fs) throws Exception {
+        TrackingFileManager tfm = new DefaultTrackingFileManager();
+
+        for (int i = 0; i < 1000; i++) {
+            Path propFile = createTmpFile(fs);
+            assertTrue(tfm.delete(propFile));
+            assertFalse(Files.exists(propFile), "File is not gone");
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testLockingOnCanonicalPath(FS fs) throws Exception {
         final TrackingFileManager tfm = new DefaultTrackingFileManager();
 
-        final File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
+        Path propFile = createTmpFile(fs);
 
         final List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
 
         Thread[] threads = new Thread[4];
         for (int i = 0; i < threads.length; i++) {
-            String path = propFile.getParent();
+            String path = propFile.getParent().toString();
             for (int j = 0; j < i; j++) {
                 path += "/.";
             }
-            path += "/" + propFile.getName();
-            final File file = new File(path);
+            path += "/" + propFile.getFileName();
+            final Path file = fileSystem != null ? fileSystem.getPath(path) : Paths.get(path);
 
             threads[i] = new Thread(() -> {
                 try {
