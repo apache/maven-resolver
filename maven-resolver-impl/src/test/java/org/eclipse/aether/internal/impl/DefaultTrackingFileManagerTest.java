@@ -165,7 +165,7 @@ public class DefaultTrackingFileManagerTest {
         for (int i = 0; i < 1000; i++) {
             Path propFile = createTmpFile(fs);
             assertTrue(tfm.delete(propFile));
-            assertFalse(Files.isRegularFile(propFile), "File is not gone");
+            assertFalse(Files.exists(propFile), "File is not gone");
         }
     }
 
