@@ -1,0 +1,69 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.eclipse.aether.internal.impl.synccontext.named;
+
+import java.util.Collection;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.named.NamedLockKey;
+
+import static java.util.Objects.requireNonNull;
+
+/**
+ * Wrapping {@link NameMapper} class that applies discovered {@link org.eclipse.aether.spi.locking.LockingInhibitor}.
+ *
+ * @since 2.0.14
+ */
+public class InhibitingNameMapper implements NameMapper {
+    private final NameMapper delegate;
+    private final Predicate<Artifact> artifactPredicate;
+    private final Predicate<Metadata> metadataPredicate;
+
+    public InhibitingNameMapper(
+            NameMapper delegate, Predicate<Artifact> artifactPredicate, Predicate<Metadata> metadataPredicate) {
+        this.delegate = requireNonNull(delegate);
+        this.artifactPredicate = artifactPredicate;
+        this.metadataPredicate = metadataPredicate;
+    }
+
+    @Override
+    public boolean isFileSystemFriendly() {
+        return delegate.isFileSystemFriendly();
+    }
+
+    @Override
+    public Collection<NamedLockKey> nameLocks(
+            RepositorySystemSession session,
+            Collection<? extends Artifact> artifacts,
+            Collection<? extends Metadata> metadatas) {
+        if (artifacts != null && artifactPredicate != null) {
+            artifacts =
+                    artifacts.stream().filter(a -> !artifactPredicate.test(a)).collect(Collectors.toList());
+        }
+        if (metadatas != null && metadataPredicate != null) {
+            metadatas =
+                    metadatas.stream().filter(m -> !metadataPredicate.test(m)).collect(Collectors.toList());
+        }
+        return delegate.nameLocks(session, artifacts, metadatas);
+    }
+}

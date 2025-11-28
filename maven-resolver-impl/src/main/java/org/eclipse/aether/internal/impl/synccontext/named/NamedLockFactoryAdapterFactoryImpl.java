@@ -24,12 +24,16 @@ import javax.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
+import org.eclipse.aether.spi.locking.LockingInhibitorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,12 +89,21 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
 
     protected final String defaultNameMapperName;
 
+    protected final Map<String, LockingInhibitorFactory> lockingInhibitorFactories;
+
     @Inject
     public NamedLockFactoryAdapterFactoryImpl(
             final Map<String, NamedLockFactory> factories,
             final Map<String, NameMapper> nameMappers,
+            final Map<String, LockingInhibitorFactory> lockingInhibitorFactories,
             final RepositorySystemLifecycle lifecycle) {
-        this(factories, DEFAULT_FACTORY_NAME, nameMappers, DEFAULT_NAME_MAPPER_NAME, lifecycle);
+        this(
+                factories,
+                DEFAULT_FACTORY_NAME,
+                nameMappers,
+                DEFAULT_NAME_MAPPER_NAME,
+                lockingInhibitorFactories,
+                lifecycle);
     }
 
     public NamedLockFactoryAdapterFactoryImpl(
@@ -98,11 +111,13 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
             final String defaultFactoryName,
             final Map<String, NameMapper> nameMappers,
             final String defaultNameMapperName,
+            final Map<String, LockingInhibitorFactory> lockingInhibitorFactories,
             final RepositorySystemLifecycle lifecycle) {
         this.factories = requireNonNull(factories);
         this.defaultFactoryName = requireNonNull(defaultFactoryName);
         this.nameMappers = requireNonNull(nameMappers);
         this.defaultNameMapperName = requireNonNull(defaultNameMapperName);
+        this.lockingInhibitorFactories = requireNonNull(lockingInhibitorFactories);
         lifecycle.addOnSystemEndedHandler(this::shutdown);
 
         logger.debug(
@@ -125,7 +140,7 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
     protected NamedLockFactoryAdapter createAdapter(RepositorySystemSession session) {
         final String nameMapperName = requireNonNull(getNameMapperName(session));
         final String factoryName = requireNonNull(getFactoryName(session));
-        final NameMapper nameMapper = selectNameMapper(nameMapperName);
+        final NameMapper nameMapper = selectNameMapper(session, nameMapperName);
         final NamedLockFactory factory = selectFactory(factoryName);
         logger.debug("Creating adapter using nameMapper '{}' and factory '{}'", nameMapperName, factoryName);
         return new NamedLockFactoryAdapter(nameMapper, factory);
@@ -172,13 +187,42 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
     }
 
     /**
-     * Selects a name mapper, never returns {@code null}.
+     * Selects a name mapper, never returns {@code null}. Applies inhibitors.
      */
-    protected NameMapper selectNameMapper(final String nameMapperName) {
+    protected NameMapper selectNameMapper(final RepositorySystemSession session, final String nameMapperName) {
         NameMapper nameMapper = nameMappers.get(nameMapperName);
         if (nameMapper == null) {
             throw new IllegalArgumentException(
                     "Unknown NameMapper name: '" + nameMapperName + "', known ones: " + nameMappers.keySet());
+        }
+        if (!lockingInhibitorFactories.isEmpty()) {
+            ArrayList<Predicate<Artifact>> artifactPredicates = new ArrayList<>();
+            ArrayList<Predicate<Metadata>> metadataPredicates = new ArrayList<>();
+            for (LockingInhibitorFactory factory : lockingInhibitorFactories.values()) {
+                factory.newInstance(session).ifPresent(i -> {
+                    i.inhibitArtifactLocking().ifPresent(artifactPredicates::add);
+                    i.inhibitMetadataLocking().ifPresent(metadataPredicates::add);
+                });
+            }
+            if (!artifactPredicates.isEmpty() || !metadataPredicates.isEmpty()) {
+                Predicate<Artifact> ap = null;
+                Predicate<Metadata> md = null;
+                for (Predicate<Artifact> predicate : artifactPredicates) {
+                    if (ap == null) {
+                        ap = predicate;
+                    } else {
+                        ap = ap.or(predicate);
+                    }
+                }
+                for (Predicate<Metadata> predicate : metadataPredicates) {
+                    if (md == null) {
+                        md = predicate;
+                    } else {
+                        md = md.or(predicate);
+                    }
+                }
+                return new InhibitingNameMapper(nameMapper, ap, md);
+            }
         }
         return nameMapper;
     }

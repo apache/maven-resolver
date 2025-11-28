@@ -101,6 +101,7 @@ import org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
 import org.eclipse.aether.internal.impl.filter.FilteringPipelineRepositoryConnectorFactory;
 import org.eclipse.aether.internal.impl.filter.GroupIdRemoteRepositoryFilterSource;
+import org.eclipse.aether.internal.impl.filter.PrefixesLockingInhibitorFactory;
 import org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSource;
 import org.eclipse.aether.internal.impl.offline.OfflinePipelineRepositoryConnectorFactory;
 import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
@@ -138,6 +139,7 @@ import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy
 import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
+import org.eclipse.aether.spi.locking.LockingInhibitorFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.spi.validator.ValidatorFactory;
@@ -363,6 +365,22 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return result;
     }
 
+    private Map<String, LockingInhibitorFactory> lockingInhibitorFactories;
+
+    public final Map<String, LockingInhibitorFactory> getLockingInhibitorFactories() {
+        checkClosed();
+        if (lockingInhibitorFactories == null) {
+            lockingInhibitorFactories = createLockingInhibitorFactories();
+        }
+        return lockingInhibitorFactories;
+    }
+
+    protected Map<String, LockingInhibitorFactory> createLockingInhibitorFactories() {
+        HashMap<String, LockingInhibitorFactory> result = new HashMap<>();
+        result.put(PrefixesLockingInhibitorFactory.NAME, new PrefixesLockingInhibitorFactory());
+        return result;
+    }
+
     private NamedLockFactoryAdapterFactory namedLockFactoryAdapterFactory;
 
     public final NamedLockFactoryAdapterFactory getNamedLockFactoryAdapterFactory() {
@@ -375,7 +393,10 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected NamedLockFactoryAdapterFactory createNamedLockFactoryAdapterFactory() {
         return new NamedLockFactoryAdapterFactoryImpl(
-                getNamedLockFactories(), getNameMappers(), getRepositorySystemLifecycle());
+                getNamedLockFactories(),
+                getNameMappers(),
+                getLockingInhibitorFactories(),
+                getRepositorySystemLifecycle());
     }
 
     private SyncContextFactory syncContextFactory;
