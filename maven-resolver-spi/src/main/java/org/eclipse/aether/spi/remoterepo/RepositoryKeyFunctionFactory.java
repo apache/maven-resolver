@@ -16,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.impl;
+package org.eclipse.aether.spi.remoterepo;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.util.repository.RepositoryKeyFunction;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
 
 /**
  * A factory to create {@link RepositoryKeyFunction} instances.
  *
  * @since 2.0.14
- * @provisional This type is provisional and can be changed, moved or removed without prior notice.
  */
 public interface RepositoryKeyFunctionFactory {
     /**

@@ -51,7 +51,6 @@ import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.RepositoryConnectorProvider;
 import org.eclipse.aether.impl.RepositoryEventDispatcher;
-import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.impl.RepositorySystemValidator;
 import org.eclipse.aether.impl.UpdateCheckManager;
@@ -140,6 +139,7 @@ import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy
 import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.spi.validator.ValidatorFactory;

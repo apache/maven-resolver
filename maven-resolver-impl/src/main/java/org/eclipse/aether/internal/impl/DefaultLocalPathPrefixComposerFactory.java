@@ -23,8 +23,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
-import org.eclipse.aether.util.repository.RepositoryKeyFunction;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 
 import static java.util.Objects.requireNonNull;
 

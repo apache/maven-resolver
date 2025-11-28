@@ -22,8 +22,8 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.repository.RepositoryKeyFunction;
 
 /**
  * Support class for {@link LocalPathPrefixComposerFactory} implementations: it predefines and makes re-usable

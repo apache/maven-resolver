@@ -27,11 +27,11 @@ import java.util.Map;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.DirectoryUtils;
 
 import static java.util.Objects.requireNonNull;

@@ -33,11 +33,11 @@ import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.ChecksumProcessor;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

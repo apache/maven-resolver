@@ -26,6 +26,7 @@ import java.util.TreeSet;
 
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
 import org.eclipse.aether.util.PathUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 

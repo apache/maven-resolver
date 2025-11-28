@@ -24,11 +24,11 @@ import javax.inject.Singleton;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;

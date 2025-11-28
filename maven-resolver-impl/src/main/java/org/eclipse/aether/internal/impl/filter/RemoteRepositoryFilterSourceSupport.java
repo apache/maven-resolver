@@ -24,11 +24,11 @@ import java.nio.file.Path;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.checksum.FileTrustedChecksumsSourceSupport;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.DirectoryUtils;
 
 import static java.util.Objects.requireNonNull;

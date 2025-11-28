@@ -16,14 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.repository;
+package org.eclipse.aether.repository;
 
 import java.util.function.BiFunction;
 
-import org.eclipse.aether.repository.RemoteRepository;
-
 /**
- * The repository key function.
+ * The repository key function, it produces keys (strings) for given {@link RemoteRepository} instances.
  *
  * @since 2.0.14
  */

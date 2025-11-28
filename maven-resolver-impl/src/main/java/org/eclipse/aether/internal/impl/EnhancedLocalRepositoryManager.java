@@ -35,7 +35,7 @@ import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.repository.RepositoryKeyFunction;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
 
 import static java.util.Objects.requireNonNull;
 

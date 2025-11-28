@@ -34,7 +34,7 @@ import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.repository.RepositoryKeyFunction;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
 
 import static java.util.Objects.requireNonNull;
 
