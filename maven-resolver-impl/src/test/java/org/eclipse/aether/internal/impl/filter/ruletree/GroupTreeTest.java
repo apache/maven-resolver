@@ -18,10 +18,13 @@
  */
 package org.eclipse.aether.internal.impl.filter.ruletree;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -124,5 +127,46 @@ public class GroupTreeTest {
         assertFalse(groupTree.acceptedGroupId("org.apache.baz.aaa"));
 
         assertFalse(groupTree.acceptedGroupId("not.in.list.but.uses.default"));
+    }
+
+    @Test
+    void implicitAndExplicitDefaultIsSame() {
+        // w/o asterisk: uses coded defaults
+        GroupTree implicitTree = new GroupTree("root");
+        implicitTree.loadNodes(Stream.of(
+                "# comment",
+                "",
+                "org.apache.maven",
+                "!=org.apache.maven.foo",
+                "!org.apache.maven.bar",
+                "=org.apache.baz"));
+        HashMap<String, Boolean> implicitResults = new HashMap<>();
+        // w/ asterisk: set to same value as default (should cause no change)
+        GroupTree explicitTree = new GroupTree("root");
+        explicitTree.loadNodes(Stream.of(
+                "# comment",
+                "",
+                "org.apache.maven",
+                "!=org.apache.maven.foo",
+                "!org.apache.maven.bar",
+                "=org.apache.baz",
+                "!*"));
+        HashMap<String, Boolean> explicitResults = new HashMap<>();
+
+        for (String key : Arrays.asList(
+                "org.apache.maven",
+                "org.apache.maven.aaa",
+                "org.apache.maven.foo",
+                "org.apache.maven.foo.aaa",
+                "org.apache.maven.bar",
+                "org.apache.maven.bar.aaa",
+                "org.apache.baz",
+                "org.apache.baz.aaa",
+                "not.in.list.but.uses.default")) {
+            implicitResults.put(key, implicitTree.acceptedGroupId(key));
+            explicitResults.put(key, explicitTree.acceptedGroupId(key));
+        }
+
+        assertEquals(implicitResults, explicitResults);
     }
 }
