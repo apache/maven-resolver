@@ -30,8 +30,8 @@ import org.eclipse.aether.RepositorySystemSession;
  * repository) and are NOT produced/written or altered in any way by Resolver, merely cached and read. Hence, despite
  * artifact locking inhibition is given as option, it should never happen in fact, as aforementioned conditions
  * never stand for them. On the other hand, good examples of resources may be needing locking inhibition are
- * archetype catalogs and RRF prefix files (both are produced by remote entities, and are just cached and read
- * by local instance).
+ * archetype catalogs and RRF prefix files, as both are metadata, hence their remotely fetched cache entries do not
+ * conflict locally, furthermore both are produced by remote entities only, and are just cached and read by Maven.
  *
  * @since 2.0.14
  */

@@ -30,9 +30,9 @@ import org.eclipse.aether.spi.locking.LockingInhibitor;
 import org.eclipse.aether.spi.locking.LockingInhibitorFactory;
 
 /**
- * Locking inhibitor for prefix files. They are perfect candidates, as they are created on remote, and locally are
- * only cached and read, and they do not clash on local file system (local repo) as they are stored in a file
- * that has origin repository factored in, as they are metadata.
+ * Locking inhibitor for RRF prefix files. They are perfect candidates, as they are created on remote, and locally are
+ * only cached and read, and they do not clash on local file system (local repo) either, as they are stored in a file
+ * that has origin repository factored in (as any metadata is).
  *
  * @since 2.0.14
  */
