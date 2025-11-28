@@ -36,4 +36,11 @@ public interface TrackingFileManager {
      * as in updated file, never {@code null}.
      */
     Properties update(File file, Map<String, String> updates);
+
+    /**
+     * Deletes the specified properties file, if exists. If file existed and was deleted, returns {@code true}.
+     *
+     * @since 1.9.25
+     */
+    boolean delete(File file);
 }

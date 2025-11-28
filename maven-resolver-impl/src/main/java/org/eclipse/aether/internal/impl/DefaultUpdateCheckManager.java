@@ -476,7 +476,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager, Service {
         Properties props = write(touchFile, dataKey, transferKey, check.getException());
 
         if (artifactFile.exists() && !hasErrors(props)) {
-            touchFile.delete();
+            trackingFileManager.delete(touchFile);
         }
     }
 

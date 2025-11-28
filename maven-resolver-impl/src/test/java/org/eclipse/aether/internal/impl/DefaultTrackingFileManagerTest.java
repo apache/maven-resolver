@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -101,6 +103,17 @@ public class DefaultTrackingFileManagerTest {
             File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
             assertNotNull(tfm.update(propFile, updates));
             assertTrue("Leaked file: " + propFile, propFile.delete());
+        }
+    }
+
+    @Test
+    public void testDeleteFileIsGone() throws Exception {
+        TrackingFileManager tfm = new DefaultTrackingFileManager();
+
+        for (int i = 0; i < 1000; i++) {
+            File propFile = TestFileUtils.createTempFile("#COMMENT\nkey1=value1\nkey2 : value2");
+            assertTrue(tfm.delete(propFile));
+            assertFalse("File is not gone", Files.isRegularFile(propFile.toPath()));
         }
     }
 
