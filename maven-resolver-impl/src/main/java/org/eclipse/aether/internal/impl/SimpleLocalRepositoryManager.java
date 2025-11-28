@@ -21,7 +21,6 @@ package org.eclipse.aether.internal.impl;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.function.BiFunction;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -35,6 +34,7 @@ import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.repository.RepositoryKeyFunction;
 
 import static java.util.Objects.requireNonNull;
 
@@ -47,13 +47,13 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
     private final LocalPathComposer localPathComposer;
 
-    private final BiFunction<RemoteRepository, String, String> repositoryKeyFunction;
+    private final RepositoryKeyFunction repositoryKeyFunction;
 
     SimpleLocalRepositoryManager(
             Path basePath,
             String type,
             LocalPathComposer localPathComposer,
-            BiFunction<RemoteRepository, String, String> repositoryKeyFunction) {
+            RepositoryKeyFunction repositoryKeyFunction) {
         requireNonNull(basePath, "base directory cannot be null");
         repository = new LocalRepository(basePath.toAbsolutePath(), type);
         this.localPathComposer = requireNonNull(localPathComposer);

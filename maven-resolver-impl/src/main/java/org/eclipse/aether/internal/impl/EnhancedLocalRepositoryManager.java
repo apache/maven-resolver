@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.function.BiFunction;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -36,6 +35,7 @@ import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.repository.RepositoryKeyFunction;
 
 import static java.util.Objects.requireNonNull;
 
@@ -71,7 +71,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
-            BiFunction<RemoteRepository, String, String> repositoryKeyFunction,
+            RepositoryKeyFunction repositoryKeyFunction,
             String trackingFilename,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposer localPathPrefixComposer) {

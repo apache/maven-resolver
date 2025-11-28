@@ -21,10 +21,8 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.function.BiFunction;
-
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.repository.RepositoryKeyFunction;
 
 /**
  * Default local path prefix composer factory: it fully reuses {@link LocalPathPrefixComposerFactorySupport} class
@@ -65,7 +63,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 boolean splitRemoteRepositoryLast,
                 String releasesPrefix,
                 String snapshotsPrefix,
-                BiFunction<RemoteRepository, String, String> repositoryKeyFunction) {
+                RepositoryKeyFunction repositoryKeyFunction) {
             super(
                     split,
                     localPrefix,

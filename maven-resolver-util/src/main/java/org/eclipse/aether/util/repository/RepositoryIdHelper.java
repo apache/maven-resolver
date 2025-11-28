@@ -23,7 +23,6 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.function.BiFunction;
 
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -77,15 +76,6 @@ public final class RepositoryIdHelper {
          * {@link RemoteRepository}.
          */
         GURK
-    }
-
-    /**
-     * The repository key function.
-     */
-    @FunctionalInterface
-    public interface RepositoryKeyFunction extends BiFunction<RemoteRepository, String, String> {
-        @Override
-        String apply(RemoteRepository repository, String context);
     }
 
     /**

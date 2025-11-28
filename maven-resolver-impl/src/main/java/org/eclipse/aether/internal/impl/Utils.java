@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.BiFunction;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -45,6 +44,7 @@ import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
+import org.eclipse.aether.util.repository.RepositoryKeyFunction;
 
 import static java.util.Objects.requireNonNull;
 
@@ -222,8 +222,7 @@ public final class Utils {
      * @since 2.0.14
      * @see #repositoryKeyFunction(Class, RepositorySystemSession, String, String)
      */
-    public static BiFunction<RemoteRepository, String, String> systemRepositoryKeyFunction(
-            RepositorySystemSession session) {
+    public static RepositoryKeyFunction systemRepositoryKeyFunction(RepositorySystemSession session) {
         return repositoryKeyFunction(
                 Utils.class,
                 session,
@@ -240,15 +239,14 @@ public final class Utils {
      * @since 2.0.14
      */
     @SuppressWarnings("unchecked")
-    public static BiFunction<RemoteRepository, String, String> repositoryKeyFunction(
+    public static RepositoryKeyFunction repositoryKeyFunction(
             Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
         requireNonNull(session);
         requireNonNull(defaultValue);
-        final RepositoryIdHelper.RepositoryKeyFunction repositoryKeyFunction =
-                RepositoryIdHelper.getRepositoryKeyFunction(
-                        configurationKey != null
-                                ? ConfigUtils.getString(session, defaultValue, configurationKey)
-                                : defaultValue);
+        final RepositoryKeyFunction repositoryKeyFunction = RepositoryIdHelper.getRepositoryKeyFunction(
+                configurationKey != null
+                        ? ConfigUtils.getString(session, defaultValue, configurationKey)
+                        : defaultValue);
         if (session.getCache() != null) {
             // both are expensive methods; cache it in session (repo -> context -> ID)
             return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)

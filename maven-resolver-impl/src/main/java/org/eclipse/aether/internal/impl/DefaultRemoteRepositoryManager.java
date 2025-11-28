@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositoryCache;
@@ -41,6 +40,7 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
+import org.eclipse.aether.util.repository.RepositoryKeyFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +103,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             return dominantRepositories;
         }
 
-        BiFunction<RemoteRepository, String, String> repositoryKeyFunction = Utils.systemRepositoryKeyFunction(session);
+        RepositoryKeyFunction repositoryKeyFunction = Utils.systemRepositoryKeyFunction(session);
         MirrorSelector mirrorSelector = session.getMirrorSelector();
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();
@@ -193,7 +193,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
 
     private RemoteRepository mergeMirrors(
             RepositorySystemSession session,
-            BiFunction<RemoteRepository, String, String> repositoryKeyFunction,
+            RepositoryKeyFunction repositoryKeyFunction,
             RemoteRepository dominant,
             RemoteRepository recessive) {
         RemoteRepository.Builder merged = null;
