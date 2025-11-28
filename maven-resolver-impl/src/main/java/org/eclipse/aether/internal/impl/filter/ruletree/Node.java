@@ -26,7 +26,7 @@ import java.util.HashMap;
 class Node {
     private final String name;
     private final boolean stop;
-    private final Boolean allow;
+    private Boolean allow;
     private final HashMap<String, Node> siblings;
 
     protected Node(String name, boolean stop, Boolean allow) {
@@ -50,6 +50,10 @@ class Node {
 
     public Boolean isAllow() {
         return allow;
+    }
+
+    public void setAllow(Boolean allow) {
+        this.allow = allow;
     }
 
     protected Node addSibling(String name, boolean stop, Boolean allow) {
