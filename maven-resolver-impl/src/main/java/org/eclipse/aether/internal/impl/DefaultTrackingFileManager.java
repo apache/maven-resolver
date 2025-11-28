@@ -62,7 +62,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         if (Files.isReadable(path)) {
             synchronized (mutex(path)) {
                 try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-                     FileLock unused = fileLock(fileChannel, true)) {
+                        FileLock unused = fileLock(fileChannel, true)) {
                     Properties props = new Properties();
                     props.load(Channels.newInputStream(fileChannel));
                     return props;
@@ -89,8 +89,8 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         Properties props = new Properties();
         synchronized (mutex(path)) {
             try (FileChannel fileChannel = FileChannel.open(
-                    path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-                 FileLock unused = fileLock(fileChannel, false)) {
+                            path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+                    FileLock unused = fileLock(fileChannel, false)) {
                 if (fileChannel.size() > 0) {
                     props.load(Channels.newInputStream(fileChannel));
                 }
@@ -126,7 +126,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         if (Files.isReadable(path)) {
             synchronized (mutex(path)) {
                 try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE);
-                     FileLock unused = fileLock(fileChannel, false)) {
+                        FileLock unused = fileLock(fileChannel, false)) {
                     Files.delete(path);
                     return true;
                 } catch (NoSuchFileException e) {
