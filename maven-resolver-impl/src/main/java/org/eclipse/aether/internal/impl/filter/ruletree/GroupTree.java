@@ -116,7 +116,7 @@ public class GroupTree extends Node {
     public boolean acceptedGroupId(String groupId) {
         final List<String> current = new ArrayList<>();
         final List<String> groupElements = elementsOfGroup(groupId);
-        Boolean accepted = isAllow();
+        Boolean accepted = null;
         Node currentNode = this;
         for (String groupElement : groupElements) {
             current.add(groupElement);
