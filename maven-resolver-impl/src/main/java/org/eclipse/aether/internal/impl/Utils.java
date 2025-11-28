@@ -22,10 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployRequest;
@@ -42,11 +39,6 @@ import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGenerator;
 import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
-import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
-import org.eclipse.aether.util.repository.RepositoryKeyFunction;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Internal utility methods.
@@ -213,53 +205,6 @@ public final class Utils {
             throws RepositoryOfflineException {
         if (session.isOffline()) {
             offlineController.checkOffline(session, repository);
-        }
-    }
-
-    /**
-     * Returns system-wide repository key function.
-     *
-     * @since 2.0.14
-     * @see #repositoryKeyFunction(Class, RepositorySystemSession, String, String)
-     */
-    public static RepositoryKeyFunction systemRepositoryKeyFunction(RepositorySystemSession session) {
-        return repositoryKeyFunction(
-                Utils.class,
-                session,
-                ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION,
-                ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION);
-    }
-
-    /**
-     * Method that based on configuration returns the "repository key function". The returned function will be session
-     * cached if session is equipped with cache, otherwise it will be non cached. Method never returns {@code null}.
-     * Only the {@code configurationKey} parameter may be {@code null} in which case no configuration lookup happens
-     * but the {@code defaultValue} is directly used instead.
-     *
-     * @since 2.0.14
-     */
-    @SuppressWarnings("unchecked")
-    public static RepositoryKeyFunction repositoryKeyFunction(
-            Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
-        requireNonNull(session);
-        requireNonNull(defaultValue);
-        final RepositoryKeyFunction repositoryKeyFunction = RepositoryIdHelper.getRepositoryKeyFunction(
-                configurationKey != null
-                        ? ConfigUtils.getString(session, defaultValue, configurationKey)
-                        : defaultValue);
-        if (session.getCache() != null) {
-            // both are expensive methods; cache it in session (repo -> context -> ID)
-            return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
-                            session.getCache()
-                                    .computeIfAbsent(
-                                            session,
-                                            owner.getName() + ".repositoryKeyFunction",
-                                            ConcurrentHashMap::new))
-                    .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
-                    .computeIfAbsent(
-                            context == null ? "" : context, k2 -> repositoryKeyFunction.apply(repository, context));
-        } else {
-            return repositoryKeyFunction;
         }
     }
 }

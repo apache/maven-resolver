@@ -27,7 +27,7 @@ import java.util.Map;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.internal.impl.Utils;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
@@ -73,6 +73,12 @@ public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecks
     public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
 
     public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "nid";
+
+    private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
+
+    protected FileTrustedChecksumsSourceSupport(RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
+        this.repositoryKeyFunctionFactory = requireNonNull(repositoryKeyFunctionFactory);
+    }
 
     /**
      * This implementation will call into underlying code only if enabled, and will enforce non-{@code null} return
@@ -156,7 +162,8 @@ public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecks
      */
     protected String repositoryKey(RepositorySystemSession session, ArtifactRepository artifactRepository) {
         if (artifactRepository instanceof RemoteRepository) {
-            return Utils.repositoryKeyFunction(
+            return repositoryKeyFunctionFactory
+                    .repositoryKeyFunction(
                             FileTrustedChecksumsSourceSupport.class,
                             session,
                             DEFAULT_REPOSITORY_KEY_FUNCTION,

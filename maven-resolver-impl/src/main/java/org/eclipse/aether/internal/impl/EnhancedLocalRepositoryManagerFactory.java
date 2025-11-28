@@ -24,6 +24,7 @@ import javax.inject.Singleton;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
@@ -65,14 +66,18 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     private final LocalPathPrefixComposerFactory localPathPrefixComposerFactory;
 
+    private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
+
     @Inject
     public EnhancedLocalRepositoryManagerFactory(
             final LocalPathComposer localPathComposer,
             final TrackingFileManager trackingFileManager,
-            final LocalPathPrefixComposerFactory localPathPrefixComposerFactory) {
+            final LocalPathPrefixComposerFactory localPathPrefixComposerFactory,
+            final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
         this.localPathComposer = requireNonNull(localPathComposer);
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposerFactory = requireNonNull(localPathPrefixComposerFactory);
+        this.repositoryKeyFunctionFactory = requireNonNull(repositoryKeyFunctionFactory);
     }
 
     @Override
@@ -93,7 +98,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
             return new EnhancedLocalRepositoryManager(
                     repository.getBasePath(),
                     localPathComposer,
-                    Utils.systemRepositoryKeyFunction(session),
+                    repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session),
                     trackingFilename,
                     trackingFileManager,
                     localPathPrefixComposerFactory.createComposer(session));

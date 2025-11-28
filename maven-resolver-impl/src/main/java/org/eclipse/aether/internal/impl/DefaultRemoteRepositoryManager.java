@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationSelector;
@@ -83,11 +84,17 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
 
     private final ChecksumPolicyProvider checksumPolicyProvider;
 
+    private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
+
     @Inject
     public DefaultRemoteRepositoryManager(
-            UpdatePolicyAnalyzer updatePolicyAnalyzer, ChecksumPolicyProvider checksumPolicyProvider) {
+            UpdatePolicyAnalyzer updatePolicyAnalyzer,
+            ChecksumPolicyProvider checksumPolicyProvider,
+            RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
         this.updatePolicyAnalyzer = requireNonNull(updatePolicyAnalyzer, "update policy analyzer cannot be null");
         this.checksumPolicyProvider = requireNonNull(checksumPolicyProvider, "checksum policy provider cannot be null");
+        this.repositoryKeyFunctionFactory =
+                requireNonNull(repositoryKeyFunctionFactory, "repository key function factory cannot be null");
     }
 
     @Override
@@ -103,7 +110,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             return dominantRepositories;
         }
 
-        RepositoryKeyFunction repositoryKeyFunction = Utils.systemRepositoryKeyFunction(session);
+        RepositoryKeyFunction repositoryKeyFunction = repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session);
         MirrorSelector mirrorSelector = session.getMirrorSelector();
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();

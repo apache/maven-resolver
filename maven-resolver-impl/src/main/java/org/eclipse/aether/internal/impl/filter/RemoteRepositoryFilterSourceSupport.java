@@ -24,7 +24,7 @@ import java.nio.file.Path;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.internal.impl.Utils;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.checksum.FileTrustedChecksumsSourceSupport;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
@@ -69,6 +69,12 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
 
     public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "nid";
 
+    private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
+
+    protected RemoteRepositoryFilterSourceSupport(RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
+        this.repositoryKeyFunctionFactory = requireNonNull(repositoryKeyFunctionFactory);
+    }
+
     /**
      * Returns {@code true} if session configuration contains this name set to {@code true}.
      * <p>
@@ -111,7 +117,8 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
      * @since 2.0.14
      */
     protected String repositoryKey(RepositorySystemSession session, RemoteRepository repository) {
-        return Utils.repositoryKeyFunction(
+        return repositoryKeyFunctionFactory
+                .repositoryKeyFunction(
                         FileTrustedChecksumsSourceSupport.class,
                         session,
                         DEFAULT_REPOSITORY_KEY_FUNCTION,

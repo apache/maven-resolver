@@ -36,6 +36,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.filter.prefixes.PrefixesSource;
 import org.eclipse.aether.internal.impl.filter.ruletree.PrefixTree;
 import org.eclipse.aether.metadata.DefaultMetadata;
@@ -196,9 +197,11 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     @Inject
     public PrefixesRemoteRepositoryFilterSource(
+            RepositoryKeyFunctionFactory repositoryKeyFunctionFactory,
             Supplier<MetadataResolver> metadataResolver,
             Supplier<RemoteRepositoryManager> remoteRepositoryManager,
             RepositoryLayoutProvider repositoryLayoutProvider) {
+        super(repositoryKeyFunctionFactory);
         this.metadataResolver = requireNonNull(metadataResolver);
         this.remoteRepositoryManager = requireNonNull(remoteRepositoryManager);
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);

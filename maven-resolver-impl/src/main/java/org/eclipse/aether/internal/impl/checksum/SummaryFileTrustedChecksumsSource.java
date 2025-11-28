@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -141,9 +142,11 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
 
     @Inject
     public SummaryFileTrustedChecksumsSource(
+            RepositoryKeyFunctionFactory repoKeyFunctionFactory,
             LocalPathComposer localPathComposer,
             RepositorySystemLifecycle repositorySystemLifecycle,
             PathProcessor pathProcessor) {
+        super(repoKeyFunctionFactory);
         this.localPathComposer = requireNonNull(localPathComposer);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.pathProcessor = requireNonNull(pathProcessor);

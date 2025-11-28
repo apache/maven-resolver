@@ -18,11 +18,15 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.repository.RepositoryKeyFunction;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Default local path prefix composer factory: it fully reuses {@link LocalPathPrefixComposerFactorySupport} class
@@ -33,6 +37,13 @@ import org.eclipse.aether.util.repository.RepositoryKeyFunction;
 @Singleton
 @Named
 public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefixComposerFactorySupport {
+    private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
+
+    @Inject
+    public DefaultLocalPathPrefixComposerFactory(RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
+        this.repositoryKeyFunctionFactory = requireNonNull(repositoryKeyFunctionFactory);
+    }
+
     @Override
     public LocalPathPrefixComposer createComposer(RepositorySystemSession session) {
         return new DefaultLocalPathPrefixComposer(
@@ -45,7 +56,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 isSplitRemoteRepositoryLast(session),
                 getReleasesPrefix(session),
                 getSnapshotsPrefix(session),
-                Utils.systemRepositoryKeyFunction(session));
+                repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session));
     }
 
     /**

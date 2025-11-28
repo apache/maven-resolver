@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.filter.ruletree.GroupTree;
 import org.eclipse.aether.metadata.Metadata;
@@ -156,7 +157,10 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
 
     @Inject
     public GroupIdRemoteRepositoryFilterSource(
-            RepositorySystemLifecycle repositorySystemLifecycle, PathProcessor pathProcessor) {
+            RepositoryKeyFunctionFactory repositoryKeyFunctionFactory,
+            RepositorySystemLifecycle repositorySystemLifecycle,
+            PathProcessor pathProcessor) {
+        super(repositoryKeyFunctionFactory);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.pathProcessor = requireNonNull(pathProcessor);
     }

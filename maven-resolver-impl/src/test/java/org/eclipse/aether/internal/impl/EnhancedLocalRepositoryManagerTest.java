@@ -111,7 +111,8 @@ public class EnhancedLocalRepositoryManagerTest {
                 RepositoryIdHelper::simpleRepositoryKey,
                 "_remote.repositories",
                 trackingFileManager,
-                new DefaultLocalPathPrefixComposerFactory().createComposer(session));
+                new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory())
+                        .createComposer(session));
     }
 
     @AfterEach

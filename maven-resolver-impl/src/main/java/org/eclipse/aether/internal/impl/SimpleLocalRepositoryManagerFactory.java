@@ -23,6 +23,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
@@ -41,17 +42,22 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
     private float priority;
 
     private final LocalPathComposer localPathComposer;
+    private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
 
     /**
      * No-arg constructor, as "simple" local repository is meant mainly for use in tests.
      */
     public SimpleLocalRepositoryManagerFactory() {
         this.localPathComposer = new DefaultLocalPathComposer();
+        this.repositoryKeyFunctionFactory = new DefaultRepositoryKeyFunctionFactory();
     }
 
     @Inject
-    public SimpleLocalRepositoryManagerFactory(final LocalPathComposer localPathComposer) {
+    public SimpleLocalRepositoryManagerFactory(
+            final LocalPathComposer localPathComposer,
+            final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
         this.localPathComposer = requireNonNull(localPathComposer);
+        this.repositoryKeyFunctionFactory = requireNonNull(repositoryKeyFunctionFactory);
     }
 
     @Override
@@ -65,7 +71,7 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
                     repository.getBasePath(),
                     "simple",
                     localPathComposer,
-                    Utils.repositoryKeyFunction(
+                    repositoryKeyFunctionFactory.repositoryKeyFunction(
                             SimpleLocalRepositoryManagerFactory.class,
                             session,
                             RepositoryIdHelper.RepositoryKeyType.SIMPLE.name(),

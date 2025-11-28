@@ -33,6 +33,7 @@ import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.impl.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
@@ -105,7 +106,10 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
 
     @Inject
     public SparseDirectoryTrustedChecksumsSource(
-            ChecksumProcessor checksumProcessor, LocalPathComposer localPathComposer) {
+            RepositoryKeyFunctionFactory repositoryKeyFunctionFactory,
+            ChecksumProcessor checksumProcessor,
+            LocalPathComposer localPathComposer) {
+        super(repositoryKeyFunctionFactory);
         this.checksumProcessor = requireNonNull(checksumProcessor);
         this.localPathComposer = requireNonNull(localPathComposer);
     }
