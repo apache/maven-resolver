@@ -47,6 +47,9 @@ import org.slf4j.LoggerFactory;
  * to back off two parallel implementations that coexist in Maven (this class and {@code maven-compat} one), as in
  * certain cases the two implementations may collide on properties files. This locking must remain in place for as long
  * as {@code maven-compat} code exists.
+ *
+ * <em>IMPORTANT:</em> This class is kept fully in sync with the master branch one (w/ simple change to convert File
+ * to Path instances).
  */
 @Singleton
 @Named
@@ -59,7 +62,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         if (Files.isReadable(path)) {
             synchronized (mutex(path)) {
                 try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-                        FileLock unused = fileLock(fileChannel, Math.max(1, fileChannel.size()), true)) {
+                     FileLock unused = fileLock(fileChannel, true)) {
                     Properties props = new Properties();
                     props.load(Channels.newInputStream(fileChannel));
                     return props;
@@ -86,8 +89,8 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         Properties props = new Properties();
         synchronized (mutex(path)) {
             try (FileChannel fileChannel = FileChannel.open(
-                            path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-                    FileLock unused = fileLock(fileChannel, Math.max(1, fileChannel.size()), false)) {
+                    path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+                 FileLock unused = fileLock(fileChannel, false)) {
                 if (fileChannel.size() > 0) {
                     props.load(Channels.newInputStream(fileChannel));
                 }
@@ -123,7 +126,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         if (Files.isReadable(path)) {
             synchronized (mutex(path)) {
                 try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE);
-                        FileLock unused = fileLock(fileChannel, Math.max(1, fileChannel.size()), false)) {
+                     FileLock unused = fileLock(fileChannel, false)) {
                     Files.delete(path);
                     return true;
                 } catch (NoSuchFileException e) {
@@ -143,11 +146,11 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         return path.toAbsolutePath().normalize().toString().intern();
     }
 
-    private FileLock fileLock(FileChannel channel, long size, boolean shared) throws IOException {
+    private FileLock fileLock(FileChannel channel, boolean shared) throws IOException {
         FileLock lock = null;
         for (int attempts = 8; attempts >= 0; attempts--) {
             try {
-                lock = channel.lock(0, size, shared);
+                lock = channel.lock(0, Long.MAX_VALUE, shared);
                 break;
             } catch (OverlappingFileLockException e) {
                 if (attempts <= 0) {
