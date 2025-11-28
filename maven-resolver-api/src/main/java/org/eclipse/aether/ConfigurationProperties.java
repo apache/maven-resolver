@@ -150,6 +150,13 @@ public final class ConfigurationProperties {
     public static final String CACHED_PRIORITIES = PREFIX_PRIORITY + "cached";
 
     /**
+     * The default caching of priority components if {@link #CACHED_PRIORITIES} isn't set. Default value is {@code true}.
+     *
+     * @since 2.0.0
+     */
+    public static final boolean DEFAULT_CACHED_PRIORITIES = true;
+
+    /**
      * The priority to use for a certain extension class. {@code &lt;class&gt;} can either be the fully qualified
      * name or the simple name of a class. If the class name ends with Factory that suffix could optionally be left out.
      * This configuration is used by {@code org.eclipse.aether.internal.impl.PrioritizedComponents} internal utility
@@ -170,13 +177,6 @@ public final class ConfigurationProperties {
      * @configurationRepoIdSuffix No
      */
     public static final String CLASS_PRIORITIES = PREFIX_PRIORITY + "<class>";
-
-    /**
-     * The default caching of priority components if {@link #CACHED_PRIORITIES} isn't set. Default value is {@code true}.
-     *
-     * @since 2.0.0
-     */
-    public static final boolean DEFAULT_CACHED_PRIORITIES = true;
 
     /**
      * A flag indicating whether interaction with the user is allowed.
@@ -559,6 +559,23 @@ public final class ConfigurationProperties {
      */
     public static final String DEFAULT_REPOSITORY_SYSTEM_DEPENDENCY_VISITOR =
             REPOSITORY_SYSTEM_DEPENDENCY_VISITOR_LEVELORDER;
+
+    /**
+     * <b>Experimental:</b> Configuration for system-wide "repository key" function.
+     * Accepted and recommended values: "nid" (default), "nid_hurl" and "ngurk", while "simple" is Maven 3 legacy,
+     * technically equivalent to "nid". For complete description see enum
+     * {@code org.eclipse.aether.util.repository.RepositoryIdHelper.RepositoryKeyType} in utils. <em>Warning:</em>
+     * repository key function affects Resolver fundamentally and may have unexpected results! Only change this
+     * if you know what you are doing!
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION}
+     */
+    public static final String REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = PREFIX_SYSTEM + "repositoryKeyFunction";
+
+    public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid";
 
     /**
      * A flag indicating whether version scheme cache statistics should be printed on JVM shutdown.

@@ -56,7 +56,8 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
     void defaultConfigNoSplitAllNulls() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
 
-        LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
+        LocalPathPrefixComposerFactory factory =
+                new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory());
         LocalPathPrefixComposer composer = factory.createComposer(session);
         assertNotNull(composer);
 
@@ -79,7 +80,8 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
         DefaultRepositorySystemSession session = TestUtils.newSession();
         session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT, Boolean.TRUE.toString());
 
-        LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
+        LocalPathPrefixComposerFactory factory =
+                new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory());
         LocalPathPrefixComposer composer = factory.createComposer(session);
         assertNotNull(composer);
 
@@ -110,7 +112,8 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
         session.setConfigProperty(
                 DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_REMOTE_REPOSITORY, Boolean.TRUE.toString());
 
-        LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
+        LocalPathPrefixComposerFactory factory =
+                new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory());
         LocalPathPrefixComposer composer = factory.createComposer(session);
         assertNotNull(composer);
 
@@ -175,7 +178,8 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
         session.setConfigProperty(
                 DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_REMOTE_REPOSITORY, Boolean.TRUE.toString());
 
-        LocalPathPrefixComposerFactory factory = new DefaultLocalPathPrefixComposerFactory();
+        LocalPathPrefixComposerFactory factory =
+                new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory());
         LocalPathPrefixComposer composer = factory.createComposer(session);
         assertNotNull(composer);
 

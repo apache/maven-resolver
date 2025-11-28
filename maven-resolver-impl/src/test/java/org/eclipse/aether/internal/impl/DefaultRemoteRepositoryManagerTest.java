@@ -53,8 +53,10 @@ public class DefaultRemoteRepositoryManagerTest {
         session = TestUtils.newSession();
         session.setChecksumPolicy(null);
         session.setUpdatePolicy(null);
-        manager =
-                new DefaultRemoteRepositoryManager(new StubUpdatePolicyAnalyzer(), new DefaultChecksumPolicyProvider());
+        manager = new DefaultRemoteRepositoryManager(
+                new StubUpdatePolicyAnalyzer(),
+                new DefaultChecksumPolicyProvider(),
+                new DefaultRepositoryKeyFunctionFactory());
     }
 
     @AfterEach

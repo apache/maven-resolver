@@ -18,14 +18,15 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.util.function.Function;
-
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.ArtifactRepository;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Default local path prefix composer factory: it fully reuses {@link LocalPathPrefixComposerFactorySupport} class
@@ -36,6 +37,13 @@ import org.eclipse.aether.util.repository.RepositoryIdHelper;
 @Singleton
 @Named
 public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefixComposerFactorySupport {
+    private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
+
+    @Inject
+    public DefaultLocalPathPrefixComposerFactory(RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
+        this.repositoryKeyFunctionFactory = requireNonNull(repositoryKeyFunctionFactory);
+    }
+
     @Override
     public LocalPathPrefixComposer createComposer(RepositorySystemSession session) {
         return new DefaultLocalPathPrefixComposer(
@@ -48,7 +56,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 isSplitRemoteRepositoryLast(session),
                 getReleasesPrefix(session),
                 getSnapshotsPrefix(session),
-                RepositoryIdHelper.cachedIdToPathSegment(session));
+                repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session));
     }
 
     /**
@@ -66,7 +74,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 boolean splitRemoteRepositoryLast,
                 String releasesPrefix,
                 String snapshotsPrefix,
-                Function<ArtifactRepository, String> idToPathSegmentFunction) {
+                RepositoryKeyFunction repositoryKeyFunction) {
             super(
                     split,
                     localPrefix,
@@ -77,7 +85,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                     splitRemoteRepositoryLast,
                     releasesPrefix,
                     snapshotsPrefix,
-                    idToPathSegmentFunction);
+                    repositoryKeyFunction);
         }
     }
 }
