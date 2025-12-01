@@ -24,15 +24,13 @@ import javax.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
-import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
+import org.eclipse.aether.spi.locking.LockingInhibitor;
 import org.eclipse.aether.spi.locking.LockingInhibitorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
@@ -196,32 +194,12 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
                     "Unknown NameMapper name: '" + nameMapperName + "', known ones: " + nameMappers.keySet());
         }
         if (!lockingInhibitorFactories.isEmpty()) {
-            ArrayList<Predicate<Artifact>> artifactPredicates = new ArrayList<>();
-            ArrayList<Predicate<Metadata>> metadataPredicates = new ArrayList<>();
+            ArrayList<LockingInhibitor> inhibitors = new ArrayList<>();
             for (LockingInhibitorFactory factory : lockingInhibitorFactories.values()) {
-                factory.newInstance(session).ifPresent(i -> {
-                    i.inhibitArtifactLocking().ifPresent(artifactPredicates::add);
-                    i.inhibitMetadataLocking().ifPresent(metadataPredicates::add);
-                });
+                factory.newInstance(session).ifPresent(inhibitors::add);
             }
-            if (!artifactPredicates.isEmpty() || !metadataPredicates.isEmpty()) {
-                Predicate<Artifact> ap = null;
-                Predicate<Metadata> md = null;
-                for (Predicate<Artifact> predicate : artifactPredicates) {
-                    if (ap == null) {
-                        ap = predicate;
-                    } else {
-                        ap = ap.or(predicate);
-                    }
-                }
-                for (Predicate<Metadata> predicate : metadataPredicates) {
-                    if (md == null) {
-                        md = predicate;
-                    } else {
-                        md = md.or(predicate);
-                    }
-                }
-                return new InhibitingNameMapper(nameMapper, ap, md);
+            if (!inhibitors.isEmpty()) {
+                return new InhibitingNameMapper(nameMapper, inhibitors);
             }
         }
         return nameMapper;

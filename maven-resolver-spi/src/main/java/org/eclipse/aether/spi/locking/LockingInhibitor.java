@@ -18,9 +18,6 @@
  */
 package org.eclipse.aether.spi.locking;
 
-import java.util.Optional;
-import java.util.function.Predicate;
-
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
@@ -34,14 +31,14 @@ public interface LockingInhibitor {
      * May provide a predicate for artifacts that needs lock inhibition. <em>Warning: you do not want to override
      * this method, or if you do, think twice.</em>
      */
-    default Optional<Predicate<Artifact>> inhibitArtifactLocking() {
-        return Optional.empty();
+    default boolean inhibitArtifactLocking(Artifact artifact) {
+        return false;
     }
 
     /**
      * May provide a predicate for metadata that needs lock inhibition.
      */
-    default Optional<Predicate<Metadata>> inhibitMetadataLocking() {
-        return Optional.empty();
+    default boolean inhibitMetadataLocking(Metadata metadata) {
+        return false;
     }
 }

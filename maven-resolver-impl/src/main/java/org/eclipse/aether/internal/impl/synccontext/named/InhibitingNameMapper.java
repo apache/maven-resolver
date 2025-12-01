@@ -19,13 +19,14 @@
 package org.eclipse.aether.internal.impl.synccontext.named;
 
 import java.util.Collection;
-import java.util.function.Predicate;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLockKey;
+import org.eclipse.aether.spi.locking.LockingInhibitor;
 
 import static java.util.Objects.requireNonNull;
 
@@ -36,14 +37,11 @@ import static java.util.Objects.requireNonNull;
  */
 public class InhibitingNameMapper implements NameMapper {
     private final NameMapper delegate;
-    private final Predicate<Artifact> artifactPredicate;
-    private final Predicate<Metadata> metadataPredicate;
+    private final List<LockingInhibitor> lockingInhibitors;
 
-    public InhibitingNameMapper(
-            NameMapper delegate, Predicate<Artifact> artifactPredicate, Predicate<Metadata> metadataPredicate) {
+    public InhibitingNameMapper(NameMapper delegate, List<LockingInhibitor> lockingInhibitors) {
         this.delegate = requireNonNull(delegate);
-        this.artifactPredicate = artifactPredicate;
-        this.metadataPredicate = metadataPredicate;
+        this.lockingInhibitors = requireNonNull(lockingInhibitors);
     }
 
     @Override
@@ -56,13 +54,15 @@ public class InhibitingNameMapper implements NameMapper {
             RepositorySystemSession session,
             Collection<? extends Artifact> artifacts,
             Collection<? extends Metadata> metadatas) {
-        if (artifacts != null && artifactPredicate != null) {
-            artifacts =
-                    artifacts.stream().filter(a -> !artifactPredicate.test(a)).collect(Collectors.toList());
+        if (artifacts != null) {
+            artifacts = artifacts.stream()
+                    .filter(a -> lockingInhibitors.stream().noneMatch(i -> i.inhibitArtifactLocking(a)))
+                    .collect(Collectors.toList());
         }
-        if (metadatas != null && metadataPredicate != null) {
-            metadatas =
-                    metadatas.stream().filter(m -> !metadataPredicate.test(m)).collect(Collectors.toList());
+        if (metadatas != null) {
+            metadatas = metadatas.stream()
+                    .filter(m -> lockingInhibitors.stream().noneMatch(i -> i.inhibitMetadataLocking(m)))
+                    .collect(Collectors.toList());
         }
         return delegate.nameLocks(session, artifacts, metadatas);
     }

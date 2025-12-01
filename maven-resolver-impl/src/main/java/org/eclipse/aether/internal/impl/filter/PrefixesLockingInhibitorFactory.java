@@ -55,7 +55,7 @@ public class PrefixesLockingInhibitorFactory implements LockingInhibitorFactory,
     }
 
     @Override
-    public Optional<Predicate<Metadata>> inhibitMetadataLocking() {
-        return Optional.of(PREFIX_PREDICATE);
+    public boolean inhibitMetadataLocking(Metadata metadata) {
+        return PREFIX_PREDICATE.test(metadata);
     }
 }
