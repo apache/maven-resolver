@@ -86,7 +86,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     private static final String CONFIG_PROPS_PREFIX =
             RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
 
-    private static final String PREFIX_FILE_TYPE = ".meta/prefixes.txt";
+    static final String PREFIX_FILE_TYPE = ".meta/prefixes.txt";
 
     /**
      * Configuration to enable the Prefixes filter (enabled by default). Can be fine-tuned per repository using
