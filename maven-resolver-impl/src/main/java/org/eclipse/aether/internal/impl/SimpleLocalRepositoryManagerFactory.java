@@ -27,6 +27,7 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
 
 import static java.util.Objects.requireNonNull;
@@ -41,17 +42,22 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
     private float priority;
 
     private final LocalPathComposer localPathComposer;
+    private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
 
     /**
      * No-arg constructor, as "simple" local repository is meant mainly for use in tests.
      */
     public SimpleLocalRepositoryManagerFactory() {
         this.localPathComposer = new DefaultLocalPathComposer();
+        this.repositoryKeyFunctionFactory = new DefaultRepositoryKeyFunctionFactory();
     }
 
     @Inject
-    public SimpleLocalRepositoryManagerFactory(final LocalPathComposer localPathComposer) {
+    public SimpleLocalRepositoryManagerFactory(
+            final LocalPathComposer localPathComposer,
+            final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
         this.localPathComposer = requireNonNull(localPathComposer);
+        this.repositoryKeyFunctionFactory = requireNonNull(repositoryKeyFunctionFactory);
     }
 
     @Override
@@ -65,7 +71,11 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
                     repository.getBasePath(),
                     "simple",
                     localPathComposer,
-                    RepositoryIdHelper.cachedIdToPathSegment(session));
+                    repositoryKeyFunctionFactory.repositoryKeyFunction(
+                            SimpleLocalRepositoryManagerFactory.class,
+                            session,
+                            RepositoryIdHelper.RepositoryKeyType.SIMPLE.name(),
+                            null));
         } else {
             throw new NoLocalRepositoryManagerException(repository);
         }

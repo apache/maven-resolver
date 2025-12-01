@@ -48,9 +48,9 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -157,7 +157,10 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
 
     @Inject
     public GroupIdRemoteRepositoryFilterSource(
-            RepositorySystemLifecycle repositorySystemLifecycle, PathProcessor pathProcessor) {
+            RepositoryKeyFunctionFactory repositoryKeyFunctionFactory,
+            RepositorySystemLifecycle repositorySystemLifecycle,
+            PathProcessor pathProcessor) {
+        super(repositoryKeyFunctionFactory);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.pathProcessor = requireNonNull(pathProcessor);
     }
@@ -248,9 +251,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     private Path ruleFile(RepositorySystemSession session, RemoteRepository remoteRepository) {
         return ruleFiles(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> getBasedir(
                         session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
-                .resolve(GROUP_ID_FILE_PREFIX
-                        + RepositoryIdHelper.cachedIdToPathSegment(session).apply(remoteRepository)
-                        + GROUP_ID_FILE_SUFFIX));
+                .resolve(GROUP_ID_FILE_PREFIX + repositoryKey(session, remoteRepository) + GROUP_ID_FILE_SUFFIX));
     }
 
     private GroupTree cacheRules(RepositorySystemSession session, RemoteRepository remoteRepository) {

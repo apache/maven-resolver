@@ -38,8 +38,10 @@ import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,11 +84,17 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
 
     private final ChecksumPolicyProvider checksumPolicyProvider;
 
+    private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
+
     @Inject
     public DefaultRemoteRepositoryManager(
-            UpdatePolicyAnalyzer updatePolicyAnalyzer, ChecksumPolicyProvider checksumPolicyProvider) {
+            UpdatePolicyAnalyzer updatePolicyAnalyzer,
+            ChecksumPolicyProvider checksumPolicyProvider,
+            RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
         this.updatePolicyAnalyzer = requireNonNull(updatePolicyAnalyzer, "update policy analyzer cannot be null");
         this.checksumPolicyProvider = requireNonNull(checksumPolicyProvider, "checksum policy provider cannot be null");
+        this.repositoryKeyFunctionFactory =
+                requireNonNull(repositoryKeyFunctionFactory, "repository key function factory cannot be null");
     }
 
     @Override
@@ -102,6 +110,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             return dominantRepositories;
         }
 
+        RepositoryKeyFunction repositoryKeyFunction = repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session);
         MirrorSelector mirrorSelector = session.getMirrorSelector();
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();
@@ -121,15 +130,16 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                 }
             }
 
-            String key = getKey(repository);
+            String key = repositoryKeyFunction.apply(repository, null);
 
             for (ListIterator<RemoteRepository> it = result.listIterator(); it.hasNext(); ) {
                 RemoteRepository dominantRepository = it.next();
 
-                if (key.equals(getKey(dominantRepository))) {
+                if (key.equals(repositoryKeyFunction.apply(dominantRepository, null))) {
                     if (!dominantRepository.getMirroredRepositories().isEmpty()
                             && !repository.getMirroredRepositories().isEmpty()) {
-                        RemoteRepository mergedRepository = mergeMirrors(session, dominantRepository, repository);
+                        RemoteRepository mergedRepository =
+                                mergeMirrors(session, repositoryKeyFunction, dominantRepository, repository);
                         if (mergedRepository != dominantRepository) {
                             it.set(mergedRepository);
                         }
@@ -188,21 +198,20 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                 original.getUrl());
     }
 
-    private String getKey(RemoteRepository repository) {
-        return repository.getId();
-    }
-
     private RemoteRepository mergeMirrors(
-            RepositorySystemSession session, RemoteRepository dominant, RemoteRepository recessive) {
+            RepositorySystemSession session,
+            RepositoryKeyFunction repositoryKeyFunction,
+            RemoteRepository dominant,
+            RemoteRepository recessive) {
         RemoteRepository.Builder merged = null;
         RepositoryPolicy releases = null, snapshots = null;
 
         next:
         for (RemoteRepository rec : recessive.getMirroredRepositories()) {
-            String recKey = getKey(rec);
+            String recKey = repositoryKeyFunction.apply(rec, null);
 
             for (RemoteRepository dom : dominant.getMirroredRepositories()) {
-                if (recKey.equals(getKey(dom))) {
+                if (recKey.equals(repositoryKeyFunction.apply(dom, null))) {
                     continue next;
                 }
             }

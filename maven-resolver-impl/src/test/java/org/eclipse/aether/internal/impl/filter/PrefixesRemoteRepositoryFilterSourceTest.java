@@ -33,6 +33,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.MetadataResolver;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.DefaultArtifactPredicateFactory;
+import org.eclipse.aether.internal.impl.DefaultRepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -84,7 +85,10 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
                 new Maven2RepositoryLayoutFactory(
                         checksumsSelector(), new DefaultArtifactPredicateFactory(checksumsSelector()))));
         return new PrefixesRemoteRepositoryFilterSource(
-                () -> metadataResolver, () -> remoteRepositoryManager, layoutProvider);
+                new DefaultRepositoryKeyFunctionFactory(),
+                () -> metadataResolver,
+                () -> remoteRepositoryManager,
+                layoutProvider);
     }
 
     @Override
