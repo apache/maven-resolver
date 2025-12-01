@@ -39,13 +39,13 @@ public class InhibitingNameMapperTest extends NameMapperTestSupport {
             Arrays.asList(
                     new LockingInhibitor() {
                         @Override
-                        public boolean inhibitArtifactLocking(Artifact artifact) {
+                        public boolean preventArtifactLocking(Artifact artifact) {
                             return "no.lock".equals(artifact.getGroupId());
                         }
                     },
                     new LockingInhibitor() {
                         @Override
-                        public boolean inhibitMetadataLocking(Metadata metadata) {
+                        public boolean preventMetadataLocking(Metadata metadata) {
                             return "no.lock".equals(metadata.getGroupId());
                         }
                     }));

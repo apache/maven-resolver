@@ -56,12 +56,12 @@ public class InhibitingNameMapper implements NameMapper {
             Collection<? extends Metadata> metadatas) {
         if (artifacts != null) {
             artifacts = artifacts.stream()
-                    .filter(a -> lockingInhibitors.stream().noneMatch(i -> i.inhibitArtifactLocking(a)))
+                    .filter(a -> lockingInhibitors.stream().noneMatch(i -> i.preventArtifactLocking(a)))
                     .collect(Collectors.toList());
         }
         if (metadatas != null) {
             metadatas = metadatas.stream()
-                    .filter(m -> lockingInhibitors.stream().noneMatch(i -> i.inhibitMetadataLocking(m)))
+                    .filter(m -> lockingInhibitors.stream().noneMatch(i -> i.preventMetadataLocking(m)))
                     .collect(Collectors.toList());
         }
         return delegate.nameLocks(session, artifacts, metadatas);

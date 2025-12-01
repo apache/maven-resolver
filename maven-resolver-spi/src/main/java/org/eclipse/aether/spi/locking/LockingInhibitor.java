@@ -28,17 +28,18 @@ import org.eclipse.aether.metadata.Metadata;
  */
 public interface LockingInhibitor {
     /**
-     * May provide a predicate for artifacts that needs lock inhibition. <em>Warning: you do not want to override
-     * this method, or if you do, think twice.</em>
+     * Should return {@code true for artifacts that needs lock inhibition.
+     * <p>
+     * <em>Warning: you do not want to override this method, or if you do, think twice.</em>
      */
-    default boolean inhibitArtifactLocking(Artifact artifact) {
+    default boolean preventArtifactLocking(Artifact artifact) {
         return false;
     }
 
     /**
-     * May provide a predicate for metadata that needs lock inhibition.
+     * Should return {@code true} for metadata that needs lock inhibition.
      */
-    default boolean inhibitMetadataLocking(Metadata metadata) {
+    default boolean preventMetadataLocking(Metadata metadata) {
         return false;
     }
 }
