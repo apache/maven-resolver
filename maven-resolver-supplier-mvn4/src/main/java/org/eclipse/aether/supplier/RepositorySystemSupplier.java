@@ -76,6 +76,7 @@ import org.eclipse.aether.internal.impl.DefaultPathProcessor;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher;
+import org.eclipse.aether.internal.impl.DefaultRepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
@@ -144,6 +145,7 @@ import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.locking.LockingInhibitorFactory;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.spi.resolution.ArtifactResolverPostProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.eclipse.aether.spi.validator.ValidatorFactory;
@@ -253,7 +255,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected LocalPathPrefixComposerFactory createLocalPathPrefixComposerFactory() {
-        return new DefaultLocalPathPrefixComposerFactory();
+        return new DefaultLocalPathPrefixComposerFactory(getRepositoryKeyFunctionFactory());
     }
 
     private RepositorySystemLifecycle repositorySystemLifecycle;
@@ -325,6 +327,20 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected UpdateCheckManager createUpdateCheckManager() {
         return new DefaultUpdateCheckManager(getTrackingFileManager(), getUpdatePolicyAnalyzer(), getPathProcessor());
+    }
+
+    private RepositoryKeyFunctionFactory repositoriesKeyFunctionFactory;
+
+    public final RepositoryKeyFunctionFactory getRepositoryKeyFunctionFactory() {
+        checkClosed();
+        if (repositoriesKeyFunctionFactory == null) {
+            repositoriesKeyFunctionFactory = createRepositoryKeyFunctionFactory();
+        }
+        return repositoriesKeyFunctionFactory;
+    }
+
+    protected RepositoryKeyFunctionFactory createRepositoryKeyFunctionFactory() {
+        return new DefaultRepositoryKeyFunctionFactory();
     }
 
     private Map<String, NamedLockFactory> namedLockFactories;
@@ -509,13 +525,18 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected LocalRepositoryProvider createLocalRepositoryProvider() {
         LocalPathComposer localPathComposer = getLocalPathComposer();
+        RepositoryKeyFunctionFactory repositoryKeyFunctionFactory = getRepositoryKeyFunctionFactory();
         HashMap<String, LocalRepositoryManagerFactory> localRepositoryProviders = new HashMap<>(2);
         localRepositoryProviders.put(
-                SimpleLocalRepositoryManagerFactory.NAME, new SimpleLocalRepositoryManagerFactory(localPathComposer));
+                SimpleLocalRepositoryManagerFactory.NAME,
+                new SimpleLocalRepositoryManagerFactory(localPathComposer, repositoryKeyFunctionFactory));
         localRepositoryProviders.put(
                 EnhancedLocalRepositoryManagerFactory.NAME,
                 new EnhancedLocalRepositoryManagerFactory(
-                        localPathComposer, getTrackingFileManager(), getLocalPathPrefixComposerFactory()));
+                        localPathComposer,
+                        getTrackingFileManager(),
+                        getLocalPathPrefixComposerFactory(),
+                        repositoryKeyFunctionFactory));
         return new DefaultLocalRepositoryProvider(localRepositoryProviders);
     }
 
@@ -530,7 +551,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected RemoteRepositoryManager createRemoteRepositoryManager() {
-        return new DefaultRemoteRepositoryManager(getUpdatePolicyAnalyzer(), getChecksumPolicyProvider());
+        return new DefaultRemoteRepositoryManager(
+                getUpdatePolicyAnalyzer(), getChecksumPolicyProvider(), getRepositoryKeyFunctionFactory());
     }
 
     private Map<String, RemoteRepositoryFilterSource> remoteRepositoryFilterSources;
@@ -547,11 +569,15 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         HashMap<String, RemoteRepositoryFilterSource> result = new HashMap<>();
         result.put(
                 GroupIdRemoteRepositoryFilterSource.NAME,
-                new GroupIdRemoteRepositoryFilterSource(getRepositorySystemLifecycle(), getPathProcessor()));
+                new GroupIdRemoteRepositoryFilterSource(
+                        getRepositoryKeyFunctionFactory(), getRepositorySystemLifecycle(), getPathProcessor()));
         result.put(
                 PrefixesRemoteRepositoryFilterSource.NAME,
                 new PrefixesRemoteRepositoryFilterSource(
-                        this::getMetadataResolver, this::getRemoteRepositoryManager, getRepositoryLayoutProvider()));
+                        getRepositoryKeyFunctionFactory(),
+                        this::getMetadataResolver,
+                        this::getRemoteRepositoryManager,
+                        getRepositoryLayoutProvider()));
         return result;
     }
 
@@ -611,11 +637,15 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         HashMap<String, TrustedChecksumsSource> result = new HashMap<>();
         result.put(
                 SparseDirectoryTrustedChecksumsSource.NAME,
-                new SparseDirectoryTrustedChecksumsSource(getChecksumProcessor(), getLocalPathComposer()));
+                new SparseDirectoryTrustedChecksumsSource(
+                        getRepositoryKeyFunctionFactory(), getChecksumProcessor(), getLocalPathComposer()));
         result.put(
                 SummaryFileTrustedChecksumsSource.NAME,
                 new SummaryFileTrustedChecksumsSource(
-                        getLocalPathComposer(), getRepositorySystemLifecycle(), getPathProcessor()));
+                        getRepositoryKeyFunctionFactory(),
+                        getLocalPathComposer(),
+                        getRepositorySystemLifecycle(),
+                        getPathProcessor()));
         return result;
     }
 

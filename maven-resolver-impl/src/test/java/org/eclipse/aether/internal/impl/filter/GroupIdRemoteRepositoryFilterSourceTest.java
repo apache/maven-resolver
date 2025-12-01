@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.impl.DefaultRepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
@@ -42,7 +43,9 @@ public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFil
     protected GroupIdRemoteRepositoryFilterSource getRemoteRepositoryFilterSource(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository) {
         return groupIdRemoteRepositoryFilterSource = new GroupIdRemoteRepositoryFilterSource(
-                new DefaultRepositorySystemLifecycle(), new PathProcessorSupport());
+                new DefaultRepositoryKeyFunctionFactory(),
+                new DefaultRepositorySystemLifecycle(),
+                new PathProcessorSupport());
     }
 
     @Override
