@@ -28,7 +28,6 @@ jobs:
     with:
       ff-run: false
       ff-site-run: false
-      jdk-matrix: '[ "21" ]'
-      maven-matrix: '[ "3.9.11", "4.0.0-rc-4" ]'
+      maven4-enabled: true
       verify-fail-fast: false
-
+      jdk-matrix: '[ "21", "25" ]'

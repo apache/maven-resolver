@@ -30,8 +30,7 @@ import com.redis.testcontainers.RedisContainer;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper;
-import org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
@@ -68,7 +67,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     private RepositorySystemSession session;
 
     protected static void setNamedLockFactory(final NamedLockFactory namedLockFactory) {
-        adapter = new NamedLockFactoryAdapter(new DiscriminatingNameMapper(GAVNameMapper.gav()), namedLockFactory);
+        adapter = new NamedLockFactoryAdapter(NameMappers.discriminatingNameMapper(), namedLockFactory);
     }
 
     @AfterAll

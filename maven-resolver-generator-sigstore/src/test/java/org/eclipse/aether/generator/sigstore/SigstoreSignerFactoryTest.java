@@ -64,6 +64,7 @@ public class SigstoreSignerFactoryTest {
     private RepositorySystemSession createSession() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
         session.setConfigProperty(SigstoreConfigurationKeys.CONFIG_PROP_ENABLED, Boolean.TRUE);
+        session.setConfigProperty(SigstoreConfigurationKeys.CONFIG_PROP_PUBLIC_STAGING, Boolean.TRUE);
         return session;
     }
 
@@ -99,11 +100,11 @@ public class SigstoreSignerFactoryTest {
             assertEquals(3, signatures.size());
 
             assertTrue(signatures.stream()
-                    .anyMatch(a -> "".equals(a.getClassifier()) && "jar.asc".equals(a.getExtension())));
+                    .anyMatch(a -> "".equals(a.getClassifier()) && "jar.sigstore.json".equals(a.getExtension())));
             assertTrue(signatures.stream()
-                    .anyMatch(a -> "source".equals(a.getClassifier()) && "jar.asc".equals(a.getExtension())));
+                    .anyMatch(a -> "source".equals(a.getClassifier()) && "jar.sigstore.json".equals(a.getExtension())));
             assertTrue(signatures.stream()
-                    .anyMatch(a -> "".equals(a.getClassifier()) && "foo.asc".equals(a.getExtension())));
+                    .anyMatch(a -> "".equals(a.getClassifier()) && "foo.sigstore.json".equals(a.getExtension())));
         }
     }
 

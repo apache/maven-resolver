@@ -19,6 +19,7 @@
 package org.apache.maven.resolver.examples.resolver;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -37,7 +38,8 @@ public class ResolverDemo {
         System.out.println("------------------------------------------------------------");
         System.out.println(ResolverDemo.class.getSimpleName());
 
-        Resolver resolver = new Resolver(args, "https://repo.maven.apache.org/maven2/", "target/resolver-demo-repo");
+        Resolver resolver =
+                new Resolver(args, "https://repo.maven.apache.org/maven2/", Paths.get("target/resolver-demo-repo"));
         ResolverResult result = resolver.resolve("junit", "junit", "4.13.2");
 
         System.out.println("Result:");
@@ -47,8 +49,8 @@ public class ResolverDemo {
     }
 
     public void resolve(String[] args) throws DependencyResolutionException {
-        Resolver resolver =
-                new Resolver(args, "http://localhost:8081/nexus/content/groups/public", "target/aether-repo");
+        Resolver resolver = new Resolver(
+                args, "http://localhost:8081/nexus/content/groups/public", Paths.get("target/aether-repo"));
 
         ResolverResult result = resolver.resolve("com.mycompany.app", "super-app", "1.0");
 
@@ -66,8 +68,8 @@ public class ResolverDemo {
     }
 
     public void installAndDeploy(String[] args) throws InstallationException, DeploymentException {
-        Resolver resolver =
-                new Resolver(args, "http://localhost:8081/nexus/content/groups/public", "target/aether-repo");
+        Resolver resolver = new Resolver(
+                args, "http://localhost:8081/nexus/content/groups/public", Paths.get("target/aether-repo"));
 
         Artifact artifact = new DefaultArtifact("com.mycompany.super", "super-core", "jar", "0.1-SNAPSHOT");
         artifact = artifact.setFile(new File("jar-from-whatever-process.jar"));

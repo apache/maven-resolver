@@ -21,14 +21,10 @@ package org.eclipse.aether.internal.impl;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.function.Function;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
-import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
@@ -38,7 +34,7 @@ import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.StringDigestUtil;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
 
 import static java.util.Objects.requireNonNull;
 
@@ -51,17 +47,17 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
     private final LocalPathComposer localPathComposer;
 
-    private final Function<ArtifactRepository, String> idToPathSegmentFunction;
+    private final RepositoryKeyFunction repositoryKeyFunction;
 
     SimpleLocalRepositoryManager(
             Path basePath,
             String type,
             LocalPathComposer localPathComposer,
-            Function<ArtifactRepository, String> idToPathSegmentFunction) {
+            RepositoryKeyFunction repositoryKeyFunction) {
         requireNonNull(basePath, "base directory cannot be null");
         repository = new LocalRepository(basePath.toAbsolutePath(), type);
         this.localPathComposer = requireNonNull(localPathComposer);
-        this.idToPathSegmentFunction = requireNonNull(idToPathSegmentFunction);
+        this.repositoryKeyFunction = requireNonNull(repositoryKeyFunction);
     }
 
     @Override
@@ -85,7 +81,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
     @Override
     public String getPathForLocalMetadata(Metadata metadata) {
         requireNonNull(metadata, "metadata cannot be null");
-        return localPathComposer.getPathForMetadata(metadata, "local");
+        return localPathComposer.getPathForMetadata(metadata, LocalRepository.ID);
     }
 
     @Override
@@ -101,35 +97,7 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
      * of the remote repository (as it may change).
      */
     protected String getRepositoryKey(RemoteRepository repository, String context) {
-        String key;
-
-        if (repository.isRepositoryManager()) {
-            // repository serves dynamic contents, take request parameters into account for key
-
-            StringBuilder buffer = new StringBuilder(128);
-
-            buffer.append(idToPathSegmentFunction.apply(repository));
-
-            buffer.append('-');
-
-            SortedSet<String> subKeys = new TreeSet<>();
-            for (RemoteRepository mirroredRepo : repository.getMirroredRepositories()) {
-                subKeys.add(mirroredRepo.getId());
-            }
-
-            StringDigestUtil sha1 = StringDigestUtil.sha1();
-            sha1.update(context);
-            for (String subKey : subKeys) {
-                sha1.update(subKey);
-            }
-            buffer.append(sha1.digest());
-
-            key = buffer.toString();
-        } else {
-            key = idToPathSegmentFunction.apply(repository);
-        }
-
-        return key;
+        return repositoryKeyFunction.apply(repository, context);
     }
 
     @Override

@@ -30,6 +30,8 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
+import org.eclipse.aether.spi.locking.LockingInhibitor;
+import org.eclipse.aether.spi.locking.LockingInhibitorFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,10 +55,11 @@ import static java.util.Objects.requireNonNull;
 public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapterFactory {
     public static final String DEFAULT_FACTORY_NAME = FileLockNamedLockFactory.NAME;
 
-    public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.FILE_GAV_NAME;
+    public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.FILE_GAECV_NAME;
 
     /**
-     * Name of the lock factory to use in session.
+     * Name of the lock factory to use in session. Out of the box supported ones are "file-lock", "rwlock-local",
+     * "semaphore-local", "noop". By adding extensions one can extend available lock factories (for example IPC locking).
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
@@ -65,8 +68,8 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
     public static final String CONFIG_PROP_FACTORY_KEY = NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "factory";
 
     /**
-     * Name of the name mapper to use in session. Out of the box supported ones are "static", "gav", "file-gav",
-     * "file-hgav", "file-static" and "discriminating".
+     * Name of the name mapper to use in session. Out of the box supported ones are "static", "gav", "gaecv", "file-gav",
+     * "file-gaecv", "file-hgav", "file-hgaecv", "file-static" and "discriminating".
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
@@ -84,12 +87,21 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
 
     protected final String defaultNameMapperName;
 
+    protected final Map<String, LockingInhibitorFactory> lockingInhibitorFactories;
+
     @Inject
     public NamedLockFactoryAdapterFactoryImpl(
             final Map<String, NamedLockFactory> factories,
             final Map<String, NameMapper> nameMappers,
+            final Map<String, LockingInhibitorFactory> lockingInhibitorFactories,
             final RepositorySystemLifecycle lifecycle) {
-        this(factories, DEFAULT_FACTORY_NAME, nameMappers, DEFAULT_NAME_MAPPER_NAME, lifecycle);
+        this(
+                factories,
+                DEFAULT_FACTORY_NAME,
+                nameMappers,
+                DEFAULT_NAME_MAPPER_NAME,
+                lockingInhibitorFactories,
+                lifecycle);
     }
 
     public NamedLockFactoryAdapterFactoryImpl(
@@ -97,11 +109,13 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
             final String defaultFactoryName,
             final Map<String, NameMapper> nameMappers,
             final String defaultNameMapperName,
+            final Map<String, LockingInhibitorFactory> lockingInhibitorFactories,
             final RepositorySystemLifecycle lifecycle) {
         this.factories = requireNonNull(factories);
         this.defaultFactoryName = requireNonNull(defaultFactoryName);
         this.nameMappers = requireNonNull(nameMappers);
         this.defaultNameMapperName = requireNonNull(defaultNameMapperName);
+        this.lockingInhibitorFactories = requireNonNull(lockingInhibitorFactories);
         lifecycle.addOnSystemEndedHandler(this::shutdown);
 
         logger.debug(
@@ -124,7 +138,7 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
     protected NamedLockFactoryAdapter createAdapter(RepositorySystemSession session) {
         final String nameMapperName = requireNonNull(getNameMapperName(session));
         final String factoryName = requireNonNull(getFactoryName(session));
-        final NameMapper nameMapper = selectNameMapper(nameMapperName);
+        final NameMapper nameMapper = selectNameMapper(session, nameMapperName);
         final NamedLockFactory factory = selectFactory(factoryName);
         logger.debug("Creating adapter using nameMapper '{}' and factory '{}'", nameMapperName, factoryName);
         return new NamedLockFactoryAdapter(nameMapper, factory);
@@ -171,13 +185,22 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
     }
 
     /**
-     * Selects a name mapper, never returns {@code null}.
+     * Selects a name mapper, never returns {@code null}. Applies inhibitors.
      */
-    protected NameMapper selectNameMapper(final String nameMapperName) {
+    protected NameMapper selectNameMapper(final RepositorySystemSession session, final String nameMapperName) {
         NameMapper nameMapper = nameMappers.get(nameMapperName);
         if (nameMapper == null) {
             throw new IllegalArgumentException(
                     "Unknown NameMapper name: '" + nameMapperName + "', known ones: " + nameMappers.keySet());
+        }
+        if (!lockingInhibitorFactories.isEmpty()) {
+            ArrayList<LockingInhibitor> inhibitors = new ArrayList<>();
+            for (LockingInhibitorFactory factory : lockingInhibitorFactories.values()) {
+                factory.newInstance(session).ifPresent(inhibitors::add);
+            }
+            if (!inhibitors.isEmpty()) {
+                return new InhibitingNameMapper(nameMapper, inhibitors);
+            }
         }
         return nameMapper;
     }

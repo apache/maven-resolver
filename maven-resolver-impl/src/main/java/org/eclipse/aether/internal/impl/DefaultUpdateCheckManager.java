@@ -22,8 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -482,11 +480,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         Properties props = write(touchPath, dataKey, transferKey, check.getException());
 
         if (Files.exists(artifactPath) && !hasErrors(props)) {
-            try {
-                Files.deleteIfExists(touchPath);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            trackingFileManager.delete(touchPath);
         }
     }
 

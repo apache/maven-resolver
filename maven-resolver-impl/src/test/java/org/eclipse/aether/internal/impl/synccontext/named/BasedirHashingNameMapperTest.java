@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class BasedirHashingNameMapperTest extends NameMapperTestSupport {
     private final String PS = "/"; // we work with URIs now, not OS file paths
 
-    BasedirNameMapper mapper = new BasedirNameMapper(new HashingNameMapper(GAVNameMapper.gav()));
+    NameMapper mapper = NameMappers.fileHashingGavNameMapper();
 
     @Test
     void nullsAndEmptyInputs() {
@@ -129,7 +129,7 @@ public class BasedirHashingNameMapperTest extends NameMapperTestSupport {
         assertEquals(1, names.size());
         assertEquals(
                 names.iterator().next().name(),
-                basedir.toUri() + PS + ".locks" + PS + "520e2ba3a365db8cd804bcc40df38e1a52987e0f");
+                basedir.toUri() + PS + ".locks" + PS + "d7e4ca43a23278042698fe526287af16b18f8791");
     }
 
     @Test

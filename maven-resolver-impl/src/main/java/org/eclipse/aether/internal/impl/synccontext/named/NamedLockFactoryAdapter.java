@@ -22,6 +22,7 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -33,6 +34,7 @@ import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.NamedLockKey;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +56,7 @@ public final class NamedLockFactoryAdapter {
      */
     public static final String CONFIG_PROP_TIME = CONFIG_PROPS_PREFIX + "time";
 
-    public static final long DEFAULT_TIME = 30L;
+    public static final long DEFAULT_TIME = 900L;
 
     /**
      * The unit of maximum time amount to be blocked to obtain lock. Use TimeUnit enum names.
@@ -161,7 +163,7 @@ public final class NamedLockFactoryAdapter {
             this.shared = shared;
             this.lockNaming = lockNaming;
             this.namedLockFactory = namedLockFactory;
-            this.time = getTime(session);
+            this.time = getTime(session, DEFAULT_TIME, CONFIG_PROP_TIME);
             this.timeUnit = getTimeUnit(session);
             this.retry = getRetry(session);
             this.retryWait = getRetryWait(session);
@@ -178,8 +180,8 @@ public final class NamedLockFactoryAdapter {
             }
         }
 
-        private long getTime(final RepositorySystemSession session) {
-            return ConfigUtils.getLong(session, DEFAULT_TIME, CONFIG_PROP_TIME);
+        private long getTime(final RepositorySystemSession session, long defaultValue, String... keys) {
+            return ConfigUtils.getLong(session, defaultValue, keys);
         }
 
         private TimeUnit getTimeUnit(final RepositorySystemSession session) {
@@ -255,10 +257,46 @@ public final class NamedLockFactoryAdapter {
             }
             // if we are here, means all attempts were unsuccessful: fail
             close();
-            IllegalStateException ex = new IllegalStateException("Could not acquire " + lockKind + " lock for "
-                    + namedLock.key().resources() + " using lock "
-                    + namedLock.key().name() + " in " + timeStr);
+            String message = "Could not acquire " + lockKind + " lock for "
+                    + lockSubjects(artifacts, metadatas) + " in " + timeStr
+                    + "; consider using '" + CONFIG_PROP_TIME
+                    + "' property to increase lock timeout to a value that fits your environment";
+            FailedToAcquireLockException ex = new FailedToAcquireLockException(shared, message);
             throw namedLockFactory.onFailure(ex);
+        }
+
+        private String lockSubjects(
+                Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas) {
+            StringBuilder builder = new StringBuilder();
+            if (artifacts != null && !artifacts.isEmpty()) {
+                builder.append("artifacts: ")
+                        .append(artifacts.stream().map(ArtifactIdUtils::toId).collect(Collectors.joining(", ")));
+            }
+            if (metadatas != null && !metadatas.isEmpty()) {
+                if (builder.length() != 0) {
+                    builder.append("; ");
+                }
+                builder.append("metadata: ")
+                        .append(metadatas.stream().map(this::metadataSubjects).collect(Collectors.joining(", ")));
+            }
+            return builder.toString();
+        }
+
+        private String metadataSubjects(Metadata metadata) {
+            String name = "";
+            if (!metadata.getGroupId().isEmpty()) {
+                name += metadata.getGroupId();
+                if (!metadata.getArtifactId().isEmpty()) {
+                    name += ":" + metadata.getArtifactId();
+                    if (!metadata.getVersion().isEmpty()) {
+                        name += ":" + metadata.getVersion();
+                    }
+                }
+            }
+            if (!metadata.getType().isEmpty()) {
+                name += (name.isEmpty() ? "" : ":") + metadata.getType();
+            }
+            return name;
         }
 
         @Override

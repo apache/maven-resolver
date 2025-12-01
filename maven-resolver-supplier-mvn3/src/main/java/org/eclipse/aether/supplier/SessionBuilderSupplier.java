@@ -32,6 +32,7 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
+import org.eclipse.aether.impl.scope.InternalScopeManager;
 import org.eclipse.aether.internal.impl.scope.ManagedDependencyContextRefiner;
 import org.eclipse.aether.internal.impl.scope.ManagedScopeDeriver;
 import org.eclipse.aether.internal.impl.scope.ManagedScopeSelector;
@@ -65,7 +66,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected final RepositorySystem repositorySystem;
-    protected final ScopeManagerImpl scopeManager;
+    protected final InternalScopeManager scopeManager;
 
     public SessionBuilderSupplier(RepositorySystem repositorySystem) {
         this.repositorySystem = requireNonNull(repositorySystem);
@@ -88,12 +89,16 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         session.setArtifactDescriptorPolicy(getArtifactDescriptorPolicy());
     }
 
+    protected InternalScopeManager getScopeManager() {
+        return this.scopeManager;
+    }
+
     protected DependencyTraverser getDependencyTraverser() {
         return new FatArtifactTraverser();
     }
 
     protected DependencyManager getDependencyManager() {
-        return new ClassicDependencyManager(scopeManager);
+        return new ClassicDependencyManager(getScopeManager());
     }
 
     protected DependencySelector getDependencySelector() {
@@ -110,10 +115,10 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         return new ChainedDependencyGraphTransformer(
                 new ConflictResolver(
                         new ConfigurableVersionSelector(),
-                        new ManagedScopeSelector(this.scopeManager),
+                        new ManagedScopeSelector(getScopeManager()),
                         new SimpleOptionalitySelector(),
-                        new ManagedScopeDeriver(this.scopeManager)),
-                new ManagedDependencyContextRefiner(this.scopeManager));
+                        new ManagedScopeDeriver(getScopeManager())),
+                new ManagedDependencyContextRefiner(getScopeManager()));
     }
 
     protected ArtifactTypeRegistry getArtifactTypeRegistry() {

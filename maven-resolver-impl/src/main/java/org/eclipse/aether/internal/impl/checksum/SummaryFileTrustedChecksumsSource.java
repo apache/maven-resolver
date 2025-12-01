@@ -46,8 +46,8 @@ import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,9 +142,11 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
 
     @Inject
     public SummaryFileTrustedChecksumsSource(
+            RepositoryKeyFunctionFactory repoKeyFunctionFactory,
             LocalPathComposer localPathComposer,
             RepositorySystemLifecycle repositorySystemLifecycle,
             PathProcessor pathProcessor) {
+        super(repoKeyFunctionFactory);
         this.localPathComposer = requireNonNull(localPathComposer);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
         this.pathProcessor = requireNonNull(pathProcessor);
@@ -177,7 +179,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                 Path summaryFile = summaryFile(
                         basedir,
                         originAware,
-                        RepositoryIdHelper.cachedIdToPathSegment(session).apply(artifactRepository),
+                        repositoryKey(session, artifactRepository),
                         checksumAlgorithmFactory.getFileExtension());
                 ConcurrentHashMap<String, String> algorithmChecksums =
                         checksums.computeIfAbsent(summaryFile, f -> loadProvidedChecksums(summaryFile));
@@ -199,7 +201,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                 checksums,
                 getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
                 isOriginAware(session),
-                RepositoryIdHelper.cachedIdToPathSegment(session));
+                r -> repositoryKey(session, r));
     }
 
     /**
@@ -263,17 +265,17 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
 
         private final boolean originAware;
 
-        private final Function<ArtifactRepository, String> idToPathSegmentFunction;
+        private final Function<ArtifactRepository, String> repositoryKeyFunction;
 
         private SummaryFileWriter(
                 ConcurrentHashMap<Path, ConcurrentHashMap<String, String>> cache,
                 Path basedir,
                 boolean originAware,
-                Function<ArtifactRepository, String> idToPathSegmentFunction) {
+                Function<ArtifactRepository, String> repositoryKeyFunction) {
             this.cache = cache;
             this.basedir = basedir;
             this.originAware = originAware;
-            this.idToPathSegmentFunction = idToPathSegmentFunction;
+            this.repositoryKeyFunction = repositoryKeyFunction;
         }
 
         @Override
@@ -287,7 +289,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                 Path summaryFile = summaryFile(
                         basedir,
                         originAware,
-                        idToPathSegmentFunction.apply(artifactRepository),
+                        repositoryKeyFunction.apply(artifactRepository),
                         checksumAlgorithmFactory.getFileExtension());
                 String checksum = requireNonNull(trustedArtifactChecksums.get(checksumAlgorithmFactory.getName()));
 
