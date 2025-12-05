@@ -54,7 +54,8 @@ public final class PrioritizedComponents<T> {
         boolean cached = ConfigUtils.getBoolean(
                 session, ConfigurationProperties.DEFAULT_CACHED_PRIORITIES, ConfigurationProperties.CACHED_PRIORITIES);
         if (cached) {
-            String key = PrioritizedComponents.class.getName() + ".pc." + discriminator.getName();
+            String key = PrioritizedComponents.class.getName() + ".pc." + discriminator.getName()
+                    + Integer.toHexString(components.hashCode());
             return (PrioritizedComponents<C>)
                     session.getData().computeIfAbsent(key, () -> create(session, components, priorityFunction));
         } else {
