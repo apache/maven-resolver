@@ -57,8 +57,8 @@ public final class PrioritizedComponents<T> {
         if (cached && session.getCache() != null) {
             String key = PrioritizedComponents.class.getName() + ".pc." + discriminator.getName()
                     + Integer.toHexString(components.hashCode());
-            return (PrioritizedComponents<C>)
-                    session.getCache().computeIfAbsent(session, key, () -> create(session, components, priorityFunction));
+            return (PrioritizedComponents<C>) session.getCache()
+                    .computeIfAbsent(session, key, () -> create(session, components, priorityFunction));
         } else {
             return create(session, components, priorityFunction);
         }
