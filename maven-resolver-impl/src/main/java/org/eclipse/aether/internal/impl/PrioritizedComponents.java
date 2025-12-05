@@ -35,7 +35,7 @@ import org.eclipse.aether.util.ConfigUtils;
  */
 public final class PrioritizedComponents<T> {
     /**
-     * Reuses or creates and caches (if session data does not contain yet and session is equipped with cache)
+     * Reuses or creates and caches (if session is equipped with cache, and it does not contain it yet)
      * prioritized components under certain key into session cache. Same session is used to configure prioritized
      * components, so priority sorted components during session are immutable and reusable (if {@code components}
      * component map is unchanged).
