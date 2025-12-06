@@ -84,11 +84,16 @@ The aforementioned (opaque) IDs need to be mapped from artifacts and metadata.
 Out of the box, name mapper implementations are the following:
 
 - `static` implemented in `org.eclipse.aether.internal.impl.synccontext.named.StaticNameMapper`.
-- `gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper`.
+- `gav` implemented in  `org.eclipse.aether.internal.impl.synccontext.named.GAVNameMapper`.
+- `gaecv` implemented in `org.eclipse.aether.internal.impl.synccontext.named.GAECVNameMapper`.
 - `discriminating` implemented in `org.eclipse.aether.internal.impl.synccontext.named.DiscriminatingNameMapper`.
 - `file-gav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileGAVNameMapper`.
+- `file-gaecv` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileGAECVNameMapper`.
+- `file-hgav` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileHGAVNameMapper`.
+- `file-hgaecv` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileHGAECVNameMapper`.
+- `file-static` implemented in `org.eclipse.aether.internal.impl.synccontext.named.FileStaticNameMapper`.
 
-Note: the `file-gav` name mapper MUST be used with `file-lock` named locking, no other mapper will work with it.
+Note: the `file-*` name mapper MUST be used with `file-lock` named locking, no other mapper will work with it.
 
 ${esc.hash}${esc.hash} Diagnostic collection in case of failures
 
