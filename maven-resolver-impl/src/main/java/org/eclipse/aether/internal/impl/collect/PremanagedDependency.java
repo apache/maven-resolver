@@ -37,30 +37,30 @@ import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
  */
 public class PremanagedDependency {
 
-    final String premanagedVersion;
+    private final String premanagedVersion;
 
-    final String premanagedScope;
+    private final String premanagedScope;
 
-    final Boolean premanagedOptional;
-
-    /**
-     * @since 1.1.0
-     */
-    final Collection<Exclusion> premanagedExclusions;
+    private final Boolean premanagedOptional;
 
     /**
      * @since 1.1.0
      */
-    final Map<String, String> premanagedProperties;
+    private final Collection<Exclusion> premanagedExclusions;
+
+    /**
+     * @since 1.1.0
+     */
+    private final Map<String, String> premanagedProperties;
 
     /**
      * @since 2.0.14
      */
-    final Map<DependencyManagement.Subject, Boolean> managedSubjects;
+    private final Map<DependencyManagement.Subject, Boolean> managedSubjects;
 
-    final Dependency managedDependency;
+    private final Dependency managedDependency;
 
-    final boolean premanagedState;
+    private final boolean premanagedState;
 
     @SuppressWarnings("checkstyle:parameternumber")
     PremanagedDependency(
