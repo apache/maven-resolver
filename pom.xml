@@ -29,7 +29,7 @@
 
   <groupId>org.apache.maven.resolver</groupId>
   <artifactId>maven-resolver</artifactId>
-  <version>1.9.25-SNAPSHOT</version>
+  <version>1.9.25</version>
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver</name>
@@ -65,7 +65,7 @@
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</developerConnection>
-    <tag>maven-resolver-1.9.24</tag>
+    <tag>maven-resolver-1.9.25</tag>
     <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
   </scm>
   <issueManagement>
@@ -97,7 +97,7 @@
     <mavenVersion>3.9.11</mavenVersion>
     <minimalMavenBuildVersion>[3.8.7,)</minimalMavenBuildVersion>
     <minimalJavaBuildVersion>[1.8.0-362,)</minimalJavaBuildVersion>
-    <project.build.outputTimestamp>2025-06-26T19:10:42Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2025-12-06T12:51:05Z</project.build.outputTimestamp>
     <bnd.instructions.additions />
   </properties>
 
