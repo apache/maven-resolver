@@ -72,6 +72,19 @@ public class DependencyManagerTest {
     }
 
     @Test
+    void duplicateDepMgt() {
+        DependencyManager manager = new TransitiveDependencyManager(null);
+        DependencyManager derived = manager.deriveChildManager(newContext(
+                        new Dependency(new DefaultArtifact("dupe:dupe:1.0"), ""),
+                        new Dependency(new DefaultArtifact("dupe:dupe:2.0"), "")))
+                .deriveChildManager(newContext());
+        DependencyManagement management =
+                derived.manageDependency(new Dependency(new DefaultArtifact("dupe:dupe:1.1"), ""));
+        // bug: here would be 2.0
+        assertEquals("1.0", management.getVersion());
+    }
+
+    @Test
     void testClassic() {
         DependencyManager manager = new ClassicDependencyManager(null);
         DependencyManagement mngt;

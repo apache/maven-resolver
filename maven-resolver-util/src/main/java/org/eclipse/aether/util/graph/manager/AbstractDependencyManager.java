@@ -197,7 +197,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             MMap<Key, String> managedLocalPaths,
             MMap<Key, Holder<Collection<Exclusion>>> managedExclusions);
 
-    private boolean containsManagedVersion(Key key) {
+    private boolean containsManagedVersion(Key key, MMap<Key, String> managedVersions) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
                 return true;
@@ -218,7 +218,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return null;
     }
 
-    private boolean containsManagedScope(Key key) {
+    private boolean containsManagedScope(Key key, MMap<Key, String> managedScopes) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
                 return true;
@@ -239,7 +239,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return null;
     }
 
-    private boolean containsManagedOptional(Key key) {
+    private boolean containsManagedOptional(Key key, MMap<Key, Boolean> managedOptionals) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
                 return true;
@@ -260,7 +260,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return null;
     }
 
-    private boolean containsManagedLocalPath(Key key) {
+    private boolean containsManagedLocalPath(Key key, MMap<Key, String> managedLocalPaths) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
                 return true;
@@ -327,7 +327,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             Key key = new Key(artifact);
 
             String version = artifact.getVersion();
-            if (!version.isEmpty() && !containsManagedVersion(key)) {
+            if (!version.isEmpty() && !containsManagedVersion(key, managedVersions)) {
                 if (managedVersions == null) {
                     managedVersions = MMap.emptyNotDone();
                 }
@@ -336,7 +336,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
             if (isInheritedDerived()) {
                 String scope = managedDependency.getScope();
-                if (!scope.isEmpty() && !containsManagedScope(key)) {
+                if (!scope.isEmpty() && !containsManagedScope(key, managedScopes)) {
                     if (managedScopes == null) {
                         managedScopes = MMap.emptyNotDone();
                     }
@@ -344,7 +344,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 }
 
                 Boolean optional = managedDependency.getOptional();
-                if (optional != null && !containsManagedOptional(key)) {
+                if (optional != null && !containsManagedOptional(key, managedOptionals)) {
                     if (managedOptionals == null) {
                         managedOptionals = MMap.emptyNotDone();
                     }
@@ -355,7 +355,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             String localPath = systemDependencyScope == null
                     ? null
                     : systemDependencyScope.getSystemPath(managedDependency.getArtifact());
-            if (localPath != null && !containsManagedLocalPath(key)) {
+            if (localPath != null && !containsManagedLocalPath(key, managedLocalPaths)) {
                 if (managedLocalPaths == null) {
                     managedLocalPaths = MMap.emptyNotDone();
                 }
