@@ -197,9 +197,9 @@ public class GroupTreeTest {
         groupTree = new GroupTree("root");
         groupTree.loadNodes(Stream.of("# comment", "", "org.apache", "!=org.apache.maven.plugins"));
 
-        assertTrue(groupTree.acceptedGroupId("org.apache")); // this is given (=)
+        assertTrue(groupTree.acceptedGroupId("org.apache")); // this is given
         assertTrue(groupTree.acceptedGroupId("org.apache.maven")); // implied by first
-        assertFalse(groupTree.acceptedGroupId("org.apache.maven.plugins")); // this is given (=)
-        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by above
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.plugins")); // this is given (!=)
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by first
     }
 }
