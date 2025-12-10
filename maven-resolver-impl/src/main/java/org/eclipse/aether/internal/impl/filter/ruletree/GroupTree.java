@@ -126,7 +126,7 @@ public class GroupTree extends Node {
             }
             if (currentNode.isStop() && groupElements.equals(current)) {
                 accepted = currentNode.isAllow();
-            } else if (!currentNode.isStop()) {
+            } else if (!currentNode.isStop() && currentNode.isAllow() != null) {
                 accepted = currentNode.isAllow();
             }
         }

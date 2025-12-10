@@ -169,4 +169,19 @@ public class GroupTreeTest {
 
         assertEquals(implicitResults, explicitResults);
     }
+
+    @Test
+    void gh1703One() {
+        GroupTree groupTree = new GroupTree("root");
+        // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
+        groupTree.loadNodes(Stream.of(
+                "# comment",
+                "",
+                "org.apache",
+                "org.apache.maven.plugins"));
+
+        assertTrue(groupTree.acceptedGroupId("org.apache")); // this is given
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven")); // implied by above
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins")); // implied by above (line is redundant)
+    }
 }
