@@ -442,7 +442,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
      * </ul>
      * Note: the third check is interfering with RRF, as RRF may make list of remote repositories empty,  that was
      * originally non-empty, by eliminating remote repositories to consider.
-     * Hence, we leave use this method ONLY if RRF is inactive.
+     * Hence, we may use this method ONLY if RRF is inactive.
      */
     private boolean isLocallyInstalled(LocalArtifactResult lar, VersionResult vr) {
         if (lar.isAvailable()) {
