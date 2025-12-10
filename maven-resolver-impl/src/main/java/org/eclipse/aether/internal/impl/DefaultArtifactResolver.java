@@ -312,9 +312,10 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                             new LocalArtifactRequest(
                                     artifact, filteredRemoteRepositories, request.getRequestContext()));
                     result.setLocalArtifactResult(local);
-                    boolean found = (filter != null && local.isAvailable()) || isLocallyInstalled(local, versionResult);
-                    // with filtering it is availability that drives logic
-                    // without filtering it is simply presence of file that drives the logic
+                    boolean found = (filter != null && local.isAvailable())
+                            || (filter == null && isLocallyInstalled(local, versionResult));
+                    // with filtering: availability drives the logic
+                    // without filtering: simply presence of file drives the logic
                     // "interop" logic with simple LRM leads to RRF breakage: hence is ignored when filtering in effect
                     if (found) {
                         if (local.getRepository() != null) {
