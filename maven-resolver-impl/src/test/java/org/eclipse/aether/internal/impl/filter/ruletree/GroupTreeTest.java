@@ -172,12 +172,34 @@ public class GroupTreeTest {
 
     @Test
     void gh1703One() {
-        GroupTree groupTree = new GroupTree("root");
+        GroupTree groupTree;
+
+        // REPRODUCER as given
+        groupTree = new GroupTree("root");
         // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
         groupTree.loadNodes(Stream.of("# comment", "", "org.apache", "org.apache.maven.plugins"));
 
         assertTrue(groupTree.acceptedGroupId("org.apache")); // this is given
-        assertTrue(groupTree.acceptedGroupId("org.apache.maven")); // implied by above
-        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins")); // implied by above (line is redundant)
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven")); // implied by first
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins")); // implied by first (line is redundant)
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by first
+
+        // FIXED
+        groupTree = new GroupTree("root");
+        groupTree.loadNodes(Stream.of("# comment", "", "=org.apache", "org.apache.maven.plugins"));
+
+        assertTrue(groupTree.acceptedGroupId("org.apache")); // this is given (=)
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven")); // not allowed
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins")); // this is given (and below)
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by above
+
+        // MIXED
+        groupTree = new GroupTree("root");
+        groupTree.loadNodes(Stream.of("# comment", "", "org.apache", "!=org.apache.maven.plugins"));
+
+        assertTrue(groupTree.acceptedGroupId("org.apache")); // this is given (=)
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven")); // implied by first
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven.plugins")); // this is given (=)
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by above
     }
 }
