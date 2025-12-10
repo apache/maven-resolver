@@ -40,8 +40,9 @@ import org.eclipse.aether.util.artifact.JavaScopes;
 
 /**
  * Resolves the transitive (compile) LARGE dependencies of an imaginary artifact in parallel.
- * This is the reproducer for locking issues: <a href="https://github.com/apache/maven-resolver/issues/1644>GH-1644</a>
- * This code does NOT run as part of build/tests, it is meant to be ad-hoc run from IDE or alike. */
+ * This is the reproducer for locking issues: <a href="https://github.com/apache/maven-resolver/issues/1644">GH-1644</a>.
+ * This code does NOT run as part of build/tests, it is meant to be ad-hoc run from IDE or alike.
+ */
 public class ResolveTransitiveDependenciesParallel {
 
     /**

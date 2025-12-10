@@ -28,7 +28,7 @@ import org.eclipse.aether.metadata.Metadata;
  */
 public interface LockingInhibitor {
     /**
-     * Should return {@code true for artifacts that needs lock inhibition.
+     * Should return {@code true} for artifacts that needs lock inhibition.
      * <p>
      * <em>Warning: you do not want to override this method, or if you do, think twice.</em>
      */
