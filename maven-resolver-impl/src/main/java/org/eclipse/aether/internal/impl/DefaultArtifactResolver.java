@@ -432,6 +432,18 @@ public class DefaultArtifactResolver implements ArtifactResolver {
         }
     }
 
+    /**
+     * This is the method that checks local artifact result if no RRF being used. Unlike with RRF, where only
+     * {@link LocalArtifactResult#isAvailable()} is checked, here we perform multiple checks:
+     * <ul>
+     *     <li>if {@link LocalArtifactResult#isAvailable()} is {@code true}, return {@code true}</li>
+     *     <li>if {@link LocalArtifactResult#getRepository()} is instance of {@link LocalRepository}, return {@code true}</li>
+     *     <li>if {@link LocalArtifactResult#getRepository()} is {@code null} and request had zero remote repositories set, return {@code true}</li>
+     * </ul>
+     * Note: the third check is interfering with RRF, as RRF may make list of remote repositories empty,  that was
+     * originally non-empty, by eliminating remote repositories to consider.
+     * Hence, we leave use this method ONLY if RRF is inactive.
+     */
     private boolean isLocallyInstalled(LocalArtifactResult lar, VersionResult vr) {
         if (lar.isAvailable()) {
             return true;
