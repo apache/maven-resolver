@@ -25,7 +25,7 @@ import java.util.HashMap;
  */
 class Node {
     private final String name;
-    private final boolean stop;
+    private boolean stop;
     private Boolean allow;
     private final HashMap<String, Node> siblings;
 
@@ -52,12 +52,23 @@ class Node {
         return allow;
     }
 
+    public void setStop(boolean stop) {
+        this.stop = stop;
+    }
+
     public void setAllow(Boolean allow) {
         this.allow = allow;
     }
 
     protected Node addSibling(String name, boolean stop, Boolean allow) {
-        return siblings.computeIfAbsent(name, n -> new Node(n, stop, allow));
+        Node result = siblings.computeIfAbsent(name, n -> new Node(n, stop, allow));
+        if (stop && !result.stop) {
+            result.setStop(stop);
+        }
+        if (allow != null) {
+            result.setAllow(allow);
+        }
+        return result;
     }
 
     protected Node getSibling(String name) {

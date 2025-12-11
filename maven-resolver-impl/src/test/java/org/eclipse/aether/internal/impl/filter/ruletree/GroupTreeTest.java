@@ -184,6 +184,16 @@ public class GroupTreeTest {
         assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins")); // implied by first (line is redundant)
         assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by first
 
+        // INVERTED REPRODUCER as given
+        groupTree = new GroupTree("root");
+        // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
+        groupTree.loadNodes(Stream.of("# comment", "", "org.apache.maven.plugins", "org.apache"));
+
+        assertTrue(groupTree.acceptedGroupId("org.apache")); // this is given
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven")); // implied by first
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins")); // implied by first (line is redundant)
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by first
+
         // FIXED
         groupTree = new GroupTree("root");
         groupTree.loadNodes(Stream.of("# comment", "", "=org.apache", "org.apache.maven.plugins"));
@@ -201,5 +211,26 @@ public class GroupTreeTest {
         assertTrue(groupTree.acceptedGroupId("org.apache.maven")); // implied by first
         assertFalse(groupTree.acceptedGroupId("org.apache.maven.plugins")); // this is given (!=)
         assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by first
+    }
+
+    @Test
+    void gh1711() {
+        GroupTree groupTree;
+
+        // "last wins"
+        groupTree = new GroupTree("root");
+        // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
+        groupTree.loadNodes(Stream.of("org.apache", "!org.apache"));
+
+        assertFalse(groupTree.acceptedGroupId("org.apache")); // last wins
+        assertFalse(groupTree.acceptedGroupId("org.apache.maven")); // last wins
+
+        // "last wins"
+        groupTree = new GroupTree("root");
+        // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
+        groupTree.loadNodes(Stream.of("org.apache", "!org.apache", "org.apache"));
+
+        assertTrue(groupTree.acceptedGroupId("org.apache")); // last wins
+        assertTrue(groupTree.acceptedGroupId("org.apache.maven")); // last wins
     }
 }
