@@ -63,6 +63,15 @@ import static java.util.stream.Collectors.toList;
  * line is ignored.
  */
 public class GroupTree extends Node<GroupTree> {
+    /**
+     * Creates root (special for root: allow is not null).
+     */
+    public static GroupTree create(String name) {
+        GroupTree result = new GroupTree(name);
+        result.allow = false;
+        return result;
+    }
+
     private static final String ROOT = "*";
     private static final String MOD_EXCLUSION = "!";
     private static final String MOD_STOP = "=";
@@ -74,28 +83,12 @@ public class GroupTree extends Node<GroupTree> {
     private boolean stop;
     private Boolean allow;
 
-    public GroupTree(String name) {
+    private GroupTree(String name) {
         super(name);
     }
 
-    public boolean isStop() {
-        return stop;
-    }
-
-    public Boolean isAllow() {
-        return allow;
-    }
-
-    public void setStop(boolean stop) {
-        this.stop = stop;
-    }
-
-    public void setAllow(boolean allow) {
-        this.allow = allow;
-    }
-
     public int loadNodes(Stream<String> linesStream) {
-        setAllow(false);
+        this.allow = false;
         AtomicInteger counter = new AtomicInteger(0);
         linesStream.forEach(line -> {
             if (loadNode(line)) {
@@ -119,17 +112,17 @@ public class GroupTree extends Node<GroupTree> {
                 line = line.substring(MOD_STOP.length());
             }
             if (ROOT.equals(line)) {
-                this.setAllow(allow);
+                this.allow = allow;
                 return true;
             }
             List<String> groupElements = elementsOfGroup(line);
             for (String groupElement : groupElements.subList(0, groupElements.size() - 1)) {
-                currentNode = currentNode.addSibling(groupElement, () -> new GroupTree(groupElement));
+                currentNode = currentNode.siblings.computeIfAbsent(groupElement, GroupTree::new);
             }
             String lastElement = groupElements.get(groupElements.size() - 1);
-            currentNode = currentNode.addSibling(lastElement, () -> new GroupTree(lastElement));
-            currentNode.setStop(stop);
-            currentNode.setAllow(allow);
+            currentNode = currentNode.siblings.computeIfAbsent(lastElement, GroupTree::new);
+            currentNode.stop = stop;
+            currentNode.allow = allow;
             return true;
         }
         return false;
@@ -142,21 +135,21 @@ public class GroupTree extends Node<GroupTree> {
         GroupTree currentNode = this;
         for (String groupElement : groupElements) {
             current.add(groupElement);
-            currentNode = currentNode.getSibling(groupElement);
+            currentNode = currentNode.siblings.get(groupElement);
             if (currentNode == null) {
                 // we stepped off the tree; use value we got so far
                 break;
-            } else if (currentNode.isStop() && groupElements.equals(current)) {
+            } else if (currentNode.stop && groupElements.equals(current)) {
                 // exact match
-                accepted = currentNode.isAllow();
+                accepted = currentNode.allow;
                 break;
-            } else if (!currentNode.isStop() && currentNode.isAllow() != null) {
+            } else if (!currentNode.stop && currentNode.allow != null) {
                 // "inherit" if not STOP and allow is set; and most probably we loop more
-                accepted = currentNode.isAllow();
+                accepted = currentNode.allow;
             }
         }
         // use 'accepted', if defined; otherwise fallback to root (it always has 'allow' set)
-        return accepted != null ? accepted : this.isAllow();
+        return accepted != null ? accepted : this.allow;
     }
 
     @Override

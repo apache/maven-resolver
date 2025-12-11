@@ -18,19 +18,18 @@
  */
 package org.eclipse.aether.internal.impl.filter.ruletree;
 
-import java.util.HashMap;
-import java.util.function.Supplier;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A tree structure with rules.
  */
 abstract class Node<N extends Node<?>> {
     protected final String name;
-    protected final HashMap<String, N> siblings;
+    protected final ConcurrentHashMap<String, N> siblings;
 
     protected Node(String name) {
         this.name = name;
-        this.siblings = new HashMap<>();
+        this.siblings = new ConcurrentHashMap<>();
     }
 
     public String getName() {
@@ -39,14 +38,6 @@ abstract class Node<N extends Node<?>> {
 
     public boolean isLeaf() {
         return siblings.isEmpty();
-    }
-
-    protected N addSibling(String name, Supplier<N> supplier) {
-        return siblings.computeIfAbsent(name, k -> supplier.get());
-    }
-
-    protected N getSibling(String name) {
-        return siblings.get(name);
     }
 
     @Override

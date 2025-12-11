@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GroupTreeTest {
     @Test
     void smoke() {
-        GroupTree groupTree = new GroupTree("root");
+        GroupTree groupTree = GroupTree.create("root");
         groupTree.loadNodes(Stream.of(
                 "# comment",
                 "",
@@ -61,7 +61,7 @@ public class GroupTreeTest {
 
     @Test
     void smokeWithPositiveDefault() {
-        GroupTree groupTree = new GroupTree("root");
+        GroupTree groupTree = GroupTree.create("root");
         groupTree.loadNodes(Stream.of(
                 "# comment",
                 "",
@@ -89,7 +89,7 @@ public class GroupTreeTest {
 
     @Test
     void smokeWithPositiveDefaultExclusionsOnly() {
-        GroupTree groupTree = new GroupTree("root");
+        GroupTree groupTree = GroupTree.create("root");
         groupTree.loadNodes(Stream.of("# comment", "*", "!org.apache.maven.foo", "!=org.apache.maven.bar"));
         groupTree.dump("");
 
@@ -111,7 +111,7 @@ public class GroupTreeTest {
 
     @Test
     void smokeWithNegativeDefault() {
-        GroupTree groupTree = new GroupTree("root");
+        GroupTree groupTree = GroupTree.create("root");
         groupTree.loadNodes(Stream.of(
                 "# comment",
                 "",
@@ -140,7 +140,7 @@ public class GroupTreeTest {
     @Test
     void implicitAndExplicitDefaultIsSame() {
         // w/o asterisk: uses coded defaults
-        GroupTree implicitTree = new GroupTree("root");
+        GroupTree implicitTree = GroupTree.create("root");
         implicitTree.loadNodes(Stream.of(
                 "# comment",
                 "",
@@ -152,7 +152,7 @@ public class GroupTreeTest {
 
         HashMap<String, Boolean> implicitResults = new HashMap<>();
         // w/ asterisk: set to same value as default (should cause no change)
-        GroupTree explicitTree = new GroupTree("root");
+        GroupTree explicitTree = GroupTree.create("root");
         explicitTree.loadNodes(Stream.of(
                 "# comment",
                 "",
@@ -185,7 +185,7 @@ public class GroupTreeTest {
         GroupTree groupTree;
 
         // REPRODUCER as given
-        groupTree = new GroupTree("root");
+        groupTree = GroupTree.create("root");
         // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
         groupTree.loadNodes(Stream.of("# comment", "", "org.apache", "org.apache.maven.plugins"));
         groupTree.dump("");
@@ -196,7 +196,7 @@ public class GroupTreeTest {
         assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by first
 
         // INVERTED REPRODUCER as given
-        groupTree = new GroupTree("root");
+        groupTree = GroupTree.create("root");
         // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
         groupTree.loadNodes(Stream.of("# comment", "", "org.apache.maven.plugins", "org.apache"));
         groupTree.dump("");
@@ -207,7 +207,7 @@ public class GroupTreeTest {
         assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by first
 
         // FIXED
-        groupTree = new GroupTree("root");
+        groupTree = GroupTree.create("root");
         groupTree.loadNodes(Stream.of("# comment", "", "=org.apache", "org.apache.maven.plugins"));
         groupTree.dump("");
 
@@ -217,7 +217,7 @@ public class GroupTreeTest {
         assertTrue(groupTree.acceptedGroupId("org.apache.maven.plugins.foo")); // implied by above
 
         // MIXED
-        groupTree = new GroupTree("root");
+        groupTree = GroupTree.create("root");
         groupTree.loadNodes(Stream.of("# comment", "", "org.apache", "!=org.apache.maven.plugins"));
         groupTree.dump("");
 
@@ -232,7 +232,7 @@ public class GroupTreeTest {
         GroupTree groupTree;
 
         // "last wins"
-        groupTree = new GroupTree("root");
+        groupTree = GroupTree.create("root");
         // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
         groupTree.loadNodes(Stream.of("org.apache", "!org.apache"));
         groupTree.dump("");
@@ -241,7 +241,7 @@ public class GroupTreeTest {
         assertFalse(groupTree.acceptedGroupId("org.apache.maven")); // last wins
 
         // "last wins"
-        groupTree = new GroupTree("root");
+        groupTree = GroupTree.create("root");
         // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
         groupTree.loadNodes(Stream.of("org.apache", "!org.apache", "org.apache"));
         groupTree.dump("");

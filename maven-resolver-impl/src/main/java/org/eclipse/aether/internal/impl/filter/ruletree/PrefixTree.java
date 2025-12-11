@@ -65,7 +65,7 @@ public class PrefixTree extends Node<PrefixTree> {
         if (!line.startsWith("#") && !line.trim().isEmpty()) {
             PrefixTree currentNode = this;
             for (String element : elementsOfPath(line)) {
-                currentNode = currentNode.addSibling(element, () -> new PrefixTree(element));
+                currentNode = currentNode.siblings.computeIfAbsent(element, PrefixTree::new);
             }
             return true;
         }
@@ -76,7 +76,7 @@ public class PrefixTree extends Node<PrefixTree> {
         final List<String> pathElements = elementsOfPath(path);
         PrefixTree currentNode = this;
         for (String pathElement : pathElements) {
-            currentNode = currentNode.getSibling(pathElement);
+            currentNode = currentNode.siblings.get(pathElement);
             if (currentNode == null || currentNode.isLeaf()) {
                 break;
             }
