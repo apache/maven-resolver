@@ -61,7 +61,7 @@ import static java.util.stream.Collectors.toList;
  * In case of conflicting rules, parsing happens by "first wins", so line closer to first line in file "wins", and conflicting
  * line is ignored.
  */
-public class GroupTree extends Node {
+public class GroupTree extends Node<GroupTree> {
     private static final String ROOT = "*";
     private static final String MOD_EXCLUSION = "!";
     private static final String MOD_STOP = "=";
@@ -70,12 +70,31 @@ public class GroupTree extends Node {
         return Arrays.stream(groupId.split("\\.")).filter(e -> !e.isEmpty()).collect(toList());
     }
 
+    private boolean stop;
+    private Boolean allow;
+
     public GroupTree(String name) {
         super(name);
-        setAllow(false);
+    }
+
+    public boolean isStop() {
+        return stop;
+    }
+
+    public Boolean isAllow() {
+        return allow;
+    }
+
+    public void setStop(boolean stop) {
+        this.stop = stop;
+    }
+
+    public void setAllow(boolean allow) {
+        this.allow = allow;
     }
 
     public int loadNodes(Stream<String> linesStream) {
+        setAllow(false);
         AtomicInteger counter = new AtomicInteger(0);
         linesStream.forEach(line -> {
             if (loadNode(line)) {
@@ -87,7 +106,7 @@ public class GroupTree extends Node {
 
     public boolean loadNode(String line) {
         if (!line.startsWith("#") && !line.trim().isEmpty()) {
-            Node currentNode = this;
+            GroupTree currentNode = this;
             boolean allow = true;
             if (line.startsWith(MOD_EXCLUSION)) {
                 allow = false;
@@ -104,9 +123,10 @@ public class GroupTree extends Node {
             }
             List<String> groupElements = elementsOfGroup(line);
             for (String groupElement : groupElements.subList(0, groupElements.size() - 1)) {
-                currentNode = currentNode.addSibling(groupElement);
+                currentNode = currentNode.addSibling(groupElement, () -> new GroupTree(groupElement));
             }
-            currentNode = currentNode.addSibling(groupElements.get(groupElements.size() - 1));
+            String lastElement = groupElements.get(groupElements.size() - 1);
+            currentNode = currentNode.addSibling(lastElement, () -> new GroupTree(lastElement));
             currentNode.setStop(stop);
             currentNode.setAllow(allow);
             return true;
@@ -118,20 +138,35 @@ public class GroupTree extends Node {
         final List<String> current = new ArrayList<>();
         final List<String> groupElements = elementsOfGroup(groupId);
         Boolean accepted = null;
-        Node currentNode = this;
+        GroupTree currentNode = this;
         for (String groupElement : groupElements) {
             current.add(groupElement);
             currentNode = currentNode.getSibling(groupElement);
             if (currentNode == null) {
+                // we stepped off the tree; use value we got so far
                 break;
-            }
-            if (currentNode.isStop() && groupElements.equals(current)) {
+            } else if (currentNode.isStop() && groupElements.equals(current)) {
+                // exact match
                 accepted = currentNode.isAllow();
+                break;
             } else if (!currentNode.isStop() && currentNode.isAllow() != null) {
+                // "inherit" if not STOP and allow is set; and most probably we loop more
                 accepted = currentNode.isAllow();
             }
         }
-        // use `accepted`, if defined; otherwise fallback to root (it always has `allow` set)
+        // use 'accepted', if defined; otherwise fallback to root (it always has 'allow' set)
         return accepted != null ? accepted : this.isAllow();
+    }
+
+    @Override
+    public String toString() {
+        return (allow != null ? (allow ? "+" : "-") : "?") + (stop ? "=" : "") + name;
+    }
+
+    public void dump(String prefix) {
+        System.out.println(prefix + this);
+        for (GroupTree node : siblings.values()) {
+            node.dump(prefix + "  ");
+        }
     }
 }

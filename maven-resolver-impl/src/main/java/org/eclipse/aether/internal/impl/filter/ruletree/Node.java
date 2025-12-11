@@ -19,20 +19,17 @@
 package org.eclipse.aether.internal.impl.filter.ruletree;
 
 import java.util.HashMap;
+import java.util.function.Supplier;
 
 /**
  * A tree structure with rules.
  */
-class Node {
-    private final String name;
-    private boolean stop;
-    private Boolean allow;
-    private final HashMap<String, Node> siblings;
+abstract class Node<N extends Node<?>> {
+    protected final String name;
+    protected final HashMap<String, N> siblings;
 
     protected Node(String name) {
         this.name = name;
-        this.stop = false;
-        this.allow = null;
         this.siblings = new HashMap<>();
     }
 
@@ -44,38 +41,22 @@ class Node {
         return siblings.isEmpty();
     }
 
-    public boolean isStop() {
-        return stop;
+    protected N addSibling(String name, Supplier<N> supplier) {
+        return siblings.computeIfAbsent(name, k -> supplier.get());
     }
 
-    public Boolean isAllow() {
-        return allow;
-    }
-
-    public void setStop(boolean stop) {
-        this.stop = stop;
-    }
-
-    public void setAllow(boolean allow) {
-        this.allow = allow;
-    }
-
-    protected Node addSibling(String name) {
-        return siblings.computeIfAbsent(name, Node::new);
-    }
-
-    protected Node getSibling(String name) {
+    protected N getSibling(String name) {
         return siblings.get(name);
     }
 
     @Override
     public String toString() {
-        return (allow != null ? (allow ? "+" : "-") : "?") + (stop ? "=" : "") + name;
+        return name;
     }
 
     public void dump(String prefix) {
         System.out.println(prefix + this);
-        for (Node node : siblings.values()) {
+        for (N node : siblings.values()) {
             node.dump(prefix + "  ");
         }
     }

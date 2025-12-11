@@ -41,7 +41,7 @@ import static java.util.stream.Collectors.toList;
  *     <li><a href="https://repo.eclipse.org/content/repositories/tycho/.meta/prefixes.txt">Eclipse Tycho</a></li>
  * </ul>
  */
-public class PrefixTree extends Node {
+public class PrefixTree extends Node<PrefixTree> {
     private static List<String> elementsOfPath(final String path) {
         return Arrays.stream(path.split("/")).filter(e -> !e.isEmpty()).collect(toList());
     }
@@ -62,9 +62,9 @@ public class PrefixTree extends Node {
 
     public boolean loadNode(String line) {
         if (!line.startsWith("#") && !line.trim().isEmpty()) {
-            Node currentNode = this;
+            PrefixTree currentNode = this;
             for (String element : elementsOfPath(line)) {
-                currentNode = currentNode.addSibling(element);
+                currentNode = currentNode.addSibling(element, () -> new PrefixTree(element));
             }
             return true;
         }
@@ -73,13 +73,14 @@ public class PrefixTree extends Node {
 
     public boolean acceptedPath(String path) {
         final List<String> pathElements = elementsOfPath(path);
-        Node currentNode = this;
+        PrefixTree currentNode = this;
         for (String pathElement : pathElements) {
             currentNode = currentNode.getSibling(pathElement);
             if (currentNode == null || currentNode.isLeaf()) {
                 break;
             }
         }
+        // path is accepted if its elements lead to an existing node that is a leaf node
         return currentNode != null && currentNode.isLeaf();
     }
 }
