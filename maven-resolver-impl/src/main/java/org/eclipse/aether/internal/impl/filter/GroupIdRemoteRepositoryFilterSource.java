@@ -123,9 +123,11 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     public static final boolean DEFAULT_SKIPPED = false;
 
     /**
-     * The "no input outcome": if filter is enabled, but no input is available. By default, RRF filters without
-     * input would "stand aside" and just "allow", resulting in same outcome for "disabled" and "enabled but no input
-     * available" situations. This configuration allows to alter outcome for "enabled but no input available" case.
+     * Determines what happens when the filter is enabled, but has no groupId file available for given remote repository
+     * to work with. When set to {@code true} (default), the filter allows all requests to proceed for given remote
+     * repository when no groupId file is available. When set to {@code false}, the filter blocks all requests toward
+     * given remote repository when no groupId file is available. This setting allows repoId suffix, hence, can
+     * determine "global" or "repository targeted" behaviors.
      *
      * @since 2.0.14
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
