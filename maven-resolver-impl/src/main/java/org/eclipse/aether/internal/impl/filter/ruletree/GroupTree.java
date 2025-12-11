@@ -64,11 +64,11 @@ import static java.util.stream.Collectors.toList;
  */
 public class GroupTree extends Node<GroupTree> {
     /**
-     * Creates root (special for root: allow is not null).
+     * Creates root, that is special: accept is never null.
      */
     public static GroupTree create(String name) {
         GroupTree result = new GroupTree(name);
-        result.allow = false;
+        result.accept = false;
         return result;
     }
 
@@ -81,7 +81,7 @@ public class GroupTree extends Node<GroupTree> {
     }
 
     private boolean stop;
-    private Boolean allow;
+    private Boolean accept;
 
     private GroupTree(String name) {
         super(name);
@@ -100,9 +100,9 @@ public class GroupTree extends Node<GroupTree> {
     public boolean loadNode(String line) {
         if (!line.startsWith("#") && !line.trim().isEmpty()) {
             GroupTree currentNode = this;
-            boolean allow = true;
+            boolean accept = true;
             if (line.startsWith(MOD_EXCLUSION)) {
-                allow = false;
+                accept = false;
                 line = line.substring(MOD_EXCLUSION.length());
             }
             boolean stop = false;
@@ -111,7 +111,7 @@ public class GroupTree extends Node<GroupTree> {
                 line = line.substring(MOD_STOP.length());
             }
             if (ROOT.equals(line)) {
-                this.allow = allow;
+                this.accept = accept;
                 return true;
             }
             List<String> groupElements = elementsOfGroup(line);
@@ -121,7 +121,7 @@ public class GroupTree extends Node<GroupTree> {
             String lastElement = groupElements.get(groupElements.size() - 1);
             currentNode = currentNode.siblings.computeIfAbsent(lastElement, GroupTree::new);
             currentNode.stop = stop;
-            currentNode.allow = allow;
+            currentNode.accept = accept;
             return true;
         }
         return false;
@@ -140,20 +140,20 @@ public class GroupTree extends Node<GroupTree> {
                 break;
             } else if (currentNode.stop && groupElements.equals(current)) {
                 // exact match
-                accepted = currentNode.allow;
+                accepted = currentNode.accept;
                 break;
-            } else if (!currentNode.stop && currentNode.allow != null) {
+            } else if (!currentNode.stop && currentNode.accept != null) {
                 // "inherit" if not STOP and allow is set; and most probably we loop more
-                accepted = currentNode.allow;
+                accepted = currentNode.accept;
             }
         }
         // use 'accepted', if defined; otherwise fallback to root (it always has 'allow' set)
-        return accepted != null ? accepted : this.allow;
+        return accepted != null ? accepted : this.accept;
     }
 
     @Override
     public String toString() {
-        return (allow != null ? (allow ? "+" : "-") : "?") + (stop ? "=" : "") + name;
+        return (accept != null ? (accept ? "+" : "-") : "?") + (stop ? "=" : "") + name;
     }
 
     @Override
