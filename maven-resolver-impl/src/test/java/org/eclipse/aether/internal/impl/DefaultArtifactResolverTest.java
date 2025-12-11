@@ -34,6 +34,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.UpdateCheckManager;
 import org.eclipse.aether.impl.VersionResolver;
 import org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager;
@@ -63,6 +64,7 @@ import org.eclipse.aether.resolution.VersionResolutionException;
 import org.eclipse.aether.resolution.VersionResult;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
+import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
@@ -96,7 +98,7 @@ public class DefaultArtifactResolverTest {
 
     private HashMap<String, RemoteRepositoryFilterSource> remoteRepositoryFilterSources;
 
-    private DefaultRemoteRepositoryFilterManager remoteRepositoryFilterManager;
+    private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
     @Before
     public void setup() {
@@ -885,5 +887,116 @@ public class DefaultArtifactResolverTest {
 
         resolved = resolved.setFile(null);
         assertEquals(artifact, resolved);
+    }
+
+    @Test
+    public void testCachedButFilteredOut() {
+        remoteRepositoryFilterManager = new RemoteRepositoryFilterManager() {
+            @Override
+            public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
+                return new RemoteRepositoryFilter() {
+                    @Override
+                    public Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
+                        return new Result() {
+                            @Override
+                            public boolean isAccepted() {
+                                return false;
+                            }
+
+                            @Override
+                            public String reasoning() {
+                                return "REFUSED";
+                            }
+                        };
+                    }
+
+                    @Override
+                    public Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
+                        return new Result() {
+                            @Override
+                            public boolean isAccepted() {
+                                return true;
+                            }
+
+                            @Override
+                            public String reasoning() {
+                                return "OK";
+                            }
+                        };
+                    }
+                };
+            }
+        };
+        session.setLocalRepositoryManager(new LocalRepositoryManager() {
+            public LocalRepository getRepository() {
+                return null;
+            }
+
+            public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
+                return null;
+            }
+
+            public String getPathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
+                return null;
+            }
+
+            public String getPathForLocalMetadata(Metadata metadata) {
+                return null;
+            }
+
+            public String getPathForLocalArtifact(Artifact artifact) {
+                return null;
+            }
+
+            public LocalArtifactResult find(RepositorySystemSession session, LocalArtifactRequest request) {
+                LocalArtifactResult result = new LocalArtifactResult(request);
+                result.setAvailable(false);
+                try {
+                    result.setFile(TestFileUtils.createTempFile(""));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return result;
+            }
+
+            public void add(RepositorySystemSession session, LocalArtifactRegistration request) {}
+
+            public LocalMetadataResult find(RepositorySystemSession session, LocalMetadataRequest request) {
+                LocalMetadataResult result = new LocalMetadataResult(request);
+                try {
+                    result.setFile(TestFileUtils.createTempFile(""));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return result;
+            }
+
+            public void add(RepositorySystemSession session, LocalMetadataRegistration request) {}
+        });
+
+        // rebuild resolver with our filter
+        resolver = new DefaultArtifactResolver();
+        resolver.setFileProcessor(new TestFileProcessor());
+        resolver.setRepositoryEventDispatcher(new StubRepositoryEventDispatcher());
+        resolver.setVersionResolver(new StubVersionResolver());
+        resolver.setUpdateCheckManager(new StaticUpdateCheckManager(false));
+        resolver.setRepositoryConnectorProvider(repositoryConnectorProvider);
+        resolver.setRemoteRepositoryManager(new StubRemoteRepositoryManager());
+        resolver.setSyncContextFactory(new StubSyncContextFactory());
+        resolver.setOfflineController(new DefaultOfflineController());
+        resolver.setArtifactResolverPostProcessors(Collections.emptyMap());
+        resolver.setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
+
+        ArtifactRequest request = new ArtifactRequest(artifact, null, "");
+        request.addRepository(new RemoteRepository.Builder("id", "default", "file:///").build());
+
+        // resolver should throw
+        try {
+            resolver.resolveArtifact(session, request);
+            fail("Should throw ArtifactResolutionException");
+        } catch (ArtifactResolutionException ex) {
+            // message should contain present=true, available=false, filter message
+            assertTrue(ex.getMessage().contains("gid:aid:ext:ver (present, but unavailable): REFUSED"));
+        }
     }
 }
