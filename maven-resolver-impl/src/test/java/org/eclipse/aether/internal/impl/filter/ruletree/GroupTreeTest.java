@@ -197,7 +197,7 @@ public class GroupTreeTest {
 
         // INVERTED REPRODUCER as given
         groupTree = GroupTree.create("root");
-        // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
+        // reproducer in opposite order
         groupTree.loadNodes(Stream.of("# comment", "", "org.apache.maven.plugins", "org.apache"));
         groupTree.dump("");
 
