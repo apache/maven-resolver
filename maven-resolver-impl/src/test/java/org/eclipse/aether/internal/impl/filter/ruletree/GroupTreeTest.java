@@ -231,18 +231,16 @@ public class GroupTreeTest {
     void gh1711() {
         GroupTree groupTree;
 
-        // "last wins"
+        // "last wins" 1
         groupTree = GroupTree.create("root");
-        // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
         groupTree.loadNodes(Stream.of("org.apache", "!org.apache"));
         groupTree.dump("");
 
         assertFalse(groupTree.acceptedGroupId("org.apache")); // last wins
         assertFalse(groupTree.acceptedGroupId("org.apache.maven")); // last wins
 
-        // "last wins"
+        // "last wins" 2
         groupTree = GroupTree.create("root");
-        // this is redundant, as 'org.apache' IMPLIES 'org.apache.maven.plugins'
         groupTree.loadNodes(Stream.of("org.apache", "!org.apache", "org.apache"));
         groupTree.dump("");
 
