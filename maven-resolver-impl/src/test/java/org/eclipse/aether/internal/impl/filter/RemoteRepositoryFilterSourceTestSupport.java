@@ -56,6 +56,8 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
 
     protected abstract void enableSource(DefaultRepositorySystemSession session, boolean enabled);
 
+    protected abstract void setOutcome(DefaultRepositorySystemSession session, boolean enabled);
+
     protected abstract void allowArtifact(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository, Artifact artifact);
 
@@ -64,6 +66,31 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
         enableSource(session, false);
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNull(filter);
+    }
+
+    @Test
+    void enabledNoInput() {
+        enableSource(session, true);
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, acceptedArtifact);
+
+        assertTrue(result.isAccepted());
+        assertTrue(result.reasoning().endsWith("No input available"));
+    }
+
+    @Test
+    void enabledNoInputAlteredOutcome() {
+        enableSource(session, true);
+        setOutcome(session, false);
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, acceptedArtifact);
+
+        assertFalse(result.isAccepted());
+        assertTrue(result.reasoning().endsWith("No input available"));
     }
 
     @Test

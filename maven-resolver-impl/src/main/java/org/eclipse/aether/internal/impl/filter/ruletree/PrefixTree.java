@@ -42,8 +42,6 @@ import static java.util.stream.Collectors.toList;
  * </ul>
  */
 public class PrefixTree extends Node {
-    public static final PrefixTree SENTINEL = new PrefixTree("sentinel");
-
     private static List<String> elementsOfPath(final String path) {
         return Arrays.stream(path.split("/")).filter(e -> !e.isEmpty()).collect(toList());
     }

@@ -340,7 +340,7 @@ public class DefaultMetadataResolverTest {
         assertSame(request, result.getRequest());
         assertNotNull(result.getException());
         assertInstanceOf(MetadataNotFoundException.class, result.getException());
-        assertEquals("never-accept", result.getException().getMessage());
+        assertEquals("never-accept: never accept", result.getException().getMessage());
         assertNull(result.getMetadata());
 
         connector.assertSeenExpected();
@@ -400,7 +400,9 @@ public class DefaultMetadataResolverTest {
         assertSame(request, result.getRequest());
         assertNotNull(result.getException());
         assertInstanceOf(MetadataNotFoundException.class, result.getException());
-        assertEquals("never-accept-" + repository.getId(), result.getException().getMessage());
+        assertEquals(
+                "never-accept-" + repository.getId() + ": matched",
+                result.getException().getMessage());
         assertNull(result.getMetadata());
 
         connector.assertSeenExpected();

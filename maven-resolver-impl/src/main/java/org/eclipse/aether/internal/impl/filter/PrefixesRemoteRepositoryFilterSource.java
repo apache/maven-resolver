@@ -83,9 +83,6 @@ import static java.util.Objects.requireNonNull;
 public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepositoryFilterSourceSupport {
     public static final String NAME = "prefixes";
 
-    private static final String CONFIG_PROPS_PREFIX =
-            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
-
     static final String PREFIX_FILE_TYPE = ".meta/prefixes.txt";
 
     /**
@@ -138,6 +135,39 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     public static final boolean DEFAULT_SKIPPED = false;
 
     /**
+     * Determines what happens when the filter is enabled, but has no prefixes available for given remote repository
+     * to work with. When set to {@code true} (default), the filter allows all requests to proceed for given remote
+     * repository when no prefixes are available. When set to {@code false}, the filter blocks all requests toward
+     * given remote repository when no prefixes are available. This setting allows repoId suffix, hence, can
+     * determine "global" or "repository targeted" behaviors.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_NO_INPUT_OUTCOME}
+     */
+    public static final String CONFIG_PROP_NO_INPUT_OUTCOME =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".noInputOutcome";
+
+    public static final boolean DEFAULT_NO_INPUT_OUTCOME = true;
+
+    /**
+     * Configuration to allow Prefixes file resolution attempt from remote repository as "auto discovery". If this
+     * configuration set to {@code false} only user-provided prefixes will be used.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_RESOLVE_PREFIX_FILES}
+     */
+    public static final String CONFIG_PROP_RESOLVE_PREFIX_FILES =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".resolvePrefixFiles";
+
+    public static final boolean DEFAULT_RESOLVE_PREFIX_FILES = true;
+
+    /**
      * Configuration to allow Prefixes filter to auto-discover prefixes from mirrored repositories as well. For this to
      * work <em>Maven should be aware</em> that given remote repository is mirror and is usually backed by MRM. Given
      * multiple MRM implementations messes up prefixes file, is better to just skip these. In other case, one may use
@@ -179,7 +209,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #LOCAL_REPO_PREFIX_DIR}
      */
-    public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
+    public static final String CONFIG_PROP_BASEDIR =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".basedir";
 
     public static final String LOCAL_REPO_PREFIX_DIR = ".remoteRepositoryFilters";
 
@@ -272,6 +303,9 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                         r -> loadPrefixTree(session, basedir, remoteRepository));
     }
 
+    private static final PrefixTree DISABLED = new PrefixTree("disabled");
+    private static final PrefixTree ENABLED_NO_INPUT = new PrefixTree("enabled-no-input");
+
     private PrefixTree loadPrefixTree(
             RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
         if (isRepositoryFilteringEnabled(session, remoteRepository)) {
@@ -312,10 +346,10 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                 }
             }
             logger.debug("Prefix file for remote repository {} not available", remoteRepository);
-            return PrefixTree.SENTINEL;
+            return ENABLED_NO_INPUT;
         }
         logger.debug("Prefix file for remote repository {} disabled", remoteRepository);
-        return PrefixTree.SENTINEL;
+        return DISABLED;
     }
 
     private Path resolvePrefixesFromLocalConfiguration(
@@ -331,6 +365,13 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private boolean supportedResolvePrefixesForRemoteRepository(
             RepositorySystemSession session, RemoteRepository remoteRepository) {
+        if (!ConfigUtils.getBoolean(
+                session,
+                DEFAULT_RESOLVE_PREFIX_FILES,
+                CONFIG_PROP_RESOLVE_PREFIX_FILES + "." + remoteRepository.getId(),
+                CONFIG_PROP_RESOLVE_PREFIX_FILES)) {
+            return false;
+        }
         if (remoteRepository.isRepositoryManager()) {
             return ConfigUtils.getBoolean(
                     session, DEFAULT_USE_REPOSITORY_MANAGERS, CONFIG_PROP_USE_REPOSITORY_MANAGERS);
@@ -383,7 +424,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         public Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
             RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
             if (repositoryLayout == NOT_SUPPORTED) {
-                return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
+                return result(true, NAME, "Unsupported layout: " + remoteRepository);
             }
             return acceptPrefix(
                     remoteRepository,
@@ -394,7 +435,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         public Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
             RepositoryLayout repositoryLayout = cacheLayout(session, remoteRepository);
             if (repositoryLayout == NOT_SUPPORTED) {
-                return new SimpleResult(true, "Unsupported layout: " + remoteRepository);
+                return result(true, NAME, "Unsupported layout: " + remoteRepository);
             }
             return acceptPrefix(
                     remoteRepository,
@@ -403,19 +444,27 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
         private Result acceptPrefix(RemoteRepository repository, String path) {
             PrefixTree prefixTree = cachePrefixTree(session, basedir, repository);
-            if (prefixTree == PrefixTree.SENTINEL) {
-                return NOT_PRESENT_RESULT;
+            if (prefixTree == DISABLED) {
+                return result(true, NAME, "Disabled");
+            } else if (prefixTree == ENABLED_NO_INPUT) {
+                return result(
+                        ConfigUtils.getBoolean(
+                                session,
+                                DEFAULT_NO_INPUT_OUTCOME,
+                                CONFIG_PROP_NO_INPUT_OUTCOME + "." + repository.getId(),
+                                CONFIG_PROP_NO_INPUT_OUTCOME),
+                        NAME,
+                        "No input available");
             }
-            if (prefixTree.acceptedPath(path)) {
-                return new SimpleResult(true, "Path " + path + " allowed from " + repository);
-            } else {
-                return new SimpleResult(false, "Path " + path + " NOT allowed from " + repository);
-            }
+            boolean accepted = prefixTree.acceptedPath(path);
+            return result(
+                    accepted,
+                    NAME,
+                    accepted
+                            ? "Path " + path + " allowed from " + repository.getId()
+                            : "Path " + path + " NOT allowed from " + repository.getId());
         }
     }
-
-    private static final RemoteRepositoryFilter.Result NOT_PRESENT_RESULT =
-            new SimpleResult(true, "Prefix file not present");
 
     private static final RepositoryLayout NOT_SUPPORTED = new RepositoryLayout() {
         @Override
