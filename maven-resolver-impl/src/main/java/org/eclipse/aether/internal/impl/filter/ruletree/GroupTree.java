@@ -41,6 +41,7 @@ import static java.util.stream.Collectors.toList;
  * means "by default deny" (same effect as when this character is not present in file). Use of limiter modifier
  * on "root" like {@code "=*"} has no effect, is simply ignored.
  *
+ * <p>
  * Examples:
  * <pre>
  * {@code
@@ -163,6 +164,7 @@ public class GroupTree extends Node<GroupTree> {
         return (allow != null ? (allow ? "+" : "-") : "?") + (stop ? "=" : "") + name;
     }
 
+    @Override
     public void dump(String prefix) {
         System.out.println(prefix + this);
         for (GroupTree node : siblings.values()) {

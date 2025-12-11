@@ -34,6 +34,7 @@ import static java.util.stream.Collectors.toList;
  * </ul>
  * By default, artifact is allowed if layout converted path of it has a matching prefix in this file.
  *
+ * <p>
  * Example prefix files:
  * <ul>
  *     <li><a href="https://repo.maven.apache.org/maven2/.meta/prefixes.txt">Maven Central</a></li>
