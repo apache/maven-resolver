@@ -338,8 +338,8 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                     accepted,
                     NAME,
                     accepted
-                            ? "G:" + groupId + " allowed from " + repository
-                            : "G:" + groupId + " NOT allowed from " + repository);
+                            ? "G:" + groupId + " allowed from " + repository.getId()
+                            : "G:" + groupId + " NOT allowed from " + repository.getId());
         }
     }
 

@@ -459,8 +459,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                     accepted,
                     NAME,
                     accepted
-                            ? "Path " + path + " allowed from " + repository
-                            : "Path " + path + " NOT allowed from " + repository);
+                            ? "Path " + path + " allowed from " + repository.getId()
+                            : "Path " + path + " NOT allowed from " + repository.getId());
         }
     }
 
