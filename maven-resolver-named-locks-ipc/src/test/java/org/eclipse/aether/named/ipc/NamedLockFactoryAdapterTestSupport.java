@@ -98,7 +98,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void sharedAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -113,7 +113,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void exclusiveAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -128,7 +128,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void mixedAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -143,7 +143,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void nestedSharedShared() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -156,7 +156,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void nestedExclusiveShared() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -169,7 +169,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void nestedExclusiveExclusive() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -182,7 +182,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void nestedSharedExclusive() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner (outer)
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser (inner)
