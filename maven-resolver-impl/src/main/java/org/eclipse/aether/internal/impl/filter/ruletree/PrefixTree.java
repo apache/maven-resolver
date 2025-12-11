@@ -47,7 +47,7 @@ public class PrefixTree extends Node {
     }
 
     public PrefixTree(String name) {
-        super(name, false, null);
+        super(name);
     }
 
     public int loadNodes(Stream<String> linesStream) {
@@ -64,7 +64,7 @@ public class PrefixTree extends Node {
         if (!line.startsWith("#") && !line.trim().isEmpty()) {
             Node currentNode = this;
             for (String element : elementsOfPath(line)) {
-                currentNode = currentNode.addSibling(element, false, null);
+                currentNode = currentNode.addSibling(element);
             }
             return true;
         }

@@ -29,10 +29,10 @@ class Node {
     private Boolean allow;
     private final HashMap<String, Node> siblings;
 
-    protected Node(String name, boolean stop, Boolean allow) {
+    protected Node(String name) {
         this.name = name;
-        this.stop = stop;
-        this.allow = allow;
+        this.stop = false;
+        this.allow = null;
         this.siblings = new HashMap<>();
     }
 
@@ -56,19 +56,12 @@ class Node {
         this.stop = stop;
     }
 
-    public void setAllow(Boolean allow) {
+    public void setAllow(boolean allow) {
         this.allow = allow;
     }
 
-    protected Node addSibling(String name, boolean stop, Boolean allow) {
-        Node result = siblings.computeIfAbsent(name, n -> new Node(n, stop, allow));
-        if (stop && !result.stop) {
-            result.setStop(stop);
-        }
-        if (allow != null) {
-            result.setAllow(allow);
-        }
-        return result;
+    protected Node addSibling(String name) {
+        return siblings.computeIfAbsent(name, Node::new);
     }
 
     protected Node getSibling(String name) {

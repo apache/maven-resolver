@@ -71,7 +71,8 @@ public class GroupTree extends Node {
     }
 
     public GroupTree(String name) {
-        super(name, false, false);
+        super(name);
+        setAllow(false);
     }
 
     public int loadNodes(Stream<String> linesStream) {
@@ -103,9 +104,11 @@ public class GroupTree extends Node {
             }
             List<String> groupElements = elementsOfGroup(line);
             for (String groupElement : groupElements.subList(0, groupElements.size() - 1)) {
-                currentNode = currentNode.addSibling(groupElement, false, null);
+                currentNode = currentNode.addSibling(groupElement);
             }
-            currentNode.addSibling(groupElements.get(groupElements.size() - 1), stop, allow);
+            currentNode = currentNode.addSibling(groupElements.get(groupElements.size() - 1));
+            currentNode.setStop(stop);
+            currentNode.setAllow(allow);
             return true;
         }
         return false;
