@@ -88,7 +88,6 @@ public class GroupTree extends Node<GroupTree> {
     }
 
     public int loadNodes(Stream<String> linesStream) {
-        this.allow = false;
         AtomicInteger counter = new AtomicInteger(0);
         linesStream.forEach(line -> {
             if (loadNode(line)) {
