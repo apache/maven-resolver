@@ -59,8 +59,8 @@ import static java.util.stream.Collectors.toList;
  * and "allow {@code org.apache.bar} groupID ONLY".
  *
  * <p>
- * In case of conflicting rules, parsing happens by "first wins", so line closer to first line in file "wins", and conflicting
- * line is ignored.
+ * In case of conflicting rules, parsing happens by "last wins", so line closer to last line in file "wins", and conflicting
+ * line value is lost.
  */
 public class GroupTree extends Node<GroupTree> {
     /**
