@@ -291,7 +291,8 @@ public class DefaultArtifactResolverTest {
             assertFalse(result.getExceptions().isEmpty());
             assertInstanceOf(
                     ArtifactNotFoundException.class, result.getExceptions().get(0));
-            assertEquals("never-accept", result.getExceptions().get(0).getMessage());
+            assertEquals(
+                    "never-accept: never accept", result.getExceptions().get(0).getMessage());
 
             Artifact resolved = result.getArtifact();
             assertNull(resolved);
@@ -342,7 +343,8 @@ public class DefaultArtifactResolverTest {
             assertFalse(result.getExceptions().isEmpty());
             assertInstanceOf(
                     ArtifactNotFoundException.class, result.getExceptions().get(0));
-            assertEquals("never-accept-id", result.getExceptions().get(0).getMessage());
+            assertEquals(
+                    "never-accept-id: matched", result.getExceptions().get(0).getMessage());
 
             Artifact resolved = result.getArtifact();
             assertNull(resolved);

@@ -129,12 +129,12 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
     /**
      * Simple {@link RemoteRepositoryFilter.Result} immutable implementation.
      */
-    protected static class SimpleResult implements RemoteRepositoryFilter.Result {
+    private static class SimpleResult implements RemoteRepositoryFilter.Result {
         private final boolean accepted;
 
         private final String reasoning;
 
-        public SimpleResult(boolean accepted, String reasoning) {
+        private SimpleResult(boolean accepted, String reasoning) {
             this.accepted = accepted;
             this.reasoning = requireNonNull(reasoning);
         }
@@ -148,5 +148,12 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
         public String reasoning() {
             return reasoning;
         }
+    }
+
+    /**
+     * Visible for testing.
+     */
+    static RemoteRepositoryFilter.Result result(boolean accepted, String name, String message) {
+        return new SimpleResult(accepted, name + ": " + message);
     }
 }

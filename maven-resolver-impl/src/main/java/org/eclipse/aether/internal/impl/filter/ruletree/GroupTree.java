@@ -62,8 +62,6 @@ import static java.util.stream.Collectors.toList;
  * line is ignored.
  */
 public class GroupTree extends Node {
-    public static final GroupTree SENTINEL = new GroupTree("sentinel");
-
     private static final String ROOT = "*";
     private static final String MOD_EXCLUSION = "!";
     private static final String MOD_STOP = "=";

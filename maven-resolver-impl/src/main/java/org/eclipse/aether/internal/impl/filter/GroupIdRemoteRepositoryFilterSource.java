@@ -79,9 +79,6 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
         implements ArtifactResolverPostProcessor {
     public static final String NAME = "groupId";
 
-    private static final String CONFIG_PROPS_PREFIX =
-            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".";
-
     /**
      * Configuration to enable the GroupId filter (enabled by default). Can be fine-tuned per repository using
      * repository ID suffixes.
@@ -126,13 +123,30 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     public static final boolean DEFAULT_SKIPPED = false;
 
     /**
+     * The "no input outcome": if filter is enabled, but no input is available. By default, RRF filters without
+     * input would "stand aside" and just "allow", resulting in same outcome for "disabled" and "enabled but no input
+     * available" situations. This configuration allows to alter outcome for "enabled but no input available" case.
+     *
+     * @since 2.0.14
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     * @configurationDefaultValue {@link #DEFAULT_NO_INPUT_OUTCOME}
+     */
+    public static final String CONFIG_PROP_NO_INPUT_OUTCOME =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".noInputOutcome";
+
+    public static final boolean DEFAULT_NO_INPUT_OUTCOME = true;
+
+    /**
      * The basedir where to store filter files. If path is relative, it is resolved from local repository root.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #LOCAL_REPO_PREFIX_DIR}
      */
-    public static final String CONFIG_PROP_BASEDIR = CONFIG_PROPS_PREFIX + "basedir";
+    public static final String CONFIG_PROP_BASEDIR =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".basedir";
 
     public static final String LOCAL_REPO_PREFIX_DIR = ".remoteRepositoryFilters";
 
@@ -143,7 +157,8 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue false
      */
-    public static final String CONFIG_PROP_RECORD = CONFIG_PROPS_PREFIX + "record";
+    public static final String CONFIG_PROP_RECORD =
+            RemoteRepositoryFilterSourceSupport.CONFIG_PROPS_PREFIX + NAME + ".record";
 
     static final String GROUP_ID_FILE_PREFIX = "groupId-";
 
@@ -236,7 +251,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                                 .add(line);
                         rules(session)
                                 .compute(normalized, (k, v) -> {
-                                    if (v == null || v == GroupTree.SENTINEL) {
+                                    if (v == null || v == DISABLED || v == ENABLED_NO_INPUT) {
                                         v = new GroupTree("");
                                     }
                                     return v;
@@ -260,6 +275,9 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                         normalizeRemoteRepository(session, remoteRepository), r -> loadRepositoryRules(session, r));
     }
 
+    private static final GroupTree DISABLED = new GroupTree("disabled");
+    private static final GroupTree ENABLED_NO_INPUT = new GroupTree("enabled-no-input");
+
     private GroupTree loadRepositoryRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
         if (isRepositoryFilteringEnabled(session, remoteRepository)) {
             Path filePath = ruleFile(session, remoteRepository);
@@ -277,10 +295,10 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                 }
             }
             logger.debug("Group rules file for remote repository {} not available", remoteRepository);
-            return GroupTree.SENTINEL;
+            return ENABLED_NO_INPUT;
         }
         logger.debug("Group rules file for remote repository {} disabled", remoteRepository);
-        return GroupTree.SENTINEL;
+        return DISABLED;
     }
 
     private class GroupIdFilter implements RemoteRepositoryFilter {
@@ -291,34 +309,39 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
         }
 
         @Override
-        public Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
-            return acceptGroupId(remoteRepository, artifact.getGroupId());
+        public Result acceptArtifact(RemoteRepository repository, Artifact artifact) {
+            return acceptGroupId(repository, artifact.getGroupId());
         }
 
         @Override
-        public Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
-            return acceptGroupId(remoteRepository, metadata.getGroupId());
+        public Result acceptMetadata(RemoteRepository repository, Metadata metadata) {
+            return acceptGroupId(repository, metadata.getGroupId());
         }
 
-        private Result acceptGroupId(RemoteRepository remoteRepository, String groupId) {
-            GroupTree groupTree = cacheRules(session, remoteRepository);
-            if (GroupTree.SENTINEL == groupTree) {
-                return NOT_PRESENT_RESULT;
+        private Result acceptGroupId(RemoteRepository repository, String groupId) {
+            GroupTree groupTree = cacheRules(session, repository);
+            if (groupTree == DISABLED) {
+                return result(true, NAME, "Disabled");
+            } else if (groupTree == ENABLED_NO_INPUT) {
+                return result(
+                        ConfigUtils.getBoolean(
+                                session,
+                                DEFAULT_NO_INPUT_OUTCOME,
+                                CONFIG_PROP_NO_INPUT_OUTCOME + "." + repository.getId(),
+                                CONFIG_PROP_NO_INPUT_OUTCOME),
+                        NAME,
+                        "No input available");
             }
 
-            if (groupTree.acceptedGroupId(groupId)) {
-                return new SimpleResult(true, "G:" + groupId + " allowed from " + remoteRepository);
-            } else {
-                return new SimpleResult(false, "G:" + groupId + " NOT allowed from " + remoteRepository);
-            }
+            boolean accepted = groupTree.acceptedGroupId(groupId);
+            return result(
+                    accepted,
+                    NAME,
+                    accepted
+                            ? "G:" + groupId + " allowed from " + repository
+                            : "G:" + groupId + " NOT allowed from " + repository);
         }
     }
-
-    /**
-     * Filter result when filter "stands aside" as it had no input.
-     */
-    private static final RemoteRepositoryFilter.Result NOT_PRESENT_RESULT =
-            new SimpleResult(true, "GroupId file not present");
 
     /**
      * Returns {@code true} if given session is recording.

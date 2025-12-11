@@ -93,9 +93,20 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
 
     @Override
     protected void enableSource(DefaultRepositorySystemSession session, boolean enabled) {
+        // disable resolving/auto discovery
+        session.setConfigProperty(
+                "aether.remoteRepositoryFilter." + PrefixesRemoteRepositoryFilterSource.NAME + ".resolvePrefixFiles",
+                Boolean.valueOf(false).toString());
         session.setConfigProperty(
                 "aether.remoteRepositoryFilter." + PrefixesRemoteRepositoryFilterSource.NAME,
                 Boolean.valueOf(enabled).toString());
+    }
+
+    @Override
+    protected void setOutcome(DefaultRepositorySystemSession session, boolean outcome) {
+        session.setConfigProperty(
+                "aether.remoteRepositoryFilter." + PrefixesRemoteRepositoryFilterSource.NAME + ".noInputOutcome",
+                Boolean.valueOf(outcome).toString());
     }
 
     @Override
@@ -131,6 +142,6 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
         RemoteRepositoryFilter.Result result = filter.acceptArtifact(mirror, acceptedArtifact);
 
         assertTrue(result.isAccepted());
-        assertEquals("Prefix file not present", result.reasoning());
+        assertEquals("prefixes: No input available", result.reasoning());
     }
 }
