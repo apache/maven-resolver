@@ -254,7 +254,7 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                         rules(session)
                                 .compute(normalized, (k, v) -> {
                                     if (v == null || v == DISABLED || v == ENABLED_NO_INPUT) {
-                                        v = new GroupTree("");
+                                        v = GroupTree.create("record");
                                     }
                                     return v;
                                 })
@@ -277,15 +277,16 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                         normalizeRemoteRepository(session, remoteRepository), r -> loadRepositoryRules(session, r));
     }
 
-    private static final GroupTree DISABLED = new GroupTree("disabled");
-    private static final GroupTree ENABLED_NO_INPUT = new GroupTree("enabled-no-input");
+    private static final GroupTree DISABLED = GroupTree.create("disabled");
+    private static final GroupTree ENABLED_NO_INPUT = GroupTree.create("enabled-no-input");
 
     private GroupTree loadRepositoryRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
         if (isRepositoryFilteringEnabled(session, remoteRepository)) {
             Path filePath = ruleFile(session, remoteRepository);
             if (Files.isReadable(filePath)) {
                 try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
-                    GroupTree groupTree = new GroupTree("");
+                    GroupTree groupTree =
+                            GroupTree.create(filePath.getFileName().toString());
                     int rules = groupTree.loadNodes(lines);
                     logger.info("Loaded {} group rules for remote repository {}", rules, remoteRepository.getId());
                     if (logger.isDebugEnabled()) {
