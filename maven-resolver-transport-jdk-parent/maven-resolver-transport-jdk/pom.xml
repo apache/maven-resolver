@@ -140,7 +140,7 @@
       <dependencies>
         <dependency>
           <groupId>org.apache.maven.resolver</groupId>
-          <artifactId>maven-resolver-transport-jdk-11</artifactId>
+          <artifactId>maven-resolver-transport-jdk11</artifactId>
           <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
@@ -159,7 +159,7 @@
                 </goals>
                 <phase>prepare-package</phase>
                 <configuration>
-                  <includeArtifactIds>maven-resolver-transport-jdk-11</includeArtifactIds>
+                  <includeArtifactIds>maven-resolver-transport-jdk11</includeArtifactIds>
                   <includeClassifiers>sources</includeClassifiers>
                   <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
                   <includes>**/*.java</includes>
@@ -170,6 +170,7 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.6.1</version>
             <executions>
               <execution>
                 <id>add-source</id>
