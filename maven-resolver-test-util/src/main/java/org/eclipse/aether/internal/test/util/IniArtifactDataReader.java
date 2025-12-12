@@ -96,9 +96,7 @@ class IniArtifactDataReader {
 
         Map<State, List<String>> sections = new HashMap<>();
 
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(reader);
+        try (BufferedReader in = new BufferedReader(reader)) {
             while ((line = in.readLine()) != null) {
 
                 line = cutComment(line);
@@ -122,17 +120,6 @@ class IniArtifactDataReader {
                     }
                     lines.add(line.trim());
                 }
-            }
-
-            in.close();
-            in = null;
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
             }
         }
 
