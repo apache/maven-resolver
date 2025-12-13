@@ -19,9 +19,8 @@ under the License.
 -->
 
 [Apache Maven](http://maven.apache.org/) 3.x uses Resolver (former Aether) for repository
-tasks and Maven plugins that target Maven 3.x can do so as well. To
-start, you likely want to add the following dependencies to your plugin
-POM:
+tasks, and Maven plugins that target Maven 3.x can do so as well. To
+start, add the following dependencies to the plugin POM:
 
 ```xml
 <project>
@@ -53,12 +52,12 @@ POM:
 </project>
 ```
 
-*Note:* At runtime, the actual version of `maven-resolver-api` being used is
-enforced by the Maven core, just like other Maven APIs. So be sure to
+*Note:* At runtime, the actual version of `maven-resolver-api` added to the classpath is
+set by the Maven core so be sure to
 compile/test your plugin against the version of `maven-resolver-api` that is
 used by the minimum version of Maven that your plugin wants to support.
 
-Next, in your mojo source, you need to grab the repository related
+Next, in your mojo source, you need to inject the repository related
 components and parameters:
 
 ```java
@@ -104,8 +103,8 @@ public class MyMojo extends AbstractMojo
 }
 ```
 
-Usually, you need only `remoteProjectRepositories` or `remotePluginRepositories`
+Usually, you only need one of  `remoteProjectRepositories` or `remotePluginRepositories`,
 depending on the nature of artifacts your plugin is dealing with. The other plugin
 parameter would be superfluous in that case. But in general, the bits
-shown above should give you all the handles that you need to work with
-Aether from within a Maven plugin.
+shown above should give you all the handles that you need to use the resolver
+from within a Maven plugin.
