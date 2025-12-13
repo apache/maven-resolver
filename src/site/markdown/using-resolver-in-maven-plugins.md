@@ -103,8 +103,8 @@ public class MyMojo extends AbstractMojo
 }
 ```
 
-Usually, you only need one of  `remoteProjectRepositories` or `remotePluginRepositories`,
-depending on the nature of artifacts your plugin is dealing with. The other plugin
-parameter would be superfluous in that case. But in general, the bits
+Usually you only need one of `remoteProjectRepositories` or `remotePluginRepositories`,
+depending on the nature of the artifacts your plugin is dealing with. The other plugin
+parameter is superfluous. In general, the code
 shown above should give you all the handles that you need to use the resolver
 from within a Maven plugin.
