@@ -632,4 +632,113 @@ public class GenericVersionTest extends AbstractVersionTest {
                 "f95e94f7-2443-4b2f-a10d-059d8d224dd9",
                 "b558af80-78bc-43c7-b916-d635a23cc4b5");
     }
+
+    private void checkVersionsOrder(String[] versions) {
+        assertSequence(versions);
+    }
+
+    private void checkVersionsEqual(String v1, String v2) {
+        assertOrder(X_EQ_Y, v1, v2);
+    }
+
+    private void checkVersionsHaveSameOrder(String v1, String v2) {
+        assertOrder(X_EQ_Y, v1, v2);
+    }
+
+    private void checkVersionsOrder(String v1, String v2) {
+        assertOrder(X_LT_Y, v1, v2);
+    }
+
+    /**
+     * Test <a href="https://issues.apache.org/jira/browse/MNG-5568">MNG-5568</a> edge case
+     * which was showing transitive inconsistency: since A &gt; B and B &gt; C then we should have A &gt; C
+     * otherwise sorting a list of ComparableVersions() will in some cases throw runtime exception;
+     * see Netbeans issues <a href="https://netbeans.org/bugzilla/show_bug.cgi?id=240845">240845</a> and
+     * <a href="https://netbeans.org/bugzilla/show_bug.cgi?id=226100">226100</a>
+     */
+    @Test
+    void testMng5568() {
+        checkVersionsOrder("6.1.0rc3", "6.1H.5-beta");
+        checkVersionsOrder("6.1.0rc3", "6.1.0"); // classical
+        checkVersionsOrder("6.1.0", "6.1H.5-beta"); // transitivity
+    }
+
+    /**
+     * Test <a href="https://jira.apache.org/jira/browse/MNG-6572">MNG-6572</a> optimization.
+     */
+    @Test
+    void testMng6572() {
+        String a = "20190126.230843"; // resembles a SNAPSHOT
+        String b = "1234567890.12345"; // 10 digit number
+        String c = "123456789012345.1H.5-beta"; // 15 digit number
+        String d = "12345678901234567890.1H.5-beta"; // 20 digit number
+
+        checkVersionsOrder(a, b);
+        checkVersionsOrder(b, c);
+        checkVersionsOrder(a, c);
+        checkVersionsOrder(c, d);
+        checkVersionsOrder(b, d);
+        checkVersionsOrder(a, d);
+    }
+
+    /**
+     * Test <a href="https://issues.apache.org/jira/browse/MNG-6964">MNG-6964</a> edge cases
+     * for qualifiers that start with "-0.", which was showing A == C and B == C but A &lt; B.
+     */
+    @Test
+    void testMng6964() {
+        String a = "1-0.alpha";
+        String b = "1-0.beta";
+        String c = "1";
+
+        checkVersionsOrder(a, c); // Now a < c, but before MNG-6964 they were equal
+        checkVersionsOrder(b, c); // Now b < c, but before MNG-6964 they were equal
+        checkVersionsOrder(a, b); // Should still be true
+    }
+
+    /**
+     * Test <a href="https://issues.apache.org/jira/browse/MNG-7559">MNG-7559</a> edge cases
+     * -pfd < final, ga, release
+     * 2.0.1.MR < 2.0.1
+     * 9.4.1.jre16 > 9.4.1.jre16-preview
+     */
+    @Test
+    void testMng7559() {
+        // checking general cases
+        // checkVersionsOrder(new String[] {"ab", "alpha", "beta", "cd", "ea", "milestone", "pfd", "preview", "RC"});
+        // checking identified issues respect the general case
+        // checkVersionsOrder("2.3-pfd", "2.3");
+        // checkVersionsOrder("2.0.1.MR", "2.0.1");
+        checkVersionsOrder("9.4.1.jre16-preview", "9.4.1.jre16");
+        checkVersionsOrder("1-ga-1", "1-sp-1");
+    }
+
+    /**
+     * Test <a href="https://issues.apache.org/jira/browse/MNG-7644">MNG-7644</a> edge cases
+     * 1.0.0.RC1 &lt; 1.0.0-RC2 and more generally:
+     * 1.0.0.X1 &lt; 1.0.0-X2 for any string X
+     */
+    @Test
+    void testMng7644() {
+        for (String x : new String[] {"abc", "alpha", "a", "beta", "b", "def", "m", "preview", "RC"}) {
+            // 1.0.0.X1 < 1.0.0-X2 for any string x
+            checkVersionsOrder("1.0.0." + x + "1", "1.0.0-" + x + "2");
+            // 2.0.X1 == 2-X1 == 2.0.0.X1 for any string x
+            checkVersionsEqual("2-" + x + "1", "2.0." + x + "1"); // previously ordered, now equals
+            checkVersionsEqual("2-" + x + "1", "2.0.0." + x + "1"); // previously ordered, now equals
+            checkVersionsEqual("2.0." + x + "1", "2.0.0." + x + "1"); // previously ordered, now equals
+        }
+    }
+
+    @Test
+    public void testMng7714() {
+        String f = ("1.0.final-redhat");
+        String sp1 = ("1.0-sp1-redhat");
+        String sp2 = ("1.0-sp-1-redhat");
+        String sp3 = ("1.0-sp.1-redhat");
+        assertOrder(X_LT_Y, f, sp1);
+        assertOrder(X_LT_Y, f, sp2);
+        assertOrder(X_LT_Y, f, sp3);
+    }
+
 }
