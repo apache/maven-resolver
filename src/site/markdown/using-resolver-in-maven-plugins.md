@@ -18,7 +18,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-[Apache Maven](http://maven.apache.org/) 3.x uses Resolver (former Aether) for repository
+[Apache Maven](https://maven.apache.org/) 3.x uses Resolver (formerly Aether) for repository
 tasks, and Maven plugins that target Maven 3.x can do so as well. To
 start, add the following dependencies to the plugin POM:
 
