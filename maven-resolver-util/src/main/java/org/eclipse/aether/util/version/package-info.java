@@ -61,7 +61,7 @@
  * Note: this version spec does not document (or cover) many corner cases that we believe are "atypical" or not
  * commonly used. Some known examples are:
  * <ul>
- *     <li>Using "min" or "max" special segments as a non-trailing segment. This yields in "undefined" behaviour and should be avoided.</li>
+ *     <li>Using "min" or "max" special segments as a non-trailing segment. Comparisons with such strings are "undefined" and should be avoided.</li>
  *     <li>Having a non-number as the first segment of a version. Versions are expected (but not enforced) to start with numbers.</li>
  * </ul>
  */
