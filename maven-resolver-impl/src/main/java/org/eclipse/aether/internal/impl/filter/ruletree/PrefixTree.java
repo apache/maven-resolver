@@ -34,6 +34,7 @@ import static java.util.stream.Collectors.toList;
  * </ul>
  * By default, artifact is allowed if layout converted path of it has a matching prefix in this file.
  *
+ * <p>
  * Example prefix files:
  * <ul>
  *     <li><a href="https://repo.maven.apache.org/maven2/.meta/prefixes.txt">Maven Central</a></li>
@@ -41,15 +42,13 @@ import static java.util.stream.Collectors.toList;
  *     <li><a href="https://repo.eclipse.org/content/repositories/tycho/.meta/prefixes.txt">Eclipse Tycho</a></li>
  * </ul>
  */
-public class PrefixTree extends Node {
-    public static final PrefixTree SENTINEL = new PrefixTree("sentinel");
-
+public class PrefixTree extends Node<PrefixTree> {
     private static List<String> elementsOfPath(final String path) {
         return Arrays.stream(path.split("/")).filter(e -> !e.isEmpty()).collect(toList());
     }
 
     public PrefixTree(String name) {
-        super(name, false, null);
+        super(name);
     }
 
     public int loadNodes(Stream<String> linesStream) {
@@ -64,9 +63,9 @@ public class PrefixTree extends Node {
 
     public boolean loadNode(String line) {
         if (!line.startsWith("#") && !line.trim().isEmpty()) {
-            Node currentNode = this;
+            PrefixTree currentNode = this;
             for (String element : elementsOfPath(line)) {
-                currentNode = currentNode.addSibling(element, false, null);
+                currentNode = currentNode.siblings.computeIfAbsent(element, PrefixTree::new);
             }
             return true;
         }
@@ -75,13 +74,14 @@ public class PrefixTree extends Node {
 
     public boolean acceptedPath(String path) {
         final List<String> pathElements = elementsOfPath(path);
-        Node currentNode = this;
+        PrefixTree currentNode = this;
         for (String pathElement : pathElements) {
-            currentNode = currentNode.getSibling(pathElement);
+            currentNode = currentNode.siblings.get(pathElement);
             if (currentNode == null || currentNode.isLeaf()) {
                 break;
             }
         }
+        // path is accepted if its elements lead to an existing node that is a leaf node
         return currentNode != null && currentNode.isLeaf();
     }
 }

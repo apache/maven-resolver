@@ -55,6 +55,13 @@ public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFil
                 Boolean.valueOf(enabled).toString());
     }
 
+    @Override
+    protected void setOutcome(DefaultRepositorySystemSession session, boolean outcome) {
+        session.setConfigProperty(
+                "aether.remoteRepositoryFilter." + GroupIdRemoteRepositoryFilterSource.NAME + ".noInputOutcome",
+                Boolean.valueOf(outcome).toString());
+    }
+
     protected void allowArtifact(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository, Artifact artifact) {
         DefaultRepositorySystemSession newSession = new DefaultRepositorySystemSession(session);

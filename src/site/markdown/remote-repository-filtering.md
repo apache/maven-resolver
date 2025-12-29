@@ -188,7 +188,7 @@ Be aware: In case a line with single asterisk `*` is present, the whole logic of
 hence there is no need to add "allowed entries" (they are allowed by default), but one can add "disallowed entries" by 
 adding `!com.foo` and alike.
 
-Conflicting rules: rule parser is intentionally trivial, so in case of conflicting rules the "first wins" strategy is 
+Conflicting rules: rule parser is intentionally trivial, so in case of conflicting rules the "last wins" strategy is 
 applied. Ideally, user should keep files sorted or handle them in a way one can detect conflicts in it.
 
 ## Operation

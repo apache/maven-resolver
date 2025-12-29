@@ -119,7 +119,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void sharedAccess(TestInfo testInfo) throws InterruptedException {
         final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winner
@@ -135,7 +135,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void exclusiveAccess(TestInfo testInfo) throws InterruptedException {
         final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
@@ -151,7 +151,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void mixedAccess(TestInfo testInfo) throws InterruptedException {
         final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner

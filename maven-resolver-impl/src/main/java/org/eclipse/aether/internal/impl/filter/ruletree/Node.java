@@ -18,22 +18,18 @@
  */
 package org.eclipse.aether.internal.impl.filter.ruletree;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A tree structure with rules.
  */
-class Node {
-    private final String name;
-    private final boolean stop;
-    private Boolean allow;
-    private final HashMap<String, Node> siblings;
+abstract class Node<N extends Node<?>> {
+    protected final String name;
+    protected final ConcurrentHashMap<String, N> siblings;
 
-    protected Node(String name, boolean stop, Boolean allow) {
+    protected Node(String name) {
         this.name = name;
-        this.stop = stop;
-        this.allow = allow;
-        this.siblings = new HashMap<>();
+        this.siblings = new ConcurrentHashMap<>();
     }
 
     public String getName() {
@@ -44,34 +40,14 @@ class Node {
         return siblings.isEmpty();
     }
 
-    public boolean isStop() {
-        return stop;
-    }
-
-    public Boolean isAllow() {
-        return allow;
-    }
-
-    public void setAllow(Boolean allow) {
-        this.allow = allow;
-    }
-
-    protected Node addSibling(String name, boolean stop, Boolean allow) {
-        return siblings.computeIfAbsent(name, n -> new Node(n, stop, allow));
-    }
-
-    protected Node getSibling(String name) {
-        return siblings.get(name);
-    }
-
     @Override
     public String toString() {
-        return (allow != null ? (allow ? "+" : "-") : "?") + (stop ? "=" : "") + name;
+        return name;
     }
 
     public void dump(String prefix) {
         System.out.println(prefix + this);
-        for (Node node : siblings.values()) {
+        for (N node : siblings.values()) {
             node.dump(prefix + "  ");
         }
     }
