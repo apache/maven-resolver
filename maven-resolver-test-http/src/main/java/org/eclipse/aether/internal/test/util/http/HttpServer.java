@@ -139,6 +139,8 @@ public class HttpServer {
 
     private final AtomicInteger serverErrorsBeforeWorks = new AtomicInteger(0);
 
+    private int serverErrorStatusCode;
+
     private final List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
 
     public String getHost() {
@@ -271,7 +273,12 @@ public class HttpServer {
     }
 
     public HttpServer setServerErrorsBeforeWorks(int serverErrorsBeforeWorks) {
+        return setServerErrorsBeforeWorks(serverErrorsBeforeWorks, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    public HttpServer setServerErrorsBeforeWorks(int serverErrorsBeforeWorks, int errorStatusCode) {
         this.serverErrorsBeforeWorks.set(serverErrorsBeforeWorks);
+        this.serverErrorStatusCode = errorStatusCode;
         return this;
     }
 
@@ -323,7 +330,7 @@ public class HttpServer {
         public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
                 throws IOException {
             if (serverErrorsBeforeWorks.getAndDecrement() > 0) {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.setStatus(serverErrorStatusCode);
                 writeResponseBodyMessage(response, "Oops, come back later!");
             }
         }

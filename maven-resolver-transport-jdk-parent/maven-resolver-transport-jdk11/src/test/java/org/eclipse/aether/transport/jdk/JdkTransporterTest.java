@@ -87,17 +87,21 @@ class JdkTransporterTest extends HttpTransporterTest {
     @Override
     @Disabled
     @Test
-    protected void testRetryHandler_defaultCount_positive() {}
-
-    @Override
-    @Disabled
-    @Test
-    protected void testRetryHandler_explicitCount_positive() {}
-
-    @Override
-    @Disabled
-    @Test
     protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() {}
+
+    @Override
+    @Test
+    protected void testRetryHandler_defaultCount_negative() throws Exception {
+        // internally JDK client uses its own retry mechanism with 1 retry for ConnectionExpiredException, therefore
+        // close more connections to trigger failed retries
+        // Compare with https://github.com/mizosoft/methanol/issues/174
+        httpServer.setConnectionsToClose(8);
+        try {
+            transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+            fail("Expected error");
+        } catch (Exception expected) {
+        }
+    }
 
     public JdkTransporterTest() {
         super(() -> new JdkTransporterFactory(standardChecksumExtractor(), new DefaultPathProcessor()));
