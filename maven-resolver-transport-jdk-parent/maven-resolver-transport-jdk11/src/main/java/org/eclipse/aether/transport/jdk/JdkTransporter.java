@@ -20,6 +20,7 @@ package org.eclipse.aether.transport.jdk;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.X509ExtendedTrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -27,12 +28,14 @@ import javax.net.ssl.X509TrustManager;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Authenticator;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NoRouteToHostException;
 import java.net.PasswordAuthentication;
 import java.net.ProxySelector;
 import java.net.Socket;
@@ -55,14 +58,17 @@ import java.time.format.DateTimeParseException;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
 import com.github.mizosoft.methanol.Methanol;
+import com.github.mizosoft.methanol.RetryInterceptor;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -104,7 +110,7 @@ import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.D
  * <p>
  * Known issues:
  * <ul>
- *     <li>Does not support {@link ConfigurationProperties#REQUEST_TIMEOUT}, see <a href="https://bugs.openjdk.org/browse/JDK-8258397">JDK-8258397</a></li>
+ *     <li>Does not properly support {@link ConfigurationProperties#REQUEST_TIMEOUT} prior Java 26, see <a href="https://bugs.openjdk.org/browse/JDK-8208693">JDK-8208693</a></li>
  * </ul>
  * <p>
  * Related: <a href="https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a">No TLS proxy supported</a>.
@@ -119,6 +125,18 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             .withZone(ZoneId.of("GMT"));
 
     private static final long MODIFICATION_THRESHOLD = 60L * 1000L;
+
+    /**
+     * Classes of IOExceptions that should not be retried (because they are permanent failures).
+     * Same as in <a href="https://github.com/apache/httpcomponents-client/blob/54900db4653d7f207477e6ee40135b88e9bcf832/httpclient/src/main/java/org/apache/http/impl/client/DefaultHttpRequestRetryHandler.java#L102">
+     * Apache HttpClient's DefaultHttpRequestRetryHandler</a>.
+     */
+    private static final Set<Class<? extends IOException>> NON_RETRIABLE_IO_EXCEPTIONS = Set.of(
+            InterruptedIOException.class,
+            UnknownHostException.class,
+            ConnectException.class,
+            NoRouteToHostException.class,
+            SSLException.class);
 
     private final ChecksumExtractor checksumExtractor;
 
@@ -525,7 +543,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             }
         }
 
-        HttpClient.Builder builder = Methanol.newBuilder()
+        Methanol.Builder builder = Methanol.newBuilder()
                 .version(HttpClient.Version.valueOf(ConfigUtils.getString(
                         session,
                         DEFAULT_HTTP_VERSION,
@@ -573,7 +591,69 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             });
         }
 
+        configureRetryHandler(session, repository, builder);
+
         return builder.build();
+    }
+
+    protected void configureRetryHandler(
+            RepositorySystemSession session, RemoteRepository repository, Methanol.Builder builder) {
+        int retryCount = ConfigUtils.getInteger(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_COUNT,
+                ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT + "." + repository.getId(),
+                ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT);
+        long retryInterval = ConfigUtils.getLong(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_INTERVAL,
+                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL + "." + repository.getId(),
+                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL);
+        long retryIntervalMax = ConfigUtils.getLong(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX,
+                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL_MAX + "." + repository.getId(),
+                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL_MAX);
+        if (retryCount < 0) {
+            throw new IllegalArgumentException("retryCount must be >= 0");
+        }
+        if (retryInterval < 0L) {
+            throw new IllegalArgumentException("retryInterval must be >= 0");
+        }
+        if (retryIntervalMax < 0L) {
+            throw new IllegalArgumentException("retryIntervalMax must be >= 0");
+        }
+        String serviceUnavailableCodesString = ConfigUtils.getString(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE,
+                ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE + "." + repository.getId(),
+                ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE);
+        Set<Integer> serviceUnavailableCodes = new HashSet<>();
+        try {
+            for (String code : ConfigUtils.parseCommaSeparatedUniqueNames(serviceUnavailableCodesString)) {
+                serviceUnavailableCodes.add(Integer.parseInt(code));
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "Illegal HTTP codes for " + ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE
+                            + " (list of integers): " + serviceUnavailableCodesString);
+        }
+        if (retryCount > 0) {
+            Methanol.Interceptor rateLimitingRetryInterceptor = RetryInterceptor.newBuilder()
+                    .maxRetries(retryCount)
+                    .onStatus(serviceUnavailableCodes::contains)
+                    .backoff(RetryInterceptor.BackoffStrategy.linear(
+                            Duration.ofMillis(retryInterval), Duration.ofMillis(retryIntervalMax)))
+                    .build();
+            builder.interceptor(rateLimitingRetryInterceptor);
+            Methanol.Interceptor retryIoExceptionsInterceptor = RetryInterceptor.newBuilder()
+                    // this is in addition to the JDK internal retries (https://github.com/mizosoft/methanol/issues/174)
+                    // e.g. for connection timeouts this is hardcoded to 2 attempts:
+                    // https://github.com/openjdk/jdk/blob/640343f7d94894b0378ea5b1768eeac203a9aaf8/src/java.net.http/share/classes/jdk/internal/net/http/MultiExchange.java#L665
+                    .maxRetries(retryCount)
+                    .onException(t -> t instanceof IOException && !NON_RETRIABLE_IO_EXCEPTIONS.contains(t.getClass()))
+                    .build();
+            builder.interceptor(retryIoExceptionsInterceptor);
+        }
     }
 
     private static InetAddress getHttpLocalAddress(RepositorySystemSession session, RemoteRepository repository) {
