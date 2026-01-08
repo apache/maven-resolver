@@ -178,7 +178,7 @@ public class TestFileUtils {
         try (FileInputStream fis = new FileInputStream(source);
                 OutputStream fos = new BufferedOutputStream(new FileOutputStream(target))) {
 
-            for (byte[] buffer = new byte[1024 * 32];;) {
+            for (byte[] buffer = new byte[1024 * 32]; ; ) {
                 int bytes = fis.read(buffer);
                 if (bytes < 0) {
                     break;
