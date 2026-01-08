@@ -173,6 +173,9 @@ public class HttpTransporterTest {
 
     protected static final long OLD_FILE_TIMESTAMP = 160660800000L;
 
+    /** HTTP status code for "Too Many Requests". */
+    private static final int SC_TOO_MANY_REQUESTS = 429;
+
     @BeforeEach
     protected void setUp(TestInfo testInfo) throws Exception {
         System.out.println("=== " + testInfo.getDisplayName() + " ===");
@@ -184,6 +187,7 @@ public class HttpTransporterTest {
         factory = transporterFactorySupplier.get();
         repoDir = TestFileUtils.createTempDir();
         TestFileUtils.writeString(new File(repoDir, "file.txt"), "test");
+        TestFileUtils.writeString(new File(repoDir, "artifact.pom"), "<xml>pom</xml>");
         TestFileUtils.writeString(new File(repoDir, "dir/file.txt"), "test");
         TestFileUtils.writeString(new File(repoDir, "dir/oldFile.txt"), "oldTest", OLD_FILE_TIMESTAMP);
         TestFileUtils.writeString(new File(repoDir, "empty.txt"), "");
@@ -239,6 +243,42 @@ public class HttpTransporterTest {
             fail("Expected error");
         } catch (Exception expected) {
         }
+    }
+
+    @Test
+    protected void testRetryHandler_tooManyRequests_explicitCount_positive() throws Exception {
+        // set low retry count as this involves back off delays
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 1);
+        int retryIntervalMs = 500;
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL, retryIntervalMs);
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setServerErrorsBeforeWorks(1, SC_TOO_MANY_REQUESTS);
+        long startTime = System.currentTimeMillis();
+        transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+        assertTrue(
+                System.currentTimeMillis() - startTime >= retryIntervalMs,
+                "Expected back off delay of at least " + retryIntervalMs);
+    }
+
+    @Test
+    protected void testRetryHandler_tooManyRequests_explicitCount_negative() throws Exception {
+        // set low retry count as this involves back off delays
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 3);
+        int retryIntervalMs = 100;
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL, retryIntervalMs);
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setServerErrorsBeforeWorks(4, SC_TOO_MANY_REQUESTS);
+        long startTime = System.currentTimeMillis();
+        try {
+            transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+            fail("Expected error");
+        } catch (Exception expected) {
+        }
+        // linear backoff: 1x + 2x + 3x
+        long expectedMinimumDuration = retryIntervalMs * (1 + 2 + 3);
+        assertTrue(
+                System.currentTimeMillis() - startTime >= expectedMinimumDuration,
+                "Expected back off delay of at least " + expectedMinimumDuration);
     }
 
     @Test
@@ -389,6 +429,17 @@ public class HttpTransporterTest {
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("oldTest", listener.getBaos().toString(StandardCharsets.UTF_8));
         assertEquals(OLD_FILE_TIMESTAMP, file.lastModified());
+    }
+
+    @Test
+    protected void testGet_CompressionUsedWithPom() throws Exception {
+        File file = TestFileUtils.createTempFile("pom");
+        GetTask task = new GetTask(URI.create("repo/artifact.pom")).setDataPath(file.toPath());
+        transporter.get(task);
+        String acceptEncoding = httpServer.getLogEntries().get(0).getHeaders().get("Accept-Encoding");
+        assertNotNull(acceptEncoding, "Missing Accept-Encoding header when retrieving pom");
+        // support either gzip or deflate as the transporter implementation may vary
+        assertTrue(acceptEncoding.contains("gzip") || acceptEncoding.contains("deflate"));
     }
 
     @Test

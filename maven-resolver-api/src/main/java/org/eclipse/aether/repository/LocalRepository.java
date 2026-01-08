@@ -31,19 +31,25 @@ import java.util.Objects;
  * the repository.
  */
 public final class LocalRepository implements ArtifactRepository {
+    public static final String ID = "local";
 
     private final Path basePath;
 
     private final String type;
 
+    private final int hashCode;
+
     /**
      * Creates a new local repository with the specified base directory and unknown type.
      *
      * @param basedir The base directory of the repository, may be {@code null}.
+     * @deprecated Use {@link LocalRepository(Path)} instead.
      */
+    @Deprecated
     public LocalRepository(String basedir) {
         this.basePath = Paths.get(RepositoryUriUtils.toUri(basedir)).toAbsolutePath();
         this.type = "";
+        this.hashCode = Objects.hash(this.basePath, this.type);
     }
 
     /**
@@ -99,6 +105,7 @@ public final class LocalRepository implements ArtifactRepository {
     public LocalRepository(Path basePath, String type) {
         this.basePath = basePath;
         this.type = (type != null) ? type : "";
+        this.hashCode = Objects.hash(this.basePath, this.type);
     }
 
     @Override
@@ -108,7 +115,7 @@ public final class LocalRepository implements ArtifactRepository {
 
     @Override
     public String getId() {
-        return "local";
+        return ID;
     }
 
     /**
@@ -153,13 +160,6 @@ public final class LocalRepository implements ArtifactRepository {
 
     @Override
     public int hashCode() {
-        int hash = 17;
-        hash = hash * 31 + hash(basePath);
-        hash = hash * 31 + hash(type);
-        return hash;
-    }
-
-    private static int hash(Object obj) {
-        return obj != null ? obj.hashCode() : 0;
+        return hashCode;
     }
 }

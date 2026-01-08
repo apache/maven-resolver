@@ -54,4 +54,20 @@ public interface TrackingFileManager {
      * @since 2.0.0
      */
     Properties update(Path path, Map<String, String> updates);
+
+    /**
+     * Deletes the specified properties file, if exists. If file existed and was deleted, returns {@code true}.
+     *
+     * @deprecated Use {@link #delete(Path)} instead.
+     * @since 1.9.25
+     */
+    @Deprecated
+    boolean delete(File file);
+
+    /**
+     * Deletes the specified properties file, if exists. If file existed and was deleted, returns {@code true}.
+     *
+     * @since 2.0.14
+     */
+    boolean delete(Path path);
 }

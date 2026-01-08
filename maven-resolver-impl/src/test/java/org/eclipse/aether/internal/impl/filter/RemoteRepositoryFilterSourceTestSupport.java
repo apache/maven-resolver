@@ -34,15 +34,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * UT helper for {@link RemoteRepositoryFilterSource} UTs.
  */
 public abstract class RemoteRepositoryFilterSourceTestSupport {
-    private final Artifact acceptedArtifact = new DefaultArtifact("org.one:aid:1.0");
+    protected final Artifact acceptedArtifact = new DefaultArtifact("org.one:aid:1.0");
 
-    private final Artifact notAcceptedArtifact = new DefaultArtifact("org.two:aid:1.0");
+    protected final Artifact notAcceptedArtifact = new DefaultArtifact("org.two:aid:1.0");
 
-    private DefaultRepositorySystemSession session;
+    protected DefaultRepositorySystemSession session;
 
-    private RemoteRepository remoteRepository;
+    protected RemoteRepository remoteRepository;
 
-    private RemoteRepositoryFilterSource subject;
+    protected RemoteRepositoryFilterSource subject;
 
     @BeforeEach
     void setup() {
@@ -56,6 +56,8 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
 
     protected abstract void enableSource(DefaultRepositorySystemSession session, boolean enabled);
 
+    protected abstract void setOutcome(DefaultRepositorySystemSession session, boolean enabled);
+
     protected abstract void allowArtifact(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository, Artifact artifact);
 
@@ -64,6 +66,31 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
         enableSource(session, false);
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNull(filter);
+    }
+
+    @Test
+    void enabledNoInput() {
+        enableSource(session, true);
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, acceptedArtifact);
+
+        assertTrue(result.isAccepted());
+        assertTrue(result.reasoning().endsWith("No input available"));
+    }
+
+    @Test
+    void enabledNoInputAlteredOutcome() {
+        enableSource(session, true);
+        setOutcome(session, false);
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, acceptedArtifact);
+
+        assertFalse(result.isAccepted());
+        assertTrue(result.reasoning().endsWith("No input available"));
     }
 
     @Test

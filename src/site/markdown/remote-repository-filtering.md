@@ -181,6 +181,16 @@ Lines 1 and 2 are ignored. Line 3 means "allow `org.apache.maven` G and below". 
 only" (so `org.apache.maven.foo.bar` is allowed due first line). Line 5 means "disallow `org.apache.maven.indexer` and below"
 and finally line 6 means "allow `org.apache.bar` ONLY" (so `org.apache.bar.foo` is NOT enabled).
 
+One can use one special entry "root" `*` (asterisk) to define the "default acceptance" (that without it 
+defaults to REJECTED). Similarly, adding `!*` to file defines "default acceptance" of FALSE/REJECTED as well, 
+and adding it to file changes nothing, as this is the default acceptance (but may serve some documentation purposes). 
+Be aware: In case a line with single asterisk `*` is present, the whole logic of Group filter is getting inverted, 
+hence there is no need to add "allowed entries" (they are allowed by default), but one can add "disallowed entries" by 
+adding `!com.foo` and alike.
+
+Conflicting rules: rule parser is intentionally trivial, so in case of conflicting rules the "last wins" strategy is 
+applied. Ideally, user should keep files sorted or handle them in a way one can detect conflicts in it.
+
 ## Operation
 
 To make RRF filters operate, as they are by default enabled, you have to make sure that:

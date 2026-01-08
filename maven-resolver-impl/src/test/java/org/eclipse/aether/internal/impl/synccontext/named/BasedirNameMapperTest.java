@@ -36,7 +36,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BasedirNameMapperTest extends NameMapperTestSupport {
-    private final BasedirNameMapper mapper = new BasedirNameMapper(GAVNameMapper.fileGav());
+    private final NameMapper mapper = NameMappers.fileGavNameMapper();
 
     private String getPrefix() throws IOException {
         Path basedir = DirectoryUtils.resolveDirectory(

@@ -26,6 +26,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
+import org.eclipse.aether.internal.impl.DefaultRepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.repository.LocalRepository;
@@ -44,7 +45,10 @@ public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsS
     @Override
     protected FileTrustedChecksumsSourceSupport prepareSubject(RepositorySystemLifecycle lifecycle) {
         return new SummaryFileTrustedChecksumsSource(
-                new DefaultLocalPathComposer(), lifecycle, new PathProcessorSupport());
+                new DefaultRepositoryKeyFunctionFactory(),
+                new DefaultLocalPathComposer(),
+                lifecycle,
+                new PathProcessorSupport());
     }
 
     @Override

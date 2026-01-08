@@ -56,6 +56,16 @@ class JettyTransporterTest extends HttpTransporterTest {
     @Override
     @Disabled
     @Test
+    protected void testRetryHandler_tooManyRequests_explicitCount_positive() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testRetryHandler_tooManyRequests_explicitCount_negative() {}
+
+    @Override
+    @Disabled
+    @Test
     protected void testPut_Authenticated_ExpectContinueRejected_ExplicitlyConfiguredHeader() {}
 
     public JettyTransporterTest() {

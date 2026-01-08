@@ -39,7 +39,7 @@ public final class Filters {
             }
 
             private final RemoteRepositoryFilter.Result RESULT =
-                    new RemoteRepositoryFilterSourceSupport.SimpleResult(true, getName());
+                    RemoteRepositoryFilterSourceSupport.result(true, getName(), "always accept");
 
             @Override
             public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
@@ -68,10 +68,10 @@ public final class Filters {
             }
 
             private final RemoteRepositoryFilter.Result MATCHED =
-                    new RemoteRepositoryFilterSourceSupport.SimpleResult(true, getName());
+                    RemoteRepositoryFilterSourceSupport.result(true, getName(), "matched");
 
             private final RemoteRepositoryFilter.Result UNMATCHED =
-                    new RemoteRepositoryFilterSourceSupport.SimpleResult(false, getName());
+                    RemoteRepositoryFilterSourceSupport.result(false, getName(), "unmatched");
 
             @Override
             public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
@@ -100,7 +100,7 @@ public final class Filters {
             }
 
             private final RemoteRepositoryFilter.Result RESULT =
-                    new RemoteRepositoryFilterSourceSupport.SimpleResult(false, getName());
+                    RemoteRepositoryFilterSourceSupport.result(false, getName(), "never accept");
 
             @Override
             public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
@@ -129,10 +129,10 @@ public final class Filters {
             }
 
             private final RemoteRepositoryFilter.Result MATCHED =
-                    new RemoteRepositoryFilterSourceSupport.SimpleResult(false, getName());
+                    RemoteRepositoryFilterSourceSupport.result(false, getName(), "matched");
 
             private final RemoteRepositoryFilter.Result UNMATCHED =
-                    new RemoteRepositoryFilterSourceSupport.SimpleResult(true, getName());
+                    RemoteRepositoryFilterSourceSupport.result(true, getName(), "unmatched");
 
             @Override
             public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {

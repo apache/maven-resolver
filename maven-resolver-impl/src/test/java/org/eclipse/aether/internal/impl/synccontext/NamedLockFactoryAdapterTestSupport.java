@@ -29,7 +29,9 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.impl.synccontext.named.*;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
+import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.eclipse.aether.repository.LocalRepository;
@@ -55,7 +57,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     /**
      * Subclass MAY populate this field but subclass must take care of proper cleanup as well, if needed!
      */
-    protected static NameMapper nameMapper = new DiscriminatingNameMapper(GAVNameMapper.gav());
+    protected static NameMapper nameMapper = NameMappers.discriminatingNameMapper();
 
     /**
      * Subclass MUST populate this field but subclass must take care of proper cleanup as well, if needed! Once set,

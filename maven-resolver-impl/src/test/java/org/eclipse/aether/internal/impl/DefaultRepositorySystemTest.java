@@ -64,7 +64,9 @@ public class DefaultRepositorySystemTest {
                 mock(LocalRepositoryProvider.class),
                 new StubSyncContextFactory(),
                 new DefaultRemoteRepositoryManager(
-                        new DefaultUpdatePolicyAnalyzer(), new DefaultChecksumPolicyProvider()),
+                        new DefaultUpdatePolicyAnalyzer(),
+                        new DefaultChecksumPolicyProvider(),
+                        new DefaultRepositoryKeyFunctionFactory()),
                 new DefaultRepositorySystemLifecycle(),
                 Collections.emptyMap(),
                 new DefaultRepositorySystemValidator(Collections.emptyList()));

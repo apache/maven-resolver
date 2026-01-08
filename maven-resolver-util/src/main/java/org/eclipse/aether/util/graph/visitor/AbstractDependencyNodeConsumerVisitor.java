@@ -81,7 +81,7 @@ abstract class AbstractDependencyNodeConsumerVisitor implements DependencyVisito
     protected abstract boolean doVisitLeave(DependencyNode node);
 
     protected boolean acceptNode(DependencyNode node) {
-        return filter.accept(node, path);
+        return filter.accept(node, path.head());
     }
 
     protected void consumeNode(DependencyNode node) {

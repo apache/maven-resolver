@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GAVNameMapperTest extends NameMapperTestSupport {
-    NameMapper mapper = GAVNameMapper.fileGav();
+    NameMapper mapper = NameMappers.gavNameMapper(true);
 
     @Test
     void nullsAndEmptyInputs() {

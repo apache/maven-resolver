@@ -217,8 +217,6 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
-        boolean first = true;
-
         for (MetadataDownload transfer : safeMetadataDownloads) {
             URI location = layout.getLocation(transfer.getMetadata(), false);
 
@@ -240,9 +238,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     checksumLocations,
                     null,
                     listener);
-            if (executor == null || first) {
+            if (executor == null) {
                 task.run();
-                first = false;
             } else {
                 executor.submit(errorForwarder.wrap(task));
             }
@@ -285,9 +282,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                         providedChecksums,
                         listener);
             }
-            if (executor == null || first) {
+            if (executor == null) {
                 task.run();
-                first = false;
             } else {
                 executor.submit(errorForwarder.wrap(task));
             }
@@ -309,8 +305,6 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 getExecutor(false, parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1);
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
-        boolean first = true;
-
         for (ArtifactUpload transfer : safeArtifactUploads) {
             URI location = layout.getLocation(transfer.getArtifact(), true);
 
@@ -322,9 +316,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     layout.getChecksumLocations(transfer.getArtifact(), true, location);
 
             Runnable task = new PutTaskRunner(location, transfer.getPath(), checksumLocations, listener);
-            if (executor == null || first) {
+            if (executor == null) {
                 task.run();
-                first = false;
             } else {
                 executor.submit(errorForwarder.wrap(task));
             }
@@ -344,9 +337,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                         layout.getChecksumLocations(transfer.getMetadata(), true, location);
 
                 Runnable task = new PutTaskRunner(location, transfer.getPath(), checksumLocations, listener);
-                if (executor == null || first) {
+                if (executor == null) {
                     task.run();
-                    first = false;
                 } else {
                     executor.submit(errorForwarder.wrap(task));
                 }

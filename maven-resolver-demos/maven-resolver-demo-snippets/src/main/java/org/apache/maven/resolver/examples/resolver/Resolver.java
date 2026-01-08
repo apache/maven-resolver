@@ -21,6 +21,7 @@ package org.apache.maven.resolver.examples.resolver;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 import org.apache.maven.resolver.examples.util.Booter;
 import org.eclipse.aether.RepositorySystem;
@@ -55,7 +56,7 @@ public class Resolver {
 
     private final LocalRepository localRepository;
 
-    public Resolver(String[] args, String remoteRepository, String localRepository) {
+    public Resolver(String[] args, String remoteRepository, Path localRepository) {
         this.args = args;
         this.remoteRepository = remoteRepository;
         this.repositorySystem = Booter.newRepositorySystem(Booter.selectFactory(args));

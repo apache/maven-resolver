@@ -29,7 +29,7 @@
 
   <groupId>org.apache.maven.resolver</groupId>
   <artifactId>maven-resolver</artifactId>
-  <version>2.0.14-SNAPSHOT</version>
+  <version>2.0.15-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver</name>
@@ -106,22 +106,22 @@
     <sisuVersion>0.9.0.M4</sisuVersion>
     <guiceVersion>5.1.0</guiceVersion>
     <slf4jVersion>2.0.17</slf4jVersion>
-    <testcontainersVersion>1.21.3</testcontainersVersion>
-    <bouncycastleVersion>1.82</bouncycastleVersion>
+    <testcontainersVersion>2.0.3</testcontainersVersion>
+    <bouncycastleVersion>1.83</bouncycastleVersion>
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server) -->
     <jettyVersion>10.0.26</jettyVersion>
     <!-- used by supplier and demo only -->
-    <maven3Version>3.9.11</maven3Version>
+    <maven3Version>3.9.12</maven3Version>
     <maven4Version>4.0.0-rc-4</maven4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
-    <project.build.outputTimestamp>2025-10-07T09:08:52Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2025-12-12T18:37:18Z</project.build.outputTimestamp>
     <bnd.instructions.additions />
 
     <!-- Parent versions -->
-    <versions.junit5>5.13.4</versions.junit5>
+    <versions.junit5>5.14.1</versions.junit5>
   </properties>
 
   <dependencyManagement>
@@ -238,7 +238,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.20.0</version>
+        <version>5.21.0</version>
       </dependency>
 
       <!-- we need override plexus-util/xml versions from parent -->
@@ -338,7 +338,7 @@
         <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
-          <version>0.23.1</version>
+          <version>0.25.1</version>
           <configuration>
             <oldVersion>
               <!-- We compare same module against 1.8.0 set as "baseline" -->
@@ -650,7 +650,7 @@
         <plugin>
           <groupId>biz.aQute.bnd</groupId>
           <artifactId>bnd-maven-plugin</artifactId>
-          <version>7.1.0</version>
+          <version>7.2.0</version>
           <configuration>
             <bnd><![CDATA[
               Bundle-SymbolicName: org.apache.${replacestring;${project.artifactId};-;.}

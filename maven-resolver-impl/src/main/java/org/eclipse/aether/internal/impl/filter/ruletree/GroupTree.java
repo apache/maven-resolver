@@ -36,8 +36,12 @@ import static java.util.stream.Collectors.toList;
  *     <li>a valid Maven groupID ie "org.apache.maven".</li>
  * </ul>
  * By default, a G entry ie {@code org.apache.maven} means "allow {@code org.apache.maven} G and all Gs below
- * (so {@code org.apache.maven.plugins} etc. are all allowed).
+ * (so {@code org.apache.maven.plugins} etc. are all allowed). There is one special entry {@code "*"} (asterisk)
+ * that means "root" and defines the default acceptance: {@code "*"} means "by default accept" and {@code "!*"}
+ * means "by default deny" (same effect as when this character is not present in file). Use of limiter modifier
+ * on "root" like {@code "=*"} has no effect, is simply ignored.
  *
+ * <p>
  * Examples:
  * <pre>
  * {@code
@@ -55,12 +59,20 @@ import static java.util.stream.Collectors.toList;
  * and "allow {@code org.apache.bar} groupID ONLY".
  *
  * <p>
- * In case of conflicting rules, parsing happens by "first wins", so line closer to first line in file "wins", and conflicting
- * line is ignored.
+ * In case of conflicting rules, parsing happens by "last wins", so line closer to last line in file "wins", and conflicting
+ * line value is lost.
  */
-public class GroupTree extends Node {
-    public static final GroupTree SENTINEL = new GroupTree("sentinel");
+public class GroupTree extends Node<GroupTree> {
+    /**
+     * Creates root, that is special: accept is never null.
+     */
+    public static GroupTree create(String name) {
+        GroupTree result = new GroupTree(name);
+        result.accept = false;
+        return result;
+    }
 
+    private static final String ROOT = "*";
     private static final String MOD_EXCLUSION = "!";
     private static final String MOD_STOP = "=";
 
@@ -68,8 +80,11 @@ public class GroupTree extends Node {
         return Arrays.stream(groupId.split("\\.")).filter(e -> !e.isEmpty()).collect(toList());
     }
 
-    public GroupTree(String name) {
-        super(name, false, null);
+    private boolean stop;
+    private Boolean accept;
+
+    private GroupTree(String name) {
+        super(name);
     }
 
     public int loadNodes(Stream<String> linesStream) {
@@ -84,10 +99,10 @@ public class GroupTree extends Node {
 
     public boolean loadNode(String line) {
         if (!line.startsWith("#") && !line.trim().isEmpty()) {
-            Node currentNode = this;
-            boolean allow = true;
+            GroupTree currentNode = this;
+            boolean accept = true;
             if (line.startsWith(MOD_EXCLUSION)) {
-                allow = false;
+                accept = false;
                 line = line.substring(MOD_EXCLUSION.length());
             }
             boolean stop = false;
@@ -95,11 +110,18 @@ public class GroupTree extends Node {
                 stop = true;
                 line = line.substring(MOD_STOP.length());
             }
+            if (ROOT.equals(line)) {
+                this.accept = accept;
+                return true;
+            }
             List<String> groupElements = elementsOfGroup(line);
             for (String groupElement : groupElements.subList(0, groupElements.size() - 1)) {
-                currentNode = currentNode.addSibling(groupElement, false, null);
+                currentNode = currentNode.siblings.computeIfAbsent(groupElement, GroupTree::new);
             }
-            currentNode.addSibling(groupElements.get(groupElements.size() - 1), stop, allow);
+            String lastElement = groupElements.get(groupElements.size() - 1);
+            currentNode = currentNode.siblings.computeIfAbsent(lastElement, GroupTree::new);
+            currentNode.stop = stop;
+            currentNode.accept = accept;
             return true;
         }
         return false;
@@ -109,19 +131,36 @@ public class GroupTree extends Node {
         final List<String> current = new ArrayList<>();
         final List<String> groupElements = elementsOfGroup(groupId);
         Boolean accepted = null;
-        Node currentNode = this;
+        GroupTree currentNode = this;
         for (String groupElement : groupElements) {
             current.add(groupElement);
-            currentNode = currentNode.getSibling(groupElement);
+            currentNode = currentNode.siblings.get(groupElement);
             if (currentNode == null) {
+                // we stepped off the tree; use value we got so far
                 break;
-            }
-            if (currentNode.isStop() && groupElements.equals(current)) {
-                accepted = currentNode.isAllow();
-            } else if (!currentNode.isStop()) {
-                accepted = currentNode.isAllow();
+            } else if (currentNode.stop && groupElements.equals(current)) {
+                // exact match
+                accepted = currentNode.accept;
+                break;
+            } else if (!currentNode.stop && currentNode.accept != null) {
+                // "inherit" if not STOP and allow is set; and most probably we loop more
+                accepted = currentNode.accept;
             }
         }
-        return accepted != null && accepted;
+        // use 'accepted', if defined; otherwise fallback to root (it always has 'allow' set)
+        return accepted != null ? accepted : this.accept;
+    }
+
+    @Override
+    public String toString() {
+        return (accept != null ? (accept ? "+" : "-") : "?") + (stop ? "=" : "") + name;
+    }
+
+    @Override
+    public void dump(String prefix) {
+        System.out.println(prefix + this);
+        for (GroupTree node : siblings.values()) {
+            node.dump(prefix + "  ");
+        }
     }
 }

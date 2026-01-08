@@ -35,11 +35,12 @@ import org.eclipse.aether.util.ConfigUtils;
  */
 public final class PrioritizedComponents<T> {
     /**
-     * Reuses or creates and stores (if session data does not contain yet) prioritized components under certain key into
-     * given session. Same session is used to configure prioritized components, so priority sorted components during
-     * session are immutable and reusable.
+     * Reuses or creates and caches (if session is equipped with cache, and it does not contain it yet)
+     * prioritized components under certain key into session cache. Same session is used to configure prioritized
+     * components, so priority sorted components during session are immutable and reusable (if {@code components}
+     * component map is unchanged).
      * <p>
-     * The {@code components} are expected to be Sisu injected {@link Map<String, C>}-like component maps. There is a
+     * The {@code components} are expected to be Sisu injected {@link Map}-like dynamic component maps. There is a
      * simple "change detection" in place, as injected maps are dynamic, they are atomically expanded or contracted
      * as components are dynamically discovered or unloaded.
      *
@@ -53,10 +54,11 @@ public final class PrioritizedComponents<T> {
             Function<C, Float> priorityFunction) {
         boolean cached = ConfigUtils.getBoolean(
                 session, ConfigurationProperties.DEFAULT_CACHED_PRIORITIES, ConfigurationProperties.CACHED_PRIORITIES);
-        if (cached) {
-            String key = PrioritizedComponents.class.getName() + ".pc." + discriminator.getName();
-            return (PrioritizedComponents<C>)
-                    session.getData().computeIfAbsent(key, () -> create(session, components, priorityFunction));
+        if (cached && session.getCache() != null) {
+            String key = PrioritizedComponents.class.getName() + ".pc." + discriminator.getName()
+                    + Integer.toHexString(components.hashCode());
+            return (PrioritizedComponents<C>) session.getCache()
+                    .computeIfAbsent(session, key, () -> create(session, components, priorityFunction));
         } else {
             return create(session, components, priorityFunction);
         }
