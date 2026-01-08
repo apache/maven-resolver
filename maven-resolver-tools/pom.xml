@@ -33,7 +33,7 @@
 
   <properties>
     <javaVersion>17</javaVersion>
-    <roasterVersion>2.30.3.Final</roasterVersion>
+    <roasterVersion>2.31.0.Final</roasterVersion>
   </properties>
 
   <dependencies>
