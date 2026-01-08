@@ -158,7 +158,8 @@ public class TestFileUtils {
      *
      * @return the temporary directory
      * @throws IOException if an I/O error occurs
-     * @deprecated use {@code @TempDir} (JUnit 5) or {@code TemporaryFolder} (JUnit 4) instead
+     * @deprecated use {@code @TempDir} (JUnit 5) or {@code TemporaryFolder} (JUnit
+     *             4) instead
      */
     @Deprecated
     public static File createTempDir(String suffix) throws IOException {
@@ -172,12 +173,12 @@ public class TestFileUtils {
     public static long copyFile(File source, File target) throws IOException {
         long total = 0;
 
+        mkdirs(target.getParentFile());
+
         try (FileInputStream fis = new FileInputStream(source);
                 OutputStream fos = new BufferedOutputStream(new FileOutputStream(target))) {
 
-            mkdirs(target.getParentFile());
-
-            for (byte[] buffer = new byte[1024 * 32]; ; ) {
+            for (byte[] buffer = new byte[1024 * 32];;) {
                 int bytes = fis.read(buffer);
                 if (bytes < 0) {
                     break;

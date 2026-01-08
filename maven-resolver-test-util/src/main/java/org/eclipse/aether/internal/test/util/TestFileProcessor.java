@@ -33,7 +33,8 @@ import java.nio.file.Files;
 import org.eclipse.aether.spi.io.FileProcessor;
 
 /**
- * A simple file processor implementation to help satisfy component requirements during tests.
+ * A simple file processor implementation to help satisfy component requirements
+ * during tests.
  */
 public class TestFileProcessor implements FileProcessor {
 
@@ -85,10 +86,10 @@ public class TestFileProcessor implements FileProcessor {
     public long copy(File source, File target, ProgressListener listener) throws IOException {
         long total = 0;
 
+        mkdirs(target.getAbsoluteFile().getParentFile());
+
         try (InputStream fis = new FileInputStream(source);
                 OutputStream fos = new BufferedOutputStream(new FileOutputStream(target))) {
-
-            mkdirs(target.getAbsoluteFile().getParentFile());
             total = copy(fos, fis, listener);
         }
 
