@@ -33,8 +33,7 @@ import java.nio.file.Files;
 import org.eclipse.aether.spi.io.FileProcessor;
 
 /**
- * A simple file processor implementation to help satisfy component requirements
- * during tests.
+ * A simple file processor implementation to help satisfy component requirements during tests.
  */
 public class TestFileProcessor implements FileProcessor {
 
