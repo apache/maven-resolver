@@ -29,7 +29,7 @@
   <artifactId>maven-resolver-transport-apache</artifactId>
 
   <name>Maven Artifact Resolver Transport Apache</name>
-  <description>A transport implementation for repositories using http:// and https:// URLs.</description>
+  <description>A transport implementation for repositories using http:// and https:// URLs based on Apache HTTP Client 4.5.</description>
 
   <dependencies>
     <dependency>
