@@ -68,10 +68,10 @@ public class Booter {
     public static RepositorySystem newRepositorySystem(final String factory) {
         System.out.println("Using factory: " + factory);
         return switch (factory) {
-            case FACTORY_SUPPLIER -> org.apache.maven.resolver.examples.supplier.SupplierRepositorySystemFactory
-                    .newRepositorySystem();
-            case FACTORY_SISU -> org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory
-                    .newRepositorySystem();
+            case FACTORY_SUPPLIER ->
+                org.apache.maven.resolver.examples.supplier.SupplierRepositorySystemFactory.newRepositorySystem();
+            case FACTORY_SISU ->
+                org.apache.maven.resolver.examples.sisu.SisuRepositorySystemFactory.newRepositorySystem();
             default -> throw new IllegalArgumentException("Unknown factory: " + factory);
         };
     }

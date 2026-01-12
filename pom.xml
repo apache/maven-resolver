@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven</groupId>
     <artifactId>maven-parent</artifactId>
-    <version>45</version>
+    <version>46</version>
     <relativePath />
   </parent>
 
@@ -113,7 +113,7 @@
     <jettyVersion>10.0.26</jettyVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.12</maven3Version>
-    <maven4Version>4.0.0-rc-4</maven4Version>
+    <maven4Version>4.0.0-rc-5</maven4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
@@ -121,7 +121,7 @@
     <bnd.instructions.additions />
 
     <!-- Parent versions -->
-    <versions.junit5>5.14.1</versions.junit5>
+    <versions.junit5>5.14.2</versions.junit5>
   </properties>
 
   <dependencyManagement>
