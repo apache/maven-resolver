@@ -61,6 +61,7 @@
     <module>maven-resolver-transport-jetty</module>
     <module>maven-resolver-transport-jdk-parent</module>
     <module>maven-resolver-transport-apache</module>
+    <module>maven-resolver-transport-apache5x</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-transport-minio</module>
     <module>maven-resolver-generator-gnupg</module>
@@ -189,6 +190,11 @@
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-transport-apache</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-transport-apache5x</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
