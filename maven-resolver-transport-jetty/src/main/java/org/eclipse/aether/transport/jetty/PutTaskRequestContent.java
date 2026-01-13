@@ -19,6 +19,7 @@
 package org.eclipse.aether.transport.jetty;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.Channels;
@@ -28,6 +29,7 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.jetty.client.ByteBufferRequestContent;
@@ -50,15 +52,26 @@ import org.eclipse.jetty.util.thread.SerializedInvoker;
  */
 public class PutTaskRequestContent extends ByteBufferRequestContent implements Request.Content {
 
-    public static Request.Content from(PutTask putTask) throws IOException {
-        ReadableByteChannel channel;
+    public static Request.Content from(PutTask putTask) {
+        Supplier<ReadableByteChannel> newChannelSupplier;
         if (putTask.getDataPath() != null) {
-            channel = Files.newByteChannel(putTask.getDataPath(), StandardOpenOption.READ);
+            newChannelSupplier = () -> {
+                try {
+                    return Files.newByteChannel(putTask.getDataPath(), StandardOpenOption.READ);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            };
         } else {
-            // TODO: support rewind for retries when using InputStream
-            channel = Channels.newChannel(putTask.newInputStream());
+            newChannelSupplier = () -> {
+                try {
+                    return Channels.newChannel(putTask.newInputStream());
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            };
         }
-        return new PutTaskRequestContent(null, channel, 0L, putTask.getDataLength());
+        return new PutTaskRequestContent(null, newChannelSupplier, 0L, putTask.getDataLength());
     }
 
     private final AutoLock lock = new AutoLock();
@@ -72,14 +85,17 @@ public class PutTaskRequestContent extends ByteBufferRequestContent implements R
     private long totalRead;
     private Runnable demandCallback;
     private Content.Chunk terminal;
+    /** Only necessary for rewind support when leveraging the input stream. */
+    private Supplier<ReadableByteChannel> newByteChannelSupplier;
 
     /**
      * Create a {@link ByteChannelContentSource} which reads from a {@link ByteChannel}.
      * @param byteBufferPool The {@link org.eclipse.jetty.io.ByteBufferPool.Sized} to use for any internal buffers.
      * @param byteChannel The {@link ByteChannel}s to use as the source.
      */
-    protected PutTaskRequestContent(ByteBufferPool.Sized byteBufferPool, ReadableByteChannel byteChannel) {
-        this(byteBufferPool, byteChannel, 0L, -1L);
+    protected PutTaskRequestContent(
+            ByteBufferPool.Sized byteBufferPool, Supplier<ReadableByteChannel> newByteChannelSupplier) {
+        this(byteBufferPool, newByteChannelSupplier, 0L, -1L);
     }
 
     /**
@@ -96,12 +112,16 @@ public class PutTaskRequestContent extends ByteBufferRequestContent implements R
      * @see TypeUtil#checkOffsetLengthSize(long, long, long)
      */
     protected PutTaskRequestContent(
-            ByteBufferPool.Sized byteBufferPool, ReadableByteChannel byteChannel, long offset, long length) {
+            ByteBufferPool.Sized byteBufferPool,
+            Supplier<ReadableByteChannel> newByteChannelSupplier,
+            long offset,
+            long length) {
         this.byteBufferPool = Objects.requireNonNullElse(byteBufferPool, ByteBufferPool.SIZED_NON_POOLING);
-        this.byteChannel = byteChannel;
+        this.byteChannel = newByteChannelSupplier.get();
         this.offset = offset;
         this.length = TypeUtil.checkOffsetLengthSize(offset, length, -1L);
         offsetRemaining = offset;
+        this.newByteChannelSupplier = newByteChannelSupplier;
     }
 
     protected ReadableByteChannel open() throws IOException {
@@ -245,9 +265,17 @@ public class PutTaskRequestContent extends ByteBufferRequestContent implements R
     @Override
     public boolean rewind() {
         try (AutoLock ignored = lock.lock()) {
-            // We can only rewind if we have a SeekableByteChannel.
+            // open a new ByteChannel if we don't have a SeekableByteChannel.
             if (!(byteChannel instanceof SeekableByteChannel)) {
-                return false;
+                try {
+                    byteChannel.close();
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+                byteChannel = newByteChannelSupplier.get();
+                offsetRemaining = 0;
+                totalRead = 0;
+                return true;
             }
 
             // We can remove terminal condition for a rewind that is likely to occur
