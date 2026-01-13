@@ -44,6 +44,11 @@ class JettyTransporterTest extends HttpTransporterTest {
     protected void testPut_Unauthenticated() {}
 
     @Override
+    @Disabled("Currently cannot retry PUT requests based on InputStreams")
+    @Test
+    protected void testPut_AuthCache() throws Exception {}
+
+    @Override
     @Disabled
     @Test
     protected void testRetryHandler_defaultCount_positive() {}

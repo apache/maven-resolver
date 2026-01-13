@@ -18,36 +18,38 @@
  */
 package org.eclipse.aether.internal.test.util.http;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
+import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Payload;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
+import org.eclipse.jetty.http.DateGenerator;
+import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
+import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Request;
@@ -56,10 +58,8 @@ import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.IO;
-import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -287,20 +287,18 @@ public class HttpServer {
             return this;
         }
 
-        HandlerList handlers = new HandlerList();
-        handlers.addHandler(new ConnectionClosingHandler());
-        handlers.addHandler(new ServerErrorHandler());
-        handlers.addHandler(new LogHandler());
-        handlers.addHandler(new ProxyAuthHandler());
-        handlers.addHandler(new AuthHandler());
-        handlers.addHandler(new RedirectHandler());
-        handlers.addHandler(new RepoHandler());
-        handlers.addHandler(new RFC9457Handler());
-
         server = new Server();
         httpConnector = new ServerConnector(server);
         server.addConnector(httpConnector);
-        server.setHandler(handlers);
+        server.setHandler(new Handler.Sequence(
+                new ConnectionClosingHandler(),
+                new ServerErrorHandler(),
+                new LogHandler(),
+                new ProxyAuthHandler(),
+                new AuthHandler(),
+                new RedirectHandler(),
+                new RepoHandler(),
+                new RFC9457Handler()));
         server.start();
 
         return this;
@@ -315,152 +313,142 @@ public class HttpServer {
         }
     }
 
-    private class ConnectionClosingHandler extends AbstractHandler {
+    private class ConnectionClosingHandler extends Handler.Abstract {
+
         @Override
-        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
+        public boolean handle(Request request, Response response, Callback callback) throws Exception {
             if (connectionsToClose.getAndDecrement() > 0) {
-                Response jettyResponse = (Response) response;
-                jettyResponse.getHttpChannel().getConnection().close();
+                request.getConnectionMetaData().getConnection().close();
             }
+            return false;
         }
     }
 
-    private class ServerErrorHandler extends AbstractHandler {
+    private class ServerErrorHandler extends Handler.Abstract {
         @Override
-        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
-                throws IOException {
+        public boolean handle(Request request, Response response, Callback callback) throws IOException {
             if (serverErrorsBeforeWorks.getAndDecrement() > 0) {
                 response.setStatus(serverErrorStatusCode);
-                writeResponseBodyMessage(response, "Oops, come back later!");
+                writeResponseBodyMessage(request, response, "Oops, come back later!");
+                callback.succeeded();
+                return true;
             }
+            return false;
         }
     }
 
-    private class LogHandler extends AbstractHandler {
+    private class LogHandler extends Handler.Abstract {
         @Override
-        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
+        public boolean handle(Request req, Response response, Callback callback) {
             LOGGER.info(
                     "{} {}{}",
                     req.getMethod(),
-                    req.getRequestURL(),
-                    req.getQueryString() != null ? "?" + req.getQueryString() : "");
+                    req.getHttpURI().getDecodedPath(),
+                    req.getHttpURI().getQuery() != null ? "?" + req.getHttpURI().getQuery() : "");
 
             Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            for (Enumeration<String> en = req.getHeaderNames(); en.hasMoreElements(); ) {
-                String name = en.nextElement();
-                StringBuilder buffer = new StringBuilder(128);
-                for (Enumeration<String> ien = req.getHeaders(name); ien.hasMoreElements(); ) {
-                    if (buffer.length() > 0) {
-                        buffer.append(", ");
-                    }
-                    buffer.append(ien.nextElement());
-                }
-                headers.put(name, buffer.toString());
+            for (HttpField header : req.getHeaders()) {
+                headers.put(header.getName(), header.getValueList().stream().collect(Collectors.joining(", ")));
             }
-            logEntries.add(new LogEntry(req.getMethod(), req.getOriginalURI(), Collections.unmodifiableMap(headers)));
+            logEntries.add(new LogEntry(
+                    req.getMethod(), req.getHttpURI().getPathQuery(), Collections.unmodifiableMap(headers)));
+            return false;
         }
     }
 
     private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
 
-    private class RepoHandler extends AbstractHandler {
+    private class RepoHandler extends Handler.Abstract {
         @Override
-        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
-                throws IOException {
-            String path = req.getPathInfo().substring(1);
+        public boolean handle(Request req, Response response, Callback callback) throws Exception {
+            String path = req.getHttpURI().getDecodedPath().substring(1);
 
             if (!path.startsWith("repo/")) {
-                return;
+                return false;
             }
-            req.setHandled(true);
 
-            if (ExpectContinue.FAIL.equals(expectContinue) && request.getHeader(HttpHeader.EXPECT.asString()) != null) {
+            if (ExpectContinue.FAIL.equals(expectContinue) && req.getHeaders().get(HttpHeader.EXPECT) != null) {
                 response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
-                writeResponseBodyMessage(response, "Expectation was set to fail");
-                return;
+                writeResponseBodyMessage(req, response, "Expectation was set to fail");
+                callback.succeeded();
+                return true;
             }
 
             File file = new File(repoDir, path.substring(5));
             if (HttpMethod.GET.is(req.getMethod()) || HttpMethod.HEAD.is(req.getMethod())) {
-                if (!file.isFile() || path.endsWith(URIUtil.SLASH)) {
+                if (!file.isFile() || path.endsWith("/")) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    writeResponseBodyMessage(response, "Not found");
-                    return;
+                    writeResponseBodyMessage(req, response, "Not found");
+                    callback.succeeded();
+                    return true;
                 }
-                long ifUnmodifiedSince = request.getDateHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString());
+                long ifUnmodifiedSince = req.getHeaders().getDateField(HttpHeader.IF_UNMODIFIED_SINCE);
                 if (ifUnmodifiedSince != -1L && file.lastModified() > ifUnmodifiedSince) {
                     response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
-                    writeResponseBodyMessage(response, "Precondition failed");
-                    return;
+                    writeResponseBodyMessage(req, response, "Precondition failed");
+                    callback.succeeded();
+                    return true;
                 }
                 long offset = 0L;
-                String range = request.getHeader(HttpHeader.RANGE.asString());
+                String range = req.getHeaders().get(HttpHeader.RANGE);
                 if (range != null && rangeSupport) {
                     Matcher m = SIMPLE_RANGE.matcher(range);
                     if (m.matches()) {
                         offset = Long.parseLong(m.group(1));
                         if (offset >= file.length()) {
                             response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
-                            writeResponseBodyMessage(response, "Range not satisfiable");
-                            return;
+                            writeResponseBodyMessage(req, response, "Range not satisfiable");
+                            callback.succeeded();
+                            return true;
                         }
                     }
-                    String encoding = request.getHeader(HttpHeader.ACCEPT_ENCODING.asString());
+                    String encoding = req.getHeaders().get(HttpHeader.ACCEPT_ENCODING);
                     if ((encoding != null && !"identity".equals(encoding)) || ifUnmodifiedSince == -1L) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        return;
+                        callback.succeeded();
+                        return true;
                     }
                 }
                 response.setStatus((offset > 0L) ? HttpServletResponse.SC_PARTIAL_CONTENT : HttpServletResponse.SC_OK);
-                response.setDateHeader(HttpHeader.LAST_MODIFIED.asString(), file.lastModified());
-                response.setHeader(HttpHeader.CONTENT_LENGTH.asString(), Long.toString(file.length() - offset));
+                response.getHeaders().add(HttpHeader.LAST_MODIFIED, DateGenerator.formatDate(file.lastModified()));
+                response.getHeaders().add(HttpHeader.CONTENT_LENGTH, Long.toString(file.length() - offset));
                 if (offset > 0L) {
-                    response.setHeader(
-                            HttpHeader.CONTENT_RANGE.asString(),
-                            "bytes " + offset + "-" + (file.length() - 1L) + "/" + file.length());
+                    response.getHeaders()
+                            .add(
+                                    HttpHeader.CONTENT_RANGE,
+                                    "bytes " + offset + "-" + (file.length() - 1L) + "/" + file.length());
                 }
                 if (checksumHeader != null) {
                     Map<String, String> checksums = ChecksumAlgorithmHelper.calculate(
                             file, Collections.singletonList(new Sha1ChecksumAlgorithmFactory()));
                     if (checksumHeader == ChecksumHeader.NEXUS) {
-                        response.setHeader(HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get("SHA-1") + "}}");
+                        response.getHeaders().add(HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get("SHA-1") + "}}");
                     } else if (checksumHeader == ChecksumHeader.XCHECKSUM) {
-                        response.setHeader("x-checksum-sha1", checksums.get(Sha1ChecksumAlgorithmFactory.NAME));
+                        response.getHeaders().add("x-checksum-sha1", checksums.get(Sha1ChecksumAlgorithmFactory.NAME));
                     }
                 }
                 if (HttpMethod.HEAD.is(req.getMethod())) {
-                    return;
+                    callback.succeeded();
+                    return true;
                 }
-                try (FileInputStream is = new FileInputStream(file)) {
+                try (FileInputStream is = new FileInputStream(file);
+                        OutputStream os = Response.asBufferedOutputStream(req, response)) {
                     if (offset > 0L) {
                         long skipped = is.skip(offset);
                         while (skipped < offset && is.read() >= 0) {
                             skipped++;
                         }
                     }
-                    IO.copy(is, response.getOutputStream());
+                    IO.copy(is, os);
                 }
             } else if (HttpMethod.PUT.is(req.getMethod())) {
                 if (!webDav) {
                     file.getParentFile().mkdirs();
                 }
                 if (file.getParentFile().exists()) {
-                    try {
-                        FileOutputStream os = null;
-                        try {
-                            os = new FileOutputStream(file);
-                            IO.copy(request.getInputStream(), os);
-                            os.close();
-                            os = null;
-                        } finally {
-                            try {
-                                if (os != null) {
-                                    os.close();
-                                }
-                            } catch (final IOException e) {
-                                // Suppressed due to an exception already thrown in the try block.
-                            }
-                        }
+                    try (InputStream is = Content.Source.asInputStream(req);
+                            FileOutputStream os = new FileOutputStream(file)) {
+                        IO.copy(is, os);
                     } catch (IOException e) {
                         file.delete();
                         throw e;
@@ -471,9 +459,9 @@ public class HttpServer {
                 }
             } else if (HttpMethod.OPTIONS.is(req.getMethod())) {
                 if (webDav) {
-                    response.setHeader("DAV", "1,2");
+                    response.getHeaders().add("DAV", "1,2");
                 }
-                response.setHeader(HttpHeader.ALLOW.asString(), "GET, PUT, HEAD, OPTIONS");
+                response.getHeaders().add(HttpHeader.ALLOW, "GET, PUT, HEAD, OPTIONS");
                 response.setStatus(HttpServletResponse.SC_OK);
             } else if (webDav && "MKCOL".equals(req.getMethod())) {
                 if (file.exists()) {
@@ -486,33 +474,29 @@ public class HttpServer {
             } else {
                 response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
             }
+            callback.succeeded();
+            return true;
         }
     }
 
-    private void writeResponseBodyMessage(HttpServletResponse response, String message) throws IOException {
-        try (OutputStream outputStream = response.getOutputStream()) {
+    private void writeResponseBodyMessage(Request request, Response response, String message) throws IOException {
+        try (OutputStream outputStream = Response.asBufferedOutputStream(request, response)) {
             outputStream.write(message.getBytes(StandardCharsets.UTF_8));
         }
     }
 
-    private class RFC9457Handler extends AbstractHandler {
+    private class RFC9457Handler extends Handler.Abstract {
         @Override
-        public void handle(
-                final String target,
-                final Request req,
-                final HttpServletRequest request,
-                final HttpServletResponse response)
-                throws IOException, ServletException {
-            String path = req.getPathInfo().substring(1);
+        public boolean handle(Request req, Response response, Callback callback) throws Exception {
+            String path = req.getHttpURI().getPath().substring(1);
 
             if (!path.startsWith("rfc9457/")) {
-                return;
+                return false;
             }
-            req.setHandled(true);
 
             if (HttpMethod.GET.is(req.getMethod())) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.setHeader(HttpHeader.CONTENT_TYPE.asString(), "application/problem+json");
+                response.getHeaders().add(HttpHeader.CONTENT_TYPE.asString(), "application/problem+json");
                 RFC9457Payload rfc9457Payload;
                 if (path.endsWith("missing_fields.txt")) {
                     rfc9457Payload = new RFC9457Payload(null, null, null, null, null);
@@ -524,8 +508,10 @@ public class HttpServer {
                             "Your current balance is 30, but that costs 50.",
                             URI.create("/account/12345/msgs/abc"));
                 }
-                writeResponseBodyMessage(response, buildRFC9457Message(rfc9457Payload));
+                writeResponseBodyMessage(req, response, buildRFC9457Message(rfc9457Payload));
             }
+            callback.succeeded();
+            return true;
         }
     }
 
@@ -533,64 +519,70 @@ public class HttpServer {
         return new Gson().toJson(payload, RFC9457Payload.class);
     }
 
-    private class RedirectHandler extends AbstractHandler {
+    private class RedirectHandler extends Handler.Abstract {
         @Override
-        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
-            String path = req.getPathInfo();
+        public boolean handle(Request req, Response response, Callback callback) throws Exception {
+            String path = req.getHttpURI().getPath();
             if (!path.startsWith("/redirect/")) {
-                return;
+                return false;
             }
-            req.setHandled(true);
             StringBuilder location = new StringBuilder(128);
-            String scheme = req.getParameter("scheme");
-            location.append(scheme != null ? scheme : req.getScheme());
+            String scheme = Request.getParameters(req).getValue("scheme");
+            location.append(scheme != null ? scheme : req.getHttpURI().getScheme());
             location.append("://");
-            location.append(req.getServerName());
+            location.append(Request.getServerName(req));
             location.append(":");
             if ("http".equalsIgnoreCase(scheme)) {
                 location.append(getHttpPort());
             } else if ("https".equalsIgnoreCase(scheme)) {
                 location.append(getHttpsPort());
             } else {
-                location.append(req.getServerPort());
+                location.append(Request.getServerPort(req));
             }
             location.append("/repo").append(path.substring(9));
-            response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
-            response.setHeader(HttpHeader.LOCATION.asString(), location.toString());
+            Response.sendRedirect(
+                    req, response, callback, HttpServletResponse.SC_MOVED_PERMANENTLY, location.toString(), false);
+            callback.succeeded();
+            return true;
         }
     }
 
-    private class AuthHandler extends AbstractHandler {
+    private class AuthHandler extends Handler.Abstract {
         @Override
-        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response)
-                throws IOException {
+        public boolean handle(Request request, Response response, Callback callback) throws Exception {
             if (ExpectContinue.BROKEN.equals(expectContinue)
-                    && "100-continue".equalsIgnoreCase(request.getHeader(HttpHeader.EXPECT.asString()))) {
-                request.getInputStream();
+                    && "100-continue".equalsIgnoreCase(request.getHeaders().get(HttpHeader.EXPECT))) {
+                // TODO: what is this for?
+                Request.asInputStream(request);
             }
 
             if (username != null && password != null) {
-                if (checkBasicAuth(request.getHeader(HttpHeader.AUTHORIZATION.asString()), username, password)) {
-                    return;
+                if (checkBasicAuth(request.getHeaders().get(HttpHeader.AUTHORIZATION), username, password)) {
+                    return false;
                 }
-                req.setHandled(true);
-                response.setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), "basic realm=\"Test-Realm\"");
+                response.getHeaders().add(HttpHeader.WWW_AUTHENTICATE, "Basic realm=\"Test-Realm\"");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                callback.succeeded();
+                return true;
             }
+            return false;
         }
     }
 
-    private class ProxyAuthHandler extends AbstractHandler {
+    private class ProxyAuthHandler extends Handler.Abstract {
         @Override
-        public void handle(String target, Request req, HttpServletRequest request, HttpServletResponse response) {
+        public boolean handle(Request req, Response response, Callback callback) throws Exception {
             if (proxyUsername != null && proxyPassword != null) {
                 if (checkBasicAuth(
-                        request.getHeader(HttpHeader.PROXY_AUTHORIZATION.asString()), proxyUsername, proxyPassword)) {
-                    return;
+                        req.getHeaders().get(HttpHeader.PROXY_AUTHORIZATION), proxyUsername, proxyPassword)) {
+                    return false;
                 }
-                req.setHandled(true);
-                response.setHeader(HttpHeader.PROXY_AUTHENTICATE.asString(), "basic realm=\"Test-Realm\"");
+                response.getHeaders().add(HttpHeader.PROXY_AUTHENTICATE, "basic realm=\"Test-Realm\"");
                 response.setStatus(HttpServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED);
+                callback.succeeded();
+                return true;
+            } else {
+                return false;
             }
         }
     }
