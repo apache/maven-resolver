@@ -46,9 +46,11 @@ import org.eclipse.jetty.util.thread.AutoLock;
 import org.eclipse.jetty.util.thread.SerializedInvoker;
 
 /**
- * Heavily inspired by Jetty's org.eclipse.jetty.io.internal.ByteChannelContentSource but adjusted to deal with
- * ReadableByteChannels.
- * Also Jetty's ByteChannelContentSource is an internal package so should not be used directly.
+ * Heavily inspired by Jetty's {@code org.eclipse.jetty.io.internal.ByteChannelContentSource} but adjusted to deal with
+ * {@link ReadableByteChannel}s and to support rewind (to be able to retry the requests).
+ * Also Jetty's {@code ByteChannelContentSource} is an internal package so should not be used directly.
+ * @see <a href="https://javadoc.jetty.org/jetty-12/org/eclipse/jetty/io/internal/ByteChannelContentSource.html">ByteChannelContentSource</a>
+ * @see <a href="https://github.com/jetty/jetty.project/issues/14324">Jetty Issue #14324</a>
  */
 public class PutTaskRequestContent extends ByteBufferRequestContent implements Request.Content {
 
