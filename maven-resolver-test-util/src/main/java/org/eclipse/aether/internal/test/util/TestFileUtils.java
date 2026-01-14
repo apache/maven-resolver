@@ -172,14 +172,10 @@ public class TestFileUtils {
     public static long copyFile(File source, File target) throws IOException {
         long total = 0;
 
-        FileInputStream fis = null;
-        OutputStream fos = null;
-        try {
-            fis = new FileInputStream(source);
+        mkdirs(target.getParentFile());
 
-            mkdirs(target.getParentFile());
-
-            fos = new BufferedOutputStream(new FileOutputStream(target));
+        try (FileInputStream fis = new FileInputStream(source);
+                OutputStream fos = new BufferedOutputStream(new FileOutputStream(target))) {
 
             for (byte[] buffer = new byte[1024 * 32]; ; ) {
                 int bytes = fis.read(buffer);
@@ -190,28 +186,6 @@ public class TestFileUtils {
                 fos.write(buffer, 0, bytes);
 
                 total += bytes;
-            }
-
-            fos.close();
-            fos = null;
-
-            fis.close();
-            fis = null;
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
-            } finally {
-                try {
-                    if (fis != null) {
-                        fis.close();
-                    }
-                } catch (final IOException e) {
-                    // Suppressed due to an exception already thrown in the try block.
-                }
             }
         }
 
@@ -228,22 +202,10 @@ public class TestFileUtils {
      */
     @Deprecated
     public static byte[] readBytes(File file) throws IOException {
-        RandomAccessFile in = null;
-        try {
-            in = new RandomAccessFile(file, "r");
+        try (RandomAccessFile in = new RandomAccessFile(file, "r")) {
             byte[] actual = new byte[(int) in.length()];
             in.readFully(actual);
-            in.close();
-            in = null;
             return actual;
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
-            }
         }
     }
 
@@ -251,21 +213,9 @@ public class TestFileUtils {
     public static void writeBytes(File file, byte[] pattern, int repeat) throws IOException {
         file.deleteOnExit();
         file.getParentFile().mkdirs();
-        OutputStream out = null;
-        try {
-            out = new BufferedOutputStream(new FileOutputStream(file));
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
             for (int i = 0; i < repeat; i++) {
                 out.write(pattern);
-            }
-            out.close();
-            out = null;
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
             }
         }
     }
@@ -287,40 +237,16 @@ public class TestFileUtils {
     }
 
     public static void readProps(File file, Properties props) throws IOException {
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(file);
+        try (FileInputStream fis = new FileInputStream(file)) {
             props.load(fis);
-            fis.close();
-            fis = null;
-        } finally {
-            try {
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
-            }
         }
     }
 
     public static void writeProps(File file, Properties props) throws IOException {
         file.getParentFile().mkdirs();
 
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(file);
+        try (FileOutputStream fos = new FileOutputStream(file)) {
             props.store(fos, "aether-test");
-            fos.close();
-            fos = null;
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
-            }
         }
     }
 }

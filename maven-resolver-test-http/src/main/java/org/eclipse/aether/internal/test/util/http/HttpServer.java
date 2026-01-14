@@ -446,20 +446,8 @@ public class HttpServer {
                 }
                 if (file.getParentFile().exists()) {
                     try {
-                        FileOutputStream os = null;
-                        try {
-                            os = new FileOutputStream(file);
+                        try (FileOutputStream os = new FileOutputStream(file)) {
                             IO.copy(request.getInputStream(), os);
-                            os.close();
-                            os = null;
-                        } finally {
-                            try {
-                                if (os != null) {
-                                    os.close();
-                                }
-                            } catch (final IOException e) {
-                                // Suppressed due to an exception already thrown in the try block.
-                            }
                         }
                     } catch (IOException e) {
                         file.delete();
