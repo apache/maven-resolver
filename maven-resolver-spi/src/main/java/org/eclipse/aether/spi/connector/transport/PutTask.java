@@ -24,9 +24,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+import org.apache.commons.io.channels.ByteArraySeekableByteChannel;
 
 /**
  * A task to upload a resource to the remote repository.
@@ -54,12 +58,31 @@ public final class PutTask extends TransportTask {
      *
      * @return The input stream for the data, never {@code null}. The stream is unbuffered.
      * @throws IOException If the stream could not be opened.
+     * @deprecated Use {@link #newByteChannel()} instead.
      */
+    @Deprecated
     public InputStream newInputStream() throws IOException {
         if (dataPath != null) {
             return Files.newInputStream(dataPath);
         }
         return new ByteArrayInputStream(dataBytes);
+    }
+
+    /**
+     * Opens a seekable byte channel for the data to be uploaded. The length of the channel can be queried via
+     * {@link #getDataLength()}. It's the responsibility of the caller to close the provided channel.
+     * Write operations on the returned channel will throw {@link java.nio.channels.NonWritableChannelException}.
+     *
+     * @return The seekable byte channel for the data, never {@code null}.
+     * @throws IOException If the channel could not be opened.
+     * @since 2.1.0
+     * @see #getInputStream()
+     */
+    public SeekableByteChannel newByteChannel() throws IOException {
+        if (dataPath != null) {
+            return Files.newByteChannel(dataPath, StandardOpenOption.READ);
+        }
+        return ByteArraySeekableByteChannel.wrap(dataBytes);
     }
 
     /**
@@ -94,7 +117,9 @@ public final class PutTask extends TransportTask {
      *
      * @return The data file or {@code null} if the data resides in memory.
      * @since 2.0.0
+     * @deprecated Use {@link #newByteChannel()} instead.
      */
+    @Deprecated
     public Path getDataPath() {
         return dataPath;
     }
