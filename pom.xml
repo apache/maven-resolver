@@ -57,6 +57,7 @@
     <module>maven-resolver-transport-classpath</module>
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-http</module>
+    <module>maven-resolver-transport-ipfs</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-supplier</module>
     <module>maven-resolver-demos</module>
