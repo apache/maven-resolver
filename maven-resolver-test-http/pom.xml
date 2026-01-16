@@ -32,7 +32,7 @@
   <description>A collection of utility classes to ease testing of HTTP transports.</description>
 
   <properties>
-    <javaVersion>11</javaVersion>
+    <javaVersion>17</javaVersion>
   </properties>
 
   <dependencies>
@@ -75,7 +75,16 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.http2</groupId>
-      <artifactId>http2-server</artifactId>
+      <artifactId>jetty-http2-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.compression</groupId>
+      <artifactId>jetty-compression-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -84,7 +93,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>${slf4jVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>

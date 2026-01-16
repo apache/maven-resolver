@@ -30,10 +30,10 @@
   <packaging>jar</packaging>
 
   <name>Maven Artifact Resolver Transport Jetty</name>
-  <description>Maven Artifact Transport Jetty.</description>
+  <description>Maven Artifact Transport based on Jetty 12.1.</description>
 
   <properties>
-    <javaVersion>11</javaVersion>
+    <javaVersion>17</javaVersion>
   </properties>
 
   <dependencies>
@@ -66,11 +66,11 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.http2</groupId>
-      <artifactId>http2-client</artifactId>
+      <artifactId>jetty-http2-client</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.http2</groupId>
-      <artifactId>http2-http-client-transport</artifactId>
+      <artifactId>jetty-http2-client-transport</artifactId>
     </dependency>
 
     <dependency>
