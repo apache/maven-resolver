@@ -58,9 +58,8 @@ public final class PutTask extends TransportTask {
      *
      * @return The input stream for the data, never {@code null}. The stream is unbuffered.
      * @throws IOException If the stream could not be opened.
-     * @deprecated Use {@link #newByteChannel()} instead.
+     * @see #newByteChannel()
      */
-    @Deprecated
     public InputStream newInputStream() throws IOException {
         if (dataPath != null) {
             return Files.newInputStream(dataPath);
@@ -71,7 +70,7 @@ public final class PutTask extends TransportTask {
     /**
      * Opens a seekable byte channel for the data to be uploaded. The length of the channel can be queried via
      * {@link #getDataLength()}. It's the responsibility of the caller to close the provided channel.
-     * Write operations on the returned channel will throw {@link java.nio.channels.NonWritableChannelException}.
+     * Write operations are not supposed to be performed on the returned channel and will have undefined behaviour.
      *
      * @return The seekable byte channel for the data, never {@code null}.
      * @throws IOException If the channel could not be opened.
@@ -114,12 +113,12 @@ public final class PutTask extends TransportTask {
 
     /**
      * Gets the file (if any) with the data to be uploaded.
+     * Consider using the data agnostic {@link #newInputStream()} or {@link #newByteChannel()} methods to access the data to not deal with {@code null} return values.
      *
      * @return The data file or {@code null} if the data resides in memory.
      * @since 2.0.0
-     * @deprecated Use {@link #newByteChannel()} instead.
+     * @see #getDataBytes()
      */
-    @Deprecated
     public Path getDataPath() {
         return dataPath;
     }
@@ -149,6 +148,18 @@ public final class PutTask extends TransportTask {
         this.dataPath = dataPath;
         dataBytes = EMPTY;
         return this;
+    }
+
+    /**
+     * Gets the binary data to be uploaded.
+     * Consider using the data agnostic {@link #newInputStream()} or {@link #newByteChannel()} methods to access the data to not deal with {@code null} return values.
+     *
+     * @return The binary data, may be {@code null} if the data resides in a file.
+     * @since 2.1.0
+     * @see #getDataPath()
+     */
+    public byte[] getDataBytes() {
+        return dataBytes;
     }
 
     /**
