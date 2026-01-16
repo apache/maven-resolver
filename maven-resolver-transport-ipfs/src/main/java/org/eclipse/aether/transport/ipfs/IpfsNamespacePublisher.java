@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Simple helper that exposes basic IPFS related methods.
+ */
 @SuppressWarnings("rawtypes")
 public class IpfsNamespacePublisher {
     private final Logger logger = LoggerFactory.getLogger(getClass());

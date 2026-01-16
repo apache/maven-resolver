@@ -31,8 +31,7 @@ import org.eclipse.aether.spi.connector.transport.PutTask;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A transporter using {@link java.nio.file.Path} that is reading and writing from specified base directory
- * of given {@link java.nio.file.FileSystem}.
+ * A transporter using {@link IpfsNamespacePublisher} to implement transport features.
  */
 final class IpfsTransporter extends AbstractTransporter {
     private final IpfsNamespacePublisher publisher;

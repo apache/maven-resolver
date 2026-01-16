@@ -18,6 +18,6 @@
  * under the License.
  */
 /**
- * Support for downloads/uploads using the IPFS as "remote" storage.
+ * Transport implementation using IPFS node.
  */
 package org.eclipse.aether.transport.ipfs;
