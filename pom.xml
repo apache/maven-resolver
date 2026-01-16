@@ -58,6 +58,7 @@
     <module>maven-resolver-connector-basic</module>
     <module>maven-resolver-transport-classpath</module>
     <module>maven-resolver-transport-file</module>
+    <module>maven-resolver-transport-ipfs</module>
     <module>maven-resolver-transport-jetty</module>
     <module>maven-resolver-transport-jdk-parent</module>
     <module>maven-resolver-transport-apache</module>
