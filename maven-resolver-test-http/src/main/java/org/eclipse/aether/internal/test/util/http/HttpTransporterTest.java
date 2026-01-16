@@ -228,6 +228,14 @@ public abstract class HttpTransporterTest {
         session = null;
     }
 
+    /**
+     * Indicates whether the transporter implementation supports preemptive authentication (i.e., sending credentials with the first request).
+     * @return {@code true} if preemptive authentication is supported, {@code false} otherwise.
+     */
+    protected boolean supportsPreemptiveAuth() {
+        return true;
+    }
+
     @Test
     protected void testClassify() {
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new FileNotFoundException()));
@@ -880,7 +888,11 @@ public abstract class HttpTransporterTest {
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(0L, listener.getDataLength());
-        assertEquals(1, listener.getStartedCount());
+        // some transports may skip the upload for empty resources
+        assertTrue(
+                listener.getStartedCount() <= 1,
+                "The transport should be started at most once but was started " + listener.getStartedCount()
+                        + " times");
         assertEquals(0, listener.getProgressedCount());
         assertEquals("", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
@@ -913,7 +925,7 @@ public abstract class HttpTransporterTest {
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(6L, listener.getDataLength());
-        assertEquals(1, listener.getStartedCount());
+        assertEquals(supportsPreemptiveAuth() ? 1 : 2, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
@@ -935,7 +947,7 @@ public abstract class HttpTransporterTest {
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(6L, listener.getDataLength());
-        assertEquals(1, listener.getStartedCount());
+        assertEquals(supportsPreemptiveAuth() ? 1 : 2, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
@@ -955,7 +967,7 @@ public abstract class HttpTransporterTest {
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(6L, listener.getDataLength());
-        assertEquals(1, listener.getStartedCount());
+        assertEquals(supportsPreemptiveAuth() ? 1 : 2, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
@@ -976,7 +988,9 @@ public abstract class HttpTransporterTest {
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(6L, listener.getDataLength());
-        assertEquals(1, listener.getStartedCount()); // w/ expectContinue enabled would have here 2
+        assertEquals(
+                supportsPreemptiveAuth() ? 1 : 2,
+                listener.getStartedCount()); // w/ expectContinue enabled would have here 2/3
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
@@ -1036,7 +1050,7 @@ public abstract class HttpTransporterTest {
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(6L, listener.getDataLength());
-        assertEquals(1, listener.getStartedCount());
+        assertEquals(supportsPreemptiveAuth() ? 1 : 2, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
@@ -1075,7 +1089,7 @@ public abstract class HttpTransporterTest {
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(6L, listener.getDataLength());
-        assertEquals(1, listener.getStartedCount());
+        assertEquals(supportsPreemptiveAuth() ? 1 : 2, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
@@ -1165,7 +1179,8 @@ public abstract class HttpTransporterTest {
         newTransporter(httpServer.getHttpUrl());
         PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
         transporter.put(task);
-        assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
+        assertEquals(
+                supportsPreemptiveAuth() ? 1 : 2, httpServer.getLogEntries().size()); // put w/ auth
     }
 
     @Test
@@ -1197,7 +1212,8 @@ public abstract class HttpTransporterTest {
         newTransporter(httpServer.getHttpUrl());
         PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
         transporter.put(task);
-        assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
+        assertEquals(
+                supportsPreemptiveAuth() ? 1 : 2, httpServer.getLogEntries().size()); // put w/ auth
         httpServer.getLogEntries().clear();
         task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
         transporter.put(task);
@@ -1394,8 +1410,9 @@ public abstract class HttpTransporterTest {
         task = new GetTask(URI.create("repo/file.txt"));
         transporter.get(task);
         assertEquals("test", task.getDataString());
-        // there are NO challenge round-trips, all goes through at first
-        assertEquals(1, httpServer.getLogEntries().size());
+        // there are (potentially) NO challenge round-trips, all goes through at first
+        assertEquals(
+                supportsPreemptiveAuth() ? 1 : 2, httpServer.getLogEntries().size());
     }
 
     @Test
