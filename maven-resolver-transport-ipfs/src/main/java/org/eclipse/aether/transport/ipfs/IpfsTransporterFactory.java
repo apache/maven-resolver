@@ -44,6 +44,8 @@ import static java.util.Objects.requireNonNull;
  * It is recommended to have namespace equal to artifacts groupId prefix, for example artifacts with groupId
  * {@code org.apache.maven.plugins} should be published into {@code org.apache} or {@code org.apache.maven} or
  * {@code org.apache.maven.plugins} namespace.
+ *
+ * @since 2.0.15
  */
 @Named(IpfsTransporterFactory.NAME)
 public final class IpfsTransporterFactory implements TransporterFactory {

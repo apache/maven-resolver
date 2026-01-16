@@ -36,6 +36,8 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Simple helper that exposes basic IPFS related methods.
+ *
+ * @since 2.0.15
  */
 @SuppressWarnings("rawtypes")
 public class IpfsNamespacePublisher {

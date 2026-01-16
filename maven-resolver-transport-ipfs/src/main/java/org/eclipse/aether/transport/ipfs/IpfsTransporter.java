@@ -32,6 +32,8 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A transporter using {@link IpfsNamespacePublisher} to implement transport features.
+ *
+ * @since 2.0.15
  */
 final class IpfsTransporter extends AbstractTransporter {
     private final IpfsNamespacePublisher publisher;

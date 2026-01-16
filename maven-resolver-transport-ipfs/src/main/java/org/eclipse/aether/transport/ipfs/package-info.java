@@ -19,5 +19,7 @@
  */
 /**
  * Transport implementation using IPFS node.
+ *
+ * @since 2.0.15
  */
 package org.eclipse.aether.transport.ipfs;

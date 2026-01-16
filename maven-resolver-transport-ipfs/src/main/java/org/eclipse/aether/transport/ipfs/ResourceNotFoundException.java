@@ -22,6 +22,8 @@ import java.io.IOException;
 
 /**
  * Special exception type used for "not found" errors.
+ *
+ * @since 2.0.15
  */
 class ResourceNotFoundException extends IOException {
     ResourceNotFoundException(String message) {
