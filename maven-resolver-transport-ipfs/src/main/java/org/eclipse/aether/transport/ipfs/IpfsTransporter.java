@@ -99,7 +99,7 @@ final class IpfsTransporter extends AbstractTransporter {
     protected void implClose() {
         if (publishIpns) {
             try {
-                if (publisher.publishNamespace()) {
+                if (!publisher.publishNamespace()) {
                     logger.warn("IPNS publish unsuccessful, see logs above for reasons");
                 }
             } catch (IOException e) {
