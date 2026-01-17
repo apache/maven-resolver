@@ -41,8 +41,7 @@ final class IpfsTransporter extends AbstractTransporter {
     private final IpfsNamespacePublisher publisher;
     private final boolean publishIpns;
 
-    IpfsTransporter(
-            IpfsNamespacePublisher publisher, boolean publishIpns) {
+    IpfsTransporter(IpfsNamespacePublisher publisher, boolean publishIpns) {
         this.publisher = requireNonNull(publisher);
         this.publishIpns = publishIpns;
     }
