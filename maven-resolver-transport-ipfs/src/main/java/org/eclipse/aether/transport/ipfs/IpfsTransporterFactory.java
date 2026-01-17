@@ -140,11 +140,6 @@ public final class IpfsTransporterFactory implements TransporterFactory {
                     IpfsTransporterConfigurationKeys.DEFAULT_PUBLISH_IPNS_KEY_CREATE,
                     IpfsTransporterConfigurationKeys.CONFIG_PROP_PUBLISH_IPNS_KEY_CREATE + "." + repository.getId(),
                     IpfsTransporterConfigurationKeys.CONFIG_PROP_PUBLISH_IPNS_KEY_CREATE);
-            boolean namespaceIsPrefix = ConfigUtils.getBoolean(
-                    session.getConfigProperties(),
-                    IpfsTransporterConfigurationKeys.DEFAULT_NAMESPACE_IS_PREFIX,
-                    IpfsTransporterConfigurationKeys.CONFIG_PROP_NAMESPACE_IS_PREFIX + "." + repository.getId(),
-                    IpfsTransporterConfigurationKeys.CONFIG_PROP_NAMESPACE_IS_PREFIX);
 
             IPFS ipfs = connect(multiaddr);
             IpfsNamespacePublisher publisher = ongoingPublishing.computeIfAbsent(repository.getId(), k -> {
@@ -161,7 +156,7 @@ public final class IpfsTransporterFactory implements TransporterFactory {
                 }
                 return pub;
             });
-            return new IpfsTransporter(publisher, namespace, namespaceIsPrefix, publishIpns);
+            return new IpfsTransporter(publisher, publishIpns);
         }
         throw new NoTransporterException(repository);
     }

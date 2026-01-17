@@ -18,11 +18,9 @@
  */
 package org.eclipse.aether.transport.ipfs;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 
 import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
@@ -41,15 +39,11 @@ import static java.util.Objects.requireNonNull;
 final class IpfsTransporter extends AbstractTransporter {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final IpfsNamespacePublisher publisher;
-    private final String namespace;
-    private final boolean namespaceIsPrefix;
     private final boolean publishIpns;
 
     IpfsTransporter(
-            IpfsNamespacePublisher publisher, String namespace, boolean namespaceIsPrefix, boolean publishIpns) {
+            IpfsNamespacePublisher publisher, boolean publishIpns) {
         this.publisher = requireNonNull(publisher);
-        this.namespace = namespace;
-        this.namespaceIsPrefix = namespaceIsPrefix;
         this.publishIpns = publishIpns;
     }
 
@@ -69,22 +63,7 @@ final class IpfsTransporter extends AbstractTransporter {
     @Override
     protected void implGet(GetTask task) throws Exception {
         String path = task.getLocation().getPath();
-        if (".meta/prefixes.txt".equals(path)) {
-            prefixes(task);
-        } else {
-            utilGet(task, publisher.get(path), true, publisher.size(path), false);
-        }
-    }
-
-    private void prefixes(GetTask task) throws Exception {
-        String prefixesString = "## repository-prefixes/2.0\n";
-        if (namespaceIsPrefix) {
-            prefixesString += "/" + namespace;
-        } else {
-            prefixesString += "@ unsupported";
-        }
-        byte[] prefixes = prefixesString.getBytes(StandardCharsets.UTF_8);
-        utilGet(task, new ByteArrayInputStream(prefixes), true, prefixes.length, false);
+        utilGet(task, publisher.get(path), true, publisher.size(path), false);
     }
 
     @Override

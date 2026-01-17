@@ -101,17 +101,4 @@ public final class IpfsTransporterConfigurationKeys {
     public static final String CONFIG_PROP_PUBLISH_IPNS_KEY_CREATE = CONFIG_PROPS_PREFIX + "publishIpnsKeyCreate";
 
     public static final boolean DEFAULT_PUBLISH_IPNS_KEY_CREATE = true;
-
-    /**
-     * By default, we assume that namespace is reverse domain, and it is <em>real prefix</em> of artifacts within
-     * given namespace (hence, it can be used in RRF as prefix source).
-     *
-     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link Boolean}
-     * @configurationDefaultValue {@link #DEFAULT_NAMESPACE_IS_PREFIX}
-     * @configurationRepoIdSuffix Yes
-     */
-    public static final String CONFIG_PROP_NAMESPACE_IS_PREFIX = CONFIG_PROPS_PREFIX + "namespaceIsPrefix";
-
-    public static final boolean DEFAULT_NAMESPACE_IS_PREFIX = true;
 }
