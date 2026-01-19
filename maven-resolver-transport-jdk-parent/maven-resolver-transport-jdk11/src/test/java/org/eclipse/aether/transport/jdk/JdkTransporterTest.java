@@ -20,6 +20,7 @@ package org.eclipse.aether.transport.jdk;
 
 import java.net.ConnectException;
 import java.net.URI;
+import java.util.stream.Stream;
 
 import org.eclipse.aether.internal.impl.DefaultPathProcessor;
 import org.eclipse.aether.internal.test.util.TestUtils;
@@ -41,6 +42,11 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Related: <a href="https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a">No TLS proxy supported</a>.
  */
 class JdkTransporterTest extends HttpTransporterTest {
+
+    @Override
+    protected Stream<String> supportedCompressionAlgorithms() {
+        return Stream.of("gzip", "deflate", "br");
+    }
 
     @Override
     @Disabled

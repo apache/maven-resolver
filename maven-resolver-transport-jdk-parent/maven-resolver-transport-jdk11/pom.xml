@@ -58,6 +58,10 @@
       <artifactId>methanol</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.github.mizosoft.methanol</groupId>
+      <artifactId>methanol-brotli</artifactId>
+    </dependency>
+    <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <scope>provided</scope>

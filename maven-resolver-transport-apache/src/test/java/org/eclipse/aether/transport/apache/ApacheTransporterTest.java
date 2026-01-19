@@ -21,6 +21,7 @@ package org.eclipse.aether.transport.apache;
 import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 import org.apache.http.pool.ConnPoolControl;
 import org.apache.http.pool.PoolStats;
@@ -45,6 +46,11 @@ class ApacheTransporterTest extends HttpTransporterTest {
 
     public ApacheTransporterTest() {
         super(() -> new ApacheTransporterFactory(standardChecksumExtractor(), new PathProcessorSupport()));
+    }
+
+    @Override
+    protected Stream<String> supportedCompressionAlgorithms() {
+        return Stream.of("gzip", "deflate");
     }
 
     @Override
@@ -86,7 +92,8 @@ class ApacheTransporterTest extends HttpTransporterTest {
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "dir1/dir2/file.txt")));
 
-        assertEquals(5, httpServer.getLogEntries().size());
+        assertEquals(
+                5, httpServer.getLogEntries().size(), "Expected 5 requests but got: " + httpServer.getLogEntries());
         assertEquals("OPTIONS", httpServer.getLogEntries().get(0).getMethod());
         assertEquals("MKCOL", httpServer.getLogEntries().get(1).getMethod());
         assertEquals("/repo/dir1/dir2/", httpServer.getLogEntries().get(1).getPath());

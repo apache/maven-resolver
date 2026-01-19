@@ -59,6 +59,10 @@
       <artifactId>methanol</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.github.mizosoft.methanol</groupId>
+      <artifactId>methanol-brotli</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>

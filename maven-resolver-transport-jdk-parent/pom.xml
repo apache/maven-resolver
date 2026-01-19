@@ -45,6 +45,11 @@
         <artifactId>methanol</artifactId>
         <version>1.9.0</version>
       </dependency>
+      <dependency>
+        <groupId>com.github.mizosoft.methanol</groupId>
+        <artifactId>methanol-brotli</artifactId>
+        <version>1.9.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 </project>
