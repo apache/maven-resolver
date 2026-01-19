@@ -162,6 +162,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private PasswordAuthentication serverAuthentication;
 
+    private PasswordAuthentication proxyAuthentication;
+
     JdkTransporter(
             RepositorySystemSession session,
             RemoteRepository repository,
@@ -452,13 +454,19 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     }
 
     private void prepare(HttpRequest.Builder requestBuilder) {
-        if (serverAuthentication != null
-                && (preemptiveAuth
-                        || (preemptivePutAuth && requestBuilder.build().method().equals("PUT")))) {
-            // https://stackoverflow.com/a/58612586
-            requestBuilder.setHeader(
-                    "Authorization",
-                    getBasicAuthValue(serverAuthentication.getUserName(), serverAuthentication.getPassword()));
+        if (preemptiveAuth
+                || (preemptivePutAuth && requestBuilder.build().method().equals("PUT"))) {
+            if (serverAuthentication != null) {
+                // https://stackoverflow.com/a/58612586
+                requestBuilder.setHeader(
+                        "Authorization",
+                        getBasicAuthValue(serverAuthentication.getUserName(), serverAuthentication.getPassword()));
+            }
+            if (proxyAuthentication != null) {
+                requestBuilder.setHeader(
+                        "Proxy-Authorization",
+                        getBasicAuthValue(proxyAuthentication.getUserName(), proxyAuthentication.getPassword()));
+            }
         }
     }
 
@@ -575,9 +583,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     String username = proxyAuthContext.get(AuthenticationContext.USERNAME);
                     String password = proxyAuthContext.get(AuthenticationContext.PASSWORD);
 
-                    authentications.put(
-                            Authenticator.RequestorType.PROXY,
-                            new PasswordAuthentication(username, password.toCharArray()));
+                    proxyAuthentication = new PasswordAuthentication(username, password.toCharArray());
+                    authentications.put(Authenticator.RequestorType.PROXY, proxyAuthentication);
                 }
             }
         }
