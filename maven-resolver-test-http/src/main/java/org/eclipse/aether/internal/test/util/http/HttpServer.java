@@ -19,19 +19,19 @@
 package org.eclipse.aether.internal.test.util.http;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,11 +43,19 @@ import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Payload;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
+import org.eclipse.jetty.compression.server.CompressionConfig;
+import org.eclipse.jetty.compression.server.CompressionHandler;
 import org.eclipse.jetty.http.DateGenerator;
 import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpURI;
+import org.eclipse.jetty.http.pathmap.MatchedResource;
+import org.eclipse.jetty.http.pathmap.PathMappings;
+import org.eclipse.jetty.http.pathmap.PathSpec;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
+import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -58,8 +66,8 @@ import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.util.Blocker;
 import org.eclipse.jetty.util.Callback;
-import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,12 +80,16 @@ public class HttpServer {
 
         private final String path;
 
-        private final Map<String, String> headers;
+        private final Map<String, String> requestHeaders;
 
-        public LogEntry(String method, String path, Map<String, String> headers) {
+        private Map<String, String> responseHeaders;
+
+        CountDownLatch responseHeadersAvailableSignal = new CountDownLatch(1);
+
+        public LogEntry(String method, String path, Map<String, String> requestHeaders) {
             this.method = method;
             this.path = path;
-            this.headers = headers;
+            this.requestHeaders = requestHeaders;
         }
 
         public String getMethod() {
@@ -88,8 +100,29 @@ public class HttpServer {
             return path;
         }
 
-        public Map<String, String> getHeaders() {
-            return headers;
+        public Map<String, String> getRequestHeaders() {
+            return requestHeaders;
+        }
+
+        /**
+         * This method blocks until the response headers are available.
+         * @return the response headers
+         */
+        public Map<String, String> getResponseHeaders() {
+            try {
+                if (!responseHeadersAvailableSignal.await(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("Timeout waiting for response headers to be available");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting for response headers to be available", e);
+            }
+            return responseHeaders;
+        }
+
+        public void setResponseHeaders(Map<String, String> responseHeaders) {
+            this.responseHeaders = responseHeaders;
+            responseHeadersAvailableSignal.countDown();
         }
 
         @Override
@@ -290,15 +323,15 @@ public class HttpServer {
         server = new Server();
         httpConnector = new ServerConnector(server);
         server.addConnector(httpConnector);
-        server.setHandler(new Handler.Sequence(
+
+        server.setHandler(new LogHandler(new CompressionEnforcingHandler(new Handler.Sequence(
                 new ConnectionClosingHandler(),
                 new ServerErrorHandler(),
-                new LogHandler(),
                 new ProxyAuthHandler(),
                 new AuthHandler(),
                 new RedirectHandler(),
                 new RepoHandler(),
-                new RFC9457Handler()));
+                new RFC9457Handler()))));
         server.start();
 
         return this;
@@ -310,6 +343,111 @@ public class HttpServer {
             server = null;
             httpConnector = null;
             httpsConnector = null;
+        }
+    }
+
+    private class CompressionEnforcingHandler extends CompressionHandler {
+        // duplicate of CompressionHandler.pathConfigs which is private
+        private final PathMappings<CompressionConfig> pathConfigs = new PathMappings<>();
+
+        CompressionEnforcingHandler(Handler handler) {
+            super(handler);
+            this.putConfiguration(
+                    "/br/*",
+                    CompressionConfig.builder().compressIncludeEncoding("br").build());
+            this.putConfiguration(
+                    "/zstd/*",
+                    CompressionConfig.builder().compressIncludeEncoding("zstd").build());
+            this.putConfiguration(
+                    "/gzip/*",
+                    CompressionConfig.builder().compressIncludeEncoding("gzip").build());
+            this.putConfiguration(
+                    "/deflate/*",
+                    CompressionConfig.builder()
+                            .compressIncludeEncoding("deflate")
+                            .build());
+        }
+
+        @Override
+        public CompressionConfig putConfiguration(PathSpec pathSpec, CompressionConfig config) {
+            // deliberately not set it in the super class yet
+            return pathConfigs.put(pathSpec, config);
+        }
+
+        @Override
+        public boolean handle(Request request, Response response, Callback callback) throws Exception {
+            Handler next = getHandler();
+            if (next == null) {
+                return false;
+            }
+            String pathInContext = Request.getPathInContext(request);
+            MatchedResource<CompressionConfig> matchedConfig = this.pathConfigs.getMatched(pathInContext);
+            if (matchedConfig == null) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("skipping compression: path {} has no matching compression config", pathInContext);
+                }
+                // No configuration, skip
+                return next.handle(request, response, callback);
+            }
+
+            // set the matched config in the super class for further processing, but for all paths
+            // no need to reset it later as this handler is not used among multiple requests
+            super.putConfiguration(PathSpec.from("/*"), matchedConfig.getResource());
+            // first path segment determines the encoding, remove it from the request path for further processing
+            return super.handle(new StripLeadingPathSegmentsRequestWrapper(request, 1), response, callback);
+        }
+    }
+
+    private static class StripLeadingPathSegmentsRequestWrapper extends Request.Wrapper {
+        private final HttpURI modifiedURI;
+
+        StripLeadingPathSegmentsRequestWrapper(Request wrapped, int segmentsToStrip) {
+            super(wrapped);
+            this.modifiedURI = stripPathSegments(wrapped.getHttpURI(), segmentsToStrip);
+        }
+
+        private static HttpURI stripPathSegments(HttpURI originalURI, int segmentsToStrip) {
+            if (segmentsToStrip <= 0) {
+                return originalURI;
+            }
+
+            String originalPath = originalURI.getPath();
+            if (originalPath == null || originalPath.isEmpty()) {
+                return originalURI;
+            }
+
+            // Split path into segments
+            String[] segments = originalPath.split("/");
+            StringBuilder newPath = new StringBuilder();
+
+            // Skip empty first segment (from leading /) and the specified number of segments
+            int skipCount = 0;
+            for (int i = 0; i < segments.length; i++) {
+                if (segments[i].isEmpty() && i == 0) {
+                    // Skip leading empty segment from leading /
+                    continue;
+                }
+                if (skipCount < segmentsToStrip) {
+                    skipCount++;
+                    continue;
+                }
+                newPath.append("/").append(segments[i]);
+            }
+
+            // If we stripped everything, return root path
+            if (newPath.isEmpty()) {
+                newPath.append("/");
+            }
+
+            // Build new URI with modified path
+            return org.eclipse.jetty.http.HttpURI.build(originalURI)
+                    .path(newPath.toString())
+                    .asImmutable();
+        }
+
+        @Override
+        public HttpURI getHttpURI() {
+            return modifiedURI;
         }
     }
 
@@ -330,29 +468,48 @@ public class HttpServer {
             if (serverErrorsBeforeWorks.getAndDecrement() > 0) {
                 response.setStatus(serverErrorStatusCode);
                 writeResponseBodyMessage(request, response, "Oops, come back later!");
-                callback.succeeded();
                 return true;
             }
             return false;
         }
     }
 
-    private class LogHandler extends Handler.Abstract {
+    private class LogHandler extends Handler.Wrapper {
+
+        LogHandler(Handler handler) {
+            super(handler);
+        }
+
         @Override
-        public boolean handle(Request req, Response response, Callback callback) {
+        public boolean handle(Request req, Response response, Callback callback) throws Exception {
+
             LOGGER.info(
                     "{} {}{}",
                     req.getMethod(),
                     req.getHttpURI().getDecodedPath(),
                     req.getHttpURI().getQuery() != null ? "?" + req.getHttpURI().getQuery() : "");
 
-            Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            for (HttpField header : req.getHeaders()) {
-                headers.put(header.getName(), header.getValueList().stream().collect(Collectors.joining(", ")));
+            Map<String, String> requestHeaders =
+                    toUnmodifiableMap(req.getHeaders()); // capture request headers before other handlers modify them
+            LogEntry logEntry = new LogEntry(req.getMethod(), req.getHttpURI().getPathQuery(), requestHeaders);
+            logEntries.add(logEntry);
+            // prevent closing the response before logging (assume all writes are synchronous for simplicity)
+            boolean result = super.handle(req, response, callback);
+            // capture response headers after other handlers modified them
+            // at this point in time the connection may have been already closed (i.e. last chunk already sent)
+            logEntry.setResponseHeaders(toUnmodifiableMap(response.getHeaders()));
+            if (result) {
+                callback.succeeded();
             }
-            logEntries.add(new LogEntry(
-                    req.getMethod(), req.getHttpURI().getPathQuery(), Collections.unmodifiableMap(headers)));
-            return false;
+            return result;
+        }
+
+        Map<String, String> toUnmodifiableMap(HttpFields headers) {
+            Map<String, String> map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            for (HttpField header : headers) {
+                map.put(header.getName(), header.getValueList().stream().collect(Collectors.joining(", ")));
+            }
+            return Collections.unmodifiableMap(map);
         }
     }
 
@@ -370,7 +527,6 @@ public class HttpServer {
             if (ExpectContinue.FAIL.equals(expectContinue) && req.getHeaders().get(HttpHeader.EXPECT) != null) {
                 response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
                 writeResponseBodyMessage(req, response, "Expectation was set to fail");
-                callback.succeeded();
                 return true;
             }
 
@@ -379,14 +535,12 @@ public class HttpServer {
                 if (!file.isFile() || path.endsWith("/")) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     writeResponseBodyMessage(req, response, "Not found");
-                    callback.succeeded();
                     return true;
                 }
                 long ifUnmodifiedSince = req.getHeaders().getDateField(HttpHeader.IF_UNMODIFIED_SINCE);
                 if (ifUnmodifiedSince != -1L && file.lastModified() > ifUnmodifiedSince) {
                     response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
                     writeResponseBodyMessage(req, response, "Precondition failed");
-                    callback.succeeded();
                     return true;
                 }
                 long offset = 0L;
@@ -398,14 +552,12 @@ public class HttpServer {
                         if (offset >= file.length()) {
                             response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
                             writeResponseBodyMessage(req, response, "Range not satisfiable");
-                            callback.succeeded();
                             return true;
                         }
                     }
                     String encoding = req.getHeaders().get(HttpHeader.ACCEPT_ENCODING);
                     if ((encoding != null && !"identity".equals(encoding)) || ifUnmodifiedSince == -1L) {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        callback.succeeded();
                         return true;
                     }
                 }
@@ -428,27 +580,27 @@ public class HttpServer {
                     }
                 }
                 if (HttpMethod.HEAD.is(req.getMethod())) {
-                    callback.succeeded();
                     return true;
                 }
-                try (FileInputStream is = new FileInputStream(file);
-                        OutputStream os = Response.asBufferedOutputStream(req, response)) {
-                    if (offset > 0L) {
-                        long skipped = is.skip(offset);
-                        while (skipped < offset && is.read() >= 0) {
-                            skipped++;
-                        }
-                    }
-                    IO.copy(is, os);
+                Content.Source contentSource =
+                        Content.Source.from(new ByteBufferPool.Sized(null), file.toPath(), offset, -1);
+                try (Blocker.Callback fileReadCallback = Blocker.callback()) {
+                    Content.copy(contentSource, response, fileReadCallback);
+                    fileReadCallback.block();
                 }
             } else if (HttpMethod.PUT.is(req.getMethod())) {
                 if (!webDav) {
                     file.getParentFile().mkdirs();
                 }
                 if (file.getParentFile().exists()) {
-                    try (InputStream is = Content.Source.asInputStream(req);
-                            FileOutputStream os = new FileOutputStream(file)) {
-                        IO.copy(is, os);
+                    try (SeekableByteChannel channel = Files.newByteChannel(
+                                    file.toPath(),
+                                    StandardOpenOption.CREATE,
+                                    StandardOpenOption.WRITE,
+                                    StandardOpenOption.TRUNCATE_EXISTING);
+                            Blocker.Callback fileWriteCallback = Blocker.callback()) {
+                        Content.copy(req, Content.Sink.from(channel), fileWriteCallback);
+                        fileWriteCallback.block();
                     } catch (IOException e) {
                         file.delete();
                         throw e;
@@ -474,14 +626,15 @@ public class HttpServer {
             } else {
                 response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
             }
-            callback.succeeded();
             return true;
         }
     }
 
     private void writeResponseBodyMessage(Request request, Response response, String message) throws IOException {
-        try (OutputStream outputStream = Response.asBufferedOutputStream(request, response)) {
-            outputStream.write(message.getBytes(StandardCharsets.UTF_8));
+        // write synchronously to avoid closing the response too early
+        try (Blocker.Callback callback = Blocker.callback()) {
+            Content.Sink.write(response, false, message, callback);
+            callback.block();
         }
     }
 
@@ -510,7 +663,6 @@ public class HttpServer {
                 }
                 writeResponseBodyMessage(req, response, buildRFC9457Message(rfc9457Payload));
             }
-            callback.succeeded();
             return true;
         }
     }
@@ -542,7 +694,6 @@ public class HttpServer {
             location.append("/repo").append(path.substring(9));
             Response.sendRedirect(
                     req, response, callback, HttpServletResponse.SC_MOVED_PERMANENTLY, location.toString(), false);
-            callback.succeeded();
             return true;
         }
     }
@@ -562,7 +713,6 @@ public class HttpServer {
                 }
                 response.getHeaders().add(HttpHeader.WWW_AUTHENTICATE, "Basic realm=\"Test-Realm\"");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                callback.succeeded();
                 return true;
             }
             return false;
@@ -579,7 +729,6 @@ public class HttpServer {
                 }
                 response.getHeaders().add(HttpHeader.PROXY_AUTHENTICATE, "basic realm=\"Test-Realm\"");
                 response.setStatus(HttpServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED);
-                callback.succeeded();
                 return true;
             } else {
                 return false;

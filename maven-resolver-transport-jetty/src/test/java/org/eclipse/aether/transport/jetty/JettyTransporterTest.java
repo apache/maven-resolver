@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.transport.jetty;
 
+import java.util.stream.Stream;
+
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.junit.jupiter.api.Disabled;
@@ -27,6 +29,11 @@ import org.junit.jupiter.api.Test;
  * Jetty transporter UT.
  */
 class JettyTransporterTest extends HttpTransporterTest {
+
+    @Override
+    protected Stream<String> supportedCompressionAlgorithms() {
+        return Stream.of("gzip", "deflate", "br", "zstd");
+    }
 
     @Override
     @Disabled

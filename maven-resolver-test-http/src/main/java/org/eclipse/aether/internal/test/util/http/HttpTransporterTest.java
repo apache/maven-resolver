@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
@@ -66,6 +67,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,12 +77,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Common set of tests against Http transporter.
  */
 @SuppressWarnings({"checkstyle:MethodName"})
-public class HttpTransporterTest {
+public abstract class HttpTransporterTest {
 
     protected static final Path KEY_STORE_PATH = Paths.get("target/keystore");
 
@@ -192,11 +196,18 @@ public class HttpTransporterTest {
         TestFileUtils.writeString(new File(repoDir, "dir/oldFile.txt"), "oldTest", OLD_FILE_TIMESTAMP);
         TestFileUtils.writeString(new File(repoDir, "empty.txt"), "");
         TestFileUtils.writeString(new File(repoDir, "some space.txt"), "space");
+        try (InputStream is = getCompressibleFileStream()) {
+            Files.copy(is, repoDir.toPath().resolve("compressible-file.xml"));
+        }
         File resumable = new File(repoDir, "resume.txt");
         TestFileUtils.writeString(resumable, "resumable");
         resumable.setLastModified(System.currentTimeMillis() - 90 * 1000);
         httpServer = new HttpServer().setRepoDir(repoDir).start();
         newTransporter(httpServer.getHttpUrl());
+    }
+
+    private static InputStream getCompressibleFileStream() {
+        return HttpTransporterTest.class.getClassLoader().getResourceAsStream("compressible-file.xml");
     }
 
     @AfterEach
@@ -431,15 +442,48 @@ public class HttpTransporterTest {
         assertEquals(OLD_FILE_TIMESTAMP, file.lastModified());
     }
 
-    @Test
-    protected void testGet_CompressionUsedWithPom() throws Exception {
-        File file = TestFileUtils.createTempFile("pom");
-        GetTask task = new GetTask(URI.create("repo/artifact.pom")).setDataPath(file.toPath());
+    /**
+     * Provides compression algorithms supported by the transporter implementation.
+     * This should be the string value passed in the {@code Accept-Encoding} header.
+     *
+     * @return stream of supported compression algorithm names
+     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Accept-Encoding#directives">Accept-Encoding directives</a>
+     */
+    protected abstract Stream<String> supportedCompressionAlgorithms();
+
+    @ParameterizedTest
+    // DEFLATE isn't supported by Jetty server (https://github.com/jetty/jetty.project/issues/280)
+    @ValueSource(strings = {"br", "gzip", "zstd"})
+    protected void testGet_WithCompression(String encoding) throws Exception {
+        assumeTrue(
+                supportedCompressionAlgorithms().anyMatch(supported -> supported.equals(encoding)),
+                () -> "Transporter does not support compression algorithm: " + encoding);
+        RecordingTransportListener listener = new RecordingTransportListener();
+        // requires a file with at least 48/50 bytes (otherwise compression is disabled,
+        // https://github.com/jetty/jetty.project/blob/2264d3d9f9586f3e5e9040fba779ed72e931cb46/jetty-core/jetty-compression/jetty-compression-brotli/src/main/java/org/eclipse/jetty/compression/brotli/BrotliCompression.java#L61)
+        GetTask task = new GetTask(URI.create(encoding + "/repo/compressible-file.xml")).setListener(listener);
         transporter.get(task);
-        String acceptEncoding = httpServer.getLogEntries().get(0).getHeaders().get("Accept-Encoding");
+        String acceptEncoding =
+                httpServer.getLogEntries().get(0).getRequestHeaders().get("Accept-Encoding");
         assertNotNull(acceptEncoding, "Missing Accept-Encoding header when retrieving pom");
-        // support either gzip or deflate as the transporter implementation may vary
-        assertTrue(acceptEncoding.contains("gzip") || acceptEncoding.contains("deflate"));
+        assertTrue(acceptEncoding.contains(encoding));
+        // check original response header sent by server (client transparently handles compression and removes it)
+        // see https://issues.apache.org/jira/browse/HTTPCORE-792
+        // and https://github.com/mizosoft/methanol/issues/182
+        for (HttpServer.LogEntry log : httpServer.getLogEntries()) {
+            assertEquals(encoding, log.getResponseHeaders().get("Content-Encoding"));
+        }
+        String expectedResourceData;
+        try (InputStream is = getCompressibleFileStream()) {
+            expectedResourceData = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        assertEquals(expectedResourceData, task.getDataString());
+        assertEquals(0L, listener.getDataOffset());
+        // data length is unknown as chunked transfer encoding is used with compression
+        assertEquals(-1, listener.getDataLength());
+        assertEquals(1, listener.getStartedCount());
+        assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
+        assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -1235,7 +1279,7 @@ public class HttpTransporterTest {
         transporter.get(new GetTask(URI.create("repo/file.txt")));
         assertEquals(1, httpServer.getLogEntries().size());
         for (HttpServer.LogEntry log : httpServer.getLogEntries()) {
-            assertEquals("SomeTest/1.0", log.getHeaders().get("User-Agent"));
+            assertEquals("SomeTest/1.0", log.getRequestHeaders().get("User-Agent"));
         }
     }
 
@@ -1251,7 +1295,7 @@ public class HttpTransporterTest {
         assertEquals(1, httpServer.getLogEntries().size());
         for (HttpServer.LogEntry log : httpServer.getLogEntries()) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
-                assertEquals(entry.getValue(), log.getHeaders().get(entry.getKey()), entry.getKey());
+                assertEquals(entry.getValue(), log.getRequestHeaders().get(entry.getKey()), entry.getKey());
             }
         }
     }
@@ -1321,8 +1365,8 @@ public class HttpTransporterTest {
         transporter.get(task);
         assertEquals("test", task.getDataString());
         assertEquals(1, httpServer.getLogEntries().size());
-        assertNotNull(httpServer.getLogEntries().get(0).getHeaders().get("Authorization"));
-        assertNotNull(httpServer.getLogEntries().get(0).getHeaders().get("Proxy-Authorization"));
+        assertNotNull(httpServer.getLogEntries().get(0).getRequestHeaders().get("Authorization"));
+        assertNotNull(httpServer.getLogEntries().get(0).getRequestHeaders().get("Proxy-Authorization"));
     }
 
     @Test
