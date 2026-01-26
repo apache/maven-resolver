@@ -47,6 +47,8 @@ import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.eclipse.aether.spi.connector.transport.TransportListener;
+import org.eclipse.aether.spi.connector.transport.TransportListener.TransportPropertyKey;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
@@ -64,10 +66,12 @@ import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.transport.HttpClientConnectionFactory;
 import org.eclipse.jetty.client.transport.HttpClientTransportDynamic;
+import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.transport.ClientConnectionFactoryOverHTTP2;
 import org.eclipse.jetty.io.ClientConnector;
+import org.eclipse.jetty.io.EndPoint.SslSessionData;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.ACCEPT_ENCODING;
@@ -246,6 +250,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         boolean resume = task.getResumeOffset() > 0L && task.getDataPath() != null;
         Response response;
         InputStreamResponseListener listener;
+        Map<TransportListener.TransportPropertyKey, Object> transportProperties;
 
         while (true) {
             Request request = client.newRequest(resolve(task)).method("GET");
@@ -266,6 +271,12 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 });
             }
 
+            Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+            // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+            request.onResponseHeader((r, field) -> {
+                rawResponseHeaders.put(field.getLowerCaseName(), field);
+                return true; // continue processing
+            });
             listener = new InputStreamResponseListener();
             request.send(listener);
             try {
@@ -287,6 +298,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     throw new HttpTransporterException(statusCode);
                 });
             }
+            transportProperties = createTransportProperties(request, rawResponseHeaders);
             break;
         }
 
@@ -311,7 +323,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         final Path dataFile = task.getDataPath();
         if (dataFile == null) {
             try (InputStream is = listener.getInputStream()) {
-                utilGet(task, is, true, length, downloadResumed);
+                utilGet(task, is, true, length, downloadResumed, transportProperties);
             }
         } else {
             try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
@@ -322,7 +334,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     }
                 }
                 try (InputStream is = listener.getInputStream()) {
-                    utilGet(task, is, true, length, downloadResumed);
+                    utilGet(task, is, true, length, downloadResumed, transportProperties);
                 }
                 tempFile.move();
             } finally {
@@ -340,6 +352,30 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         if (checksums != null && !checksums.isEmpty()) {
             checksums.forEach(task::setChecksum);
         }
+    }
+
+    private Map<TransportPropertyKey, Object> createTransportProperties(
+            Request request, Map<String, HttpField> rawResponseHeaders) {
+        SslSessionData sslSessionData = request.getConnection().getSslSessionData();
+        Map<TransportPropertyKey, Object> properties = new HashMap<>();
+        properties.put(
+                HttpTransportPropertyKey.HTTP_VERSION, request.getVersion().toString());
+        if (sslSessionData != null && sslSessionData.sslSession() != null) {
+            properties.put(
+                    HttpTransportPropertyKey.SSL_PROTOCOL,
+                    sslSessionData.sslSession().getProtocol());
+            properties.put(
+                    HttpTransportPropertyKey.SSL_CIPHER_SUITE,
+                    sslSessionData.sslSession().getCipherSuite());
+        }
+        if (rawResponseHeaders.containsKey("content-encoding")) {
+            properties.put(
+                    HttpTransportPropertyKey.CONTENT_CODING,
+                    rawResponseHeaders.get("content-encoding").getValue());
+        }
+        // TODO: how to get number of bytes transferred?
+
+        return properties;
     }
 
     private static Function<String, String> headerGetter(Response response) {
@@ -361,7 +397,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                         if (task.getDataLength() == 0) {
                             if (started.compareAndSet(false, true)) {
                                 try {
-                                    task.getListener().transportStarted(0, task.getDataLength());
+                                    task.getListener()
+                                            .transportStarted(
+                                                    0,
+                                                    task.getDataLength(),
+                                                    createTransportProperties(r, Collections.emptyMap()));
                                 } catch (TransferCancelledException e) {
                                     r.abort(e);
                                 }
@@ -371,7 +411,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     .onRequestContent((r, b) -> {
                         if (started.compareAndSet(false, true)) {
                             try {
-                                task.getListener().transportStarted(0, task.getDataLength());
+                                task.getListener()
+                                        .transportStarted(
+                                                0,
+                                                task.getDataLength(),
+                                                createTransportProperties(r, Collections.emptyMap()));
                             } catch (TransferCancelledException e) {
                                 r.abort(e);
                                 return;

@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.transfer.TransferCancelledException;
@@ -87,11 +89,42 @@ public abstract class AbstractTransporter implements Transporter {
      *            download starts at the first byte of the resource.
      * @throws IOException If the transfer encountered an I/O error.
      * @throws TransferCancelledException If the transfer was cancelled.
+     * @deprecated Use {@link #utilGet(GetTask, InputStream, boolean, long, boolean, Map)} instead.
      */
+    @Deprecated
     protected void utilGet(GetTask task, InputStream is, boolean close, long length, boolean resume)
             throws IOException, TransferCancelledException {
+        utilGet(task, is, close, length, resume, Collections.emptyMap());
+    }
+
+    /**
+     * Performs stream-based I/O for the specified download task and notifies the configured transport listener.
+     * Subclasses might want to invoke this utility method from within their {@link #implGet(GetTask)} to avoid
+     * boilerplate I/O code.
+     *
+     * @param task The download to perform, must not be {@code null}.
+     * @param is The input stream to download the data from, must not be {@code null}.
+     * @param close {@code true} if the supplied input stream should be automatically closed, {@code false} to leave the
+     *            stream open.
+     * @param length The size in bytes of the downloaded resource or {@code -1} if unknown, not to be confused with the
+     *            length of the supplied input stream which might be smaller if the download is resumed.
+     * @param resume {@code true} if the download resumes from {@link GetTask#getResumeOffset()}, {@code false} if the
+     *            download starts at the first byte of the resource.
+     * @param transportProperties the transport properties connected with this download. May be empty.
+     * @throws IOException If the transfer encountered an I/O error.
+     * @throws TransferCancelledException If the transfer was cancelled.
+     * @since NEXT
+     */
+    protected void utilGet(
+            GetTask task,
+            InputStream is,
+            boolean close,
+            long length,
+            boolean resume,
+            Map<TransportListener.TransportPropertyKey, Object> transportProperties)
+            throws IOException, TransferCancelledException {
         try (OutputStream os = task.newOutputStream(resume)) {
-            task.getListener().transportStarted(resume ? task.getResumeOffset() : 0L, length);
+            task.getListener().transportStarted(resume ? task.getResumeOffset() : 0L, length, transportProperties);
             copy(os, is, task.getListener());
         } finally {
             if (close) {
@@ -126,11 +159,36 @@ public abstract class AbstractTransporter implements Transporter {
      *            the stream open.
      * @throws IOException If the transfer encountered an I/O error.
      * @throws TransferCancelledException If the transfer was cancelled.
+     * @deprecated Use {@link #utilPut(PutTask, OutputStream, boolean, Map)} instead.
      */
+    @Deprecated
     protected void utilPut(PutTask task, OutputStream os, boolean close)
             throws IOException, TransferCancelledException {
+        utilPut(task, os, close, Collections.emptyMap());
+    }
+
+    /**
+     * Performs stream-based I/O for the specified upload task and notifies the configured transport listener.
+     * Subclasses might want to invoke this utility method from within their {@link #implPut(PutTask)} to avoid
+     * boilerplate I/O code.
+     *
+     * @param task The upload to perform, must not be {@code null}.
+     * @param os The output stream to upload the data to, must not be {@code null}.
+     * @param close {@code true} if the supplied output stream should be automatically closed, {@code false} to leave
+     *            the stream open.
+     * @param transportProperties the transport properties connected with this upload. May be empty.
+     * @throws IOException If the transfer encountered an I/O error.
+     * @throws TransferCancelledException If the transfer was cancelled.
+     * @since NEXT
+     */
+    protected void utilPut(
+            PutTask task,
+            OutputStream os,
+            boolean close,
+            Map<TransportListener.TransportPropertyKey, Object> transportProperties)
+            throws IOException, TransferCancelledException {
         try (InputStream is = task.newInputStream()) {
-            task.getListener().transportStarted(0, task.getDataLength());
+            task.getListener().transportStarted(0, task.getDataLength(), transportProperties);
             copy(os, is, task.getListener());
         } finally {
             if (close) {

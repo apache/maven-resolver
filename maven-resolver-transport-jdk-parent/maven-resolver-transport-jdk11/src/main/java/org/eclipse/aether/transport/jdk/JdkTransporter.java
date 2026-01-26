@@ -77,6 +77,8 @@ import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.eclipse.aether.spi.connector.transport.TransportListener;
+import org.eclipse.aether.spi.connector.transport.TransportListener.TransportPropertyKey;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
@@ -372,9 +374,11 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
             final boolean downloadResumed = offset > 0L;
             final Path dataFile = task.getDataPath();
+            final Map<TransportListener.TransportPropertyKey, Object> transportProperties =
+                    createTransportProperties(response);
             if (dataFile == null) {
                 try (InputStream is = response.body()) {
-                    utilGet(task, is, true, length, downloadResumed);
+                    utilGet(task, is, true, length, downloadResumed, transportProperties);
                 }
             } else {
                 try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
@@ -385,7 +389,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         }
                     }
                     try (InputStream is = response.body()) {
-                        utilGet(task, is, true, length, downloadResumed);
+                        utilGet(task, is, true, length, downloadResumed, transportProperties);
                     }
                     tempFile.move();
                 } finally {
@@ -417,6 +421,21 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
+    private Map<TransportPropertyKey, Object> createTransportProperties(HttpResponse<?> response) {
+        Map<TransportPropertyKey, Object> props = new HashMap<>();
+        props.put(HttpTransportPropertyKey.HTTP_VERSION, response.version().toString());
+        response.sslSession().ifPresent(ssl -> {
+            props.put(
+                    HttpTransportPropertyKey.SSL_PROTOCOL,
+                    response.sslSession().get().getProtocol());
+            props.put(
+                    HttpTransportPropertyKey.SSL_CIPHER_SUITE,
+                    response.sslSession().get().getCipherSuite());
+        });
+        // TODO: add compression algorithm if any (https://github.com/mizosoft/methanol/issues/182)
+        return props;
+    }
+
     private static Function<String, String> headerGetter(HttpResponse<?> response) {
         return s -> response.headers().firstValue(s).orElse(null);
     }
@@ -438,7 +457,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
         headers.forEach(request::setHeader);
         try (PathProcessor.TempFile tempFile = pathProcessor.newTempFile()) {
-            utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
+            // TODO: add properties
+            utilPut(task, Files.newOutputStream(tempFile.getPath()), true, Collections.emptyMap());
             request.PUT(HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
 
             prepare(request);
