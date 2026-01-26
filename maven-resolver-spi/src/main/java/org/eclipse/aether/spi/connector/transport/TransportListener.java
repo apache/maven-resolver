@@ -19,8 +19,10 @@
 package org.eclipse.aether.spi.connector.transport;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transfer.TransferEvent;
 
 /**
  * A skeleton class for listeners used to monitor transport operations. Reusing common regular expression syntax, the
@@ -45,8 +47,26 @@ public abstract class TransportListener {
      *
      * @param dataOffset The byte offset in the resource at which the transfer starts, must not be negative.
      * @param dataLength The total number of bytes in the resource or {@code -1} if the length is unknown.
+     * @param transportProperties The transport properties associated with this transfer, may be empty. The keys are transporter specific and the value types are key specific.
      * @throws TransferCancelledException If the transfer should be aborted.
+     * @since NEXT
      */
+    public void transportStarted(
+            long dataOffset, long dataLength, Map<TransferEvent.TransportPropertyKey, Object> transportProperties)
+            throws TransferCancelledException {
+        transportStarted(dataOffset, dataLength);
+    }
+
+    /**
+     * Notifies the listener about the start of the data transfer. This event may arise more than once if the transfer
+     * needs to be restarted (e.g. after an authentication failure).
+     *
+     * @param dataOffset The byte offset in the resource at which the transfer starts, must not be negative.
+     * @param dataLength The total number of bytes in the resource or {@code -1} if the length is unknown.
+     * @throws TransferCancelledException If the transfer should be aborted.
+     * @deprecated use {@link #transportStarted(long, long, Map)} instead
+     */
+    @Deprecated
     public void transportStarted(long dataOffset, long dataLength) throws TransferCancelledException {}
 
     /**

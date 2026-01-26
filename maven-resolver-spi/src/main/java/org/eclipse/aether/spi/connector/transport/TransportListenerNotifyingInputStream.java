@@ -23,8 +23,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transfer.TransferEvent;
 
 /**
  * An {@code InputStream} wrapper that notifies a {@link TransportListener} about progress when data is read.
@@ -34,12 +36,18 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 public class TransportListenerNotifyingInputStream extends FilterInputStream {
 
     private final TransportListener transportListener;
+    private final Map<TransferEvent.TransportPropertyKey, Object> transportProperties;
     private final long size;
     private boolean isStarted = false;
 
-    public TransportListenerNotifyingInputStream(InputStream in, TransportListener transportListener, long size) {
+    public TransportListenerNotifyingInputStream(
+            InputStream in,
+            TransportListener transportListener,
+            Map<TransferEvent.TransportPropertyKey, Object> transportProperties,
+            long size) {
         super(in);
         this.transportListener = transportListener;
+        this.transportProperties = transportProperties;
         this.size = size;
     }
 
@@ -89,7 +97,7 @@ public class TransportListenerNotifyingInputStream extends FilterInputStream {
 
     private void notifyStarted() throws IOException {
         try {
-            transportListener.transportStarted(0, size);
+            transportListener.transportStarted(0, size, transportProperties);
         } catch (TransferCancelledException e) {
             throw (IOException) new InterruptedIOException().initCause(e);
         }

@@ -66,6 +66,7 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.HttpRFC9457Exception;
+import org.eclipse.aether.transfer.HttpTransportProperty;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
@@ -580,6 +581,10 @@ public abstract class HttpTransporterTest {
      */
     protected abstract Stream<String> supportedCompressionAlgorithms();
 
+    protected boolean exposeContentCodingInTransportProperties() {
+        return true;
+    }
+
     @ParameterizedTest
     // DEFLATE isn't supported by Jetty server (https://github.com/jetty/jetty.project/issues/280)
     @ValueSource(strings = {"br", "gzip", "zstd"})
@@ -613,6 +618,9 @@ public abstract class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+        if (exposeContentCodingInTransportProperties()) {
+            assertEquals(encoding, listener.getTransportProperties().get(HttpTransportProperty.Key.CONTENT_CODING));
+        }
     }
 
     @Test
@@ -748,6 +756,12 @@ public abstract class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+        assertEquals(
+                HttpTransportProperty.SslProtocol.TLS_1_3,
+                listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_PROTOCOL));
+        assertEquals(
+                "TLS_AES_256_GCM_SHA384",
+                listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_CIPHER_SUITE));
     }
 
     @Test
@@ -821,6 +835,9 @@ public abstract class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+        assertEquals(
+                HttpTransportProperty.HttpVersion.HTTP_2,
+                listener.getTransportProperties().get(HttpTransportProperty.Key.HTTP_VERSION));
     }
 
     protected void enableHttp2Protocol() {}

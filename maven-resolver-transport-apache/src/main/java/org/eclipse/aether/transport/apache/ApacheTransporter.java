@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.transport.apache;
 
+import javax.net.ssl.SSLSession;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -32,6 +34,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -44,6 +47,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.ProtocolVersion;
 import org.apache.http.auth.AuthScheme;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
@@ -66,6 +70,7 @@ import org.apache.http.client.utils.URIUtils;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.ManagedHttpClientConnection;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.NoConnectionReuseStrategy;
@@ -81,6 +86,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
@@ -93,11 +99,15 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransportPropertiesBuilder;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.transfer.HttpTransportProperty.HttpVersion;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transfer.TransferEvent;
+import org.eclipse.aether.transport.apache.ApacheTransporter.ConcurrentAuthCache;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
@@ -412,7 +422,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 try {
                     handleStatus(response);
                     if (getter != null) {
-                        getter.handle(response);
+                        getter.handle(response, context);
                     }
                 } finally {
                     EntityUtils.consumeQuietly(response.getEntity());
@@ -562,7 +572,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             this.task = task;
         }
 
-        public void handle(CloseableHttpResponse response) throws IOException, TransferCancelledException {
+        public void handle(CloseableHttpResponse response, SharingHttpContext context)
+                throws IOException, TransferCancelledException {
             HttpEntity entity = response.getEntity();
             if (entity == null) {
                 entity = new ByteArrayEntity(new byte[0]);
@@ -584,11 +595,13 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 }
             }
 
+            Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                    createTransportProperties(response, context);
             final boolean resume = offset > 0L;
             final Path dataFile = task.getDataPath();
             if (dataFile == null) {
                 try (InputStream is = entity.getContent()) {
-                    utilGet(task, is, true, length, resume);
+                    utilGet(task, is, true, length, resume, transportProperties);
                     extractChecksums(response);
                 }
             } else {
@@ -600,7 +613,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                         }
                     }
                     try (InputStream is = entity.getContent()) {
-                        utilGet(task, is, true, length, resume);
+                        utilGet(task, is, true, length, resume, transportProperties);
                     }
                     tempFile.move();
                 } finally {
@@ -625,6 +638,42 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             if (checksums != null && !checksums.isEmpty()) {
                 checksums.forEach(task::setChecksum);
             }
+        }
+    }
+
+    private static Map<TransferEvent.TransportPropertyKey, Object> createTransportProperties(
+            CloseableHttpResponse response, HttpContext context) {
+        HttpTransportPropertiesBuilder builder =
+                new HttpTransportPropertiesBuilder(toHttpVersion(response.getProtocolVersion()));
+        HttpCoreContext coreContext = HttpCoreContext.adapt(context);
+        SSLSession sslSession = Optional.ofNullable(coreContext.getConnection(ManagedHttpClientConnection.class))
+                .filter(ManagedHttpClientConnection::isOpen)
+                // might throw an exception if the connection is closed
+                // (https://issues.apache.org/jira/browse/HTTPCLIENT-2427)
+                .map(ManagedHttpClientConnection::getSSLSession)
+                .orElse(null);
+        if (sslSession != null) {
+            builder.withSslProtocol(sslSession.getProtocol());
+            builder.withSslCipherSuite(sslSession.getCipherSuite());
+        }
+        // content encoding is not available (see https://issues.apache.org/jira/browse/HTTPCORE-792)
+        return builder.build();
+    }
+
+    static HttpVersion toHttpVersion(ProtocolVersion version) {
+        switch (version.getMajor()) {
+            case 1:
+                if (version.getMinor() == 0) {
+                    return HttpVersion.HTTP_1_0;
+                } else {
+                    return HttpVersion.HTTP_1_1;
+                }
+            case 2:
+                return HttpVersion.HTTP_2;
+            case 3:
+                return HttpVersion.HTTP_3;
+            default:
+                throw new IllegalArgumentException("Unknown version " + version.toString());
         }
     }
 

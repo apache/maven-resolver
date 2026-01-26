@@ -53,6 +53,11 @@ class ApacheTransporterTest extends HttpTransporterTest {
         return Stream.of("gzip", "deflate");
     }
 
+    protected boolean exposeContentCodingInTransportProperties() {
+        // see https://issues.apache.org/jira/browse/HTTPCORE-792
+        return false;
+    }
+
     @Override
     @Disabled
     @Test

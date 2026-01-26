@@ -57,6 +57,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -81,11 +82,14 @@ import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportListenerNotifyingInputStream;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransportPropertiesBuilder;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.transfer.HttpTransportProperty;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.slf4j.Logger;
@@ -244,6 +248,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         prepare(request);
         try {
             HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
+            task.getListener().transportStarted(0, 0, createTransportProperties(response));
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 throw new HttpTransporterException(response.statusCode());
             }
@@ -320,9 +325,11 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
             final boolean downloadResumed = offset > 0L;
             final Path dataFile = task.getDataPath();
+            final Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                    createTransportProperties(response);
             if (dataFile == null) {
                 try (InputStream is = response.body()) {
-                    utilGet(task, is, true, length, downloadResumed);
+                    utilGet(task, is, true, length, downloadResumed, transportProperties);
                 }
             } else {
                 try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
@@ -333,7 +340,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         }
                     }
                     try (InputStream is = response.body()) {
-                        utilGet(task, is, true, length, downloadResumed);
+                        utilGet(task, is, true, length, downloadResumed, transportProperties);
                     }
                     tempFile.move();
                 } finally {
@@ -365,6 +372,27 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
+    private Map<TransferEvent.TransportPropertyKey, Object> createTransportProperties(HttpResponse<?> response) {
+        HttpTransportPropertiesBuilder builder = new HttpTransportPropertiesBuilder(toHttpVersion(response.version()));
+        response.sslSession().ifPresent(ssl -> {
+            builder.withSslProtocol(ssl.getProtocol());
+            builder.withSslCipherSuite(ssl.getCipherSuite());
+        });
+        // TODO: add compression algorithm if any (https://github.com/mizosoft/methanol/issues/182)
+        return builder.build();
+    }
+
+    static HttpTransportProperty.HttpVersion toHttpVersion(HttpClient.Version version) {
+        switch (version) {
+            case HTTP_1_1:
+                return HttpTransportProperty.HttpVersion.HTTP_1_1;
+            case HTTP_2:
+                return HttpTransportProperty.HttpVersion.HTTP_2;
+            default:
+                throw new IllegalArgumentException("Unsupported HTTP version: " + version);
+        }
+    }
+
     private static Function<String, String> headerGetter(HttpResponse<?> response) {
         return s -> response.headers().firstValue(s).orElse(null);
     }
@@ -388,15 +416,18 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         if (sendRfc9457Accept) {
             JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
         }
-
         if (task.getDataLength() == 0L) {
             request.PUT(HttpRequest.BodyPublishers.noBody());
         } else {
             request.PUT(HttpRequest.BodyPublishers.fromPublisher(
                     HttpRequest.BodyPublishers.ofInputStream(() -> {
                         try {
+                            // transport properties are not available for outgoing requests
                             return new TransportListenerNotifyingInputStream(
-                                    task.newInputStream(), task.getListener(), task.getDataLength());
+                                    task.newInputStream(),
+                                    task.getListener(),
+                                    Collections.emptyMap(),
+                                    task.getDataLength());
                         } catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }

@@ -59,6 +59,12 @@ class JdkTransporterTest extends HttpTransporterTest {
     }
 
     @Override
+    protected boolean exposeContentCodingInTransportProperties() {
+        // see https://issues.apache.org/jira/browse/HTTPCORE-792
+        return false;
+    }
+
+    @Override
     @Disabled
     @Test
     protected void testAuthSchemeReuse() {}

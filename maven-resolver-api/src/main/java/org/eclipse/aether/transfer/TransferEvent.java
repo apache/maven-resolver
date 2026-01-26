@@ -19,6 +19,8 @@
 package org.eclipse.aether.transfer;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 
@@ -103,6 +105,8 @@ public final class TransferEvent {
 
     private final Exception exception;
 
+    Map<TransportPropertyKey, Object> transportProperties;
+
     TransferEvent(Builder builder) {
         type = builder.type;
         requestType = builder.requestType;
@@ -111,6 +115,7 @@ public final class TransferEvent {
         dataBuffer = builder.dataBuffer;
         transferredBytes = builder.transferredBytes;
         exception = builder.exception;
+        transportProperties = builder.transportProperties;
     }
 
     /**
@@ -196,6 +201,17 @@ public final class TransferEvent {
         return exception;
     }
 
+    /**
+     * Get the transport properties associated with this transfer.
+     * The keys are transporter specific and the value types are key specific.
+     * @return The immutable transport properties associated with this transfer, may be empty.
+     * @since NEXT
+     * @see HttpTransportProperty.Key HttpTransportProperty.Key for HTTP specific keys
+     */
+    public Map<TransportPropertyKey, Object> getTransportProperties() {
+        return transportProperties;
+    }
+
     @Override
     public String toString() {
         return getRequestType() + " " + getType() + " " + getResource();
@@ -219,6 +235,8 @@ public final class TransferEvent {
         long transferredBytes;
 
         Exception exception;
+
+        Map<TransportPropertyKey, Object> transportProperties;
 
         /**
          * Creates a new transfer event builder for the specified session and the given resource.
@@ -367,6 +385,11 @@ public final class TransferEvent {
             return this;
         }
 
+        public Builder setTransportProperties(Map<TransportPropertyKey, Object> transportProperties) {
+            this.transportProperties = Collections.unmodifiableMap(transportProperties);
+            return this;
+        }
+
         /**
          * Builds a new transfer event from the current values of this builder. The state of the builder itself remains
          * unchanged.
@@ -377,4 +400,6 @@ public final class TransferEvent {
             return new TransferEvent(this);
         }
     }
+
+    public interface TransportPropertyKey {}
 }

@@ -57,12 +57,15 @@ class TransferTransportListener<T extends Transfer> extends TransportListener {
     }
 
     @Override
-    public void transportStarted(long dataOffset, long dataLength) throws TransferCancelledException {
+    public void transportStarted(
+            long dataOffset, long dataLength, Map<TransferEvent.TransportPropertyKey, Object> transportProperties)
+            throws TransferCancelledException {
         if (checksumCalculator != null) {
             checksumCalculator.init(dataOffset);
         }
         if (listener != null) {
             eventBuilder.resetType(EventType.STARTED).setTransferredBytes(dataOffset);
+            eventBuilder.setTransportProperties(transportProperties);
             TransferEvent event = eventBuilder.build();
             event.getResource().setContentLength(dataLength).setResumeOffset(dataOffset);
             listener.transferStarted(event);
