@@ -30,7 +30,7 @@
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver Transport JDK Parent</name>
-  <description>Maven Artifact Transport JDK Java 11+ parent.</description>
+  <description>Maven Artifact Transport JDK HTTP Client parent.</description>
 
   <modules>
     <module>maven-resolver-transport-jdk8</module>
