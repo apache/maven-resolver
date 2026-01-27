@@ -30,7 +30,7 @@
   <packaging>jar</packaging>
 
   <name>Maven Artifact Resolver Transport JDK 8</name>
-  <description>Maven Artifact Transport JDK Java 11+.</description>
+  <description>Maven Artifact Transport JDK HTTP Client for Java 8 (Demoting it on Java 8 as JDK HTTP Client is only available in Java 11+).</description>
 
   <properties>
     <javaVersion>8</javaVersion>
