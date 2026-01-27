@@ -90,7 +90,7 @@ public final class BasicRepositoryConnectorConfigurationKeys {
     /**
      * Enables or disables parallel PUT processing (parallel deploys) on basic connector globally or per remote
      * repository. When disabled, connector behaves exactly as in Maven 3.8.x did: GETs are parallel while PUTs
-     * are sequential.
+     * are sequential. When enabled, connector will issue first PUT sequentially and the rest of PUTs in parallel.
      *
      * @since 1.9.5
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
