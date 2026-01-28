@@ -188,6 +188,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
         List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
 
+        boolean first = true;
+
         for (MetadataDownload transfer : safeMetadataDownloads) {
             URI location = layout.getLocation(transfer.getMetadata(), false);
 
@@ -209,7 +211,12 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     checksumLocations,
                     null,
                     listener);
-            executor.execute(errorForwarder.wrap(task));
+            if (first) {
+                task.run();
+                first = false;
+            } else {
+                executor.execute(errorForwarder.wrap(task));
+            }
         }
 
         for (ArtifactDownload transfer : safeArtifactDownloads) {
@@ -249,7 +256,12 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                         providedChecksums,
                         listener);
             }
-            executor.execute(errorForwarder.wrap(task));
+            if (first) {
+                task.run();
+                first = false;
+            } else {
+                executor.execute(errorForwarder.wrap(task));
+            }
         }
 
         errorForwarder.await();
@@ -267,6 +279,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         Executor executor = getExecutor(parallelPut ? safeArtifactUploads.size() + safeMetadataUploads.size() : 1);
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
 
+        boolean first = true;
+
         for (ArtifactUpload transfer : safeArtifactUploads) {
             URI location = layout.getLocation(transfer.getArtifact(), true);
 
@@ -280,7 +294,12 @@ final class BasicRepositoryConnector implements RepositoryConnector {
             Runnable task = new PutTaskRunner(
                     location, transfer.getFile(), transfer.getFileTransformer(), checksumLocations, listener);
 
-            executor.execute(errorForwarder.wrap(task));
+            if (first) {
+                task.run();
+                first = false;
+            } else {
+                executor.execute(errorForwarder.wrap(task));
+            }
         }
 
         errorForwarder.await(); // make sure all artifacts are PUT before we go with Metadata
@@ -298,7 +317,12 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
                 Runnable task = new PutTaskRunner(location, transfer.getFile(), checksumLocations, listener);
 
-                executor.execute(errorForwarder.wrap(task));
+                if (first) {
+                    task.run();
+                    first = false;
+                } else {
+                    executor.execute(errorForwarder.wrap(task));
+                }
             }
 
             errorForwarder.await(); // make sure each group is done before starting next group
