@@ -72,6 +72,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -1399,7 +1400,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     void testInit_BadProtocol() {
-        assertThrows(NoTransporterException.class, () -> newTransporter("bad:/void"));
+        assertFalse(factory.canHandle("bad:/void"));
     }
 
     @Test
