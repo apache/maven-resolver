@@ -30,7 +30,7 @@
   <packaging>jar</packaging>
 
   <name>Maven Artifact Resolver Transport JDK (mr)</name>
-  <description>Maven Artifact Transport JDK Java 11+.</description>
+  <description>Maven Artifact Transport JDK HTTP Client (Multi-Release demoting it on Java 8).</description>
 
   <properties>
     <bnd.instructions.additions><![CDATA[
