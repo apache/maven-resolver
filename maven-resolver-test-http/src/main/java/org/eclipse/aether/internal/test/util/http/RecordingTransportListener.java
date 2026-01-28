@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.test.util.http;
 import java.io.ByteArrayOutputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
@@ -41,8 +42,12 @@ public class RecordingTransportListener extends TransportListener {
 
     private boolean cancelProgress;
 
+    private Map<TransportPropertyKey, Object> transportProperties;
+
     @Override
-    public void transportStarted(long dataOffset, long dataLength) throws TransferCancelledException {
+    public void transportStarted(
+            long dataOffset, long dataLength, Map<TransportPropertyKey, Object> transportProperties)
+            throws TransferCancelledException {
         startedCount++;
         progressedCount = 0;
         this.dataLength = dataLength;
@@ -51,6 +56,7 @@ public class RecordingTransportListener extends TransportListener {
         if (cancelStart) {
             throw new TransferCancelledException();
         }
+        this.transportProperties = transportProperties;
     }
 
     @Override
@@ -103,5 +109,9 @@ public class RecordingTransportListener extends TransportListener {
 
     public void cancelProgress() {
         this.cancelProgress = true;
+    }
+
+    public Map<TransportPropertyKey, Object> getTransportProperties() {
+        return transportProperties;
     }
 }

@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +93,7 @@ import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
@@ -674,11 +676,13 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 }
             }
 
+            Map<TransportListener.TransportPropertyKey, Object> transportProperties =
+                    createTransportProperties(response);
             final boolean resume = offset > 0L;
             final Path dataFile = task.getDataPath();
             if (dataFile == null) {
                 try (InputStream is = entity.getContent()) {
-                    utilGet(task, is, true, length, resume);
+                    utilGet(task, is, true, length, resume, transportProperties);
                     extractChecksums(response);
                 }
             } else {
@@ -690,7 +694,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                         }
                     }
                     try (InputStream is = entity.getContent()) {
-                        utilGet(task, is, true, length, resume);
+                        utilGet(task, is, true, length, resume, transportProperties);
                     }
                     tempFile.move();
                 } finally {
@@ -716,6 +720,16 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 checksums.forEach(task::setChecksum);
             }
         }
+    }
+
+    private static Map<TransportListener.TransportPropertyKey, Object> createTransportProperties(
+            CloseableHttpResponse response) {
+        Map<TransportListener.TransportPropertyKey, Object> properties = new HashMap<>();
+        properties.put(
+                HttpTransporter.HttpTransportPropertyKey.HTTP_VERSION,
+                response.getProtocolVersion().toString());
+        // https://stackoverflow.com/questions/13273305/apache-httpclient-get-server-certificate
+        return properties;
     }
 
     private static Function<String, String> headerGetter(CloseableHttpResponse closeableHttpResponse) {
