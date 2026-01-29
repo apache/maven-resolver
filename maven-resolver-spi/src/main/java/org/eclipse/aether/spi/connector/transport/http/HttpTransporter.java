@@ -20,9 +20,23 @@ package org.eclipse.aether.spi.connector.transport.http;
 
 import org.eclipse.aether.spi.connector.transport.Transporter;
 
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.GONE;
+import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.NOT_FOUND;
+
 /**
  * A transporter using HTTP protocol.
  *
  * @since 2.0.0
  */
-public interface HttpTransporter extends Transporter {}
+public interface HttpTransporter extends Transporter {
+    @Override
+    default int classify(Throwable error) {
+        if (error instanceof HttpTransporterException) {
+            int statusCode = ((HttpTransporterException) error).getStatusCode();
+            if (statusCode == NOT_FOUND || statusCode == GONE) {
+                return ERROR_NOT_FOUND;
+            }
+        }
+        return ERROR_OTHER;
+    }
+}

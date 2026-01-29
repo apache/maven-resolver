@@ -32,6 +32,8 @@ public final class HttpConstants {
 
     public static final int NOT_FOUND = 404;
 
+    public static final int GONE = 410;
+
     public static final int PRECONDITION_FAILED = 412;
 
     public static final String ACCEPT_ENCODING = "Accept-Encoding";

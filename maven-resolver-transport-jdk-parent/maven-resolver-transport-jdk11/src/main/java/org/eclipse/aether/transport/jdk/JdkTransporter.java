@@ -96,7 +96,6 @@ import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONT
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.IF_UNMODIFIED_SINCE;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.LAST_MODIFIED;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.MULTIPLE_CHOICES;
-import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.NOT_FOUND;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.PRECONDITION_FAILED;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.RANGE;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.USER_AGENT;
@@ -279,15 +278,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         ConnectException result = new ConnectException("Connection to " + baseUri.toASCIIString() + " refused");
         result.initCause(connectException);
         return result;
-    }
-
-    @Override
-    public int classify(Throwable error) {
-        if (error instanceof HttpTransporterException
-                && ((HttpTransporterException) error).getStatusCode() == NOT_FOUND) {
-            return ERROR_NOT_FOUND;
-        }
-        return ERROR_OTHER;
     }
 
     @Override

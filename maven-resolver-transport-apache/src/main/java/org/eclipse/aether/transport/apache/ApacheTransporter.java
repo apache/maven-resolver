@@ -431,15 +431,6 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     }
 
     @Override
-    public int classify(Throwable error) {
-        if (error instanceof HttpTransporterException
-                && ((HttpTransporterException) error).getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-            return ERROR_NOT_FOUND;
-        }
-        return ERROR_OTHER;
-    }
-
-    @Override
     protected void implPeek(PeekTask task) throws Exception {
         HttpHead request = commonHeaders(new HttpHead(resolve(task)));
         try {
