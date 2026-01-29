@@ -423,9 +423,11 @@ final class HttpTransporter extends AbstractTransporter {
 
     @Override
     public int classify(Throwable error) {
-        if (error instanceof HttpResponseException
-                && ((HttpResponseException) error).getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-            return ERROR_NOT_FOUND;
+        if (error instanceof HttpResponseException) {
+            int statusCode = ((HttpResponseException) error).getStatusCode();
+            if (statusCode == HttpStatus.SC_NOT_FOUND || statusCode == HttpStatus.SC_GONE) {
+                return ERROR_NOT_FOUND;
+            }
         }
         return ERROR_OTHER;
     }

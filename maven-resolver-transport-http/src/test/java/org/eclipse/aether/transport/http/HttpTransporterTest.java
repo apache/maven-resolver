@@ -146,6 +146,7 @@ public class HttpTransporterTest {
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new FileNotFoundException()));
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new HttpResponseException(403, "Forbidden")));
         assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(new HttpResponseException(404, "Not Found")));
+        assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(new HttpResponseException(410, "Gone")));
     }
 
     @Test
