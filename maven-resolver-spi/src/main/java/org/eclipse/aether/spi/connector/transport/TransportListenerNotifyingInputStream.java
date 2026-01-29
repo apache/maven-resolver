@@ -64,7 +64,7 @@ public class TransportListenerNotifyingInputStream extends FilterInputStream {
             }
             notifyProgress(b, 0, numBytesRead);
         }
-        return super.read(b);
+        return numBytesRead;
     }
 
     @Override
