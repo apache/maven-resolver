@@ -233,6 +233,7 @@ public abstract class HttpTransporterTest {
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new FileNotFoundException()));
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new HttpTransporterException(403)));
         assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(new HttpTransporterException(404)));
+        assertEquals(Transporter.ERROR_NOT_FOUND, transporter.classify(new HttpTransporterException(410)));
     }
 
     @Test
