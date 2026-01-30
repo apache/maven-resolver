@@ -69,6 +69,7 @@ import java.util.regex.Matcher;
 
 import com.github.mizosoft.methanol.Methanol;
 import com.github.mizosoft.methanol.RetryInterceptor;
+import com.github.mizosoft.methanol.RetryInterceptor.Context;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -593,6 +594,36 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         return builder.build();
     }
 
+    public class RetryLoggingListener implements RetryInterceptor.Listener {
+        private final int maxNumRetries;
+
+        RetryLoggingListener(int maxNumRetries) {
+            this.maxNumRetries = maxNumRetries;
+        }
+
+        @Override
+        public void onRetry(Context<?> context, HttpRequest nextRequest, Duration delay) {
+            LOGGER.warn(
+                    "{} request to {} failed (attempt {} of {}) due to {}. Retrying in {} ms...",
+                    context.request().method(),
+                    context.request().uri(),
+                    context.retryCount() + 1,
+                    maxNumRetries + 1,
+                    getReason(context),
+                    delay.toMillis());
+        }
+
+        String getReason(Context<?> context) {
+            if (context.exception().isPresent()) {
+                return context.exception().get().getMessage();
+            } else if (context.response().isPresent()) {
+                return "status " + context.response().get().statusCode();
+            }
+            // should not happen
+            throw new IllegalStateException("No exception or response present in retry context");
+        }
+    }
+
     protected void configureRetryHandler(
             RepositorySystemSession session, RemoteRepository repository, Methanol.Builder builder) {
         int retryCount = ConfigUtils.getInteger(
@@ -638,6 +669,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             Methanol.Interceptor rateLimitingRetryInterceptor = RetryInterceptor.newBuilder()
                     .maxRetries(retryCount)
                     .onStatus(serviceUnavailableCodes::contains)
+                    .listener(new RetryLoggingListener(retryCount))
                     .backoff(RetryInterceptor.BackoffStrategy.linear(
                             Duration.ofMillis(retryInterval), Duration.ofMillis(retryIntervalMax)))
                     .build();
@@ -648,6 +680,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     // https://github.com/openjdk/jdk/blob/640343f7d94894b0378ea5b1768eeac203a9aaf8/src/java.net.http/share/classes/jdk/internal/net/http/MultiExchange.java#L665
                     .maxRetries(retryCount)
                     .onException(t -> t instanceof IOException && !NON_RETRIABLE_IO_EXCEPTIONS.contains(t.getClass()))
+                    .listener(new RetryLoggingListener(retryCount))
                     .build();
             builder.interceptor(retryIoExceptionsInterceptor);
         }
