@@ -110,7 +110,7 @@
     <bouncycastleVersion>1.83</bouncycastleVersion>
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server), 12.1 introduced support for different compressions (https://github.com/jetty/jetty.project/issues/8769) -->
-    <jettyVersion>12.1.5</jettyVersion>
+    <jettyVersion>12.1.6</jettyVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.12</maven3Version>
     <maven4Version>4.0.0-rc-5</maven4Version>
