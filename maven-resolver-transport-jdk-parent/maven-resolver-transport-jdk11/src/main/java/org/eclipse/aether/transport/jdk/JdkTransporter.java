@@ -29,6 +29,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Authenticator;
@@ -61,6 +62,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.function.Function;
@@ -78,12 +80,14 @@ import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.eclipse.aether.spi.connector.transport.TransportListenerNotifyingInputStream;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -428,19 +432,30 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request = request.expectContinue(expectContinue);
         }
         headers.forEach(request::setHeader);
-        try (PathProcessor.TempFile tempFile = pathProcessor.newTempFile()) {
-            utilPut(task, Files.newOutputStream(tempFile.getPath()), true);
-            request.PUT(HttpRequest.BodyPublishers.ofFile(tempFile.getPath()));
 
-            prepare(request);
+        request.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> {
             try {
-                HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
-                if (response.statusCode() >= MULTIPLE_CHOICES) {
-                    throw new HttpTransporterException(response.statusCode());
-                }
-            } catch (ConnectException e) {
-                throw enhance(e);
+                return new TransportListenerNotifyingInputStream(
+                        task.newInputStream(), task.getListener(), task.getDataLength());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
+        }));
+        prepare(request);
+        try {
+            HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
+            if (response.statusCode() >= MULTIPLE_CHOICES) {
+                throw new HttpTransporterException(response.statusCode());
+            }
+        } catch (ConnectException e) {
+            throw enhance(e);
+        } catch (IOException e) {
+            // unwrap possible underlying exception from body supplier
+            Throwable rootCause = getRootCause(e);
+            if (rootCause instanceof TransferCancelledException) {
+                throw (TransferCancelledException) rootCause;
+            }
+            throw e;
         }
     }
 
@@ -679,7 +694,15 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     // e.g. for connection timeouts this is hardcoded to 2 attempts:
                     // https://github.com/openjdk/jdk/blob/640343f7d94894b0378ea5b1768eeac203a9aaf8/src/java.net.http/share/classes/jdk/internal/net/http/MultiExchange.java#L665
                     .maxRetries(retryCount)
-                    .onException(t -> t instanceof IOException && !NON_RETRIABLE_IO_EXCEPTIONS.contains(t.getClass()))
+                    .onException(t -> {
+                        // exceptions from body publishers are wrapped inside IOExceptions
+                        // but hard to distinguish from others, so just exclude some we know are emitted from body
+                        // suppliers (https://github.com/mizosoft/methanol/issues/179)
+                        Throwable rootCause = getRootCause(t);
+                        return t instanceof IOException
+                                && !NON_RETRIABLE_IO_EXCEPTIONS.contains(t.getClass())
+                                && !(rootCause instanceof TransferCancelledException);
+                    })
                     .listener(new RetryLoggingListener(retryCount))
                     .build();
             builder.interceptor(retryIoExceptionsInterceptor);
@@ -723,5 +746,14 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         } catch (IllegalAccessException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private static Throwable getRootCause(Throwable throwable) {
+        Objects.requireNonNull(throwable);
+        Throwable rootCause = throwable;
+        while (rootCause.getCause() != null && rootCause.getCause() != rootCause) {
+            rootCause = rootCause.getCause();
+        }
+        return rootCause;
     }
 }
