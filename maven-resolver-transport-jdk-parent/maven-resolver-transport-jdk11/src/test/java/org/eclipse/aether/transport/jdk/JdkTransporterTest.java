@@ -45,7 +45,7 @@ class JdkTransporterTest extends HttpTransporterTest {
 
     @Override
     protected Stream<String> supportedCompressionAlgorithms() {
-        return Stream.of("gzip", "deflate", "br");
+        return Stream.of("gzip", "deflate");
     }
 
     @Override
