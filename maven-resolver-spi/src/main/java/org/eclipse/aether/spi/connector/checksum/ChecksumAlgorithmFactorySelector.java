@@ -52,7 +52,7 @@ public interface ChecksumAlgorithmFactorySelector {
     /**
      * Returns immutable collection of all supported algorithms. This set represents ALL the algorithms supported by
      * Resolver, and is NOT in any relation to given repository layout used checksums, returned by method {@link
-     * org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories()} (in fact, is super set
+     * org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories(boolean)} (in fact, is super set
      * of it).
      */
     Collection<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();

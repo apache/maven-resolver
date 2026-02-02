@@ -215,7 +215,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
         SmartExecutor executor = getExecutor(true, safeArtifactDownloads.size() + safeMetadataDownloads.size());
         RunnableErrorForwarder errorForwarder = new RunnableErrorForwarder();
-        List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories();
+        List<ChecksumAlgorithmFactory> checksumAlgorithmFactories = layout.getChecksumAlgorithmFactories(false);
 
         boolean first = true;
 

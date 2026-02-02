@@ -115,12 +115,28 @@ public interface RepositoryLayout {
 
     /**
      * Returns immutable list of {@link ChecksumAlgorithmFactory} this instance of layout uses, never {@code null}.
-     * The order also represents the order how remote external checksums are retrieved and validated.
+     * This (legacy, but not deprecated) method will return <em>all checksums this layout uses</em>, but
+     * these may be different in case upload or download checksums are explicitly configured. This method will
+     * reflect the checksum order used for download, but may have more elements than actually used in download
+     * validation, if the generated checksums for upload has extra elements.
      *
      * @see org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind
+     * @see #getChecksumAlgorithmFactories(boolean)
      * @since 1.8.0
      */
     List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories();
+
+    /**
+     * Returns immutable list of {@link ChecksumAlgorithmFactory} this instance of layout uses for download or upload,
+     * never {@code null}. The order also represents the order how remote external checksums are retrieved and
+     * validated (if for download).
+     *
+     * @see org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind
+     * @since 2.0.15
+     */
+    default List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories(boolean upload) {
+        return getChecksumAlgorithmFactories();
+    }
 
     /**
      * Tells whether given artifact have remote external checksums according to current layout or not. If it returns
@@ -132,7 +148,7 @@ public interface RepositoryLayout {
      *
      * The result affects only layout provided checksums. See
      * {@link org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind#REMOTE_EXTERNAL}.
-     * On download, the {@link org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories()}
+     * On download, the {@link org.eclipse.aether.spi.connector.layout.RepositoryLayout#getChecksumAlgorithmFactories(boolean)}
      * layout required checksums are calculated, and non layout-provided checksums are still utilized.
      *
      * Typical case to return {@code false} (to omit checksums) is for artifact signatures, that are already a
