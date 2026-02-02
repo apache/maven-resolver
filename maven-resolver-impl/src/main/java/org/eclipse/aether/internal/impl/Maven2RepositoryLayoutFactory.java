@@ -142,8 +142,8 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
                 CONFIG_PROP_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
                 CONFIG_PROP_CHECKSUMS_ALGORITHMS,
                 // MRESOLVER-701: support legacy properties for simpler transitioning
-                "aether.checksums.algorithms",
-                "aether.checksums.algorithms." + repository.getId()));
+                "aether.checksums.algorithms." + repository.getId(),
+                "aether.checksums.algorithms"));
 
         // explicit property for download (will be empty if not configured)
         List<String> downloadChecksumsAlgorithmNames = ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
