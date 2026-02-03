@@ -131,6 +131,8 @@ public interface RepositoryLayout {
      * never {@code null}. The order also represents the order how remote external checksums are retrieved and
      * validated (if for download).
      *
+     * @param upload {@code false} if the caller needs checksums used for download validation, or {@code true} if the
+     *                            caller needs checksums generated for upload.
      * @see org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind
      * @since 2.0.15
      */
