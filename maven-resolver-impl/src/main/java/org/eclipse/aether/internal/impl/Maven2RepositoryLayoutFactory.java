@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -57,7 +58,9 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
     /**
      * Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated
      * (uploaded) with this layout. Resolver by default supports following algorithms: MD5, SHA-1, SHA-256 and
-     * SHA-512. New algorithms can be added by implementing ChecksumAlgorithmFactory component.
+     * SHA-512. New algorithms can be added by implementing ChecksumAlgorithmFactory component. To configure separately
+     * checksums for download or upload, use {@link #CONFIG_PROP_DOWNLOAD_CHECKSUMS_ALGORITHMS} and
+     * {@link #CONFIG_PROP_UPLOAD_CHECKSUMS_ALGORITHMS} respectively.
      *
      * @since 1.8.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -68,6 +71,38 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
     public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = CONFIG_PROPS_PREFIX + "checksumAlgorithms";
 
     public static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
+
+    /**
+     * Comma-separated list of checksum algorithms with which checksums are generated and uploaded
+     * with this layout. Resolver by default supports following algorithms: MD5, SHA-1, SHA-256 and
+     * SHA-512. New algorithms can be added by implementing ChecksumAlgorithmFactory component.
+     * If this property is set, it <em>overrides</em> the value set in {@link #CONFIG_PROP_CHECKSUMS_ALGORITHMS} for
+     * uploads.
+     *
+     * @since 2.0.15
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_CHECKSUMS_ALGORITHMS}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_UPLOAD_CHECKSUMS_ALGORITHMS =
+            CONFIG_PROPS_PREFIX + "uploadChecksumAlgorithms";
+
+    /**
+     * Comma-separated list of checksum algorithms with which checksums are validated (downloaded) with this layout.
+     * Resolver by default supports following algorithms: MD5, SHA-1, SHA-256 and SHA-512.
+     * New algorithms can be added by implementing ChecksumAlgorithmFactory component.
+     * If this property is set, it <em>overrides</em> the value set in {@link #CONFIG_PROP_CHECKSUMS_ALGORITHMS} for
+     * downloads.
+     *
+     * @since 2.0.15
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_CHECKSUMS_ALGORITHMS}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_DOWNLOAD_CHECKSUMS_ALGORITHMS =
+            CONFIG_PROPS_PREFIX + "downloadChecksumAlgorithms";
 
     private float priority;
 
@@ -106,26 +141,48 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
             throw new NoRepositoryLayoutException(repository);
         }
 
-        List<ChecksumAlgorithmFactory> checksumsAlgorithms = checksumAlgorithmFactorySelector.selectList(
-                ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
-                        session,
-                        DEFAULT_CHECKSUMS_ALGORITHMS,
-                        CONFIG_PROP_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
-                        CONFIG_PROP_CHECKSUMS_ALGORITHMS,
-                        // MRESOLVER-701: support legacy properties for simpler transitioning
-                        "aether.checksums.algorithms",
-                        "aether.checksums.algorithms." + repository.getId())));
+        // explicit property for download (will be empty if not configured)
+        List<String> downloadChecksumsAlgorithmNames = ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                session,
+                DEFAULT_CHECKSUMS_ALGORITHMS,
+                CONFIG_PROP_DOWNLOAD_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
+                CONFIG_PROP_DOWNLOAD_CHECKSUMS_ALGORITHMS,
+                CONFIG_PROP_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
+                CONFIG_PROP_CHECKSUMS_ALGORITHMS,
+                // MRESOLVER-701: support legacy properties for simpler transitioning
+                "aether.checksums.algorithms." + repository.getId(),
+                "aether.checksums.algorithms"));
 
-        return new Maven2RepositoryLayout(checksumsAlgorithms, artifactPredicateFactory.newInstance(session));
+        // explicit property for upload (will be empty if not configured)
+        List<String> uploadChecksumsAlgorithmNames = ConfigUtils.parseCommaSeparatedUniqueNames(ConfigUtils.getString(
+                session,
+                DEFAULT_CHECKSUMS_ALGORITHMS,
+                CONFIG_PROP_UPLOAD_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
+                CONFIG_PROP_UPLOAD_CHECKSUMS_ALGORITHMS,
+                CONFIG_PROP_CHECKSUMS_ALGORITHMS + "." + repository.getId(),
+                CONFIG_PROP_CHECKSUMS_ALGORITHMS,
+                // MRESOLVER-701: support legacy properties for simpler transitioning
+                "aether.checksums.algorithms." + repository.getId(),
+                "aether.checksums.algorithms"));
+
+        return new Maven2RepositoryLayout(
+                checksumAlgorithmFactorySelector.selectList(downloadChecksumsAlgorithmNames),
+                checksumAlgorithmFactorySelector.selectList(uploadChecksumsAlgorithmNames),
+                artifactPredicateFactory.newInstance(session));
     }
 
     private static class Maven2RepositoryLayout implements RepositoryLayout {
-        private final List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms;
+        private final List<ChecksumAlgorithmFactory> configuredDownloadChecksumAlgorithms;
+        private final List<ChecksumAlgorithmFactory> configuredUploadChecksumAlgorithms;
         private final ArtifactPredicate artifactPredicate;
 
         private Maven2RepositoryLayout(
-                List<ChecksumAlgorithmFactory> configuredChecksumAlgorithms, ArtifactPredicate artifactPredicate) {
-            this.configuredChecksumAlgorithms = Collections.unmodifiableList(configuredChecksumAlgorithms);
+                List<ChecksumAlgorithmFactory> configuredDownloadChecksumAlgorithms,
+                List<ChecksumAlgorithmFactory> configuredUploadChecksumAlgorithms,
+                ArtifactPredicate artifactPredicate) {
+            this.configuredDownloadChecksumAlgorithms =
+                    Collections.unmodifiableList(configuredDownloadChecksumAlgorithms);
+            this.configuredUploadChecksumAlgorithms = Collections.unmodifiableList(configuredUploadChecksumAlgorithms);
             this.artifactPredicate = requireNonNull(artifactPredicate);
         }
 
@@ -139,7 +196,19 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
 
         @Override
         public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories() {
-            return configuredChecksumAlgorithms;
+            LinkedHashMap<String, ChecksumAlgorithmFactory> factories = new LinkedHashMap<>();
+            configuredDownloadChecksumAlgorithms.forEach(f -> factories.putIfAbsent(f.getName(), f));
+            configuredUploadChecksumAlgorithms.forEach(f -> factories.putIfAbsent(f.getName(), f));
+            return Collections.unmodifiableList(new ArrayList<>(factories.values()));
+        }
+
+        @Override
+        public List<ChecksumAlgorithmFactory> getChecksumAlgorithmFactories(boolean upload) {
+            if (upload) {
+                return configuredUploadChecksumAlgorithms;
+            } else {
+                return configuredDownloadChecksumAlgorithms;
+            }
         }
 
         @Override
@@ -196,17 +265,19 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
             if (artifactPredicate.isWithoutChecksum(artifact) || artifactPredicate.isChecksum(artifact)) {
                 return Collections.emptyList();
             }
-            return getChecksumLocations(location);
+            return getChecksumLocations(location, upload);
         }
 
         @Override
         public List<ChecksumLocation> getChecksumLocations(Metadata metadata, boolean upload, URI location) {
-            return getChecksumLocations(location);
+            return getChecksumLocations(location, upload);
         }
 
-        private List<ChecksumLocation> getChecksumLocations(URI location) {
-            List<ChecksumLocation> checksumLocations = new ArrayList<>(configuredChecksumAlgorithms.size());
-            for (ChecksumAlgorithmFactory checksumAlgorithmFactory : configuredChecksumAlgorithms) {
+        private List<ChecksumLocation> getChecksumLocations(URI location, boolean upload) {
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories =
+                    upload ? configuredUploadChecksumAlgorithms : configuredDownloadChecksumAlgorithms;
+            List<ChecksumLocation> checksumLocations = new ArrayList<>(checksumAlgorithmFactories.size());
+            for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
                 checksumLocations.add(ChecksumLocation.forLocation(location, checksumAlgorithmFactory));
             }
             return checksumLocations;

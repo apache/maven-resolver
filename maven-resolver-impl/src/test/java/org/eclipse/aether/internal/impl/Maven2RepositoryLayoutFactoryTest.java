@@ -319,7 +319,7 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
-    void testCustomChecksumsIgnored_IllegalInout() throws Exception {
+    void testCustomChecksumsIgnored_IllegalInput() throws Exception {
         session.setConfigProperty(
                 DefaultArtifactPredicateFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS, ".asc,foo");
         try {
@@ -331,5 +331,51 @@ public class Maven2RepositoryLayoutFactoryTest {
                     message.contains(DefaultArtifactPredicateFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS),
                     message);
         }
+    }
+
+    @Test
+    void testUploadDownloadChecksumsConfigured() throws Exception {
+        session.setConfigProperty(
+                Maven2RepositoryLayoutFactory.CONFIG_PROP_DOWNLOAD_CHECKSUMS_ALGORITHMS, "SHA-256,SHA-1");
+        session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_UPLOAD_CHECKSUMS_ALGORITHMS, "SHA-512,MD5");
+        layout = factory.newInstance(session, newRepo("default"));
+        // as configured
+        assertEquals(Arrays.asList("SHA-256", "SHA-1"), toNames(layout.getChecksumAlgorithmFactories(false)));
+        // as configured
+        assertEquals(Arrays.asList("SHA-512", "MD5"), toNames(layout.getChecksumAlgorithmFactories(true)));
+        // in order with download ones added first
+        assertEquals(
+                Arrays.asList("SHA-256", "SHA-1", "SHA-512", "MD5"), toNames(layout.getChecksumAlgorithmFactories()));
+    }
+
+    @Test
+    void testDownloadChecksumsConfigured() throws Exception {
+        session.setConfigProperty(
+                Maven2RepositoryLayoutFactory.CONFIG_PROP_DOWNLOAD_CHECKSUMS_ALGORITHMS, "SHA-256,SHA-1");
+        layout = factory.newInstance(session, newRepo("default"));
+        // as configured
+        assertEquals(Arrays.asList("SHA-256", "SHA-1"), toNames(layout.getChecksumAlgorithmFactories(false)));
+        // defaults
+        assertEquals(Arrays.asList("SHA-1", "MD5"), toNames(layout.getChecksumAlgorithmFactories(true)));
+        // in order with download ones added first
+        assertEquals(Arrays.asList("SHA-256", "SHA-1", "MD5"), toNames(layout.getChecksumAlgorithmFactories()));
+    }
+
+    @Test
+    void testUploadChecksumsConfigured() throws Exception {
+        session.setConfigProperty(
+                Maven2RepositoryLayoutFactory.CONFIG_PROP_UPLOAD_CHECKSUMS_ALGORITHMS, "SHA-512,SHA-256,SHA-1");
+        layout = factory.newInstance(session, newRepo("default"));
+        // defaults
+        assertEquals(Arrays.asList("SHA-1", "MD5"), toNames(layout.getChecksumAlgorithmFactories(false)));
+        // as configured
+        assertEquals(Arrays.asList("SHA-512", "SHA-256", "SHA-1"), toNames(layout.getChecksumAlgorithmFactories(true)));
+        // in order with download ones added first
+        assertEquals(
+                Arrays.asList("SHA-1", "MD5", "SHA-512", "SHA-256"), toNames(layout.getChecksumAlgorithmFactories()));
+    }
+
+    private static List<String> toNames(List<ChecksumAlgorithmFactory> factories) {
+        return factories.stream().map(ChecksumAlgorithmFactory::getName).collect(Collectors.toList());
     }
 }
