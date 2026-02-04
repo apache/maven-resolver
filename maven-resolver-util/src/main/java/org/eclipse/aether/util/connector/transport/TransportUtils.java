@@ -20,6 +20,7 @@ package org.eclipse.aether.util.connector.transport;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -72,22 +73,31 @@ public final class TransportUtils {
      * Getter for {@link ConfigurationProperties#HTTP_CONNECTION_MAX_TTL}.
      */
     public static int getHttpConnectionMaxTtlSeconds(RepositorySystemSession session, RemoteRepository repository) {
-        return ConfigUtils.getInteger(
+        int result = ConfigUtils.getInteger(
                 session,
                 ConfigurationProperties.DEFAULT_HTTP_CONNECTION_MAX_TTL,
                 ConfigurationProperties.HTTP_CONNECTION_MAX_TTL + "." + repository.getId(),
                 ConfigurationProperties.HTTP_CONNECTION_MAX_TTL);
+        if (result < 0) {
+            throw new IllegalArgumentException(ConfigurationProperties.HTTP_CONNECTION_MAX_TTL + " value must be >= 0");
+        }
+        return result;
     }
 
     /**
      * Getter for {@link ConfigurationProperties#HTTP_MAX_CONNECTIONS_PER_ROUTE}.
      */
     public static int getHttpMaxConnectionsPerRoute(RepositorySystemSession session, RemoteRepository repository) {
-        return ConfigUtils.getInteger(
+        int result = ConfigUtils.getInteger(
                 session,
                 ConfigurationProperties.DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE,
                 ConfigurationProperties.HTTP_MAX_CONNECTIONS_PER_ROUTE + "." + repository.getId(),
                 ConfigurationProperties.HTTP_MAX_CONNECTIONS_PER_ROUTE);
+        if (result < 1) {
+            throw new IllegalArgumentException(
+                    ConfigurationProperties.HTTP_MAX_CONNECTIONS_PER_ROUTE + " value must be > 0");
+        }
+        return result;
     }
 
     /**
@@ -138,12 +148,12 @@ public final class TransportUtils {
     /**
      * Getter for {@link ConfigurationProperties#HTTP_CREDENTIAL_ENCODING}.
      */
-    public static String getHttpCredentialsEncoding(RepositorySystemSession session, RemoteRepository repository) {
-        return ConfigUtils.getString(
+    public static Charset getHttpCredentialsEncoding(RepositorySystemSession session, RemoteRepository repository) {
+        return Charset.forName(ConfigUtils.getString(
                 session,
                 ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
                 ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
-                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING);
+                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING));
     }
 
     /**

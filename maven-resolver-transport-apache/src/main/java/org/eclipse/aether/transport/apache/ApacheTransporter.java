@@ -184,7 +184,6 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.preemptiveAuth = TransportUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = TransportUtils.isHttpPreemptivePutAuth(session, repository);
         this.supportWebDav = TransportUtils.isHttpSupportWebDav(session, repository);
-        String credentialEncoding = TransportUtils.getHttpCredentialsEncoding(session, repository);
         int connectTimeout = TransportUtils.getHttpConnectTimeout(session, repository);
         int requestTimeout = TransportUtils.getHttpRequestTimeout(session, repository);
         int retryCount = TransportUtils.getHttpRetryHandlerCount(session, repository);
@@ -212,7 +211,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 CONFIG_PROP_FOLLOW_REDIRECTS);
         String userAgent = TransportUtils.getUserAgent(session, repository);
 
-        Charset credentialsCharset = Charset.forName(credentialEncoding);
+        Charset credentialsCharset = TransportUtils.getHttpCredentialsEncoding(session, repository);
         Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
                 .register(AuthSchemes.BASIC, new BasicSchemeFactory(credentialsCharset))
                 .register(AuthSchemes.DIGEST, new DigestSchemeFactory(credentialsCharset))
