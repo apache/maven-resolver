@@ -38,6 +38,7 @@ import org.eclipse.aether.util.ConfigUtils;
  *
  * @see ConfigurationProperties
  * @see RepositorySystemSession#getConfigProperties()
+ * @since 2.0.15
  */
 public final class TransportUtils {
     private TransportUtils() {}
