@@ -23,17 +23,13 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,7 +79,6 @@ import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
@@ -100,6 +95,7 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.connector.transport.TransportUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,83 +171,25 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.repoAuthContext = AuthenticationContext.forRepository(session, repository);
         this.proxyAuthContext = AuthenticationContext.forProxy(session, repository);
 
-        String httpsSecurityMode = ConfigUtils.getString(
-                session,
-                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
-                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
-                ConfigurationProperties.HTTPS_SECURITY_MODE);
-        final int connectionMaxTtlSeconds = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_CONNECTION_MAX_TTL,
-                ConfigurationProperties.HTTP_CONNECTION_MAX_TTL + "." + repository.getId(),
-                ConfigurationProperties.HTTP_CONNECTION_MAX_TTL);
-        final int maxConnectionsPerRoute = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE,
-                ConfigurationProperties.HTTP_MAX_CONNECTIONS_PER_ROUTE + "." + repository.getId(),
-                ConfigurationProperties.HTTP_MAX_CONNECTIONS_PER_ROUTE);
+        String httpsSecurityMode = TransportUtils.getHttpsSecurityMode(session, repository);
+        final int connectionMaxTtlSeconds = TransportUtils.getHttpConnectionMaxTtlSeconds(session, repository);
+        final int maxConnectionsPerRoute = TransportUtils.getHttpMaxConnectionsPerRoute(session, repository);
         this.state = new LocalState(
                 session,
                 repository,
                 new ConnMgrConfig(
                         session, repoAuthContext, httpsSecurityMode, connectionMaxTtlSeconds, maxConnectionsPerRoute));
 
-        this.headers = ConfigUtils.getMap(
-                session,
-                Collections.emptyMap(),
-                ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
-                ConfigurationProperties.HTTP_HEADERS);
-
-        this.preemptiveAuth = ConfigUtils.getBoolean(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
-                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
-                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
-        this.preemptivePutAuth = ConfigUtils.getBoolean(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH,
-                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH + "." + repository.getId(),
-                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH);
-        this.supportWebDav = ConfigUtils.getBoolean(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_SUPPORT_WEBDAV,
-                ConfigurationProperties.HTTP_SUPPORT_WEBDAV + "." + repository.getId(),
-                ConfigurationProperties.HTTP_SUPPORT_WEBDAV);
-        String credentialEncoding = ConfigUtils.getString(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_CREDENTIAL_ENCODING,
-                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING + "." + repository.getId(),
-                ConfigurationProperties.HTTP_CREDENTIAL_ENCODING);
-        int connectTimeout = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.CONNECT_TIMEOUT);
-        int requestTimeout = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.REQUEST_TIMEOUT);
-        int retryCount = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_COUNT,
-                ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT + "." + repository.getId(),
-                ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT);
-        long retryInterval = ConfigUtils.getLong(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_INTERVAL,
-                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL + "." + repository.getId(),
-                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL);
-        long retryIntervalMax = ConfigUtils.getLong(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX,
-                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL_MAX + "." + repository.getId(),
-                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL_MAX);
-        String serviceUnavailableCodesString = ConfigUtils.getString(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE,
-                ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE + "." + repository.getId(),
-                ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE);
+        this.headers = TransportUtils.getHttpHeaders(session, repository);
+        this.preemptiveAuth = TransportUtils.isHttpPreemptiveAuth(session, repository);
+        this.preemptivePutAuth = TransportUtils.isHttpPreemptivePutAuth(session, repository);
+        this.supportWebDav = TransportUtils.isHttpSupportWebDav(session, repository);
+        String credentialEncoding = TransportUtils.getHttpCredentialsEncoding(session, repository);
+        int connectTimeout = TransportUtils.getHttpConnectTimeout(session, repository);
+        int requestTimeout = TransportUtils.getHttpRequestTimeout(session, repository);
+        int retryCount = TransportUtils.getHttpRetryHandlerCount(session, repository);
+        long retryInterval = TransportUtils.getHttpRetryHandlerInterval(session, repository);
+        long retryIntervalMax = TransportUtils.getHttpRetryHandlerIntervalMax(session, repository);
         String retryHandlerName = ConfigUtils.getString(
                 session,
                 HTTP_RETRY_HANDLER_NAME_STANDARD,
@@ -272,8 +210,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 DEFAULT_FOLLOW_REDIRECTS,
                 CONFIG_PROP_FOLLOW_REDIRECTS + "." + repository.getId(),
                 CONFIG_PROP_FOLLOW_REDIRECTS);
-        String userAgent = ConfigUtils.getString(
-                session, ConfigurationProperties.DEFAULT_USER_AGENT, ConfigurationProperties.USER_AGENT);
+        String userAgent = TransportUtils.getUserAgent(session, repository);
 
         Charset credentialsCharset = Charset.forName(credentialEncoding);
         Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
@@ -296,7 +233,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 .setConnectTimeout(connectTimeout)
                 // the time to wait for a connection from the connection manager/pool
                 .setConnectionRequestTimeout(connectTimeout)
-                .setLocalAddress(getHttpLocalAddress(session, repository))
+                .setLocalAddress(
+                        TransportUtils.getHttpLocalAddress(session, repository).orElse(null))
                 .setCookieSpec(CookieSpecs.STANDARD)
                 .build();
 
@@ -309,18 +247,11 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             throw new IllegalArgumentException(
                     "Unsupported parameter " + CONFIG_PROP_HTTP_RETRY_HANDLER_NAME + " value: " + retryHandlerName);
         }
-        Set<Integer> serviceUnavailableCodes = new HashSet<>();
-        try {
-            for (String code : ConfigUtils.parseCommaSeparatedUniqueNames(serviceUnavailableCodesString)) {
-                serviceUnavailableCodes.add(Integer.parseInt(code));
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                    "Illegal HTTP codes for " + ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE
-                            + " (list of integers): " + serviceUnavailableCodesString);
-        }
         ServiceUnavailableRetryStrategy serviceUnavailableRetryStrategy = new ResolverServiceUnavailableRetryStrategy(
-                retryCount, retryInterval, retryIntervalMax, serviceUnavailableCodes);
+                retryCount,
+                retryInterval,
+                retryIntervalMax,
+                TransportUtils.getHttpServiceUnavailableCodes(session, repository));
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
@@ -346,46 +277,12 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             builder.useSystemProperties();
         }
 
-        final String expectContinue = ConfigUtils.getString(
-                session,
-                null,
-                ConfigurationProperties.HTTP_EXPECT_CONTINUE + "." + repository.getId(),
-                ConfigurationProperties.HTTP_EXPECT_CONTINUE);
-        if (expectContinue != null) {
-            state.setExpectContinue(Boolean.parseBoolean(expectContinue));
-        }
-
-        final boolean reuseConnections = ConfigUtils.getBoolean(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_REUSE_CONNECTIONS,
-                ConfigurationProperties.HTTP_REUSE_CONNECTIONS + "." + repository.getId(),
-                ConfigurationProperties.HTTP_REUSE_CONNECTIONS);
-        if (!reuseConnections) {
+        TransportUtils.getHttpExpectContinue(session, repository).ifPresent(state::setExpectContinue);
+        if (!TransportUtils.isHttpReuseConnections(session, repository)) {
             builder.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE);
         }
 
         this.client = builder.build();
-    }
-
-    /**
-     * Returns non-null {@link InetAddress} if set in configuration, {@code null} otherwise.
-     */
-    private InetAddress getHttpLocalAddress(RepositorySystemSession session, RemoteRepository repository) {
-        String bindAddress = ConfigUtils.getString(
-                session,
-                null,
-                ConfigurationProperties.HTTP_LOCAL_ADDRESS + "." + repository.getId(),
-                ConfigurationProperties.HTTP_LOCAL_ADDRESS);
-        if (bindAddress == null) {
-            return null;
-        }
-        try {
-            return InetAddress.getByName(bindAddress);
-        } catch (UnknownHostException uhe) {
-            throw new IllegalArgumentException(
-                    "Given bind address (" + bindAddress + ") cannot be resolved for remote repository " + repository,
-                    uhe);
-        }
     }
 
     private static HttpHost toHost(Proxy proxy) {

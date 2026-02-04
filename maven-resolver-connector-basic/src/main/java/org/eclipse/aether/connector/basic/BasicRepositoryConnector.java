@@ -69,14 +69,14 @@ import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_DOWNSTREAM_THREADS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_INCLUDED_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PARALLEL_PUT;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PERSISTED_CHECKSUMS;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_SMART_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_THREADS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_UPSTREAM_THREADS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_INCLUDED_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PARALLEL_PUT;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PERSISTED_CHECKSUMS;
-import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_SMART_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_THREADS;
 
 /**
@@ -105,7 +105,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     private final int maxUpstreamThreads;
 
-    private final boolean smartChecksums;
+    private final boolean includedChecksums;
 
     private final boolean parallelPut;
 
@@ -161,7 +161,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 CONFIG_PROP_DOWNSTREAM_THREADS + "." + repository.getId(),
                 CONFIG_PROP_DOWNSTREAM_THREADS,
                 CONFIG_PROP_THREADS);
-        smartChecksums = ConfigUtils.getBoolean(session, DEFAULT_SMART_CHECKSUMS, CONFIG_PROP_SMART_CHECKSUMS);
+        includedChecksums = ConfigUtils.getBoolean(
+                session, DEFAULT_INCLUDED_CHECKSUMS, CONFIG_PROP_INCLUDED_CHECKSUMS, "aether.connector.smartChecksums");
         parallelPut = ConfigUtils.getBoolean(
                 session,
                 DEFAULT_PARALLEL_PUT,
@@ -532,7 +533,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     transporter.get(task);
                     try {
                         checksumValidator.validate(
-                                listener.getChecksums(), smartChecksums ? task.getChecksums() : null);
+                                listener.getChecksums(), includedChecksums ? task.getChecksums() : null);
                         break;
                     } catch (ChecksumFailureException e) {
                         boolean retry = trial < lastTrial && e.isRetryWorthy();

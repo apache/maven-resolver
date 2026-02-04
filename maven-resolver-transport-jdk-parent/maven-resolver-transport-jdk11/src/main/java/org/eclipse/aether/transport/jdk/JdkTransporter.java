@@ -57,16 +57,14 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
 import com.github.mizosoft.methanol.Methanol;
@@ -89,6 +87,7 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.connector.transport.TransportUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,9 +159,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final Semaphore maxConcurrentRequests;
 
-    private boolean preemptivePutAuth;
+    private final boolean preemptivePutAuth;
 
-    private boolean preemptiveAuth;
+    private final boolean preemptiveAuth;
 
     private PasswordAuthentication serverAuthentication;
 
@@ -201,57 +200,30 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
 
         HashMap<String, String> headers = new HashMap<>();
-        String userAgent = ConfigUtils.getString(
-                session, ConfigurationProperties.DEFAULT_USER_AGENT, ConfigurationProperties.USER_AGENT);
+        String userAgent = TransportUtils.getUserAgent(session, repository);
         if (userAgent != null) {
             headers.put(USER_AGENT, userAgent);
         }
-        @SuppressWarnings("unchecked")
-        Map<Object, Object> configuredHeaders = (Map<Object, Object>) ConfigUtils.getMap(
-                session,
-                Collections.emptyMap(),
-                ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
-                ConfigurationProperties.HTTP_HEADERS);
+        Map<String, String> configuredHeaders = TransportUtils.getHttpHeaders(session, repository);
         if (configuredHeaders != null) {
-            configuredHeaders.forEach((k, v) -> headers.put(String.valueOf(k), v != null ? String.valueOf(v) : null));
+            headers.putAll(configuredHeaders);
         }
         headers.put(CACHE_CONTROL, "no-cache, no-store");
 
-        this.connectTimeout = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.CONNECT_TIMEOUT);
-        this.requestTimeout = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.REQUEST_TIMEOUT);
-        String expectContinueConf = ConfigUtils.getString(
-                session,
-                null,
-                ConfigurationProperties.HTTP_EXPECT_CONTINUE + "." + repository.getId(),
-                ConfigurationProperties.HTTP_EXPECT_CONTINUE);
+        this.connectTimeout = TransportUtils.getHttpConnectTimeout(session, repository);
+        this.requestTimeout = TransportUtils.getHttpRequestTimeout(session, repository);
+        Optional<Boolean> expectContinue = TransportUtils.getHttpExpectContinue(session, repository);
         if (javaVersion > 19) {
-            this.expectContinue = expectContinueConf == null ? null : Boolean.parseBoolean(expectContinueConf);
+            this.expectContinue = expectContinue.orElse(null);
         } else {
             this.expectContinue = null;
-            if (expectContinueConf != null) {
+            if (expectContinue.isPresent()) {
                 LOGGER.warn(
                         "Configuration for Expect-Continue set but is ignored on Java versions below 20 (current java version is {}) due https://bugs.openjdk.org/browse/JDK-8286171",
                         javaVersion);
             }
         }
-        final String httpsSecurityMode = ConfigUtils.getString(
-                session,
-                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
-                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
-                ConfigurationProperties.HTTPS_SECURITY_MODE);
-
-        if (!ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(httpsSecurityMode)
-                && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
-            throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
-        }
+        final String httpsSecurityMode = TransportUtils.getHttpsSecurityMode(session, repository);
         final boolean insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
         this.maxConcurrentRequests = new Semaphore(ConfigUtils.getInteger(
@@ -260,16 +232,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 CONFIG_PROP_MAX_CONCURRENT_REQUESTS + "." + repository.getId(),
                 CONFIG_PROP_MAX_CONCURRENT_REQUESTS));
 
-        this.preemptiveAuth = ConfigUtils.getBoolean(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
-                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
-                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
-        this.preemptivePutAuth = ConfigUtils.getBoolean(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH,
-                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH + "." + repository.getId(),
-                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH);
+        this.preemptiveAuth = TransportUtils.isHttpPreemptiveAuth(session, repository);
+        this.preemptivePutAuth = TransportUtils.isHttpPreemptivePutAuth(session, repository);
 
         this.headers = headers;
         this.client = createClient(session, repository, insecure);
@@ -477,10 +441,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     }
 
     static String getBasicAuthValue(String username, char[] password) {
-        StringBuilder sb = new StringBuilder(128);
-        sb.append(username).append(':').append(password);
         // Java's HTTP client uses ISO-8859-1 for Basic auth encoding
-        return "Basic " + Base64.getEncoder().encodeToString(sb.toString().getBytes(ISO_8859_1));
+        return "Basic "
+                + Base64.getEncoder().encodeToString((username + ':' + String.valueOf(password)).getBytes(ISO_8859_1));
     }
 
     private <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
@@ -577,7 +540,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             builder.sslParameters(sslParameters);
         }
 
-        setLocalAddress(builder, () -> getHttpLocalAddress(session, repository));
+        setLocalAddress(
+                builder, TransportUtils.getHttpLocalAddress(session, repository).orElse(null));
 
         if (repository.getProxy() != null) {
             ProxySelector proxy = ProxySelector.of(new InetSocketAddress(
@@ -609,7 +573,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         return builder.build();
     }
 
-    public class RetryLoggingListener implements RetryInterceptor.Listener {
+    private static class RetryLoggingListener implements RetryInterceptor.Listener {
         private final int maxNumRetries;
 
         RetryLoggingListener(int maxNumRetries) {
@@ -639,51 +603,15 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
-    protected void configureRetryHandler(
+    private static void configureRetryHandler(
             RepositorySystemSession session, RemoteRepository repository, Methanol.Builder builder) {
-        int retryCount = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_COUNT,
-                ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT + "." + repository.getId(),
-                ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT);
-        long retryInterval = ConfigUtils.getLong(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_INTERVAL,
-                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL + "." + repository.getId(),
-                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL);
-        long retryIntervalMax = ConfigUtils.getLong(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX,
-                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL_MAX + "." + repository.getId(),
-                ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL_MAX);
-        if (retryCount < 0) {
-            throw new IllegalArgumentException("retryCount must be >= 0");
-        }
-        if (retryInterval < 0L) {
-            throw new IllegalArgumentException("retryInterval must be >= 0");
-        }
-        if (retryIntervalMax < 0L) {
-            throw new IllegalArgumentException("retryIntervalMax must be >= 0");
-        }
-        String serviceUnavailableCodesString = ConfigUtils.getString(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE,
-                ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE + "." + repository.getId(),
-                ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE);
-        Set<Integer> serviceUnavailableCodes = new HashSet<>();
-        try {
-            for (String code : ConfigUtils.parseCommaSeparatedUniqueNames(serviceUnavailableCodesString)) {
-                serviceUnavailableCodes.add(Integer.parseInt(code));
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                    "Illegal HTTP codes for " + ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE
-                            + " (list of integers): " + serviceUnavailableCodesString);
-        }
+        int retryCount = TransportUtils.getHttpRetryHandlerCount(session, repository);
+        long retryInterval = TransportUtils.getHttpRetryHandlerInterval(session, repository);
+        long retryIntervalMax = TransportUtils.getHttpRetryHandlerIntervalMax(session, repository);
         if (retryCount > 0) {
             Methanol.Interceptor rateLimitingRetryInterceptor = RetryInterceptor.newBuilder()
                     .maxRetries(retryCount)
-                    .onStatus(serviceUnavailableCodes::contains)
+                    .onStatus(TransportUtils.getHttpServiceUnavailableCodes(session, repository)::contains)
                     .listener(new RetryLoggingListener(retryCount))
                     .backoff(RetryInterceptor.BackoffStrategy.linear(
                             Duration.ofMillis(retryInterval), Duration.ofMillis(retryIntervalMax)))
@@ -709,37 +637,17 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
-    private static InetAddress getHttpLocalAddress(RepositorySystemSession session, RemoteRepository repository) {
-        String bindAddress = ConfigUtils.getString(
-                session,
-                null,
-                ConfigurationProperties.HTTP_LOCAL_ADDRESS + "." + repository.getId(),
-                ConfigurationProperties.HTTP_LOCAL_ADDRESS);
-        if (bindAddress == null) {
-            return null;
+    private static void setLocalAddress(HttpClient.Builder builder, InetAddress address) {
+        if (address == null) {
+            return;
         }
         try {
-            return InetAddress.getByName(bindAddress);
-        } catch (UnknownHostException uhe) {
-            throw new IllegalArgumentException(
-                    "Given bind address (" + bindAddress + ") cannot be resolved for remote repository " + repository,
-                    uhe);
-        }
-    }
-
-    private static void setLocalAddress(HttpClient.Builder builder, Supplier<InetAddress> addressSupplier) {
-        try {
-            final InetAddress address = addressSupplier.get();
-            if (address == null) {
-                return;
-            }
-
             final Method mtd = builder.getClass().getDeclaredMethod("localAddress", InetAddress.class);
             if (!mtd.canAccess(builder)) {
                 mtd.setAccessible(true);
             }
             mtd.invoke(builder, address);
-        } catch (final NoSuchMethodException nsme) {
+        } catch (final NoSuchMethodException ignore) {
             // skip, not yet in the API
         } catch (InvocationTargetException e) {
             throw new IllegalStateException(e.getTargetException());

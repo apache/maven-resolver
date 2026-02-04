@@ -53,8 +53,6 @@ import static java.util.Objects.requireNonNull;
 public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFactory {
     public static final String NAME = "maven2";
 
-    private static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_LAYOUT + NAME + ".";
-
     /**
      * Comma-separated list of checksum algorithms with which checksums are validated (downloaded) and generated
      * (uploaded) with this layout. Resolver by default supports following algorithms: MD5, SHA-1, SHA-256 and
@@ -68,7 +66,8 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
      * @configurationDefaultValue {@link #DEFAULT_CHECKSUMS_ALGORITHMS}
      * @configurationRepoIdSuffix Yes
      */
-    public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS = CONFIG_PROPS_PREFIX + "checksumAlgorithms";
+    public static final String CONFIG_PROP_CHECKSUMS_ALGORITHMS =
+            ConfigurationProperties.PREFIX_CHECKSUMS + "checksumAlgorithms";
 
     public static final String DEFAULT_CHECKSUMS_ALGORITHMS = "SHA-1,MD5";
 
@@ -86,7 +85,7 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
      * @configurationRepoIdSuffix Yes
      */
     public static final String CONFIG_PROP_UPLOAD_CHECKSUMS_ALGORITHMS =
-            CONFIG_PROPS_PREFIX + "uploadChecksumAlgorithms";
+            ConfigurationProperties.PREFIX_CHECKSUMS + "uploadChecksumAlgorithms";
 
     /**
      * Comma-separated list of checksum algorithms with which checksums are validated (downloaded) with this layout.
@@ -102,7 +101,7 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
      * @configurationRepoIdSuffix Yes
      */
     public static final String CONFIG_PROP_DOWNLOAD_CHECKSUMS_ALGORITHMS =
-            CONFIG_PROPS_PREFIX + "downloadChecksumAlgorithms";
+            ConfigurationProperties.PREFIX_CHECKSUMS + "downloadChecksumAlgorithms";
 
     private float priority;
 
