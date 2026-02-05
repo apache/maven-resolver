@@ -17,8 +17,8 @@
  * under the License.
  */
 /**
- * Utilities for transporters.
+ * Utilities for HTTP transporters.
  *
  * @since 2.0.15
  */
-package org.eclipse.aether.util.connector.transport;
+package org.eclipse.aether.util.connector.transport.http;

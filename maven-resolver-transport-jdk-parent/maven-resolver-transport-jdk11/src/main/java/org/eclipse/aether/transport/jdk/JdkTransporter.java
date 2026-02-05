@@ -87,7 +87,7 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.connector.transport.TransportUtils;
+import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -200,19 +200,19 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
 
         HashMap<String, String> headers = new HashMap<>();
-        String userAgent = TransportUtils.getUserAgent(session, repository);
+        String userAgent = HttpTransporterUtils.getUserAgent(session, repository);
         if (userAgent != null) {
             headers.put(USER_AGENT, userAgent);
         }
-        Map<String, String> configuredHeaders = TransportUtils.getHttpHeaders(session, repository);
+        Map<String, String> configuredHeaders = HttpTransporterUtils.getHttpHeaders(session, repository);
         if (configuredHeaders != null) {
             headers.putAll(configuredHeaders);
         }
         headers.put(CACHE_CONTROL, "no-cache, no-store");
 
-        this.connectTimeout = TransportUtils.getHttpConnectTimeout(session, repository);
-        this.requestTimeout = TransportUtils.getHttpRequestTimeout(session, repository);
-        Optional<Boolean> expectContinue = TransportUtils.getHttpExpectContinue(session, repository);
+        this.connectTimeout = HttpTransporterUtils.getHttpConnectTimeout(session, repository);
+        this.requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
+        Optional<Boolean> expectContinue = HttpTransporterUtils.getHttpExpectContinue(session, repository);
         if (javaVersion > 19) {
             this.expectContinue = expectContinue.orElse(null);
         } else {
@@ -223,7 +223,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         javaVersion);
             }
         }
-        final String httpsSecurityMode = TransportUtils.getHttpsSecurityMode(session, repository);
+        final String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         final boolean insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
         this.maxConcurrentRequests = new Semaphore(ConfigUtils.getInteger(
@@ -232,8 +232,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 CONFIG_PROP_MAX_CONCURRENT_REQUESTS + "." + repository.getId(),
                 CONFIG_PROP_MAX_CONCURRENT_REQUESTS));
 
-        this.preemptiveAuth = TransportUtils.isHttpPreemptiveAuth(session, repository);
-        this.preemptivePutAuth = TransportUtils.isHttpPreemptivePutAuth(session, repository);
+        this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
+        this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
 
         this.headers = headers;
         this.client = createClient(session, repository, insecure);
@@ -541,7 +541,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
 
         setLocalAddress(
-                builder, TransportUtils.getHttpLocalAddress(session, repository).orElse(null));
+                builder,
+                HttpTransporterUtils.getHttpLocalAddress(session, repository).orElse(null));
 
         if (repository.getProxy() != null) {
             ProxySelector proxy = ProxySelector.of(new InetSocketAddress(
@@ -605,13 +606,13 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private static void configureRetryHandler(
             RepositorySystemSession session, RemoteRepository repository, Methanol.Builder builder) {
-        int retryCount = TransportUtils.getHttpRetryHandlerCount(session, repository);
-        long retryInterval = TransportUtils.getHttpRetryHandlerInterval(session, repository);
-        long retryIntervalMax = TransportUtils.getHttpRetryHandlerIntervalMax(session, repository);
+        int retryCount = HttpTransporterUtils.getHttpRetryHandlerCount(session, repository);
+        long retryInterval = HttpTransporterUtils.getHttpRetryHandlerInterval(session, repository);
+        long retryIntervalMax = HttpTransporterUtils.getHttpRetryHandlerIntervalMax(session, repository);
         if (retryCount > 0) {
             Methanol.Interceptor rateLimitingRetryInterceptor = RetryInterceptor.newBuilder()
                     .maxRetries(retryCount)
-                    .onStatus(TransportUtils.getHttpServiceUnavailableCodes(session, repository)::contains)
+                    .onStatus(HttpTransporterUtils.getHttpServiceUnavailableCodes(session, repository)::contains)
                     .listener(new RetryLoggingListener(retryCount))
                     .backoff(RetryInterceptor.BackoffStrategy.linear(
                             Duration.ofMillis(retryInterval), Duration.ofMillis(retryIntervalMax)))

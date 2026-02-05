@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.connector.transport;
+package org.eclipse.aether.util.connector.transport.http;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -40,8 +40,8 @@ import org.eclipse.aether.util.ConfigUtils;
  * @see RepositorySystemSession#getConfigProperties()
  * @since 2.0.15
  */
-public final class TransportUtils {
-    private TransportUtils() {}
+public final class HttpTransporterUtils {
+    private HttpTransporterUtils() {}
 
     /**
      * Getter for {@link ConfigurationProperties#USER_AGENT}.

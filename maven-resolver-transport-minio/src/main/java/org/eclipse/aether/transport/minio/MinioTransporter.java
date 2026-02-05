@@ -44,7 +44,7 @@ import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
-import org.eclipse.aether.util.connector.transport.TransportUtils;
+import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -94,7 +94,7 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
         }
 
         HashMap<String, String> headers = new HashMap<>();
-        Map<String, String> configuredHeaders = TransportUtils.getHttpHeaders(session, repository);
+        Map<String, String> configuredHeaders = HttpTransporterUtils.getHttpHeaders(session, repository);
         if (configuredHeaders != null) {
             headers.putAll(configuredHeaders);
         }

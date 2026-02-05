@@ -56,7 +56,7 @@ import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.connector.transport.TransportUtils;
+import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,8 +135,8 @@ final class WagonTransporter implements Transporter {
         wagonProxy = getProxy(repository, proxyAuthContext);
 
         headers = new Properties();
-        headers.put("User-Agent", TransportUtils.getUserAgent(session, repository));
-        Map<String, String> headers = TransportUtils.getHttpHeaders(session, repository);
+        headers.put("User-Agent", HttpTransporterUtils.getUserAgent(session, repository));
+        Map<String, String> headers = HttpTransporterUtils.getHttpHeaders(session, repository);
         if (headers != null) {
             this.headers.putAll(headers);
         }
@@ -264,8 +264,8 @@ final class WagonTransporter implements Transporter {
             }
         }
 
-        int connectTimeout = TransportUtils.getHttpConnectTimeout(session, repository);
-        int requestTimeout = TransportUtils.getHttpRequestTimeout(session, repository);
+        int connectTimeout = HttpTransporterUtils.getHttpConnectTimeout(session, repository);
+        int requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
 
         wagon.setTimeout(Math.max(Math.max(connectTimeout, requestTimeout), 0));
         wagon.setInteractive(ConfigUtils.getBoolean(

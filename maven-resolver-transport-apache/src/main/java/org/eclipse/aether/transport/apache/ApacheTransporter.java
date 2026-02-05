@@ -95,7 +95,7 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.connector.transport.TransportUtils;
+import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,24 +171,24 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.repoAuthContext = AuthenticationContext.forRepository(session, repository);
         this.proxyAuthContext = AuthenticationContext.forProxy(session, repository);
 
-        String httpsSecurityMode = TransportUtils.getHttpsSecurityMode(session, repository);
-        final int connectionMaxTtlSeconds = TransportUtils.getHttpConnectionMaxTtlSeconds(session, repository);
-        final int maxConnectionsPerRoute = TransportUtils.getHttpMaxConnectionsPerRoute(session, repository);
+        String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
+        final int connectionMaxTtlSeconds = HttpTransporterUtils.getHttpConnectionMaxTtlSeconds(session, repository);
+        final int maxConnectionsPerRoute = HttpTransporterUtils.getHttpMaxConnectionsPerRoute(session, repository);
         this.state = new LocalState(
                 session,
                 repository,
                 new ConnMgrConfig(
                         session, repoAuthContext, httpsSecurityMode, connectionMaxTtlSeconds, maxConnectionsPerRoute));
 
-        this.headers = TransportUtils.getHttpHeaders(session, repository);
-        this.preemptiveAuth = TransportUtils.isHttpPreemptiveAuth(session, repository);
-        this.preemptivePutAuth = TransportUtils.isHttpPreemptivePutAuth(session, repository);
-        this.supportWebDav = TransportUtils.isHttpSupportWebDav(session, repository);
-        int connectTimeout = TransportUtils.getHttpConnectTimeout(session, repository);
-        int requestTimeout = TransportUtils.getHttpRequestTimeout(session, repository);
-        int retryCount = TransportUtils.getHttpRetryHandlerCount(session, repository);
-        long retryInterval = TransportUtils.getHttpRetryHandlerInterval(session, repository);
-        long retryIntervalMax = TransportUtils.getHttpRetryHandlerIntervalMax(session, repository);
+        this.headers = HttpTransporterUtils.getHttpHeaders(session, repository);
+        this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
+        this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
+        this.supportWebDav = HttpTransporterUtils.isHttpSupportWebDav(session, repository);
+        int connectTimeout = HttpTransporterUtils.getHttpConnectTimeout(session, repository);
+        int requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
+        int retryCount = HttpTransporterUtils.getHttpRetryHandlerCount(session, repository);
+        long retryInterval = HttpTransporterUtils.getHttpRetryHandlerInterval(session, repository);
+        long retryIntervalMax = HttpTransporterUtils.getHttpRetryHandlerIntervalMax(session, repository);
         String retryHandlerName = ConfigUtils.getString(
                 session,
                 HTTP_RETRY_HANDLER_NAME_STANDARD,
@@ -209,9 +209,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 DEFAULT_FOLLOW_REDIRECTS,
                 CONFIG_PROP_FOLLOW_REDIRECTS + "." + repository.getId(),
                 CONFIG_PROP_FOLLOW_REDIRECTS);
-        String userAgent = TransportUtils.getUserAgent(session, repository);
+        String userAgent = HttpTransporterUtils.getUserAgent(session, repository);
 
-        Charset credentialsCharset = TransportUtils.getHttpCredentialsEncoding(session, repository);
+        Charset credentialsCharset = HttpTransporterUtils.getHttpCredentialsEncoding(session, repository);
         Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
                 .register(AuthSchemes.BASIC, new BasicSchemeFactory(credentialsCharset))
                 .register(AuthSchemes.DIGEST, new DigestSchemeFactory(credentialsCharset))
@@ -232,8 +232,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 .setConnectTimeout(connectTimeout)
                 // the time to wait for a connection from the connection manager/pool
                 .setConnectionRequestTimeout(connectTimeout)
-                .setLocalAddress(
-                        TransportUtils.getHttpLocalAddress(session, repository).orElse(null))
+                .setLocalAddress(HttpTransporterUtils.getHttpLocalAddress(session, repository)
+                        .orElse(null))
                 .setCookieSpec(CookieSpecs.STANDARD)
                 .build();
 
@@ -250,7 +250,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 retryCount,
                 retryInterval,
                 retryIntervalMax,
-                TransportUtils.getHttpServiceUnavailableCodes(session, repository));
+                HttpTransporterUtils.getHttpServiceUnavailableCodes(session, repository));
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
@@ -276,8 +276,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             builder.useSystemProperties();
         }
 
-        TransportUtils.getHttpExpectContinue(session, repository).ifPresent(state::setExpectContinue);
-        if (!TransportUtils.isHttpReuseConnections(session, repository)) {
+        HttpTransporterUtils.getHttpExpectContinue(session, repository).ifPresent(state::setExpectContinue);
+        if (!HttpTransporterUtils.isHttpReuseConnections(session, repository)) {
             builder.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE);
         }
 

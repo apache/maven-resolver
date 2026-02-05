@@ -54,7 +54,7 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.connector.transport.TransportUtils;
+import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.eclipse.jetty.client.Authentication;
 import org.eclipse.jetty.client.BasicAuthentication;
 import org.eclipse.jetty.client.HttpClient;
@@ -151,22 +151,22 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
 
         HashMap<String, String> headers = new HashMap<>();
-        String userAgent = TransportUtils.getUserAgent(session, repository);
+        String userAgent = HttpTransporterUtils.getUserAgent(session, repository);
         if (userAgent != null) {
             headers.put(USER_AGENT, userAgent);
         }
-        Map<String, String> configuredHeaders = TransportUtils.getHttpHeaders(session, repository);
+        Map<String, String> configuredHeaders = HttpTransporterUtils.getHttpHeaders(session, repository);
         if (configuredHeaders != null) {
             headers.putAll(configuredHeaders);
         }
 
         this.headers = headers;
 
-        this.connectTimeout = TransportUtils.getHttpRequestTimeout(session, repository);
-        this.requestTimeout = TransportUtils.getHttpRequestTimeout(session, repository);
-        this.preemptiveAuth = TransportUtils.isHttpPreemptiveAuth(session, repository);
-        this.preemptivePutAuth = TransportUtils.isHttpPreemptivePutAuth(session, repository);
-        final String httpsSecurityMode = TransportUtils.getHttpsSecurityMode(session, repository);
+        this.connectTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
+        this.requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
+        this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
+        this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
+        final String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
         this.basicServerAuthenticationResult = new AtomicReference<>(null);
