@@ -105,16 +105,16 @@ public final class BasicRepositoryConnectorConfigurationKeys {
 
     /**
      * Flag indicating that instead of comparing the external checksum fetched from the remote repo with the
-     * calculated one, it should try to extract the reference checksum from the actual artifact response headers
+     * calculated one, it should try to extract the reference checksum included in the actual artifact response headers
      * This only works for HTTP transports.
      *
      * @since 0.9.0.M3
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
-     * @configurationDefaultValue {@link #DEFAULT_SMART_CHECKSUMS}
+     * @configurationDefaultValue {@link #DEFAULT_INCLUDED_CHECKSUMS}
      * @configurationRepoIdSuffix No
      */
-    public static final String CONFIG_PROP_SMART_CHECKSUMS = CONFIG_PROPS_PREFIX + "smartChecksums";
+    public static final String CONFIG_PROP_INCLUDED_CHECKSUMS = CONFIG_PROPS_PREFIX + "includedChecksums";
 
-    public static final boolean DEFAULT_SMART_CHECKSUMS = true;
+    public static final boolean DEFAULT_INCLUDED_CHECKSUMS = true;
 }

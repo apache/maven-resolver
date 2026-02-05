@@ -24,7 +24,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +34,6 @@ import io.minio.UploadObjectArgs;
 import io.minio.credentials.Provider;
 import io.minio.credentials.StaticProvider;
 import io.minio.errors.ErrorResponseException;
-import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -46,7 +44,7 @@ import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
-import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -96,14 +94,9 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
         }
 
         HashMap<String, String> headers = new HashMap<>();
-        @SuppressWarnings("unchecked")
-        Map<Object, Object> configuredHeaders = (Map<Object, Object>) ConfigUtils.getMap(
-                session,
-                Collections.emptyMap(),
-                ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
-                ConfigurationProperties.HTTP_HEADERS);
+        Map<String, String> configuredHeaders = HttpTransporterUtils.getHttpHeaders(session, repository);
         if (configuredHeaders != null) {
-            configuredHeaders.forEach((k, v) -> headers.put(String.valueOf(k), v != null ? String.valueOf(v) : null));
+            headers.putAll(configuredHeaders);
         }
         this.headers = headers;
 

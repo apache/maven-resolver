@@ -29,7 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -55,6 +54,7 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.eclipse.jetty.client.Authentication;
 import org.eclipse.jetty.client.BasicAuthentication;
 import org.eclipse.jetty.client.HttpClient;
@@ -151,53 +151,22 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
 
         HashMap<String, String> headers = new HashMap<>();
-        String userAgent = ConfigUtils.getString(
-                session, ConfigurationProperties.DEFAULT_USER_AGENT, ConfigurationProperties.USER_AGENT);
+        String userAgent = HttpTransporterUtils.getUserAgent(session, repository);
         if (userAgent != null) {
             headers.put(USER_AGENT, userAgent);
         }
-        @SuppressWarnings("unchecked")
-        Map<Object, Object> configuredHeaders = (Map<Object, Object>) ConfigUtils.getMap(
-                session,
-                Collections.emptyMap(),
-                ConfigurationProperties.HTTP_HEADERS + "." + repository.getId(),
-                ConfigurationProperties.HTTP_HEADERS);
+        Map<String, String> configuredHeaders = HttpTransporterUtils.getHttpHeaders(session, repository);
         if (configuredHeaders != null) {
-            configuredHeaders.forEach((k, v) -> headers.put(String.valueOf(k), v != null ? String.valueOf(v) : null));
+            headers.putAll(configuredHeaders);
         }
 
         this.headers = headers;
 
-        this.connectTimeout = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                ConfigurationProperties.CONNECT_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.CONNECT_TIMEOUT);
-        this.requestTimeout = ConfigUtils.getInteger(
-                session,
-                ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT,
-                ConfigurationProperties.REQUEST_TIMEOUT + "." + repository.getId(),
-                ConfigurationProperties.REQUEST_TIMEOUT);
-        this.preemptiveAuth = ConfigUtils.getBoolean(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_AUTH,
-                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH + "." + repository.getId(),
-                ConfigurationProperties.HTTP_PREEMPTIVE_AUTH);
-        this.preemptivePutAuth = ConfigUtils.getBoolean(
-                session,
-                ConfigurationProperties.DEFAULT_HTTP_PREEMPTIVE_PUT_AUTH,
-                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH + "." + repository.getId(),
-                ConfigurationProperties.HTTP_PREEMPTIVE_PUT_AUTH);
-        final String httpsSecurityMode = ConfigUtils.getString(
-                session,
-                ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT,
-                ConfigurationProperties.HTTPS_SECURITY_MODE + "." + repository.getId(),
-                ConfigurationProperties.HTTPS_SECURITY_MODE);
-
-        if (!ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(httpsSecurityMode)
-                && !ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode)) {
-            throw new IllegalArgumentException("Unsupported '" + httpsSecurityMode + "' HTTPS security mode.");
-        }
+        this.connectTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
+        this.requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
+        this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
+        this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
+        final String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
         this.basicServerAuthenticationResult = new AtomicReference<>(null);
@@ -376,8 +345,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     .send();
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
-            if (t instanceof IOException) {
-                IOException ioex = (IOException) t;
+            if (t instanceof IOException ioex) {
                 if (ioex.getCause() instanceof TransferCancelledException) {
                     throw (TransferCancelledException) ioex.getCause();
                 } else {
