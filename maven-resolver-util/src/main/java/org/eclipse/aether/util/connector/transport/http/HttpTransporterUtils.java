@@ -33,7 +33,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
- * A utility class to read transport-related configuration. It implements all transport related configurations from
+ * A utility class to read HTTP transport related configuration. It implements all HTTP transport related configurations from
  * {@link ConfigurationProperties} and transport implementations are free to use those that are supported by themselves.
  *
  * @see ConfigurationProperties
