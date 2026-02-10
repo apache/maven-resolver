@@ -22,7 +22,8 @@ This page lists known issues related to various transports.
 
 ## The `jdk`, JDK Transport
 
-This is the default transport used in Maven 4.
+This is the default transport used in Maven 4. Given this transport uses the Java, it is in user best interest
+to use latest patch version of Java, as HttpClient is getting bugfixes regularly.
 
 Known issues:
 * Does not properly support `aether.transport.http.requestTimeout` prior Java 26, see [JDK-8208693](https://bugs.openjdk.org/browse/JDK-8208693)
