@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.transport.apache;
 
-import java.io.Closeable;
-
 import org.apache.http.client.protocol.HttpClientContext;
 
 /**
@@ -28,16 +26,12 @@ import org.apache.http.client.protocol.HttpClientContext;
  * @see <a href="http://hc.apache.org/httpcomponents-client-ga/tutorial/html/advanced.html#stateful_conn">Stateful HTTP
  *      connections</a>
  */
-final class SharingHttpContext extends HttpClientContext implements Closeable {
+final class SharingHttpContext extends HttpClientContext {
 
     private final LocalState state;
 
-    private final SharingAuthCache authCache;
-
     SharingHttpContext(LocalState state) {
         this.state = state;
-        authCache = new SharingAuthCache(state);
-        super.setAttribute(HttpClientContext.AUTH_CACHE, authCache);
     }
 
     @Override
@@ -64,10 +58,5 @@ final class SharingHttpContext extends HttpClientContext implements Closeable {
             return null;
         }
         return super.removeAttribute(id);
-    }
-
-    @Override
-    public void close() {
-        authCache.clear();
     }
 }
