@@ -364,15 +364,12 @@ final class HttpTransporter extends AbstractTransporter {
         }
 
         if (session.getCache() != null) {
-            AuthCache cache = (AuthCache) session.getCache()
-                    .get(session, getClass().getSimpleName() + "-" + StringDigestUtil.sha1(repository.toString()));
+            String authCacheKey = getClass().getSimpleName() + "-" + repository.getId() + "-"
+                    + StringDigestUtil.sha1(repository.toString());
+            AuthCache cache = (AuthCache) session.getCache().get(session, authCacheKey);
             if (cache == null) {
                 cache = new BasicAuthCache();
-                session.getCache()
-                        .put(
-                                session,
-                                getClass().getSimpleName() + "-" + StringDigestUtil.sha1(repository.toString()),
-                                cache);
+                session.getCache().put(session, authCacheKey, cache);
             }
             this.authCache = cache;
         } else {
