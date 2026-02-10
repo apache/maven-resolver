@@ -22,7 +22,7 @@ This page lists known issues related to various transports.
 
 ## The `jdk` (Java HttpClient) Transport
 
-This is the default transport used in Maven 4. Given this transport uses the Java, it is in user best interest
+Given this transporter uses the Java HttpClient, it is in user best interest
 to use latest patch version of Java, as HttpClient is getting bugfixes regularly.
 
 Known issues:
@@ -34,12 +34,18 @@ Known issues:
   enable HTTP Basic authentication for Proxy TLS tunneling, one must set `jdk.http.auth.tunneling.disabledScheme` to 
   empty string, e.g. by adding `-Djdk.http.auth.tunneling.disabledScheme=""` JVM argument.
 
+Maven 4 uses this transport by default for HTTP(S) protocol.
+
 ## The `apache` (Apache HttpClient) Transport
 
-To use this transport, you need to specify `-Dmaven.resolver.transport=apache` Maven 4 user property.
+Transporter based on Apache HttpClient.
+
+To use this transporter in Maven 4, you need to specify `-Dmaven.resolver.transport=apache` user property.
 
 ## The `jetty` (Jetty HttpClient) Transport
 
-This transport is not available by default (is not bundled with Maven 4). To use it, 
+Transporter based on Jetty HttpClient. 
+
+In Maven 4 this transport is not available by default (is not bundled). To use it, 
 you need to add `org.apache.maven.resolver.transport:transport-http-jetty` artifact with its runtime dependencies to
 `/lib` directory of Maven. Once added to core classpath, it will take over the role of default transport.
