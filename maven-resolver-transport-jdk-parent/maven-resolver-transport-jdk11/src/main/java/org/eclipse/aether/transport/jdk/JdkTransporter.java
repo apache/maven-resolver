@@ -545,13 +545,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 HttpTransporterUtils.getHttpLocalAddress(session, repository).orElse(null));
 
         if (repository.getProxy() != null) {
-            InetSocketAddress proxyAddress = new InetSocketAddress(
-                    repository.getProxy().getHost(), repository.getProxy().getPort());
-            if (proxyAddress.isUnresolved()) {
-                throw new IllegalStateException(
-                        "Proxy host " + repository.getProxy().getHost() + " could not be resolved");
-            }
-            builder.proxy(ProxySelector.of(proxyAddress));
+            ProxySelector proxy = ProxySelector.of(new InetSocketAddress(
+                    repository.getProxy().getHost(), repository.getProxy().getPort()));
+
+            builder.proxy(proxy);
             try (AuthenticationContext proxyAuthContext = AuthenticationContext.forProxy(session, repository)) {
                 if (proxyAuthContext != null) {
                     String username = proxyAuthContext.get(AuthenticationContext.USERNAME);
