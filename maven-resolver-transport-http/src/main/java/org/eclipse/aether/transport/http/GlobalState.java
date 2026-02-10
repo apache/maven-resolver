@@ -29,7 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.HttpHost;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
@@ -95,8 +94,6 @@ final class GlobalState implements Closeable {
 
     private final ConcurrentMap<CompoundKey, Object> userTokens;
 
-    private final ConcurrentMap<HttpHost, AuthSchemePool> authSchemePools;
-
     private final ConcurrentMap<CompoundKey, Boolean> expectContinues;
 
     public static GlobalState get(RepositorySystemSession session) {
@@ -126,7 +123,6 @@ final class GlobalState implements Closeable {
     private GlobalState() {
         connectionManagers = new ConcurrentHashMap<>();
         userTokens = new ConcurrentHashMap<>();
-        authSchemePools = new ConcurrentHashMap<>();
         expectContinues = new ConcurrentHashMap<>();
     }
 
@@ -214,10 +210,6 @@ final class GlobalState implements Closeable {
         } else {
             userTokens.remove(key);
         }
-    }
-
-    public ConcurrentMap<HttpHost, AuthSchemePool> getAuthSchemePools() {
-        return authSchemePools;
     }
 
     public Boolean getExpectContinue(CompoundKey key) {

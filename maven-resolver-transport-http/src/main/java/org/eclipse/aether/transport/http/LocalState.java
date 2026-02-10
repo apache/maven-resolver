@@ -19,11 +19,7 @@
 package org.eclipse.aether.transport.http;
 
 import java.io.Closeable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScheme;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -48,8 +44,6 @@ final class LocalState implements Closeable {
 
     private volatile Boolean webDav;
 
-    private final ConcurrentMap<HttpHost, AuthSchemePool> authSchemePools;
-
     LocalState(RepositorySystemSession session, RemoteRepository repo, ConnMgrConfig connMgrConfig) {
         global = GlobalState.get(session);
         userToken = this;
@@ -57,12 +51,10 @@ final class LocalState implements Closeable {
             connMgr = GlobalState.newConnectionManager(connMgrConfig);
             userTokenKey = null;
             expectContinueKey = null;
-            authSchemePools = new ConcurrentHashMap<>();
         } else {
             connMgr = global.getConnectionManager(connMgrConfig);
             userTokenKey = new CompoundKey(repo.getId(), repo.getUrl(), repo.getAuthentication(), repo.getProxy());
             expectContinueKey = new CompoundKey(repo.getUrl(), repo.getProxy());
-            authSchemePools = global.getAuthSchemePools();
         }
     }
 
@@ -105,26 +97,6 @@ final class LocalState implements Closeable {
 
     public void setWebDav(boolean webDav) {
         this.webDav = webDav;
-    }
-
-    public AuthScheme getAuthScheme(HttpHost host) {
-        AuthSchemePool pool = authSchemePools.get(host);
-        if (pool != null) {
-            return pool.get();
-        }
-        return null;
-    }
-
-    public void setAuthScheme(HttpHost host, AuthScheme authScheme) {
-        AuthSchemePool pool = authSchemePools.get(host);
-        if (pool == null) {
-            AuthSchemePool p = new AuthSchemePool();
-            pool = authSchemePools.putIfAbsent(host, p);
-            if (pool == null) {
-                pool = p;
-            }
-        }
-        pool.put(authScheme);
     }
 
     @Override
