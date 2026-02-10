@@ -27,7 +27,7 @@ This is the default transport used in Maven 4.
 Known issues:
 * Does not properly support `aether.transport.http.requestTimeout` prior Java 26, see [JDK-8208693](https://bugs.openjdk.org/browse/JDK-8208693)
 * No TLS proxy support, see [here](https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a)
-* In case of Proxy TLS tunneling, to enable Proxy authentication one must issue `jdk.http.auth.tunneling.disabledSchemes`.
+* In case of Proxy TLS tunneling, to enable Proxy authentication one must issue `jdk.http.auth.tunneling.disabledSchemes`, see [here](https://docs.oracle.com/en/java/javase/21/core/java-networking.html#GUID-801380C1-4300-4ED8-A390-3C39135267CD).
 
 ## The `apache`, Apache HttpClient Transport
 
