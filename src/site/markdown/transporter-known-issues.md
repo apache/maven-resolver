@@ -28,6 +28,7 @@ to use latest patch version of Java, as HttpClient is getting bugfixes regularly
 Known issues:
 * Does not properly support `aether.transport.http.requestTimeout` configuration prior Java 26, see [JDK-8208693](https://bugs.openjdk.org/browse/JDK-8208693)
 * No TLS Proxy support, see [here](https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a)
+* No SOCKS proxy support, see [JDK-8214516](https://bugs.openjdk.org/browse/JDK-8214516)
 * In case of Proxy TLS tunneling, to enable Proxy Basic authentication, one must use `jdk.http.auth.tunneling.disabledScheme` 
   Java System Property, see [here](https://docs.oracle.com/en/java/javase/21/core/java-networking.html#GUID-801380C1-4300-4ED8-A390-3C39135267CD). Java versions since 8u111 have this property set to value "Basic" making HTTP 
   Basic authentication disabled, see [here](https://www.oracle.com/java/technologies/javase/8u111-relnotes.html). To 
