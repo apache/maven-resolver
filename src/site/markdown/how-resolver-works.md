@@ -23,6 +23,12 @@ is many times target of questions and curiosity how it actually works under the 
 This document tries to shed some light on this topic, and explain the main concepts
 and building blocks of Resolver.
 
+One important aspect of Resolver is that itself, alone is "incomplete". Integrating application, like Maven is
+the one that provides the "glue" (models) and logic how to resolve versions, ranges, build effective models.
+Hence, Resolver itself, alone is unusable. To make it usable, one needs to complement it with models and
+implementations of missing components. Historically, Maven module completing Resolver is the
+`org.apache.maven:maven-resolver-provider` module.
+
 ## Core Concepts
 
 At the core of Resolver lies the concept of **artifacts** and **repositories**. An artifact is basically a 
