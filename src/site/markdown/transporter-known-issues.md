@@ -18,7 +18,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-This page lists known issues related to various transports.
+This page lists known issues related to various transporters.
 
 ## The `jdk` (Java HttpClient) Transport
 
