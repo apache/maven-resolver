@@ -18,79 +18,77 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-A new Maven Resolver feature that allows filtering of Artifact by RemoteRepository based on various (extensible) 
+Remote Repository Filtering enables the resolver to filter artifacts by repository based on various (extensible) 
 criteria.
 
 ### Why?
 
-Remote Repository Filtering (RRF) is a long asked feature of Maven, and plays a huge role when your build uses
-several remote repositories. In such cases Maven "searches" the ordered list (effective POM) of remote repositories,
-and artifacts get resolved using a loop and a "first found wins" strategy. This has several implications:
+Remote Repository Filtering (RRF) is a long requested feature of Maven. It's useful when a build uses
+several remote repositories. In such cases, Maven "searches" the ordered list (effective POM) of remote repositories,
+and artifacts are resolved using a loop and a "first found wins" strategy. This has several implications:
 
-* your build gets slower, as if your artifact is in the Nth repository, Maven must make N-1 requests that will result in
-  404 Not Found only to get to Nth repository to finally get the artifact.
-* you build "leaks" artifact requests, as those repositories are asked for artifacts, that does not (or worse,
-  cannot) have them. Still, those remote repository operators do get your requests in access logs.
-* to "simplify" things, users tend to use MRM "group" (or "virtual") repositories, that causes  data loss on
+* The build is slower because when an artifact is in the Nth repository, Maven first queries the previous N-1 repositories  that will result in
+  before finally finding the artifact.
+* The build "leaks" artifact requests, as those repositories are asked for artifacts they do not have.
+  Still, those remote repository operators see the requests in the access logs.
+* To "simplify" things, users tend to use MRM "group" (or "virtual") repositories, that cause  data loss on
   Maven Project side (project loses artifact origin information) and ends up in disasters, as at the end these
-  "super-uber groups" grow uncontrollably, their member count become huge (as new members are being
-  added as time passes), or created groups count grows uncontrollably, and project start losing the knowledge
-  about their required remote repositories, needed to (re)build a project, hence these projects become
-  un-buildable without the MRM, projects become bound to MRM and/or environment that is usually out of project
+  "super-uber groups" grow uncontrollably, their member count become huge (as new members are
+  added as time passes), or created groups count grows uncontrollably, and projects start losing the knowledge
+  about the remote repositories needed to (re)build a project. Hence these projects become
+  un-buildable without the MRM, and projects become bound to MRM and/or environment that is usually out of project
   control.
+  
 
-Maven by default gets slower as remote repositories are added, leaks your own build information to remote
-repository operators, and current solutions offered to solve this problem just end up in disasters (most often).
+### What It Is
 
-### What It Is?
+You can instruct Maven which repository can contain which artifacts. Instead of "ordered loop" searching
+for artifacts in remote repositories, Maven can query a repository that has the artifact first,.
 
-Imagine you can instruct Maven which repository can contain what artifact? Instead of "ordered loop" searching
-for artifacts in remote repositories, Maven could be instructed in controlled way to directly reach only the
-needed remote repository.
+With RRF, the Maven build does not slow down when new remote repositories are added, and does not leak
+build information unnecessarily.
 
-With RRF, Maven build does NOT have to slow down with new remote repositories added, and will not leak either
-build information anywhere, as it will get things from where they should be get from.
+### What It Is Not
 
-### What It Is Not?
-
-When it solely comes to dependencies, don't forget
-[maven-enforcer-plugin](https://maven.apache.org/enforcer/enforcer-rules/bannedDependencies.html) rules that are 
-handling exactly them. RRF is NOT an alternative means to these enforcer rules, it is a tool to make your build
-faster and more private, optimized, without loosing build information (remote repositories should be in POM).
+When it comes to dependencies, don't forget
+[maven-enforcer-plugin](https://maven.apache.org/enforcer/enforcer-rules/bannedDependencies.html) rules.
+RRF is NOT an alternative to these enforcer rules. It is a tool to make your build
+faster and more private without losing build information.
 
 ### Maven Central Is Special
 
-Maven Central (MC) repository is special in this respect, as Maven will always try to get things from here, as your build,
-plugins, plugin dependencies, extension, etc. will most often come from here. While you CAN filter MC, filtering MC is
-most often a bad idea (filtering, as in "limiting what can come from it"). On other hand, MC itself offers help
+The Maven Central repository is special in this respect, as Maven will always try to download artifacts from here, as your build,
+plugins, plugin dependencies, extension, etc. will most often come from it. While you can filter Maven Central, this is
+usually a bad idea (filtering, as in "limiting what can come from it"). On other hand, Maven Central itself offers help
 to prevent request leakage to it (see "prefixes" filter).
 
-So, **most often** limiting "what can be fetched" from MC is a bad idea, it **can be done** but in very, very cautious way,
-as otherwise you put your build at risk. RRF does not distinguish the "context" of an artifact, it merely filters them out
-by (artifact, remoteRepository) pair, and by limiting MC you can easily get into state where you break your build (as
-plugin depends on filtered artifact).
+So, **most often** limiting "what can be fetched" from Maven Central is a bad idea. It **can be done** but in very, very cautious way,
+as otherwise you put your build at risk. RRF does not distinguish the "context" of an artifact. It merely filters them out
+by (artifact, remoteRepository) pair. By limiting Maven Central you can easily get into state where you break your build because
+a plugin depends on a filtered artifact.
 
 ## RRF
 
-The RRF feature offers a filter source SPI for 3rd party implementors, but it also provides 2 out of the box 
-implementations for filtering: "prefixes" and "groupId" filters.
+The RRF feature offers a filter source service provider interface for 3rd party implementors,
+but it also provides 2 out of the box  implementations for filtering: "prefixes" and "groupId" filters.
 
 Both implementation operate with several files (per remote repository), and they use the term "filter basedir". By
 default, filter basedir is resolved from local repository root and resolves to `${localRepo}/.remoteRepositoryFilters`
-directory. It will be referred to in this document with `${filterBasedir}` placeholder.
+directory. It will be referred to in this document with the `${filterBasedir}` placeholder.
 
-To explicitly set filter basedir, use following setting: `-Daether.remoteRepositoryFilter.${filterName}.basedir=somePath`, 
-where "somePath" can be relative path, then is resolved from local repository root, or absolute path, then is used as is.
+To set the filter basedir, use: `-Daether.remoteRepositoryFilter.${filterName}.basedir=somePath`.
+If "somePath" is a relative path, it is resolved from the local repository root.
+If it is an absolute path, it is used as is.
 
-Since Maven 3.9.x you can use expression like `${session.rootDirectory}/.mvn/rrf/` to store filter data along with 
-sources as `session.rootDirectory` will become an absolute path pointing to the root directory of your project (where
+Since Maven 3.9.x you can use an expression like `${session.rootDirectory}/.mvn/rrf/` to store filter data along with 
+sources. `session.rootDirectory` will become an absolute path pointing to the root directory of the project (where
 usually the `.mvn` directory is).
 
-Both implementation without input files (being present) behave as disabled for given repository. Moreover, the
-enabled settings suffixed with ".repoId" can be used to selectively enable or disable filtering for given repository
+When no input files are present, both implementations behave as if disabled for given repository. Moreover, the
+enabled settings suffixed with ".repoId" can be used to selectively enable or disable filtering for a repository
 (for example `-Daether.remoteRepositoryFilter.prefixes.myrepo=false`).
 
-Unlike in Resolver 1.x, the filtering is **by default enabled**, and prefixes will be dynamically discovered, and
+Unlike in Resolver 1.x, filtering is **enabled by default**; and prefixes will be dynamically discovered, and
 if found, used. For groupId filter user intervention is still needed to provide input files. Hence, without these,
 only prefix filtering will automatically kick in.
 
