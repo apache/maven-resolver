@@ -20,7 +20,7 @@ under the License.
 
 This page lists known issues related to various transporters.
 
-## The `jdk` (Java HttpClient) Transport
+## The `jdk` (Java HttpClient) Transporter
 
 Given this transporter uses the Java HttpClient (available since Java 11), it is in user best interest
 to use latest patch version of Java, as HttpClient is getting bugfixes regularly.
