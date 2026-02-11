@@ -44,6 +44,10 @@ The term "resolving" is a bit overloaded, but in general it involves following s
 * **flattening** transforms the tree into a flat list of artifacts, which also represents classpath ordering
 * **artifact resolving** is the process of resolving (downloading and caching, if needed) the actual artifact payload from local repository
 
+We call an artifact "resolvable" if it can be resolved from any available (local or remote) repository. To make artifact
+"resolvable" from local repository, one needs to "install" it. To make artifact "resolvable" from remote repository, 
+one needs to "deploy" it (this is over-simplification; publishing is new term, but it also involves deploy step).
+
 ### Dependency Graph Collection
 
 Collecting is the first step, user input is usually root artifact along with set of remote repositories to use.
