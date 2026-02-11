@@ -36,7 +36,7 @@ Known issues:
 
 Maven 4 uses this transport by default for HTTP(S) protocol.
 
-## The `apache` (Apache HttpClient) Transport
+## The `apache` (Apache HttpClient) Transporter
 
 Transporter based on Apache HttpClient.
 
