@@ -100,19 +100,20 @@ into model builder, that in turn, during building, will ask for POM resolutions 
 
 ----
 
-In general, steps "collection" and "conflict resolution" are done together, and lingo we use for those is "dependency collection".
+In general, steps "dependency graph collection" and "conflict resolution" are performed together, and lingo we use for that operation is "dependency collection".
 The "flattening" and "artifact resolving" are also usually done together, and we use for those the term "artifact resolving".
-To have the story more confusing, all the steps together are also called "dependency resolution".
+To have the story more confusing, when all the steps are performed together is also called "dependency resolution".
 Resolver API reflects this terminology and offers methods doing collection, resolution or both.
-
-Method `CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)` performs only the collection step,
+* 
+* Method `CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)` performs only the collection step,
 as name suggests. Hence, only steps "collection" and "conflict resolution" are performed.
-
-Method `List<ArtifactResult> resolveArtifacts(RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)`
+* Method `List<ArtifactResult> resolveArtifacts(RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)`
 performs only the artifact resolving step.
-
-Method `DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)` performs both 
+* Method `DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)` performs both 
 collection and resolution steps.
 
 Also, each subsequent step depends on the previous one, for example a "dirty graph" cannot be flattened (due possible cycles).
+And many times, what you want depends on your use case. For example, to investigate dependency graph, one may 
+want to collect the dirty graph, but not conflict resolve it. Moreover, dirty graphs are usually not even resolvable
+due cycles.
 
