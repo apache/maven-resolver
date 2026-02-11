@@ -47,6 +47,8 @@ The term "resolving" is a bit overloaded, but in general it involves following s
 We call an artifact "resolvable" if it can be resolved from any available (local or remote) repository. To make artifact
 "resolvable" from local repository, one needs to "install" it. To make artifact "resolvable" from remote repository, 
 one needs to "deploy" it (this is over-simplification; publishing is new term, but it also involves deploy step).
+For integrating apps, there are extension points like `WorkspaceReader` is, that can make artifacts resolvable 
+without installing or deploying them, but that is an integration detail.
 
 ### Dependency Graph Collection
 
