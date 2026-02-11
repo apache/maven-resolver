@@ -42,7 +42,7 @@ Transporter based on Apache HttpClient.
 
 To use this transporter in Maven 4, you need to specify `-Dmaven.resolver.transport=apache` user property.
 
-## The `jetty` (Jetty HttpClient) Transport
+## The `jetty` (Jetty HttpClient) Transporter
 
 Transporter based on Jetty HttpClient. 
 
