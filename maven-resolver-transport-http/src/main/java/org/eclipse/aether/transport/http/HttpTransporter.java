@@ -49,6 +49,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
+import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.HttpResponseException;
@@ -76,6 +77,7 @@ import org.apache.http.impl.auth.DigestSchemeFactory;
 import org.apache.http.impl.auth.KerberosSchemeFactory;
 import org.apache.http.impl.auth.NTLMSchemeFactory;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
+import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -99,6 +101,7 @@ import org.eclipse.aether.transport.http.RFC9457.HttpRFC9457Exception;
 import org.eclipse.aether.transport.http.RFC9457.RFC9457Reporter;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.FileUtils;
+import org.eclipse.aether.util.StringDigestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,6 +157,10 @@ final class HttpTransporter extends AbstractTransporter {
     private final boolean preemptivePutAuth;
 
     private final boolean supportWebDav;
+
+    private final AuthCache authCache;
+
+    private static final Object AUTH_CACHE_MUTEX = new Object();
 
     @SuppressWarnings("checkstyle:methodlength")
     HttpTransporter(
@@ -358,6 +365,20 @@ final class HttpTransporter extends AbstractTransporter {
             builder.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE);
         }
 
+        if (session.getCache() != null) {
+            String authCacheKey = getClass().getSimpleName() + "-" + repository.getId() + "-"
+                    + StringDigestUtil.sha1(repository.toString());
+            synchronized (AUTH_CACHE_MUTEX) {
+                AuthCache cache = (AuthCache) session.getCache().get(session, authCacheKey);
+                if (cache == null) {
+                    cache = new BasicAuthCache();
+                    session.getCache().put(session, authCacheKey, cache);
+                }
+                this.authCache = cache;
+            }
+        } else {
+            this.authCache = new BasicAuthCache();
+        }
         this.client = builder.build();
     }
 
@@ -504,10 +525,10 @@ final class HttpTransporter extends AbstractTransporter {
     private void execute(HttpUriRequest request, EntityGetter getter) throws Exception {
         try {
             SharingHttpContext context = new SharingHttpContext(state);
+            context.setAuthCache(authCache);
             prepare(request, context);
             try (CloseableHttpResponse response = client.execute(server, request, context)) {
                 try {
-                    context.close();
                     handleStatus(response);
                     if (getter != null) {
                         getter.handle(response);
