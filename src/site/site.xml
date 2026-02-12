@@ -45,6 +45,7 @@ under the License.
       <item name="Resolving Dependencies" href="resolving-dependencies.html"/>
       <item name="Common Misconceptions" href="common-misconceptions.html"/>
       <item name="Artifact Deployment" href="deployment.html"/>
+      <item name="How Resolver Works" href="how-resolver-works.html"/>
       <item name="Transporter Known Issues" href="transporter-known-issues.html"/>
     </menu>
     <menu name="Reference">
