@@ -39,10 +39,10 @@ are places where artifacts are stored and from where they can be retrieved. Reso
 with one local repository (usually a directory on local filesystem) and zero or more remote repositories.
 
 The term "resolving" is a bit overloaded, but in general it involves following steps:
-* **dependency graph collection** builds the "dependency graph"
-* **conflict resolution** makes the graph free of cycles, conflicts and duplicates, resulting in "dependency tree"
-* **flattening** transforms the tree into a flat list of artifacts, which also represents classpath ordering
-* **artifact resolving** is the process of resolving (downloading and caching, if needed) the actual artifact payload
+1. **dependency graph collection** builds the "dependency graph"
+2. **conflict resolution** makes the graph free of cycles, conflicts and duplicates, resulting in "dependency tree"
+3. **flattening** transforms the tree into a flat list of artifacts, which also represents classpath ordering
+4. **artifact resolving** is the process of resolving (downloading and caching, if needed) the actual artifact payload
 
 We call an artifact "resolvable" if it can be resolved from any available (local or remote) repository. To make an artifact
 "resolvable" from the local repository, one needs to "install" it. To make an artifact "resolvable" from a remote repository, 
