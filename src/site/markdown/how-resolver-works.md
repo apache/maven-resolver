@@ -22,17 +22,17 @@ Maven Artifact Resolver (former Aether) is a central piece of Maven.
 This document tries to  explain how resolver works under the hood, and explain the main concepts
 and building blocks of Resolver.
 
-Resolver alone is "incomplete". Integrating application, like Maven is
-the one that provides the "glue" (models) and logic how to resolve versions, ranges, build effective models.
-By itself, Resolver is unusable. One needs to complement it with models and implementations of missing 
-components. Historically, the Maven module completing Resolver is `org.apache.maven:maven-resolver-provider`.
+Resolver alone is "incomplete". Integrating applications like Maven provide the "glue" (models) and logic to 
+resolve versions and ranges and build effective models. By itself, Resolver is unusable. One needs to complement it 
+with models and implementations of missing components. Historically, the Maven module completing Resolver 
+is `org.apache.maven:maven-resolver-provider`.
 
 
 
 ## Core Concepts
 
 At the core of Resolver are **artifacts** and **repositories**. An artifact is basically a 
-"symbolic coordinate" of some content. Usually it is a JAR, but it can be really anything, as long as it is
+"symbolic coordinate" backed by some content. Usually it is a JAR, but it can be really anything, as long as it is
 "addressable" using Maven coordinates: `<groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>` (default value of
 `extension` is `jar`, and default value for `classifier` is `""`, empty string). Repositories
 are places where artifacts are stored and from where they can be retrieved. Resolver, by default operates
@@ -46,28 +46,28 @@ The term "resolving" is a bit overloaded, but in general it involves following s
 
 We call an artifact "resolvable" if it can be resolved from any available (local or remote) repository. To make an artifact
 "resolvable" from the local repository, one needs to "install" it. To make an artifact "resolvable" from a remote repository, 
-one needs to "deploy" it (this is over-simplification; publishing is new term, but it also involves deploy step).
+one needs to "deploy" it (this is an over-simplification; publishing is new term, but it also involves deploy step).
 Furthermore, there are extension points like `WorkspaceReader` that can make artifacts resolvable 
 without installing or deploying them, but that is an integration detail (like Maven does by exposing reactor projects).
 
 ### Dependency Graph Collection
 
-Collecting is the first step. Caller usually provides the root artifact along with the set of remote repositories to use.
-Output of collection is **dependency graph**; a.k.a. "dirty graph" that may contain cycles, conflicts, 
+Collection is the first step. The caller usually provides the root artifact along with the set of remote repositories to use.
+The output of the collection step is a **dependency graph**; a.k.a. a "dirty graph" that may contain cycles, conflicts, 
 duplicates and the like.
 
-Since Resolver 1.9.x there are two collector implementations: the legacy DepthFirst (DF) and the new BreadthFirst (BF) collector.
+Since Resolver 1.9.x there are two collector implementations: the legacy depth-first (DF) and the new breadth-first (BF) collector.
 The BF collector is now the default, as it offers better performance.
 
 One very important thing, that is constantly misunderstood, is what information is used during graph collection. 
 Only certain parts of the effective model are used, not the whole POM.
-If am allowed to overly simplify, only the following aspects of the effective model are used during graph collection:
+If I am allowed to overly simplify, only the following aspects of the effective model are used during graph collection:
 * `project/dependencies` as direct dependencies on given node
 * `project/dependencyManagement/dependencies` for **subsequent** dependency management on given node
 * `project/repositories` for **subsequent** repositories to be used on given node
 
 For more, check out `org.eclipse.aether.resolution.ArtifactDescriptorResult` class, as that is the "peephole" for Resolver
-to see effective model.
+to see the effective model.
 
 Another important detail is that Resolver 1.x by default ignored transitive dependency management. This changed in
 Resolver 2.x where transitive dependency management is enabled by default.
@@ -79,7 +79,7 @@ See also [common misconceptions](common-misconceptions.html).
 
 ### Conflict Resolution
 
-Conflict resolution is the process of removing conflicts, duplicates and cycles from the dependency graph, resulting 
+Conflict resolution is the process of removing conflicts, duplicates, and cycles from the dependency graph, resulting 
 in the **dependency tree** (as cycles are removed).
 
 Resolver 2.x has two conflict resolver implementations: "legacy" (doing multiple graph passes) and new, 
@@ -95,14 +95,13 @@ Flattening is the process of transforming the tree into a flat list of artifacts
 This is where filtering is applied as well.
 
 Resolver historically used "pre-order" to flatten the tree into a list, but Resolver 2 offers three strategies: "pre-order", 
-"post-order", and "level order" (the default). These strategies are currently fixed, but in the future we may offer a more 
-flexible API for custom flattening strategies.
+"post-order", and "level order" (the default).
 
 This step operates only on the tree stored in memory. There is no resolution of any kind.
 
 ### Artifact Resolution
 
-Artifact resolution is the process of resolving (downloading and caching, if needed) the actual artifact payload from 
+Artifact resolution is the process of resolving (downloading and caching, if needed) the actual artifact content from 
 local repository.
 
 This step is implicitly used by the Dependency Graph Resolution step as well, as collector
@@ -123,8 +122,7 @@ performs only the artifact resolving step.
 * Method `DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)` performs both 
 collection and resolution steps.
 
-Also, each subsequent step depends on the previous one. For example a "dirty graph" cannot be flattened (due possible cycles).
-Many times, what you want depends on your use case. For example, to investigate dependency graph, one may 
-want to collect the dirty graph, but not conflict resolve it. Moreover, dirty graphs are usually not even resolvable
-due cycles.
+Each subsequent step depends on the previous one. For example a "dirty graph" cannot be flattened (due to possible cycles).
+Many times, what you want depends on your use case. For example, to investigate the dependency graph, one may 
+want to collect the dirty graph, but not conflict resolve it.
 
