@@ -48,7 +48,7 @@ import org.eclipse.jetty.util.thread.SerializedInvoker;
 /**
  * Heavily inspired by Jetty's {@code org.eclipse.jetty.io.internal.ByteChannelContentSource} but adjusted to deal with
  * {@link ReadableByteChannel}s and to support rewind (to be able to retry the requests).
- * Also Jetty's {@code ByteChannelContentSource} is an internal package so should not be used directly.
+ * Also, Jetty's {@code ByteChannelContentSource} is an internal package so should not be used directly.
  * @see <a href="https://javadoc.jetty.org/jetty-12/org/eclipse/jetty/io/internal/ByteChannelContentSource.html">ByteChannelContentSource</a>
  * @see <a href="https://github.com/jetty/jetty.project/issues/14324">Jetty Issue #14324</a>
  */
@@ -88,12 +88,12 @@ public class PutTaskRequestContent extends ByteBufferRequestContent implements R
     private Runnable demandCallback;
     private Content.Chunk terminal;
     /** Only necessary for rewind support when leveraging the input stream. */
-    private Supplier<ReadableByteChannel> newByteChannelSupplier;
+    private final Supplier<ReadableByteChannel> newByteChannelSupplier;
 
     /**
      * Create a {@link ByteChannelContentSource} which reads from a {@link ByteChannel}.
      * @param byteBufferPool The {@link org.eclipse.jetty.io.ByteBufferPool.Sized} to use for any internal buffers.
-     * @param byteChannel The {@link ByteChannel}s to use as the source.
+     * @param newByteChannelSupplier The {@link ByteChannel} supplier.
      */
     protected PutTaskRequestContent(
             ByteBufferPool.Sized byteBufferPool, Supplier<ReadableByteChannel> newByteChannelSupplier) {
@@ -105,7 +105,7 @@ public class PutTaskRequestContent extends ByteBufferRequestContent implements R
      * If the {@link ByteChannel} is an instance of {@link SeekableByteChannel} the implementation will use
      * {@link SeekableByteChannel#position(long)} to navigate to the starting offset.
      * @param byteBufferPool The {@link org.eclipse.jetty.io.ByteBufferPool.Sized} to use for any internal buffers.
-     * @param byteChannel The {@link ByteChannel}s to use as the source.
+     * @param newByteChannelSupplier The {@link ByteChannel} supplier.
      * @param offset the offset byte of the content to start from.
      *               Must be greater than or equal to 0 and less than the content length (if known).
      * @param length the length of the content to make available, -1 for the full length.
@@ -154,9 +154,7 @@ public class PutTaskRequestContent extends ByteBufferRequestContent implements R
 
     protected void lockedSetTerminal(Content.Chunk terminal) {
         assert lock.isHeldByCurrentThread();
-        if (terminal == null) {
-            terminal = Objects.requireNonNull(terminal);
-        } else {
+        if (terminal != null) {
             ExceptionUtil.addSuppressedIfNotAssociated(terminal.getFailure(), terminal.getFailure());
         }
         IO.close(byteChannel);
