@@ -857,18 +857,22 @@ public abstract class HttpTransporterTest {
     @Test
     protected void testPut_FromMemory() throws Exception {
         RecordingTransportListener listener = new RecordingTransportListener();
+        String payload = "upload";
         PutTask task =
-                new PutTask(URI.create("repo/file.txt")).setListener(listener).setDataString("upload");
+                new PutTask(URI.create("repo/file.txt")).setListener(listener).setDataString(payload);
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(6L, listener.getDataLength());
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
+        assertEquals(
+                String.valueOf(payload.getBytes(StandardCharsets.UTF_8).length),
+                httpServer.getLogEntries().get(0).getRequestHeaders().get("Content-Length"));
     }
 
     @Test
-    protected void testPut_FromFile() throws Exception {
+    protected void testPut_MFromFile() throws Exception {
         File file = TestFileUtils.createTempFile("upload");
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
@@ -879,6 +883,9 @@ public abstract class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
+        assertEquals(
+                String.valueOf(file.length()),
+                httpServer.getLogEntries().get(0).getRequestHeaders().get("Content-Length"));
     }
 
     @Test
