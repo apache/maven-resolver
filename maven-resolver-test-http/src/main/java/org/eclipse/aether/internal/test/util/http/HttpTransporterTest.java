@@ -872,7 +872,7 @@ public abstract class HttpTransporterTest {
     }
 
     @Test
-    protected void testPut_MFromFile() throws Exception {
+    protected void testPut_FromFile() throws Exception {
         File file = TestFileUtils.createTempFile("upload");
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
