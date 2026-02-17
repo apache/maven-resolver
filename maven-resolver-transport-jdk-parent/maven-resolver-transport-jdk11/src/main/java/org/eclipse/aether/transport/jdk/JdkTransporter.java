@@ -409,6 +409,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                             throw new UncheckedIOException(e);
                         }
                     }),
+                   // this adds a content-length request header
                     task.getDataLength()));
         }
         prepare(request);
