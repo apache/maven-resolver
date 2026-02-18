@@ -397,14 +397,21 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
         headers.forEach(request::setHeader);
 
-        request.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> {
-            try {
-                return new TransportListenerNotifyingInputStream(
-                        task.newInputStream(), task.getListener(), task.getDataLength());
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }));
+        if (task.getDataLength() == 0L) {
+            request.PUT(HttpRequest.BodyPublishers.noBody());
+        } else {
+            request.PUT(HttpRequest.BodyPublishers.fromPublisher(
+                    HttpRequest.BodyPublishers.ofInputStream(() -> {
+                        try {
+                            return new TransportListenerNotifyingInputStream(
+                                    task.newInputStream(), task.getListener(), task.getDataLength());
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    }),
+                    // this adds a content-length request header
+                    task.getDataLength()));
+        }
         prepare(request);
         try {
             HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
