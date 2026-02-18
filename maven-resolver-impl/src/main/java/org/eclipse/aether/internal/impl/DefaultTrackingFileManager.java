@@ -161,9 +161,16 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
             try {
                 lock = channel.lock(0, Long.MAX_VALUE, shared);
                 break;
-            } catch (OverlappingFileLockException e) {
+            } catch (OverlappingFileLockException | IOException e) {
+                // For Unix process sun.nio.ch.UnixFileDispatcherImpl.lock0() is a native method that can throw IOException
+                // with message "Resource deadlock avoided"
+                // the system call level is involving fcntl() or flock()
+                // If the kernel detects that granting the lock would result in a deadlock
+                // (where two processes are waiting for each other to release locks which can happen when two processes are trying to lock the same file), 
+                // it returns an EDEADLK error, which Java throws as an IOException.
+                // Read another comment from https://github.com/bdeployteam/bdeploy/blob/7c04e7228d6d48b8990e6703a8d476e21024c639/bhive/src/main/java/io/bdeploy/bhive/objects/LockableDatabase.java#L57
                 if (attempts <= 0) {
-                    throw new IOException(e);
+                    throw (e instanceof IOException) ? (IOException) e : new IOException(e);
                 }
                 try {
                     Thread.sleep(50L);
