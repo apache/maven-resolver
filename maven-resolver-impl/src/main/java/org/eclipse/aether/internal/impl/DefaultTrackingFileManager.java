@@ -127,6 +127,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         }
     }
 
+    @Deprecated
     @Override
     public boolean delete(File file) {
         return delete(file.toPath());
