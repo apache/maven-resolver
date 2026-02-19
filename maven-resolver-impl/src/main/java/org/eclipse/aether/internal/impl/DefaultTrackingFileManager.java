@@ -151,8 +151,28 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         return false;
     }
 
-    private Object mutex(Path path) {
-        return path.toAbsolutePath().normalize().toString().intern();
+    /**
+     * This method creates a "mutex" object to synchronize on thread level, within same JVM, to prevent multiple
+     * threads from trying to lock the same file at the same time. Threads concurrently working on different files
+     * are okay, as after syncing on mutex, they operate with FS locking, that goal is to synchronize with possible
+     * other Maven processes, and not with other threads in this JVM.
+     */
+    private static Object mutex(Path path) {
+        // The interned string of path is (mis)used as mutex, to exclude different threads going for same file,
+        // as JVM file locking happens on JVM not on Thread level. This is how original code did it  ¯\_(ツ)_/¯
+        return canonicalPath(path).toString().intern();
+    }
+
+    /**
+     * Tries the best it can to figure out actual file the workload is about, while resolving cases like symlinked
+     * local repository etc.
+     */
+    private static Path canonicalPath(Path path) {
+        try {
+            return path.toRealPath();
+        } catch (IOException e) {
+            return canonicalPath(path.getParent()).resolve(path.getFileName());
+        }
     }
 
     private FileLock fileLock(FileChannel channel, boolean shared) throws IOException {
@@ -163,8 +183,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                 break;
             } catch (OverlappingFileLockException | IOException e) {
                 // For Unix process sun.nio.ch.UnixFileDispatcherImpl.lock0() is a native method that can throw
-                // IOException
-                // with message "Resource deadlock avoided"
+                // IOException with message "Resource deadlock avoided"
                 // the system call level is involving fcntl() or flock()
                 // If the kernel detects that granting the lock would result in a deadlock
                 // (where two processes are waiting for each other to release locks which can happen when two processes
@@ -172,6 +191,8 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
                 // it returns an EDEADLK error, which Java throws as an IOException.
                 // Read another comment from
                 // https://github.com/bdeployteam/bdeploy/blob/7c04e7228d6d48b8990e6703a8d476e21024c639/bhive/src/main/java/io/bdeploy/bhive/objects/LockableDatabase.java#L57
+                // Note (cstamas): seems this MAY also happen where there is ONE process but performs locking on same
+                // file from multiple threads, as Linux kernel performs lock detection on process level.
                 if (attempts <= 0) {
                     throw (e instanceof IOException) ? (IOException) e : new IOException(e);
                 }
