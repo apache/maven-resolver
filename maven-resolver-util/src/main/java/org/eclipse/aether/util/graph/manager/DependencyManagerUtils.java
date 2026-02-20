@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 
@@ -87,7 +88,7 @@ public final class DependencyManagerUtils {
      *         or if {@link #CONFIG_PROP_VERBOSE} was not enabled
      */
     public static String getPremanagedVersion(DependencyNode node) {
-        if ((node.getManagedBits() & DependencyNode.MANAGED_VERSION) == 0) {
+        if (!node.isManagedSubject(DependencyManagement.Subject.VERSION)) {
             return null;
         }
         return cast(node.getData().get(NODE_DATA_PREMANAGED_VERSION), String.class);
@@ -101,7 +102,7 @@ public final class DependencyManagerUtils {
      *         if {@link #CONFIG_PROP_VERBOSE} was not enabled
      */
     public static String getPremanagedScope(DependencyNode node) {
-        if ((node.getManagedBits() & DependencyNode.MANAGED_SCOPE) == 0) {
+        if (!node.isManagedSubject(DependencyManagement.Subject.SCOPE)) {
             return null;
         }
         return cast(node.getData().get(NODE_DATA_PREMANAGED_SCOPE), String.class);
@@ -115,7 +116,7 @@ public final class DependencyManagerUtils {
      *         {@link #CONFIG_PROP_VERBOSE} was not enabled
      */
     public static Boolean getPremanagedOptional(DependencyNode node) {
-        if ((node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) == 0) {
+        if (!node.isManagedSubject(DependencyManagement.Subject.OPTIONAL)) {
             return null;
         }
         return cast(node.getData().get(NODE_DATA_PREMANAGED_OPTIONAL), Boolean.class);
@@ -131,7 +132,7 @@ public final class DependencyManagerUtils {
      */
     @SuppressWarnings("unchecked")
     public static Collection<Exclusion> getPremanagedExclusions(DependencyNode node) {
-        if ((node.getManagedBits() & DependencyNode.MANAGED_EXCLUSIONS) == 0) {
+        if (!node.isManagedSubject(DependencyManagement.Subject.EXCLUSIONS)) {
             return null;
         }
         return cast(node.getData().get(NODE_DATA_PREMANAGED_EXCLUSIONS), Collection.class);
@@ -147,7 +148,7 @@ public final class DependencyManagerUtils {
      */
     @SuppressWarnings("unchecked")
     public static Map<String, String> getPremanagedProperties(DependencyNode node) {
-        if ((node.getManagedBits() & DependencyNode.MANAGED_PROPERTIES) == 0) {
+        if (!node.isManagedSubject(DependencyManagement.Subject.PROPERTIES)) {
             return null;
         }
         return cast(node.getData().get(NODE_DATA_PREMANAGED_PROPERTIES), Map.class);

@@ -29,7 +29,6 @@ import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 
@@ -38,27 +37,30 @@ import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
  */
 public class PremanagedDependency {
 
-    final String premanagedVersion;
+    private final String premanagedVersion;
 
-    final String premanagedScope;
+    private final String premanagedScope;
 
-    final Boolean premanagedOptional;
-
-    /**
-     * @since 1.1.0
-     */
-    final Collection<Exclusion> premanagedExclusions;
+    private final Boolean premanagedOptional;
 
     /**
      * @since 1.1.0
      */
-    final Map<String, String> premanagedProperties;
+    private final Collection<Exclusion> premanagedExclusions;
 
-    final int managedBits;
+    /**
+     * @since 1.1.0
+     */
+    private final Map<String, String> premanagedProperties;
 
-    final Dependency managedDependency;
+    /**
+     * @since 2.0.14
+     */
+    private final Map<DependencyManagement.Subject, Boolean> managedSubjects;
 
-    final boolean premanagedState;
+    private final Dependency managedDependency;
+
+    private final boolean premanagedState;
 
     @SuppressWarnings("checkstyle:parameternumber")
     PremanagedDependency(
@@ -67,7 +69,7 @@ public class PremanagedDependency {
             Boolean premanagedOptional,
             Collection<Exclusion> premanagedExclusions,
             Map<String, String> premanagedProperties,
-            int managedBits,
+            Map<DependencyManagement.Subject, Boolean> managedSubjects,
             Dependency managedDependency,
             boolean premanagedState) {
         this.premanagedVersion = premanagedVersion;
@@ -80,7 +82,7 @@ public class PremanagedDependency {
         this.premanagedProperties =
                 premanagedProperties != null ? Collections.unmodifiableMap(new HashMap<>(premanagedProperties)) : null;
 
-        this.managedBits = managedBits;
+        this.managedSubjects = managedSubjects;
         this.managedDependency = managedDependency;
         this.premanagedState = premanagedState;
     }
@@ -92,7 +94,7 @@ public class PremanagedDependency {
             boolean premanagedState) {
         DependencyManagement depMngt = depManager != null ? depManager.manageDependency(dependency) : null;
 
-        int managedBits = 0;
+        Map<DependencyManagement.Subject, Boolean> managedSubjects = new HashMap<>();
         String premanagedVersion = null;
         String premanagedScope = null;
         Boolean premanagedOptional = null;
@@ -104,37 +106,48 @@ public class PremanagedDependency {
                 Artifact artifact = dependency.getArtifact();
                 premanagedVersion = artifact.getVersion();
                 dependency = dependency.setArtifact(artifact.setVersion(depMngt.getVersion()));
-                managedBits |= DependencyNode.MANAGED_VERSION;
+                managedSubjects.put(
+                        DependencyManagement.Subject.VERSION,
+                        depMngt.isManagedSubjectEnforced(DependencyManagement.Subject.VERSION));
             }
             if (depMngt.getProperties() != null) {
                 Artifact artifact = dependency.getArtifact();
                 premanagedProperties = artifact.getProperties();
                 dependency = dependency.setArtifact(artifact.setProperties(depMngt.getProperties()));
-                managedBits |= DependencyNode.MANAGED_PROPERTIES;
+                managedSubjects.put(
+                        DependencyManagement.Subject.PROPERTIES,
+                        depMngt.isManagedSubjectEnforced(DependencyManagement.Subject.PROPERTIES));
             }
             if (depMngt.getScope() != null) {
                 premanagedScope = dependency.getScope();
                 dependency = dependency.setScope(depMngt.getScope());
-                managedBits |= DependencyNode.MANAGED_SCOPE;
+                managedSubjects.put(
+                        DependencyManagement.Subject.SCOPE,
+                        depMngt.isManagedSubjectEnforced(DependencyManagement.Subject.SCOPE));
             }
             if (depMngt.getOptional() != null) {
                 premanagedOptional = dependency.isOptional();
                 dependency = dependency.setOptional(depMngt.getOptional());
-                managedBits |= DependencyNode.MANAGED_OPTIONAL;
+                managedSubjects.put(
+                        DependencyManagement.Subject.OPTIONAL,
+                        depMngt.isManagedSubjectEnforced(DependencyManagement.Subject.OPTIONAL));
             }
             if (depMngt.getExclusions() != null) {
                 premanagedExclusions = dependency.getExclusions();
                 dependency = dependency.setExclusions(depMngt.getExclusions());
-                managedBits |= DependencyNode.MANAGED_EXCLUSIONS;
+                managedSubjects.put(
+                        DependencyManagement.Subject.EXCLUSIONS,
+                        depMngt.isManagedSubjectEnforced(DependencyManagement.Subject.EXCLUSIONS));
             }
         }
+
         return new PremanagedDependency(
                 premanagedVersion,
                 premanagedScope,
                 premanagedOptional,
                 premanagedExclusions,
                 premanagedProperties,
-                managedBits,
+                managedSubjects,
                 dependency,
                 premanagedState);
     }
@@ -144,7 +157,7 @@ public class PremanagedDependency {
     }
 
     public void applyTo(DefaultDependencyNode child) {
-        child.setManagedBits(managedBits);
+        child.setManagedSubjects(managedSubjects);
         if (premanagedState) {
             child.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_VERSION, premanagedVersion);
             child.setData(DependencyManagerUtils.NODE_DATA_PREMANAGED_SCOPE, premanagedScope);

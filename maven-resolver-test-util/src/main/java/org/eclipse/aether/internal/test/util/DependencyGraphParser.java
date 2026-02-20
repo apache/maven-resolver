@@ -36,6 +36,7 @@ import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -291,16 +292,16 @@ public class DependencyGraphParser {
             DefaultArtifact artifact = new DefaultArtifact(def.coords, def.properties);
             Dependency dependency = new Dependency(artifact, def.scope, def.optional);
             node = new DefaultDependencyNode(dependency);
-            int managedBits = 0;
+            Map<DependencyManagement.Subject, Boolean> managedSubjects = new HashMap<>();
             if (def.premanagedScope != null) {
-                managedBits |= DependencyNode.MANAGED_SCOPE;
+                managedSubjects.put(DependencyManagement.Subject.SCOPE, true);
                 node.setData("premanaged.scope", def.premanagedScope);
             }
             if (def.premanagedVersion != null) {
-                managedBits |= DependencyNode.MANAGED_VERSION;
+                managedSubjects.put(DependencyManagement.Subject.VERSION, true);
                 node.setData("premanaged.version", def.premanagedVersion);
             }
-            node.setManagedBits(managedBits);
+            node.setManagedSubjects(managedSubjects);
             if (def.relocations != null) {
                 List<Artifact> relocations = new ArrayList<>();
                 for (String relocation : def.relocations) {
