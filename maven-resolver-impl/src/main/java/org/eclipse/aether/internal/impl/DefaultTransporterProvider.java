@@ -66,6 +66,13 @@ public final class DefaultTransporterProvider implements TransporterProvider {
 
         List<NoTransporterException> errors = new ArrayList<>();
         for (PrioritizedComponent<TransporterFactory> factory : factories.getEnabled()) {
+            if (!factory.getComponent().canHandle(repository.getProtocol())) {
+                LOGGER.debug(
+                        "Transporter factory {} cannot deal with protocol {}",
+                        factory.getComponent(),
+                        repository.getProtocol());
+                continue;
+            }
             try {
                 Transporter transporter = factory.getComponent().newInstance(session, repository);
 
