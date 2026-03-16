@@ -24,7 +24,7 @@ criteria.
 ### Why?
 
 Remote Repository Filtering (RRF) is a long requested feature of Maven. It's useful when a build uses
-several remote repositories. In such cases, Maven "searches" the ordered list (effective POM) of remote repositories,
+several remote repositories. In such cases, Maven "searches" the [ordered list (effective POM) of remote repositories](https://maven.apache.org/guides/mini/guide-multiple-repositories.html#repository-order),
 and artifacts are resolved using a loop and a "first found wins" strategy. This has several implications:
 
 * The build is slower because when an artifact is in the Nth repository, Maven first queries the previous N-1 repositories  that will result in
