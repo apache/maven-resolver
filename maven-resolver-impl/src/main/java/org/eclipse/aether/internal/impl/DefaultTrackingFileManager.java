@@ -36,7 +36,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
+import org.eclipse.aether.named.NamedLock;
+import org.eclipse.aether.named.NamedLockKey;
+import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +56,7 @@ import org.slf4j.LoggerFactory;
 @Named
 public final class DefaultTrackingFileManager implements TrackingFileManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTrackingFileManager.class);
+    private static final FileLockNamedLockFactory FILE_LOCK_FACTORY = new FileLockNamedLockFactory();
 
     @Deprecated
     @Override
@@ -62,18 +67,24 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
     @Override
     public Properties read(Path path) {
         if (Files.isReadable(path)) {
-            synchronized (mutex(path)) {
-                try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-                        FileLock unused = fileLock(fileChannel, true)) {
-                    Properties props = new Properties();
-                    props.load(Channels.newInputStream(fileChannel));
-                    return props;
-                } catch (NoSuchFileException e) {
-                    LOGGER.debug("No such file to read {}: {}", path, e.getMessage());
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to read tracking file '{}'", path, e);
-                    throw new UncheckedIOException(e);
+            final String lockUri = lockUri(path);
+            try (NamedLock lock = FILE_LOCK_FACTORY.getLock(NamedLockKey.of(lockUri, lockUri))) {
+                if (lock.lockExclusively(10L, TimeUnit.SECONDS)) {
+                    try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ)) {
+                        Properties props = new Properties();
+                        props.load(Channels.newInputStream(fileChannel));
+                        return props;
+                    } catch (NoSuchFileException e) {
+                        LOGGER.debug("No such file to read {}: {}", path, e.getMessage());
+                    } catch (IOException e) {
+                        LOGGER.warn("Failed to read tracking file '{}'", path, e);
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        lock.unlock();
+                    }
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
         return null;
@@ -162,6 +173,10 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         // The interned string of path is (mis)used as mutex, to exclude different threads going for same file,
         // as JVM file locking happens on JVM not on Thread level. This is how original code did it  ¯\_(ツ)_/¯
         return canonicalPath(path).toString().intern();
+    }
+
+    private static String lockUri(Path path) {
+        return canonicalPath(path).toUri().toString();
     }
 
     /**
