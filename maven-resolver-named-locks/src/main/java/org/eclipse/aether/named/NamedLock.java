@@ -29,8 +29,7 @@ import java.util.concurrent.TimeUnit;
  *     if (lock.lockExclusively(10L, Timeunit.SECONDS)) {
  *       try {
  *         ... exclusive access to "resourceName" resource gained here
- *       }
- *       finally {
+ *       } finally {
  *         lock.unlock();
  *       }
  *     }
