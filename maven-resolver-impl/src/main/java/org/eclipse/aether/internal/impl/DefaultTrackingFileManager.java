@@ -44,6 +44,8 @@ import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 /**
  * Manages access to a properties file.
  * <p>
@@ -57,6 +59,7 @@ import org.slf4j.LoggerFactory;
 public final class DefaultTrackingFileManager implements TrackingFileManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTrackingFileManager.class);
     private static final FileLockNamedLockFactory FILE_LOCK_FACTORY = new FileLockNamedLockFactory();
+    private static final long FILE_LOCK_TIMEOUT = 10L;
 
     @Deprecated
     @Override
@@ -69,7 +72,7 @@ public final class DefaultTrackingFileManager implements TrackingFileManager {
         if (Files.isReadable(path)) {
             final String lockUri = lockUri(path);
             try (NamedLock lock = FILE_LOCK_FACTORY.getLock(NamedLockKey.of(lockUri, lockUri))) {
-                if (lock.lockExclusively(10L, TimeUnit.SECONDS)) {
+                if (lock.lockExclusively(FILE_LOCK_TIMEOUT, SECONDS)) {
                     try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ)) {
                         Properties props = new Properties();
                         props.load(Channels.newInputStream(fileChannel));
