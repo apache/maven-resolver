@@ -48,27 +48,27 @@ public final class NamedLockFactoryAdapter {
 
     /**
      * The maximum of time amount to be blocked to obtain lock.
+     * <strong>Deprecated: use {@code aether.system.named...} configuration instead.</strong>
      *
      * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Long}
-     * @configurationDefaultValue {@link #DEFAULT_TIME}
+     * @deprecated
      */
+    @Deprecated
     public static final String CONFIG_PROP_TIME = CONFIG_PROPS_PREFIX + "time";
-
-    public static final long DEFAULT_TIME = 900L;
 
     /**
      * The unit of maximum time amount to be blocked to obtain lock. Use TimeUnit enum names.
+     * <strong>Deprecated: use {@code aether.system.named...} configuration instead.</strong>
      *
      * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #DEFAULT_TIME_UNIT}
+     * @deprecated
      */
+    @Deprecated
     public static final String CONFIG_PROP_TIME_UNIT = CONFIG_PROPS_PREFIX + "time.unit";
-
-    public static final String DEFAULT_TIME_UNIT = "SECONDS";
 
     /**
      * The amount of retries on time-out.
@@ -98,9 +98,19 @@ public final class NamedLockFactoryAdapter {
 
     private final NamedLockFactory namedLockFactory;
 
-    public NamedLockFactoryAdapter(final NameMapper nameMapper, final NamedLockFactory namedLockFactory) {
+    private final long lockWait;
+
+    private final TimeUnit lockWaitUnit;
+
+    public NamedLockFactoryAdapter(
+            final NameMapper nameMapper,
+            final NamedLockFactory namedLockFactory,
+            long lockWait,
+            TimeUnit lockWaitUnit) {
         this.nameMapper = requireNonNull(nameMapper);
         this.namedLockFactory = requireNonNull(namedLockFactory);
+        this.lockWait = lockWait;
+        this.lockWaitUnit = requireNonNull(lockWaitUnit);
         // TODO: this is ad-hoc "validation", experimental and likely to change
         if (this.namedLockFactory instanceof FileLockNamedLockFactory && !this.nameMapper.isFileSystemFriendly()) {
             throw new IllegalArgumentException(
@@ -109,7 +119,7 @@ public final class NamedLockFactoryAdapter {
     }
 
     public SyncContext newInstance(final RepositorySystemSession session, final boolean shared) {
-        return new AdaptedLockSyncContext(session, shared, nameMapper, namedLockFactory);
+        return new AdaptedLockSyncContext(session, shared, nameMapper, namedLockFactory, lockWait, lockWaitUnit);
     }
 
     /**
@@ -158,34 +168,25 @@ public final class NamedLockFactoryAdapter {
                 final RepositorySystemSession session,
                 final boolean shared,
                 final NameMapper lockNaming,
-                final NamedLockFactory namedLockFactory) {
+                final NamedLockFactory namedLockFactory,
+                final long lockWait,
+                final TimeUnit lockWaitUnit) {
             this.session = session;
             this.shared = shared;
             this.lockNaming = lockNaming;
             this.namedLockFactory = namedLockFactory;
-            this.time = getTime(session, DEFAULT_TIME, CONFIG_PROP_TIME);
-            this.timeUnit = getTimeUnit(session);
+            this.time = lockWait;
+            this.timeUnit = lockWaitUnit;
             this.retry = getRetry(session);
             this.retryWait = getRetryWait(session);
             this.locks = new ArrayDeque<>();
 
-            if (time < 0L) {
-                throw new IllegalArgumentException(CONFIG_PROP_TIME + " value cannot be negative");
-            }
             if (retry < 0L) {
                 throw new IllegalArgumentException(CONFIG_PROP_RETRY + " value cannot be negative");
             }
             if (retryWait < 0L) {
                 throw new IllegalArgumentException(CONFIG_PROP_RETRY_WAIT + " value cannot be negative");
             }
-        }
-
-        private long getTime(final RepositorySystemSession session, long defaultValue, String... keys) {
-            return ConfigUtils.getLong(session, defaultValue, keys);
-        }
-
-        private TimeUnit getTimeUnit(final RepositorySystemSession session) {
-            return TimeUnit.valueOf(ConfigUtils.getString(session, DEFAULT_TIME_UNIT, CONFIG_PROP_TIME_UNIT));
         }
 
         private int getRetry(final RepositorySystemSession session) {

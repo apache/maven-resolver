@@ -50,6 +50,7 @@ import org.eclipse.aether.impl.Installer;
 import org.eclipse.aether.impl.LocalRepositoryProvider;
 import org.eclipse.aether.impl.MetadataGeneratorFactory;
 import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.impl.NamedLockFactorySelector;
 import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -108,6 +109,7 @@ import org.eclipse.aether.internal.impl.filter.FilteringPipelineRepositoryConnec
 import org.eclipse.aether.internal.impl.filter.GroupIdRemoteRepositoryFilterSource;
 import org.eclipse.aether.internal.impl.filter.PrefixesLockingInhibitorFactory;
 import org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSource;
+import org.eclipse.aether.internal.impl.named.DefaultNamedLockFactorySelector;
 import org.eclipse.aether.internal.impl.offline.OfflinePipelineRepositoryConnectorFactory;
 import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
@@ -401,6 +403,20 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return result;
     }
 
+    private NamedLockFactorySelector namedLockFactorySelector;
+
+    public final NamedLockFactorySelector getNamedLockFactorySelector() {
+        checkClosed();
+        if (namedLockFactorySelector == null) {
+            namedLockFactorySelector = createNamedLockFactorySelector();
+        }
+        return namedLockFactorySelector;
+    }
+
+    protected NamedLockFactorySelector createNamedLockFactorySelector() {
+        return new DefaultNamedLockFactorySelector(getNamedLockFactories(), getRepositorySystemLifecycle());
+    }
+
     private NamedLockFactoryAdapterFactory namedLockFactoryAdapterFactory;
 
     public final NamedLockFactoryAdapterFactory getNamedLockFactoryAdapterFactory() {
@@ -413,10 +429,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected NamedLockFactoryAdapterFactory createNamedLockFactoryAdapterFactory() {
         return new NamedLockFactoryAdapterFactoryImpl(
-                getNamedLockFactories(),
-                getNameMappers(),
-                getLockingInhibitorFactories(),
-                getRepositorySystemLifecycle());
+                getNamedLockFactorySelector(), getNameMappers(), getLockingInhibitorFactories());
     }
 
     private SyncContextFactory syncContextFactory;
