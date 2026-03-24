@@ -38,9 +38,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class DefaultTrackingFileManagerTest {
+public abstract class TrackingFileManagerTestSupport {
     public enum FS {
         DEFAULT,
         JIMFS_UNIX,
@@ -89,10 +94,12 @@ public class DefaultTrackingFileManagerTest {
         }
     }
 
+    protected abstract TrackingFileManager createTrackingFileManager(FS fs);
+
     @ParameterizedTest
     @EnumSource(FS.class)
     void testRead(FS fs) throws Exception {
-        TrackingFileManager tfm = new DefaultTrackingFileManager();
+        TrackingFileManager tfm = createTrackingFileManager(fs);
 
         Path propFile = createTmpFile(fs);
         Properties props = tfm.read(propFile);
@@ -111,7 +118,7 @@ public class DefaultTrackingFileManagerTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testReadNoFileLeak(FS fs) throws Exception {
-        TrackingFileManager tfm = new DefaultTrackingFileManager();
+        TrackingFileManager tfm = createTrackingFileManager(fs);
 
         for (int i = 0; i < 1000; i++) {
             Path propFile = createTmpFile(fs);
@@ -123,7 +130,7 @@ public class DefaultTrackingFileManagerTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testUpdate(FS fs) throws Exception {
-        TrackingFileManager tfm = new DefaultTrackingFileManager();
+        TrackingFileManager tfm = createTrackingFileManager(fs);
 
         // NOTE: The excessive repetitions are to check the update properly truncates the file
         Path propFile = createTmpFile(fs, 1000);
@@ -145,7 +152,7 @@ public class DefaultTrackingFileManagerTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testUpdateNoFileLeak(FS fs) throws Exception {
-        TrackingFileManager tfm = new DefaultTrackingFileManager();
+        TrackingFileManager tfm = createTrackingFileManager(fs);
 
         Map<String, String> updates = new HashMap<>();
         updates.put("k", "v");
@@ -160,7 +167,7 @@ public class DefaultTrackingFileManagerTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     public void testDeleteFileIsGone(FS fs) throws Exception {
-        TrackingFileManager tfm = new DefaultTrackingFileManager();
+        TrackingFileManager tfm = createTrackingFileManager(fs);
 
         for (int i = 0; i < 1000; i++) {
             Path propFile = createTmpFile(fs);
@@ -172,7 +179,7 @@ public class DefaultTrackingFileManagerTest {
     @ParameterizedTest
     @EnumSource(FS.class)
     void testLockingOnCanonicalPath(FS fs) throws Exception {
-        final TrackingFileManager tfm = new DefaultTrackingFileManager();
+        final TrackingFileManager tfm = createTrackingFileManager(fs);
 
         Path propFile = createTmpFile(fs);
 
