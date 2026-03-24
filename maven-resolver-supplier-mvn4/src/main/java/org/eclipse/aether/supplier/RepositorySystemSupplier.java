@@ -229,7 +229,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected TrackingFileManager createTrackingFileManager() {
-        return new TrackingFileManagerProvider().get();
+        return new TrackingFileManagerProvider(getNamedLockFactorySelector()).get();
     }
 
     private LocalPathComposer localPathComposer;
