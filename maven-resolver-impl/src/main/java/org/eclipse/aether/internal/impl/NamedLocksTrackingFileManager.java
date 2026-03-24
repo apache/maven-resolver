@@ -41,10 +41,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Manages access to a properties file using named locks.
  * <p>
- * Note: the file locking in this component (that predates {@link org.eclipse.aether.SyncContext}) is present only
- * to back off two parallel implementations that coexist in Maven (this class and {@code maven-compat} one), as in
- * certain cases the two implementations may collide on properties files. This locking must remain in place for as long
- * as {@code maven-compat} code exists.
+ * This implementation uses {@link NamedLock} to protect tracking files from concurrent access, and can be used
+ * when it is single "modern" Maven version used to access same local repository concurrently.
  *
  * @since 2.0.17
  * @see LegacyTrackingFileManager

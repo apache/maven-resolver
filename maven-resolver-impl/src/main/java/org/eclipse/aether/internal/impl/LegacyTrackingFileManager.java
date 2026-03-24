@@ -44,6 +44,9 @@ import org.slf4j.LoggerFactory;
  * to back off two parallel implementations that coexist in Maven (this class and {@code maven-compat} one), as in
  * certain cases the two implementations may collide on properties files. This locking must remain in place for as long
  * as {@code maven-compat} code exists.
+ * <p>
+ * This implementation should be used when multiple, legacy Maven versions (older than 3.10.x) share same local repository
+ * concurrently.
  *
  * @since 2.0.17
  * @see NamedLocksTrackingFileManager
