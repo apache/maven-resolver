@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -87,11 +89,16 @@ public class DefaultNamedLockFactorySelector implements NamedLockFactorySelector
 
     protected final Map<String, NamedLockFactory> factories;
 
+    protected final ConcurrentMap<String, NamedLockFactory> usedFactories;
+
     @Inject
     public DefaultNamedLockFactorySelector(
             Map<String, NamedLockFactory> factories, RepositorySystemLifecycle lifecycle) {
         this.factories = requireNonNull(factories);
+        this.usedFactories = new ConcurrentHashMap<>();
         lifecycle.addOnSystemEndedHandler(this::shutdown);
+
+        logger.debug("Created lock factory selector; available lock factories {}", factories.keySet());
     }
 
     @Override
@@ -111,6 +118,7 @@ public class DefaultNamedLockFactorySelector implements NamedLockFactorySelector
             throw new IllegalArgumentException(
                     "Unknown NamedLockFactory name: '" + factoryName + "', known ones: " + factories.keySet());
         }
+        usedFactories.putIfAbsent(factoryName, factory);
         return factory;
     }
 
@@ -138,9 +146,9 @@ public class DefaultNamedLockFactorySelector implements NamedLockFactorySelector
     }
 
     private void shutdown() {
-        logger.debug("Shutting down lock factories; available lock factories {}", factories.keySet());
+        logger.debug("Shutting down used lock factories {}", usedFactories.keySet());
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (Map.Entry<String, NamedLockFactory> entry : factories.entrySet()) {
+        for (Map.Entry<String, NamedLockFactory> entry : usedFactories.entrySet()) {
             try {
                 logger.debug("Shutting down '{}' factory", entry.getKey());
                 entry.getValue().shutdown();
@@ -148,6 +156,6 @@ public class DefaultNamedLockFactorySelector implements NamedLockFactorySelector
                 exceptions.add(e);
             }
         }
-        MultiRuntimeException.mayThrow("Problem shutting down factories", exceptions);
+        MultiRuntimeException.mayThrow("Problem shutting down used lock factories", exceptions);
     }
 }
