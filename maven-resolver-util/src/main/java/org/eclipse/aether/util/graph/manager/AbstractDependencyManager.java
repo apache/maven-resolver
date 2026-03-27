@@ -461,7 +461,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             }
             Collection<Exclusion> result = new LinkedHashSet<>(dependency.getExclusions());
             result.addAll(exclusions);
-            management.setExclusions(result, false);
+            management.setExclusions(result, true);
         }
 
         return management;
