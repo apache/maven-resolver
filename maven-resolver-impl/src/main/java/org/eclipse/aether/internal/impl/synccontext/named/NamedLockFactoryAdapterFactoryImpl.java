@@ -24,12 +24,11 @@ import javax.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.impl.RepositorySystemLifecycle;
+import org.eclipse.aether.impl.NamedLockFactorySelector;
 import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 import org.eclipse.aether.spi.locking.LockingInhibitor;
 import org.eclipse.aether.spi.locking.LockingInhibitorFactory;
 import org.eclipse.aether.util.ConfigUtils;
@@ -53,18 +52,18 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapterFactory {
-    public static final String DEFAULT_FACTORY_NAME = FileLockNamedLockFactory.NAME;
-
     public static final String DEFAULT_NAME_MAPPER_NAME = NameMappers.FILE_GAECV_NAME;
 
     /**
      * Name of the lock factory to use in session. Out of the box supported ones are "file-lock", "rwlock-local",
      * "semaphore-local", "noop". By adding extensions one can extend available lock factories (for example IPC locking).
+     * <strong>Deprecated: use {@code aether.system.named...} configuration instead.</strong>
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #DEFAULT_FACTORY_NAME}
+     * @deprecated
      */
+    @Deprecated
     public static final String CONFIG_PROP_FACTORY_KEY = NamedLockFactoryAdapter.CONFIG_PROPS_PREFIX + "factory";
 
     /**
@@ -79,9 +78,7 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected final Map<String, NamedLockFactory> factories;
-
-    protected final String defaultFactoryName;
+    protected final NamedLockFactorySelector namedLockFactorySelector;
 
     protected final Map<String, NameMapper> nameMappers;
 
@@ -91,71 +88,49 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
 
     @Inject
     public NamedLockFactoryAdapterFactoryImpl(
-            final Map<String, NamedLockFactory> factories,
+            final NamedLockFactorySelector namedLockFactorySelector,
             final Map<String, NameMapper> nameMappers,
-            final Map<String, LockingInhibitorFactory> lockingInhibitorFactories,
-            final RepositorySystemLifecycle lifecycle) {
-        this(
-                factories,
-                DEFAULT_FACTORY_NAME,
-                nameMappers,
-                DEFAULT_NAME_MAPPER_NAME,
-                lockingInhibitorFactories,
-                lifecycle);
+            final Map<String, LockingInhibitorFactory> lockingInhibitorFactories) {
+        this(namedLockFactorySelector, nameMappers, DEFAULT_NAME_MAPPER_NAME, lockingInhibitorFactories);
     }
 
     public NamedLockFactoryAdapterFactoryImpl(
-            final Map<String, NamedLockFactory> factories,
-            final String defaultFactoryName,
+            final NamedLockFactorySelector namedLockFactorySelector,
             final Map<String, NameMapper> nameMappers,
             final String defaultNameMapperName,
-            final Map<String, LockingInhibitorFactory> lockingInhibitorFactories,
-            final RepositorySystemLifecycle lifecycle) {
-        this.factories = requireNonNull(factories);
-        this.defaultFactoryName = requireNonNull(defaultFactoryName);
+            final Map<String, LockingInhibitorFactory> lockingInhibitorFactories) {
+        this.namedLockFactorySelector = requireNonNull(namedLockFactorySelector);
         this.nameMappers = requireNonNull(nameMappers);
         this.defaultNameMapperName = requireNonNull(defaultNameMapperName);
         this.lockingInhibitorFactories = requireNonNull(lockingInhibitorFactories);
-        lifecycle.addOnSystemEndedHandler(this::shutdown);
 
         logger.debug(
-                "Created adapter factory; available factories {}; available name mappers {}",
-                factories.keySet(),
+                "Created adapter factory; available lock factories {}; available name mappers {}",
+                namedLockFactorySelector.getAvailableLockFactories(),
                 nameMappers.keySet());
     }
 
+    private static final String ADAPTER_KEY = NamedLockFactoryAdapterFactoryImpl.class.getName() + ".adapter";
+
     /**
-     * Current implementation simply delegates to {@link #createAdapter(RepositorySystemSession)}.
+     * Current implementation memoize instance in session or delegates to {@link #createAdapter(RepositorySystemSession)}.
      */
     @Override
     public NamedLockFactoryAdapter getAdapter(RepositorySystemSession session) {
-        return createAdapter(session);
+        requireNonNull(session, "session cannot be null");
+        return (NamedLockFactoryAdapter) session.getData().computeIfAbsent(ADAPTER_KEY, () -> createAdapter(session));
     }
 
     /**
      * Creates a new adapter instance, never returns {@code null}.
      */
     protected NamedLockFactoryAdapter createAdapter(RepositorySystemSession session) {
-        final String nameMapperName = requireNonNull(getNameMapperName(session));
-        final String factoryName = requireNonNull(getFactoryName(session));
-        final NameMapper nameMapper = selectNameMapper(session, nameMapperName);
-        final NamedLockFactory factory = selectFactory(factoryName);
-        logger.debug("Creating adapter using nameMapper '{}' and factory '{}'", nameMapperName, factoryName);
-        return new NamedLockFactoryAdapter(nameMapper, factory);
-    }
-
-    /**
-     * Returns the selected (user configured or default) named lock factory name, never {@code null}.
-     */
-    protected String getFactoryName(RepositorySystemSession session) {
-        return ConfigUtils.getString(session, getDefaultFactoryName(), CONFIG_PROP_FACTORY_KEY);
-    }
-
-    /**
-     * Returns the default named lock factory name, never {@code null}.
-     */
-    protected String getDefaultFactoryName() {
-        return defaultFactoryName;
+        final NameMapper nameMapper = selectNameMapper(session, requireNonNull(getNameMapperName(session)));
+        final NamedLockFactory factory = namedLockFactorySelector.getNamedLockFactory(session.getConfigProperties());
+        final long lockWait = namedLockFactorySelector.getLockWaitTime(session.getConfigProperties());
+        final TimeUnit lockWaitUnit = namedLockFactorySelector.getLockWaitTimeUnit(session.getConfigProperties());
+        logger.debug("Creating adapter using nameMapper '{}' and factory '{}'", nameMapper, factory);
+        return new NamedLockFactoryAdapter(nameMapper, factory, lockWait, lockWaitUnit);
     }
 
     /**
@@ -170,18 +145,6 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
      */
     protected String getDefaultNameMapperName() {
         return defaultNameMapperName;
-    }
-
-    /**
-     * Selects a named lock factory, never returns {@code null}.
-     */
-    protected NamedLockFactory selectFactory(final String factoryName) {
-        NamedLockFactory factory = factories.get(factoryName);
-        if (factory == null) {
-            throw new IllegalArgumentException(
-                    "Unknown NamedLockFactory name: '" + factoryName + "', known ones: " + factories.keySet());
-        }
-        return factory;
     }
 
     /**
@@ -203,25 +166,5 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
             }
         }
         return nameMapper;
-    }
-
-    /**
-     * To be invoked on repository system shut down. This method will shut down each {@link NamedLockFactory}.
-     */
-    protected void shutdown() {
-        logger.debug(
-                "Shutting down adapter factory; available factories {}; available name mappers {}",
-                factories.keySet(),
-                nameMappers.keySet());
-        ArrayList<Exception> exceptions = new ArrayList<>();
-        for (Map.Entry<String, NamedLockFactory> entry : factories.entrySet()) {
-            try {
-                logger.debug("Shutting down '{}' factory", entry.getKey());
-                entry.getValue().shutdown();
-            } catch (Exception e) {
-                exceptions.add(e);
-            }
-        }
-        MultiRuntimeException.mayThrow("Problem shutting down factories", exceptions);
     }
 }

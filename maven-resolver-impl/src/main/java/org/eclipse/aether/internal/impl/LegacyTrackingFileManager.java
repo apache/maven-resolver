@@ -18,9 +18,6 @@
  */
 package org.eclipse.aether.internal.impl;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -41,17 +38,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Manages access to a properties file.
+ * Manages access to a properties file in legacy compatible way.
  * <p>
  * Note: the file locking in this component (that predates {@link org.eclipse.aether.SyncContext}) is present only
  * to back off two parallel implementations that coexist in Maven (this class and {@code maven-compat} one), as in
  * certain cases the two implementations may collide on properties files. This locking must remain in place for as long
  * as {@code maven-compat} code exists.
+ * <p>
+ * This implementation should be used when multiple, legacy Maven versions (older than 3.10.x) share same local repository
+ * concurrently.
+ *
+ * @since 2.0.17
+ * @see NamedLocksTrackingFileManager
+ * @see TrackingFileManagerProvider
  */
-@Singleton
-@Named
-public final class DefaultTrackingFileManager implements TrackingFileManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTrackingFileManager.class);
+public final class LegacyTrackingFileManager implements TrackingFileManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LegacyTrackingFileManager.class);
 
     @Deprecated
     @Override

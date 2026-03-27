@@ -46,6 +46,7 @@ import org.eclipse.aether.impl.Installer;
 import org.eclipse.aether.impl.LocalRepositoryProvider;
 import org.eclipse.aether.impl.MetadataGeneratorFactory;
 import org.eclipse.aether.impl.MetadataResolver;
+import org.eclipse.aether.impl.NamedLockFactorySelector;
 import org.eclipse.aether.impl.OfflineController;
 import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -77,7 +78,6 @@ import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystemValidator;
-import org.eclipse.aether.internal.impl.DefaultTrackingFileManager;
 import org.eclipse.aether.internal.impl.DefaultTransporterProvider;
 import org.eclipse.aether.internal.impl.DefaultUpdateCheckManager;
 import org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer;
@@ -87,6 +87,7 @@ import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
+import org.eclipse.aether.internal.impl.TrackingFileManagerProvider;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
@@ -104,6 +105,7 @@ import org.eclipse.aether.internal.impl.filter.FilteringPipelineRepositoryConnec
 import org.eclipse.aether.internal.impl.filter.GroupIdRemoteRepositoryFilterSource;
 import org.eclipse.aether.internal.impl.filter.PrefixesLockingInhibitorFactory;
 import org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSource;
+import org.eclipse.aether.internal.impl.named.DefaultNamedLockFactorySelector;
 import org.eclipse.aether.internal.impl.offline.OfflinePipelineRepositoryConnectorFactory;
 import org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor;
 import org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory;
@@ -223,7 +225,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected TrackingFileManager createTrackingFileManager() {
-        return new DefaultTrackingFileManager();
+        return new TrackingFileManagerProvider(getNamedLockFactorySelector()).get();
     }
 
     private LocalPathComposer localPathComposer;
@@ -397,6 +399,20 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return result;
     }
 
+    private NamedLockFactorySelector namedLockFactorySelector;
+
+    public final NamedLockFactorySelector getNamedLockFactorySelector() {
+        checkClosed();
+        if (namedLockFactorySelector == null) {
+            namedLockFactorySelector = createNamedLockFactorySelector();
+        }
+        return namedLockFactorySelector;
+    }
+
+    protected NamedLockFactorySelector createNamedLockFactorySelector() {
+        return new DefaultNamedLockFactorySelector(getNamedLockFactories(), getRepositorySystemLifecycle());
+    }
+
     private NamedLockFactoryAdapterFactory namedLockFactoryAdapterFactory;
 
     public final NamedLockFactoryAdapterFactory getNamedLockFactoryAdapterFactory() {
@@ -409,10 +425,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
 
     protected NamedLockFactoryAdapterFactory createNamedLockFactoryAdapterFactory() {
         return new NamedLockFactoryAdapterFactoryImpl(
-                getNamedLockFactories(),
-                getNameMappers(),
-                getLockingInhibitorFactories(),
-                getRepositorySystemLifecycle());
+                getNamedLockFactorySelector(), getNameMappers(), getLockingInhibitorFactories());
     }
 
     private SyncContextFactory syncContextFactory;

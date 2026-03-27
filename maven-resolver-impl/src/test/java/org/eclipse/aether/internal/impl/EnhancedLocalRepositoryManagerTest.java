@@ -98,7 +98,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 "gid", "aid", null, "maven-metadata.xml", Nature.RELEASE, TestFileUtils.createTempFile("metadata"));
 
         session = TestUtils.newSession();
-        trackingFileManager = new DefaultTrackingFileManager();
+        trackingFileManager = new TrackingFileManagerProvider().get();
         manager = getManager();
 
         artifactFile = new File(basedir, manager.getPathForLocalArtifact(artifact));

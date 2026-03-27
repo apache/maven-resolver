@@ -58,7 +58,8 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     private RepositorySystemSession session;
 
     protected static void setNamedLockFactory(final NamedLockFactory namedLockFactory) {
-        adapter = new NamedLockFactoryAdapter(NameMappers.discriminatingNameMapper(), namedLockFactory);
+        adapter = new NamedLockFactoryAdapter(
+                NameMappers.discriminatingNameMapper(), namedLockFactory, ADAPTER_TIME, ADAPTER_TIME_UNIT);
     }
 
     @AfterAll

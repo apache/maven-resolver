@@ -24,7 +24,6 @@ import javax.inject.Singleton;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
-import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactory;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 
@@ -39,8 +38,6 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public final class DefaultSyncContextFactory implements SyncContextFactory {
-    private static final String ADAPTER_KEY = DefaultSyncContextFactory.class.getName() + ".adapter";
-
     private final NamedLockFactoryAdapterFactory namedLockFactoryAdapterFactory;
 
     /**
@@ -53,9 +50,6 @@ public final class DefaultSyncContextFactory implements SyncContextFactory {
 
     @Override
     public SyncContext newInstance(final RepositorySystemSession session, final boolean shared) {
-        requireNonNull(session, "session cannot be null");
-        NamedLockFactoryAdapter adapter = (NamedLockFactoryAdapter) session.getData()
-                .computeIfAbsent(ADAPTER_KEY, () -> namedLockFactoryAdapterFactory.getAdapter(session));
-        return adapter.newInstance(session, shared);
+        return namedLockFactoryAdapterFactory.getAdapter(session).newInstance(session, shared);
     }
 }
