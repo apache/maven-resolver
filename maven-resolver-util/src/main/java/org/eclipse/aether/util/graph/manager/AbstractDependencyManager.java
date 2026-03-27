@@ -208,10 +208,12 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     /**
-     * Root manager is the one not being derived with {@link #deriveChildManager(DependencyCollectionContext)}.
+     * Returns {@code true} if this manager represents the root level (factory or root POM level).
+     * Per the depth model: 0 = factory (seed), 1 = root (project POM), 2+ = descendants.
+     * Management entries from root level should be enforced, while those from descendants are advised.
      */
     private boolean isRootManager() {
-        return path.isEmpty();
+        return depth <= 1;
     }
 
     private AbstractDependencyManager getManagedVersion(Key key) {

@@ -20,11 +20,13 @@ package org.eclipse.aether.util.graph.transformer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.stream.Stream;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -520,6 +522,84 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
                 fail("Unknown conflict resolver");
             }
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void enforcedScopeNotDerived(ConflictResolver conflictResolver) throws RepositoryException {
+        // Root -> Parent (test) -> Child (compile, scope enforced)
+        // Scope derivation would normally narrow Child's scope to "test" (from parent),
+        // but enforced scope should prevent that.
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode parent = makeDependencyNode("some-group", "parent", "1.0", "test");
+        DefaultDependencyNode child =
+                (DefaultDependencyNode) makeDependencyNode("some-group", "child", "1.0", "compile");
+        EnumMap<DependencyManagement.Subject, Boolean> enforcedScope =
+                new EnumMap<>(DependencyManagement.Subject.class);
+        enforcedScope.put(DependencyManagement.Subject.SCOPE, true);
+        child.setManagedSubjects(enforcedScope);
+        root.setChildren(mutableList(parent));
+        parent.setChildren(mutableList(child));
+
+        transform(conflictResolver, root);
+        assertEquals("compile", child.getDependency().getScope(), "Enforced scope should not be derived from parent");
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void advisedScopeIsDerived(ConflictResolver conflictResolver) throws RepositoryException {
+        // Root -> Parent (test) -> Child (compile, scope advised)
+        // Scope derivation should narrow Child's scope to "test" because it's only advised.
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode parent = makeDependencyNode("some-group", "parent", "1.0", "test");
+        DefaultDependencyNode child =
+                (DefaultDependencyNode) makeDependencyNode("some-group", "child", "1.0", "compile");
+        EnumMap<DependencyManagement.Subject, Boolean> advisedScope = new EnumMap<>(DependencyManagement.Subject.class);
+        advisedScope.put(DependencyManagement.Subject.SCOPE, false);
+        child.setManagedSubjects(advisedScope);
+        root.setChildren(mutableList(parent));
+        parent.setChildren(mutableList(child));
+
+        transform(conflictResolver, root);
+        assertEquals("test", child.getDependency().getScope(), "Advised scope should be derived from parent");
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void enforcedOptionalNotDerived(ConflictResolver conflictResolver) throws RepositoryException {
+        // Root -> Parent (optional=true) -> Child (optional=false, optional enforced)
+        // Optional derivation would normally set Child to optional (from parent),
+        // but enforced optional should prevent that.
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode parent = makeDependencyNode("some-group", "parent", "1.0");
+        parent.setOptional(true);
+        DefaultDependencyNode child = (DefaultDependencyNode) makeDependencyNode("some-group", "child", "1.0");
+        child.setOptional(false);
+        EnumMap<DependencyManagement.Subject, Boolean> enforcedOptional =
+                new EnumMap<>(DependencyManagement.Subject.class);
+        enforcedOptional.put(DependencyManagement.Subject.OPTIONAL, true);
+        child.setManagedSubjects(enforcedOptional);
+        root.setChildren(mutableList(parent));
+        parent.setChildren(mutableList(child));
+
+        transform(conflictResolver, root);
+        assertFalse(child.getDependency().isOptional(), "Enforced optional should not be derived from parent");
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void unmanagedScopeIsDerivedAsUsual(ConflictResolver conflictResolver) throws RepositoryException {
+        // Root -> Parent (test) -> Child (compile, no management)
+        // Scope derivation should narrow Child's scope to "test" as usual (backwards compat).
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode parent = makeDependencyNode("some-group", "parent", "1.0", "test");
+        DependencyNode child = makeDependencyNode("some-group", "child", "1.0", "compile");
+        root.setChildren(mutableList(parent));
+        parent.setChildren(mutableList(child));
+
+        transform(conflictResolver, root);
+        assertEquals(
+                "test", child.getDependency().getScope(), "Unmanaged scope should be derived from parent as usual");
     }
 
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
