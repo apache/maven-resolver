@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.aether.named.NamedLockFactory;
 
 /**
- * Internal selector helping to for system-wide use of named locks.
+ * Selector for system-wide use of named locks.
  *
  * @since 2.0.17
  */
