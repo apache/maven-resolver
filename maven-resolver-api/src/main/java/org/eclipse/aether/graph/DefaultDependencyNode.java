@@ -300,7 +300,7 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     @Override
     public boolean isManagedSubjectEnforced(DependencyManagement.Subject subject) {
-        return managedSubjects.getOrDefault(subject, false);
+        return isManagedSubject(subject) && managedSubjects.getOrDefault(subject, false);
     }
 
     @Override
