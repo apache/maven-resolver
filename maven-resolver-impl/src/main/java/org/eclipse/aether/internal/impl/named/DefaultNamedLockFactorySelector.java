@@ -131,7 +131,7 @@ public class DefaultNamedLockFactorySelector implements NamedLockFactorySelector
                 NamedLockFactoryAdapter.CONFIG_PROP_TIME);
         if (result <= 0) {
             throw new IllegalArgumentException(
-                    "The " + CONFIG_PROP_LOCK_WAIT_TIME_UNIT + " configuration but be grater than zero");
+                    "The " + CONFIG_PROP_LOCK_WAIT_TIME + " configuration must be greater than zero");
         }
         return result;
     }
