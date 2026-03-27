@@ -19,7 +19,7 @@
 package org.eclipse.aether.collection;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 import org.eclipse.aether.graph.Exclusion;
@@ -43,15 +43,15 @@ public final class DependencyManagement {
         PROPERTIES
     }
 
-    private final Map<Subject, Object> managedValues;
-    private final Map<Subject, Boolean> managedEnforced;
+    private final EnumMap<Subject, Object> managedValues;
+    private final EnumMap<Subject, Boolean> managedEnforced;
 
     /**
      * Creates an empty management update.
      */
     public DependencyManagement() {
-        this.managedValues = new HashMap<>();
-        this.managedEnforced = new HashMap<>();
+        this.managedValues = new EnumMap<>(Subject.class);
+        this.managedEnforced = new EnumMap<>(Subject.class);
     }
 
     /**

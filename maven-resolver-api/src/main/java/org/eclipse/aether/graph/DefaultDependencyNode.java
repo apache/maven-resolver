@@ -21,6 +21,7 @@ package org.eclipse.aether.graph;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,8 @@ import static java.util.Objects.requireNonNull;
  * A node within a dependency graph.
  */
 public final class DefaultDependencyNode implements DependencyNode {
+    private final Map<DependencyManagement.Subject, Boolean> emptyManagedSubjects =
+            Collections.unmodifiableMap(new EnumMap<>(DependencyManagement.Subject.class));
 
     private List<DependencyNode> children;
 
@@ -52,7 +55,7 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     private Version version;
 
-    private Map<DependencyManagement.Subject, Boolean> managedSubjects = Collections.emptyMap();
+    private Map<DependencyManagement.Subject, Boolean> managedSubjects = emptyManagedSubjects;
 
     private List<RemoteRepository> repositories;
 
@@ -106,7 +109,8 @@ public final class DefaultDependencyNode implements DependencyNode {
         setAliases(node.getAliases());
         setRequestContext(node.getRequestContext());
 
-        HashMap<DependencyManagement.Subject, Boolean> managedSubjects = new HashMap<>();
+        EnumMap<DependencyManagement.Subject, Boolean> managedSubjects =
+                new EnumMap<>(DependencyManagement.Subject.class);
         for (DependencyManagement.Subject subject : DependencyManagement.Subject.values()) {
             if (node.isManagedSubject(subject)) {
                 managedSubjects.put(subject, node.isManagedSubjectEnforced(subject));
@@ -262,12 +266,28 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     @Deprecated
     public void setManagedBits(int managedBits) {
-        throw new IllegalArgumentException("bits are not supported");
+        EnumMap<DependencyManagement.Subject, Boolean> subjects = new EnumMap<>(DependencyManagement.Subject.class);
+        if ((managedBits & DependencyNode.MANAGED_VERSION) != 0) {
+            subjects.put(DependencyManagement.Subject.VERSION, true);
+        }
+        if ((managedBits & DependencyNode.MANAGED_SCOPE) != 0) {
+            subjects.put(DependencyManagement.Subject.SCOPE, true);
+        }
+        if ((managedBits & DependencyNode.MANAGED_OPTIONAL) != 0) {
+            subjects.put(DependencyManagement.Subject.OPTIONAL, true);
+        }
+        if ((managedBits & DependencyNode.MANAGED_PROPERTIES) != 0) {
+            subjects.put(DependencyManagement.Subject.PROPERTIES, true);
+        }
+        if ((managedBits & DependencyNode.MANAGED_EXCLUSIONS) != 0) {
+            subjects.put(DependencyManagement.Subject.EXCLUSIONS, true);
+        }
+        setManagedSubjects(subjects.isEmpty() ? null : subjects);
     }
 
     public void setManagedSubjects(Map<DependencyManagement.Subject, Boolean> managedSubjects) {
-        if (managedSubjects == null) {
-            this.managedSubjects = Collections.emptyMap();
+        if (managedSubjects == null || managedSubjects.isEmpty()) {
+            this.managedSubjects = emptyManagedSubjects;
         } else {
             this.managedSubjects = managedSubjects;
         }

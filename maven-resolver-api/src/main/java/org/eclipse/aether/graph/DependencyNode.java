@@ -191,7 +191,22 @@ public interface DependencyNode {
      * @see org.eclipse.aether.collection.DependencyManagement.Subject
      * @since 2.0.17
      */
-    boolean isManagedSubject(DependencyManagement.Subject subject);
+    default boolean isManagedSubject(DependencyManagement.Subject subject) {
+        switch (subject) {
+            case VERSION:
+                return (getManagedBits() & MANAGED_VERSION) != 0;
+            case SCOPE:
+                return (getManagedBits() & MANAGED_SCOPE) != 0;
+            case OPTIONAL:
+                return (getManagedBits() & MANAGED_OPTIONAL) != 0;
+            case PROPERTIES:
+                return (getManagedBits() & MANAGED_PROPERTIES) != 0;
+            case EXCLUSIONS:
+                return (getManagedBits() & MANAGED_EXCLUSIONS) != 0;
+            default:
+                throw new IllegalArgumentException("Unknown subject: " + subject.name());
+        }
+    }
 
     /**
      * Returns {@code true} if given subject is managed with enforcing modality on this node.
@@ -199,7 +214,9 @@ public interface DependencyNode {
      * @see org.eclipse.aether.collection.DependencyManagement.Subject
      * @since 2.0.17
      */
-    boolean isManagedSubjectEnforced(DependencyManagement.Subject subject);
+    default boolean isManagedSubjectEnforced(DependencyManagement.Subject subject) {
+        return isManagedSubject(subject);
+    }
 
     /**
      * Gets the remote repositories from which this node's artifact shall be resolved.

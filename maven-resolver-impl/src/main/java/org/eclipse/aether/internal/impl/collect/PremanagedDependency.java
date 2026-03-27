@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.collect;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,7 +57,7 @@ public class PremanagedDependency {
     /**
      * @since 2.0.17
      */
-    private final Map<DependencyManagement.Subject, Boolean> managedSubjects;
+    private final EnumMap<DependencyManagement.Subject, Boolean> managedSubjects;
 
     private final Dependency managedDependency;
 
@@ -69,7 +70,7 @@ public class PremanagedDependency {
             Boolean premanagedOptional,
             Collection<Exclusion> premanagedExclusions,
             Map<String, String> premanagedProperties,
-            Map<DependencyManagement.Subject, Boolean> managedSubjects,
+            EnumMap<DependencyManagement.Subject, Boolean> managedSubjects,
             Dependency managedDependency,
             boolean premanagedState) {
         this.premanagedVersion = premanagedVersion;
@@ -94,7 +95,8 @@ public class PremanagedDependency {
             boolean premanagedState) {
         DependencyManagement depMngt = depManager != null ? depManager.manageDependency(dependency) : null;
 
-        Map<DependencyManagement.Subject, Boolean> managedSubjects = new HashMap<>();
+        EnumMap<DependencyManagement.Subject, Boolean> managedSubjects =
+                new EnumMap<>(DependencyManagement.Subject.class);
         String premanagedVersion = null;
         String premanagedScope = null;
         Boolean premanagedOptional = null;

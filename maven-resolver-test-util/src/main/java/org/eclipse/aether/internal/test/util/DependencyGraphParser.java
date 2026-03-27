@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -292,7 +293,8 @@ public class DependencyGraphParser {
             DefaultArtifact artifact = new DefaultArtifact(def.coords, def.properties);
             Dependency dependency = new Dependency(artifact, def.scope, def.optional);
             node = new DefaultDependencyNode(dependency);
-            Map<DependencyManagement.Subject, Boolean> managedSubjects = new HashMap<>();
+            EnumMap<DependencyManagement.Subject, Boolean> managedSubjects =
+                    new EnumMap<>(DependencyManagement.Subject.class);
             if (def.premanagedScope != null) {
                 managedSubjects.put(DependencyManagement.Subject.SCOPE, true);
                 node.setData("premanaged.scope", def.premanagedScope);
