@@ -207,6 +207,13 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedVersions != null && managedVersions.containsKey(key);
     }
 
+    /**
+     * Root manager is the one not being derived with {@link #deriveChildManager(DependencyCollectionContext)}.
+     */
+    private boolean isRootManager() {
+        return path.isEmpty();
+    }
+
     private AbstractDependencyManager getManagedVersion(Key key) {
         for (AbstractDependencyManager ancestor : path) {
             if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
@@ -398,7 +405,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             // apply only rules coming from "higher" levels
             if (versionOwner != null) {
                 management = new DependencyManagement();
-                management.setVersion(versionOwner.managedVersions.get(key), versionOwner.path.isEmpty());
+                management.setVersion(versionOwner.managedVersions.get(key), versionOwner.isRootManager());
             }
 
             AbstractDependencyManager scopeOwner = getManagedScope(key);
@@ -409,7 +416,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                     management = new DependencyManagement();
                 }
                 String managedScope = scopeOwner.managedScopes.get(key);
-                management.setScope(managedScope, scopeOwner.path.isEmpty());
+                management.setScope(managedScope, scopeOwner.isRootManager());
 
                 if (systemDependencyScope != null
                         && !systemDependencyScope.is(managedScope)
@@ -445,7 +452,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 if (management == null) {
                     management = new DependencyManagement();
                 }
-                management.setOptional(optionalOwner.managedOptionals.get(key), optionalOwner.path.isEmpty());
+                management.setOptional(optionalOwner.managedOptionals.get(key), optionalOwner.isRootManager());
             }
         }
 
