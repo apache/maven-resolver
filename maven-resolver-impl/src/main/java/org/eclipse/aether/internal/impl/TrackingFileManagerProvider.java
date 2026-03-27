@@ -26,7 +26,6 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.impl.NamedLockFactorySelector;
