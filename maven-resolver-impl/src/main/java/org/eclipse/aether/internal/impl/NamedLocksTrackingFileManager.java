@@ -92,7 +92,7 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
                 throw new IllegalStateException("Interrupted while reading tracking file " + path, e);
             }
         }
-        return null;
+        throw new IllegalStateException("Failed to lock for read the tracking file " + path);
     }
 
     @Deprecated
