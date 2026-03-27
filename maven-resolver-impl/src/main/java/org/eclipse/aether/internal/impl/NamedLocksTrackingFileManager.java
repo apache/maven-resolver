@@ -195,7 +195,9 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
         try {
             return path.toRealPath();
         } catch (IOException e) {
-            return canonicalPath(path.getParent()).resolve(path.getFileName());
+            return path.getParent() != null
+                    ? canonicalPath(path.getParent()).resolve(path.getFileName())
+                    : path.toAbsolutePath();
         }
     }
 }
