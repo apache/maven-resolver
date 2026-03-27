@@ -28,6 +28,7 @@ import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.internal.impl.named.DefaultNamedLockFactorySelector;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
@@ -58,6 +59,9 @@ public final class NamedLockFactoryAdapter {
     @Deprecated
     public static final String CONFIG_PROP_TIME = CONFIG_PROPS_PREFIX + "time";
 
+    @Deprecated
+    public static final long DEFAULT_TIME = DefaultNamedLockFactorySelector.DEFAULT_LOCK_WAIT_TIME;
+
     /**
      * The unit of maximum time amount to be blocked to obtain lock. Use TimeUnit enum names.
      * <strong>Deprecated: use {@code aether.system.named...} configuration instead.</strong>
@@ -69,6 +73,9 @@ public final class NamedLockFactoryAdapter {
      */
     @Deprecated
     public static final String CONFIG_PROP_TIME_UNIT = CONFIG_PROPS_PREFIX + "time.unit";
+
+    @Deprecated
+    public static final String DEFAULT_TIME_UNIT = DefaultNamedLockFactorySelector.DEFAULT_LOCK_WAIT_TIME_UNIT;
 
     /**
      * The amount of retries on time-out.

@@ -92,7 +92,7 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
                 throw new IllegalStateException("Interrupted while reading tracking file " + path, e);
             }
         }
-        throw new IllegalStateException("Failed to lock for read the tracking file " + path);
+        return null;
     }
 
     @Deprecated
@@ -175,7 +175,7 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
                 throw new IllegalStateException("Interrupted while deleting tracking file " + path, e);
             }
         }
-        throw new IllegalStateException("Failed to lock for delete the tracking file " + path);
+        return false;
     }
 
     /**
