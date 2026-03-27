@@ -181,10 +181,17 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
     /**
      * Creates unique named lock for given path with name that is unique for paths, but carries some extra
      * information useful for debugging.
+     * <p>
+     * Note: it is important that created named lock names remain (and carry) file friendly URLs, as this makes it
+     * work with all lock factories, even the file one. Using non-file friendly names would make it work it with
+     * all <strong>except the file lock factory</strong>.
      */
     private NamedLock namedLock(Path path) {
-        return namedLockFactory.getLock(NamedLockKey.of(
-                "tracking-" + StringDigestUtil.sha1(canonicalPath(path).toString()), path.toString()));
+        Path canonical = canonicalPath(path);
+        // Place lock file next to the tracking file, using its hash as filename
+        Path lockPath = canonical.resolveSibling("tracking-" + StringDigestUtil.sha1(canonical.toString()) + ".lock");
+        return namedLockFactory.getLock(
+                NamedLockKey.of(lockPath.toAbsolutePath().toUri().toASCIIString(), path.toString()));
     }
 
     /**

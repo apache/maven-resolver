@@ -20,11 +20,11 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.aether.named.providers.LocalReadWriteLockNamedLockFactory;
+import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 
 public class NamedLocksTrackingFileManagerTest extends TrackingFileManagerTestSupport {
     @Override
     protected TrackingFileManager createTrackingFileManager(FS fs) {
-        return new NamedLocksTrackingFileManager(new LocalReadWriteLockNamedLockFactory(), 1L, TimeUnit.SECONDS);
+        return new NamedLocksTrackingFileManager(new FileLockNamedLockFactory(), 1L, TimeUnit.SECONDS);
     }
 }
