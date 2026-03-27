@@ -69,30 +69,29 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
 
     @Override
     public Properties read(Path path) {
-        if (Files.isReadable(path)) {
-            try (NamedLock namedLock = namedLock(path)) {
-                if (namedLock.lockShared(time, unit)) {
-                    try {
-                        Properties props = new Properties();
-                        try (InputStream in = Files.newInputStream(path)) {
-                            props.load(in);
-                        }
-                        return props;
-                    } catch (NoSuchFileException e) {
-                        LOGGER.debug("No such file to read {}: {}", path, e.getMessage());
-                    } catch (IOException e) {
-                        LOGGER.warn("Failed to read tracking file '{}'", path, e);
-                        throw new UncheckedIOException(e);
-                    } finally {
-                        namedLock.unlock();
+        try (NamedLock namedLock = namedLock(path)) {
+            if (namedLock.lockShared(time, unit)) {
+                try {
+                    Properties props = new Properties();
+                    try (InputStream in = Files.newInputStream(path)) {
+                        props.load(in);
                     }
+                    return props;
+                } catch (NoSuchFileException e) {
+                    LOGGER.debug("No such file to read {}: {}", path, e.getMessage());
+                    return null;
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to read tracking file '{}'", path, e);
+                    throw new UncheckedIOException(e);
+                } finally {
+                    namedLock.unlock();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException("Interrupted while reading tracking file " + path, e);
             }
+            throw new IllegalStateException("Failed to lock for read the tracking file " + path);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while reading tracking file " + path, e);
         }
-        return null;
     }
 
     @Deprecated
@@ -104,7 +103,10 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
     @Override
     public Properties update(Path path, Map<String, String> updates) {
         try {
-            Files.createDirectories(path.getParent());
+            Path parent = path.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
         } catch (IOException e) {
             LOGGER.warn("Failed to create tracking file parent '{}'", path, e);
             throw new UncheckedIOException(e);
@@ -155,27 +157,25 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
 
     @Override
     public boolean delete(Path path) {
-        if (Files.isReadable(path)) {
-            try (NamedLock lock = namedLock(path)) {
-                if (lock.lockExclusively(time, unit)) {
-                    try {
-                        Files.delete(path);
-                        return true;
-                    } catch (NoSuchFileException e) {
-                        LOGGER.debug("No such file to delete {}: {}", path, e.getMessage());
-                    } catch (IOException e) {
-                        LOGGER.warn("Failed to delete tracking file '{}'", path, e);
-                        throw new UncheckedIOException(e);
-                    } finally {
-                        lock.unlock();
-                    }
+        try (NamedLock lock = namedLock(path)) {
+            if (lock.lockExclusively(time, unit)) {
+                try {
+                    return Files.deleteIfExists(path);
+                } catch (NoSuchFileException e) {
+                    LOGGER.debug("No such file to delete {}: {}", path, e.getMessage());
+                    return false;
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to delete tracking file '{}'", path, e);
+                    throw new UncheckedIOException(e);
+                } finally {
+                    lock.unlock();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException("Interrupted while deleting tracking file " + path, e);
             }
+            throw new IllegalStateException("Failed to lock for delete the tracking file " + path);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while deleting tracking file " + path, e);
         }
-        return false;
     }
 
     /**
