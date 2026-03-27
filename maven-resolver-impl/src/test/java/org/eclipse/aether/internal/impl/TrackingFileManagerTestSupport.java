@@ -208,8 +208,8 @@ public abstract class TrackingFileManagerTestSupport {
             });
         }
 
-        for (Thread thread1 : threads) {
-            thread1.start();
+        for (Thread thread : threads) {
+            thread.start();
         }
 
         for (Thread thread : threads) {
