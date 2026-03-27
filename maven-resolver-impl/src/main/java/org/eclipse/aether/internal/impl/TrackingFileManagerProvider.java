@@ -72,12 +72,10 @@ public class TrackingFileManagerProvider implements Provider<TrackingFileManager
     @Inject
     public TrackingFileManagerProvider(NamedLockFactorySelector selector) {
         // this is early construction; no session, hence we must rely on system properties instead
-        Map<String, String> config = System.getProperties().entrySet().stream()
-                .collect(Collectors.toMap(
-                        e -> String.valueOf(e.getKey()),
-                        e -> String.valueOf(e.getValue()),
-                        (prev, next) -> next,
-                        HashMap::new));
+        Map<String, String> config = new HashMap<>();
+        for (String name : System.getProperties().stringPropertyNames()) {
+            config.put(name, System.getProperty(name));
+        }
         String tfmName = ConfigUtils.getString(
                 config, DEFAULT_TRACKING_FILE_MANAGER_NAME, CONFIG_PROP_TRACKING_FILE_MANAGER_NAME);
         if ("legacy".equals(tfmName)) {
