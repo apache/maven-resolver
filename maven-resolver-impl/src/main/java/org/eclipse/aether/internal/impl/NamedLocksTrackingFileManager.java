@@ -175,7 +175,7 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
                 throw new IllegalStateException("Interrupted while deleting tracking file " + path, e);
             }
         }
-        return false;
+        throw new IllegalStateException("Failed to lock for delete the tracking file " + path);
     }
 
     /**
