@@ -188,6 +188,7 @@ public interface DependencyNode {
     /**
      * Returns {@code true} if given subject is managed.
      *
+     * @param subject the {@link org.eclipse.aether.collection.DependencyManagement.Subject}, must not be {@code null}.
      * @see org.eclipse.aether.collection.DependencyManagement.Subject
      * @since 2.0.17
      */
@@ -211,6 +212,7 @@ public interface DependencyNode {
     /**
      * Returns {@code true} if given subject is managed with enforcing modality on this node.
      *
+     * @param subject the {@link org.eclipse.aether.collection.DependencyManagement.Subject}, must not be {@code null}.
      * @see org.eclipse.aether.collection.DependencyManagement.Subject
      * @since 2.0.17
      */

@@ -38,9 +38,6 @@ import static java.util.Objects.requireNonNull;
  * A node within a dependency graph.
  */
 public final class DefaultDependencyNode implements DependencyNode {
-    private final Map<DependencyManagement.Subject, Boolean> emptyManagedSubjects =
-            Collections.unmodifiableMap(new EnumMap<>(DependencyManagement.Subject.class));
-
     private List<DependencyNode> children;
 
     private Dependency dependency;
@@ -55,7 +52,7 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     private Version version;
 
-    private Map<DependencyManagement.Subject, Boolean> managedSubjects = emptyManagedSubjects;
+    private Map<DependencyManagement.Subject, Boolean> managedSubjects;
 
     private List<RemoteRepository> repositories;
 
@@ -70,13 +67,14 @@ public final class DefaultDependencyNode implements DependencyNode {
      */
     public DefaultDependencyNode(Dependency dependency) {
         this.dependency = dependency;
-        artifact = (dependency != null) ? dependency.getArtifact() : null;
-        children = new ArrayList<>(0);
-        aliases = Collections.emptyList();
-        relocations = Collections.emptyList();
-        repositories = Collections.emptyList();
-        context = "";
-        data = Collections.emptyMap();
+        this.artifact = (dependency != null) ? dependency.getArtifact() : null;
+        this.children = new ArrayList<>(0);
+        this.aliases = Collections.emptyList();
+        this.relocations = Collections.emptyList();
+        this.managedSubjects = null;
+        this.repositories = Collections.emptyList();
+        this.context = "";
+        this.data = Collections.emptyMap();
     }
 
     /**
@@ -88,12 +86,13 @@ public final class DefaultDependencyNode implements DependencyNode {
      */
     public DefaultDependencyNode(Artifact artifact) {
         this.artifact = artifact;
-        children = new ArrayList<>(0);
-        aliases = Collections.emptyList();
-        relocations = Collections.emptyList();
-        repositories = Collections.emptyList();
-        context = "";
-        data = Collections.emptyMap();
+        this.children = new ArrayList<>(0);
+        this.aliases = Collections.emptyList();
+        this.relocations = Collections.emptyList();
+        this.managedSubjects = null;
+        this.repositories = Collections.emptyList();
+        this.context = "";
+        this.data = Collections.emptyMap();
     }
 
     /**
@@ -103,9 +102,9 @@ public final class DefaultDependencyNode implements DependencyNode {
      * @param node The node to copy, must not be {@code null}.
      */
     public DefaultDependencyNode(DependencyNode node) {
-        dependency = node.getDependency();
-        artifact = node.getArtifact();
-        children = new ArrayList<>(0);
+        this.dependency = node.getDependency();
+        this.artifact = node.getArtifact();
+        this.children = new ArrayList<>(0);
         setAliases(node.getAliases());
         setRequestContext(node.getRequestContext());
 
@@ -287,7 +286,7 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     public void setManagedSubjects(Map<DependencyManagement.Subject, Boolean> managedSubjects) {
         if (managedSubjects == null || managedSubjects.isEmpty()) {
-            this.managedSubjects = emptyManagedSubjects;
+            this.managedSubjects = null;
         } else {
             this.managedSubjects = managedSubjects;
         }
@@ -295,7 +294,7 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     @Override
     public boolean isManagedSubject(DependencyManagement.Subject subject) {
-        return managedSubjects.containsKey(subject);
+        return managedSubjects != null && managedSubjects.containsKey(subject);
     }
 
     @Override
