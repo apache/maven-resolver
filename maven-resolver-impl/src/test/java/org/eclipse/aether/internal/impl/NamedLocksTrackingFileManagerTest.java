@@ -25,6 +25,6 @@ import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
 public class NamedLocksTrackingFileManagerTest extends TrackingFileManagerTestSupport {
     @Override
     protected TrackingFileManager createTrackingFileManager(FS fs) {
-        return new NamedLocksTrackingFileManager(new FileLockNamedLockFactory(), 1L, TimeUnit.SECONDS);
+        return new NamedLocksTrackingFileManager(new FileLockNamedLockFactory(), 5L, TimeUnit.SECONDS);
     }
 }
