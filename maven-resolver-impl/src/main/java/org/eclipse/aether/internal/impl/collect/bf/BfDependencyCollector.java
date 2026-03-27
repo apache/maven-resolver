@@ -209,7 +209,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                         managedDependencies,
                         parents,
                         dependency,
-                        PremanagedDependency.create(rootDepManager, dependency, false, args.premanagedState));
+                        createPremanagedDependency(rootDepManager, dependency, false, args.premanagedState));
                 if (!filter(processingContext)) {
                     processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
                     resolveArtifactDescriptorAsync(args, processingContext, results);
@@ -274,7 +274,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                     results.addCycle(context.parents, cycleEntry, d);
                     DependencyNode cycleNode = context.parents.get(cycleEntry);
                     if (cycleNode.getDependency() != null) {
-                        DefaultDependencyNode child = createDependencyNode(
+                        DefaultDependencyNode child = createDependencyNodeCycle(
                                 relocations, preManaged, rangeResult, version, d, descriptorResult, cycleNode);
                         context.getParent().getChildren().add(child);
                         continue;
@@ -288,7 +288,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                                             .getArtifactId()
                                             .equals(d.getArtifact().getArtifactId());
 
-                    PremanagedDependency premanagedDependency = PremanagedDependency.create(
+                    PremanagedDependency premanagedDependency = createPremanagedDependency(
                             context.depManager, d, disableVersionManagementSubsequently, args.premanagedState);
                     DependencyProcessingContext relocatedContext = new DependencyProcessingContext(
                             context.depSelector,
@@ -406,7 +406,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                 for (Dependency dependency : descriptorResult.getDependencies()) {
                     RequestTrace childTrace = collectStepTrace(
                             parentContext.trace, args.request.getRequestContext(), parents, dependency);
-                    PremanagedDependency premanagedDependency = PremanagedDependency.create(
+                    PremanagedDependency premanagedDependency = createPremanagedDependency(
                             childManager, dependency, disableVersionManagement, args.premanagedState);
                     DependencyProcessingContext processingContext = new DependencyProcessingContext(
                             childSelector,
