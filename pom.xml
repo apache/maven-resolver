@@ -106,13 +106,13 @@
     <sisuVersion>1.0.0</sisuVersion>
     <guiceVersion>5.1.0</guiceVersion>
     <slf4jVersion>2.0.17</slf4jVersion>
-    <testcontainersVersion>2.0.3</testcontainersVersion>
+    <testcontainersVersion>2.0.4</testcontainersVersion>
     <bouncycastleVersion>1.83</bouncycastleVersion>
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server), 12.1 introduced support for different compressions (https://github.com/jetty/jetty.project/issues/8769) -->
     <jettyVersion>12.1.6</jettyVersion>
     <!-- used by supplier and demo only -->
-    <maven3Version>3.9.12</maven3Version>
+    <maven3Version>3.9.14</maven3Version>
     <maven4Version>4.0.0-rc-5</maven4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
@@ -238,7 +238,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.21.0</version>
+        <version>5.23.0</version>
       </dependency>
 
       <!-- we need override plexus-util/xml versions from parent -->
