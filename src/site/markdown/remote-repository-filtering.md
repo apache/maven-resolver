@@ -212,3 +212,9 @@ activity:
 This leads to the following "constraints":
 * "Maven Central" is asked only for those artifacts it claims it may have (prefixes)
 * "Some Remote" is asked only for allowed groupIds. If it publishes prefixes, is even better: you will not ask for things it for sure does not have.
+
+## Broken Maven Repository Managers
+
+Users of certain Maven Repository Managers reported issues with filtering, when used in conjunction with some broken Maven Repository Managers (MRM). Usually the issue involves grouped/virtual repositories where MRM leaks random resources from member repositories, like the `prefixes.txt` is. Naturally, as MRM leaks one member prefixes file, and Maven is "tricked" into belief it got proper prefixes file from remote repository, builds will fail with message like **Prefix `$PREFIX` NOT allowed from `$SERVER_ID`** (where `$PREFIX` is some artifact prefix, and `$SERVER_ID` is some remote repository ID).
+
+In this case, user should disable prefix discovery by using `-Daether.remoteRepositoryFilter.prefixes.resolvePrefixFiles=false` user property to prevent Maven attempting to resolve prefixes file from such broken MRMs.
