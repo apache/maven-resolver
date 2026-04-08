@@ -109,9 +109,7 @@ public class CollectConfiguration implements Callable<Integer> {
                     stream.map(Path::toAbsolutePath)
                             .filter(p -> p.getFileName().toString().endsWith(".class"))
                             .filter(p -> p.toString().contains("/target/classes/"))
-                            .forEach(p -> {
-                                processMavenClass(p, discoveredKeys);
-                            });
+                            .forEach(p -> processMavenClass(p, discoveredKeys));
                 } else if (mode == Mode.resolver) {
                     System.out.println("Processing Resolver sources from " + rootDirectory);
                     stream.map(Path::toAbsolutePath)

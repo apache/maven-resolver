@@ -68,6 +68,7 @@
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
+      <version>${plexusUtils3Version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
