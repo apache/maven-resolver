@@ -37,6 +37,17 @@
     ]]></bnd.instructions.additions>
   </properties>
 
+  <dependencyManagement>
+    <!-- we need to keep these aligned with Maven3; override mgmt from top level POM -->
+    <dependencies>
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-utils</artifactId>
+        <version>${plexusUtils3Version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>

@@ -114,6 +114,9 @@
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.14</maven3Version>
     <maven4Version>4.0.0-rc-5</maven4Version>
+    <plexusUtils3Version>3.6.1</plexusUtils3Version>
+    <plexusUtils4Version>4.0.3</plexusUtils4Version>
+    <plexusXml4Version>4.1.1</plexusXml4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
@@ -239,13 +242,6 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>5.23.0</version>
-      </dependency>
-
-      <!-- we need override plexus-util/xml versions from parent -->
-      <dependency>
-        <groupId>org.codehaus.plexus</groupId>
-        <artifactId>plexus-utils</artifactId>
-        <version>3.6.0</version>
       </dependency>
 
       <dependency>
