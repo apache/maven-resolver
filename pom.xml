@@ -104,7 +104,7 @@
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>1.0.0</sisuVersion>
-    <guiceVersion>5.1.0</guiceVersion>
+    <guiceVersion>7.0.0</guiceVersion>
     <slf4jVersion>2.0.17</slf4jVersion>
     <testcontainersVersion>2.0.4</testcontainersVersion>
     <bouncycastleVersion>1.83</bouncycastleVersion>
