@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 import org.eclipse.aether.version.Version;
 
@@ -285,8 +284,7 @@ public final class GenericVersion implements Version {
                     }
                 }
                 token = token.toLowerCase(Locale.ENGLISH);
-                Optional<Integer> qualifier = GenericQualifiers.tokenQualifier(token);
-                return qualifier
+                return GenericQualifiers.tokenQualifier(token)
                         .map(integer -> new Item(Item.KIND_QUALIFIER, integer))
                         .orElseGet(() -> new Item(Item.KIND_STRING, token));
             }
