@@ -64,7 +64,6 @@ public final class GenericQualifiers {
         QUALIFIERS.put("ga", QUALIFIER_ZERO);
         QUALIFIERS.put("final", QUALIFIER_ZERO);
         QUALIFIERS.put("release", QUALIFIER_ZERO);
-        QUALIFIERS.put("", QUALIFIER_ZERO); // TODO: is this entry valid?
         QUALIFIERS.put("sp", QUALIFIER_SP);
     }
 
@@ -91,8 +90,7 @@ public final class GenericQualifiers {
             String v = token.toLowerCase(Locale.ENGLISH);
             // simple case: full qualifier label is present (assuming once)
             for (Map.Entry<String, Integer> entry : QUALIFIERS.entrySet()) {
-                // TODO on map we have empty string "" as key
-                if (!entry.getKey().isEmpty() && v.contains(entry.getKey())) {
+                if (v.contains(entry.getKey())) {
                     return Optional.of(entry.getValue());
                 }
             }

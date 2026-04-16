@@ -50,7 +50,6 @@ public class GenericQualifiersVersionFilter extends VersionPredicateVersionFilte
         return new GenericQualifiersVersionFilter(i -> i > GenericQualifiers.QUALIFIER_SNAPSHOT);
     }
 
-
     /**
      * Filters any version that contains any qualifiers.
      */
