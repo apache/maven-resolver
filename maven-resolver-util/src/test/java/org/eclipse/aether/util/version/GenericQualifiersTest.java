@@ -22,10 +22,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GenericQualifiersTest {
     private static final int NO_QUALIFIER = Integer.MIN_VALUE;
+
     @Test
     void fullCases() {
         assertEquals(
@@ -59,7 +59,8 @@ public class GenericQualifiersTest {
 
     @Test
     void shortCases() {
-        // special: alpha, beta and milestone are detected also when in form of "a1" (a, b, or m immediately followed by number)
+        // special: alpha, beta and milestone are detected also when in form of "a1" (a, b, or m immediately followed by
+        // number)
         assertEquals(
                 GenericQualifiers.QUALIFIER_ALPHA,
                 GenericQualifiers.qualifier("1-a1").orElse(NO_QUALIFIER));

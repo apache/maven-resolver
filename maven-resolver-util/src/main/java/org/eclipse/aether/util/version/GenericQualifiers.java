@@ -95,9 +95,9 @@ public final class GenericQualifiers {
                 String label = entry.getKey();
                 int pos = v.indexOf(label);
                 if (pos > -1
-                        && (pos == 0 || !Character.isAlphabetic(v.charAt(pos - 1)))
+                        && (pos == 0 || !Character.isLetter(v.charAt(pos - 1)))
                         && (pos >= v.length() - label.length()
-                                || !Character.isAlphabetic(v.charAt(pos + label.length())))) {
+                                || !Character.isLetter(v.charAt(pos + label.length())))) {
                     // it must be surrounded by "transition" (non-char; to avoid "rc" detection in "1.0-arc")
                     return Optional.of(entry.getValue());
                 }
