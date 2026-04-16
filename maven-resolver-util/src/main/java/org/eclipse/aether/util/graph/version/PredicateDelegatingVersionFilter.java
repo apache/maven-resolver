@@ -18,47 +18,48 @@
  */
 package org.eclipse.aether.util.graph.version;
 
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.VersionFilter;
-import org.eclipse.aether.version.Version;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * A version filter that excludes any version that is blacklisted by predicate.
+ * A version filter that applies delegate version filter if predicate applies.
  *
- * @since 2.0.0
+ * @since 2.0.17
  */
-public class PredicateVersionFilter implements VersionFilter {
+public class PredicateDelegatingVersionFilter implements VersionFilter {
     private final Predicate<Artifact> artifactPredicate;
+    private final VersionFilter delegate;
 
     /**
      * Creates a new instance of this version filter.
      */
-    public PredicateVersionFilter(Predicate<Artifact> artifactPredicate) {
+    public PredicateDelegatingVersionFilter(Predicate<Artifact> artifactPredicate, VersionFilter delegate) {
         this.artifactPredicate = requireNonNull(artifactPredicate);
+        this.delegate = requireNonNull(delegate);
     }
 
     @Override
-    public void filterVersions(VersionFilterContext context) {
-        Artifact dependencyArtifact = context.getDependency().getArtifact();
-        Iterator<Version> it = context.iterator();
-        while (it.hasNext()) {
-            Version version = it.next();
-            if (!artifactPredicate.test(dependencyArtifact.setVersion(version.toString()))) {
-                it.remove();
-            }
+    public void filterVersions(VersionFilterContext context) throws RepositoryException {
+        if (artifactPredicate.test(context.getDependency().getArtifact())) {
+            delegate.filterVersions(context);
         }
     }
 
     @Override
     public VersionFilter deriveChildFilter(DependencyCollectionContext context) {
-        return this;
+        VersionFilter derived = delegate.deriveChildFilter(context);
+        if (derived == delegate) {
+            return this;
+        } else {
+            return new PredicateDelegatingVersionFilter(artifactPredicate, derived);
+        }
     }
 
     @Override
@@ -69,12 +70,12 @@ public class PredicateVersionFilter implements VersionFilter {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        PredicateVersionFilter that = (PredicateVersionFilter) o;
-        return Objects.equals(artifactPredicate, that.artifactPredicate);
+        PredicateDelegatingVersionFilter that = (PredicateDelegatingVersionFilter) o;
+        return Objects.equals(artifactPredicate, that.artifactPredicate) && Objects.equals(delegate, that.delegate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(artifactPredicate);
+        return Objects.hash(artifactPredicate, delegate);
     }
 }
