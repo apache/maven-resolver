@@ -64,6 +64,7 @@ public final class GenericQualifiers {
         QUALIFIERS.put("ga", QUALIFIER_ZERO);
         QUALIFIERS.put("final", QUALIFIER_ZERO);
         QUALIFIERS.put("release", QUALIFIER_ZERO);
+        QUALIFIERS.put("", QUALIFIER_ZERO); // TODO: is this entry valid?
         QUALIFIERS.put("sp", QUALIFIER_SP);
     }
 
