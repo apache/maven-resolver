@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.version;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -165,6 +166,9 @@ public class GenericVersionScheme extends VersionSchemeSupport {
         GenericVersion prev = null;
         int i = 1;
         for (String version : args) {
+            if (!StandardCharsets.US_ASCII.newEncoder().canEncode(version)) {
+                System.out.println("WW Use of non-ASCII characters for version strings is not recommended.");
+            }
             try {
                 GenericVersion c = scheme.parseVersion(version);
 
