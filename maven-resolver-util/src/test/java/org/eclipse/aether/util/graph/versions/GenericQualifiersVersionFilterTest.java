@@ -31,6 +31,26 @@ public class GenericQualifiersVersionFilterTest extends AbstractVersionFilterTes
         GenericQualifiersVersionFilter filter = GenericQualifiersVersionFilter.previewVersionFilter();
         VersionFilterContext ctx = newContext(
                 "g:a:[1,9]",
+                "1-alpha-1",
+                "1-M1",
+                "1",
+                "2-SNAPSHOT",
+                "3.0-GA",
+                "3.1",
+                "4.0-SNAPSHOT",
+                "5.0.0.rc",
+                "5.0.0",
+                "5.0.0-sp");
+        filter.filterVersions(ctx);
+        assertVersions(ctx, "1", "2-SNAPSHOT", "3.0-GA", "3.1", "4.0-SNAPSHOT", "5.0.0.rc", "5.0.0", "5.0.0-sp");
+    }
+
+    @Test
+    void testReleasePreviewVersionFilter() {
+        GenericQualifiersVersionFilter filter = GenericQualifiersVersionFilter.releasePreviewVersionFilter();
+        VersionFilterContext ctx = newContext(
+                "g:a:[1,9]",
+                "1-alpha-1",
                 "1-M1",
                 "1",
                 "2-SNAPSHOT",
@@ -45,10 +65,30 @@ public class GenericQualifiersVersionFilterTest extends AbstractVersionFilterTes
     }
 
     @Test
+    void testNonReleaseVersionFilter() {
+        GenericQualifiersVersionFilter filter = GenericQualifiersVersionFilter.nonReleaseVersionFilter();
+        VersionFilterContext ctx = newContext(
+                "g:a:[1,9]",
+                "1-alpha-1",
+                "1-M1",
+                "1",
+                "2-SNAPSHOT",
+                "3.0-GA",
+                "3.1",
+                "4.0-SNAPSHOT",
+                "5.0.0.rc",
+                "5.0.0",
+                "5.0.0-sp");
+        filter.filterVersions(ctx);
+        assertVersions(ctx, "1", "3.0-GA", "3.1", "5.0.0", "5.0.0-sp");
+    }
+
+    @Test
     void testAnyQualifierVersionFilter() {
         GenericQualifiersVersionFilter filter = GenericQualifiersVersionFilter.anyQualifierVersionFilter();
         VersionFilterContext ctx = newContext(
                 "g:a:[1,9]",
+                "1-alpha-1",
                 "1-M1",
                 "1",
                 "2-SNAPSHOT",
