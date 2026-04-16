@@ -387,10 +387,6 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         MetadataResolver mr = metadataResolver.get();
         RemoteRepositoryManager rm = remoteRepositoryManager.get();
         if (mr != null && rm != null) {
-            // create "prepared" (auth, proxy and mirror equipped repo)
-            RemoteRepository prepared = rm.aggregateRepositories(
-                            session, Collections.emptyList(), Collections.singletonList(remoteRepository), true)
-                    .get(0);
             // retrieve prefix as metadata from repository
             MetadataResult result = mr.resolveMetadata(
                             new DefaultRepositorySystemSession(session)
@@ -398,7 +394,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                                     .setConfigProperty(CONFIG_PROP_SKIPPED, Boolean.TRUE.toString()),
                             Collections.singleton(new MetadataRequest(
                                             new DefaultMetadata(PREFIX_FILE_TYPE, Metadata.Nature.RELEASE_OR_SNAPSHOT))
-                                    .setRepository(prepared)
+                                    .setRepository(remoteRepository)
                                     .setDeleteLocalCopyIfMissing(true)
                                     .setFavorLocalRepository(true)))
                     .get(0);
