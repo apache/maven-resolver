@@ -91,7 +91,8 @@ public final class GenericQualifiers {
             String v = token.toLowerCase(Locale.ENGLISH);
             // simple case: full qualifier label is present (assuming once)
             for (Map.Entry<String, Integer> entry : QUALIFIERS.entrySet()) {
-                if (v.contains(entry.getKey())) {
+                // TODO on map we have empty string "" as key
+                if (!entry.getKey().isEmpty() && v.contains(entry.getKey())) {
                     return Optional.of(entry.getValue());
                 }
             }
