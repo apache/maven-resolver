@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.util.graph.versions;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -74,7 +74,7 @@ public abstract class AbstractVersionFilterTest {
     }
 
     protected void assertVersions(VersionFilter.VersionFilterContext context, String... versions) {
-        List<Version> filtered = new java.util.ArrayList<>();
+        ArrayList<Version> filtered = new ArrayList<>();
         context.iterator().forEachRemaining(filtered::add);
         assertEquals(versions.length, context.getCount(), filtered.toString());
         Iterator<Version> it = context.iterator();

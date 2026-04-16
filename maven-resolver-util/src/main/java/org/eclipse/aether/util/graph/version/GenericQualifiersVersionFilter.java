@@ -44,7 +44,7 @@ public class GenericQualifiersVersionFilter extends VersionPredicateVersionFilte
 
     /**
      * Constructor that is able to select which qualifier to accept. Passed in predicate is invoked for version with
-     * detect qualifiers only.
+     * detected qualifiers only, while versions without qualifiers are accepted.
      *
      * @see GenericQualifiers
      */
