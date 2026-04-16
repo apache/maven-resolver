@@ -18,25 +18,34 @@
  */
 package org.eclipse.aether.util.graph.version;
 
-import java.util.Optional;
-
 import org.eclipse.aether.util.version.GenericQualifiers;
 
+import java.util.function.Predicate;
+
 /**
- * A version filter that (unconditionally) blocks "preview" versions (non SNAPSHOT ones), as defined
- * by {@link GenericQualifiers}.
+ * A version filter that (unconditionally) blocks based on qualifiers, as defined by {@link GenericQualifiers}.
  *
  * @since 2.0.17
  */
-public class GenericPreviewVersionFilter extends VersionPredicateVersionFilter {
+public class GenericQualifiersVersionFilter extends VersionPredicateVersionFilter {
     /**
-     * Creates a new instance of this version filter.
+     * Filters any version that contains "preview" qualifiers.
      */
-    public GenericPreviewVersionFilter() {
-        super(v -> {
-            String version = v.toString();
-            Optional<Integer> qualifier = GenericQualifiers.qualifier(version);
-            return !qualifier.isPresent() || qualifier.get() >= GenericQualifiers.QUALIFIER_SNAPSHOT;
-        });
+    public static GenericQualifiersVersionFilter previewVersionFilter() {
+        return new GenericQualifiersVersionFilter(i -> i >= GenericQualifiers.QUALIFIER_SNAPSHOT);
     }
+
+    /**
+     * Filters any version that contains any qualifiers.
+     */
+    public static GenericQualifiersVersionFilter anyQualifierVersionFilter() {
+        return new GenericQualifiersVersionFilter(i -> false);
+    }
+
+    private GenericQualifiersVersionFilter(Predicate<Integer> qualifierPredicate) {
+        super(v -> GenericQualifiers.qualifier(v.toString())
+                .map(qualifierPredicate::test)
+                .orElse(true));
+    }
+
 }

@@ -89,9 +89,10 @@ public final class GenericQualifiers {
         if (token.length() > 1) {
             String v = token.toLowerCase(Locale.ENGLISH);
             // simple case: full qualifier label is present (assuming once)
-            Optional<Integer> result = tokenQualifier(v);
-            if (result.isPresent()) {
-                return result;
+            for (Map.Entry<String, Integer> entry : QUALIFIERS.entrySet()) {
+                if (v.contains(entry.getKey())) {
+                    return Optional.of(entry.getValue());
+                }
             }
             // complex case: contains 'a', 'b' or 'm' followed immediately by number
             for (char ch : new char[] {'a', 'b', 'm'}) {
