@@ -20,11 +20,8 @@ package org.eclipse.aether.util.graph.versions;
 
 import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
 import org.eclipse.aether.util.graph.version.GenericQualifiersVersionFilter;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class GenericQualifiersVersionFilterTest extends AbstractVersionFilterTest {
@@ -32,7 +29,17 @@ public class GenericQualifiersVersionFilterTest extends AbstractVersionFilterTes
     @Test
     void testPreviewVersionFilter() {
         GenericQualifiersVersionFilter filter = GenericQualifiersVersionFilter.previewVersionFilter();
-        VersionFilterContext ctx = newContext("g:a:[1,9]", "1-M1", "1", "2-SNAPSHOT", "3.0-GA", "3.1", "4.0-SNAPSHOT", "5.0.0.rc", "5.0.0", "5.0.0-sp");
+        VersionFilterContext ctx = newContext(
+                "g:a:[1,9]",
+                "1-M1",
+                "1",
+                "2-SNAPSHOT",
+                "3.0-GA",
+                "3.1",
+                "4.0-SNAPSHOT",
+                "5.0.0.rc",
+                "5.0.0",
+                "5.0.0-sp");
         filter.filterVersions(ctx);
         assertVersions(ctx, "1", "2-SNAPSHOT", "3.0-GA", "3.1", "4.0-SNAPSHOT", "5.0.0", "5.0.0-sp");
     }
@@ -40,7 +47,17 @@ public class GenericQualifiersVersionFilterTest extends AbstractVersionFilterTes
     @Test
     void testAnyQualifierVersionFilter() {
         GenericQualifiersVersionFilter filter = GenericQualifiersVersionFilter.anyQualifierVersionFilter();
-        VersionFilterContext ctx = newContext("g:a:[1,9]", "1-M1", "1", "2-SNAPSHOT", "3.0-GA", "3.1", "4.0-SNAPSHOT", "5.0.0.rc", "5.0.0", "5.0.0-sp");
+        VersionFilterContext ctx = newContext(
+                "g:a:[1,9]",
+                "1-M1",
+                "1",
+                "2-SNAPSHOT",
+                "3.0-GA",
+                "3.1",
+                "4.0-SNAPSHOT",
+                "5.0.0.rc",
+                "5.0.0",
+                "5.0.0-sp");
         filter.filterVersions(ctx);
         assertVersions(ctx, "1", "3.1", "5.0.0");
     }

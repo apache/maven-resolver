@@ -18,9 +18,9 @@
  */
 package org.eclipse.aether.util.graph.version;
 
-import org.eclipse.aether.util.version.GenericQualifiers;
-
 import java.util.function.Predicate;
+
+import org.eclipse.aether.util.version.GenericQualifiers;
 
 /**
  * A version filter that (unconditionally) blocks based on qualifiers, as defined by {@link GenericQualifiers}.
@@ -42,10 +42,15 @@ public class GenericQualifiersVersionFilter extends VersionPredicateVersionFilte
         return new GenericQualifiersVersionFilter(i -> false);
     }
 
-    private GenericQualifiersVersionFilter(Predicate<Integer> qualifierPredicate) {
+    /**
+     * Constructor that is able to select which qualifier to accept. Passed in predicate is invoked for version with
+     * detect qualifiers only.
+     *
+     * @see GenericQualifiers
+     */
+    public GenericQualifiersVersionFilter(Predicate<Integer> qualifierPredicate) {
         super(v -> GenericQualifiers.qualifier(v.toString())
                 .map(qualifierPredicate::test)
                 .orElse(true));
     }
-
 }
