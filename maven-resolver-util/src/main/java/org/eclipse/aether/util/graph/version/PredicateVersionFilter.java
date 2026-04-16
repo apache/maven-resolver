@@ -30,7 +30,7 @@ import org.eclipse.aether.version.Version;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A version filter that excludes any version that is blacklisted by predicate.
+ * A version filter that excludes any version that is blacklisted.
  *
  * @since 2.0.0
  */
