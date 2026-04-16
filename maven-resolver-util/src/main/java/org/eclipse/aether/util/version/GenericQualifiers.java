@@ -18,7 +18,8 @@
  */
 package org.eclipse.aether.util.version;
 
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -54,17 +55,18 @@ public final class GenericQualifiers {
     private static final Map<String, Integer> QUALIFIERS;
 
     static {
-        QUALIFIERS = new HashMap<>();
-        QUALIFIERS.put(LABEL_ALPHA, QUALIFIER_ALPHA);
-        QUALIFIERS.put(LABEL_BETA, QUALIFIER_BETA);
-        QUALIFIERS.put(LABEL_MILESTONE, QUALIFIER_MILESTONE);
-        QUALIFIERS.put("rc", QUALIFIER_RC);
-        QUALIFIERS.put("cr", QUALIFIER_RC);
-        QUALIFIERS.put("snapshot", QUALIFIER_SNAPSHOT);
-        QUALIFIERS.put("ga", QUALIFIER_ZERO);
-        QUALIFIERS.put("final", QUALIFIER_ZERO);
-        QUALIFIERS.put("release", QUALIFIER_ZERO);
-        QUALIFIERS.put("sp", QUALIFIER_SP);
+        Map<String, Integer> qualifiers = new LinkedHashMap<>();
+        qualifiers.put(LABEL_ALPHA, QUALIFIER_ALPHA);
+        qualifiers.put(LABEL_BETA, QUALIFIER_BETA);
+        qualifiers.put(LABEL_MILESTONE, QUALIFIER_MILESTONE);
+        qualifiers.put("rc", QUALIFIER_RC);
+        qualifiers.put("cr", QUALIFIER_RC);
+        qualifiers.put("snapshot", QUALIFIER_SNAPSHOT);
+        qualifiers.put("ga", QUALIFIER_ZERO);
+        qualifiers.put("final", QUALIFIER_ZERO);
+        qualifiers.put("release", QUALIFIER_ZERO);
+        qualifiers.put("sp", QUALIFIER_SP);
+        QUALIFIERS = Collections.unmodifiableMap(qualifiers);
     }
 
     /**
@@ -90,7 +92,13 @@ public final class GenericQualifiers {
             String v = token.toLowerCase(Locale.ENGLISH);
             // simple case: full qualifier label is present (assuming once)
             for (Map.Entry<String, Integer> entry : QUALIFIERS.entrySet()) {
-                if (v.contains(entry.getKey())) {
+                String label = entry.getKey();
+                int pos = v.indexOf(label);
+                if (pos > -1
+                        && (pos == 0 || !Character.isAlphabetic(v.charAt(pos - 1)))
+                        && (pos >= v.length() - label.length()
+                                || !Character.isAlphabetic(v.charAt(pos + label.length())))) {
+                    // it must be surrounded by "transition" (non-char; to avoid "rc" detection in "1.0-arc")
                     return Optional.of(entry.getValue());
                 }
             }
