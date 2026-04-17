@@ -107,13 +107,16 @@
     <guiceVersion>5.1.0</guiceVersion>
     <slf4jVersion>2.0.17</slf4jVersion>
     <testcontainersVersion>2.0.4</testcontainersVersion>
-    <bouncycastleVersion>1.83</bouncycastleVersion>
+    <bouncycastleVersion>1.84</bouncycastleVersion>
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server), 12.1 introduced support for different compressions (https://github.com/jetty/jetty.project/issues/8769) -->
     <jettyVersion>12.1.6</jettyVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.14</maven3Version>
     <maven4Version>4.0.0-rc-5</maven4Version>
+    <plexusUtils3Version>3.6.1</plexusUtils3Version>
+    <plexusUtils4Version>4.0.3</plexusUtils4Version>
+    <plexusXml4Version>4.1.1</plexusXml4Version>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
@@ -241,13 +244,6 @@
         <version>5.23.0</version>
       </dependency>
 
-      <!-- we need override plexus-util/xml versions from parent -->
-      <dependency>
-        <groupId>org.codehaus.plexus</groupId>
-        <artifactId>plexus-utils</artifactId>
-        <version>3.6.0</version>
-      </dependency>
-
       <dependency>
         <groupId>javax.inject</groupId>
         <artifactId>javax.inject</artifactId>
@@ -273,7 +269,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>33.5.0-jre</version>
+        <version>33.6.0-jre</version>
       </dependency>
 
       <dependency>
@@ -338,7 +334,7 @@
         <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
-          <version>0.25.4</version>
+          <version>0.25.6</version>
           <configuration>
             <oldVersion>
               <!-- We compare same module against 1.8.0 set as "baseline" -->
@@ -650,7 +646,7 @@
         <plugin>
           <groupId>biz.aQute.bnd</groupId>
           <artifactId>bnd-maven-plugin</artifactId>
-          <version>7.2.1</version>
+          <version>7.2.3</version>
           <configuration>
             <bnd><![CDATA[
               Bundle-SymbolicName: org.apache.${replacestring;${project.artifactId};-;.}

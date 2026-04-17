@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.graph.versions;
+package org.eclipse.aether.util.graph.version;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -73,7 +74,9 @@ public abstract class AbstractVersionFilterTest {
     }
 
     protected void assertVersions(VersionFilter.VersionFilterContext context, String... versions) {
-        assertEquals(versions.length, context.getCount());
+        ArrayList<Version> filtered = new ArrayList<>();
+        context.iterator().forEachRemaining(filtered::add);
+        assertEquals(versions.length, context.getCount(), filtered.toString());
         Iterator<Version> it = context.iterator();
         for (String version : versions) {
             assertTrue(it.hasNext());

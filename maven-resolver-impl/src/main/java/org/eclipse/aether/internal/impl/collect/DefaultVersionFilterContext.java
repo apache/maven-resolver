@@ -35,24 +35,49 @@ import org.eclipse.aether.version.VersionConstraint;
 /**
  * Default implementation of {@link VersionFilter.VersionFilterContext}.
  * Internal helper class for collector implementations.
+ * This instance is not thread safe, and same context instance must not be shared across threads.
  */
 public final class DefaultVersionFilterContext implements VersionFilter.VersionFilterContext {
     private final RepositorySystemSession session;
 
     private Dependency dependency;
 
-    VersionRangeResult result;
+    private VersionRangeResult result;
 
-    private List<Version> versions;
+    private ArrayList<Version> versions;
 
     public DefaultVersionFilterContext(RepositorySystemSession session) {
         this.session = session;
+        this.dependency = null;
+        this.result = null;
+        this.versions = null;
     }
 
+    private DefaultVersionFilterContext(
+            RepositorySystemSession session, Dependency dependency, VersionRangeResult result) {
+        this.session = session;
+        this.dependency = dependency;
+        this.result = result;
+        this.versions = new ArrayList<>(result.getVersions());
+    }
+
+    /**
+     * The use of this method allows strictly single-threaded use of context. Is unused in production, only in tests.
+     */
+    @Deprecated
     public void set(Dependency dependency, VersionRangeResult result) {
         this.dependency = dependency;
         this.result = result;
         this.versions = new ArrayList<>(result.getVersions());
+    }
+
+    /**
+     * Creates an initialized, new context instance out of this context session and provided dependency and result.
+     * The newly created context is still not thread safe, but allows to have multiple contexts with different
+     * dependencies and results in the same time (processed in multiple threads in parallel like BF collector does).
+     */
+    public DefaultVersionFilterContext initialize(Dependency dependency, VersionRangeResult result) {
+        return new DefaultVersionFilterContext(this.session, dependency, result);
     }
 
     public List<Version> get() {

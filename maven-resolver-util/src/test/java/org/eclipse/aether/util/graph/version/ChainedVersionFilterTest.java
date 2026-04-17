@@ -16,14 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.graph.versions;
+package org.eclipse.aether.util.graph.version;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
-import org.eclipse.aether.util.graph.version.ChainedVersionFilter;
-import org.eclipse.aether.util.graph.version.HighestVersionFilter;
-import org.eclipse.aether.util.graph.version.SnapshotVersionFilter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

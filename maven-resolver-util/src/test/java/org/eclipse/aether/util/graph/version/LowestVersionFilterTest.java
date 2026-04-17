@@ -16,36 +16,43 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.graph.versions;
+package org.eclipse.aether.util.graph.version;
 
 import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
-import org.eclipse.aether.util.graph.version.SnapshotVersionFilter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SnapshotVersionFilterTest extends AbstractVersionFilterTest {
+public class LowestVersionFilterTest extends AbstractVersionFilterTest {
 
     @Test
     void testFilterVersions() {
-        SnapshotVersionFilter filter = new SnapshotVersionFilter();
-        VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2-SNAPSHOT", "3.1", "4.0-SNAPSHOT", "5.0.0");
+        LowestVersionFilter filter = new LowestVersionFilter();
+        VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2", "3", "4", "5", "6", "7", "8", "9");
         filter.filterVersions(ctx);
-        assertVersions(ctx, "1", "3.1", "5.0.0");
+        assertVersions(ctx, "1");
+    }
+
+    @Test
+    void testFilterVersions3() {
+        LowestVersionFilter filter = new LowestVersionFilter(3);
+        VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2", "3", "4", "5", "6", "7", "8", "9");
+        filter.filterVersions(ctx);
+        assertVersions(ctx, "1", "2", "3");
     }
 
     @Test
     void testDeriveChildFilter() {
-        SnapshotVersionFilter filter = new SnapshotVersionFilter();
+        LowestVersionFilter filter = new LowestVersionFilter();
         assertSame(filter, derive(filter, "g:a:1"));
     }
 
     @SuppressWarnings("EqualsWithItself")
     @Test
     void testEquals() {
-        SnapshotVersionFilter filter = new SnapshotVersionFilter();
+        LowestVersionFilter filter = new LowestVersionFilter();
         assertNotEquals(null, filter);
         assertEquals(filter, filter);
-        assertEquals(filter, new SnapshotVersionFilter());
+        assertEquals(filter, new LowestVersionFilter());
     }
 }

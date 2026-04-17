@@ -459,7 +459,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
         List<? extends Version> versions;
         if (verFilter != null && rangeResult.getVersionConstraint().getRange() != null) {
-            verContext.set(dependency, rangeResult);
+            verContext = verContext.initialize(dependency, rangeResult);
             try {
                 verFilter.filterVersions(verContext);
             } catch (RepositoryException e) {

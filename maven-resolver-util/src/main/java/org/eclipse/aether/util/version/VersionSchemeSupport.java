@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 2.0.0
  */
-abstract class VersionSchemeSupport implements VersionScheme {
+public abstract class VersionSchemeSupport implements VersionScheme {
     @Override
     public GenericVersionRange parseVersionRange(final String range) throws InvalidVersionSpecificationException {
         return new GenericVersionRange(this, range);

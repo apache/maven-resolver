@@ -32,7 +32,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Despite its name, this class is generic in a sense it works with any {@link Version}
  */
-final class GenericVersionRange implements VersionRange {
+public final class GenericVersionRange implements VersionRange {
     private final VersionScheme versionScheme;
 
     private final Bound lowerBound;

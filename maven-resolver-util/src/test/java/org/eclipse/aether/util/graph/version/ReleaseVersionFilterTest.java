@@ -16,44 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.graph.versions;
+package org.eclipse.aether.util.graph.version;
 
 import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
-import org.eclipse.aether.util.graph.version.LowestVersionFilter;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
-public class LowestVersionFilterTest extends AbstractVersionFilterTest {
+public class ReleaseVersionFilterTest extends AbstractVersionFilterTest {
 
     @Test
     void testFilterVersions() {
-        LowestVersionFilter filter = new LowestVersionFilter();
-        VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2", "3", "4", "5", "6", "7", "8", "9");
+        ReleaseVersionFilter filter = new ReleaseVersionFilter();
+        VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2-SNAPSHOT", "3.1", "4.0-SNAPSHOT", "5.0.0");
         filter.filterVersions(ctx);
-        assertVersions(ctx, "1");
-    }
-
-    @Test
-    void testFilterVersions3() {
-        LowestVersionFilter filter = new LowestVersionFilter(3);
-        VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2", "3", "4", "5", "6", "7", "8", "9");
-        filter.filterVersions(ctx);
-        assertVersions(ctx, "1", "2", "3");
+        assertVersions(ctx, "2-SNAPSHOT", "4.0-SNAPSHOT");
     }
 
     @Test
     void testDeriveChildFilter() {
-        LowestVersionFilter filter = new LowestVersionFilter();
+        ReleaseVersionFilter filter = new ReleaseVersionFilter();
         assertSame(filter, derive(filter, "g:a:1"));
     }
 
     @SuppressWarnings("EqualsWithItself")
     @Test
     void testEquals() {
-        LowestVersionFilter filter = new LowestVersionFilter();
+        ReleaseVersionFilter filter = new ReleaseVersionFilter();
         assertNotEquals(null, filter);
         assertEquals(filter, filter);
-        assertEquals(filter, new LowestVersionFilter());
+        assertEquals(filter, new ReleaseVersionFilter());
     }
 }

@@ -62,12 +62,13 @@
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-classworlds</artifactId>
-      <version>2.9.0</version>
+      <version>2.10.0</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
+      <version>${plexusUtils3Version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>

@@ -18,44 +18,48 @@
  */
 package org.eclipse.aether.util.graph.version;
 
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.VersionFilter;
-import org.eclipse.aether.version.Version;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * A version filter that excludes any version that is not-matched by version predicate.
+ * A version filter that applies delegate version filter if context predicate applies.
  *
- * @since 2.0.11
+ * @since 2.0.17
  */
-public class VersionPredicateVersionFilter implements VersionFilter {
-    private final Predicate<Version> versionPredicate;
+public class ContextPredicateDelegatingVersionFilter implements VersionFilter {
+    private final Predicate<VersionFilterContext> contextPredicate;
+    private final VersionFilter delegate;
 
     /**
-     * Creates a new instance of this version filter. It will filter out versions not matched by predicate.
-     * Note: filter always operates with baseVersions.
+     * Creates a new instance of this version filter.
      */
-    public VersionPredicateVersionFilter(Predicate<Version> versionPredicate) {
-        this.versionPredicate = requireNonNull(versionPredicate);
+    public ContextPredicateDelegatingVersionFilter(
+            Predicate<VersionFilterContext> contextPredicate, VersionFilter delegate) {
+        this.contextPredicate = requireNonNull(contextPredicate);
+        this.delegate = requireNonNull(delegate);
     }
 
     @Override
-    public void filterVersions(VersionFilterContext context) {
-        for (Iterator<Version> it = context.iterator(); it.hasNext(); ) {
-            if (!versionPredicate.test(it.next())) {
-                it.remove();
-            }
+    public void filterVersions(VersionFilterContext context) throws RepositoryException {
+        if (contextPredicate.test(context)) {
+            delegate.filterVersions(context);
         }
     }
 
     @Override
     public VersionFilter deriveChildFilter(DependencyCollectionContext context) {
-        return this;
+        VersionFilter derived = delegate.deriveChildFilter(context);
+        if (derived == delegate) {
+            return this;
+        } else {
+            return new ContextPredicateDelegatingVersionFilter(contextPredicate, derived);
+        }
     }
 
     @Override
@@ -66,12 +70,12 @@ public class VersionPredicateVersionFilter implements VersionFilter {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        VersionPredicateVersionFilter that = (VersionPredicateVersionFilter) o;
-        return Objects.equals(versionPredicate, that.versionPredicate);
+        ContextPredicateDelegatingVersionFilter that = (ContextPredicateDelegatingVersionFilter) o;
+        return Objects.equals(contextPredicate, that.contextPredicate) && Objects.equals(delegate, that.delegate);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(contextPredicate, delegate);
     }
 }
