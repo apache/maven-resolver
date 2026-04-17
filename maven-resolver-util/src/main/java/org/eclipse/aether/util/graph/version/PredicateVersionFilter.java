@@ -23,7 +23,7 @@ import java.util.function.Predicate;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * A version filter that excludes any version that is blacklisted.
+ * A version filter that excludes any version that is blacklisted by predicate.
  *
  * @since 2.0.0
  * @deprecated Use {@link ArtifactPredicateVersionFilter} instead.
