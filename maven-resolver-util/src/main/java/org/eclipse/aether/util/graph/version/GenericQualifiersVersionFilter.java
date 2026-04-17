@@ -38,16 +38,8 @@ public class GenericQualifiersVersionFilter extends VersionPredicateVersionFilte
     /**
      * Filters any version that contains "pre-release" qualifiers (alpha, beta, milestone, rc/cr).
      */
-    public static GenericQualifiersVersionFilter releasePreviewVersionFilter() {
+    public static GenericQualifiersVersionFilter preReleaseVersionFilter() {
         return new GenericQualifiersVersionFilter(i -> i > GenericQualifiers.QUALIFIER_RC);
-    }
-
-    /**
-     * Filters any version that contains "non-final" qualifiers including snapshots (alpha, beta, milestone,
-     * rc/cr, snapshot).
-     */
-    public static GenericQualifiersVersionFilter nonReleaseVersionFilter() {
-        return new GenericQualifiersVersionFilter(i -> i > GenericQualifiers.QUALIFIER_SNAPSHOT);
     }
 
     /**
