@@ -18,63 +18,22 @@
  */
 package org.eclipse.aether.util.graph.version;
 
-import java.util.Iterator;
-import java.util.Objects;
 import java.util.function.Predicate;
 
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.collection.DependencyCollectionContext;
-import org.eclipse.aether.collection.VersionFilter;
-import org.eclipse.aether.version.Version;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * A version filter that excludes any version that is blacklisted.
  *
  * @since 2.0.0
+ * @deprecated Use {@link ArtifactPredicateVersionFilter} instead.
  */
-public class PredicateVersionFilter implements VersionFilter {
-    private final Predicate<Artifact> artifactPredicate;
-
+@Deprecated
+public class PredicateVersionFilter extends ArtifactPredicateVersionFilter {
     /**
      * Creates a new instance of this version filter.
      */
     public PredicateVersionFilter(Predicate<Artifact> artifactPredicate) {
-        this.artifactPredicate = requireNonNull(artifactPredicate);
-    }
-
-    @Override
-    public void filterVersions(VersionFilterContext context) {
-        Artifact dependencyArtifact = context.getDependency().getArtifact();
-        Iterator<Version> it = context.iterator();
-        while (it.hasNext()) {
-            Version version = it.next();
-            if (!artifactPredicate.test(dependencyArtifact.setVersion(version.toString()))) {
-                it.remove();
-            }
-        }
-    }
-
-    @Override
-    public VersionFilter deriveChildFilter(DependencyCollectionContext context) {
-        return this;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        PredicateVersionFilter that = (PredicateVersionFilter) o;
-        return Objects.equals(artifactPredicate, that.artifactPredicate);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(artifactPredicate);
+        super(artifactPredicate);
     }
 }

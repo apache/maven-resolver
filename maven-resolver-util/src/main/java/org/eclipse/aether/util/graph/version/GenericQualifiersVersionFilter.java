@@ -24,8 +24,14 @@ import org.eclipse.aether.util.version.GenericQualifiers;
 
 /**
  * A version filter that (unconditionally) blocks based on qualifiers, as defined by {@link GenericQualifiers}.
+ * Note: while SNAPSHOT string is also a qualifier, this filter does not deal with them, see {@link SnapshotVersionFilter},
+ * {@link ContextualSnapshotVersionFilter} and {@link ContextualAncestorSnapshotVersionFilter}.
  *
  * @since 2.0.17
+ * @see GenericQualifiers
+ * @see SnapshotVersionFilter
+ * @see ContextualSnapshotVersionFilter
+ * @see ContextualAncestorSnapshotVersionFilter
  */
 public class GenericQualifiersVersionFilter extends VersionPredicateVersionFilter {
     /**
