@@ -18,15 +18,17 @@
  */
 package org.eclipse.aether.util.graph.version;
 
+import org.eclipse.aether.artifact.Artifact;
+
 /**
- * A version filter that (unconditionally) blocks non "*-SNAPSHOT" versions.
+ * A version filter that (unconditionally) blocks non-snapshot versions.
  */
-public class ReleaseVersionFilter extends VersionPredicateVersionFilter {
+public class ReleaseVersionFilter extends ArtifactPredicateVersionFilter {
 
     /**
      * Creates a new instance of this version filter.
      */
     public ReleaseVersionFilter() {
-        super(v -> v.toString().endsWith("SNAPSHOT"));
+        super(Artifact::isSnapshot);
     }
 }

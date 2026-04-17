@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.eclipse.aether.version.Version;
 
@@ -34,7 +32,7 @@ import static java.util.Objects.requireNonNull;
  * A generic version, that is a version that accepts any input string and tries to apply common sense sorting. See
  * {@link GenericVersionScheme} for details.
  */
-final class GenericVersion implements Version {
+public final class GenericVersion implements Version {
 
     private final String version;
 
@@ -175,30 +173,6 @@ final class GenericVersion implements Version {
     }
 
     static final class Tokenizer {
-
-        private static final Integer QUALIFIER_ALPHA = -5;
-
-        private static final Integer QUALIFIER_BETA = -4;
-
-        private static final Integer QUALIFIER_MILESTONE = -3;
-
-        private static final Map<String, Integer> QUALIFIERS;
-
-        static {
-            QUALIFIERS = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            QUALIFIERS.put("alpha", QUALIFIER_ALPHA);
-            QUALIFIERS.put("beta", QUALIFIER_BETA);
-            QUALIFIERS.put("milestone", QUALIFIER_MILESTONE);
-            QUALIFIERS.put("cr", -2);
-            QUALIFIERS.put("rc", -2);
-            QUALIFIERS.put("snapshot", -1);
-            QUALIFIERS.put("ga", 0);
-            QUALIFIERS.put("final", 0);
-            QUALIFIERS.put("release", 0);
-            QUALIFIERS.put("", 0);
-            QUALIFIERS.put("sp", 1);
-        }
-
         private final String version;
 
         private final int versionLength;
@@ -296,22 +270,23 @@ final class GenericVersion implements Version {
                     switch (token.charAt(0)) {
                         case 'a':
                         case 'A':
-                            return new Item(Item.KIND_QUALIFIER, QUALIFIER_ALPHA);
+                            token = GenericQualifiers.LABEL_ALPHA;
+                            break;
                         case 'b':
                         case 'B':
-                            return new Item(Item.KIND_QUALIFIER, QUALIFIER_BETA);
+                            token = GenericQualifiers.LABEL_BETA;
+                            break;
                         case 'm':
                         case 'M':
-                            return new Item(Item.KIND_QUALIFIER, QUALIFIER_MILESTONE);
+                            token = GenericQualifiers.LABEL_MILESTONE;
+                            break;
                         default:
                     }
                 }
-                Integer qualifier = QUALIFIERS.get(token);
-                if (qualifier != null) {
-                    return new Item(Item.KIND_QUALIFIER, qualifier);
-                } else {
-                    return new Item(Item.KIND_STRING, token.toLowerCase(Locale.ENGLISH));
-                }
+                token = token.toLowerCase(Locale.ENGLISH);
+                return GenericQualifiers.tokenQualifier(token)
+                        .map(integer -> new Item(Item.KIND_QUALIFIER, integer))
+                        .orElseGet(() -> new Item(Item.KIND_STRING, token));
             }
         }
     }

@@ -16,38 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.util.graph.versions;
+package org.eclipse.aether.util.graph.version;
 
 import org.eclipse.aether.collection.VersionFilter.VersionFilterContext;
-import org.eclipse.aether.util.graph.version.ReleaseVersionFilter;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class ReleaseVersionFilterTest extends AbstractVersionFilterTest {
+public class SnapshotVersionFilterTest extends AbstractVersionFilterTest {
 
     @Test
     void testFilterVersions() {
-        ReleaseVersionFilter filter = new ReleaseVersionFilter();
+        SnapshotVersionFilter filter = new SnapshotVersionFilter();
         VersionFilterContext ctx = newContext("g:a:[1,9]", "1", "2-SNAPSHOT", "3.1", "4.0-SNAPSHOT", "5.0.0");
         filter.filterVersions(ctx);
-        assertVersions(ctx, "2-SNAPSHOT", "4.0-SNAPSHOT");
+        assertVersions(ctx, "1", "3.1", "5.0.0");
     }
 
     @Test
     void testDeriveChildFilter() {
-        ReleaseVersionFilter filter = new ReleaseVersionFilter();
+        SnapshotVersionFilter filter = new SnapshotVersionFilter();
         assertSame(filter, derive(filter, "g:a:1"));
     }
 
     @SuppressWarnings("EqualsWithItself")
     @Test
     void testEquals() {
-        ReleaseVersionFilter filter = new ReleaseVersionFilter();
+        SnapshotVersionFilter filter = new SnapshotVersionFilter();
         assertNotEquals(null, filter);
         assertEquals(filter, filter);
-        assertEquals(filter, new ReleaseVersionFilter());
+        assertEquals(filter, new SnapshotVersionFilter());
     }
 }

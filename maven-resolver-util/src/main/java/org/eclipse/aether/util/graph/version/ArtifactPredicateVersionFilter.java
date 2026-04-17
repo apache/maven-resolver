@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.version.Version;
@@ -29,25 +30,27 @@ import org.eclipse.aether.version.Version;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A version filter that excludes any version that is not-matched by version predicate.
+ * A version filter that excludes any version that is not-matched by artifact predicate.
  *
- * @since 2.0.11
+ * @since 2.0.17
  */
-public class VersionPredicateVersionFilter implements VersionFilter {
-    private final Predicate<Version> versionPredicate;
+public class ArtifactPredicateVersionFilter implements VersionFilter {
+    private final Predicate<Artifact> artifactPredicate;
 
     /**
-     * Creates a new instance of this version filter. It will filter out versions not matched by predicate.
-     * Note: filter always operates with baseVersions.
+     * Creates a new instance of this version filter.
      */
-    public VersionPredicateVersionFilter(Predicate<Version> versionPredicate) {
-        this.versionPredicate = requireNonNull(versionPredicate);
+    public ArtifactPredicateVersionFilter(Predicate<Artifact> artifactPredicate) {
+        this.artifactPredicate = requireNonNull(artifactPredicate);
     }
 
     @Override
     public void filterVersions(VersionFilterContext context) {
-        for (Iterator<Version> it = context.iterator(); it.hasNext(); ) {
-            if (!versionPredicate.test(it.next())) {
+        Artifact dependencyArtifact = context.getDependency().getArtifact();
+        Iterator<Version> it = context.iterator();
+        while (it.hasNext()) {
+            Version version = it.next();
+            if (!artifactPredicate.test(dependencyArtifact.setVersion(version.toString()))) {
                 it.remove();
             }
         }
@@ -66,12 +69,12 @@ public class VersionPredicateVersionFilter implements VersionFilter {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        VersionPredicateVersionFilter that = (VersionPredicateVersionFilter) o;
-        return Objects.equals(versionPredicate, that.versionPredicate);
+        ArtifactPredicateVersionFilter that = (ArtifactPredicateVersionFilter) o;
+        return Objects.equals(artifactPredicate, that.artifactPredicate);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(artifactPredicate);
     }
 }
