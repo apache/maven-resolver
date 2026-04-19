@@ -65,6 +65,8 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider {
                 localRepositoryManagerFactories,
                 LocalRepositoryManagerFactory::getPriority);
 
+        LOGGER.debug("Selecting LocalRepositoryManager for {}", repository);
+
         List<NoLocalRepositoryManagerException> errors = new ArrayList<>();
         for (PrioritizedComponent<LocalRepositoryManagerFactory> factory : factories.getEnabled()) {
             try {
@@ -83,7 +85,19 @@ public class DefaultLocalRepositoryProvider implements LocalRepositoryProvider {
                 return manager;
             } catch (NoLocalRepositoryManagerException e) {
                 // continue and try next factory
-                LOGGER.debug("Could not obtain local repository manager for {}", repository, e);
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace(
+                            "LRM factory {} did not provide LRM for {}",
+                            factory.getComponent().getClass(),
+                            repository,
+                            e);
+                } else {
+                    LOGGER.debug(
+                            "LRM factory {} did not provide LRM for {}: {}",
+                            factory.getComponent().getClass(),
+                            repository,
+                            e.getMessage());
+                }
                 errors.add(e);
             }
         }
