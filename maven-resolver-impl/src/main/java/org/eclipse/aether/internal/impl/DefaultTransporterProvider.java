@@ -64,6 +64,8 @@ public final class DefaultTransporterProvider implements TransporterProvider {
         PrioritizedComponents<TransporterFactory> factories = PrioritizedComponents.reuseOrCreate(
                 session, TransporterFactory.class, transporterFactories, TransporterFactory::getPriority);
 
+        LOGGER.debug("Selecting Transporter for {}", repository);
+
         List<NoTransporterException> errors = new ArrayList<>();
         for (PrioritizedComponent<TransporterFactory> factory : factories.getEnabled()) {
             try {
@@ -101,7 +103,19 @@ public final class DefaultTransporterProvider implements TransporterProvider {
                 return transporter;
             } catch (NoTransporterException e) {
                 // continue and try next factory
-                LOGGER.debug("Could not obtain transporter factory for {}", repository, e);
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace(
+                            "Transporter factory {} did not provide Transporter for {}",
+                            factory.getComponent().getClass(),
+                            repository,
+                            e);
+                } else {
+                    LOGGER.debug(
+                            "Transporter factory {} did not provide Transporter for {}: {}",
+                            factory.getComponent().getClass(),
+                            repository,
+                            e.getMessage());
+                }
                 errors.add(e);
             }
         }

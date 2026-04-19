@@ -76,6 +76,8 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
         PrioritizedComponents<RepositoryConnectorFactory> factories = PrioritizedComponents.reuseOrCreate(
                 session, RepositoryConnectorFactory.class, connectorFactories, RepositoryConnectorFactory::getPriority);
 
+        LOGGER.debug("Selecting RepositoryConnector for {}", repository);
+
         List<NoRepositoryConnectorException> errors = new ArrayList<>();
         for (PrioritizedComponent<RepositoryConnectorFactory> factory : factories.getEnabled()) {
             try {
@@ -100,7 +102,19 @@ public class DefaultRepositoryConnectorProvider implements RepositoryConnectorPr
                 return connector;
             } catch (NoRepositoryConnectorException e) {
                 // continue and try next factory
-                LOGGER.debug("Could not obtain connector factory for {}", repository, e);
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace(
+                            "Connector factory {} did not provide connector for {}",
+                            factory.getComponent().getClass(),
+                            repository,
+                            e);
+                } else {
+                    LOGGER.debug(
+                            "Connector factory {} did not provide connector for {}: {}",
+                            factory.getComponent().getClass(),
+                            repository,
+                            e.getMessage());
+                }
                 errors.add(e);
             }
         }
