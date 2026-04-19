@@ -191,7 +191,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
 
         RequestTrace trace = collectStepTrace(parent, args.request.getRequestContext(), args.nodes.nodes, dependency);
         PremanagedDependency preManaged =
-                PremanagedDependency.create(depManager, dependency, disableVersionManagement, args.premanagedState);
+                createPremanagedDependency(depManager, dependency, disableVersionManagement, args.premanagedState);
         dependency = preManaged.getManagedDependency();
 
         boolean noDescriptor = isLackingDescriptor(args.session, dependency.getArtifact());
@@ -231,7 +231,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                     results.addCycle(args.nodes.nodes, cycleEntry, d);
                     DependencyNode cycleNode = args.nodes.get(cycleEntry);
                     if (cycleNode.getDependency() != null) {
-                        DefaultDependencyNode child = createDependencyNode(
+                        DefaultDependencyNode child = createDependencyNodeCycle(
                                 relocations, preManaged, rangeResult, version, d, descriptorResult, cycleNode);
                         node.getChildren().add(child);
                         continue;
