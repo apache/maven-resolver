@@ -103,41 +103,28 @@ public abstract class HttpTransporterTest {
     protected static SSLContext defaultSslContext;
 
     static {
-        // Warning: "cross connected" with HttpServer!
-        /*System.setProperty(
-                "javax.net.ssl.trustStore", KEY_STORE_PATH.toAbsolutePath().toString());
-        System.setProperty("javax.net.ssl.trustStorePassword", "server-pwd");
-        System.setProperty(
-                "javax.net.ssl.keyStore", TRUST_STORE_PATH.toAbsolutePath().toString());
-        System.setProperty("javax.net.ssl.keyStorePassword", "client-pwd");
-
-        System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");*/
+        // uncomment to enable SSL debugging for easier troubleshooting of SSL related test failures
         // System.setProperty("javax.net.debug", "all");
     }
 
     @BeforeAll
     protected static void beforeAll() throws NoSuchAlgorithmException {
-        // initialize custom keystore and truststore files from classpath resources if not already present (e.g., from
-        // previous test run)
-        if (!Files.isRegularFile(KEY_STORE_PATH)) {
-            URL keyStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store");
-            URL keyStoreSelfSignedUrl =
-                    HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store-selfsigned");
-            URL trustStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/client-store");
+        // populate custom keystore and truststore
+        URL keyStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store");
+        URL keyStoreSelfSignedUrl =
+                HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store-selfsigned");
+        URL trustStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/client-store");
 
-            try {
-                try (InputStream keyStoreStream = keyStoreUrl.openStream();
-                        InputStream keyStoreSelfSignedStream = keyStoreSelfSignedUrl.openStream();
-                        InputStream trustStoreStream = trustStoreUrl.openStream()) {
-                    Files.copy(keyStoreStream, KEY_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(
-                            keyStoreSelfSignedStream, KEY_STORE_SELF_SIGNED_PATH, StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(trustStoreStream, TRUST_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
+        try {
+            try (InputStream keyStoreStream = keyStoreUrl.openStream();
+                    InputStream keyStoreSelfSignedStream = keyStoreSelfSignedUrl.openStream();
+                    InputStream trustStoreStream = trustStoreUrl.openStream()) {
+                Files.copy(keyStoreStream, KEY_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(keyStoreSelfSignedStream, KEY_STORE_SELF_SIGNED_PATH, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(trustStoreStream, TRUST_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
             }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
         // override default SSLContext to include our custom keystore and truststore (which are "cross connected" with
         // HttpServer)
