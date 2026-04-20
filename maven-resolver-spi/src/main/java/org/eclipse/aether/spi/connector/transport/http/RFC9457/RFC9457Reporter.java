@@ -24,14 +24,15 @@ import java.io.IOException;
  * A reporter for RFC 9457 messages.
  * RFC 9457 is a standard for reporting problems in HTTP responses as a JSON object.
  * There are members specified in the RFC but none of those appear to be required,
- * @see <a href=https://www.rfc-editor.org/rfc/rfc9457#section-3-7>rfc9457 section 3.7</a>
+ * see <a href=https://www.rfc-editor.org/rfc/rfc9457#section-3-7>rfc9457 section 3.7</a>
  * Given the JSON fields are not mandatory, this reporter simply extracts the body of the
  * response without validation.
- * A RFC 9457 message is detected by the content type "application/problem+json".
+ * A RFC 9457 message is detected by the content type {@value #CONTENT_TYPE_PROBLEM_DETAILS_JSON} in the response header.
  *
  * @param <T> The type of the response.
  * @param <E> The base exception type to throw if the response is not a RFC9457 message.
  * @param <R> The type of the request or request builder (which allows to modify headers)
+ * @see <a href=https://www.rfc-editor.org/rfc/rfc9457#section-3-7>RFC 9457</a>
  */
 public abstract class RFC9457Reporter<T, E extends Exception, R> {
     public static final String CONTENT_TYPE_PROBLEM_DETAILS_JSON = "application/problem+json";

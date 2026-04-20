@@ -68,11 +68,24 @@ public class RFC9457Payload {
 
     @Override
     public String toString() {
-        return "RFC9457Payload {" + "type="
-                + type + ", status="
-                + status + ", title='"
-                + title + ", detail='"
-                + detail + ", instance="
-                + instance + '}';
+        StringBuilder builder = new StringBuilder();
+        builder.append("RFC9457Payload [");
+        if (type != null) {
+            builder.append("type=").append(type).append(", ");
+        }
+        if (status != null) {
+            builder.append("status=").append(status).append(", ");
+        }
+        if (title != null) {
+            builder.append("title=").append(title).append(", ");
+        }
+        if (detail != null) {
+            builder.append("detail=").append(detail).append(", ");
+        }
+        if (instance != null) {
+            builder.append("instance=").append(instance);
+        }
+        builder.append("]");
+        return builder.toString();
     }
 }
