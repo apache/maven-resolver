@@ -20,17 +20,26 @@ package org.eclipse.aether.transport.jdk;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
-public class JdkRFC9457Reporter extends RFC9457Reporter<HttpResponse<InputStream>, HttpTransporterException> {
+public class JdkRFC9457Reporter
+        extends RFC9457Reporter<HttpResponse<InputStream>, HttpTransporterException, HttpRequest.Builder> {
     public static final JdkRFC9457Reporter INSTANCE = new JdkRFC9457Reporter();
 
     private JdkRFC9457Reporter() {}
+
+    @Override
+    public void prepareRequest(Builder requestBuilder) {
+        requestBuilder.header(HttpConstants.ACCEPT, CONTENT_TYPE_PROBLEM_DETAILS_JSON);
+    }
 
     @Override
     protected boolean isRFC9457Message(final HttpResponse<InputStream> response) {

@@ -276,6 +276,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 HttpRequest.Builder request =
                         HttpRequest.newBuilder().uri(resolve(task)).GET();
                 headers.forEach(request::setHeader);
+                JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
 
                 if (resume) {
                     long resumeOffset = task.getResumeOffset();
@@ -396,6 +397,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request = request.expectContinue(expectContinue);
         }
         headers.forEach(request::setHeader);
+        JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
 
         if (task.getDataLength() == 0L) {
             request.PUT(HttpRequest.BodyPublishers.noBody());
@@ -414,9 +416,15 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
         prepare(request);
         try {
-            HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
+            HttpResponse<InputStream> response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
-                throw new HttpTransporterException(response.statusCode());
+                try {
+                    JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
+                        throw new HttpTransporterException(statusCode);
+                    });
+                } finally {
+                    closeBody(response);
+                }
             }
         } catch (ConnectException e) {
             throw enhance(e);

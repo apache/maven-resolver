@@ -250,6 +250,14 @@ public abstract class HttpTransporterTest {
     }
 
     @Test
+    protected void testPeek_DoesNotAcceptRfc9457() throws Exception {
+        // peek is HEAD request, therefore cannot support RFC 9457
+        transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+        String accept = httpServer.getLogEntries().get(0).getRequestHeaders().get("Accept");
+        assertNull(accept, "No accept header expected for HEAD request, but was: " + accept);
+    }
+
+    @Test
     protected void testRetryHandler_defaultCount_positive() throws Exception {
         httpServer.setConnectionsToClose(3);
         transporter.peek(new PeekTask(URI.create("repo/file.txt")));
@@ -449,6 +457,17 @@ public abstract class HttpTransporterTest {
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("oldTest", listener.getBaos().toString(StandardCharsets.UTF_8));
         assertEquals(OLD_FILE_TIMESTAMP, file.lastModified());
+    }
+
+    @Test
+    protected void testGet_AcceptsRfc9457() throws Exception {
+        GetTask task = new GetTask(URI.create("repo/file.txt"));
+        transporter.get(task);
+        String accept = httpServer.getLogEntries().get(0).getRequestHeaders().get("Accept");
+        assertNotNull(accept, "Missing Accept header when retrieving artifact");
+        assertTrue(
+                accept.contains("application/problem+json"),
+                "Expected Accept header to contain application/problem+json, but was: " + accept);
     }
 
     /**
@@ -869,6 +888,18 @@ public abstract class HttpTransporterTest {
         assertEquals(
                 String.valueOf(payload.getBytes(StandardCharsets.UTF_8).length),
                 httpServer.getLogEntries().get(0).getRequestHeaders().get("Content-Length"));
+    }
+
+    @Test
+    protected void testPut_AcceptsRfc9457() throws Exception {
+        String payload = "upload";
+        PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString(payload);
+        transporter.put(task);
+        String accept = httpServer.getLogEntries().get(0).getRequestHeaders().get("Accept");
+        assertNotNull(accept, "Missing Accept header when retrieving artifact");
+        assertTrue(
+                accept.contains("application/problem+json"),
+                "Expected Accept header to contain application/problem+json, but was: " + accept);
     }
 
     @Test

@@ -354,6 +354,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
         EntityGetter getter = new EntityGetter(task);
         HttpGet request = commonHeaders(new HttpGet(resolve(task)));
+        ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
         while (true) {
             try {
                 if (resume) {
@@ -378,6 +379,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     protected void implPut(PutTask task) throws Exception {
         PutTaskEntity entity = new PutTaskEntity(task);
         HttpPut request = commonHeaders(entity(new HttpPut(resolve(task)), entity));
+        ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
         try {
             execute(request, null);
         } catch (HttpResponseException e) {
@@ -507,7 +509,6 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         if (!state.isExpectContinue()) {
             request.removeHeaders(HttpHeaders.EXPECT);
         }
-
         return request;
     }
 

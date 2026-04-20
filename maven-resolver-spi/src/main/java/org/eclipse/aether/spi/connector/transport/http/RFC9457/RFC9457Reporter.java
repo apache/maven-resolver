@@ -31,8 +31,11 @@ import java.io.IOException;
  *
  * @param <T> The type of the response.
  * @param <E> The base exception type to throw if the response is not a RFC9457 message.
+ * @param <R> The type of the request or request builder (which allows to modify headers)
  */
-public abstract class RFC9457Reporter<T, E extends Exception> {
+public abstract class RFC9457Reporter<T, E extends Exception, R> {
+    public static final String CONTENT_TYPE_PROBLEM_DETAILS_JSON = "application/problem+json";
+
     protected abstract boolean isRFC9457Message(T response);
 
     protected abstract int getStatusCode(T response);
@@ -41,8 +44,16 @@ public abstract class RFC9457Reporter<T, E extends Exception> {
 
     protected abstract String getBody(T response) throws IOException;
 
+    /**
+     * Prepares the request to accept RFC 9457 responses.
+     * This involves setting/updating the "Accept" header to include "application/problem+json".
+     * @param request The request or request builder to prepare
+     * @see <a href=https://www.rfc-editor.org/rfc/rfc9457#section-3-2>RFC 9457 section 3.2</a>
+     */
+    public abstract void prepareRequest(R request);
+
     protected boolean hasRFC9457ContentType(String contentType) {
-        return "application/problem+json".equals(contentType);
+        return CONTENT_TYPE_PROBLEM_DETAILS_JSON.equals(contentType);
     }
 
     /**
