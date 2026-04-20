@@ -112,7 +112,7 @@
     <!-- Used by Jetty Transport (client) and Test HTTP (server), 12.1 introduced support for different compressions (https://github.com/jetty/jetty.project/issues/8769) -->
     <jettyVersion>12.1.6</jettyVersion>
     <!-- used by supplier and demo only -->
-    <maven3Version>3.9.14</maven3Version>
+    <maven3Version>3.9.15</maven3Version>
     <maven4Version>4.0.0-rc-5</maven4Version>
     <plexusUtils3Version>3.6.1</plexusUtils3Version>
     <plexusUtils4Version>4.0.3</plexusUtils4Version>
