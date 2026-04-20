@@ -53,6 +53,14 @@ public abstract class RFC9457Reporter<T, E extends Exception, R> {
     public abstract void prepareRequest(R request);
 
     protected boolean hasRFC9457ContentType(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        // strip off parameters
+        int idx = contentType.indexOf(';');
+        if (idx > -1) {
+            contentType = contentType.substring(0, idx);
+        }
         return CONTENT_TYPE_PROBLEM_DETAILS_JSON.equals(contentType);
     }
 

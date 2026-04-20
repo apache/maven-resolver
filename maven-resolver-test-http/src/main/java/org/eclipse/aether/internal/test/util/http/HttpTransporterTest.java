@@ -18,6 +18,10 @@
  */
 package org.eclipse.aether.internal.test.util.http;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,6 +35,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -62,7 +69,9 @@ import org.eclipse.aether.spi.connector.transport.http.RFC9457.HttpRFC9457Except
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -91,9 +100,11 @@ public abstract class HttpTransporterTest {
 
     protected static final Path TRUST_STORE_PATH = Paths.get("target/trustStore");
 
+    protected static SSLContext defaultSslContext;
+
     static {
         // Warning: "cross connected" with HttpServer!
-        System.setProperty(
+        /*System.setProperty(
                 "javax.net.ssl.trustStore", KEY_STORE_PATH.toAbsolutePath().toString());
         System.setProperty("javax.net.ssl.trustStorePassword", "server-pwd");
         System.setProperty(
@@ -101,8 +112,112 @@ public abstract class HttpTransporterTest {
         System.setProperty("javax.net.ssl.keyStorePassword", "client-pwd");
 
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");*/
         // System.setProperty("javax.net.debug", "all");
+    }
+
+    @BeforeAll
+    protected static void beforeAll() throws NoSuchAlgorithmException {
+        // initialize custom keystore and truststore files from classpath resources if not already present (e.g., from
+        // previous test run)
+        if (!Files.isRegularFile(KEY_STORE_PATH)) {
+            URL keyStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store");
+            URL keyStoreSelfSignedUrl =
+                    HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store-selfsigned");
+            URL trustStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/client-store");
+
+            try {
+                try (InputStream keyStoreStream = keyStoreUrl.openStream();
+                        InputStream keyStoreSelfSignedStream = keyStoreSelfSignedUrl.openStream();
+                        InputStream trustStoreStream = trustStoreUrl.openStream()) {
+                    Files.copy(keyStoreStream, KEY_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(
+                            keyStoreSelfSignedStream, KEY_STORE_SELF_SIGNED_PATH, StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(trustStoreStream, TRUST_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        // override default SSLContext to include our custom keystore and truststore (which are "cross connected" with
+        // HttpServer)
+        defaultSslContext = SSLContext.getDefault();
+        SSLContext.setDefault(createSSLContext());
+    }
+
+    @AfterAll
+    protected static void afterAll() {
+        if (defaultSslContext != null) {
+            SSLContext.setDefault(defaultSslContext);
+        }
+    }
+
+    /**
+     * Creates an {@link SSLContext} that extends the default keystore and truststore with the entries
+     * from {@link #KEY_STORE_PATH} (password {@code "server-pwd"}) and {@link #TRUST_STORE_PATH}
+     * (password {@code "client-pwd"}).
+     *
+     * @return an {@link SSLContext} combining default and custom key/trust material
+     */
+    protected static SSLContext createSSLContext() {
+        try {
+            // Load custom key store (KEY_STORE_PATH acts as truststore in "cross connected" setup)
+            KeyStore customTrustStore = KeyStore.getInstance("jks");
+            try (InputStream is = Files.newInputStream(KEY_STORE_PATH)) {
+                customTrustStore.load(is, "server-pwd".toCharArray());
+            }
+
+            // Load custom trust store (TRUST_STORE_PATH acts as keystore in "cross connected" setup)
+            KeyStore customKeyStore = KeyStore.getInstance("jks");
+            try (InputStream is = Files.newInputStream(TRUST_STORE_PATH)) {
+                customKeyStore.load(is, "client-pwd".toCharArray());
+            }
+
+            // Load default truststore and merge custom entries
+            KeyStore defaultTrustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            Path defaultTrustStorePath = Path.of(System.getProperty("java.home"), "lib", "security", "cacerts");
+            if (Files.exists(defaultTrustStorePath)) {
+                try (InputStream is = Files.newInputStream(defaultTrustStorePath)) {
+                    defaultTrustStore.load(is, "changeit".toCharArray());
+                }
+            } else {
+                defaultTrustStore.load(null, null);
+            }
+            Enumeration<String> aliases = customTrustStore.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                defaultTrustStore.setCertificateEntry("custom-trust-" + alias, customTrustStore.getCertificate(alias));
+            }
+
+            // Load default keystore and merge custom entries
+            KeyStore mergedKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            mergedKeyStore.load(null, null);
+            Enumeration<String> keyAliases = customKeyStore.aliases();
+            while (keyAliases.hasMoreElements()) {
+                String alias = keyAliases.nextElement();
+                if (customKeyStore.isKeyEntry(alias)) {
+                    mergedKeyStore.setKeyEntry(
+                            alias,
+                            customKeyStore.getKey(alias, "client-pwd".toCharArray()),
+                            "client-pwd".toCharArray(),
+                            customKeyStore.getCertificateChain(alias));
+                } else {
+                    mergedKeyStore.setCertificateEntry(alias, customKeyStore.getCertificate(alias));
+                }
+            }
+
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(defaultTrustStore);
+
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(mergedKeyStore, "client-pwd".toCharArray());
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+            return sslContext;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create SSLContext", e);
+        }
     }
 
     private final Supplier<HttpTransporterFactory> transporterFactorySupplier;
@@ -125,26 +240,6 @@ public abstract class HttpTransporterTest {
 
     protected HttpTransporterTest(Supplier<HttpTransporterFactory> transporterFactorySupplier) {
         this.transporterFactorySupplier = requireNonNull(transporterFactorySupplier);
-
-        if (!Files.isRegularFile(KEY_STORE_PATH)) {
-            URL keyStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store");
-            URL keyStoreSelfSignedUrl =
-                    HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store-selfsigned");
-            URL trustStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/client-store");
-
-            try {
-                try (InputStream keyStoreStream = keyStoreUrl.openStream();
-                        InputStream keyStoreSelfSignedStream = keyStoreSelfSignedUrl.openStream();
-                        InputStream trustStoreStream = trustStoreUrl.openStream()) {
-                    Files.copy(keyStoreStream, KEY_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(
-                            keyStoreSelfSignedStream, KEY_STORE_SELF_SIGNED_PATH, StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(trustStoreStream, TRUST_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
     }
 
     protected static ChecksumExtractor standardChecksumExtractor() {
@@ -468,6 +563,25 @@ public abstract class HttpTransporterTest {
         assertTrue(
                 accept.contains("application/problem+json"),
                 "Expected Accept header to contain application/problem+json, but was: " + accept);
+    }
+
+    @Test
+    protected void testGet_ParseRfc9457() throws Exception {
+        // use Maven Central (Cloudflare CDN) as endpoints that return RFC 9457 responses
+        newTransporter("https://repo.maven.apache.org");
+        try {
+            // https://blog.cloudflare.com/rfc-9457-agent-error-pages/#how-to-use-it
+            GetTask task = new GetTask(URI.create("cdn-cgi/error/1020"));
+            transporter.get(task);
+            fail("Should have throw HttpRFC9457Exception");
+        } catch (HttpRFC9457Exception e) {
+            // Expected exception, verify the content of the RFC 9457 message.
+            assertEquals(403, e.getStatusCode());
+            assertEquals("Error 1020: Access denied", e.getPayload().getTitle());
+            assertEquals(
+                    "The request was blocked by a Cloudflare firewall rule configured by the site owner.",
+                    e.getPayload().getDetail());
+        }
     }
 
     /**
