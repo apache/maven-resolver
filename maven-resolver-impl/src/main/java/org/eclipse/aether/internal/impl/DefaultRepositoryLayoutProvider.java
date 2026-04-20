@@ -67,7 +67,19 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
         List<NoRepositoryLayoutException> errors = new ArrayList<>();
         for (PrioritizedComponent<RepositoryLayoutFactory> factory : factories.getEnabled()) {
             try {
-                return factory.getComponent().newInstance(session, repository);
+                RepositoryLayout repositoryLayout = factory.getComponent().newInstance(session, repository);
+
+                if (LOGGER.isDebugEnabled()) {
+                    StringBuilder buffer = new StringBuilder(256);
+                    buffer.append("Using layout ")
+                            .append(repositoryLayout.getClass().getSimpleName());
+                    Utils.appendClassLoader(buffer, repositoryLayout);
+                    buffer.append(" with priority ").append(factory.getPriority());
+                    buffer.append(" for ").append(repository.getUrl());
+                    LOGGER.debug(buffer.toString());
+                }
+
+                return repositoryLayout;
             } catch (NoRepositoryLayoutException e) {
                 // continue and try next factory
                 if (LOGGER.isTraceEnabled()) {
