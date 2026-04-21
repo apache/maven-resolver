@@ -29,7 +29,6 @@ import java.nio.channels.ByteChannel;
  * @since 2.0.1
  */
 public class ByteChannelWrapper implements ByteChannel {
-
     private final ByteChannel socket;
 
     public ByteChannelWrapper(ByteChannel socket) {

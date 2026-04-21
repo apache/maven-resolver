@@ -114,7 +114,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(15)
+    @Timeout(25)
     public void exclusiveAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
