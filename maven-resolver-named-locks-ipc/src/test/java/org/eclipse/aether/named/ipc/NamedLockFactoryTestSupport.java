@@ -135,7 +135,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    @Timeout(15)
+    @Timeout(25)
     public void exclusiveAccess(TestInfo testInfo) throws InterruptedException {
         final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner

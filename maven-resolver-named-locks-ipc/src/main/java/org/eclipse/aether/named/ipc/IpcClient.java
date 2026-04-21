@@ -116,8 +116,8 @@ public class IpcClient {
     }
 
     SocketChannel createClient() throws IOException {
-        String familyProp = System.getProperty(IpcServer.SYSTEM_PROP_FAMILY, IpcServer.DEFAULT_FAMILY);
-        SocketFamily family = familyProp != null ? SocketFamily.valueOf(familyProp) : SocketFamily.inet;
+        SocketFamily family =
+                SocketFamily.valueOf(System.getProperty(IpcServer.SYSTEM_PROP_FAMILY, IpcServer.DEFAULT_FAMILY));
 
         Path lockPath = this.lockPath.toAbsolutePath().normalize();
         Path lockFile =
@@ -414,7 +414,7 @@ public class IpcClient {
      */
     void stopServer() {
         try {
-            List<String> response = send(Arrays.asList(REQUEST_STOP), Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+            List<String> response = send(List.of(REQUEST_STOP), Long.MAX_VALUE, TimeUnit.MILLISECONDS);
             if (response.size() != 1 || !RESPONSE_STOP.equals(response.get(0))) {
                 throw new IOException("Unexpected response: " + response);
             }

@@ -95,15 +95,5 @@ class IpcNamedLock extends NamedLockSupport {
         }
     }
 
-    private static final class Ctx {
-        private final boolean acted;
-        private final String contextId;
-        private final boolean shared;
-
-        private Ctx(boolean acted, String contextId, boolean shared) {
-            this.acted = acted;
-            this.contextId = contextId;
-            this.shared = shared;
-        }
-    }
+    private record Ctx(boolean acted, String contextId, boolean shared) {}
 }

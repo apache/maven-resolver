@@ -271,7 +271,7 @@ public class IpcServer {
                         }
                         break;
                     case IpcMessages.REQUEST_ACQUIRE:
-                        if (request.size() < 1) {
+                        if (request.isEmpty()) {
                             throw new IOException(
                                     "Expected at least one argument for " + command + " but got " + request);
                         }
@@ -321,7 +321,7 @@ public class IpcServer {
                         }
                         break;
                     case IpcMessages.REQUEST_STOP:
-                        if (request.size() != 0) {
+                        if (!request.isEmpty()) {
                             throw new IOException("Expected zero argument for " + command + " but got " + request);
                         }
                         synchronized (output) {
