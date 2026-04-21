@@ -23,15 +23,22 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpRequest;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
-public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse, HttpResponseException> {
+public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse, HttpResponseException, HttpRequest> {
     public static final ApacheRFC9457Reporter INSTANCE = new ApacheRFC9457Reporter();
 
     private ApacheRFC9457Reporter() {}
+
+    @Override
+    public void prepareRequest(HttpRequest request) {
+        request.addHeader(HttpConstants.ACCEPT, CONTENT_TYPE_PROBLEM_DETAILS_JSON);
+    }
 
     @Override
     protected boolean isRFC9457Message(final CloseableHttpResponse response) {

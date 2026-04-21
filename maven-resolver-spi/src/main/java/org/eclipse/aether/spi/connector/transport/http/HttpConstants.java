@@ -36,6 +36,8 @@ public final class HttpConstants {
 
     public static final int PRECONDITION_FAILED = 412;
 
+    public static final String ACCEPT = "Accept";
+
     public static final String ACCEPT_ENCODING = "Accept-Encoding";
 
     public static final String CACHE_CONTROL = "Cache-Control";

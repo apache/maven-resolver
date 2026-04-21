@@ -30,12 +30,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 public class RFC9457Parser {
-    private static Gson gson = new GsonBuilder()
+    private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(RFC9457Payload.class, new RFC9457PayloadAdapter())
             .create();
 
     public static RFC9457Payload parse(String data) {
-        return gson.fromJson(data, RFC9457Payload.class);
+        return GSON.fromJson(data, RFC9457Payload.class);
     }
 
     private static class RFC9457PayloadAdapter implements JsonDeserializer<RFC9457Payload> {

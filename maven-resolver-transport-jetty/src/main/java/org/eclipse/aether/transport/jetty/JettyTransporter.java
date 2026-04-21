@@ -212,7 +212,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             if (preemptiveAuth) {
                 mayApplyPreemptiveAuth(request);
             }
-
+            JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
             if (resume) {
                 long resumeOffset = task.getResumeOffset();
                 long lastModified =
@@ -309,14 +309,16 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
     protected void implPut(PutTask task) throws Exception {
         Request request = client.newRequest(resolve(task)).method("PUT");
         request.headers(m -> headers.forEach(m::add));
+        JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
         if (preemptiveAuth || preemptivePutAuth) {
             mayApplyPreemptiveAuth(request);
         }
         request.body(PutTaskRequestContent.from(task));
         AtomicBoolean started = new AtomicBoolean(false);
         Response response;
+        InputStreamResponseListener listener = new InputStreamResponseListener();
         try {
-            response = request.onRequestCommit(r -> {
+            request.onRequestCommit(r -> {
                         if (task.getDataLength() == 0) {
                             if (started.compareAndSet(false, true)) {
                                 try {
@@ -342,7 +344,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                             r.abort(e);
                         }
                     })
-                    .send();
+                    .send(listener);
+            response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof IOException ioex) {
@@ -357,7 +360,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 throw new RuntimeException(t);
             }
         }
+
         if (response.getStatus() >= MULTIPLE_CHOICES) {
+            JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
+                throw new HttpTransporterException(statusCode);
+            });
             throw new HttpTransporterException(response.getStatus());
         }
     }

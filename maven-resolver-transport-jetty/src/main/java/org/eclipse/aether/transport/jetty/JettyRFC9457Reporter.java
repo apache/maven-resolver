@@ -28,13 +28,20 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 import org.eclipse.jetty.client.InputStreamResponseListener;
+import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.http.HttpHeader;
 
-public class JettyRFC9457Reporter extends RFC9457Reporter<InputStreamResponseListener, HttpTransporterException> {
+public class JettyRFC9457Reporter
+        extends RFC9457Reporter<InputStreamResponseListener, HttpTransporterException, Request> {
     public static final JettyRFC9457Reporter INSTANCE = new JettyRFC9457Reporter();
 
     private JettyRFC9457Reporter() {}
+
+    @Override
+    public void prepareRequest(Request request) {
+        request.headers(h -> h.add(HttpHeader.ACCEPT.asString(), CONTENT_TYPE_PROBLEM_DETAILS_JSON));
+    }
 
     @Override
     protected boolean isRFC9457Message(final InputStreamResponseListener listener) {
