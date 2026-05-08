@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.17
  * @see LegacyTrackingFileManager
- * @see TrackingFileManagerProvider
+ * @see TrackingFileManagerSupplier
  */
 public final class NamedLocksTrackingFileManager implements TrackingFileManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(NamedLocksTrackingFileManager.class);

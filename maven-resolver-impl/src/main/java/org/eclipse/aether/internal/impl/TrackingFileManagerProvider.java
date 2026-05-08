@@ -23,74 +23,25 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import org.eclipse.aether.ConfigurationProperties;
-import org.eclipse.aether.impl.NamedLockFactorySelector;
-import org.eclipse.aether.named.NamedLockFactory;
-import org.eclipse.aether.util.ConfigUtils;
+import static java.util.Objects.requireNonNull;
 
 /**
- * Provides selected instance of {@link TrackingFileManager} implementation.
+ * Bridges to {@link TrackingFileManagerSupplier} when in Guice/Sisu.
  *
  * @since 2.0.17
  */
 @Singleton
 @Named
 public class TrackingFileManagerProvider implements Provider<TrackingFileManager> {
-    public static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_SYSTEM + "trackingFileManager.";
+    private final TrackingFileManagerSupplier delegate;
 
-    /**
-     * Name of the tracking file manager to use. Supported values are "namedLocks" and "legacy". The latter should be
-     * used if it is known, that local repository is simultaneously accessed by Maven 3.10+ and older Maven versions.
-     * This decision happens early, during boot of the system, hence system properties can be used only as configuration
-     * source.
-     *
-     * @configurationSource {@link System#getProperty(String, String)}
-     * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #DEFAULT_TRACKING_FILE_MANAGER_NAME}
-     */
-    public static final String CONFIG_PROP_TRACKING_FILE_MANAGER_NAME = CONFIG_PROPS_PREFIX + "name";
-
-    public static final String DEFAULT_TRACKING_FILE_MANAGER_NAME = "legacy";
-
-    private final TrackingFileManager trackingFileManager;
-
-    /**
-     * Default constructor, to be used in tests; provides "legacy" tracking file manager only.
-     */
-    public TrackingFileManagerProvider() {
-        this.trackingFileManager = new LegacyTrackingFileManager();
-    }
-
-    /**
-     * Constructor to be used in production.
-     */
     @Inject
-    public TrackingFileManagerProvider(NamedLockFactorySelector selector) {
-        // this is early construction; no session, hence we must rely on system properties instead
-        Map<String, String> config = new HashMap<>();
-        for (String name : System.getProperties().stringPropertyNames()) {
-            config.put(name, System.getProperty(name));
-        }
-        String tfmName = ConfigUtils.getString(
-                config, DEFAULT_TRACKING_FILE_MANAGER_NAME, CONFIG_PROP_TRACKING_FILE_MANAGER_NAME);
-        if ("legacy".equals(tfmName)) {
-            this.trackingFileManager = new LegacyTrackingFileManager();
-        } else if ("namedLocks".equals(tfmName)) {
-            NamedLockFactory factory = selector.getNamedLockFactory(config);
-            long time = selector.getLockWaitTime(config);
-            TimeUnit timeUnit = selector.getLockWaitTimeUnit(config);
-            this.trackingFileManager = new NamedLocksTrackingFileManager(factory, time, timeUnit);
-        } else {
-            throw new IllegalArgumentException("Unknown tracking file manager name: " + tfmName);
-        }
+    public TrackingFileManagerProvider(TrackingFileManagerSupplier metadataResolverProvider) {
+        this.delegate = requireNonNull(metadataResolverProvider);
     }
 
     @Override
     public TrackingFileManager get() {
-        return trackingFileManager;
+        return delegate.get();
     }
 }

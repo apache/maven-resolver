@@ -374,7 +374,7 @@ public class DefaultArtifactResolverTest {
         resolver = setupArtifactResolver(
                 new StubVersionResolver(),
                 new DefaultUpdateCheckManager(
-                        new TrackingFileManagerProvider().get(),
+                        new TrackingFileManagerSupplier().get(),
                         new DefaultUpdatePolicyAnalyzer(),
                         new DefaultPathProcessor()));
 
