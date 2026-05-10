@@ -21,6 +21,10 @@ package org.eclipse.aether.scope;
 import java.util.Collection;
 import java.util.Optional;
 
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.DependencyFilter;
+
 /**
  * Scope manager.
  *
@@ -67,4 +71,24 @@ public interface ScopeManager {
      * Returns the "universe" (all) of resolution scopes as immutable collection.
      */
     Collection<ResolutionScope> getResolutionScopeUniverse();
+
+    /**
+     * Resolver scope configuration specific: dependency selector to be used to support this scope (with its dependency
+     * and resolution scopes).
+     * <p>
+     * Important: Resolver 2.x when used with {@link ScopeManager}, the scope semantics is defined by client code.
+     * Hence, the scopes cannot be interpreted with fixed logic as it was the case in Maven 3.9 and before, instead
+     * the {@link ScopeManager} has to be asked to create selector based on scope configuration.
+     */
+    DependencySelector getDependencySelector(RepositorySystemSession session, ResolutionScope resolutionScope);
+
+    /**
+     * Resolver scope configuration specific: dependency filter to be used to support this scope (with its dependency
+     * and resolution scopes).
+     * <p>
+     * Important: Resolver 2.x when used with {@link ScopeManager}, the scope semantics is defined by client code.
+     * Hence, the scopes cannot be interpreted with fixed logic as it was the case in Maven 3.9 and before, instead
+     * the {@link ScopeManager} has to be asked to create filter based on scope configuration.
+     */
+    DependencyFilter getDependencyFilter(RepositorySystemSession session, ResolutionScope resolutionScope);
 }
