@@ -43,16 +43,24 @@ import static org.eclipse.aether.impl.scope.BuildScopeQuery.union;
 
 /**
  * Maven3 scope configurations. Configures scope manager to support Maven3 scopes.
+ * <p>
+ * This manager supports the old Maven 3 dependency scopes + new "compile-only".
+ * <p>
+ * Note: Maven3 CANNOT support Maven 4 scopes "test-only" and "test-runtime", as it does not distinguish
+ * resolution scope (the class {@code ResolutionScope} has only "TEST", instead of "TEST_COMPILE" and "TEST_RUNTIME").
  *
  * @since 2.0.11
  */
 public final class Maven3ScopeManagerConfiguration implements ScopeManagerConfiguration {
     public static final Maven3ScopeManagerConfiguration INSTANCE = new Maven3ScopeManagerConfiguration();
-    public static final String DS_COMPILE = "compile";
-    public static final String DS_RUNTIME = "runtime";
-    public static final String DS_PROVIDED = "provided";
-    public static final String DS_SYSTEM = "system";
-    public static final String DS_TEST = "test";
+    public static final String DS_NONE = "none";
+    public static final String DS_COMPILE = "compile"; // JavaScopes.COMPILE;
+    public static final String DS_COMPILE_ONLY = "compile-only";
+    public static final String DS_RUNTIME = "runtime"; // JavaScopes.RUNTIME;
+    public static final String DS_PROVIDED = "provided"; // JavaScopes.PROVIDED;
+    public static final String DS_SYSTEM = "system"; // JavaScopes.SYSTEM;
+    public static final String DS_TEST = "test"; // JavaScopes.TEST;
+
     public static final String RS_NONE = "none";
     public static final String RS_MAIN_COMPILE = "main-compile";
     public static final String RS_MAIN_COMPILE_PLUS_RUNTIME = "main-compilePlusRuntime";
@@ -89,7 +97,10 @@ public final class Maven3ScopeManagerConfiguration implements ScopeManagerConfig
     @Override
     public Collection<DependencyScope> buildDependencyScopes(InternalScopeManager internalScopeManager) {
         ArrayList<DependencyScope> result = new ArrayList<>();
+        result.add(internalScopeManager.createDependencyScope(DS_NONE, false, Collections.emptySet()));
         result.add(internalScopeManager.createDependencyScope(DS_COMPILE, true, all()));
+        result.add(internalScopeManager.createDependencyScope(
+                DS_COMPILE_ONLY, false, select(CommonBuilds.PROJECT_PATH_MAIN, CommonBuilds.BUILD_PATH_COMPILE)));
         result.add(internalScopeManager.createDependencyScope(
                 DS_RUNTIME, true, byBuildPath(CommonBuilds.BUILD_PATH_RUNTIME)));
         result.add(internalScopeManager.createDependencyScope(
