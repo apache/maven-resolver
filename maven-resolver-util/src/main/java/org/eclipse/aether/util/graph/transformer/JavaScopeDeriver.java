@@ -25,6 +25,8 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver.ScopeDeriver;
 
 /**
  * A scope deriver for use with {@link ConflictResolver} that supports the scopes from {@link JavaScopes}.
+ * <p>
+ * To be used with Maven 3 (without scope manager).
  */
 public final class JavaScopeDeriver extends ScopeDeriver {
 

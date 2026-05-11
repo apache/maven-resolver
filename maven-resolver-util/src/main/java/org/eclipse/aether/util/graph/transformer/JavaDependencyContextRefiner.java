@@ -31,6 +31,8 @@ import static java.util.Objects.requireNonNull;
  * A dependency graph transformer that refines the request context for nodes that belong to the "project" context by
  * appending the buildpath type to which the node belongs. For instance, a compile-time project dependency will be
  * assigned the request context "project/compile".
+ * <p>
+ * To be used with Maven 3 (without scope manager).
  *
  * @see DependencyNode#getRequestContext()
  */
