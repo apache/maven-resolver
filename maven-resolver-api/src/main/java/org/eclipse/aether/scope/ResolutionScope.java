@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.scope;
 
+import java.util.Set;
+
 /**
  * Generic resolution scope.
  *
@@ -31,4 +33,9 @@ public interface ResolutionScope {
      * The label.
      */
     String getId();
+
+    /**
+     * Aliases, for easier legacy mapping, never {@code null}.
+     */
+    Set<String> getAliases();
 }
