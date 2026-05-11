@@ -34,6 +34,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.impl.scope.BuildPath;
 import org.eclipse.aether.impl.scope.BuildScope;
 import org.eclipse.aether.impl.scope.BuildScopeQuery;
@@ -160,6 +161,11 @@ public final class ScopeManagerImpl implements InternalScopeManager {
                     OptionalDependencySelector.fromDirect(),
                     new ExclusionDependencySelector());
         }
+    }
+
+    @Override
+    public DependencyFilter getDependencyFilter(RepositorySystemSession session, ResolutionScope resolutionScope) {
+        return new ScopeDependencyFilter(null, getDirectlyExcludedLabels(translate(resolutionScope)));
     }
 
     @Override

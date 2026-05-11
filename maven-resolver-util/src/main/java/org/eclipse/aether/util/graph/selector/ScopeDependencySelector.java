@@ -38,6 +38,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @see Dependency#getScope()
  * @deprecated this class is deprecated. Use same named class from impl module instead.
+ * @see org.eclipse.aether.scope.ScopeManager#getDependencySelector(org.eclipse.aether.RepositorySystemSession, org.eclipse.aether.scope.ResolutionScope)
  */
 @Deprecated
 public final class ScopeDependencySelector implements DependencySelector {

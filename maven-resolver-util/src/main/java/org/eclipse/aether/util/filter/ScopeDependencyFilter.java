@@ -66,6 +66,7 @@ public final class ScopeDependencyFilter implements DependencyFilter {
         }
     }
 
+    @Override
     public boolean accept(DependencyNode node, List<DependencyNode> parents) {
         Dependency dependency = node.getDependency();
 

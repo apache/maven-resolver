@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.CollectResult;
-import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.scope.DependencyScope;
 import org.eclipse.aether.scope.ResolutionScope;
 import org.eclipse.aether.scope.ScopeManager;
@@ -52,12 +51,6 @@ public interface InternalScopeManager extends ScopeManager {
      * Returns the {@link BuildScope} that this scope deem as main.
      */
     Optional<BuildScope> getDependencyScopeMainProjectBuildScope(DependencyScope dependencyScope);
-
-    /**
-     * Resolver specific: dependency selector to be used to support this scope (with its dependency
-     * and resolution scopes).
-     */
-    DependencySelector getDependencySelector(RepositorySystemSession session, ResolutionScope resolutionScope);
 
     /**
      * Resolver specific: post-processing to be used to support this scope (with its dependency
