@@ -23,9 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.DependencyFilter;
-import org.eclipse.aether.scope.ResolutionScope;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 /**
@@ -117,7 +115,7 @@ public final class DependencyFilterUtils {
      * @deprecated resolver is oblivious about "scopes", it is consumer project which needs to lay these down and
      * also assign proper semantics. Moreover, Resolver is oblivious about notions of "classpath", "modulepath", and
      * any other similar uses. These should be handled by consumer project.
-     * @see org.eclipse.aether.scope.ScopeManager#getDependencyFilter(RepositorySystemSession, ResolutionScope)
+     * @see org.eclipse.aether.scope.ScopeManager#getDependencyFilter(org.eclipse.aether.RepositorySystemSession, org.eclipse.aether.scope.ResolutionScope)
      */
     @Deprecated
     public static DependencyFilter classpathFilter(String... classpathTypes) {

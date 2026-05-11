@@ -25,11 +25,9 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.TreeSet;
 
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.scope.ResolutionScope;
 
 import static java.util.Objects.requireNonNull;
 
@@ -40,7 +38,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @see Dependency#getScope()
  * @deprecated this class is deprecated. Use same named class from impl module instead.
- * @see org.eclipse.aether.scope.ScopeManager#getDependencySelector(RepositorySystemSession, ResolutionScope)
+ * @see org.eclipse.aether.scope.ScopeManager#getDependencySelector(org.eclipse.aether.RepositorySystemSession, org.eclipse.aether.scope.ResolutionScope)
  */
 @Deprecated
 public final class ScopeDependencySelector implements DependencySelector {
