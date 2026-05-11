@@ -26,10 +26,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A simple artifact type.
- *
- * @deprecated since 2.0, the artifact types should be defined by the resolver consumer
  */
-@Deprecated
 public final class DefaultArtifactType implements ArtifactType {
 
     private final String id;
@@ -123,18 +120,22 @@ public final class DefaultArtifactType implements ArtifactType {
         return (str == null) ? "" : str;
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
+    @Override
     public String getExtension() {
         return extension;
     }
 
+    @Override
     public String getClassifier() {
         return classifier;
     }
 
+    @Override
     public Map<String, String> getProperties() {
         return properties;
     }

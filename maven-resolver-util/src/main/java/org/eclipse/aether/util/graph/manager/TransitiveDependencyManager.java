@@ -72,12 +72,7 @@ import org.eclipse.aether.scope.SystemDependencyScope;
 public final class TransitiveDependencyManager extends AbstractDependencyManager {
     /**
      * Creates a new dependency manager without any management information.
-     *
-     * @deprecated Use {@link #TransitiveDependencyManager(ScopeManager)} instead to provide
-     *             application-specific scope management. This constructor uses legacy system
-     *             dependency scope handling.
      */
-    @Deprecated
     public TransitiveDependencyManager() {
         this(null);
     }
