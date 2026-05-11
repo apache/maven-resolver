@@ -19,7 +19,9 @@
 package org.eclipse.aether.impl.scope;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.CollectResult;
@@ -105,8 +107,26 @@ public interface InternalScopeManager extends ScopeManager {
      * <p>
      * Should be invoked only via {@link ScopeManagerConfiguration#buildResolutionScopes(InternalScopeManager)}.
      */
+    default ResolutionScope createResolutionScope(
+            String id,
+            Mode mode,
+            Collection<BuildScopeQuery> wantedPresence,
+            Collection<DependencyScope> explicitlyIncluded,
+            Collection<DependencyScope> transitivelyExcluded) {
+        return createResolutionScope(
+                id, Collections.emptySet(), mode, wantedPresence, explicitlyIncluded, transitivelyExcluded);
+    }
+
+    /**
+     * Creates resolution scope instance with aliases.
+     * <p>
+     * Should be invoked only via {@link ScopeManagerConfiguration#buildResolutionScopes(InternalScopeManager)}.
+     *
+     * @since 2.0.18
+     */
     ResolutionScope createResolutionScope(
             String id,
+            Set<String> aliases,
             Mode mode,
             Collection<BuildScopeQuery> wantedPresence,
             Collection<DependencyScope> explicitlyIncluded,

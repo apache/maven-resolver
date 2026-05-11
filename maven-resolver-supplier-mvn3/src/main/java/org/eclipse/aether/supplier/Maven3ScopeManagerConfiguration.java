@@ -60,12 +60,15 @@ public final class Maven3ScopeManagerConfiguration implements ScopeManagerConfig
     public static final String DS_PROVIDED = "provided"; // JavaScopes.PROVIDED;
     public static final String DS_SYSTEM = "system"; // JavaScopes.SYSTEM;
     public static final String DS_TEST = "test"; // JavaScopes.TEST;
+    public static final String DS_TEST_ONLY = "test-only";
+    public static final String DS_TEST_RUNTIME = "test-runtime";
 
     public static final String RS_NONE = "none";
     public static final String RS_MAIN_COMPILE = "main-compile";
     public static final String RS_MAIN_COMPILE_PLUS_RUNTIME = "main-compilePlusRuntime";
     public static final String RS_MAIN_RUNTIME = "main-runtime";
     public static final String RS_MAIN_RUNTIME_PLUS_SYSTEM = "main-runtimePlusSystem";
+    public static final String RS_TEST = "test";
     public static final String RS_TEST_COMPILE = "test-compile";
     public static final String RS_TEST_RUNTIME = "test-runtime";
 
@@ -89,7 +92,7 @@ public final class Maven3ScopeManagerConfiguration implements ScopeManagerConfig
     @Override
     public BuildScopeSource getBuildScopeSource() {
         return new BuildScopeMatrixSource(
-                Collections.singletonList(CommonBuilds.PROJECT_PATH_MAIN),
+                Arrays.asList(CommonBuilds.PROJECT_PATH_MAIN, CommonBuilds.PROJECT_PATH_TEST),
                 Arrays.asList(CommonBuilds.BUILD_PATH_COMPILE, CommonBuilds.BUILD_PATH_RUNTIME),
                 CommonBuilds.MAVEN_TEST_BUILD_SCOPE);
     }
@@ -111,6 +114,10 @@ public final class Maven3ScopeManagerConfiguration implements ScopeManagerConfig
                         select(CommonBuilds.PROJECT_PATH_TEST, CommonBuilds.BUILD_PATH_RUNTIME))));
         result.add(internalScopeManager.createDependencyScope(
                 DS_TEST, false, byProjectPath(CommonBuilds.PROJECT_PATH_TEST)));
+        result.add(internalScopeManager.createDependencyScope(
+                DS_TEST_ONLY, false, singleton(CommonBuilds.PROJECT_PATH_TEST, CommonBuilds.BUILD_PATH_COMPILE)));
+        result.add(internalScopeManager.createDependencyScope(
+                DS_TEST_RUNTIME, false, singleton(CommonBuilds.PROJECT_PATH_TEST, CommonBuilds.BUILD_PATH_RUNTIME)));
         result.add(internalScopeManager.createSystemDependencyScope(
                 DS_SYSTEM, false, all(), ArtifactProperties.LOCAL_PATH));
         return result;
@@ -133,26 +140,36 @@ public final class Maven3ScopeManagerConfiguration implements ScopeManagerConfig
                 allDependencyScopes));
         result.add(internalScopeManager.createResolutionScope(
                 RS_MAIN_COMPILE,
+                Collections.singleton("compile"),
                 InternalScopeManager.Mode.ELIMINATE,
                 singleton(CommonBuilds.PROJECT_PATH_MAIN, CommonBuilds.BUILD_PATH_COMPILE),
                 Collections.singletonList(system),
                 nonTransitiveDependencyScopes));
         result.add(internalScopeManager.createResolutionScope(
                 RS_MAIN_COMPILE_PLUS_RUNTIME,
+                Collections.singleton("compile+runtime"),
                 InternalScopeManager.Mode.ELIMINATE,
                 byProjectPath(CommonBuilds.PROJECT_PATH_MAIN),
                 Collections.singletonList(system),
                 nonTransitiveDependencyScopes));
         result.add(internalScopeManager.createResolutionScope(
                 RS_MAIN_RUNTIME,
+                Collections.singleton("runtime"),
                 InternalScopeManager.Mode.ELIMINATE,
                 singleton(CommonBuilds.PROJECT_PATH_MAIN, CommonBuilds.BUILD_PATH_RUNTIME),
                 Collections.emptySet(),
                 nonTransitiveDependencyScopes));
         result.add(internalScopeManager.createResolutionScope(
                 RS_MAIN_RUNTIME_PLUS_SYSTEM,
+                Collections.singleton("runtime+system"),
                 InternalScopeManager.Mode.ELIMINATE,
                 singleton(CommonBuilds.PROJECT_PATH_MAIN, CommonBuilds.BUILD_PATH_RUNTIME),
+                Collections.singletonList(system),
+                nonTransitiveDependencyScopes));
+        result.add(internalScopeManager.createResolutionScope(
+                RS_TEST,
+                InternalScopeManager.Mode.ELIMINATE,
+                byProjectPath(CommonBuilds.PROJECT_PATH_TEST),
                 Collections.singletonList(system),
                 nonTransitiveDependencyScopes));
         result.add(internalScopeManager.createResolutionScope(
