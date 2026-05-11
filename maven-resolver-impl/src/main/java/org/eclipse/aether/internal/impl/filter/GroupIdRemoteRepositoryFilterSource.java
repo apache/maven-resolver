@@ -266,9 +266,13 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
     }
 
     private Path ruleFile(RepositorySystemSession session, RemoteRepository remoteRepository) {
-        return ruleFiles(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> getBasedir(
-                        session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
-                .resolve(GROUP_ID_FILE_PREFIX + repositoryKey(session, remoteRepository) + GROUP_ID_FILE_SUFFIX));
+        return ruleFiles(session)
+                .computeIfAbsent(
+                        normalizeRemoteRepository(session, remoteRepository),
+                        r -> getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
+                                .resolve(GROUP_ID_FILE_PREFIX
+                                        + repositoryKey(session, remoteRepository)
+                                        + GROUP_ID_FILE_SUFFIX));
     }
 
     private GroupTree cacheRules(RepositorySystemSession session, RemoteRepository remoteRepository) {
