@@ -304,6 +304,17 @@ public final class HttpTransporterUtils {
 
     /**
      * Shared code to create "base {@link URI}" for most common HTTP remote repositories and all HTTP transports.
+     * Note: this method just applies common validation and adjustments to URI, but it does not enforce protocol
+     * to be HTTP/HTTPS!
+     * <p>
+     * Validations and adjustments applied:
+     * <ul>
+     *     <li>URI string is parsed from {@link RemoteRepository#getUrl()} returned string</li>
+     *     <li>URI must have parsable {@link URI#parseServerAuthority()}</li>
+     *     <li>URI must not be opaque</li>
+     *     <li>URI must not have fragment or query</li>
+     *     <li>URI path is adjusted to end with {@code /} (slash).</li>
+     * </ul>
      *
      * @since 2.0.18
      */
