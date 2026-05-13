@@ -184,7 +184,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             if (uri.getRawFragment() != null || uri.getRawQuery() != null) {
                 throw new URISyntaxException(repository.getUrl(), "URL must not have fragment or query");
             }
-            String path = uri.getPath();
+            String path = uri.getRawPath();
             if (path == null) {
                 path = "/";
             }
