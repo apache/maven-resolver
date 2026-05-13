@@ -74,6 +74,7 @@ public class HttpTransporterUtilsTest {
         assertEquals("https", uri.getScheme());
         assertEquals("host.dk", uri.getHost());
         assertEquals("/repø/", uri.getPath());
+        assertEquals("https://host.dk/rep%C3%B8/", uri.toASCIIString());
 
         uri = HttpTransporterUtils.getBaseUri(
                 new RemoteRepository.Builder("repø", "default", "https://host.dk/rep%C3%B8").build());
@@ -81,6 +82,7 @@ public class HttpTransporterUtilsTest {
         assertEquals("https", uri.getScheme());
         assertEquals("host.dk", uri.getHost());
         assertEquals("/repø/", uri.getPath());
+        assertEquals("https://host.dk/rep%C3%B8/", uri.toASCIIString());
 
         uri = HttpTransporterUtils.getBaseUri(
                 new RemoteRepository.Builder("räpo", "default", "https://host.de/räpo").build());
@@ -88,6 +90,7 @@ public class HttpTransporterUtilsTest {
         assertEquals("https", uri.getScheme());
         assertEquals("host.de", uri.getHost());
         assertEquals("/räpo/", uri.getPath());
+        assertEquals("https://host.de/r%C3%A4po/", uri.toASCIIString());
 
         uri = HttpTransporterUtils.getBaseUri(
                 new RemoteRepository.Builder("räpo", "default", "https://host.de/r%C3%A4po").build());
@@ -95,5 +98,6 @@ public class HttpTransporterUtilsTest {
         assertEquals("https", uri.getScheme());
         assertEquals("host.de", uri.getHost());
         assertEquals("/räpo/", uri.getPath());
+        assertEquals("https://host.de/r%C3%A4po/", uri.toASCIIString());
     }
 }
