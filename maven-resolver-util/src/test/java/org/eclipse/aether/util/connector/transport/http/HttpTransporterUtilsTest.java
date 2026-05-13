@@ -44,8 +44,7 @@ public class HttpTransporterUtilsTest {
                 new RemoteRepository.Builder("repo", "", "https://host.com/base").build());
         assertEquals("https://host.com/base/", uri.toASCIIString());
 
-        uri = HttpTransporterUtils.getBaseUri(
-                new RemoteRepository.Builder("fragment", "", "https://host.com").build());
+        uri = HttpTransporterUtils.getBaseUri(new RemoteRepository.Builder("fragment", "", "https://host.com").build());
         assertEquals("https://host.com/", uri.toASCIIString());
     }
 
