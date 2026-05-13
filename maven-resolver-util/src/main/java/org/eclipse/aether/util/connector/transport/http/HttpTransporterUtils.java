@@ -19,6 +19,8 @@
 package org.eclipse.aether.util.connector.transport.http;
 
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -298,5 +300,31 @@ public final class HttpTransporterUtils {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Shared code to create "base {@link URI}" for most common HTTP remote repositories and all HTTP transports.
+     *
+     * @since 2.0.18
+     */
+    public static URI getBaseUri(RemoteRepository repository) throws URISyntaxException {
+        URI uri = new URI(repository.getUrl()).parseServerAuthority();
+        if (uri.isOpaque()) {
+            throw new URISyntaxException(repository.getUrl(), "URL must not be opaque");
+        }
+        if (uri.getRawFragment() != null || uri.getRawQuery() != null) {
+            throw new URISyntaxException(repository.getUrl(), "URL must not have fragment or query");
+        }
+        String path = uri.getRawPath();
+        if (path == null) {
+            path = "/";
+        }
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        if (!path.endsWith("/")) {
+            path = path + "/";
+        }
+        return new URI(uri.getScheme() + "://" + uri.getRawAuthority() + path);
     }
 }

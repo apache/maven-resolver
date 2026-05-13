@@ -160,10 +160,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
-            this.baseUri = new URI(repository.getUrl()).parseServerAuthority();
-            if (baseUri.isOpaque()) {
-                throw new URISyntaxException(repository.getUrl(), "URL must not be opaque");
-            }
+            this.baseUri = HttpTransporterUtils.getBaseUri(repository);
             this.server = URIUtils.extractHost(baseUri);
             if (server == null) {
                 throw new URISyntaxException(repository.getUrl(), "URL lacks host name");
