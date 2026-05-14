@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
@@ -38,40 +39,49 @@ import org.eclipse.aether.version.VersionConstraint;
  * @noextend This interface is not intended to be extended by clients.
  */
 public interface DependencyNode {
-
     /**
      * A bit flag indicating the dependency version was subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
+    @Deprecated
     int MANAGED_VERSION = 0x01;
 
     /**
      * A bit flag indicating the dependency scope was subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
+    @Deprecated
     int MANAGED_SCOPE = 0x02;
 
     /**
      * A bit flag indicating the optional flag was subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
+    @Deprecated
     int MANAGED_OPTIONAL = 0x04;
 
     /**
      * A bit flag indicating the artifact properties were subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
+    @Deprecated
     int MANAGED_PROPERTIES = 0x08;
 
     /**
      * A bit flag indicating the exclusions were subject to dependency management
      *
      * @see #getManagedBits()
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
+    @Deprecated
     int MANAGED_EXCLUSIONS = 0x10;
 
     /**
@@ -170,8 +180,45 @@ public interface DependencyNode {
      * @return A bit field containing any of the bits {@link #MANAGED_VERSION}, {@link #MANAGED_SCOPE},
      *         {@link #MANAGED_OPTIONAL}, {@link #MANAGED_PROPERTIES} and {@link #MANAGED_EXCLUSIONS} if the
      *         corresponding attribute was set via dependency management.
+     * @deprecated Use {@link #isManagedSubject(DependencyManagement.Subject)} and {@link #isManagedSubjectEnforced(DependencyManagement.Subject)} instead.
      */
+    @Deprecated
     int getManagedBits();
+
+    /**
+     * Returns {@code true} if given subject is managed.
+     *
+     * @param subject the {@link org.eclipse.aether.collection.DependencyManagement.Subject}, must not be {@code null}.
+     * @see org.eclipse.aether.collection.DependencyManagement.Subject
+     * @since 2.0.17
+     */
+    default boolean isManagedSubject(DependencyManagement.Subject subject) {
+        switch (subject) {
+            case VERSION:
+                return (getManagedBits() & MANAGED_VERSION) != 0;
+            case SCOPE:
+                return (getManagedBits() & MANAGED_SCOPE) != 0;
+            case OPTIONAL:
+                return (getManagedBits() & MANAGED_OPTIONAL) != 0;
+            case PROPERTIES:
+                return (getManagedBits() & MANAGED_PROPERTIES) != 0;
+            case EXCLUSIONS:
+                return (getManagedBits() & MANAGED_EXCLUSIONS) != 0;
+            default:
+                throw new IllegalArgumentException("Unknown subject: " + subject.name());
+        }
+    }
+
+    /**
+     * Returns {@code true} if given subject is managed with enforcing modality on this node.
+     *
+     * @param subject the {@link org.eclipse.aether.collection.DependencyManagement.Subject}, must not be {@code null}.
+     * @see org.eclipse.aether.collection.DependencyManagement.Subject
+     * @since 2.0.17
+     */
+    default boolean isManagedSubjectEnforced(DependencyManagement.Subject subject) {
+        return isManagedSubject(subject);
+    }
 
     /**
      * Gets the remote repositories from which this node's artifact shall be resolved.

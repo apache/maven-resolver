@@ -33,6 +33,7 @@ import java.util.Objects;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
+import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -675,7 +676,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
         }
 
         private String deriveScope(DependencyNode node, String conflictId) throws RepositoryException {
-            if ((node.getManagedBits() & DependencyNode.MANAGED_SCOPE) != 0
+            if (node.isManagedSubjectEnforced(DependencyManagement.Subject.SCOPE)
                     || (conflictId != null && resolvedIds.containsKey(conflictId))) {
                 return scope(node.getDependency());
             }
@@ -702,7 +703,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
             Dependency dep = node.getDependency();
             boolean optional = (dep != null) && dep.isOptional();
             if (optional
-                    || (node.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) != 0
+                    || node.isManagedSubjectEnforced(DependencyManagement.Subject.OPTIONAL)
                     || (conflictId != null && resolvedIds.containsKey(conflictId))) {
                 return optional;
             }
