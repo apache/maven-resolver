@@ -128,24 +128,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
-            URI uri = new URI(repository.getUrl()).parseServerAuthority();
-            if (uri.isOpaque()) {
-                throw new URISyntaxException(repository.getUrl(), "URL must not be opaque");
-            }
-            if (uri.getRawFragment() != null || uri.getRawQuery() != null) {
-                throw new URISyntaxException(repository.getUrl(), "URL must not have fragment or query");
-            }
-            String path = uri.getPath();
-            if (path == null) {
-                path = "/";
-            }
-            if (!path.startsWith("/")) {
-                path = "/" + path;
-            }
-            if (!path.endsWith("/")) {
-                path = path + "/";
-            }
-            this.baseUri = URI.create(uri.getScheme() + "://" + uri.getRawAuthority() + path);
+            this.baseUri = HttpTransporterUtils.getBaseUri(repository);
         } catch (URISyntaxException e) {
             throw new NoTransporterException(repository, e.getMessage(), e);
         }
