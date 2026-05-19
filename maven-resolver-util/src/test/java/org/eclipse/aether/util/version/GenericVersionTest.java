@@ -19,7 +19,9 @@
 package org.eclipse.aether.util.version;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,6 +31,8 @@ import org.eclipse.aether.version.Version;
 import org.junit.Test;
 
 import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -378,6 +382,80 @@ public class GenericVersionTest extends AbstractVersionTest {
     public void testCompareUuidVersionStringStream() {
         // this operation below fails with IAEx if comparison is unstable
         uuidVersionStringStream().map(this::newVersion).sorted().collect(toList());
+    }
+
+    /**
+     * UT for <a href="https://issues.apache.org/jira/browse/MRESOLVER-686">MRESOLVER-686</a>.
+     *
+     * When two versions differ in kind at index 0 (e.g. a string-prefixed branch-style version versus a numeric
+     * release whose first segment happens to be zero), comparePadding with a number filter may return 0 even though
+     * the versions are clearly different. That makes equality non-transitive and breaks TimSort when Maven's
+     * DefaultVersionRangeResolver sorts a metadata list mixing both shapes.
+     */
+    @Test
+    public void testTransitivityAtIndexZeroKindMismatch() {
+        Version a = newVersion("foo-branch-SNAPSHOT");
+        Version b = newVersion("0-x-SNAPSHOT");
+        Version c = newVersion("zar-branch-SNAPSHOT");
+
+        int ab = Integer.signum(a.compareTo(b));
+        int bc = Integer.signum(b.compareTo(c));
+        int ac = Integer.signum(a.compareTo(c));
+        // With the fix, at index 0 the kind difference (STRING(3) < INT(4)) wins: a < b and c < b.
+        assertOrder(X_LT_Y, "foo-branch-SNAPSHOT", "0-x-SNAPSHOT");
+        assertOrder(X_LT_Y, "zar-branch-SNAPSHOT", "0-x-SNAPSHOT");
+        assertOrder(X_LT_Y, "foo-branch-SNAPSHOT", "zar-branch-SNAPSHOT");
+        // and the three results must be transitively consistent
+        if (ab == 0 && bc == 0 && ac != 0) {
+            fail("equality is not transitive: a~b~c but a!=c");
+        }
+    }
+
+    /**
+     * UT for <a href="https://issues.apache.org/jira/browse/MRESOLVER-686">MRESOLVER-686</a>.
+     *
+     * Sorting a representative mix of string-prefixed branch-style SNAPSHOT names and numeric releases (the kind of
+     * list Maven's DefaultVersionRangeResolver builds from a repository's maven-metadata.xml) must not throw
+     * {@code IllegalArgumentException}, must produce a non-decreasing sequence under {@link Version#compareTo}, and
+     * must place every string-prefixed version before every numeric-prefixed version (kind at index 0 wins).
+     */
+    @Test
+    public void testSortBranchAndNumericVersions() {
+        List<String> input = Arrays.asList(
+                "foo-branch-1-SNAPSHOT",
+                "bar-branch-2-SNAPSHOT",
+                "baz-branch-3-SNAPSHOT",
+                "qux-branch-4-SNAPSHOT",
+                "quux-branch-5-SNAPSHOT",
+                "corge-branch-6-SNAPSHOT",
+                "garply-branch-7-SNAPSHOT",
+                "waldo-branch-8-SNAPSHOT",
+                "0-latest-SNAPSHOT",
+                "0.0-SNAPSHOT",
+                "0.5640-SNAPSHOT",
+                "0.5641-SNAPSHOT",
+                "1.163.0.0-qa",
+                "2.19.0.0-dev",
+                "2.19.0.0-qa",
+                "3.59.0.0-dev",
+                "4.225.2.0-dev",
+                "4.225.2.1-dev");
+        List<Version> sorted = input.stream().map(this::newVersion).sorted().collect(toList());
+
+        // Sort is total: no element lost or duplicated.
+        assertEquals(input.size(), sorted.size());
+
+        // Sorted output is non-decreasing under compareTo (sanity-checks the comparator itself).
+        for (int i = 0; i + 1 < sorted.size(); i++) {
+            assertTrue(
+                    "sorted[" + i + "]=" + sorted.get(i) + " should be <= sorted[" + (i + 1) + "]=" + sorted.get(i + 1),
+                    sorted.get(i).compareTo(sorted.get(i + 1)) <= 0);
+        }
+
+        // All string-prefixed entries must sort before all numeric-prefixed entries, and the specific
+        // highest / lowest elements are what we expect.
+        assertEquals("bar-branch-2-SNAPSHOT", sorted.get(0).toString());
+        assertEquals("4.225.2.1-dev", sorted.get(sorted.size() - 1).toString());
     }
 
     private Stream<String> uuidVersionStringStream() {
