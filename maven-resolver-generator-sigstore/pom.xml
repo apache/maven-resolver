@@ -33,7 +33,7 @@
 
   <properties>
     <javaVersion>17</javaVersion>
-    <sigstoreVersion>2.0.0</sigstoreVersion>
+    <sigstoreVersion>2.1.0</sigstoreVersion>
   </properties>
 
   <dependencies>
