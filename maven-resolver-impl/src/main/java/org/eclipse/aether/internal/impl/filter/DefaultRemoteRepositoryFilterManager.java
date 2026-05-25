@@ -100,16 +100,16 @@ public final class DefaultRemoteRepositoryFilterManager implements RemoteReposit
 
         @Override
         public RemoteRepositoryFilter.Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
-            return new Consensus(
-                    participants.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()
-                            .acceptArtifact(remoteRepository, artifact))));
+            return new Consensus(participants.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey, e -> e.getValue().acceptArtifact(remoteRepository, artifact))));
         }
 
         @Override
         public RemoteRepositoryFilter.Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
-            return new Consensus(
-                    participants.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()
-                            .acceptMetadata(remoteRepository, metadata))));
+            return new Consensus(participants.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey, e -> e.getValue().acceptMetadata(remoteRepository, metadata))));
         }
     }
 
