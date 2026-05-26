@@ -20,14 +20,18 @@ package org.eclipse.aether.util.graph.manager;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyManagement;
+import org.eclipse.aether.collection.DependencyManagement.Subject;
 import org.eclipse.aether.collection.DependencyManager;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -267,5 +271,176 @@ public class DependencyManagerTest {
         mngt = manager.manageDependency(new Dependency(E1, null));
         // DO NOT APPLY ONTO ITSELF
         assertNull(mngt);
+    }
+
+    /**
+     * Tests that root-level management produces enforced results for version, scope, and optional.
+     */
+    @Test
+    void testTransitiveEnforcementFromRoot() {
+        DependencyManager manager = new TransitiveDependencyManager(null);
+
+        // depth=1: derive from root with managed dependencies
+        manager = manager.deriveChildManager(newContext(
+                new Dependency(A2, null, null), new Dependency(B, null, true), new Dependency(C1, "newscope", null)));
+
+        // depth=2: management is applied — check enforcement flags
+        manager = manager.deriveChildManager(newContext());
+        DependencyManagement mngt = manager.manageDependency(new Dependency(A1, null));
+        assertNotNull(mngt);
+        assertEquals(A2.getVersion(), mngt.getVersion());
+        // version management from root should be enforced
+        assertTrue(mngt.isManagedSubject(Subject.VERSION));
+        assertTrue(mngt.isManagedSubjectEnforced(Subject.VERSION));
+
+        mngt = manager.manageDependency(new Dependency(C1, null));
+        assertNotNull(mngt);
+        assertEquals("newscope", mngt.getScope());
+        // scope management from root should be enforced
+        assertTrue(mngt.isManagedSubject(Subject.SCOPE));
+        assertTrue(mngt.isManagedSubjectEnforced(Subject.SCOPE));
+
+        mngt = manager.manageDependency(new Dependency(B1, null));
+        assertNotNull(mngt);
+        assertEquals(Boolean.TRUE, mngt.getOptional());
+        // optional management from root should be enforced
+        assertTrue(mngt.isManagedSubject(Subject.OPTIONAL));
+        assertTrue(mngt.isManagedSubjectEnforced(Subject.OPTIONAL));
+    }
+
+    /**
+     * Tests that transitive (non-root) management produces advised (not enforced) results
+     * for scope and optional.
+     */
+    @Test
+    void testTransitiveEnforcementFromNonRoot() {
+        DependencyManager manager = new TransitiveDependencyManager(null);
+
+        // depth=1: no managed dependencies at root level
+        manager = manager.deriveChildManager(newContext());
+
+        // depth=2: managed dependencies introduced at transitive level
+        manager = manager.deriveChildManager(newContext(
+                new Dependency(A2, null, null), new Dependency(B, null, true), new Dependency(C1, "newscope", null)));
+
+        // depth=3: management is applied — check enforcement flags
+        manager = manager.deriveChildManager(newContext());
+        DependencyManagement mngt = manager.manageDependency(new Dependency(A1, null));
+        assertNotNull(mngt);
+        assertEquals(A2.getVersion(), mngt.getVersion());
+        // version management from non-root should NOT be enforced (advised)
+        assertTrue(mngt.isManagedSubject(Subject.VERSION));
+        assertFalse(mngt.isManagedSubjectEnforced(Subject.VERSION));
+
+        mngt = manager.manageDependency(new Dependency(C1, null));
+        assertNotNull(mngt);
+        assertEquals("newscope", mngt.getScope());
+        // scope management from non-root should NOT be enforced (advised)
+        assertTrue(mngt.isManagedSubject(Subject.SCOPE));
+        assertFalse(mngt.isManagedSubjectEnforced(Subject.SCOPE));
+
+        mngt = manager.manageDependency(new Dependency(B1, null));
+        assertNotNull(mngt);
+        assertEquals(Boolean.TRUE, mngt.getOptional());
+        // optional management from non-root should NOT be enforced (advised)
+        assertTrue(mngt.isManagedSubject(Subject.OPTIONAL));
+        assertFalse(mngt.isManagedSubjectEnforced(Subject.OPTIONAL));
+    }
+
+    /**
+     * Tests that classic dependency manager also produces enforced results from root.
+     */
+    @Test
+    void testClassicEnforcementFromRoot() {
+        DependencyManager manager = new ClassicDependencyManager(null);
+
+        // depth=1: derive from root
+        manager = manager.deriveChildManager(
+                newContext(new Dependency(A2, null, null), new Dependency(C1, "newscope", null)));
+
+        // depth=2: management is applied
+        manager = manager.deriveChildManager(newContext());
+        DependencyManagement mngt = manager.manageDependency(new Dependency(A1, null));
+        assertNotNull(mngt);
+        assertTrue(mngt.isManagedSubjectEnforced(Subject.VERSION));
+
+        mngt = manager.manageDependency(new Dependency(C1, null));
+        assertNotNull(mngt);
+        assertTrue(mngt.isManagedSubjectEnforced(Subject.SCOPE));
+    }
+
+    /**
+     * Tests backwards compatibility: setManagedBits maps to isManagedSubject/isManagedSubjectEnforced.
+     */
+    @Test
+    void testSetManagedBitsBackwardsCompat() {
+        DefaultDependencyNode node = new DefaultDependencyNode(new Dependency(A1, "compile"));
+
+        // Set via deprecated API
+        node.setManagedBits(DependencyNode.MANAGED_VERSION | DependencyNode.MANAGED_SCOPE);
+
+        // Check via new API — all mapped as enforced
+        assertTrue(node.isManagedSubject(Subject.VERSION));
+        assertTrue(node.isManagedSubjectEnforced(Subject.VERSION));
+        assertTrue(node.isManagedSubject(Subject.SCOPE));
+        assertTrue(node.isManagedSubjectEnforced(Subject.SCOPE));
+
+        // Unset subjects
+        assertFalse(node.isManagedSubject(Subject.OPTIONAL));
+        assertFalse(node.isManagedSubjectEnforced(Subject.OPTIONAL));
+        assertFalse(node.isManagedSubject(Subject.PROPERTIES));
+        assertFalse(node.isManagedSubject(Subject.EXCLUSIONS));
+
+        // Round-trip: getManagedBits still works
+        assertEquals(DependencyNode.MANAGED_VERSION | DependencyNode.MANAGED_SCOPE, node.getManagedBits());
+    }
+
+    /**
+     * Tests that setManagedSubjects with explicit enforcement flags works correctly.
+     */
+    @Test
+    void testSetManagedSubjectsWithEnforcement() {
+        DefaultDependencyNode node = new DefaultDependencyNode(new Dependency(A1, "compile"));
+
+        EnumMap<Subject, Boolean> subjects = new EnumMap<>(Subject.class);
+        subjects.put(Subject.VERSION, true); // enforced
+        subjects.put(Subject.SCOPE, false); // advised
+        subjects.put(Subject.OPTIONAL, false); // advised
+        node.setManagedSubjects(subjects);
+
+        // All are managed
+        assertTrue(node.isManagedSubject(Subject.VERSION));
+        assertTrue(node.isManagedSubject(Subject.SCOPE));
+        assertTrue(node.isManagedSubject(Subject.OPTIONAL));
+        assertFalse(node.isManagedSubject(Subject.PROPERTIES));
+
+        // Only version is enforced
+        assertTrue(node.isManagedSubjectEnforced(Subject.VERSION));
+        assertFalse(node.isManagedSubjectEnforced(Subject.SCOPE));
+        assertFalse(node.isManagedSubjectEnforced(Subject.OPTIONAL));
+        assertFalse(node.isManagedSubjectEnforced(Subject.PROPERTIES));
+
+        // getManagedBits still reports all managed subjects (regardless of enforcement)
+        assertEquals(
+                DependencyNode.MANAGED_VERSION | DependencyNode.MANAGED_SCOPE | DependencyNode.MANAGED_OPTIONAL,
+                node.getManagedBits());
+    }
+
+    /**
+     * Tests that setManagedSubjects with null clears all managed subjects.
+     */
+    @Test
+    void testSetManagedSubjectsNull() {
+        DefaultDependencyNode node = new DefaultDependencyNode(new Dependency(A1, "compile"));
+
+        EnumMap<Subject, Boolean> subjects = new EnumMap<>(Subject.class);
+        subjects.put(Subject.VERSION, true);
+        node.setManagedSubjects(subjects);
+        assertTrue(node.isManagedSubject(Subject.VERSION));
+
+        // Clear
+        node.setManagedSubjects(null);
+        assertFalse(node.isManagedSubject(Subject.VERSION));
+        assertEquals(0, node.getManagedBits());
     }
 }
