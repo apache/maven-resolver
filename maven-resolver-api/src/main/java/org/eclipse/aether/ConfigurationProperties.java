@@ -596,10 +596,6 @@ public final class ConfigurationProperties {
      */
     public static final boolean DEFAULT_VERSION_SCHEME_CACHE_DEBUG = false;
 
-    private ConfigurationProperties() {
-        // hide constructor
-    }
-
     /**
      * Boolean flag should the HTTP transport support RFC 9457 messages. Some servers have issues with handling the
      * HTTP Accept headers, when support is enabled. Known servers not supporting RFC 9457 is for
@@ -619,4 +615,8 @@ public final class ConfigurationProperties {
      * @since 2.0.19
      */
     public static final boolean DEFAULT_HTTP_SUPPORT_RFC9457 = true;
+
+    private ConfigurationProperties() {
+        // hide constructor
+    }
 }
