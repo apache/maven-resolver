@@ -181,6 +181,34 @@ and the same tools can be also used to "batch verify" the enlisted artifacts in 
 
 Each summary file contains information for single checksum algorithm, represented as summary file extension.
 
+If you are using Maven 3.9.x, use the following procedure to save the summary checksum file alongside your project code:
+
+1. Add the following command line flags to your `.mvn/config` file:
+
+   ```
+   --strict-checksums
+   -Daether.checksums.algorithms=SHA-512,SHA-1,MD5
+   -Daether.trustedChecksumsSource.summaryFile=true
+   -Daether.trustedChecksumsSource.summaryFile.basedir=${session.rootDirectory}/.mvn/checksums/
+   -Daether.artifactResolver.postProcessor.trustedChecksums=true
+   -Daether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms=SHA-512
+   -Daether.artifactResolver.postProcessor.trustedChecksums.failIfMissing=true
+   ```
+
+2. Run a build with trusted checksum recording enabled:
+
+   ```sh
+   mvn clean install -Daether.artifactResolver.postProcessor.trustedChecksums.record=true
+   ```
+
+   This will generate one or more checksum files (one for each source Maven repository) with the `.sha512` extension.
+
+3. Verify that the build succeeds with trusted checksum recording disabled:
+
+   ```sh
+   mvn clean install
+   ```
+
 ### Sparse Directory Trusted Checksums Source
 
 This source mimics Maven local repository layout, and stores checksums in similar layout
@@ -189,3 +217,13 @@ as Maven local repository stores checksums in local repository.
 Here, just like Maven local repository, the sparse directory can contain multiple algorithm checksums,
 as they are coded in checksum file path (the extension).
 
+### Notes On Using Trusted Checksums
+
+- Use the `--strict-checksums` flag to fail a build if the expected checksums of downloaded
+  artifacts do not match.
+- More than one checksum algorithm can be specified for the
+  `aether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms` system property. The
+  listed checksums must be a subset of those specified by `aether.checksums.algorithms`.
+- Most dependency management tools do not currently update trusted checksum files if they are
+  stored in version control alongside source code. We hope maintainers of these tools support
+  Maven trusted checksums in the near future.
