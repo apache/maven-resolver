@@ -149,16 +149,16 @@ public final class HttpTransporterUtils {
     }
 
     /**
-     * Getter for {@link ConfigurationProperties#HTTP_SUPPORT_RFC9457}.
+     * Getter for {@link ConfigurationProperties#HTTP_SEND_RFC9457_ACCEPT}.
      *
      * @since 2.0.19
      */
-    public static boolean isHttpSupportRfc9457(RepositorySystemSession session, RemoteRepository repository) {
+    public static boolean isHttpSendRfc9457Accept(RepositorySystemSession session, RemoteRepository repository) {
         return ConfigUtils.getBoolean(
                 session,
-                ConfigurationProperties.DEFAULT_HTTP_SUPPORT_RFC9457,
-                ConfigurationProperties.HTTP_SUPPORT_RFC9457 + "." + repository.getId(),
-                ConfigurationProperties.HTTP_SUPPORT_RFC9457);
+                ConfigurationProperties.DEFAULT_HTTP_SEND_RFC9457_ACCEPT,
+                ConfigurationProperties.HTTP_SEND_RFC9457_ACCEPT + "." + repository.getId(),
+                ConfigurationProperties.HTTP_SEND_RFC9457_ACCEPT);
     }
 
     /**

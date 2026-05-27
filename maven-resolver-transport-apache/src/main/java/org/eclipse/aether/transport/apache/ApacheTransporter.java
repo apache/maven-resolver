@@ -148,7 +148,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final boolean supportWebDav;
 
-    private final boolean supportRfc9457;
+    private final boolean sendRfc9457Accept;
 
     private final AuthCache authCache;
 
@@ -188,7 +188,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
         this.supportWebDav = HttpTransporterUtils.isHttpSupportWebDav(session, repository);
-        this.supportRfc9457 = HttpTransporterUtils.isHttpSupportRfc9457(session, repository);
+        this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
         int connectTimeout = HttpTransporterUtils.getHttpConnectTimeout(session, repository);
         int requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
         int retryCount = HttpTransporterUtils.getHttpRetryHandlerCount(session, repository);
@@ -354,7 +354,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
         EntityGetter getter = new EntityGetter(task);
         HttpGet request = commonHeaders(new HttpGet(resolve(task)));
-        if (supportRfc9457) {
+        if (sendRfc9457Accept) {
             ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
         }
         while (true) {
@@ -381,7 +381,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     protected void implPut(PutTask task) throws Exception {
         PutTaskEntity entity = new PutTaskEntity(task);
         HttpPut request = commonHeaders(entity(new HttpPut(resolve(task)), entity));
-        if (supportRfc9457) {
+        if (sendRfc9457Accept) {
             ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
         }
         try {
@@ -530,23 +530,10 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     private void handleStatus(CloseableHttpResponse response) throws Exception {
         int status = response.getStatusLine().getStatusCode();
         if (status >= 300) {
-            if (supportRfc9457) {
-                ApacheRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
-                    throw new HttpResponseException(statusCode, reasonPhrase + " (" + statusCode + ")");
-                });
-            } else {
-                throw new HttpResponseException(status, getReasonPhrase(response));
-            }
+            ApacheRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
+                throw new HttpResponseException(statusCode, reasonPhrase + " (" + statusCode + ")");
+            });
         }
-    }
-
-    private String getReasonPhrase(final CloseableHttpResponse response) {
-        String reasonPhrase = response.getStatusLine().getReasonPhrase();
-        if (reasonPhrase == null || reasonPhrase.isEmpty()) {
-            return "";
-        }
-        int statusCode = response.getStatusLine().getStatusCode();
-        return reasonPhrase + " (" + statusCode + ")";
     }
 
     @Override

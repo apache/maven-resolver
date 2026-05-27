@@ -163,7 +163,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final boolean preemptiveAuth;
 
-    private final boolean supportRfc9457;
+    private final boolean sendRfc9457Accept;
 
     private PasswordAuthentication serverAuthentication;
 
@@ -219,7 +219,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
-        this.supportRfc9457 = HttpTransporterUtils.isHttpSupportRfc9457(session, repository);
+        this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
 
         this.headers = headers;
         this.client = createClient(session, repository, insecure);
@@ -262,7 +262,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 HttpRequest.Builder request =
                         HttpRequest.newBuilder().uri(resolve(task)).GET();
                 headers.forEach(request::setHeader);
-                if (supportRfc9457) {
+                if (sendRfc9457Accept) {
                     JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
                 }
 
@@ -385,7 +385,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request = request.expectContinue(expectContinue);
         }
         headers.forEach(request::setHeader);
-        if (supportRfc9457) {
+        if (sendRfc9457Accept) {
             JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
         }
 
@@ -409,13 +409,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             HttpResponse<InputStream> response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 try {
-                    if (supportRfc9457) {
-                        JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
-                            throw new HttpTransporterException(statusCode);
-                        });
-                    } else {
-                        throw new HttpTransporterException(response.statusCode());
-                    }
+                    JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
+                        throw new HttpTransporterException(statusCode);
+                    });
                 } finally {
                     closeBody(response);
                 }

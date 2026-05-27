@@ -111,7 +111,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final boolean preemptivePutAuth;
 
-    private final boolean supportRfc9457;
+    private final boolean sendRfc9457Accept;
 
     private final boolean insecure;
 
@@ -151,7 +151,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         this.requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
-        this.supportRfc9457 = HttpTransporterUtils.isHttpSupportRfc9457(session, repository);
+        this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
         final String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
@@ -198,7 +198,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             if (preemptiveAuth) {
                 mayApplyPreemptiveAuth(request);
             }
-            if (supportRfc9457) {
+            if (sendRfc9457Accept) {
                 JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
             }
             if (resume) {
@@ -230,13 +230,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     resume = false;
                     continue;
                 }
-                if (supportRfc9457) {
-                    JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
-                        throw new HttpTransporterException(statusCode);
-                    });
-                } else {
-                    throw new HttpTransporterException(response.getStatus());
-                }
+                JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
+                    throw new HttpTransporterException(statusCode);
+                });
             }
             break;
         }
@@ -301,7 +297,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
     protected void implPut(PutTask task) throws Exception {
         Request request = client.newRequest(resolve(task)).method("PUT");
         request.headers(m -> headers.forEach(m::add));
-        if (supportRfc9457) {
+        if (sendRfc9457Accept) {
             JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
         }
         if (preemptiveAuth || preemptivePutAuth) {
@@ -356,13 +352,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
 
         if (response.getStatus() >= MULTIPLE_CHOICES) {
-            if (supportRfc9457) {
-                JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
-                    throw new HttpTransporterException(statusCode);
-                });
-            } else {
-                throw new HttpTransporterException(response.getStatus());
-            }
+            JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
+                throw new HttpTransporterException(statusCode);
+            });
         }
     }
 

@@ -597,24 +597,27 @@ public final class ConfigurationProperties {
     public static final boolean DEFAULT_VERSION_SCHEME_CACHE_DEBUG = false;
 
     /**
-     * Boolean flag should the HTTP transport support RFC 9457 messages. Some servers have issues with handling the
-     * HTTP Accept headers, when support is enabled. Known servers not supporting RFC 9457 is for
-     * example Sonatype Nexus 2.
+     * Boolean flag should the HTTP transport send HTTP <pre>Accept</pre> header to signal that it supports RFC 9457
+     * error messages. Some servers have issues with handling the HTTP Accept headers. Known servers not supporting it
+     * is for example Staging REST endpoint of Sonatype Nexus 2.
+     * This configuration is only about sending (or not sending) HTTP header with content of
+     * <pre>Accept: application/problem+json</pre> that may be required by some servers to trigger error reporting
+     * using RFC 9457.
      *
      * @since 2.0.19
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
-     * @configurationDefaultValue {@link #DEFAULT_HTTP_SUPPORT_RFC9457}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_SEND_RFC9457_ACCEPT}
      * @configurationRepoIdSuffix Yes
      */
-    public static final String HTTP_SUPPORT_RFC9457 = PREFIX_TRANSPORT_HTTP + "supportRfc9457";
+    public static final String HTTP_SEND_RFC9457_ACCEPT = PREFIX_TRANSPORT_HTTP + "sendRfc9457Accept";
 
     /**
-     * Default value to use if {@link #HTTP_SUPPORT_RFC9457} is not set: {@code true}.
+     * Default value to use if {@link #HTTP_SEND_RFC9457_ACCEPT} is not set: {@code true}.
      *
      * @since 2.0.19
      */
-    public static final boolean DEFAULT_HTTP_SUPPORT_RFC9457 = true;
+    public static final boolean DEFAULT_HTTP_SEND_RFC9457_ACCEPT = true;
 
     private ConfigurationProperties() {
         // hide constructor
