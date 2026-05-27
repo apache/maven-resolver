@@ -163,6 +163,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final boolean preemptiveAuth;
 
+    private final boolean supportRfc9457;
+
     private PasswordAuthentication serverAuthentication;
 
     private PasswordAuthentication proxyAuthentication;
@@ -217,6 +219,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
+        this.supportRfc9457 = HttpTransporterUtils.isHttpSupportRfc9457(session, repository);
 
         this.headers = headers;
         this.client = createClient(session, repository, insecure);
@@ -259,7 +262,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 HttpRequest.Builder request =
                         HttpRequest.newBuilder().uri(resolve(task)).GET();
                 headers.forEach(request::setHeader);
-                JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+                if (supportRfc9457) {
+                    JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+                }
 
                 if (resume) {
                     long resumeOffset = task.getResumeOffset();
@@ -380,7 +385,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request = request.expectContinue(expectContinue);
         }
         headers.forEach(request::setHeader);
-        JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+        if (supportRfc9457) {
+            JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+        }
 
         if (task.getDataLength() == 0L) {
             request.PUT(HttpRequest.BodyPublishers.noBody());
@@ -402,9 +409,13 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             HttpResponse<InputStream> response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 try {
-                    JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
-                        throw new HttpTransporterException(statusCode);
-                    });
+                    if (supportRfc9457) {
+                        JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
+                            throw new HttpTransporterException(statusCode);
+                        });
+                    } else {
+                        throw new HttpTransporterException(response.statusCode());
+                    }
                 } finally {
                     closeBody(response);
                 }

@@ -599,4 +599,24 @@ public final class ConfigurationProperties {
     private ConfigurationProperties() {
         // hide constructor
     }
+
+    /**
+     * Boolean flag should the HTTP transport support RFC 9457 messages. Some servers have issues with handling the
+     * HTTP Accept headers, when support is enabled. Known servers not supporting RFC 9457 is for
+     * example Sonatype Nexus 2.
+     *
+     * @since 2.0.19
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_SUPPORT_RFC9457}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String HTTP_SUPPORT_RFC9457 = PREFIX_TRANSPORT_HTTP + "supportRfc9457";
+
+    /**
+     * Default value to use if {@link #HTTP_SUPPORT_RFC9457} is not set: {@code true}.
+     *
+     * @since 2.0.19
+     */
+    public static final boolean DEFAULT_HTTP_SUPPORT_RFC9457 = true;
 }
