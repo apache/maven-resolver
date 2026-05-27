@@ -163,6 +163,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final boolean preemptiveAuth;
 
+    private final boolean sendRfc9457Accept;
+
     private PasswordAuthentication serverAuthentication;
 
     private PasswordAuthentication proxyAuthentication;
@@ -217,6 +219,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
+        this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
 
         this.headers = headers;
         this.client = createClient(session, repository, insecure);
@@ -259,7 +262,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 HttpRequest.Builder request =
                         HttpRequest.newBuilder().uri(resolve(task)).GET();
                 headers.forEach(request::setHeader);
-                JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+                if (sendRfc9457Accept) {
+                    JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+                }
 
                 if (resume) {
                     long resumeOffset = task.getResumeOffset();
@@ -380,7 +385,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request = request.expectContinue(expectContinue);
         }
         headers.forEach(request::setHeader);
-        JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+        if (sendRfc9457Accept) {
+            JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+        }
 
         if (task.getDataLength() == 0L) {
             request.PUT(HttpRequest.BodyPublishers.noBody());

@@ -414,7 +414,7 @@ public class CollectConfiguration implements Callable<Integer> {
         return null;
     }
 
-    protected static final Pattern CONSTANT_PATTERN = Pattern.compile(".*static final.* ([A-Z_]+) = (.*);");
+    protected static final Pattern CONSTANT_PATTERN = Pattern.compile(".*static final.* ([A-Z0-9_]+) = (.*);");
 
     protected static final ToolProvider JAVAP = ToolProvider.findFirst("javap").orElseThrow();
 

@@ -111,6 +111,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final boolean preemptivePutAuth;
 
+    private final boolean sendRfc9457Accept;
+
     private final boolean insecure;
 
     private final AtomicReference<BasicAuthentication.BasicResult> basicServerAuthenticationResult;
@@ -149,6 +151,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         this.requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
+        this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
         final String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
@@ -195,7 +198,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             if (preemptiveAuth) {
                 mayApplyPreemptiveAuth(request);
             }
-            JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
+            if (sendRfc9457Accept) {
+                JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
+            }
             if (resume) {
                 long resumeOffset = task.getResumeOffset();
                 long lastModified =
@@ -292,7 +297,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
     protected void implPut(PutTask task) throws Exception {
         Request request = client.newRequest(resolve(task)).method("PUT");
         request.headers(m -> headers.forEach(m::add));
-        JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
+        if (sendRfc9457Accept) {
+            JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
+        }
         if (preemptiveAuth || preemptivePutAuth) {
             mayApplyPreemptiveAuth(request);
         }
@@ -348,7 +355,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
                 throw new HttpTransporterException(statusCode);
             });
-            throw new HttpTransporterException(response.getStatus());
         }
     }
 

@@ -148,6 +148,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final boolean supportWebDav;
 
+    private final boolean sendRfc9457Accept;
+
     private final AuthCache authCache;
 
     @SuppressWarnings("checkstyle:methodlength")
@@ -186,6 +188,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
         this.supportWebDav = HttpTransporterUtils.isHttpSupportWebDav(session, repository);
+        this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
         int connectTimeout = HttpTransporterUtils.getHttpConnectTimeout(session, repository);
         int requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
         int retryCount = HttpTransporterUtils.getHttpRetryHandlerCount(session, repository);
@@ -351,7 +354,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
         EntityGetter getter = new EntityGetter(task);
         HttpGet request = commonHeaders(new HttpGet(resolve(task)));
-        ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
+        if (sendRfc9457Accept) {
+            ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
+        }
         while (true) {
             try {
                 if (resume) {
@@ -376,7 +381,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     protected void implPut(PutTask task) throws Exception {
         PutTaskEntity entity = new PutTaskEntity(task);
         HttpPut request = commonHeaders(entity(new HttpPut(resolve(task)), entity));
-        ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
+        if (sendRfc9457Accept) {
+            ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
+        }
         try {
             execute(request, null);
         } catch (HttpResponseException e) {

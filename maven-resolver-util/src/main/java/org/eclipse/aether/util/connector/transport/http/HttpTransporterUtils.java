@@ -149,6 +149,19 @@ public final class HttpTransporterUtils {
     }
 
     /**
+     * Getter for {@link ConfigurationProperties#HTTP_SEND_RFC9457_ACCEPT}.
+     *
+     * @since 2.0.19
+     */
+    public static boolean isHttpSendRfc9457Accept(RepositorySystemSession session, RemoteRepository repository) {
+        return ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_SEND_RFC9457_ACCEPT,
+                ConfigurationProperties.HTTP_SEND_RFC9457_ACCEPT + "." + repository.getId(),
+                ConfigurationProperties.HTTP_SEND_RFC9457_ACCEPT);
+    }
+
+    /**
      * Getter for {@link ConfigurationProperties#HTTP_CREDENTIAL_ENCODING}.
      */
     public static Charset getHttpCredentialsEncoding(RepositorySystemSession session, RemoteRepository repository) {
