@@ -38,7 +38,7 @@ public class JdkRFC9457Reporter
 
     @Override
     public void prepareRequest(Builder requestBuilder) {
-        requestBuilder.header(HttpConstants.ACCEPT, CONTENT_TYPE_PROBLEM_DETAILS_JSON);
+        requestBuilder.header(HttpConstants.ACCEPT, CONTENT_TYPE_PROBLEM_DETAILS_JSON_WITH_ANY);
     }
 
     @Override

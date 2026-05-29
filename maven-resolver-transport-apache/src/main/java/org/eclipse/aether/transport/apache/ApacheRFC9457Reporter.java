@@ -37,7 +37,7 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
 
     @Override
     public void prepareRequest(HttpRequest request) {
-        request.addHeader(HttpConstants.ACCEPT, CONTENT_TYPE_PROBLEM_DETAILS_JSON);
+        request.addHeader(HttpConstants.ACCEPT, CONTENT_TYPE_PROBLEM_DETAILS_JSON_WITH_ANY);
     }
 
     @Override
