@@ -36,7 +36,7 @@ import java.io.IOException;
  */
 public abstract class RFC9457Reporter<T, E extends Exception, R> {
     public static final String CONTENT_TYPE_PROBLEM_DETAILS_JSON = "application/problem+json";
-    public static final String CONTENT_TYPE_PROBLEM_DETAILS_JSON_WITH_ANY = "application/problem+json, */*";
+    public static final String CONTENT_TYPE_PROBLEM_DETAILS_JSON_AND_ANY = "application/problem+json,*/*";
 
     protected abstract boolean isRFC9457Message(T response);
 

@@ -40,7 +40,7 @@ public class JettyRFC9457Reporter
 
     @Override
     public void prepareRequest(Request request) {
-        request.headers(h -> h.add(HttpHeader.ACCEPT.asString(), CONTENT_TYPE_PROBLEM_DETAILS_JSON_WITH_ANY));
+        request.headers(h -> h.add(HttpHeader.ACCEPT.asString(), CONTENT_TYPE_PROBLEM_DETAILS_JSON_AND_ANY));
     }
 
     @Override
