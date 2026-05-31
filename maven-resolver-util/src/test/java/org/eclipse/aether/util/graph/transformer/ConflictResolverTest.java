@@ -21,6 +21,7 @@ package org.eclipse.aether.util.graph.transformer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.eclipse.aether.RepositoryException;
@@ -28,10 +29,12 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyVisitor;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
 import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
+import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -483,6 +486,8 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
             System.out.println("CR=" + conflictResolver.getClass().getSimpleName() + "; verbosity=" + verbosity.name());
             if (!cyclesLeftInPlace) {
                 transformed.accept(DUMPER_SOUT);
+            } else {
+                transformed.accept(new TreeDependencyVisitor(DUMPER_SOUT));
             }
 
             assertSame(transformed, root);
@@ -522,13 +527,167 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         }
     }
 
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void subtreeRepeatedSameInstance(ConflictResolver conflictResolver) throws RepositoryException {
+        // root -> d1 ----> st1* -> st2 -> st3
+        //   |---> st1* --> st2 --> st3
+        //          |-----> st3
+        // Note: st1* are TWO DIFFERENT instances, but st2->st3 are same instances on different paths
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode d1 = makeDependencyNode("some-group", "d1", "1.0");
+        DependencyNode st1a = makeDependencyNode("some-group", "st1", "1.0");
+        DependencyNode st1b = makeDependencyNode("some-group", "st1", "1.0");
+        DependencyNode st2 = makeDependencyNode("some-group", "st2", "1.0");
+        DependencyNode st3 = makeDependencyNode("some-group", "st3", "1.0");
+
+        root.setChildren(mutableList(d1, st1b));
+        d1.setChildren(mutableList(st1a));
+        st1a.setChildren(mutableList(st2));
+        st2.setChildren(mutableList(st3));
+        st1b.setChildren(mutableList(st2, st3));
+
+        System.out.println();
+        System.out.println("Input node:");
+        root.accept(DUMPER_SOUT);
+
+        DependencyNode transformedRoot = transform(conflictResolver, root);
+
+        System.out.println();
+        System.out.println("Transformed node:");
+        transformedRoot.accept(DUMPER_SOUT);
+
+        assertSame(transformedRoot, root);
+        AtomicInteger occurrenceOfSt3 = new AtomicInteger(0);
+        root.accept(new DependencyVisitor() {
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                if (node.getArtifact() != null
+                        && node.getArtifact().getArtifactId().equals("st3")) {
+                    occurrenceOfSt3.incrementAndGet();
+                }
+                return true;
+            }
+
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                return true;
+            }
+        });
+        assertEquals(1, occurrenceOfSt3.get()); // st3 must be present only once in tree
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void subtreeRepeatedSameInstanceWithRealCycle(ConflictResolver conflictResolver) throws RepositoryException {
+        // root -> d1 ----> st1* -> st2 -> st3
+        //   |---> st1* --> st2 --> st3* -> st2
+        //          |-----> st3
+        // Note: st1* are TWO DIFFERENT instances, but st2->st3 are same instances on different paths
+        // Note: st3* are TWO DIFFERENT instances
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode d1 = makeDependencyNode("some-group", "d1", "1.0");
+        DependencyNode st1a = makeDependencyNode("some-group", "st1", "1.0");
+        DependencyNode st1b = makeDependencyNode("some-group", "st1", "1.0");
+        DependencyNode st2 = makeDependencyNode("some-group", "st2", "1.0");
+        DependencyNode st3 = makeDependencyNode("some-group", "st3", "1.0");
+        DependencyNode st3a = makeDependencyNode("some-group", "st3", "1.0");
+
+        root.setChildren(mutableList(d1, st1b));
+        d1.setChildren(mutableList(st1a));
+        st1a.setChildren(mutableList(st2));
+        st2.setChildren(mutableList(st3a));
+        st1b.setChildren(mutableList(st2, st3));
+        st3a.setChildren(mutableList(st2));
+
+        System.out.println();
+        System.out.println("Input node:");
+        root.accept(new TreeDependencyVisitor(DUMPER_SOUT)); // we have a cycle, so must wrap it
+
+        DependencyNode transformedRoot = transform(conflictResolver, root);
+
+        System.out.println();
+        System.out.println("Transformed node:");
+        // transformedRoot.accept(DUMPER_SOUT);
+
+        assertSame(transformedRoot, root);
+        AtomicInteger occurrenceOfSt3 = new AtomicInteger(0);
+        root.accept(new DependencyVisitor() {
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                if (node.getArtifact() != null
+                        && node.getArtifact().getArtifactId().equals("st3")) {
+                    occurrenceOfSt3.incrementAndGet();
+                }
+                return true;
+            }
+
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                return true;
+            }
+        });
+        assertEquals(1, occurrenceOfSt3.get()); // st3 must be present only once in tree
+    }
+
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void nettyBoringSslExample(ConflictResolver conflictResolver) throws RepositoryException {
+        // root -> nbc1 ---> nbc2
+        //   |---> nbc2 ---> nbc1
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode nbc1 = makeDependencyNode("some-group", "nbc", "1.0", "arch1", "compile");
+        DependencyNode nbc2 = makeDependencyNode("some-group", "nbc", "1.0", "arch2", "compile");
+
+        root.setChildren(mutableList(nbc1, nbc2));
+        nbc1.setChildren(mutableList(nbc2));
+        nbc2.setChildren(mutableList(nbc1));
+
+        System.out.println();
+        System.out.println("Input node:");
+        root.accept(new TreeDependencyVisitor(DUMPER_SOUT)); // we have a cycle, so must wrap it
+
+        DependencyNode transformedRoot = transform(conflictResolver, root);
+
+        System.out.println();
+        System.out.println("Transformed node:");
+        transformedRoot.accept(DUMPER_SOUT);
+
+        assertSame(transformedRoot, root);
+        AtomicInteger occurrence = new AtomicInteger(0);
+        root.accept(new DependencyVisitor() {
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                if (node.getArtifact() != null
+                        && node.getArtifact().getArtifactId().equals("nbc")) {
+                    occurrence.incrementAndGet();
+                }
+                return true;
+            }
+
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                return true;
+            }
+        });
+        assertEquals(2, occurrence.get()); // st3 must be present only once in tree
+    }
+
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
         return makeDependencyNode(groupId, artifactId, version, "compile");
     }
 
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version, String scope) {
-        DefaultDependencyNode node = new DefaultDependencyNode(
-                new Dependency(new DefaultArtifact(groupId + ':' + artifactId + ':' + version), scope));
+        return makeDependencyNode(groupId, artifactId, version, null, "compile");
+    }
+
+    private static DependencyNode makeDependencyNode(
+            String groupId, String artifactId, String version, String classifier, String scope) {
+        DefaultDependencyNode node = (classifier != null && !classifier.isEmpty())
+                ? new DefaultDependencyNode(new Dependency(
+                        new DefaultArtifact(groupId + ':' + artifactId + ":jar:" + classifier + ":" + version), scope))
+                : new DefaultDependencyNode(
+                        new Dependency(new DefaultArtifact(groupId + ':' + artifactId + ':' + version), scope));
         node.setVersion(new TestVersion(version));
         node.setVersionConstraint(new TestVersionConstraint(node.getVersion()));
         return node;
