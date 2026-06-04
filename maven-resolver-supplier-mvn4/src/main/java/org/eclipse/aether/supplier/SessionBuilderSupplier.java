@@ -24,13 +24,12 @@ import java.util.function.Supplier;
 
 import org.apache.maven.api.DependencyScope;
 import org.apache.maven.repository.internal.artifact.FatArtifactTraverser;
-import org.apache.maven.repository.internal.type.DefaultTypeProvider;
 import org.apache.maven.utils.Os;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
-import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.artifact.DefaultArtifactType;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
@@ -89,7 +88,7 @@ public class SessionBuilderSupplier {
         this.scopeManager = scopeManagerConfiguration == null ? null : new ScopeManagerImpl(scopeManagerConfiguration);
     }
 
-    protected void configureSessionBuilder(RepositorySystemSession.SessionBuilder session) {
+    public void configureSessionBuilder(RepositorySystemSession.SessionBuilder session) {
         session.setSystemProperties(System.getProperties());
         boolean caseSensitive = !Os.IS_WINDOWS;
         System.getenv().forEach((key, value) -> {
@@ -107,19 +106,19 @@ public class SessionBuilderSupplier {
         session.setArtifactDescriptorPolicy(getArtifactDescriptorPolicy());
     }
 
-    protected InternalScopeManager getScopeManager() {
+    public InternalScopeManager getScopeManager() {
         return this.scopeManager;
     }
 
-    protected DependencyTraverser getDependencyTraverser() {
+    public DependencyTraverser getDependencyTraverser() {
         return new FatArtifactTraverser();
     }
 
-    protected DependencyManager getDependencyManager() {
+    public DependencyManager getDependencyManager() {
         return this.getDependencyManager(true);
     }
 
-    protected DependencyManager getDependencyManager(boolean transitive) {
+    public DependencyManager getDependencyManager(boolean transitive) {
         if (getScopeManager() == null) {
             return transitive ? new TransitiveDependencyManager() : new ClassicDependencyManager();
         } else {
@@ -129,7 +128,7 @@ public class SessionBuilderSupplier {
         }
     }
 
-    protected DependencySelector getDependencySelector() {
+    public DependencySelector getDependencySelector() {
         if (getScopeManager() == null) {
             return new AndDependencySelector(
                     ScopeDependencySelector.legacy(
@@ -145,7 +144,7 @@ public class SessionBuilderSupplier {
         }
     }
 
-    protected DependencyGraphTransformer getDependencyGraphTransformer() {
+    public DependencyGraphTransformer getDependencyGraphTransformer() {
         if (getScopeManager() == null) {
             return new ChainedDependencyGraphTransformer(
                     new ConflictResolver(
@@ -165,13 +164,25 @@ public class SessionBuilderSupplier {
         }
     }
 
-    protected ArtifactTypeRegistry getArtifactTypeRegistry() {
+    public DefaultArtifactTypeRegistry getArtifactTypeRegistry() {
         DefaultArtifactTypeRegistry stereotypes = new DefaultArtifactTypeRegistry();
-        new DefaultTypeProvider().types().forEach(stereotypes::add);
+        stereotypes.add(new DefaultArtifactType("pom"));
+        stereotypes.add(new DefaultArtifactType("maven-plugin", "jar", "", "java"));
+        stereotypes.add(new DefaultArtifactType("jar", "jar", "", "java"));
+        stereotypes.add(new DefaultArtifactType("ejb", "jar", "", "java"));
+        stereotypes.add(new DefaultArtifactType("ejb-client", "jar", "client", "java"));
+        stereotypes.add(new DefaultArtifactType("test-jar", "jar", "tests", "java"));
+        stereotypes.add(new DefaultArtifactType("javadoc", "jar", "javadoc", "java"));
+        stereotypes.add(new DefaultArtifactType("java-source", "jar", "sources", "java", false, false));
+        stereotypes.add(new DefaultArtifactType("fatjar", "jar", "", "java", true, true));
+        stereotypes.add(new DefaultArtifactType("war", "war", "", "java", false, true));
+        stereotypes.add(new DefaultArtifactType("ear", "ear", "", "java", false, true));
+        stereotypes.add(new DefaultArtifactType("rar", "rar", "", "java", false, true));
+        stereotypes.add(new DefaultArtifactType("par", "par", "", "java", false, true));
         return stereotypes;
     }
 
-    protected ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
+    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
         return new SimpleArtifactDescriptorPolicy(true, true);
     }
 

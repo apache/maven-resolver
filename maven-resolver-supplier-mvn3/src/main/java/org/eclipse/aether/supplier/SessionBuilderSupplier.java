@@ -91,7 +91,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
                 scopeManagerConfiguration == null ? null : new ScopeManagerImpl(scopeManagerConfiguration); // nullable
     }
 
-    protected void configureSessionBuilder(SessionBuilder session) {
+    public void configureSessionBuilder(SessionBuilder session) {
         session.setSystemProperties(System.getProperties());
         boolean caseSensitive = !Os.IS_WINDOWS;
         System.getenv().forEach((key, value) -> {
@@ -109,19 +109,19 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         session.setArtifactDescriptorPolicy(getArtifactDescriptorPolicy());
     }
 
-    protected InternalScopeManager getScopeManager() {
+    public InternalScopeManager getScopeManager() {
         return this.scopeManager;
     }
 
-    protected DependencyTraverser getDependencyTraverser() {
+    public DependencyTraverser getDependencyTraverser() {
         return new FatArtifactTraverser();
     }
 
-    protected DependencyManager getDependencyManager() {
+    public DependencyManager getDependencyManager() {
         return this.getDependencyManager(false);
     }
 
-    protected DependencyManager getDependencyManager(boolean transitive) {
+    public DependencyManager getDependencyManager(boolean transitive) {
         if (getScopeManager() == null) {
             return transitive ? new TransitiveDependencyManager() : new ClassicDependencyManager();
         } else {
@@ -131,7 +131,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         }
     }
 
-    protected DependencySelector getDependencySelector() {
+    public DependencySelector getDependencySelector() {
         if (getScopeManager() == null) {
             return new AndDependencySelector(
                     ScopeDependencySelector.legacy(null, Arrays.asList(JavaScopes.TEST, JavaScopes.PROVIDED)),
@@ -149,7 +149,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         }
     }
 
-    protected DependencyGraphTransformer getDependencyGraphTransformer() {
+    public DependencyGraphTransformer getDependencyGraphTransformer() {
         if (getScopeManager() == null) {
             return new ChainedDependencyGraphTransformer(
                     new ConflictResolver(
@@ -169,7 +169,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         }
     }
 
-    protected ArtifactTypeRegistry getArtifactTypeRegistry() {
+    public DefaultArtifactTypeRegistry getArtifactTypeRegistry() {
         DefaultArtifactTypeRegistry stereotypes = new DefaultArtifactTypeRegistry();
         stereotypes.add(new DefaultArtifactType("pom"));
         stereotypes.add(new DefaultArtifactType("maven-plugin", "jar", "", "java"));
@@ -187,7 +187,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         return stereotypes;
     }
 
-    protected ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
+    public ArtifactDescriptorPolicy getArtifactDescriptorPolicy() {
         return new SimpleArtifactDescriptorPolicy(true, true);
     }
 
