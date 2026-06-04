@@ -98,6 +98,19 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
     public static final int DEFAULT_MAX_CYCLES = 10;
 
+    /**
+     * The allowed runs of collection (and re-collection). By default, there must be at least 1 run, so values smaller
+     * than 1 are considered configuration errors and will fail dependency collection.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_MAX_RUNS}
+     * @since 2.0.19
+     */
+    public static final String CONFIG_PROP_MAX_RUNS = DefaultDependencyCollector.CONFIG_PROPS_PREFIX + "maxRuns";
+
+    public static final int DEFAULT_MAX_RUNS = 5;
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected final RemoteRepositoryManager remoteRepositoryManager;
@@ -138,13 +151,24 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
         final Map<String, Object> stats = new LinkedHashMap<>();
         final AtomicInteger runs = new AtomicInteger(0);
+        final int maxRuns = ConfigUtils.getInteger(originalSession, DEFAULT_MAX_RUNS, CONFIG_PROP_MAX_RUNS);
+        if (maxRuns < 1) {
+            throw new DependencyCollectionException(
+                    new CollectResult(request),
+                    "Invalid configuration: '" + CONFIG_PROP_MAX_RUNS
+                            + "' configuration must be equal or grater than 1");
+        }
 
         CollectResult result = null;
 
         boolean finished = false;
         while (!finished) {
             final long time1 = System.nanoTime();
-            runs.incrementAndGet();
+            if (runs.incrementAndGet() > maxRuns) {
+                throw new DependencyCollectionException(
+                        new CollectResult(request),
+                        "Too many collection attempts (bug of used DependencyCollectionChecker?)");
+            }
 
             RepositorySystemSession session = dependencyCollectionChecker.prepare(setUpSession, request);
             final DependencyTraverser depTraverser = session.getDependencyTraverser();
