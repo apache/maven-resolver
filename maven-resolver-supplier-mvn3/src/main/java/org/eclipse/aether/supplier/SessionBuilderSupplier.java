@@ -33,6 +33,7 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.impl.scope.InternalScopeManager;
+import org.eclipse.aether.impl.scope.ScopeManagerConfiguration;
 import org.eclipse.aether.internal.impl.scope.ManagedDependencyContextRefiner;
 import org.eclipse.aether.internal.impl.scope.ManagedScopeDeriver;
 import org.eclipse.aether.internal.impl.scope.ManagedScopeSelector;
@@ -41,12 +42,17 @@ import org.eclipse.aether.internal.impl.scope.ScopeDependencySelector;
 import org.eclipse.aether.internal.impl.scope.ScopeManagerImpl;
 import org.eclipse.aether.resolution.ArtifactDescriptorPolicy;
 import org.eclipse.aether.util.artifact.DefaultArtifactTypeRegistry;
+import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.graph.manager.ClassicDependencyManager;
+import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.ConfigurableVersionSelector;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
+import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
+import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.traverser.FatArtifactTraverser;
 import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
@@ -60,7 +66,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * Extend this class and override methods to customize, if needed.
  * <p>
- * Resolver created as this is NOT using {@link org.eclipse.aether.scope.ScopeManager}!
+ * Resolver session created as this may or may not use {@link org.eclipse.aether.scope.ScopeManager}.
  *
  * @since 2.0.0
  */
@@ -68,9 +74,21 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     protected final RepositorySystem repositorySystem;
     protected final InternalScopeManager scopeManager;
 
+    /**
+     * Creates Resolver 2 session using Maven 3 elements without {@link InternalScopeManager}.
+     */
     public SessionBuilderSupplier(RepositorySystem repositorySystem) {
+        this(repositorySystem, null);
+    }
+
+    /**
+     * Creates Resolver 2 session using Maven 3 elements with or without {@link InternalScopeManager}.
+     */
+    public SessionBuilderSupplier(
+            RepositorySystem repositorySystem, ScopeManagerConfiguration scopeManagerConfiguration) {
         this.repositorySystem = requireNonNull(repositorySystem);
-        this.scopeManager = new ScopeManagerImpl(Maven3ScopeManagerConfiguration.INSTANCE);
+        this.scopeManager =
+                scopeManagerConfiguration == null ? null : new ScopeManagerImpl(scopeManagerConfiguration); // nullable
     }
 
     protected void configureSessionBuilder(SessionBuilder session) {
@@ -80,7 +98,9 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
             key = "env." + (caseSensitive ? key : key.toUpperCase(Locale.ENGLISH));
             session.setSystemProperty(key, value);
         });
-        session.setScopeManager(scopeManager);
+        if (getScopeManager() != null) {
+            session.setScopeManager(getScopeManager());
+        }
         session.setDependencyTraverser(getDependencyTraverser());
         session.setDependencyManager(getDependencyManager());
         session.setDependencySelector(getDependencySelector());
@@ -98,27 +118,55 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
     }
 
     protected DependencyManager getDependencyManager() {
-        return new ClassicDependencyManager(getScopeManager());
+        return this.getDependencyManager(false);
+    }
+
+    protected DependencyManager getDependencyManager(boolean transitive) {
+        if (getScopeManager() == null) {
+            return transitive ? new TransitiveDependencyManager() : new ClassicDependencyManager();
+        } else {
+            return transitive
+                    ? new TransitiveDependencyManager(getScopeManager())
+                    : new ClassicDependencyManager(getScopeManager());
+        }
     }
 
     protected DependencySelector getDependencySelector() {
-        return new AndDependencySelector(
-                ScopeDependencySelector.legacy(
-                        null,
-                        Arrays.asList(
-                                Maven3ScopeManagerConfiguration.DS_TEST, Maven3ScopeManagerConfiguration.DS_PROVIDED)),
-                OptionalDependencySelector.fromDirect(),
-                new ExclusionDependencySelector());
+        if (getScopeManager() == null) {
+            return new AndDependencySelector(
+                    ScopeDependencySelector.legacy(null, Arrays.asList(JavaScopes.TEST, JavaScopes.PROVIDED)),
+                    OptionalDependencySelector.fromDirect(),
+                    new ExclusionDependencySelector());
+        } else {
+            return new AndDependencySelector(
+                    ScopeDependencySelector.legacy(
+                            null,
+                            Arrays.asList(
+                                    Maven3ScopeManagerConfiguration.DS_TEST,
+                                    Maven3ScopeManagerConfiguration.DS_PROVIDED)),
+                    OptionalDependencySelector.fromDirect(),
+                    new ExclusionDependencySelector());
+        }
     }
 
     protected DependencyGraphTransformer getDependencyGraphTransformer() {
-        return new ChainedDependencyGraphTransformer(
-                new ConflictResolver(
-                        new ConfigurableVersionSelector(),
-                        new ManagedScopeSelector(getScopeManager()),
-                        new SimpleOptionalitySelector(),
-                        new ManagedScopeDeriver(getScopeManager())),
-                new ManagedDependencyContextRefiner(getScopeManager()));
+        if (getScopeManager() == null) {
+            return new ChainedDependencyGraphTransformer(
+                    new ConflictResolver(
+                            new ConfigurableVersionSelector(),
+                            new JavaScopeSelector(),
+                            new SimpleOptionalitySelector(),
+                            new JavaScopeDeriver()),
+                    new JavaDependencyContextRefiner());
+        } else {
+            return new ChainedDependencyGraphTransformer(
+                    new ConflictResolver(
+                            new ConfigurableVersionSelector(),
+                            new ManagedScopeSelector(getScopeManager()),
+                            new SimpleOptionalitySelector(),
+                            new ManagedScopeDeriver(getScopeManager())),
+                    new ManagedDependencyContextRefiner(getScopeManager()));
+        }
     }
 
     protected ArtifactTypeRegistry getArtifactTypeRegistry() {
@@ -131,6 +179,7 @@ public class SessionBuilderSupplier implements Supplier<SessionBuilder> {
         stereotypes.add(new DefaultArtifactType("test-jar", "jar", "tests", "java"));
         stereotypes.add(new DefaultArtifactType("javadoc", "jar", "javadoc", "java"));
         stereotypes.add(new DefaultArtifactType("java-source", "jar", "sources", "java", false, false));
+        stereotypes.add(new DefaultArtifactType("fatjar", "jar", "", "java", true, true));
         stereotypes.add(new DefaultArtifactType("war", "war", "", "java", false, true));
         stereotypes.add(new DefaultArtifactType("ear", "ear", "", "java", false, true));
         stereotypes.add(new DefaultArtifactType("rar", "rar", "", "java", false, true));

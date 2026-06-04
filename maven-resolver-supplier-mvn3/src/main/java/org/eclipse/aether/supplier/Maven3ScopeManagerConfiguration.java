@@ -33,6 +33,7 @@ import org.eclipse.aether.impl.scope.ScopeManagerConfiguration;
 import org.eclipse.aether.internal.impl.scope.ScopeManagerDump;
 import org.eclipse.aether.scope.DependencyScope;
 import org.eclipse.aether.scope.ResolutionScope;
+import org.eclipse.aether.util.artifact.JavaScopes;
 
 import static org.eclipse.aether.impl.scope.BuildScopeQuery.all;
 import static org.eclipse.aether.impl.scope.BuildScopeQuery.byBuildPath;
@@ -44,22 +45,24 @@ import static org.eclipse.aether.impl.scope.BuildScopeQuery.union;
 /**
  * Maven3 scope configurations. Configures scope manager to support Maven3 scopes.
  * <p>
- * This manager supports the old Maven 3 dependency scopes + new "compile-only".
+ * This manager supports the old Maven 3 dependency scopes + new scopes.
  * <p>
- * Note: Maven3 CANNOT support Maven 4 scopes "test-only" and "test-runtime", as it does not distinguish
+ * Note: Maven3 CANNOT support new scopes "test-only" and "test-runtime", as it does not distinguish
  * resolution scope (the class {@code ResolutionScope} has only "TEST", instead of "TEST_COMPILE" and "TEST_RUNTIME").
+ * <em>This scope manager configuration is not used in Maven 3!</em>
  *
  * @since 2.0.11
  */
 public final class Maven3ScopeManagerConfiguration implements ScopeManagerConfiguration {
     public static final Maven3ScopeManagerConfiguration INSTANCE = new Maven3ScopeManagerConfiguration();
     public static final String DS_NONE = "none";
-    public static final String DS_COMPILE = "compile"; // JavaScopes.COMPILE;
+    public static final String DS_COMPILE = JavaScopes.COMPILE;
+    public static final String DS_RUNTIME = JavaScopes.RUNTIME;
+    public static final String DS_PROVIDED = JavaScopes.PROVIDED;
+    public static final String DS_SYSTEM = JavaScopes.SYSTEM;
+    public static final String DS_TEST = JavaScopes.TEST;
+
     public static final String DS_COMPILE_ONLY = "compile-only";
-    public static final String DS_RUNTIME = "runtime"; // JavaScopes.RUNTIME;
-    public static final String DS_PROVIDED = "provided"; // JavaScopes.PROVIDED;
-    public static final String DS_SYSTEM = "system"; // JavaScopes.SYSTEM;
-    public static final String DS_TEST = "test"; // JavaScopes.TEST;
     public static final String DS_TEST_ONLY = "test-only";
     public static final String DS_TEST_RUNTIME = "test-runtime";
 

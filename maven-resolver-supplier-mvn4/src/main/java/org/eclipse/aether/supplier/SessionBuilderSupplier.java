@@ -20,12 +20,10 @@ package org.eclipse.aether.supplier;
 
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.apache.maven.api.DependencyScope;
 import org.apache.maven.repository.internal.artifact.FatArtifactTraverser;
-import org.apache.maven.repository.internal.scopes.Maven4ScopeManagerConfiguration;
 import org.apache.maven.repository.internal.type.DefaultTypeProvider;
 import org.apache.maven.utils.Os;
 import org.eclipse.aether.RepositorySystem;
@@ -38,6 +36,7 @@ import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.impl.scope.InternalScopeManager;
+import org.eclipse.aether.impl.scope.ScopeManagerConfiguration;
 import org.eclipse.aether.internal.impl.scope.ManagedDependencyContextRefiner;
 import org.eclipse.aether.internal.impl.scope.ManagedScopeDeriver;
 import org.eclipse.aether.internal.impl.scope.ManagedScopeSelector;
@@ -53,8 +52,13 @@ import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.ConfigurableVersionSelector;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
+import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
+import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.repository.SimpleArtifactDescriptorPolicy;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A simple {@link Supplier} of {@link SessionBuilder} instances, that on each call supplies newly
@@ -69,16 +73,38 @@ public class SessionBuilderSupplier {
     protected final RepositorySystem repositorySystem;
     protected final InternalScopeManager scopeManager;
 
+    /**
+     * Creates Resolver 2 session using Maven 4 elements without {@link InternalScopeManager}.
+     */
     public SessionBuilderSupplier(RepositorySystem repositorySystem) {
-        this.repositorySystem = Objects.requireNonNull(repositorySystem);
-        this.scopeManager = new ScopeManagerImpl(Maven4ScopeManagerConfiguration.INSTANCE);
+        this(repositorySystem, null);
     }
 
-    /** @deprecated */
-    @Deprecated
-    public SessionBuilderSupplier() {
-        this.repositorySystem = null;
-        this.scopeManager = new ScopeManagerImpl(Maven4ScopeManagerConfiguration.INSTANCE);
+    /**
+     * Creates Resolver 2 session using Maven 4 elements with or without {@link InternalScopeManager}.
+     */
+    public SessionBuilderSupplier(
+            RepositorySystem repositorySystem, ScopeManagerConfiguration scopeManagerConfiguration) {
+        this.repositorySystem = requireNonNull(repositorySystem);
+        this.scopeManager = scopeManagerConfiguration == null ? null : new ScopeManagerImpl(scopeManagerConfiguration);
+    }
+
+    protected void configureSessionBuilder(RepositorySystemSession.SessionBuilder session) {
+        session.setSystemProperties(System.getProperties());
+        boolean caseSensitive = !Os.IS_WINDOWS;
+        System.getenv().forEach((key, value) -> {
+            key = "env." + (caseSensitive ? key : key.toUpperCase(Locale.ENGLISH));
+            session.setSystemProperty(key, value);
+        });
+        if (getScopeManager() != null) {
+            session.setScopeManager(getScopeManager());
+        }
+        session.setDependencyTraverser(getDependencyTraverser());
+        session.setDependencyManager(getDependencyManager());
+        session.setDependencySelector(getDependencySelector());
+        session.setDependencyGraphTransformer(getDependencyGraphTransformer());
+        session.setArtifactTypeRegistry(getArtifactTypeRegistry());
+        session.setArtifactDescriptorPolicy(getArtifactDescriptorPolicy());
     }
 
     protected InternalScopeManager getScopeManager() {
@@ -93,29 +119,50 @@ public class SessionBuilderSupplier {
         return this.getDependencyManager(true);
     }
 
-    public DependencyManager getDependencyManager(boolean transitive) {
-        return transitive
-                ? new TransitiveDependencyManager(getScopeManager())
-                : new ClassicDependencyManager(getScopeManager());
+    protected DependencyManager getDependencyManager(boolean transitive) {
+        if (getScopeManager() == null) {
+            return transitive ? new TransitiveDependencyManager() : new ClassicDependencyManager();
+        } else {
+            return transitive
+                    ? new TransitiveDependencyManager(getScopeManager())
+                    : new ClassicDependencyManager(getScopeManager());
+        }
     }
 
     protected DependencySelector getDependencySelector() {
-        return new AndDependencySelector(new DependencySelector[] {
-            ScopeDependencySelector.legacy(
-                    null, Arrays.asList(DependencyScope.TEST.id(), DependencyScope.PROVIDED.id())),
-            OptionalDependencySelector.fromDirect(),
-            new ExclusionDependencySelector()
-        });
+        if (getScopeManager() == null) {
+            return new AndDependencySelector(
+                    ScopeDependencySelector.legacy(
+                            null, Arrays.asList(DependencyScope.TEST.id(), DependencyScope.PROVIDED.id())),
+                    OptionalDependencySelector.fromDirect(),
+                    new ExclusionDependencySelector());
+        } else {
+            return new AndDependencySelector(
+                    ScopeDependencySelector.legacy(
+                            null, Arrays.asList(DependencyScope.TEST.id(), DependencyScope.PROVIDED.id())),
+                    OptionalDependencySelector.fromDirect(),
+                    new ExclusionDependencySelector());
+        }
     }
 
     protected DependencyGraphTransformer getDependencyGraphTransformer() {
-        return new ChainedDependencyGraphTransformer(
-                new ConflictResolver(
-                        new ConfigurableVersionSelector(),
-                        new ManagedScopeSelector(getScopeManager()),
-                        new SimpleOptionalitySelector(),
-                        new ManagedScopeDeriver(getScopeManager())),
-                new ManagedDependencyContextRefiner(getScopeManager()));
+        if (getScopeManager() == null) {
+            return new ChainedDependencyGraphTransformer(
+                    new ConflictResolver(
+                            new ConfigurableVersionSelector(),
+                            new JavaScopeSelector(),
+                            new SimpleOptionalitySelector(),
+                            new JavaScopeDeriver()),
+                    new JavaDependencyContextRefiner());
+        } else {
+            return new ChainedDependencyGraphTransformer(
+                    new ConflictResolver(
+                            new ConfigurableVersionSelector(),
+                            new ManagedScopeSelector(getScopeManager()),
+                            new SimpleOptionalitySelector(),
+                            new ManagedScopeDeriver(getScopeManager())),
+                    new ManagedDependencyContextRefiner(getScopeManager()));
+        }
     }
 
     protected ArtifactTypeRegistry getArtifactTypeRegistry() {
@@ -128,27 +175,19 @@ public class SessionBuilderSupplier {
         return new SimpleArtifactDescriptorPolicy(true, true);
     }
 
-    protected void configureSessionBuilder(RepositorySystemSession.SessionBuilder session) {
-        session.setDependencyTraverser(this.getDependencyTraverser());
-        session.setDependencyManager(this.getDependencyManager());
-        session.setDependencySelector(this.getDependencySelector());
-        session.setDependencyGraphTransformer(this.getDependencyGraphTransformer());
-        session.setArtifactTypeRegistry(this.getArtifactTypeRegistry());
-        session.setArtifactDescriptorPolicy(this.getArtifactDescriptorPolicy());
-        session.setScopeManager(this.getScopeManager());
-
-        session.setSystemProperties(System.getProperties());
-        boolean caseSensitive = !Os.IS_WINDOWS;
-        System.getenv().forEach((key, value) -> {
-            key = "env." + (caseSensitive ? key : key.toUpperCase(Locale.ENGLISH));
-            session.setSystemProperty(key, value);
-        });
-    }
-
+    /**
+     * Creates a new Maven-like repository system session by initializing the session with values typical for
+     * Maven-based resolution. In more detail, this method configures settings relevant for the processing of dependency
+     * graphs, most other settings remain at their generic default value. Use the various setters to further configure
+     * the session with authentication, mirror, proxy and other information required for your environment. At least,
+     * local repository manager needs to be configured to make session be able to create session instance.
+     *
+     * @return SessionBuilder configured with minimally required things for "Maven-based resolution". At least LRM must
+     * be set on builder to make it able to create session instances.
+     */
     public RepositorySystemSession.SessionBuilder get() {
-        Objects.requireNonNull(this.repositorySystem, "repositorySystem");
-        RepositorySystemSession.SessionBuilder builder = this.repositorySystem.createSessionBuilder();
-        this.configureSessionBuilder(builder);
+        RepositorySystemSession.SessionBuilder builder = repositorySystem.createSessionBuilder();
+        configureSessionBuilder(builder);
         return builder;
     }
 }
