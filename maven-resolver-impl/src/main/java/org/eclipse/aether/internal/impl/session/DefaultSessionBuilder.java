@@ -35,6 +35,7 @@ import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.RepositorySystemSession.SessionBuilder;
 import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.collection.DependencyCollectionChecker;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
@@ -132,6 +133,8 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     private Supplier<RepositoryCache> repositoryCacheSupplier = DEFAULT_REPOSITORY_CACHE_SUPPLIER;
 
     private ScopeManager scopeManager;
+
+    private DependencyCollectionChecker dependencyCollectionChecker = DependencyCollectionChecker.NOOP;
 
     private final ArrayList<Runnable> onSessionCloseHandlers = new ArrayList<>();
 
@@ -364,6 +367,13 @@ public final class DefaultSessionBuilder implements SessionBuilder {
     }
 
     @Override
+    public SessionBuilder setDependencyCollectionChecker(DependencyCollectionChecker dependencyCollectionChecker) {
+        requireNonNull(dependencyCollectionChecker, "null dependencyCollectionChecker");
+        this.dependencyCollectionChecker = dependencyCollectionChecker;
+        return null;
+    }
+
+    @Override
     public SessionBuilder addOnSessionEndedHandler(Runnable handler) {
         requireNonNull(handler, "null handler");
         onSessionCloseHandlers.add(handler);
@@ -485,6 +495,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
                 sessionDataSupplier.get(),
                 repositoryCacheSupplier.get(),
                 scopeManager,
+                dependencyCollectionChecker,
                 onSessionCloseHandlers,
                 repositorySystem,
                 repositorySystemLifecycle);

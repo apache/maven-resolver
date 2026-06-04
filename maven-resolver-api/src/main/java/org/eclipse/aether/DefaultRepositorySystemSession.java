@@ -25,6 +25,7 @@ import java.util.function.Function;
 
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.collection.DependencyCollectionChecker;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
@@ -128,6 +129,8 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
 
     private ScopeManager scopeManager;
 
+    private DependencyCollectionChecker dependencyCollectionChecker;
+
     private final Function<Runnable, Boolean> onSessionEndedRegistrar;
 
     /**
@@ -165,6 +168,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         proxySelector = PassthroughProxySelector.INSTANCE;
         authenticationSelector = PassthroughAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
+        dependencyCollectionChecker = DependencyCollectionChecker.NOOP;
         data = new DefaultSessionData();
         this.onSessionEndedRegistrar = requireNonNull(onSessionEndedRegistrar, "onSessionEndedRegistrar");
     }
@@ -206,6 +210,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         setData(session.getData());
         setCache(session.getCache());
         setScopeManager(session.getScopeManager());
+        setDependencyCollectionChecker(session.getDependencyCollectionChecker());
         this.onSessionEndedRegistrar = session::addOnSessionEndedHandler;
     }
 
@@ -830,6 +835,24 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         } else {
             return SystemDependencyScope.LEGACY;
         }
+    }
+
+    @Override
+    public DependencyCollectionChecker getDependencyCollectionChecker() {
+        return dependencyCollectionChecker;
+    }
+
+    /**
+     * Sets the dependency collection checker, may not be {@code null}.
+     *
+     * @param dependencyCollectionChecker The dependency collection checker, never {@code null}.
+     * @return The session for chaining, never {@code null}.
+     * @since 2.0.19
+     */
+    public DefaultRepositorySystemSession setDependencyCollectionChecker(
+            DependencyCollectionChecker dependencyCollectionChecker) {
+        this.dependencyCollectionChecker = requireNonNull(dependencyCollectionChecker);
+        return this;
     }
 
     /**

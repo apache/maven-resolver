@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.collection.DependencyCollectionChecker;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
@@ -406,6 +407,15 @@ public interface RepositorySystemSession {
         SessionBuilder setScopeManager(ScopeManager scopeManager);
 
         /**
+         * Sets the dependency collection checker, never {@code null}.
+         *
+         * @param dependencyCollectionChecker The checker instance, may not be {@code null}.
+         * @return The session for chaining, never {@code null}.
+         * @since 2.0.19
+         */
+        SessionBuilder setDependencyCollectionChecker(DependencyCollectionChecker dependencyCollectionChecker);
+
+        /**
          * Adds on session ended handler to be immediately registered when this builder creates session.
          *
          * @param handler The on session ended handler, may not be {@code null}.
@@ -781,6 +791,14 @@ public interface RepositorySystemSession {
      * @since 2.0.0
      */
     SystemDependencyScope getSystemDependencyScope();
+
+    /**
+     * Returns the dependency collector checker, never {@code null}.
+     *
+     * @return The effective {@link DependencyCollectionChecker} instance, never {@code null}.
+     * @since 2.0.19
+     */
+    DependencyCollectionChecker getDependencyCollectionChecker();
 
     /**
      * Registers a handler to execute when this session closed.

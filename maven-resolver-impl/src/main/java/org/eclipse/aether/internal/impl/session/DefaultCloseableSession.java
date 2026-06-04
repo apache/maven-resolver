@@ -31,6 +31,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.collection.DependencyCollectionChecker;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
@@ -113,6 +114,8 @@ public final class DefaultCloseableSession implements CloseableSession {
 
     private final ScopeManager scopeManager;
 
+    private final DependencyCollectionChecker dependencyCollectionChecker;
+
     private final RepositorySystem repositorySystem;
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
@@ -147,6 +150,7 @@ public final class DefaultCloseableSession implements CloseableSession {
             SessionData data,
             RepositoryCache cache,
             ScopeManager scopeManager,
+            DependencyCollectionChecker dependencyCollectionChecker,
             List<Runnable> onSessionEndedHandlers,
             RepositorySystem repositorySystem,
             RepositorySystemLifecycle repositorySystemLifecycle) {
@@ -177,6 +181,7 @@ public final class DefaultCloseableSession implements CloseableSession {
         this.data = requireNonNull(data);
         this.cache = cache;
         this.scopeManager = scopeManager;
+        this.dependencyCollectionChecker = requireNonNull(dependencyCollectionChecker);
 
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);
@@ -341,6 +346,11 @@ public final class DefaultCloseableSession implements CloseableSession {
     @Override
     public ScopeManager getScopeManager() {
         return scopeManager;
+    }
+
+    @Override
+    public DependencyCollectionChecker getDependencyCollectionChecker() {
+        return dependencyCollectionChecker;
     }
 
     @Override
