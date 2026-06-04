@@ -181,7 +181,7 @@ public final class DefaultCloseableSession implements CloseableSession {
         this.data = requireNonNull(data);
         this.cache = cache;
         this.scopeManager = scopeManager;
-        this.dependencyCollectionChecker = requireNonNull(dependencyCollectionChecker);
+        this.dependencyCollectionChecker = dependencyCollectionChecker;
 
         this.repositorySystem = requireNonNull(repositorySystem);
         this.repositorySystemLifecycle = requireNonNull(repositorySystemLifecycle);

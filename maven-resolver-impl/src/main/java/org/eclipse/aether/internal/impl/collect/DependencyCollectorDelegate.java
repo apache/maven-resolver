@@ -145,7 +145,9 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         final InternalScopeManager scopeManager = (InternalScopeManager) originalSession.getScopeManager();
         final RepositorySystemSession setUpSession = setUpSession(originalSession, request, scopeManager);
         final DependencyCollectionChecker dependencyCollectionChecker =
-                originalSession.getDependencyCollectionChecker();
+                originalSession.getDependencyCollectionChecker() == null
+                        ? DependencyCollectionChecker.NOOP
+                        : originalSession.getDependencyCollectionChecker();
 
         final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 

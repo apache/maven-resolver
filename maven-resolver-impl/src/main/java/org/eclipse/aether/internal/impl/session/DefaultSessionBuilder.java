@@ -134,7 +134,7 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     private ScopeManager scopeManager;
 
-    private DependencyCollectionChecker dependencyCollectionChecker = DependencyCollectionChecker.NOOP;
+    private DependencyCollectionChecker dependencyCollectionChecker;
 
     private final ArrayList<Runnable> onSessionCloseHandlers = new ArrayList<>();
 
@@ -368,7 +368,6 @@ public final class DefaultSessionBuilder implements SessionBuilder {
 
     @Override
     public SessionBuilder setDependencyCollectionChecker(DependencyCollectionChecker dependencyCollectionChecker) {
-        requireNonNull(dependencyCollectionChecker, "null dependencyCollectionChecker");
         this.dependencyCollectionChecker = dependencyCollectionChecker;
         return null;
     }

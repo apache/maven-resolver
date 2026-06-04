@@ -168,7 +168,6 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
         proxySelector = PassthroughProxySelector.INSTANCE;
         authenticationSelector = PassthroughAuthenticationSelector.INSTANCE;
         artifactTypeRegistry = NullArtifactTypeRegistry.INSTANCE;
-        dependencyCollectionChecker = DependencyCollectionChecker.NOOP;
         data = new DefaultSessionData();
         this.onSessionEndedRegistrar = requireNonNull(onSessionEndedRegistrar, "onSessionEndedRegistrar");
     }
@@ -843,15 +842,15 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     }
 
     /**
-     * Sets the dependency collection checker, may not be {@code null}.
+     * Sets the dependency collection checker, may be {@code null}.
      *
-     * @param dependencyCollectionChecker The dependency collection checker, never {@code null}.
+     * @param dependencyCollectionChecker The dependency collection checker, may be {@code null}.
      * @return The session for chaining, never {@code null}.
      * @since 2.0.19
      */
     public DefaultRepositorySystemSession setDependencyCollectionChecker(
             DependencyCollectionChecker dependencyCollectionChecker) {
-        this.dependencyCollectionChecker = requireNonNull(dependencyCollectionChecker);
+        this.dependencyCollectionChecker = dependencyCollectionChecker;
         return this;
     }
 

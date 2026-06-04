@@ -407,10 +407,10 @@ public interface RepositorySystemSession {
         SessionBuilder setScopeManager(ScopeManager scopeManager);
 
         /**
-         * Sets the dependency collection checker, never {@code null}.
+         * Sets the dependency collection checker, may be {@code null}.
          *
-         * @param dependencyCollectionChecker The checker instance, may not be {@code null}.
-         * @return The session for chaining, never {@code null}.
+         * @param dependencyCollectionChecker The checker instance, may be {@code null}.
+         * @return The session for chaining, may be {@code null}.
          * @since 2.0.19
          */
         SessionBuilder setDependencyCollectionChecker(DependencyCollectionChecker dependencyCollectionChecker);
@@ -793,9 +793,9 @@ public interface RepositorySystemSession {
     SystemDependencyScope getSystemDependencyScope();
 
     /**
-     * Returns the dependency collector checker, never {@code null}.
+     * Returns the dependency collector checker, may be {@code null}.
      *
-     * @return The effective {@link DependencyCollectionChecker} instance, never {@code null}.
+     * @return The effective {@link DependencyCollectionChecker} instance, may be {@code null}.
      * @since 2.0.19
      */
     DependencyCollectionChecker getDependencyCollectionChecker();
