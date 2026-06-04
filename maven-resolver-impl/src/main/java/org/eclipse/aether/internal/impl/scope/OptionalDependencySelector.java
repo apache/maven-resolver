@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.internal.impl.scope;
 
+import java.util.Collection;
 import java.util.Objects;
-import java.util.Set;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
@@ -67,11 +67,11 @@ public final class OptionalDependencySelector implements DependencySelector {
     private final int seed;
     private final int depth;
     private final int applyFrom;
-    private final Set<String> ignoredKeys;
-    private final Set<String> unselectedKeys;
+    private final Collection<String> ignoredKeys;
+    private final Collection<String> unselectedKeys;
 
     private OptionalDependencySelector(
-            int seed, int depth, int applyFrom, Set<String> ignoredKeys, Set<String> unselectedKeys) {
+            int seed, int depth, int applyFrom, Collection<String> ignoredKeys, Collection<String> unselectedKeys) {
         this.seed = seed;
         this.depth = depth;
         this.applyFrom = applyFrom;
@@ -106,8 +106,8 @@ public final class OptionalDependencySelector implements DependencySelector {
                 seed,
                 depth + 1,
                 applyFrom,
-                (Set<String>) context.getSession().getData().get(IGNORED_KEYS),
-                (Set<String>) context.getSession().getData().get(UNSELECTED_KEYS));
+                (Collection<String>) context.getSession().getData().get(IGNORED_KEYS),
+                (Collection<String>) context.getSession().getData().get(UNSELECTED_KEYS));
     }
 
     @Override
