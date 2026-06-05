@@ -19,7 +19,10 @@
 package org.eclipse.aether.named.ipc;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
+@DisabledOnOs(OS.WINDOWS)
 public class IpcAdapterIT extends NamedLockFactoryAdapterTestSupport {
     @BeforeAll
     static void createNamedLockFactory() {
