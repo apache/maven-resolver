@@ -18,11 +18,13 @@
  */
 package org.eclipse.aether.internal.impl.scope;
 
+import java.util.Collection;
 import java.util.Objects;
 
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -35,6 +37,9 @@ import static java.util.Objects.requireNonNull;
  * @see Dependency#isOptional()
  */
 public final class OptionalDependencySelector implements DependencySelector {
+    public static final String IGNORED_KEYS = OptionalDependencySelector.class.getName() + ".ignored";
+    public static final String UNSELECTED_KEYS = OptionalDependencySelector.class.getName() + ".unselected";
+
     /**
      * Excludes optional dependencies always (from root).
      */
@@ -56,29 +61,53 @@ public final class OptionalDependencySelector implements DependencySelector {
         if (applyFrom < 1) {
             throw new IllegalArgumentException("applyFrom must be non-zero and positive");
         }
-        return new OptionalDependencySelector(Objects.hash(applyFrom), 0, applyFrom);
+        return new OptionalDependencySelector(Objects.hash(applyFrom), 0, applyFrom, null, null);
     }
 
     private final int seed;
     private final int depth;
     private final int applyFrom;
+    private final Collection<String> ignoredKeys;
+    private final Collection<String> unselectedKeys;
 
-    private OptionalDependencySelector(int seed, int depth, int applyFrom) {
+    private OptionalDependencySelector(
+            int seed, int depth, int applyFrom, Collection<String> ignoredKeys, Collection<String> unselectedKeys) {
         this.seed = seed;
         this.depth = depth;
         this.applyFrom = applyFrom;
+        this.ignoredKeys = ignoredKeys; // nullable
+        this.unselectedKeys = unselectedKeys; // nullable
     }
 
     @Override
     public boolean selectDependency(Dependency dependency) {
         requireNonNull(dependency, "dependency cannot be null");
-        return depth < applyFrom || !dependency.isOptional();
+        String key = null;
+        if (ignoredKeys != null || unselectedKeys != null) {
+            key = ArtifactIdUtils.toId(dependency.getArtifact());
+        }
+        if (ignoredKeys != null) {
+            if (ignoredKeys.contains(key)) {
+                return true;
+            }
+        }
+        boolean result = depth < applyFrom || !dependency.isOptional();
+        if (!result && unselectedKeys != null) {
+            unselectedKeys.add(key);
+        }
+        return result;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
-        return new OptionalDependencySelector(seed, depth + 1, applyFrom);
+        return new OptionalDependencySelector(
+                seed,
+                depth + 1,
+                applyFrom,
+                (Collection<String>) context.getSession().getData().get(IGNORED_KEYS),
+                (Collection<String>) context.getSession().getData().get(UNSELECTED_KEYS));
     }
 
     @Override
