@@ -39,10 +39,6 @@ and supplies new, ready-to-use `RepositorySystem` instance for each call. Class 
 no instance caching or anything alike is present: all that is concern of caller, just like proper shutdown 
 of the created resolver instances is.
 
-The `RepositorySystemSession` should be created using the 
-`org.apache.maven.repository.internal.MavenRepositorySystemUtils#newSession()` method
-and local repository added to it in usual way (there is no change in this area).
-
 The supplier class is written in a way, to allow easy customization if needed: just extend the class and override
 method as needed (all methods are protected).
 

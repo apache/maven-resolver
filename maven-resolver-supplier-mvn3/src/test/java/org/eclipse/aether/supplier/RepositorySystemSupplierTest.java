@@ -44,7 +44,7 @@ public class RepositorySystemSupplierTest {
     @Test
     void smoke() throws Exception {
         try (RepositorySystem system = new RepositorySystemSupplier().get();
-                CloseableSession session = new SessionBuilderSupplier(system)
+                CloseableSession session = new SessionBuilderSupplier(system, Maven3ScopeManagerConfiguration.INSTANCE)
                         .get()
                         .withLocalRepositoryBaseDirectories(new File("target/local-repo").toPath())
                         .build()) {
@@ -66,7 +66,7 @@ public class RepositorySystemSupplierTest {
     @Test
     void smokeV2Feature() throws Exception {
         try (RepositorySystem system = new RepositorySystemSupplier().get();
-                CloseableSession session = new SessionBuilderSupplier(system)
+                CloseableSession session = new SessionBuilderSupplier(system, Maven3ScopeManagerConfiguration.INSTANCE)
                         .get()
                         .withLocalRepositoryBaseDirectories(new File("target/local-repo").toPath())
                         .build()) {
