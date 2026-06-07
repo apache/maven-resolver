@@ -22,6 +22,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -84,15 +85,25 @@ public interface SmartExecutor extends AutoCloseable {
         @Override
         public void submit(Runnable runnable) {
             ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-            executor.submit(() -> {
-                ClassLoader old = Thread.currentThread().getContextClassLoader();
-                Thread.currentThread().setContextClassLoader(tccl);
+            try {
+                executor.submit(() -> {
+                    ClassLoader old = Thread.currentThread().getContextClassLoader();
+                    Thread.currentThread().setContextClassLoader(tccl);
+                    try {
+                        runnable.run();
+                    } finally {
+                        Thread.currentThread().setContextClassLoader(old);
+                    }
+                });
+            } catch (RejectedExecutionException e) {
                 try {
                     runnable.run();
-                } finally {
-                    Thread.currentThread().setContextClassLoader(old);
+                } catch (RuntimeException | Error t) {
+                    // swallow to match async submit() semantics where exceptions
+                    // are captured by the Future; callers like RunnableErrorForwarder
+                    // already record the error before re-throwing
                 }
-            });
+            }
         }
 
         @Override
@@ -136,13 +147,25 @@ public interface SmartExecutor extends AutoCloseable {
         public void submit(Runnable runnable) {
             try {
                 semaphore.acquire();
-                executor.submit(() -> {
+                try {
+                    executor.submit(() -> {
+                        try {
+                            runnable.run();
+                        } finally {
+                            semaphore.release();
+                        }
+                    });
+                } catch (RejectedExecutionException e) {
                     try {
                         runnable.run();
+                    } catch (RuntimeException | Error t) {
+                        // swallow to match async submit() semantics where exceptions
+                        // are captured by the Future; callers like RunnableErrorForwarder
+                        // already record the error before re-throwing
                     } finally {
                         semaphore.release();
                     }
-                });
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
