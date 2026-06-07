@@ -497,9 +497,7 @@ public class IpcServer {
                     .map(k -> IpcServer.this.locks.computeIfAbsent(k, Lock::new))
                     .forEach(l -> {
                         l.unlock(this);
-                        if (l.isEmpty()) {
-                            IpcServer.this.locks.remove(l.key, l);
-                        }
+                        IpcServer.this.locks.compute(l.key, (k, v) -> (v == l && v.isEmpty()) ? null : v);
                     });
         }
     }
