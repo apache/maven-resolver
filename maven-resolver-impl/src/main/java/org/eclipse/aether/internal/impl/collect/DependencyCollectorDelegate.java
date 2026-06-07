@@ -550,7 +550,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
         final int maxCycles;
 
-        String errorPath;
+        volatile String errorPath;
 
         public Results(CollectResult result, RepositorySystemSession session) {
             this.result = result;
