@@ -312,7 +312,7 @@ final class WagonTransporter implements Transporter {
             try {
                 connectWagon(wagon);
             } catch (Exception e) {
-                wagons.add(wagon);
+                releaseWagon(wagon);
                 throw e;
             }
         }
