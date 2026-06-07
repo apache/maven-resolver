@@ -614,9 +614,9 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Adds node children: this method should be "batch" used, as all (potential) children should be added at once.
          * Method will return really added ones, as this class avoids cycles. Those forming a cycle are added to {@link Path}
-         * structure but are bot recursed, keeping {@link Path} cycle free.
+         * structure but are not recursed (returned in list), keeping {@link Path} cycle free.
          * This method also maintains "conflictIdPath", that is a list of "conflict partition IDs" leading from root
-         * toward given instance. This implies that this conflict resolver, by its nature "recalculates" the
+         * toward given instance. This implies that this conflict resolver, by its nature "redoes" the
          * {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} calculated by {@link ConflictIdSorter}.
          */
         private List<Path> addChildren(List<DependencyNode> children) throws RepositoryException {
