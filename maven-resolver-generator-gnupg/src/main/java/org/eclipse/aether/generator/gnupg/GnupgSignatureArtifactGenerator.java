@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -50,7 +49,7 @@ import org.slf4j.LoggerFactory;
 final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
     private static final String ARTIFACT_EXTENSION = ".asc";
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final ArrayList<Artifact> artifacts;
+    private final List<Artifact> artifacts;
     private final Predicate<Artifact> signableArtifactPredicate;
     private final PGPSecretKey secretKey;
     private final PGPPrivateKey privateKey;
@@ -71,7 +70,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
         this.privateKey = privateKey;
         this.hashSubPackets = hashSubPackets;
         this.keyInfo = keyInfo;
-        this.signatureTempFiles = new CopyOnWriteArrayList<>();
+        this.signatureTempFiles = new ArrayList<>();
         logger.debug("Created generator using key {}", keyInfo);
     }
 
@@ -81,7 +80,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
     }
 
     @Override
-    public Collection<? extends Artifact> generate(Collection<? extends Artifact> generatedArtifacts) {
+    public synchronized Collection<? extends Artifact> generate(Collection<? extends Artifact> generatedArtifacts) {
         try {
             artifacts.addAll(generatedArtifacts);
 
@@ -116,7 +115,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         signatureTempFiles.forEach(p -> {
             try {
                 Files.deleteIfExists(p);
