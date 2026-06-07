@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
     private static final String ARTIFACT_EXTENSION = ".asc";
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final ArrayList<Artifact> artifacts;
+    private final List<Artifact> artifacts;
     private final Predicate<Artifact> signableArtifactPredicate;
     private final PGPSecretKey secretKey;
     private final PGPPrivateKey privateKey;
@@ -65,7 +65,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
             PGPPrivateKey privateKey,
             PGPSignatureSubpacketVector hashSubPackets,
             String keyInfo) {
-        this.artifacts = new ArrayList<>(artifacts);
+        this.artifacts = new CopyOnWriteArrayList<>(artifacts);
         this.signableArtifactPredicate = signableArtifactPredicate;
         this.secretKey = secretKey;
         this.privateKey = privateKey;
