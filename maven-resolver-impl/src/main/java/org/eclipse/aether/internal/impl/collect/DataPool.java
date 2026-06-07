@@ -566,17 +566,19 @@ public final class DataPool {
         @SuppressWarnings("unchecked")
         public V intern(K key, V value) {
             Object[] result = new Object[1];
-            map.compute(key, (k, existingRef) -> {
-                if (existingRef != null) {
-                    V pooled = existingRef.get();
-                    if (pooled != null) {
-                        result[0] = pooled;
-                        return existingRef;
+            synchronized (map) {
+                map.compute(key, (k, existingRef) -> {
+                    if (existingRef != null) {
+                        V pooled = existingRef.get();
+                        if (pooled != null) {
+                            result[0] = pooled;
+                            return existingRef;
+                        }
                     }
-                }
-                result[0] = value;
-                return new WeakReference<>(value);
-            });
+                    result[0] = value;
+                    return new WeakReference<>(value);
+                });
+            }
             return (V) result[0];
         }
     }
