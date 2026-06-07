@@ -568,7 +568,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             return errorPath;
         }
 
-        public void addException(Dependency dependency, Exception e, List<DependencyNode> nodes) {
+        public synchronized void addException(Dependency dependency, Exception e, List<DependencyNode> nodes) {
             if (maxExceptions < 0 || result.getExceptions().size() < maxExceptions) {
                 result.addException(e);
                 if (errorPath == null) {
@@ -591,7 +591,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             }
         }
 
-        public void addCycle(List<DependencyNode> nodes, int cycleEntry, Dependency dependency) {
+        public synchronized void addCycle(List<DependencyNode> nodes, int cycleEntry, Dependency dependency) {
             if (maxCycles < 0 || result.getCycles().size() < maxCycles) {
                 result.addCycle(new DefaultDependencyCycle(nodes, cycleEntry, dependency));
             }
