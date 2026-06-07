@@ -180,53 +180,34 @@ public final class DataPool {
         internArtifactDescriptorManagedDependencies = ConfigUtils.getBoolean(
                 session, true, CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES);
 
-        InternPool<Artifact, Artifact> artifactsPool = null;
-        InternPool<Dependency, Dependency> dependenciesPool = null;
-        InternPool<DescriptorKey, Descriptor> descriptorsPool = null;
-        InternPool<List<Dependency>, List<Dependency>> dependencyListsPool = null;
+        InternPool<Artifact, Artifact> artifactsPool;
+        InternPool<Dependency, Dependency> dependenciesPool;
+        InternPool<DescriptorKey, Descriptor> descriptorsPool;
+        InternPool<List<Dependency>, List<Dependency>> dependencyListsPool;
         if (cache != null) {
-            artifactsPool = (InternPool<Artifact, Artifact>) cache.get(session, ARTIFACT_POOL);
-            dependenciesPool = (InternPool<Dependency, Dependency>) cache.get(session, DEPENDENCY_POOL);
-            descriptorsPool = (InternPool<DescriptorKey, Descriptor>) cache.get(session, DESCRIPTORS);
+            artifactsPool = (InternPool<Artifact, Artifact>) cache.computeIfAbsent(
+                    session,
+                    ARTIFACT_POOL,
+                    () -> createPool(ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT)));
+            dependenciesPool = (InternPool<Dependency, Dependency>) cache.computeIfAbsent(
+                    session,
+                    DEPENDENCY_POOL,
+                    () -> createPool(ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY)));
+            descriptorsPool = (InternPool<DescriptorKey, Descriptor>) cache.computeIfAbsent(
+                    session,
+                    DESCRIPTORS,
+                    () -> createPool(ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR)));
+            dependencyListsPool = (InternPool<List<Dependency>, List<Dependency>>) cache.computeIfAbsent(
+                    session,
+                    DEPENDENCY_LISTS_POOL,
+                    () -> createPool(
+                            ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY_LISTS)));
+        } else {
+            artifactsPool = createPool(ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT));
+            dependenciesPool = createPool(ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY));
+            descriptorsPool = createPool(ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR));
             dependencyListsPool =
-                    (InternPool<List<Dependency>, List<Dependency>>) cache.get(session, DEPENDENCY_LISTS_POOL);
-        }
-
-        if (artifactsPool == null) {
-            String artifactPoolType = ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT);
-
-            artifactsPool = createPool(artifactPoolType);
-            if (cache != null) {
-                cache.put(session, ARTIFACT_POOL, artifactsPool);
-            }
-        }
-
-        if (dependenciesPool == null) {
-            String dependencyPoolType = ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY);
-
-            dependenciesPool = createPool(dependencyPoolType);
-            if (cache != null) {
-                cache.put(session, DEPENDENCY_POOL, dependenciesPool);
-            }
-        }
-
-        if (descriptorsPool == null) {
-            String descriptorPoolType = ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR);
-
-            descriptorsPool = createPool(descriptorPoolType);
-            if (cache != null) {
-                cache.put(session, DESCRIPTORS, descriptorsPool);
-            }
-        }
-
-        if (dependencyListsPool == null) {
-            String dependencyListsPoolType =
-                    ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY_LISTS);
-
-            dependencyListsPool = createPool(dependencyListsPoolType);
-            if (cache != null) {
-                cache.put(session, DEPENDENCY_LISTS_POOL, dependencyListsPool);
-            }
+                    createPool(ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY_LISTS));
         }
 
         this.artifacts = artifactsPool;
