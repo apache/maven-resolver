@@ -442,24 +442,29 @@ public class IpcServer {
             return future;
         }
 
-        public synchronized void unlock(Context context) {
-            if (holders.remove(context)) {
-                while (waiters != null
-                        && !waiters.isEmpty()
-                        && (holders.isEmpty() || holders.get(0).shared && waiters.get(0).context.shared)) {
-                    Waiter waiter = waiters.remove(0);
-                    holders.add(waiter.context);
-                    waiter.future.complete(null);
-                }
-            } else if (waiters != null) {
-                for (Iterator<Waiter> it = waiters.iterator(); it.hasNext(); ) {
-                    Waiter waiter = it.next();
-                    if (waiter.context == context) {
-                        it.remove();
-                        waiter.future.cancel(false);
+        public void unlock(Context context) {
+            List<CompletableFuture<Void>> toComplete;
+            synchronized (this) {
+                toComplete = new ArrayList<>();
+                if (holders.remove(context)) {
+                    while (waiters != null
+                            && !waiters.isEmpty()
+                            && (holders.isEmpty() || holders.get(0).shared && waiters.get(0).context.shared)) {
+                        Waiter waiter = waiters.remove(0);
+                        holders.add(waiter.context);
+                        toComplete.add(waiter.future);
+                    }
+                } else if (waiters != null) {
+                    for (Iterator<Waiter> it = waiters.iterator(); it.hasNext(); ) {
+                        Waiter waiter = it.next();
+                        if (waiter.context == context) {
+                            it.remove();
+                            waiter.future.cancel(false);
+                        }
                     }
                 }
             }
+            toComplete.forEach(f -> f.complete(null));
         }
 
         public synchronized boolean isEmpty() {
