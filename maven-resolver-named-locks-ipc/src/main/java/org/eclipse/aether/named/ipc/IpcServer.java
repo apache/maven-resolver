@@ -461,6 +461,10 @@ public class IpcServer {
                 }
             }
         }
+
+        public synchronized boolean isEmpty() {
+            return (holders == null || holders.isEmpty()) && (waiters == null || waiters.isEmpty());
+        }
     }
 
     class Context {
@@ -486,7 +490,12 @@ public class IpcServer {
         public void unlock() {
             locks.stream()
                     .map(k -> IpcServer.this.locks.computeIfAbsent(k, Lock::new))
-                    .forEach(l -> l.unlock(this));
+                    .forEach(l -> {
+                        l.unlock(this);
+                        if (l.isEmpty()) {
+                            IpcServer.this.locks.remove(l.key, l);
+                        }
+                    });
         }
     }
 }
