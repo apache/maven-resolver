@@ -50,6 +50,7 @@ public class ResolveTransitiveDependencies {
         try (RepositorySystem system = Booter.newRepositorySystem(Booter.selectFactory(args));
                 CloseableSession session = Booter.newRepositorySystemSession(system, Booter.selectFs(args))
                         .build()) {
+            // Artifact artifact = new DefaultArtifact("dom4j:dom4j:1.6.1");
             Artifact artifact = new DefaultArtifact("org.apache.maven.resolver:maven-resolver-impl:1.3.3");
 
             DependencyFilter classpathFilter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
