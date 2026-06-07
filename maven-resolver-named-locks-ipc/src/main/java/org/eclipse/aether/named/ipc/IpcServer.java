@@ -377,7 +377,7 @@ public class IpcServer {
                 break;
             } else {
                 try {
-                    Thread.sleep(TimeUnit.NANOSECONDS.toMillis(left));
+                    Thread.sleep(Math.max(1, TimeUnit.NANOSECONDS.toMillis(left)));
                 } catch (InterruptedException e) {
                     info("IpcServer expiration check interrupted, closing");
                     close();
