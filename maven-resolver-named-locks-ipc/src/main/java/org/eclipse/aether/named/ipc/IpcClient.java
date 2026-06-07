@@ -81,10 +81,10 @@ public class IpcClient {
     protected final Path syncPath;
     protected final boolean noFork;
 
-    protected SocketChannel socket;
-    protected DataOutputStream output;
-    protected DataInputStream input;
-    protected Thread receiver;
+    protected volatile SocketChannel socket;
+    protected volatile DataOutputStream output;
+    protected volatile DataInputStream input;
+    protected volatile Thread receiver;
 
     protected final AtomicInteger requestId = new AtomicInteger();
     protected final Map<Integer, CompletableFuture<List<String>>> responses = new ConcurrentHashMap<>();
