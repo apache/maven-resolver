@@ -27,7 +27,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +110,7 @@ public class IpcServer {
     public static final boolean DEFAULT_DEBUG = false;
 
     private final ServerSocketChannel serverSocket;
-    private final Map<SocketChannel, Thread> clients = new HashMap<>();
+    private final Map<SocketChannel, Thread> clients = new ConcurrentHashMap<>();
     private final AtomicInteger counter = new AtomicInteger();
     private final Map<String, Lock> locks = new ConcurrentHashMap<>();
     private final Map<String, Context> contexts = new ConcurrentHashMap<>();
