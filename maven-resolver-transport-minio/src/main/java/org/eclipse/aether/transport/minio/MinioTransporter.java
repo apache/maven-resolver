@@ -175,8 +175,9 @@ final class MinioTransporter extends AbstractTransporter implements Transporter 
         task.getListener().transportStarted(0, task.getDataLength());
         final Path dataFile = task.getDataPath();
         if (dataFile == null) {
-            try (PathProcessor.TempFile tempFile = pathProcessor.newTempFile()) {
-                Files.copy(task.newInputStream(), tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
+            try (PathProcessor.TempFile tempFile = pathProcessor.newTempFile();
+                    InputStream inputStream = task.newInputStream()) {
+                Files.copy(inputStream, tempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
                 client.uploadObject(UploadObjectArgs.builder()
                         .bucket(objectName.getBucket())
                         .object(objectName.getName())
