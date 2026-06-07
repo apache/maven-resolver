@@ -116,6 +116,9 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
 
     protected NamedLock getLockAndRefTrack(final NamedLockKey key, Supplier<NamedLockSupport> supplier) {
         return locks.compute(key, (k, v) -> {
+                    if (shutdown.get()) {
+                        throw new IllegalStateException("factory already shut down");
+                    }
                     if (v == null) {
                         v = new NamedLockHolder(supplier.get());
                     }
