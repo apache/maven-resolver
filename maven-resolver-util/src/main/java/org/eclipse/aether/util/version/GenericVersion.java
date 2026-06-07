@@ -122,6 +122,9 @@ final class GenericVersion implements Version {
             Item thatItem = those.get(index);
 
             if (thisItem.isNumber() != thatItem.isNumber()) {
+                if (index == 0) {
+                    return thisItem.compareTo(thatItem);
+                }
                 if (number == thisItem.isNumber()) {
                     return comparePadding(these, index, number);
                 } else {
