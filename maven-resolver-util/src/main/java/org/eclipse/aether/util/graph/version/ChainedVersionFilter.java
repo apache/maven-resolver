@@ -33,7 +33,7 @@ public class ChainedVersionFilter implements VersionFilter {
 
     private final VersionFilter[] filters;
 
-    private int hashCode;
+    private volatile int hashCode;
 
     /**
      * Chains the specified version filters.

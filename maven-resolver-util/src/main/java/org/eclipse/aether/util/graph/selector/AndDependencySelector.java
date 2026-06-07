@@ -39,7 +39,7 @@ public final class AndDependencySelector implements DependencySelector {
 
     private final Set<? extends DependencySelector> selectors;
 
-    private int hashCode;
+    private volatile int hashCode;
 
     /**
      * Creates a new selector from the specified selectors. Prefer
