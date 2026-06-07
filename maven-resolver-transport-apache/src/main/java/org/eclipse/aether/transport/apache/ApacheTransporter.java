@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
@@ -43,6 +44,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthScheme;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.client.AuthCache;
@@ -73,7 +75,6 @@ import org.apache.http.impl.auth.DigestSchemeFactory;
 import org.apache.http.impl.auth.KerberosSchemeFactory;
 import org.apache.http.impl.auth.NTLMSchemeFactory;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
-import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -294,9 +295,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                             Keys.of(
                                     getClass(),
                                     repository.getId() + "-" + StringDigestUtil.sha1(repository.toString())),
-                            BasicAuthCache::new);
+                            ConcurrentAuthCache::new);
         } else {
-            this.authCache = new BasicAuthCache();
+            this.authCache = new ConcurrentAuthCache();
         }
         this.client = builder.build();
     }
@@ -763,6 +764,37 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             }
             RETRY_INTERVAL_HOLDER.remove();
             return ri;
+        }
+    }
+
+    static class ConcurrentAuthCache implements AuthCache {
+        private final ConcurrentHashMap<HttpHost, AuthScheme> map = new ConcurrentHashMap<>();
+
+        @Override
+        public void put(HttpHost host, AuthScheme authScheme) {
+            if (host != null && authScheme != null) {
+                map.put(host, authScheme);
+            }
+        }
+
+        @Override
+        public AuthScheme get(HttpHost host) {
+            if (host == null) {
+                return null;
+            }
+            return map.get(host);
+        }
+
+        @Override
+        public void remove(HttpHost host) {
+            if (host != null) {
+                map.remove(host);
+            }
+        }
+
+        @Override
+        public void clear() {
+            map.clear();
         }
     }
 }
