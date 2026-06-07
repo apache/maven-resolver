@@ -560,11 +560,11 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             maxCycles = ConfigUtils.getInteger(session, DEFAULT_MAX_CYCLES, CONFIG_PROP_MAX_CYCLES);
         }
 
-        public CollectResult getResult() {
+        public synchronized CollectResult getResult() {
             return result;
         }
 
-        public String getErrorPath() {
+        public synchronized String getErrorPath() {
             return errorPath;
         }
 
