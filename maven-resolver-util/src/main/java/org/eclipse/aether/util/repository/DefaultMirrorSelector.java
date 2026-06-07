@@ -18,9 +18,9 @@
  */
 package org.eclipse.aether.util.repository;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -38,7 +38,7 @@ public final class DefaultMirrorSelector implements MirrorSelector {
 
     private static final String EXTERNAL_HTTP_WILDCARD = "external:http:*";
 
-    private final List<MirrorDef> mirrors = new ArrayList<>();
+    private final List<MirrorDef> mirrors = new CopyOnWriteArrayList<>();
 
     /**
      * Adds the specified mirror to this selector.
