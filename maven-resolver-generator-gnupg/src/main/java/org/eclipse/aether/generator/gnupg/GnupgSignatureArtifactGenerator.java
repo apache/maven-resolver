@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -54,7 +56,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
     private final PGPPrivateKey privateKey;
     private final PGPSignatureSubpacketVector hashSubPackets;
     private final String keyInfo;
-    private final ArrayList<Path> signatureTempFiles;
+    private final List<Path> signatureTempFiles;
 
     GnupgSignatureArtifactGenerator(
             Collection<Artifact> artifacts,
@@ -69,7 +71,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
         this.privateKey = privateKey;
         this.hashSubPackets = hashSubPackets;
         this.keyInfo = keyInfo;
-        this.signatureTempFiles = new ArrayList<>();
+        this.signatureTempFiles = new CopyOnWriteArrayList<>();
         logger.debug("Created generator using key {}", keyInfo);
     }
 
