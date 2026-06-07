@@ -39,7 +39,7 @@ public final class AndDependencySelector implements DependencySelector {
 
     private final Set<? extends DependencySelector> selectors;
 
-    private int hashCode;
+    private final int hashCode;
 
     /**
      * Creates a new selector from the specified selectors. Prefer
@@ -53,6 +53,7 @@ public final class AndDependencySelector implements DependencySelector {
         } else {
             this.selectors = Collections.emptySet();
         }
+        this.hashCode = 17 * 31 + this.selectors.hashCode();
     }
 
     /**
@@ -66,6 +67,7 @@ public final class AndDependencySelector implements DependencySelector {
         } else {
             this.selectors = Collections.emptySet();
         }
+        this.hashCode = 17 * 31 + this.selectors.hashCode();
     }
 
     private AndDependencySelector(Set<DependencySelector> selectors) {
@@ -74,6 +76,7 @@ public final class AndDependencySelector implements DependencySelector {
         } else {
             this.selectors = Collections.emptySet();
         }
+        this.hashCode = 17 * 31 + this.selectors.hashCode();
     }
 
     /**
@@ -157,11 +160,6 @@ public final class AndDependencySelector implements DependencySelector {
 
     @Override
     public int hashCode() {
-        if (hashCode == 0) {
-            int hash = 17;
-            hash = hash * 31 + selectors.hashCode();
-            hashCode = hash;
-        }
         return hashCode;
     }
 
