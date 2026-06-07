@@ -100,10 +100,13 @@ public class GenericVersionScheme extends VersionSchemeSupport {
         GLOBAL_TOTAL_REQUESTS.incrementAndGet();
 
         boolean[] created = {false};
-        GenericVersion result = versionCache.computeIfAbsent(version, v -> {
-            created[0] = true;
-            return new GenericVersion(v);
-        });
+        GenericVersion result;
+        synchronized (versionCache) {
+            result = versionCache.computeIfAbsent(version, v -> {
+                created[0] = true;
+                return new GenericVersion(v);
+            });
+        }
         if (created[0]) {
             cacheMisses.incrementAndGet();
             GLOBAL_CACHE_MISSES.incrementAndGet();
