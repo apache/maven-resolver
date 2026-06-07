@@ -110,17 +110,25 @@ public interface SmartExecutor extends AutoCloseable {
         public <T> Future<T> submit(Callable<T> callable) {
             ClassLoader tccl = Thread.currentThread().getContextClassLoader();
             CompletableFuture<T> future = new CompletableFuture<>();
-            executor.submit(() -> {
-                ClassLoader old = Thread.currentThread().getContextClassLoader();
-                Thread.currentThread().setContextClassLoader(tccl);
+            try {
+                executor.submit(() -> {
+                    ClassLoader old = Thread.currentThread().getContextClassLoader();
+                    Thread.currentThread().setContextClassLoader(tccl);
+                    try {
+                        future.complete(callable.call());
+                    } catch (Exception e) {
+                        future.completeExceptionally(e);
+                    } finally {
+                        Thread.currentThread().setContextClassLoader(old);
+                    }
+                });
+            } catch (RejectedExecutionException e) {
                 try {
                     future.complete(callable.call());
-                } catch (Exception e) {
-                    future.completeExceptionally(e);
-                } finally {
-                    Thread.currentThread().setContextClassLoader(old);
+                } catch (Exception ex) {
+                    future.completeExceptionally(ex);
                 }
-            });
+            }
             return future;
         }
 
@@ -176,15 +184,25 @@ public interface SmartExecutor extends AutoCloseable {
             try {
                 semaphore.acquire();
                 CompletableFuture<T> future = new CompletableFuture<>();
-                executor.submit(() -> {
+                try {
+                    executor.submit(() -> {
+                        try {
+                            future.complete(callable.call());
+                        } catch (Exception e) {
+                            future.completeExceptionally(e);
+                        } finally {
+                            semaphore.release();
+                        }
+                    });
+                } catch (RejectedExecutionException e) {
                     try {
                         future.complete(callable.call());
-                    } catch (Exception e) {
-                        future.completeExceptionally(e);
+                    } catch (Exception ex) {
+                        future.completeExceptionally(ex);
                     } finally {
                         semaphore.release();
                     }
-                });
+                }
                 return future;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
