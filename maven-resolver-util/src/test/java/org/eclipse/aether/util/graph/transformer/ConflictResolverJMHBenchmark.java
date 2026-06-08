@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,8 +55,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
-@Warmup(iterations = 2, time = 2, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 3, time = 2, timeUnit = TimeUnit.SECONDS)
+@Warmup(iterations = 1, time = 2, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 2, time = 2, timeUnit = TimeUnit.SECONDS)
 public class ConflictResolverJMHBenchmark {
     private static final RepositorySystemSession session = TestUtils.newSession();
 
@@ -123,6 +124,26 @@ public class ConflictResolverJMHBenchmark {
         uniqueSnakeWithRootCycle(classic, 40);
     }
 
+    @Benchmark
+    public void symmetricBinaryTreeUnique_5_path() throws RepositoryException {
+        symmetricBinaryTree(path, 5, Integer.MAX_VALUE);
+    }
+
+    @Benchmark
+    public void symmetricBinaryTreeUnique_5_classic() throws RepositoryException {
+        symmetricBinaryTree(classic, 5, Integer.MAX_VALUE);
+    }
+
+    @Benchmark
+    public void symmetricBinaryTreeMod50_5_path() throws RepositoryException {
+        symmetricBinaryTree(path, 5, 50);
+    }
+
+    @Benchmark
+    public void symmetricBinaryTreeMod50_5_classic() throws RepositoryException {
+        symmetricBinaryTree(classic, 5, 50);
+    }
+
     /**
      * A "snake", plain chain of unique dependencies of given length.
      */
@@ -160,6 +181,35 @@ public class ConflictResolverJMHBenchmark {
 
         assertSame(root, transformedNode);
         assertEquals(1, transformedNode.getChildren().size());
+    }
+
+    /**
+     * A symmetric binary tree with given depth. Provided modulo is to create conflicts, if larger that total tree nodes,
+     * tree will be "unique" (no conflicts).
+     */
+    private static void symmetricBinaryTree(ConflictResolver conflictResolver, int depth, int modulo)
+            throws RepositoryException {
+        DependencyNode root = makeDependencyNode("group-id", "root", "1.0");
+        int level = 2;
+        int idCounter = 1;
+        ArrayDeque<DependencyNode> stack = new ArrayDeque<>();
+        stack.push(root);
+        for (int i = 0; i < depth; i++) {
+            ArrayList<DependencyNode> children = new ArrayList<>();
+            while (!stack.isEmpty()) {
+                DependencyNode node = stack.pop();
+                DependencyNode left = makeDependencyNode("group-id", "d" + idCounter++ % modulo, "1.0");
+                DependencyNode right = makeDependencyNode("group-id", "d" + idCounter++ % modulo, "1.0");
+                node.setChildren(mutableList(left, right));
+                children.add(left);
+                children.add(right);
+            }
+            stack.addAll(children);
+        }
+
+        DependencyNode transformedNode = transform(conflictResolver, root);
+
+        assertSame(root, transformedNode);
     }
 
     private static final DependencyGraphDumper DUMPER_SOUT = new DependencyGraphDumper(System.out::println);
