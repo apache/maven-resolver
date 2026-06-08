@@ -144,6 +144,26 @@ public class ConflictResolverJMHBenchmark {
     }
 
     @Benchmark
+    public void symmetricBinaryTreeUnique_10_path() throws RepositoryException {
+        symmetricBinaryTree(path, 10, Integer.MAX_VALUE);
+    }
+
+    @Benchmark
+    public void symmetricBinaryTreeUnique_10_classic() throws RepositoryException {
+        symmetricBinaryTree(classic, 10, Integer.MAX_VALUE);
+    }
+
+    @Benchmark
+    public void symmetricBinaryTreeMod50_10_path() throws RepositoryException {
+        symmetricBinaryTree(path, 10, 50);
+    }
+
+    @Benchmark
+    public void symmetricBinaryTreeMod50_10_classic() throws RepositoryException {
+        symmetricBinaryTree(classic, 10, 50);
+    }
+
+    @Benchmark
     public void diamondFan_10x5_path() throws RepositoryException {
         diamondFan(path, 5, 10);
     }
