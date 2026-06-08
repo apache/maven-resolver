@@ -49,14 +49,6 @@ public class CachingArtifactTypeRegistry implements ArtifactTypeRegistry {
     }
 
     public ArtifactType get(String typeId) {
-        ArtifactType type = types.get(typeId);
-        if (type != null) {
-            return type;
-        }
-        type = delegate.get(typeId);
-        if (type != null) {
-            types.put(typeId, type);
-        }
-        return type;
+        return types.computeIfAbsent(typeId, delegate::get);
     }
 }

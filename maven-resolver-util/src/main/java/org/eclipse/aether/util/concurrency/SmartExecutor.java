@@ -96,7 +96,13 @@ public interface SmartExecutor extends AutoCloseable {
                     }
                 });
             } catch (RejectedExecutionException e) {
-                runnable.run();
+                try {
+                    runnable.run();
+                } catch (RuntimeException | Error t) {
+                    // swallow to match async submit() semantics where exceptions
+                    // are captured by the Future; callers like RunnableErrorForwarder
+                    // already record the error before re-throwing
+                }
             }
         }
 
@@ -160,6 +166,10 @@ public interface SmartExecutor extends AutoCloseable {
                 } catch (RejectedExecutionException e) {
                     try {
                         runnable.run();
+                    } catch (RuntimeException | Error t) {
+                        // swallow to match async submit() semantics where exceptions
+                        // are captured by the Future; callers like RunnableErrorForwarder
+                        // already record the error before re-throwing
                     } finally {
                         semaphore.release();
                     }
