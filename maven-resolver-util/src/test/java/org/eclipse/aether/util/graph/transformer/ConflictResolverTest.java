@@ -673,6 +673,53 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertEquals(2, occurrence.get()); // st3 must be present only once in tree
     }
 
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void issue1903(ConflictResolver conflictResolver) throws RepositoryException {
+        // The "dom4j:dom4j:1.6.1" case
+        // root -> A -> B (in cycle with A via cyclicPredecessors) -> C (unique, only reachable through B)
+        //                                                         -> A' (same conflictId as A, actual cycle)
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode aPrim = makeDependencyNode("some-group", "a", "1.0", "compile");
+        DependencyNode aSec = makeDependencyNode("some-group", "a", "1.1", "compile");
+        DependencyNode b = makeDependencyNode("some-group", "b", "1.0", "compile");
+        DependencyNode c = makeDependencyNode("some-group", "c", "1.0", "compile");
+
+        root.setChildren(mutableList(aPrim));
+        aPrim.setChildren(mutableList(b));
+        b.setChildren(mutableList(c, aSec));
+        aSec.setChildren(mutableList(b));
+
+        System.out.println();
+        System.out.println("Input node:");
+        root.accept(new TreeDependencyVisitor(DUMPER_SOUT)); // we have a cycle, so must wrap it
+
+        DependencyNode transformedRoot = transform(conflictResolver, root);
+
+        System.out.println();
+        System.out.println("Transformed node:");
+        transformedRoot.accept(DUMPER_SOUT);
+
+        assertSame(transformedRoot, root);
+        AtomicInteger occurrence = new AtomicInteger(0);
+        root.accept(new DependencyVisitor() {
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                if (node.getArtifact() != null
+                        && node.getArtifact().getArtifactId().equals("a")) {
+                    occurrence.incrementAndGet();
+                }
+                return true;
+            }
+
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                return true;
+            }
+        });
+        assertEquals(1, occurrence.get()); // a must be present only once in tree
+    }
+
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
         return makeDependencyNode(groupId, artifactId, version, "compile");
     }

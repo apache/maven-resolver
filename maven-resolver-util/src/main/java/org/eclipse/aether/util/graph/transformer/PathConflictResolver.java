@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -152,25 +153,10 @@ public final class PathConflictResolver extends ConflictResolver {
         Map<String, Object> stats = (Map<String, Object>) context.get(TransformationContextKeys.STATS);
         long time1 = System.nanoTime();
 
-        @SuppressWarnings("unchecked")
-        Collection<Collection<String>> conflictIdCycles =
-                (Collection<Collection<String>>) context.get(TransformationContextKeys.CYCLIC_CONFLICT_IDS);
-        if (conflictIdCycles == null) {
-            throw new RepositoryException("conflict id cycles have not been identified");
-        }
-
         Map<DependencyNode, String> conflictIds =
                 (Map<DependencyNode, String>) context.get(TransformationContextKeys.CONFLICT_IDS);
         if (conflictIds == null) {
             throw new RepositoryException("conflict groups have not been identified");
-        }
-
-        Map<String, Collection<String>> cyclicPredecessors = new HashMap<>();
-        for (Collection<String> cycle : conflictIdCycles) {
-            for (String conflictId : cycle) {
-                Collection<String> predecessors = cyclicPredecessors.computeIfAbsent(conflictId, k -> new HashSet<>());
-                predecessors.addAll(cycle);
-            }
         }
 
         State state = new State(
@@ -183,7 +169,6 @@ public final class PathConflictResolver extends ConflictResolver {
                 scopeSelector.getInstance(node, context),
                 scopeDeriver.getInstance(node, context),
                 optionalitySelector.getInstance(node, context),
-                cyclicPredecessors,
                 conflictIds,
                 node);
 
@@ -287,11 +272,6 @@ public final class PathConflictResolver extends ConflictResolver {
         private final ConflictResolver.OptionalitySelector optionalitySelector;
 
         /**
-         * The conflict predecessors by conflictId.
-         */
-        private final Map<String, Collection<String>> cyclicPredecessors;
-
-        /**
          * The node to conflictId mapping from {@link ConflictMarker}.
          */
         private final Map<DependencyNode, String> conflictIds;
@@ -320,7 +300,6 @@ public final class PathConflictResolver extends ConflictResolver {
                 ConflictResolver.ScopeSelector scopeSelector,
                 ConflictResolver.ScopeDeriver scopeDeriver,
                 ConflictResolver.OptionalitySelector optionalitySelector,
-                Map<String, Collection<String>> cyclicPredecessors,
                 Map<DependencyNode, String> conflictIds,
                 DependencyNode node)
                 throws RepositoryException {
@@ -330,7 +309,6 @@ public final class PathConflictResolver extends ConflictResolver {
             this.scopeSelector = scopeSelector;
             this.scopeDeriver = scopeDeriver;
             this.optionalitySelector = optionalitySelector;
-            this.cyclicPredecessors = cyclicPredecessors;
             this.conflictIds = conflictIds;
             this.partitions = new HashMap<>();
             this.resolvedIds = new HashMap<>();
@@ -343,7 +321,13 @@ public final class PathConflictResolver extends ConflictResolver {
          * sorted conflictIds can serve as a starting to point to walk the graph.
          */
         private Path build(DependencyNode node) throws RepositoryException {
-            Path root = new Path(this, node, null, false);
+            String nodeConflictId = this.conflictIds.get(node);
+            Path root = new Path(
+                    this,
+                    node,
+                    nodeConflictId,
+                    nodeConflictId != null ? Collections.singleton(nodeConflictId) : Collections.emptySet(),
+                    null);
             gatherCRNodes(root);
             return root;
         }
@@ -392,22 +376,29 @@ public final class PathConflictResolver extends ConflictResolver {
      * and the conflict resolution algorithm can efficiently process each group independently.
      */
     private static class Path {
+        // given
         private final State state;
         private DependencyNode dn;
         private final String conflictId;
         private final Path parent;
-        private final boolean cycle;
+        // Set of conflictIds that we "stepped over" from root to here; is a set, and if duplicate element addition is
+        // attempted, it signals we deal with a cycle, as we are about to enter into same tree partition (nodes with
+        // same conflictId) we already have been. This could be a list, but for our purposes "duplication detection"
+        // (loop) is perfectly enough.
+        private final Set<String> conflictIdsSinceRoot;
+        // derived
         private final int depth;
         private final List<Path> children;
+        // mutated
         private String scope;
         private boolean optional;
 
-        private Path(State state, DependencyNode dn, Path parent, boolean cycle) {
+        private Path(State state, DependencyNode dn, String conflictId, Set<String> conflictIdsSinceRoot, Path parent) {
             this.state = state;
             this.dn = dn;
-            this.conflictId = state.conflictIds.get(dn);
+            this.conflictId = conflictId;
             this.parent = parent;
-            this.cycle = cycle;
+            this.conflictIdsSinceRoot = conflictIdsSinceRoot;
             this.depth = parent != null ? parent.depth + 1 : 0;
             this.children = new ArrayList<>();
             pull(0);
@@ -633,19 +624,23 @@ public final class PathConflictResolver extends ConflictResolver {
 
         /**
          * Adds node children: this method should be "batch" used, as all (potential) children should be added at once.
-         * Method will return really added ones, as this class avoids cycles.
+         * Method will return really added {@link Path} instances, as this class avoids cycles. Those forming a cycle
+         * are added to {@link Path} structure but are not recursed (not returned in list), keeping {@link Path} cycle
+         * free. This method also maintains "conflictIdsSinceRoot", that is a set of "conflict IDs" that were touched
+         * while going from tree root to current node instance.
+         * This implies that this conflict resolver, by its nature "redoes" the
+         * {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} calculated by {@link ConflictIdSorter}.
          */
         private List<Path> addChildren(List<DependencyNode> children) throws RepositoryException {
             ArrayList<Path> added = new ArrayList<>(children.size());
             for (DependencyNode child : children) {
-                boolean cycle = this.state
-                        .cyclicPredecessors
-                        .getOrDefault(this.state.conflictIds.get(child), Collections.emptySet())
-                        .contains(this.conflictId);
-                Path c = new Path(this.state, child, this, cycle);
+                String childConflictId = this.state.conflictIds.get(child);
+                Set<String> conflictIdsSinceRoot = new HashSet<>(this.conflictIdsSinceRoot);
+                boolean cycle = !conflictIdsSinceRoot.add(childConflictId);
+                Path c = new Path(this.state, child, childConflictId, conflictIdsSinceRoot, this);
                 this.children.add(c);
                 c.derive(0, false);
-                if (c.parent != null && !c.parent.cycle) {
+                if (!cycle) {
                     added.add(c);
                 }
             }

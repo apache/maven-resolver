@@ -55,7 +55,12 @@ class IpcNamedLock extends NamedLockSupport {
         }
         try {
             String contextId = client.newContext(true, time, unit);
-            client.lock(Objects.requireNonNull(contextId), keys, time, unit);
+            try {
+                client.lock(Objects.requireNonNull(contextId), keys, time, unit);
+            } catch (TimeoutException e) {
+                client.unlock(contextId);
+                return false;
+            }
             contexts.push(new Ctx(true, contextId, true));
             return true;
         } catch (TimeoutException e) {
@@ -75,7 +80,12 @@ class IpcNamedLock extends NamedLockSupport {
         }
         try {
             String contextId = client.newContext(false, time, unit);
-            client.lock(Objects.requireNonNull(contextId), keys, time, unit);
+            try {
+                client.lock(Objects.requireNonNull(contextId), keys, time, unit);
+            } catch (TimeoutException e) {
+                client.unlock(contextId);
+                return false;
+            }
             contexts.push(new Ctx(true, contextId, false));
             return true;
         } catch (TimeoutException e) {
