@@ -48,8 +48,10 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
      * @see #newInstance(WorkspaceReader, WorkspaceReader)
      */
     public ChainedWorkspaceReader(WorkspaceReader... readers) {
-        ArrayList<WorkspaceReader> list =
-                Arrays.stream(readers).filter(Objects::nonNull).collect(Collectors.toCollection(ArrayList::new));
+        ArrayList<WorkspaceReader> list = new ArrayList<>();
+        if (readers != null) {
+            Collections.addAll(list, readers);
+        }
         StringBuilder buffer = new StringBuilder();
         for (WorkspaceReader reader : list) {
             if (buffer.length() > 0) {
@@ -107,6 +109,7 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
 
     @Override
     public WorkspaceRepository getRepository() {
+        // Assumes WorkspaceReader.getRepository() returns a stable (immutable) repository for the reader’s lifetime.
         return repository;
     }
 
