@@ -117,6 +117,7 @@
     <plexusUtils3Version>3.6.1</plexusUtils3Version>
     <plexusUtils4Version>4.0.3</plexusUtils4Version>
     <plexusXml4Version>4.1.1</plexusXml4Version>
+    <jmhVersion>1.37</jmhVersion>
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
@@ -324,6 +325,17 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
         <version>1.28.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-core</artifactId>
+        <version>${jmhVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-generator-annprocess</artifactId>
+        <version>${jmhVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
