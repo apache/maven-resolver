@@ -313,16 +313,20 @@ public class IpcClient {
 
     List<String> send(List<String> request, long time, TimeUnit unit) throws TimeoutException, IOException {
         ensureInitialized();
+        DataOutputStream out = output;
+        if (out == null) {
+            throw new IOException("Connection closed");
+        }
         int id = requestId.incrementAndGet();
         CompletableFuture<List<String>> response = new CompletableFuture<>();
         responses.put(id, response);
-        synchronized (output) {
-            output.writeInt(id);
-            output.writeInt(request.size());
+        synchronized (out) {
+            out.writeInt(id);
+            out.writeInt(request.size());
             for (String s : request) {
-                output.writeUTF(s);
+                out.writeUTF(s);
             }
-            output.flush();
+            out.flush();
         }
         try {
             return response.get(time, unit);
