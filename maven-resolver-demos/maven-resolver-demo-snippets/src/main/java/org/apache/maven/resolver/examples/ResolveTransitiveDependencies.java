@@ -52,7 +52,7 @@ public class ResolveTransitiveDependencies {
                         .build()) {
             // An "interesting" artifact that depends on itself (different version). All Maven versions
             // released so far contained dom4j:dom4j:1.5.2 on classpath for dom4j:dom4j:1.6.1
-            // In Resolver 2.0.19 this is fixed.
+            // In Resolver 2.0.19+ this is fixed.
             Artifact artifact = new DefaultArtifact("dom4j:dom4j:1.6.1");
 
             DependencyFilter classpathFilter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);

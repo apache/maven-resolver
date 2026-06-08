@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -320,7 +322,12 @@ public final class PathConflictResolver extends ConflictResolver {
          */
         private Path build(DependencyNode node) throws RepositoryException {
             String nodeConflictId = this.conflictIds.get(node);
-            Path root = new Path(this, node, nodeConflictId, Collections.singletonList(nodeConflictId), null);
+            Path root = new Path(
+                    this,
+                    node,
+                    nodeConflictId,
+                    nodeConflictId != null ? Collections.singleton(nodeConflictId) : Collections.emptySet(),
+                    null);
             gatherCRNodes(root);
             return root;
         }
@@ -374,7 +381,11 @@ public final class PathConflictResolver extends ConflictResolver {
         private DependencyNode dn;
         private final String conflictId;
         private final Path parent;
-        private final List<String> conflictIdPath;
+        // Set of conflictIds that we "stepped over" from root to here; is a set, and if duplicate element addition is
+        // attempted, it signals we deal with a cycle, as we are about to enter into same tree partition (nodes with
+        // same conflictId) we already have been. This could be a list, but for our purposes "duplication detection"
+        // (loop) is perfectly enough.
+        private final Set<String> conflictIdsSinceRoot;
         // derived
         private final int depth;
         private final List<Path> children;
@@ -382,12 +393,12 @@ public final class PathConflictResolver extends ConflictResolver {
         private String scope;
         private boolean optional;
 
-        private Path(State state, DependencyNode dn, String conflictId, List<String> conflictIdPath, Path parent) {
+        private Path(State state, DependencyNode dn, String conflictId, Set<String> conflictIdsSinceRoot, Path parent) {
             this.state = state;
             this.dn = dn;
             this.conflictId = conflictId;
             this.parent = parent;
-            this.conflictIdPath = conflictIdPath;
+            this.conflictIdsSinceRoot = conflictIdsSinceRoot;
             this.depth = parent != null ? parent.depth + 1 : 0;
             this.children = new ArrayList<>();
             pull(0);
@@ -623,10 +634,9 @@ public final class PathConflictResolver extends ConflictResolver {
             ArrayList<Path> added = new ArrayList<>(children.size());
             for (DependencyNode child : children) {
                 String childConflictId = this.state.conflictIds.get(child);
-                List<String> newPath = new ArrayList<>(this.conflictIdPath);
-                boolean cycle = newPath.contains(childConflictId);
-                newPath.add(childConflictId);
-                Path c = new Path(this.state, child, childConflictId, newPath, this);
+                Set<String> conflictIdsSinceRoot = new HashSet<>(this.conflictIdsSinceRoot);
+                boolean cycle = !conflictIdsSinceRoot.add(childConflictId);
+                Path c = new Path(this.state, child, childConflictId, conflictIdsSinceRoot, this);
                 this.children.add(c);
                 c.derive(0, false);
                 if (!cycle) {
