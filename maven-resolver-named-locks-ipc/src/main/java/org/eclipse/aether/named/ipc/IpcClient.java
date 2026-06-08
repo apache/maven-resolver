@@ -295,7 +295,10 @@ public class IpcClient {
                     s.add(input.readUTF());
                 }
                 CompletableFuture<List<String>> f = responses.remove(id);
-                if (f == null || s.isEmpty()) {
+                if (f == null) {
+                    continue;
+                }
+                if (s.isEmpty()) {
                     throw new IllegalStateException("Protocol error");
                 }
                 f.complete(s);
@@ -326,6 +329,9 @@ public class IpcClient {
             throw (IOException) new InterruptedIOException("Interrupted").initCause(e);
         } catch (ExecutionException e) {
             throw new IOException("Execution error", e);
+        } catch (TimeoutException e) {
+            responses.remove(id);
+            throw e;
         }
     }
 
