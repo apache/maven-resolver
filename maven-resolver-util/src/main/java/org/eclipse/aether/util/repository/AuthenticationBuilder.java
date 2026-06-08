@@ -19,6 +19,7 @@
 package org.eclipse.aether.util.repository;
 
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -142,6 +143,22 @@ public final class AuthenticationBuilder {
     public AuthenticationBuilder addHostnameVerifier(HostnameVerifier verifier) {
         if (verifier != null) {
             authentications.add(new ComponentAuthentication(AuthenticationContext.SSL_HOSTNAME_VERIFIER, verifier));
+        }
+        return this;
+    }
+
+    /**
+     * Adds an SSL context for SSL/TLS connections. <strong>Note:</strong> This method assumes that all possible
+     * instances of the SSL context's runtime type exhibit the exact same behavior, i.e. the behavior of the SSL
+     * context depends solely on the runtime type and not on any configuration. For SSL contexts that do not fit
+     * this assumption, use {@link #addCustom(Authentication)} with a suitable implementation instead.
+     *
+     * @param sslContext the SSL context, may be {@code null}
+     * @return this builder for chaining, never {@code null}
+     */
+    public AuthenticationBuilder addSslContext(SSLContext sslContext) {
+        if (sslContext != null) {
+            authentications.add(new ComponentAuthentication(AuthenticationContext.SSL_CONTEXT, sslContext));
         }
         return this;
     }
