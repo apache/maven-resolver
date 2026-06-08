@@ -155,6 +155,8 @@ public final class AuthenticationBuilder {
      *
      * @param sslContext the SSL context, may be {@code null}
      * @return this builder for chaining, never {@code null}
+     * @see AuthenticationContext#SSL_CONTEXT
+     * @since 2.0.19
      */
     public AuthenticationBuilder addSslContext(SSLContext sslContext) {
         if (sslContext != null) {
