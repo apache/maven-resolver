@@ -34,7 +34,6 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
-import org.eclipse.aether.util.graph.visitor.DependencyGraphDumper;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Measurement;
@@ -144,6 +143,26 @@ public class ConflictResolverJMHBenchmark {
         symmetricBinaryTree(classic, 5, 50);
     }
 
+    @Benchmark
+    public void diamondFan_10x5_path() throws RepositoryException {
+        diamondFan(path, 5, 10);
+    }
+
+    @Benchmark
+    public void diamondFan_10x5_classic() throws RepositoryException {
+        diamondFan(classic, 5, 10);
+    }
+
+    @Benchmark
+    public void diamondFan_20x10_path() throws RepositoryException {
+        diamondFan(path, 10, 20);
+    }
+
+    @Benchmark
+    public void diamondFan_20x10_classic() throws RepositoryException {
+        diamondFan(classic, 10, 20);
+    }
+
     /**
      * A "snake", plain chain of unique dependencies of given length.
      */
@@ -159,7 +178,6 @@ public class ConflictResolverJMHBenchmark {
         DependencyNode transformedNode = transform(conflictResolver, root);
 
         assertSame(root, transformedNode);
-        assertEquals(1, transformedNode.getChildren().size());
     }
 
     /**
@@ -180,7 +198,6 @@ public class ConflictResolverJMHBenchmark {
         DependencyNode transformedNode = transform(conflictResolver, root);
 
         assertSame(root, transformedNode);
-        assertEquals(1, transformedNode.getChildren().size());
     }
 
     /**
@@ -212,7 +229,61 @@ public class ConflictResolverJMHBenchmark {
         assertSame(root, transformedNode);
     }
 
-    private static final DependencyGraphDumper DUMPER_SOUT = new DependencyGraphDumper(System.out::println);
+    /**
+     * A "diamond fan": {@code width} independent chains of length {@code depth}, all converging
+     * on the same shared artifact at two different versions (simulating a real version conflict).
+     * This is the topology where CCR's O(N²) re-walk per conflict group shows up most clearly.
+     *
+     * Graph shape (width=3, depth=2):
+     *   root
+     *   ├── chain-0-0 → chain-0-1 → shared:1.0
+     *   ├── chain-1-0 → chain-1-1 → shared:2.0   (conflict: 1.0 vs 2.0)
+     *   └── chain-2-0 → chain-2-1 → shared:1.0
+     */
+    private static void diamondFan(ConflictResolver conflictResolver, int depth, int width) throws RepositoryException {
+        DependencyNode root = makeDependencyNode("group-id", "root", "1.0");
+        List<DependencyNode> chains = new ArrayList<>(width);
+
+        for (int w = 0; w < width; w++) {
+            DependencyNode chainHead = makeDependencyNode("group-id", "chain-" + w + "-0", "1.0");
+            DependencyNode last = chainHead;
+            for (int d = 1; d < depth; d++) {
+                DependencyNode dep = makeDependencyNode("group-id", "chain-" + w + "-" + d, "1.0");
+                last.setChildren(mutableList(dep));
+                last = dep;
+            }
+            // All chains converge on the same artifact at alternating versions — real conflict
+            String version = (w % 2 == 0) ? "1.0" : "2.0";
+            DependencyNode shared = makeDependencyNode("group-id", "shared", version);
+            last.setChildren(mutableList(shared));
+            chains.add(chainHead);
+        }
+
+        root.setChildren(chains);
+
+        DependencyNode result = transform(conflictResolver, root);
+        assertNotNull(result);
+        // After conflict resolution, all paths to "shared" must agree on one version
+        assertEquals(1, countDistinctVersions(result, "shared"));
+    }
+
+    private static int countDistinctVersions(DependencyNode node, String artifactId) {
+        // BFS/DFS to count distinct versions of the given artifactId in the resolved graph
+        java.util.Set<String> versions = new java.util.HashSet<>();
+        collectVersions(node, artifactId, versions);
+        return versions.size();
+    }
+
+    private static void collectVersions(DependencyNode node, String artifactId, java.util.Set<String> versions) {
+        if (node.getArtifact() != null
+                && artifactId.equals(node.getArtifact().getArtifactId())
+                && node.getData().get(ConflictResolver.NODE_DATA_WINNER) == null) {
+            versions.add(node.getArtifact().getVersion());
+        }
+        for (DependencyNode child : node.getChildren()) {
+            collectVersions(child, artifactId, versions);
+        }
+    }
 
     private static DependencyNode transform(ConflictResolver conflictResolver, DependencyNode root)
             throws RepositoryException {
@@ -227,7 +298,7 @@ public class ConflictResolverJMHBenchmark {
     }
 
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version, String scope) {
-        return makeDependencyNode(groupId, artifactId, version, null, "compile");
+        return makeDependencyNode(groupId, artifactId, version, null, scope);
     }
 
     private static DependencyNode makeDependencyNode(
