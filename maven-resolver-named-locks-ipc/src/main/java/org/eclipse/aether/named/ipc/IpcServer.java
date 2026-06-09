@@ -152,7 +152,7 @@ public class IpcServer {
         // also interrupt and kill the daemon.
         try {
             sun.misc.Signal.handle(new sun.misc.Signal("INT"), sun.misc.SignalHandler.SIG_IGN);
-            if (IpcClient.IS_WINDOWS) {
+            if (!IpcClient.IS_WINDOWS) {
                 sun.misc.Signal.handle(new sun.misc.Signal("TSTP"), sun.misc.SignalHandler.SIG_IGN);
             }
         } catch (Throwable t) {
