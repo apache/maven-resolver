@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.WorkspaceReader;
@@ -36,7 +37,7 @@ import static java.util.Objects.requireNonNull;
  */
 public final class ChainedWorkspaceReader implements WorkspaceReader {
     private final List<WorkspaceReader> readers;
-    private final WorkspaceRepository repository;
+    private final AtomicReference<WorkspaceRepository> repository;
 
     /**
      * Creates a new workspace reader by chaining the specified readers.
@@ -57,7 +58,7 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
             buffer.append(reader.getRepository().getContentType());
         }
         this.readers = Collections.unmodifiableList(list);
-        this.repository = new WorkspaceRepository(buffer.toString(), new Key(list));
+        this.repository = new AtomicReference<>(new WorkspaceRepository(buffer.toString(), new Key(list)));
     }
 
     /**
@@ -106,8 +107,15 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
 
     @Override
     public WorkspaceRepository getRepository() {
-        // Assumes WorkspaceReader.getRepository() returns a stable (immutable) repository for the reader’s lifetime.
-        return repository;
+        Key key = new Key(readers);
+        repository.getAndUpdate(r -> {
+            if (!key.equals(r.getKey())) {
+                return new WorkspaceRepository(r.getContentType(), key);
+            } else {
+                return r;
+            }
+        });
+        return repository.get();
     }
 
     private static class Key {
