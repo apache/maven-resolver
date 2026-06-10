@@ -38,6 +38,7 @@ import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmHelper;
+import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.artifact.ArtifactIdUtils;
@@ -274,9 +275,11 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
                     if (!missingTrustedAlg.isEmpty() && failIfMissing) {
                         artifactResult.addException(
                                 artifactRepository,
-                                new ChecksumFailureException("Missing from " + trustedSourceName
-                                        + " trusted checksum(s) " + missingTrustedAlg + " for artifact "
-                                        + ArtifactIdUtils.toId(artifact)));
+                                ChecksumFailureException.noneAvailable(
+                                        "Missing from " + trustedSourceName
+                                                + " trusted checksum(s) " + missingTrustedAlg + " for artifact "
+                                                + ArtifactIdUtils.toId(artifact),
+                                        ChecksumPolicy.ChecksumKind.PROVIDED.name()));
                         valid = false;
                     }
 
@@ -288,10 +291,11 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
                         if (trustedChecksum != null && !Objects.equals(calculatedChecksum, trustedChecksum)) {
                             artifactResult.addException(
                                     artifactRepository,
-                                    new ChecksumFailureException("Artifact "
-                                            + ArtifactIdUtils.toId(artifact) + " trusted checksum mismatch: "
-                                            + trustedSourceName + "=" + trustedChecksum + "; calculated="
-                                            + calculatedChecksum));
+                                    ChecksumFailureException.mismatchDetail(
+                                            "Trusted Checksums Source: " + trustedSourceName,
+                                            trustedChecksum,
+                                            ChecksumPolicy.ChecksumKind.PROVIDED.name(),
+                                            calculatedChecksum));
                             valid = false;
                         }
                     }
@@ -301,8 +305,9 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
             if (!validated && failIfMissing) {
                 artifactResult.addException(
                         artifactRepository,
-                        new ChecksumFailureException(
-                                "There are no enabled trusted checksums" + " source(s) to validate against."));
+                        ChecksumFailureException.noneAvailable(
+                                "There are no enabled trusted checksums source(s) to validate against.",
+                                ChecksumPolicy.ChecksumKind.PROVIDED.name()));
                 valid = false;
             }
         } catch (IOException e) {
