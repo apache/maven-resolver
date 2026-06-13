@@ -41,7 +41,7 @@ public final class ExclusionDependencySelector implements DependencySelector {
     // sorted and dupe-free array, faster to iterate than LinkedHashSet
     private final Exclusion[] exclusions;
 
-    private int hashCode;
+    private volatile int hashCode;
 
     /**
      * Creates a new selector without any exclusions.

@@ -38,7 +38,7 @@ public final class AndDependencyTraverser implements DependencyTraverser {
 
     private final Set<? extends DependencyTraverser> traversers;
 
-    private int hashCode;
+    private volatile int hashCode;
 
     /**
      * Creates a new traverser from the specified traversers. Prefer

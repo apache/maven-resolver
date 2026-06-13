@@ -67,8 +67,8 @@ final class DeferredCredentialsProvider implements CredentialsProvider {
                     delegate.setCredentials(entry.getKey(), entry.getValue().newCredentials());
                 }
             }
+            return delegate.getCredentials(authScope);
         }
-        return delegate.getCredentials(authScope);
     }
 
     @Override

@@ -550,7 +550,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
         final int maxCycles;
 
-        String errorPath;
+        volatile String errorPath;
 
         public Results(CollectResult result, RepositorySystemSession session) {
             this.result = result;
@@ -560,15 +560,15 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             maxCycles = ConfigUtils.getInteger(session, DEFAULT_MAX_CYCLES, CONFIG_PROP_MAX_CYCLES);
         }
 
-        public CollectResult getResult() {
+        public synchronized CollectResult getResult() {
             return result;
         }
 
-        public String getErrorPath() {
+        public synchronized String getErrorPath() {
             return errorPath;
         }
 
-        public void addException(Dependency dependency, Exception e, List<DependencyNode> nodes) {
+        public synchronized void addException(Dependency dependency, Exception e, List<DependencyNode> nodes) {
             if (maxExceptions < 0 || result.getExceptions().size() < maxExceptions) {
                 result.addException(e);
                 if (errorPath == null) {
@@ -591,7 +591,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             }
         }
 
-        public void addCycle(List<DependencyNode> nodes, int cycleEntry, Dependency dependency) {
+        public synchronized void addCycle(List<DependencyNode> nodes, int cycleEntry, Dependency dependency) {
             if (maxCycles < 0 || result.getCycles().size() < maxCycles) {
                 result.addCycle(new DefaultDependencyCycle(nodes, cycleEntry, dependency));
             }
