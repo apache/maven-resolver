@@ -60,7 +60,7 @@ abstract class AbstractChecksumPolicy implements ChecksumPolicy {
 
     @Override
     public void onNoMoreChecksums() throws ChecksumFailureException {
-        throw new ChecksumFailureException("Checksum validation failed, no checksums available");
+        throw ChecksumFailureException.noneAvailable("Checksum validation failed, no checksums available", null);
     }
 
     @Override

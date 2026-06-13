@@ -35,7 +35,7 @@
   <properties>
     <javaVersion>8</javaVersion>
 
-    <okhttpVersion>5.3.2</okhttpVersion>
+    <okhttpVersion>5.4.0</okhttpVersion>
   </properties>
 
   <dependencyManagement>
@@ -77,7 +77,7 @@
     <dependency>
       <groupId>io.minio</groupId>
       <artifactId>minio</artifactId>
-      <version>9.0.1</version>
+      <version>9.0.2</version>
     </dependency>
 
     <!-- Overrides/Updates for Minio Java -->
