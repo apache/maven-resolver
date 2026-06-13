@@ -287,7 +287,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
 
         if (session.getCache() != null) {
-            String authCacheKey = getClass().getSimpleName() + "-" + repository.getId() + "-"
+            String authCacheKey = getClass().getName() + "@"
+                    + Integer.toHexString(System.identityHashCode(getClass().getClassLoader())) + "-"
+                    + repository.getId() + "-"
                     + StringDigestUtil.sha1(repository.toString());
             this.authCache = (AuthCache) session.getCache().computeIfAbsent(session, authCacheKey, BasicAuthCache::new);
         } else {
