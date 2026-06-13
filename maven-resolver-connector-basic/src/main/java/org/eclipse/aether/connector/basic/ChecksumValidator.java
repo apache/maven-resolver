@@ -142,7 +142,7 @@ final class ChecksumValidator {
                 checksumPolicy.onChecksumMismatch(
                         checksumAlgorithmFactory.getName(),
                         kind,
-                        new ChecksumFailureException(expected, kind.name(), actual));
+                        ChecksumFailureException.mismatch(expected, kind.name(), actual));
             } else if (checksumPolicy.onChecksumMatch(checksumAlgorithmFactory.getName(), kind)) {
                 return true;
             }
@@ -156,8 +156,10 @@ final class ChecksumValidator {
             Object calculated = actualChecksums.get(factory.getName());
             if (calculated instanceof Exception) {
                 checksumPolicy.onChecksumError(
-                        factory.getName(), ChecksumKind.REMOTE_EXTERNAL, new ChecksumFailureException((Exception)
-                                calculated));
+                        factory.getName(),
+                        ChecksumKind.REMOTE_EXTERNAL,
+                        ChecksumFailureException.processingFailure(
+                                "Checksum calculation problem", (Exception) calculated));
                 continue;
             }
             Path checksumFile = getChecksumPath(checksumLocation.getChecksumAlgorithmFactory());
@@ -169,7 +171,9 @@ final class ChecksumValidator {
                     }
                 } catch (Exception e) {
                     checksumPolicy.onChecksumError(
-                            factory.getName(), ChecksumKind.REMOTE_EXTERNAL, new ChecksumFailureException(e));
+                            factory.getName(),
+                            ChecksumKind.REMOTE_EXTERNAL,
+                            ChecksumFailureException.processingFailure("Checksum fetching problem", e));
                     continue;
                 }
 
@@ -181,13 +185,15 @@ final class ChecksumValidator {
                     checksumPolicy.onChecksumMismatch(
                             factory.getName(),
                             ChecksumKind.REMOTE_EXTERNAL,
-                            new ChecksumFailureException(expected, ChecksumKind.REMOTE_EXTERNAL.name(), actual));
+                            ChecksumFailureException.mismatch(expected, ChecksumKind.REMOTE_EXTERNAL.name(), actual));
                 } else if (checksumPolicy.onChecksumMatch(factory.getName(), ChecksumKind.REMOTE_EXTERNAL)) {
                     return true;
                 }
             } catch (IOException e) {
                 checksumPolicy.onChecksumError(
-                        factory.getName(), ChecksumKind.REMOTE_EXTERNAL, new ChecksumFailureException(e));
+                        factory.getName(),
+                        ChecksumKind.REMOTE_EXTERNAL,
+                        ChecksumFailureException.processingFailure("Checksum related IO problem", e));
             }
         }
         return false;
