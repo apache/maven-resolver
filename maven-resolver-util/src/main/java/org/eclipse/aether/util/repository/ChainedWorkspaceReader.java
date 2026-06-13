@@ -20,10 +20,12 @@ package org.eclipse.aether.util.repository;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -48,7 +50,7 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
     public ChainedWorkspaceReader(WorkspaceReader... readers) {
         ArrayList<WorkspaceReader> list = new ArrayList<>();
         if (readers != null) {
-            Collections.addAll(list, readers);
+            Arrays.stream(readers).filter(Objects::nonNull).forEach(list::add);
         }
         StringBuilder buffer = new StringBuilder();
         for (WorkspaceReader reader : list) {
