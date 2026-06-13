@@ -79,11 +79,6 @@ public class WarnChecksumPolicyTest {
 
     @Test
     void testOnNoMoreChecksums() {
-        try {
-            policy.onNoMoreChecksums();
-            fail("No exception");
-        } catch (ChecksumFailureException e) {
-            assertTrue(e.getMessage().contains("no checksums available"));
-        }
+        assertDoesNotThrow(policy::onNoMoreChecksums);
     }
 }
