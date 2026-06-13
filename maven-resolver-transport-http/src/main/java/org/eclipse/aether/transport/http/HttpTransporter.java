@@ -366,7 +366,9 @@ final class HttpTransporter extends AbstractTransporter {
         }
 
         if (session.getCache() != null) {
-            String authCacheKey = getClass().getSimpleName() + "-" + repository.getId() + "-"
+            String authCacheKey = getClass().getName() + "@"
+                    + Integer.toHexString(System.identityHashCode(getClass().getClassLoader())) + "-"
+                    + repository.getId() + "-"
                     + StringDigestUtil.sha1(repository.toString());
             synchronized (AUTH_CACHE_MUTEX) {
                 AuthCache cache = (AuthCache) session.getCache().get(session, authCacheKey);
