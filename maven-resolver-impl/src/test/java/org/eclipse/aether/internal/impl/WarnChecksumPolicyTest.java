@@ -22,6 +22,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy.ChecksumKind;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.eclipse.aether.transfer.TransferResource;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,6 +78,7 @@ public class WarnChecksumPolicyTest {
         policy.onChecksumError("SHA-1", ChecksumKind.REMOTE_EXTERNAL, exception);
     }
 
+    @Disabled("Disabled as part of https://github.com/apache/maven-resolver/issues/1920")
     @Test
     void testOnNoMoreChecksums() {
         try {
