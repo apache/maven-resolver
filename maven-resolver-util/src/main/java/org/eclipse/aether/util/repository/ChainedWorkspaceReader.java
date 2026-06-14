@@ -110,14 +110,13 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
     @Override
     public WorkspaceRepository getRepository() {
         Key key = new Key(readers);
-        repository.getAndUpdate(r -> {
+        return repository.updateAndGet(r -> {
             if (!key.equals(r.getKey())) {
                 return new WorkspaceRepository(r.getContentType(), key);
             } else {
                 return r;
             }
         });
-        return repository.get();
     }
 
     private static class Key {

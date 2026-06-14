@@ -19,10 +19,10 @@
 package org.eclipse.aether.util.repository;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -150,8 +150,8 @@ public class ChainedWorkspaceReaderTest {
     void concurrentKeyChange() throws InterruptedException {
         WorkspaceReader reader =
                 ChainedWorkspaceReader.newInstance(new StableWorkspaceReader(), new UnstableWorkspaceReader());
-        final int threads = 10;
-        List<WorkspaceRepository> results = new ArrayList<>(threads);
+        final int threads = 100;
+        ConcurrentLinkedQueue<WorkspaceRepository> results = new ConcurrentLinkedQueue<>();
         CountDownLatch latch = new CountDownLatch(threads);
         for (int i = 0; i < threads; i++) {
             new Thread(() -> {
@@ -167,7 +167,9 @@ public class ChainedWorkspaceReaderTest {
         // assert no same element present in results
         assertEquals(new HashSet<>(results).size(), results.size());
         for (int i = 0; i < threads; i++) {
-            assertEquals("stable+unstable", results.get(i).getContentType());
+            assertEquals("stable+unstable", results.remove().getContentType());
         }
+        // foolproof: queue must be empty after we checked all elements of it
+        assertEquals(0, results.size());
     }
 }
