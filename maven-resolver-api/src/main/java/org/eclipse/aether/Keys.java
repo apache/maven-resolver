@@ -28,15 +28,15 @@ import static java.util.Objects.requireNonNull;
  * long as they are used by components loaded once in system. As we saw, some subsystems like transports can be
  * loaded multiple times. For example, in case of Maven, some transport may be present in Maven core, but also loaded up
  * by some extension. In this case, key should distinguish between their {@link ClassLoader}s.
- * <p/>
+ * <p>
  * It is this class caller responsibility to use proper objects as keys, this class merely helps one to create composite
- * keys our of object instances that are expected to be anyway good candidates as key. Examples of these objects are
+ * keys out of object instances that are expected to be anyway good candidates as key. Examples of these objects are
  * {@link String} instances but also {@link Class} instances, and many other types also usable as keys.
- * <p/>
+ * <p>
  * Important: never forget to perform {@code null}-check, when getting cache from {@link RepositorySystemSession#getCache()}
  * method as it may return {@code null}, when cache is disabled session-wise.
- * <p/>
- * Historical note: As mentioned above, use od {@link String} instances for keys is perfect match, and it worked from
+ * <p>
+ * Historical note: As mentioned above, use of {@link String} instances for keys is perfect match, and it worked from
  * very start. But, as use cases got more and more complex and keys used started to be constructed in more and more
  * sophisticated ways, but were still {@link String} instances. Believe, or not, the sole purpose of string keys
  * was easier debugging. By using this helper class, this convenience should remain.
@@ -53,11 +53,13 @@ public final class Keys {
     /**
      * Creates object instance usable as key in session data and cache. Objects passed to this method may or may
      * not implement equals/hashCode, but it is responsibility of caller to understand what is she or he doing.
-     * <p/>
-     * If the first instance of key elements is an object instance that was returned by this same method, creation of
-     * "subkeys" happens, where original key elements are concatenated with new ones. If the arguments contain only
-     * one argument, and it is an object instance that was returned by this same method, passed in instance is returned.
-     * <p/>
+     * <p>
+     * If the first element of key elements is an object instance that was created by this method, creation of
+     * "subkeys" happens, where original key elements expanded from first element and are concatenated with new ones.
+     * This expansion happens <em>only, if the first key element was already a key created by this class</em>.
+     * If the arguments contain only one argument, and it is an object instance that was created by this method,
+     * the passed in instance is returned unmodified.
+     * <p>
      * Based on what kind of elements are used, one can create multiple kind of keys:
      * <ul>
      *     <li>To create <em>globally matched keys</em>, preferred is to use {@link String} key elements</li>
@@ -89,7 +91,7 @@ public final class Keys {
         private final int hashCode;
 
         private Key(Object[] keys) {
-            this.keys = keys;
+            this.keys = keys.clone();
             this.hashCode = Arrays.hashCode(keys);
         }
 

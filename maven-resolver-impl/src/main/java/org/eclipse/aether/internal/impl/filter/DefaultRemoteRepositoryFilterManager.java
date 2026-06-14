@@ -59,9 +59,15 @@ public final class DefaultRemoteRepositoryFilterManager implements RemoteReposit
     @Override
     public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
         // use session specific key to distinguish between "derived" sessions
+        Object sessionDiscriminator;
+        if (session instanceof RepositorySystemSession.CloseableSession) {
+            sessionDiscriminator = ((RepositorySystemSession.CloseableSession) session).sessionId();
+        } else {
+            sessionDiscriminator = System.identityHashCode(session);
+        }
         return (RemoteRepositoryFilter) session.getData()
                 .computeIfAbsent(
-                        Keys.of(DefaultRemoteRepositoryFilterManager.class, "instance", session.hashCode()), () -> {
+                        Keys.of(DefaultRemoteRepositoryFilterManager.class, sessionDiscriminator), () -> {
                             HashMap<String, RemoteRepositoryFilter> filters = new HashMap<>();
                             for (Map.Entry<String, RemoteRepositoryFilterSource> entry : sources.entrySet()) {
                                 RemoteRepositoryFilter filter = entry.getValue().getRemoteRepositoryFilter(session);
