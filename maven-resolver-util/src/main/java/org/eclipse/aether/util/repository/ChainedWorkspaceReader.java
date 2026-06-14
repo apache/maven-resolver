@@ -20,10 +20,13 @@ package org.eclipse.aether.util.repository;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.WorkspaceReader;
@@ -35,10 +38,8 @@ import static java.util.Objects.requireNonNull;
  * A workspace reader that delegates to a chain of other readers, effectively aggregating their contents.
  */
 public final class ChainedWorkspaceReader implements WorkspaceReader {
-
-    private final List<WorkspaceReader> readers = new ArrayList<>();
-
-    private WorkspaceRepository repository;
+    private final List<WorkspaceReader> readers;
+    private final AtomicReference<WorkspaceRepository> repository;
 
     /**
      * Creates a new workspace reader by chaining the specified readers.
@@ -47,19 +48,19 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
      * @see #newInstance(WorkspaceReader, WorkspaceReader)
      */
     public ChainedWorkspaceReader(WorkspaceReader... readers) {
+        ArrayList<WorkspaceReader> list = new ArrayList<>();
         if (readers != null) {
-            Collections.addAll(this.readers, readers);
+            Arrays.stream(readers).filter(Objects::nonNull).forEach(list::add);
         }
-
         StringBuilder buffer = new StringBuilder();
-        for (WorkspaceReader reader : this.readers) {
+        for (WorkspaceReader reader : list) {
             if (buffer.length() > 0) {
                 buffer.append('+');
             }
             buffer.append(reader.getRepository().getContentType());
         }
-
-        repository = new WorkspaceRepository(buffer.toString(), new Key(this.readers));
+        this.readers = Collections.unmodifiableList(list);
+        this.repository = new AtomicReference<>(new WorkspaceRepository(buffer.toString(), new Key(list)));
     }
 
     /**
@@ -79,6 +80,7 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
         return new ChainedWorkspaceReader(reader1, reader2);
     }
 
+    @Override
     public File findArtifact(Artifact artifact) {
         requireNonNull(artifact, "artifact cannot be null");
         File file = null;
@@ -93,6 +95,7 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
         return file;
     }
 
+    @Override
     public List<String> findVersions(Artifact artifact) {
         requireNonNull(artifact, "artifact cannot be null");
         Collection<String> versions = new LinkedHashSet<>();
@@ -104,22 +107,27 @@ public final class ChainedWorkspaceReader implements WorkspaceReader {
         return Collections.unmodifiableList(new ArrayList<>(versions));
     }
 
+    @Override
     public WorkspaceRepository getRepository() {
         Key key = new Key(readers);
-        if (!key.equals(repository.getKey())) {
-            repository = new WorkspaceRepository(repository.getContentType(), key);
-        }
-        return repository;
+        return repository.updateAndGet(r -> {
+            if (!key.equals(r.getKey())) {
+                return new WorkspaceRepository(r.getContentType(), key);
+            } else {
+                return r;
+            }
+        });
     }
 
     private static class Key {
-
-        private final List<Object> keys = new ArrayList<>();
+        private final List<Object> keys;
 
         Key(List<WorkspaceReader> readers) {
+            ArrayList<Object> keys = new ArrayList<>();
             for (WorkspaceReader reader : readers) {
                 keys.add(reader.getRepository().getKey());
             }
+            this.keys = keys;
         }
 
         @Override
