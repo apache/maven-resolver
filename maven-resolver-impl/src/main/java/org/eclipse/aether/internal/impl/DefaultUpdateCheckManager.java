@@ -33,6 +33,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.UpdateCheck;
@@ -68,12 +69,13 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
 
     private static final String NOT_FOUND = "";
 
-    static final Object SESSION_CHECKS = new Object() {
+    // instance bound private key
+    static final Object SESSION_CHECKS = Keys.of(new Object() {
         @Override
         public String toString() {
             return "updateCheckManager.checks";
         }
-    };
+    });
 
     /**
      * Manages the session state, i.e. influences if the same download requests to artifacts/metadata will happen

@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.MetadataResolver;
@@ -238,16 +239,20 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         this.repositoryLayoutProvider = requireNonNull(repositoryLayoutProvider);
     }
 
+    private static final Object PREFIXES_KEY = Keys.of(PrefixesRemoteRepositoryFilterSource.class, "prefixes");
+
     @SuppressWarnings("unchecked")
     private ConcurrentMap<RemoteRepository, PrefixTree> prefixes(RepositorySystemSession session) {
         return (ConcurrentMap<RemoteRepository, PrefixTree>)
-                session.getData().computeIfAbsent(getClass().getName() + ".prefixes", ConcurrentHashMap::new);
+                session.getData().computeIfAbsent(PREFIXES_KEY, ConcurrentHashMap::new);
     }
+
+    private static final Object LAYOUTS_KEY = Keys.of(PrefixesRemoteRepositoryFilterSource.class, "layouts");
 
     @SuppressWarnings("unchecked")
     private ConcurrentMap<RemoteRepository, RepositoryLayout> layouts(RepositorySystemSession session) {
         return (ConcurrentMap<RemoteRepository, RepositoryLayout>)
-                session.getData().computeIfAbsent(getClass().getName() + ".layouts", ConcurrentHashMap::new);
+                session.getData().computeIfAbsent(LAYOUTS_KEY, ConcurrentHashMap::new);
     }
 
     @Override

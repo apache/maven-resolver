@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
@@ -48,8 +49,6 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public final class DefaultRemoteRepositoryFilterManager implements RemoteRepositoryFilterManager {
-    private static final String INSTANCE_KEY = DefaultRemoteRepositoryFilterManager.class.getName() + ".instance";
-
     private final Map<String, RemoteRepositoryFilterSource> sources;
 
     @Inject
@@ -60,21 +59,22 @@ public final class DefaultRemoteRepositoryFilterManager implements RemoteReposit
     @Override
     public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
         // use session specific key to distinguish between "derived" sessions
-        String instanceSpecificKey = INSTANCE_KEY + "." + session.hashCode();
-        return (RemoteRepositoryFilter) session.getData().computeIfAbsent(instanceSpecificKey, () -> {
-            HashMap<String, RemoteRepositoryFilter> filters = new HashMap<>();
-            for (Map.Entry<String, RemoteRepositoryFilterSource> entry : sources.entrySet()) {
-                RemoteRepositoryFilter filter = entry.getValue().getRemoteRepositoryFilter(session);
-                if (filter != null) {
-                    filters.put(entry.getKey(), filter);
-                }
-            }
-            if (!filters.isEmpty()) {
-                return new Participants(filters);
-            } else {
-                return null;
-            }
-        });
+        return (RemoteRepositoryFilter) session.getData()
+                .computeIfAbsent(
+                        Keys.of(DefaultRemoteRepositoryFilterManager.class, "instance", session.hashCode()), () -> {
+                            HashMap<String, RemoteRepositoryFilter> filters = new HashMap<>();
+                            for (Map.Entry<String, RemoteRepositoryFilterSource> entry : sources.entrySet()) {
+                                RemoteRepositoryFilter filter = entry.getValue().getRemoteRepositoryFilter(session);
+                                if (filter != null) {
+                                    filters.put(entry.getKey(), filter);
+                                }
+                            }
+                            if (!filters.isEmpty()) {
+                                return new Participants(filters);
+                            } else {
+                                return null;
+                            }
+                        });
     }
 
     /**

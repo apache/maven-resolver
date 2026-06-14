@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.scope;
 import java.util.Collection;
 import java.util.Objects;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
@@ -37,8 +38,8 @@ import static java.util.Objects.requireNonNull;
  * @see Dependency#isOptional()
  */
 public final class OptionalDependencySelector implements DependencySelector {
-    public static final String IGNORED_KEYS = OptionalDependencySelector.class.getName() + ".ignored";
-    public static final String UNSELECTED_KEYS = OptionalDependencySelector.class.getName() + ".unselected";
+    public static final Object IGNORED_KEYS = Keys.of(OptionalDependencySelector.class, "ignored");
+    public static final Object UNSELECTED_KEYS = Keys.of(OptionalDependencySelector.class, "unselected");
 
     /**
      * Excludes optional dependencies always (from root).

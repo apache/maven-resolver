@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.ArtifactRepository;
@@ -146,8 +147,8 @@ public final class TrustedChecksumsArtifactResolverPostProcessor extends Artifac
      */
     public static final String CONFIG_PROP_RECORD = CONFIG_PROPS_PREFIX + "record";
 
-    private static final String CHECKSUM_ALGORITHMS_CACHE_KEY =
-            TrustedChecksumsArtifactResolverPostProcessor.class.getName() + ".checksumAlgorithms";
+    private static final Object CHECKSUM_ALGORITHMS_CACHE_KEY =
+            Keys.of(TrustedChecksumsArtifactResolverPostProcessor.class, "checksumAlgorithms");
 
     private final ChecksumAlgorithmFactorySelector checksumAlgorithmFactorySelector;
 
