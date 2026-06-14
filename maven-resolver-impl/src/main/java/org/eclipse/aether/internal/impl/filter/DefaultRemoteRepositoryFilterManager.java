@@ -66,21 +66,20 @@ public final class DefaultRemoteRepositoryFilterManager implements RemoteReposit
             sessionDiscriminator = System.identityHashCode(session);
         }
         return (RemoteRepositoryFilter) session.getData()
-                .computeIfAbsent(
-                        Keys.of(DefaultRemoteRepositoryFilterManager.class, sessionDiscriminator), () -> {
-                            HashMap<String, RemoteRepositoryFilter> filters = new HashMap<>();
-                            for (Map.Entry<String, RemoteRepositoryFilterSource> entry : sources.entrySet()) {
-                                RemoteRepositoryFilter filter = entry.getValue().getRemoteRepositoryFilter(session);
-                                if (filter != null) {
-                                    filters.put(entry.getKey(), filter);
-                                }
-                            }
-                            if (!filters.isEmpty()) {
-                                return new Participants(filters);
-                            } else {
-                                return null;
-                            }
-                        });
+                .computeIfAbsent(Keys.of(DefaultRemoteRepositoryFilterManager.class, sessionDiscriminator), () -> {
+                    HashMap<String, RemoteRepositoryFilter> filters = new HashMap<>();
+                    for (Map.Entry<String, RemoteRepositoryFilterSource> entry : sources.entrySet()) {
+                        RemoteRepositoryFilter filter = entry.getValue().getRemoteRepositoryFilter(session);
+                        if (filter != null) {
+                            filters.put(entry.getKey(), filter);
+                        }
+                    }
+                    if (!filters.isEmpty()) {
+                        return new Participants(filters);
+                    } else {
+                        return null;
+                    }
+                });
     }
 
     /**
