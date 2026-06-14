@@ -93,4 +93,20 @@ public class KeysTest {
         assertEquals(key1.hashCode(), key2.hashCode());
         assertNotEquals(key1.hashCode(), key3.hashCode());
     }
+
+    @Test
+    void subKey() {
+        Object key1 = Keys.of("one", "two", "three");
+        Object key2 = Keys.of("one", "two");
+        assertNotSame(key1, key2);
+
+        assertNotEquals(key1, key2);
+        assertNotEquals(key1.hashCode(), key2.hashCode());
+
+        Object key3 = Keys.of(key2, "three");
+        assertNotSame(key1, key3);
+
+        assertEquals(key1, key3);
+        assertEquals(key1.hashCode(), key3.hashCode());
+    }
 }
