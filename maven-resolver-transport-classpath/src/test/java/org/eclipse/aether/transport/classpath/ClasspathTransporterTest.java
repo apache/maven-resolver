@@ -32,7 +32,6 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +58,9 @@ public class ClasspathTransporterTest {
             transporter.close();
             transporter = null;
         }
-        transporter = factory.newInstance(session, newRepo(url));
+        RemoteRepository repo = newRepo(url);
+        assertTrue(factory.canHandle(repo.getProtocol()));
+        transporter = factory.newInstance(session, repo);
     }
 
     @BeforeEach
@@ -259,8 +260,8 @@ public class ClasspathTransporterTest {
     }
 
     @Test
-    void testInit_BadProtocol() {
-        assertThrows(NoTransporterException.class, () -> newTransporter("bad:/void"));
+    void testCanHandle_BadProtocol() {
+        assertFalse(factory.canHandle("bad:/void"));
     }
 
     @Test
