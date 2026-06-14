@@ -59,7 +59,7 @@ public final class PrioritizedComponents<T> {
             return (PrioritizedComponents<C>) session.getCache()
                     .computeIfAbsent(
                             session,
-                            Keys.of(discriminator, "pc-" + Integer.toHexString(components.hashCode())),
+                            Keys.of(PrioritizedComponents.class, discriminator, "pc-" + Integer.toHexString(components.hashCode())),
                             () -> create(session, components, priorityFunction));
         } else {
             return create(session, components, priorityFunction);

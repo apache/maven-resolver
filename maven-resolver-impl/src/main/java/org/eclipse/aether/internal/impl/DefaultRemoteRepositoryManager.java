@@ -159,7 +159,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
         }
         RepositoryCache cache = session.getCache();
         if (cache != null) {
-            Object key = Keys.of(original, mirror);
+            Object key = Keys.of(mirror.getId(), mirror.getUrl(), original.getId(), original.getUrl());
             if (cache.get(session, key) != null) {
                 return;
             }
