@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.util.ConfigUtils;
 
@@ -55,10 +56,11 @@ public final class PrioritizedComponents<T> {
         boolean cached = ConfigUtils.getBoolean(
                 session, ConfigurationProperties.DEFAULT_CACHED_PRIORITIES, ConfigurationProperties.CACHED_PRIORITIES);
         if (cached && session.getCache() != null) {
-            String key = PrioritizedComponents.class.getName() + ".pc." + discriminator.getName()
-                    + Integer.toHexString(components.hashCode());
             return (PrioritizedComponents<C>) session.getCache()
-                    .computeIfAbsent(session, key, () -> create(session, components, priorityFunction));
+                    .computeIfAbsent(
+                            session,
+                            Keys.of(discriminator, "pc-" + Integer.toHexString(components.hashCode())),
+                            () -> create(session, components, priorityFunction));
         } else {
             return create(session, components, priorityFunction);
         }

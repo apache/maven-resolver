@@ -81,6 +81,7 @@ import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
@@ -287,11 +288,13 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
 
         if (session.getCache() != null) {
-            String authCacheKey = getClass().getName() + "@"
-                    + Integer.toHexString(System.identityHashCode(getClass().getClassLoader())) + "-"
-                    + repository.getId() + "-"
-                    + StringDigestUtil.sha1(repository.toString());
-            this.authCache = (AuthCache) session.getCache().computeIfAbsent(session, authCacheKey, BasicAuthCache::new);
+            this.authCache = (AuthCache) session.getCache()
+                    .computeIfAbsent(
+                            session,
+                            Keys.of(
+                                    getClass(),
+                                    repository.getId() + "-" + StringDigestUtil.sha1(repository.toString())),
+                            BasicAuthCache::new);
         } else {
             this.authCache = new BasicAuthCache();
         }
