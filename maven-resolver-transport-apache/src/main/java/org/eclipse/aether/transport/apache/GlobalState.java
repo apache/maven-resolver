@@ -43,6 +43,7 @@ import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLInitializationException;
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.util.ConfigUtils;
@@ -86,7 +87,7 @@ final class GlobalState implements Closeable {
         }
     }
 
-    private static final String KEY = GlobalState.class.getName();
+    private static final Object KEY = Keys.of(GlobalState.class);
 
     private static final String CONFIG_PROP_CACHE_STATE =
             ApacheTransporterConfigurationKeys.CONFIG_PROPS_PREFIX + "cacheState";

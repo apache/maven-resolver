@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -125,13 +126,13 @@ public final class DataPool {
     public static final String CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES =
             "aether.dependencyCollector.pool.internArtifactDescriptorManagedDependencies";
 
-    private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
+    private static final Object ARTIFACT_POOL = Keys.of(DataPool.class, "artifact");
 
-    private static final String DEPENDENCY_POOL = DataPool.class.getName() + "$Dependency";
+    private static final Object DEPENDENCY_POOL = Keys.of(DataPool.class, "dependency");
 
-    private static final String DESCRIPTORS = DataPool.class.getName() + "$Descriptors";
+    private static final Object DESCRIPTORS = Keys.of(DataPool.class, "descriptors");
 
-    private static final String DEPENDENCY_LISTS_POOL = DataPool.class.getName() + "$DependencyLists";
+    private static final Object DEPENDENCY_LISTS_POOL = Keys.of(DataPool.class, "dependencyLists");
 
     public static final ArtifactDescriptorResult NO_DESCRIPTOR =
             new ArtifactDescriptorResult(new ArtifactDescriptorRequest());
