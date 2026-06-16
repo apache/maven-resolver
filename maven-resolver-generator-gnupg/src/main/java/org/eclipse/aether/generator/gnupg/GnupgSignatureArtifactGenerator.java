@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -56,6 +57,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
     private final PGPSignatureSubpacketVector hashSubPackets;
     private final String keyInfo;
     private final List<Path> signatureTempFiles;
+    private final AtomicBoolean closed;
 
     GnupgSignatureArtifactGenerator(
             Collection<Artifact> artifacts,
@@ -71,6 +73,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
         this.hashSubPackets = hashSubPackets;
         this.keyInfo = keyInfo;
         this.signatureTempFiles = new ArrayList<>();
+        this.closed = new AtomicBoolean(false);
         logger.debug("Created generator using key {}", keyInfo);
     }
 
@@ -115,14 +118,16 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
     }
 
     @Override
-    public synchronized void close() {
-        signatureTempFiles.forEach(p -> {
-            try {
-                Files.deleteIfExists(p);
-            } catch (IOException e) {
-                p.toFile().deleteOnExit();
-            }
-        });
+    public void close() {
+        if (closed.compareAndSet(false, true)) {
+            signatureTempFiles.forEach(p -> {
+                try {
+                    Files.deleteIfExists(p);
+                } catch (IOException e) {
+                    p.toFile().deleteOnExit();
+                }
+            });
+        }
     }
 
     private void sign(InputStream content, OutputStream signature) throws IOException {
