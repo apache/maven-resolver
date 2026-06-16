@@ -28,6 +28,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 import dev.sigstore.KeylessSigner;
@@ -47,10 +49,11 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
     private static final String ARTIFACT_EXTENSION = ".sigstore.json";
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final PathProcessor pathProcessor;
-    private final ArrayList<Artifact> artifacts;
+    private final List<Artifact> artifacts;
     private final Predicate<Artifact> signableArtifactPredicate;
     private final boolean publicStaging;
-    private final ArrayList<Path> signatureTempFiles;
+    private final List<Path> signatureTempFiles;
+    private final AtomicBoolean closed;
 
     SigstoreSignatureArtifactGenerator(
             PathProcessor pathProcessor,
@@ -62,6 +65,7 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
         this.signableArtifactPredicate = signableArtifactPredicate;
         this.publicStaging = publicStaging;
         this.signatureTempFiles = new ArrayList<>();
+        this.closed = new AtomicBoolean(false);
         logger.debug("Created sigstore generator (publicStaging={})", publicStaging);
     }
 
@@ -71,7 +75,7 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
     }
 
     @Override
-    public Collection<? extends Artifact> generate(Collection<? extends Artifact> generatedArtifacts) {
+    public synchronized Collection<? extends Artifact> generate(Collection<? extends Artifact> generatedArtifacts) {
         try {
             artifacts.addAll(generatedArtifacts);
 
@@ -148,12 +152,14 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
 
     @Override
     public void close() {
-        signatureTempFiles.forEach(p -> {
-            try {
-                Files.deleteIfExists(p);
-            } catch (IOException e) {
-                p.toFile().deleteOnExit();
-            }
-        });
+        if (closed.compareAndSet(false, true)) {
+            signatureTempFiles.forEach(p -> {
+                try {
+                    Files.deleteIfExists(p);
+                } catch (IOException e) {
+                    p.toFile().deleteOnExit();
+                }
+            });
+        }
     }
 }
