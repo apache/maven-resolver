@@ -20,6 +20,7 @@ package org.eclipse.aether.collection;
 
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.Map;
 
 import org.eclipse.aether.graph.Exclusion;
@@ -33,7 +34,7 @@ public final class DependencyManagement {
     /**
      * Enumeration of manageable attributes, attributes that can be subjected to dependency management.
      *
-     * @since 2.0.17
+     * @since 2.0.19
      */
     public enum Subject {
         VERSION,
@@ -44,20 +45,20 @@ public final class DependencyManagement {
     }
 
     private final EnumMap<Subject, Object> managedValues;
-    private final EnumMap<Subject, Boolean> managedEnforced;
+    private final EnumSet<Subject> managedEnforced;
 
     /**
      * Creates an empty management update.
      */
     public DependencyManagement() {
         this.managedValues = new EnumMap<>(Subject.class);
-        this.managedEnforced = new EnumMap<>(Subject.class);
+        this.managedEnforced = EnumSet.noneOf(Subject.class);
     }
 
     /**
      * Returns {@code true} if passed in subject is managed.
      *
-     * @since 2.0.17
+     * @since 2.0.19
      */
     public boolean isManagedSubject(Subject subject) {
         return managedValues.containsKey(subject);
@@ -66,10 +67,10 @@ public final class DependencyManagement {
     /**
      * Returns {@code true} if passed in subject is managed and is enforced.
      *
-     * @since 2.0.17
+     * @since 2.0.19
      */
     public boolean isManagedSubjectEnforced(Subject subject) {
-        return isManagedSubject(subject) && managedEnforced.getOrDefault(subject, false);
+        return isManagedSubject(subject) && managedEnforced.contains(subject);
     }
 
     /**
@@ -100,17 +101,10 @@ public final class DependencyManagement {
      * @param version The new version, may be {@code null} if the version is not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.17
+     * @since 2.0.19
      */
     public DependencyManagement setVersion(String version, boolean enforced) {
-        if (version == null) {
-            this.managedValues.remove(Subject.VERSION);
-            this.managedEnforced.remove(Subject.VERSION);
-        } else {
-            this.managedValues.put(Subject.VERSION, version);
-            this.managedEnforced.put(Subject.VERSION, enforced);
-        }
-        return this;
+        return set(Subject.VERSION, version, enforced);
     }
 
     /**
@@ -141,17 +135,10 @@ public final class DependencyManagement {
      * @param scope The new scope, may be {@code null} if the scope is not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.17
+     * @since 2.0.19
      */
     public DependencyManagement setScope(String scope, boolean enforced) {
-        if (scope == null) {
-            this.managedValues.remove(Subject.SCOPE);
-            this.managedEnforced.remove(Subject.SCOPE);
-        } else {
-            this.managedValues.put(Subject.SCOPE, scope);
-            this.managedEnforced.put(Subject.SCOPE, enforced);
-        }
-        return this;
+        return set(Subject.SCOPE, scope, enforced);
     }
 
     /**
@@ -182,17 +169,10 @@ public final class DependencyManagement {
      * @param optional The optional flag, may be {@code null} if the flag is not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.17
+     * @since 2.0.19
      */
     public DependencyManagement setOptional(Boolean optional, boolean enforced) {
-        if (optional == null) {
-            this.managedValues.remove(Subject.OPTIONAL);
-            this.managedEnforced.remove(Subject.OPTIONAL);
-        } else {
-            this.managedValues.put(Subject.OPTIONAL, optional);
-            this.managedEnforced.put(Subject.OPTIONAL, enforced);
-        }
-        return this;
+        return set(Subject.OPTIONAL, optional, enforced);
     }
 
     /**
@@ -230,17 +210,10 @@ public final class DependencyManagement {
      * @param exclusions The new exclusions, may be {@code null} if the exclusions are not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.17
+     * @since 2.0.19
      */
     public DependencyManagement setExclusions(Collection<Exclusion> exclusions, boolean enforced) {
-        if (exclusions == null) {
-            this.managedValues.remove(Subject.EXCLUSIONS);
-            this.managedEnforced.remove(Subject.EXCLUSIONS);
-        } else {
-            this.managedValues.put(Subject.EXCLUSIONS, exclusions);
-            this.managedEnforced.put(Subject.EXCLUSIONS, enforced);
-        }
-        return this;
+        return set(Subject.EXCLUSIONS, exclusions, enforced);
     }
 
     /**
@@ -278,15 +251,26 @@ public final class DependencyManagement {
      * @param properties The new artifact properties, may be {@code null} if the properties are not managed.
      * @param enforced The enforcement of new value.
      * @return This management update for chaining, never {@code null}.
-     * @since 2.0.17
+     * @since 2.0.19
      */
     public DependencyManagement setProperties(Map<String, String> properties, boolean enforced) {
-        if (properties == null) {
-            this.managedValues.remove(Subject.PROPERTIES);
-            this.managedEnforced.remove(Subject.PROPERTIES);
+        return set(Subject.PROPERTIES, properties, enforced);
+    }
+
+    /**
+     * Generic but private setter that applies common logic.
+     */
+    private DependencyManagement set(Subject subject, Object value, boolean enforced) {
+        if (value == null) {
+            this.managedValues.remove(subject);
+            this.managedEnforced.remove(subject);
         } else {
-            this.managedValues.put(Subject.PROPERTIES, properties);
-            this.managedEnforced.put(Subject.PROPERTIES, enforced);
+            this.managedValues.put(subject, value);
+            if (enforced) {
+                this.managedEnforced.add(subject);
+            } else {
+                this.managedEnforced.remove(subject);
+            }
         }
         return this;
     }

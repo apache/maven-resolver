@@ -55,7 +55,7 @@ public class PremanagedDependency {
     private final Map<String, String> premanagedProperties;
 
     /**
-     * @since 2.0.17
+     * @since 2.0.19
      */
     private final EnumMap<DependencyManagement.Subject, Boolean> managedSubjects;
 
@@ -95,8 +95,7 @@ public class PremanagedDependency {
             boolean premanagedState) {
         DependencyManagement depMngt = depManager != null ? depManager.manageDependency(dependency) : null;
 
-        EnumMap<DependencyManagement.Subject, Boolean> managedSubjects =
-                new EnumMap<>(DependencyManagement.Subject.class);
+        EnumMap<DependencyManagement.Subject, Boolean> managedSubjects = null;
         String premanagedVersion = null;
         String premanagedScope = null;
         Boolean premanagedOptional = null;
@@ -105,6 +104,7 @@ public class PremanagedDependency {
 
         if (depMngt != null) {
             if (depMngt.getVersion() != null && !disableVersionManagement) {
+                managedSubjects = new EnumMap<>(DependencyManagement.Subject.class);
                 Artifact artifact = dependency.getArtifact();
                 premanagedVersion = artifact.getVersion();
                 dependency = dependency.setArtifact(artifact.setVersion(depMngt.getVersion()));
@@ -113,6 +113,9 @@ public class PremanagedDependency {
                         depMngt.isManagedSubjectEnforced(DependencyManagement.Subject.VERSION));
             }
             if (depMngt.getProperties() != null) {
+                if (managedSubjects == null) {
+                    managedSubjects = new EnumMap<>(DependencyManagement.Subject.class);
+                }
                 Artifact artifact = dependency.getArtifact();
                 premanagedProperties = artifact.getProperties();
                 dependency = dependency.setArtifact(artifact.setProperties(depMngt.getProperties()));
@@ -121,6 +124,9 @@ public class PremanagedDependency {
                         depMngt.isManagedSubjectEnforced(DependencyManagement.Subject.PROPERTIES));
             }
             if (depMngt.getScope() != null) {
+                if (managedSubjects == null) {
+                    managedSubjects = new EnumMap<>(DependencyManagement.Subject.class);
+                }
                 premanagedScope = dependency.getScope();
                 dependency = dependency.setScope(depMngt.getScope());
                 managedSubjects.put(
@@ -128,6 +134,9 @@ public class PremanagedDependency {
                         depMngt.isManagedSubjectEnforced(DependencyManagement.Subject.SCOPE));
             }
             if (depMngt.getOptional() != null) {
+                if (managedSubjects == null) {
+                    managedSubjects = new EnumMap<>(DependencyManagement.Subject.class);
+                }
                 premanagedOptional = dependency.isOptional();
                 dependency = dependency.setOptional(depMngt.getOptional());
                 managedSubjects.put(
@@ -135,6 +144,9 @@ public class PremanagedDependency {
                         depMngt.isManagedSubjectEnforced(DependencyManagement.Subject.OPTIONAL));
             }
             if (depMngt.getExclusions() != null) {
+                if (managedSubjects == null) {
+                    managedSubjects = new EnumMap<>(DependencyManagement.Subject.class);
+                }
                 premanagedExclusions = dependency.getExclusions();
                 dependency = dependency.setExclusions(depMngt.getExclusions());
                 managedSubjects.put(

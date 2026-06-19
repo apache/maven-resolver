@@ -38,6 +38,8 @@ import static java.util.Objects.requireNonNull;
  * A node within a dependency graph.
  */
 public final class DefaultDependencyNode implements DependencyNode {
+    private static final DependencyManagement.Subject[] SUBJECTS = DependencyManagement.Subject.values();
+
     private List<DependencyNode> children;
 
     private Dependency dependency;
@@ -108,18 +110,16 @@ public final class DefaultDependencyNode implements DependencyNode {
         setAliases(node.getAliases());
         setRequestContext(node.getRequestContext());
 
-        EnumMap<DependencyManagement.Subject, Boolean> managedSubjects =
-                new EnumMap<>(DependencyManagement.Subject.class);
-        for (DependencyManagement.Subject subject : DependencyManagement.Subject.values()) {
+        EnumMap<DependencyManagement.Subject, Boolean> managedSubjects = null;
+        for (DependencyManagement.Subject subject : SUBJECTS) {
             if (node.isManagedSubject(subject)) {
+                if (managedSubjects == null) {
+                    managedSubjects = new EnumMap<>(DependencyManagement.Subject.class);
+                }
                 managedSubjects.put(subject, node.isManagedSubjectEnforced(subject));
             }
         }
-        if (managedSubjects.isEmpty()) {
-            setManagedSubjects(null);
-        } else {
-            setManagedSubjects(managedSubjects);
-        }
+        setManagedSubjects(managedSubjects);
 
         setRelocations(node.getRelocations());
         setRepositories(node.getRepositories());
@@ -265,6 +265,10 @@ public final class DefaultDependencyNode implements DependencyNode {
 
     @Deprecated
     public void setManagedBits(int managedBits) {
+        if (managedBits == 0) {
+            setManagedSubjects(null);
+            return;
+        }
         EnumMap<DependencyManagement.Subject, Boolean> subjects = new EnumMap<>(DependencyManagement.Subject.class);
         if ((managedBits & DependencyNode.MANAGED_VERSION) != 0) {
             subjects.put(DependencyManagement.Subject.VERSION, true);

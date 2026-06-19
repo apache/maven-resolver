@@ -190,7 +190,7 @@ public interface DependencyNode {
      *
      * @param subject the {@link org.eclipse.aether.collection.DependencyManagement.Subject}, must not be {@code null}.
      * @see org.eclipse.aether.collection.DependencyManagement.Subject
-     * @since 2.0.17
+     * @since 2.0.19
      */
     default boolean isManagedSubject(DependencyManagement.Subject subject) {
         switch (subject) {
@@ -214,7 +214,7 @@ public interface DependencyNode {
      *
      * @param subject the {@link org.eclipse.aether.collection.DependencyManagement.Subject}, must not be {@code null}.
      * @see org.eclipse.aether.collection.DependencyManagement.Subject
-     * @since 2.0.17
+     * @since 2.0.19
      */
     default boolean isManagedSubjectEnforced(DependencyManagement.Subject subject) {
         return isManagedSubject(subject);
