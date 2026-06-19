@@ -87,7 +87,7 @@ import org.eclipse.aether.internal.impl.LocalPathPrefixComposerFactory;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.internal.impl.TrackingFileManager;
-import org.eclipse.aether.internal.impl.TrackingFileManagerProvider;
+import org.eclipse.aether.internal.impl.TrackingFileManagerSupplier;
 import org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector;
 import org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory;
 import org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory;
@@ -225,7 +225,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected TrackingFileManager createTrackingFileManager() {
-        return new TrackingFileManagerProvider(getNamedLockFactorySelector()).get();
+        return new TrackingFileManagerSupplier(getNamedLockFactorySelector()).get();
     }
 
     private LocalPathComposer localPathComposer;

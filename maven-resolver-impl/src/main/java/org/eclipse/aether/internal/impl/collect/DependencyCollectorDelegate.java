@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
@@ -33,6 +34,7 @@ import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.collection.DependencyCollectionChecker;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
@@ -97,6 +99,19 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
     public static final int DEFAULT_MAX_CYCLES = 10;
 
+    /**
+     * The allowed runs of collection (and re-collection). By default, there must be at least 1 run, so values smaller
+     * than 1 are considered configuration errors and will fail dependency collection.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Integer}
+     * @configurationDefaultValue {@link #DEFAULT_MAX_RUNS}
+     * @since 2.0.19
+     */
+    public static final String CONFIG_PROP_MAX_RUNS = DefaultDependencyCollector.CONFIG_PROPS_PREFIX + "maxRuns";
+
+    public static final int DEFAULT_MAX_RUNS = 5;
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected final RemoteRepositoryManager remoteRepositoryManager;
@@ -122,153 +137,181 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
     @SuppressWarnings("checkstyle:methodlength")
     @Override
-    public final CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)
+    public final CollectResult collectDependencies(
+            final RepositorySystemSession originalSession, final CollectRequest request)
             throws DependencyCollectionException {
-        requireNonNull(session, "session cannot be null");
+        requireNonNull(originalSession, "session cannot be null");
         requireNonNull(request, "request cannot be null");
 
-        InternalScopeManager scopeManager = (InternalScopeManager) session.getScopeManager();
-        session = setUpSession(session, request, scopeManager);
+        final InternalScopeManager scopeManager = (InternalScopeManager) originalSession.getScopeManager();
+        final RepositorySystemSession setUpSession = setUpSession(originalSession, request, scopeManager);
+        final DependencyCollectionChecker dependencyCollectionChecker =
+                originalSession.getDependencyCollectionChecker() == null
+                        ? DependencyCollectionChecker.NOOP
+                        : originalSession.getDependencyCollectionChecker();
 
-        RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
+        final RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
-        CollectResult result = new CollectResult(request);
+        final Map<String, Object> stats = new LinkedHashMap<>();
+        final AtomicInteger runs = new AtomicInteger(0);
+        final int maxRuns = ConfigUtils.getInteger(originalSession, DEFAULT_MAX_RUNS, CONFIG_PROP_MAX_RUNS);
+        if (maxRuns < 1) {
+            throw new DependencyCollectionException(
+                    new CollectResult(request),
+                    "Invalid configuration: '" + CONFIG_PROP_MAX_RUNS
+                            + "' configuration must be equal or grater than 1");
+        }
 
-        DependencyTraverser depTraverser = session.getDependencyTraverser();
-        VersionFilter verFilter = session.getVersionFilter();
+        CollectResult result = null;
 
-        Dependency root = request.getRoot();
-        List<RemoteRepository> repositories = request.getRepositories();
-        List<Dependency> dependencies = request.getDependencies();
-        List<Dependency> managedDependencies = request.getManagedDependencies();
-
-        Map<String, Object> stats = new LinkedHashMap<>();
-        long time1 = System.nanoTime();
-
-        DefaultDependencyNode node;
-        if (root != null) {
-            List<? extends Version> versions;
-            VersionRangeResult rangeResult;
-            try {
-                VersionRangeRequest rangeRequest = new VersionRangeRequest(
-                        root.getArtifact(), request.getRepositories(), request.getRequestContext());
-                rangeRequest.setTrace(trace);
-                rangeResult = versionRangeResolver.resolveVersionRange(session, rangeRequest);
-                versions = filterVersions(root, rangeResult, verFilter, new DefaultVersionFilterContext(session));
-            } catch (VersionRangeResolutionException e) {
-                result.addException(e);
-                throw new DependencyCollectionException(result, e.getMessage());
+        boolean finished = false;
+        while (!finished) {
+            final long time1 = System.nanoTime();
+            if (runs.incrementAndGet() > maxRuns) {
+                throw new DependencyCollectionException(
+                        new CollectResult(request),
+                        "Too many collection attempts (bug of used DependencyCollectionChecker?)");
             }
 
-            Version version = versions.get(versions.size() - 1);
-            root = root.setArtifact(root.getArtifact().setVersion(version.toString()));
+            RepositorySystemSession session = dependencyCollectionChecker.prepare(setUpSession, request);
+            final DependencyTraverser depTraverser = session.getDependencyTraverser();
+            final VersionFilter verFilter = session.getVersionFilter();
 
-            ArtifactDescriptorResult descriptorResult;
-            try {
-                ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-                descriptorRequest.setArtifact(root.getArtifact());
-                descriptorRequest.setRepositories(request.getRepositories());
-                descriptorRequest.setRequestContext(request.getRequestContext());
-                descriptorRequest.setTrace(trace);
-                if (isLackingDescriptor(session, root.getArtifact())) {
-                    descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
-                } else {
-                    descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
-                    for (ArtifactDecorator decorator :
-                            Utils.getArtifactDecorators(session, artifactDecoratorFactories)) {
-                        descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
-                    }
+            Dependency root = request.getRoot();
+            List<RemoteRepository> repositories = request.getRepositories();
+            List<Dependency> dependencies = request.getDependencies();
+            List<Dependency> managedDependencies = request.getManagedDependencies();
+
+            result = new CollectResult(request);
+            DefaultDependencyNode node;
+            if (root != null) {
+                List<? extends Version> versions;
+                VersionRangeResult rangeResult;
+                try {
+                    VersionRangeRequest rangeRequest = new VersionRangeRequest(
+                            root.getArtifact(), request.getRepositories(), request.getRequestContext());
+                    rangeRequest.setTrace(trace);
+                    rangeResult = versionRangeResolver.resolveVersionRange(session, rangeRequest);
+                    versions = filterVersions(root, rangeResult, verFilter, new DefaultVersionFilterContext(session));
+                } catch (VersionRangeResolutionException e) {
+                    result.addException(e);
+                    throw new DependencyCollectionException(result, e.getMessage());
                 }
-            } catch (ArtifactDescriptorException e) {
-                result.addException(e);
-                throw new DependencyCollectionException(result, e.getMessage());
+
+                Version version = versions.get(versions.size() - 1);
+                root = root.setArtifact(root.getArtifact().setVersion(version.toString()));
+
+                ArtifactDescriptorResult descriptorResult;
+                try {
+                    ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+                    descriptorRequest.setArtifact(root.getArtifact());
+                    descriptorRequest.setRepositories(request.getRepositories());
+                    descriptorRequest.setRequestContext(request.getRequestContext());
+                    descriptorRequest.setTrace(trace);
+                    if (isLackingDescriptor(session, root.getArtifact())) {
+                        descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
+                    } else {
+                        descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
+                        for (ArtifactDecorator decorator :
+                                Utils.getArtifactDecorators(session, artifactDecoratorFactories)) {
+                            descriptorResult.setArtifact(decorator.decorateArtifact(descriptorResult));
+                        }
+                    }
+                } catch (ArtifactDescriptorException e) {
+                    result.addException(e);
+                    throw new DependencyCollectionException(result, e.getMessage());
+                }
+
+                root = root.setArtifact(descriptorResult.getArtifact());
+
+                if (!session.isIgnoreArtifactDescriptorRepositories()) {
+                    repositories = remoteRepositoryManager.aggregateRepositories(
+                            session, repositories, descriptorResult.getRepositories(), true);
+                }
+                dependencies = mergeDeps(dependencies, descriptorResult.getDependencies());
+                managedDependencies = mergeDeps(managedDependencies, descriptorResult.getManagedDependencies());
+
+                node = new DefaultDependencyNode(root);
+                node.setRequestContext(request.getRequestContext());
+                node.setRelocations(descriptorResult.getRelocations());
+                node.setVersionConstraint(rangeResult.getVersionConstraint());
+                node.setVersion(version);
+                node.setAliases(descriptorResult.getAliases());
+                node.setRepositories(request.getRepositories());
+            } else {
+                node = new DefaultDependencyNode(request.getRootArtifact());
+                node.setRequestContext(request.getRequestContext());
+                node.setRepositories(request.getRepositories());
             }
 
-            root = root.setArtifact(descriptorResult.getArtifact());
+            result.setRoot(node);
 
-            if (!session.isIgnoreArtifactDescriptorRepositories()) {
-                repositories = remoteRepositoryManager.aggregateRepositories(
-                        session, repositories, descriptorResult.getRepositories(), true);
+            boolean traverse = root == null || depTraverser == null || depTraverser.traverseDependency(root);
+            String errorPath = null;
+            if (traverse && !dependencies.isEmpty()) {
+                DataPool pool = new DataPool(session);
+
+                DefaultDependencyCollectionContext context = new DefaultDependencyCollectionContext(
+                        session, request.getRootArtifact(), root, managedDependencies);
+
+                DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext(session);
+
+                Results results = new Results(result, session);
+
+                doCollectDependencies(
+                        session,
+                        trace,
+                        pool,
+                        context,
+                        versionContext,
+                        request,
+                        node,
+                        repositories,
+                        dependencies,
+                        managedDependencies,
+                        results);
+
+                errorPath = results.getErrorPath();
             }
-            dependencies = mergeDeps(dependencies, descriptorResult.getDependencies());
-            managedDependencies = mergeDeps(managedDependencies, descriptorResult.getManagedDependencies());
 
-            node = new DefaultDependencyNode(root);
-            node.setRequestContext(request.getRequestContext());
-            node.setRelocations(descriptorResult.getRelocations());
-            node.setVersionConstraint(rangeResult.getVersionConstraint());
-            node.setVersion(version);
-            node.setAliases(descriptorResult.getAliases());
-            node.setRepositories(request.getRepositories());
-        } else {
-            node = new DefaultDependencyNode(request.getRootArtifact());
-            node.setRequestContext(request.getRequestContext());
-            node.setRepositories(request.getRepositories());
-        }
+            final long time2 = System.nanoTime();
 
-        result.setRoot(node);
-
-        boolean traverse = root == null || depTraverser == null || depTraverser.traverseDependency(root);
-        String errorPath = null;
-        if (traverse && !dependencies.isEmpty()) {
-            DataPool pool = new DataPool(session);
-
-            DefaultDependencyCollectionContext context = new DefaultDependencyCollectionContext(
-                    session, request.getRootArtifact(), root, managedDependencies);
-
-            DefaultVersionFilterContext versionContext = new DefaultVersionFilterContext(session);
-
-            Results results = new Results(result, session);
-
-            doCollectDependencies(
-                    session,
-                    trace,
-                    pool,
-                    context,
-                    versionContext,
-                    request,
-                    node,
-                    repositories,
-                    dependencies,
-                    managedDependencies,
-                    results);
-
-            errorPath = results.getErrorPath();
-        }
-
-        long time2 = System.nanoTime();
-
-        DependencyGraphTransformer transformer = session.getDependencyGraphTransformer();
-        if (transformer != null) {
-            try {
-                DefaultDependencyGraphTransformationContext context =
-                        new DefaultDependencyGraphTransformationContext(session);
-                context.put(TransformationContextKeys.STATS, stats);
-                result.setRoot(transformer.transformGraph(node, context));
-            } catch (RepositoryException e) {
-                result.addException(e);
+            DependencyGraphTransformer transformer = session.getDependencyGraphTransformer();
+            if (transformer != null) {
+                try {
+                    DefaultDependencyGraphTransformationContext context =
+                            new DefaultDependencyGraphTransformationContext(session);
+                    context.put(TransformationContextKeys.STATS, stats);
+                    result.setRoot(transformer.transformGraph(node, context));
+                } catch (RepositoryException e) {
+                    result.addException(e);
+                }
             }
-        }
 
-        long time3 = System.nanoTime();
-        if (logger.isDebugEnabled()) {
+            if (errorPath != null) {
+                throw new DependencyCollectionException(result, "Failed to collect dependencies at " + errorPath);
+            }
+            if (!result.getExceptions().isEmpty()) {
+                throw new DependencyCollectionException(result);
+            }
+
+            if (request.getResolutionScope() != null) {
+                result = scopeManager.postProcess(session, request.getResolutionScope(), result);
+            }
+
+            long time3 = System.nanoTime();
             stats.put(getClass().getSimpleName() + ".collectTime", time2 - time1);
             stats.put(getClass().getSimpleName() + ".transformTime", time3 - time2);
+
+            finished = dependencyCollectionChecker.isSatisfactory(session, request, result);
+        }
+
+        stats.put(getClass().getSimpleName() + ".runs", runs.get());
+        if (logger.isDebugEnabled()) {
             logger.debug("Dependency collection stats {}", stats);
         }
 
-        if (errorPath != null) {
-            throw new DependencyCollectionException(result, "Failed to collect dependencies at " + errorPath);
-        }
-        if (!result.getExceptions().isEmpty()) {
-            throw new DependencyCollectionException(result);
-        }
-
-        if (request.getResolutionScope() != null) {
-            return scopeManager.postProcess(session, request.getResolutionScope(), result);
-        } else {
-            return result;
-        }
+        return result;
     }
 
     /**
@@ -516,7 +559,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
         final int maxCycles;
 
-        String errorPath;
+        volatile String errorPath;
 
         public Results(CollectResult result, RepositorySystemSession session) {
             this.result = result;
@@ -526,15 +569,15 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             maxCycles = ConfigUtils.getInteger(session, DEFAULT_MAX_CYCLES, CONFIG_PROP_MAX_CYCLES);
         }
 
-        public CollectResult getResult() {
+        public synchronized CollectResult getResult() {
             return result;
         }
 
-        public String getErrorPath() {
+        public synchronized String getErrorPath() {
             return errorPath;
         }
 
-        public void addException(Dependency dependency, Exception e, List<DependencyNode> nodes) {
+        public synchronized void addException(Dependency dependency, Exception e, List<DependencyNode> nodes) {
             if (maxExceptions < 0 || result.getExceptions().size() < maxExceptions) {
                 result.addException(e);
                 if (errorPath == null) {
@@ -557,7 +600,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
             }
         }
 
-        public void addCycle(List<DependencyNode> nodes, int cycleEntry, Dependency dependency) {
+        public synchronized void addCycle(List<DependencyNode> nodes, int cycleEntry, Dependency dependency) {
             if (maxCycles < 0 || result.getCycles().size() < maxCycles) {
                 result.addCycle(new DefaultDependencyCycle(nodes, cycleEntry, dependency));
             }

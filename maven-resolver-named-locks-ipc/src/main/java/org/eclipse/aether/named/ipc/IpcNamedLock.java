@@ -55,7 +55,12 @@ class IpcNamedLock extends NamedLockSupport {
         }
         try {
             String contextId = client.newContext(true, time, unit);
-            client.lock(Objects.requireNonNull(contextId), keys, time, unit);
+            try {
+                client.lock(Objects.requireNonNull(contextId), keys, time, unit);
+            } catch (TimeoutException e) {
+                tryUnlock(contextId);
+                return false;
+            }
             contexts.push(new Ctx(true, contextId, true));
             return true;
         } catch (TimeoutException e) {
@@ -75,7 +80,12 @@ class IpcNamedLock extends NamedLockSupport {
         }
         try {
             String contextId = client.newContext(false, time, unit);
-            client.lock(Objects.requireNonNull(contextId), keys, time, unit);
+            try {
+                client.lock(Objects.requireNonNull(contextId), keys, time, unit);
+            } catch (TimeoutException e) {
+                tryUnlock(contextId);
+                return false;
+            }
             contexts.push(new Ctx(true, contextId, false));
             return true;
         } catch (TimeoutException e) {
@@ -95,15 +105,15 @@ class IpcNamedLock extends NamedLockSupport {
         }
     }
 
-    private static final class Ctx {
-        private final boolean acted;
-        private final String contextId;
-        private final boolean shared;
-
-        private Ctx(boolean acted, String contextId, boolean shared) {
-            this.acted = acted;
-            this.contextId = contextId;
-            this.shared = shared;
+    private void tryUnlock(String contextId) {
+        try {
+            client.unlock(contextId);
+        } catch (Exception e) {
+            // Best-effort cleanup: if unlock fails during timeout handling,
+            // we must not propagate the exception — doing so would crash the
+            // calling thread and skip latch countdowns in tests, causing hangs.
         }
     }
+
+    private record Ctx(boolean acted, String contextId, boolean shared) {}
 }

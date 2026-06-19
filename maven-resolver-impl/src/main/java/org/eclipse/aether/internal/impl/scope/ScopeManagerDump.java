@@ -97,6 +97,7 @@ public final class ScopeManagerDump {
                 .sorted(Comparator.comparing(ResolutionScope::getId))
                 .forEach(s -> {
                     System.out.println("* " + s.getId());
+                    System.out.println("               Aliases: " + s.getAliases());
                     System.out.println("     Directly included: " + scopeManager.getDirectlyIncludedLabels(s));
                     System.out.println("     Directly excluded: " + scopeManager.getDirectlyExcludedLabels(s));
                     System.out.println(" Transitively excluded: " + scopeManager.getTransitivelyExcludedLabels(s));

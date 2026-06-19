@@ -33,7 +33,7 @@ public class ChainedVersionFilter implements VersionFilter {
 
     private final VersionFilter[] filters;
 
-    private int hashCode;
+    private final int hashCode;
 
     /**
      * Chains the specified version filters.
@@ -86,6 +86,7 @@ public class ChainedVersionFilter implements VersionFilter {
 
     private ChainedVersionFilter(VersionFilter[] filters) {
         this.filters = filters;
+        this.hashCode = getClass().hashCode() * 31 + Arrays.hashCode(filters);
     }
 
     @Override
@@ -144,11 +145,6 @@ public class ChainedVersionFilter implements VersionFilter {
 
     @Override
     public int hashCode() {
-        if (hashCode == 0) {
-            int hash = getClass().hashCode();
-            hash = hash * 31 + Arrays.hashCode(filters);
-            hashCode = hash;
-        }
         return hashCode;
     }
 }

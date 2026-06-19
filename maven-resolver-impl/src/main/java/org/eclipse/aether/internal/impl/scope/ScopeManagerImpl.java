@@ -34,6 +34,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.impl.scope.BuildPath;
 import org.eclipse.aether.impl.scope.BuildScope;
 import org.eclipse.aether.impl.scope.BuildScopeQuery;
@@ -163,6 +164,11 @@ public final class ScopeManagerImpl implements InternalScopeManager {
     }
 
     @Override
+    public DependencyFilter getDependencyFilter(RepositorySystemSession session, ResolutionScope resolutionScope) {
+        return new ScopeDependencyFilter(null, getDirectlyExcludedLabels(translate(resolutionScope)));
+    }
+
+    @Override
     public CollectResult postProcess(
             RepositorySystemSession session, ResolutionScope resolutionScope, CollectResult collectResult) {
         ResolutionScopeImpl rs = translate(resolutionScope);
@@ -195,11 +201,12 @@ public final class ScopeManagerImpl implements InternalScopeManager {
     @Override
     public ResolutionScope createResolutionScope(
             String id,
+            Set<String> aliases,
             Mode mode,
             Collection<BuildScopeQuery> wantedPresence,
             Collection<DependencyScope> explicitlyIncluded,
             Collection<DependencyScope> transitivelyExcluded) {
-        return new ResolutionScopeImpl(id, mode, wantedPresence, explicitlyIncluded, transitivelyExcluded);
+        return new ResolutionScopeImpl(id, aliases, mode, wantedPresence, explicitlyIncluded, transitivelyExcluded);
     }
 
     private Set<DependencyScope> collectScopes(Collection<BuildScopeQuery> wantedPresence) {
@@ -405,6 +412,7 @@ public final class ScopeManagerImpl implements InternalScopeManager {
 
     private class ResolutionScopeImpl implements ResolutionScope {
         private final String id;
+        private final Set<String> aliases;
         private final Mode mode;
         private final Set<BuildScopeQuery> wantedPresence;
         private final Set<DependencyScope> directlyIncluded;
@@ -412,11 +420,13 @@ public final class ScopeManagerImpl implements InternalScopeManager {
 
         private ResolutionScopeImpl(
                 String id,
+                Set<String> aliases,
                 Mode mode,
                 Collection<BuildScopeQuery> wantedPresence,
                 Collection<DependencyScope> explicitlyIncluded,
                 Collection<DependencyScope> transitivelyExcluded) {
             this.id = requireNonNull(id, "id");
+            this.aliases = Collections.unmodifiableSet(new HashSet<>(aliases));
             this.mode = requireNonNull(mode, "mode");
             this.wantedPresence = Collections.unmodifiableSet(new HashSet<>(wantedPresence));
             Set<DependencyScope> included = collectScopes(wantedPresence);
@@ -432,6 +442,11 @@ public final class ScopeManagerImpl implements InternalScopeManager {
         @Override
         public String getId() {
             return id;
+        }
+
+        @Override
+        public Set<String> getAliases() {
+            return aliases;
         }
 
         public Mode getMode() {

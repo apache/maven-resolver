@@ -24,7 +24,6 @@ package org.eclipse.aether.named.ipc;
  * @since 2.0.1
  */
 public class IpcMessages {
-
     public static final String REQUEST_CONTEXT = "request-context";
     public static final String REQUEST_ACQUIRE = "request-acquire";
     public static final String REQUEST_CLOSE = "request-close";

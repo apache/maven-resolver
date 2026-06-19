@@ -99,16 +99,22 @@ public class GenericVersionScheme extends VersionSchemeSupport {
         totalRequests.incrementAndGet();
         GLOBAL_TOTAL_REQUESTS.incrementAndGet();
 
-        GenericVersion existing = versionCache.get(version);
-        if (existing != null) {
-            cacheHits.incrementAndGet();
-            GLOBAL_CACHE_HITS.incrementAndGet();
-            return existing;
-        } else {
+        boolean[] created = {false};
+        GenericVersion result;
+        synchronized (versionCache) {
+            result = versionCache.computeIfAbsent(version, v -> {
+                created[0] = true;
+                return new GenericVersion(v);
+            });
+        }
+        if (created[0]) {
             cacheMisses.incrementAndGet();
             GLOBAL_CACHE_MISSES.incrementAndGet();
-            return versionCache.computeIfAbsent(version, GenericVersion::new);
+        } else {
+            cacheHits.incrementAndGet();
+            GLOBAL_CACHE_HITS.incrementAndGet();
         }
+        return result;
     }
 
     /**

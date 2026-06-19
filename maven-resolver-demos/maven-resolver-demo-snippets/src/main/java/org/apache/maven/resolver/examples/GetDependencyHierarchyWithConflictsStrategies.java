@@ -107,9 +107,10 @@ public class GetDependencyHierarchyWithConflictsStrategies {
                 System.out.println("tree:");
                 result.getRoot().accept(new DependencyGraphDumper(System.out::println));
 
-                List<DependencyNode> selected =
-                        system.flattenDependencyNodes(session, result.getRoot(), (node, parents) -> !node.getData()
-                                .containsKey(ConflictResolver.NODE_DATA_WINNER));
+                List<DependencyNode> selected = system.flattenDependencyNodes(
+                        session,
+                        result.getRoot(),
+                        (node, parents) -> !node.getData().containsKey(ConflictResolver.NODE_DATA_WINNER));
                 System.out.println("cp:");
                 selected.forEach(System.out::println);
             }

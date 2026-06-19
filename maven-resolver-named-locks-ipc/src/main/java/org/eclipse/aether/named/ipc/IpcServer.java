@@ -27,7 +27,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +110,7 @@ public class IpcServer {
     public static final boolean DEFAULT_DEBUG = false;
 
     private final ServerSocketChannel serverSocket;
-    private final Map<SocketChannel, Thread> clients = new HashMap<>();
+    private final Map<SocketChannel, Thread> clients = new ConcurrentHashMap<>();
     private final AtomicInteger counter = new AtomicInteger();
     private final Map<String, Lock> locks = new ConcurrentHashMap<>();
     private final Map<String, Context> contexts = new ConcurrentHashMap<>();
@@ -152,7 +151,7 @@ public class IpcServer {
         // also interrupt and kill the daemon.
         try {
             sun.misc.Signal.handle(new sun.misc.Signal("INT"), sun.misc.SignalHandler.SIG_IGN);
-            if (IpcClient.IS_WINDOWS) {
+            if (!IpcClient.IS_WINDOWS) {
                 sun.misc.Signal.handle(new sun.misc.Signal("TSTP"), sun.misc.SignalHandler.SIG_IGN);
             }
         } catch (Throwable t) {
@@ -271,7 +270,7 @@ public class IpcServer {
                         }
                         break;
                     case IpcMessages.REQUEST_ACQUIRE:
-                        if (request.size() < 1) {
+                        if (request.isEmpty()) {
                             throw new IOException(
                                     "Expected at least one argument for " + command + " but got " + request);
                         }
@@ -321,7 +320,7 @@ public class IpcServer {
                         }
                         break;
                     case IpcMessages.REQUEST_STOP:
-                        if (request.size() != 0) {
+                        if (!request.isEmpty()) {
                             throw new IOException("Expected zero argument for " + command + " but got " + request);
                         }
                         synchronized (output) {
@@ -378,7 +377,7 @@ public class IpcServer {
                 break;
             } else {
                 try {
-                    Thread.sleep(TimeUnit.NANOSECONDS.toMillis(left));
+                    Thread.sleep(Math.max(1, TimeUnit.NANOSECONDS.toMillis(left)));
                 } catch (InterruptedException e) {
                     info("IpcServer expiration check interrupted, closing");
                     close();
@@ -443,24 +442,33 @@ public class IpcServer {
             return future;
         }
 
-        public synchronized void unlock(Context context) {
-            if (holders.remove(context)) {
-                while (waiters != null
-                        && !waiters.isEmpty()
-                        && (holders.isEmpty() || holders.get(0).shared && waiters.get(0).context.shared)) {
-                    Waiter waiter = waiters.remove(0);
-                    holders.add(waiter.context);
-                    waiter.future.complete(null);
-                }
-            } else if (waiters != null) {
-                for (Iterator<Waiter> it = waiters.iterator(); it.hasNext(); ) {
-                    Waiter waiter = it.next();
-                    if (waiter.context == context) {
-                        it.remove();
-                        waiter.future.cancel(false);
+        public void unlock(Context context) {
+            List<CompletableFuture<Void>> toComplete;
+            synchronized (this) {
+                toComplete = new ArrayList<>();
+                if (holders.remove(context)) {
+                    while (waiters != null
+                            && !waiters.isEmpty()
+                            && (holders.isEmpty() || holders.get(0).shared && waiters.get(0).context.shared)) {
+                        Waiter waiter = waiters.remove(0);
+                        holders.add(waiter.context);
+                        toComplete.add(waiter.future);
+                    }
+                } else if (waiters != null) {
+                    for (Iterator<Waiter> it = waiters.iterator(); it.hasNext(); ) {
+                        Waiter waiter = it.next();
+                        if (waiter.context == context) {
+                            it.remove();
+                            waiter.future.cancel(false);
+                        }
                     }
                 }
             }
+            toComplete.forEach(f -> f.complete(null));
+        }
+
+        public synchronized boolean isEmpty() {
+            return (holders == null || holders.isEmpty()) && (waiters == null || waiters.isEmpty());
         }
     }
 
@@ -487,7 +495,10 @@ public class IpcServer {
         public void unlock() {
             locks.stream()
                     .map(k -> IpcServer.this.locks.computeIfAbsent(k, Lock::new))
-                    .forEach(l -> l.unlock(this));
+                    .forEach(l -> {
+                        l.unlock(this);
+                        IpcServer.this.locks.compute(l.key, (k, v) -> (v == l && v.isEmpty()) ? null : v);
+                    });
         }
     }
 }

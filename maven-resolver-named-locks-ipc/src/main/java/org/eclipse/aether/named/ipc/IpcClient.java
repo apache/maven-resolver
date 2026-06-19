@@ -81,10 +81,10 @@ public class IpcClient {
     protected final Path syncPath;
     protected final boolean noFork;
 
-    protected SocketChannel socket;
-    protected DataOutputStream output;
-    protected DataInputStream input;
-    protected Thread receiver;
+    protected volatile SocketChannel socket;
+    protected volatile DataOutputStream output;
+    protected volatile DataInputStream input;
+    protected volatile Thread receiver;
 
     protected final AtomicInteger requestId = new AtomicInteger();
     protected final Map<Integer, CompletableFuture<List<String>>> responses = new ConcurrentHashMap<>();
@@ -116,8 +116,8 @@ public class IpcClient {
     }
 
     SocketChannel createClient() throws IOException {
-        String familyProp = System.getProperty(IpcServer.SYSTEM_PROP_FAMILY, IpcServer.DEFAULT_FAMILY);
-        SocketFamily family = familyProp != null ? SocketFamily.valueOf(familyProp) : SocketFamily.inet;
+        SocketFamily family =
+                SocketFamily.valueOf(System.getProperty(IpcServer.SYSTEM_PROP_FAMILY, IpcServer.DEFAULT_FAMILY));
 
         Path lockPath = this.lockPath.toAbsolutePath().normalize();
         Path lockFile =
@@ -295,13 +295,17 @@ public class IpcClient {
                     s.add(input.readUTF());
                 }
                 CompletableFuture<List<String>> f = responses.remove(id);
-                if (f == null || s.isEmpty()) {
-                    throw new IllegalStateException("Protocol error");
+                if (f == null) {
+                    continue;
+                }
+                if (s.isEmpty()) {
+                    f.completeExceptionally(new IOException("Protocol error: empty response"));
+                    continue;
                 }
                 f.complete(s);
             }
         } catch (EOFException e) {
-            // server is stopped; just quit
+            close(new IOException("Server disconnected", e));
         } catch (Exception e) {
             close(e);
         }
@@ -309,23 +313,31 @@ public class IpcClient {
 
     List<String> send(List<String> request, long time, TimeUnit unit) throws TimeoutException, IOException {
         ensureInitialized();
+        DataOutputStream out = output;
+        if (out == null) {
+            throw new IOException("Connection closed");
+        }
         int id = requestId.incrementAndGet();
         CompletableFuture<List<String>> response = new CompletableFuture<>();
         responses.put(id, response);
-        synchronized (output) {
-            output.writeInt(id);
-            output.writeInt(request.size());
+        synchronized (out) {
+            out.writeInt(id);
+            out.writeInt(request.size());
             for (String s : request) {
-                output.writeUTF(s);
+                out.writeUTF(s);
             }
-            output.flush();
+            out.flush();
         }
         try {
             return response.get(time, unit);
         } catch (InterruptedException e) {
+            responses.remove(id);
             throw (IOException) new InterruptedIOException("Interrupted").initCause(e);
         } catch (ExecutionException e) {
             throw new IOException("Execution error", e);
+        } catch (TimeoutException e) {
+            responses.remove(id);
+            throw e;
         }
     }
 
@@ -337,6 +349,7 @@ public class IpcClient {
     }
 
     synchronized void close(Throwable e) {
+        initialized = false;
         if (socket != null) {
             try {
                 socket.close();
@@ -347,7 +360,7 @@ public class IpcClient {
             input = null;
             output = null;
         }
-        if (receiver != null) {
+        if (receiver != null && Thread.currentThread() != receiver) {
             receiver.interrupt();
             try {
                 receiver.join(1000);
@@ -398,8 +411,7 @@ public class IpcClient {
 
     void unlock(String contextId) {
         try {
-            List<String> response =
-                    send(Arrays.asList(REQUEST_CLOSE, contextId), Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+            List<String> response = send(Arrays.asList(REQUEST_CLOSE, contextId), 10, TimeUnit.SECONDS);
             if (response.size() != 1 || !RESPONSE_CLOSE.equals(response.get(0))) {
                 throw new IOException("Unexpected response: " + response);
             }
@@ -414,7 +426,7 @@ public class IpcClient {
      */
     void stopServer() {
         try {
-            List<String> response = send(Arrays.asList(REQUEST_STOP), Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+            List<String> response = send(List.of(REQUEST_STOP), 30, TimeUnit.SECONDS);
             if (response.size() != 1 || !RESPONSE_STOP.equals(response.get(0))) {
                 throw new IOException("Unexpected response: " + response);
             }

@@ -23,11 +23,11 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
@@ -52,31 +52,6 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
-
-    private static final class LoggedMirror {
-
-        private final Object[] keys;
-
-        LoggedMirror(RemoteRepository original, RemoteRepository mirror) {
-            keys = new Object[] {mirror.getId(), mirror.getUrl(), original.getId(), original.getUrl()};
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            } else if (!(obj instanceof LoggedMirror)) {
-                return false;
-            }
-            LoggedMirror that = (LoggedMirror) obj;
-            return Arrays.equals(keys, that.keys);
-        }
-
-        @Override
-        public int hashCode() {
-            return Arrays.hashCode(keys);
-        }
-    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRemoteRepositoryManager.class);
 
@@ -184,7 +159,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
         }
         RepositoryCache cache = session.getCache();
         if (cache != null) {
-            Object key = new LoggedMirror(original, mirror);
+            Object key = Keys.of(mirror.getId(), mirror.getUrl(), original.getId(), original.getUrl());
             if (cache.get(session, key) != null) {
                 return;
             }

@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.0.17
  * @see NamedLocksTrackingFileManager
- * @see TrackingFileManagerProvider
+ * @see TrackingFileManagerSupplier
  */
 public final class LegacyTrackingFileManager implements TrackingFileManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyTrackingFileManager.class);

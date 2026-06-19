@@ -19,12 +19,10 @@
 package org.eclipse.aether.util.artifact;
 
 /**
- * The dependency scopes used for Java dependencies.
+ * The Maven 3 dependency scopes used for Java dependencies.
  *
  * @see org.eclipse.aether.graph.Dependency#getScope()
- * @deprecated definition and semantics of the scopes should be defined by consumer project
  */
-@Deprecated
 public final class JavaScopes {
 
     public static final String COMPILE = "compile";

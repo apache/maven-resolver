@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
@@ -43,6 +44,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthScheme;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.client.AuthCache;
@@ -73,7 +75,6 @@ import org.apache.http.impl.auth.DigestSchemeFactory;
 import org.apache.http.impl.auth.KerberosSchemeFactory;
 import org.apache.http.impl.auth.NTLMSchemeFactory;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
-import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -81,6 +82,7 @@ import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
@@ -148,6 +150,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final boolean supportWebDav;
 
+    private final boolean sendRfc9457Accept;
+
     private final AuthCache authCache;
 
     @SuppressWarnings("checkstyle:methodlength")
@@ -160,10 +164,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
-            this.baseUri = new URI(repository.getUrl()).parseServerAuthority();
-            if (baseUri.isOpaque()) {
-                throw new URISyntaxException(repository.getUrl(), "URL must not be opaque");
-            }
+            this.baseUri = HttpTransporterUtils.getBaseUri(repository);
             this.server = URIUtils.extractHost(baseUri);
             if (server == null) {
                 throw new URISyntaxException(repository.getUrl(), "URL lacks host name");
@@ -189,6 +190,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
         this.supportWebDav = HttpTransporterUtils.isHttpSupportWebDav(session, repository);
+        this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
         int connectTimeout = HttpTransporterUtils.getHttpConnectTimeout(session, repository);
         int requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
         int retryCount = HttpTransporterUtils.getHttpRetryHandlerCount(session, repository);
@@ -287,11 +289,15 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
 
         if (session.getCache() != null) {
-            String authCacheKey = getClass().getSimpleName() + "-" + repository.getId() + "-"
-                    + StringDigestUtil.sha1(repository.toString());
-            this.authCache = (AuthCache) session.getCache().computeIfAbsent(session, authCacheKey, BasicAuthCache::new);
+            this.authCache = (AuthCache) session.getCache()
+                    .computeIfAbsent(
+                            session,
+                            Keys.of(
+                                    getClass(),
+                                    repository.getId() + "-" + StringDigestUtil.sha1(repository.toString())),
+                            ConcurrentAuthCache::new);
         } else {
-            this.authCache = new BasicAuthCache();
+            this.authCache = new ConcurrentAuthCache();
         }
         this.client = builder.build();
     }
@@ -354,6 +360,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
         EntityGetter getter = new EntityGetter(task);
         HttpGet request = commonHeaders(new HttpGet(resolve(task)));
+        if (sendRfc9457Accept) {
+            ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
+        }
         while (true) {
             try {
                 if (resume) {
@@ -378,6 +387,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     protected void implPut(PutTask task) throws Exception {
         PutTaskEntity entity = new PutTaskEntity(task);
         HttpPut request = commonHeaders(entity(new HttpPut(resolve(task)), entity));
+        if (sendRfc9457Accept) {
+            ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
+        }
         try {
             execute(request, null);
         } catch (HttpResponseException e) {
@@ -507,7 +519,6 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         if (!state.isExpectContinue()) {
             request.removeHeaders(HttpHeaders.EXPECT);
         }
-
         return request;
     }
 
@@ -753,6 +764,37 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             }
             RETRY_INTERVAL_HOLDER.remove();
             return ri;
+        }
+    }
+
+    static class ConcurrentAuthCache implements AuthCache {
+        private final ConcurrentHashMap<HttpHost, AuthScheme> map = new ConcurrentHashMap<>();
+
+        @Override
+        public void put(HttpHost host, AuthScheme authScheme) {
+            if (host != null && authScheme != null) {
+                map.put(host, authScheme);
+            }
+        }
+
+        @Override
+        public AuthScheme get(HttpHost host) {
+            if (host == null) {
+                return null;
+            }
+            return map.get(host);
+        }
+
+        @Override
+        public void remove(HttpHost host) {
+            if (host != null) {
+                map.remove(host);
+            }
+        }
+
+        @Override
+        public void clear() {
+            map.clear();
         }
     }
 }

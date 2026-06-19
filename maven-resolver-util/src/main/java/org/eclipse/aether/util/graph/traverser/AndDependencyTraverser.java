@@ -38,7 +38,7 @@ public final class AndDependencyTraverser implements DependencyTraverser {
 
     private final Set<? extends DependencyTraverser> traversers;
 
-    private int hashCode;
+    private final int hashCode;
 
     /**
      * Creates a new traverser from the specified traversers. Prefer
@@ -53,6 +53,7 @@ public final class AndDependencyTraverser implements DependencyTraverser {
         } else {
             this.traversers = Collections.emptySet();
         }
+        this.hashCode = 17 * 31 + this.traversers.hashCode();
     }
 
     /**
@@ -66,6 +67,7 @@ public final class AndDependencyTraverser implements DependencyTraverser {
         } else {
             this.traversers = Collections.emptySet();
         }
+        this.hashCode = 17 * 31 + this.traversers.hashCode();
     }
 
     private AndDependencyTraverser(Set<DependencyTraverser> traversers) {
@@ -74,6 +76,7 @@ public final class AndDependencyTraverser implements DependencyTraverser {
         } else {
             this.traversers = Collections.emptySet();
         }
+        this.hashCode = 17 * 31 + this.traversers.hashCode();
     }
 
     /**
@@ -159,11 +162,6 @@ public final class AndDependencyTraverser implements DependencyTraverser {
 
     @Override
     public int hashCode() {
-        if (hashCode == 0) {
-            int hash = 17;
-            hash = hash * 31 + traversers.hashCode();
-            hashCode = hash;
-        }
         return hashCode;
     }
 }

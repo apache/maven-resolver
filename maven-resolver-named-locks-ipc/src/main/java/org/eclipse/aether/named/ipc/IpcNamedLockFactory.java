@@ -56,8 +56,7 @@ public class IpcNamedLockFactory extends NamedLockFactorySupport {
         requireNonNull(ipcHome);
         Path repository = ipcHome.resolve("repository");
         Path logPath = ipcHome.resolve("log");
-        Path syncPath = null;
-        this.client = new IpcClient(repository, logPath, syncPath);
+        this.client = new IpcClient(repository, logPath, null);
     }
 
     @Override

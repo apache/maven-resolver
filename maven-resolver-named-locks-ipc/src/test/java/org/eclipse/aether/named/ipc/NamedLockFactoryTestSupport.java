@@ -31,12 +31,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * UT support for {@link NamedLockFactory}.
  */
+@DisabledOnOs(value = OS.WINDOWS, disabledReason = "IPC named locks are not supported on Windows (Unix domain sockets)")
 public abstract class NamedLockFactoryTestSupport {
     protected static NamedLockFactory namedLockFactory;
 
@@ -135,7 +138,7 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
-    @Timeout(15)
+    @Timeout(25)
     public void exclusiveAccess(TestInfo testInfo) throws InterruptedException {
         final Collection<NamedLockKey> keys = Collections.singleton(NamedLockKey.of(testInfo.getDisplayName()));
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner

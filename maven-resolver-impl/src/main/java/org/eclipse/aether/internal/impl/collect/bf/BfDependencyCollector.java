@@ -197,6 +197,9 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
 
             List<DependencyNode> parents = Collections.singletonList(node);
             for (Dependency dependency : dependencies) {
+                if (rootDepSelector != null && !rootDepSelector.selectDependency(dependency)) {
+                    continue;
+                }
                 RequestTrace childTrace =
                         collectStepTrace(trace, args.request.getRequestContext(), parents, dependency);
                 DependencyProcessingContext processingContext = new DependencyProcessingContext(
@@ -210,11 +213,9 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                         parents,
                         dependency,
                         createPremanagedDependency(rootDepManager, dependency, false, args.premanagedState));
-                if (!filter(processingContext)) {
-                    processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
-                    resolveArtifactDescriptorAsync(args, processingContext, results);
-                    args.dependencyProcessingQueue.add(processingContext);
-                }
+                processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
+                resolveArtifactDescriptorAsync(args, processingContext, results);
+                args.dependencyProcessingQueue.add(processingContext);
             }
 
             while (!args.dependencyProcessingQueue.isEmpty()) {
@@ -282,27 +283,28 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                 }
 
                 if (!descriptorResult.getRelocations().isEmpty()) {
-                    boolean disableVersionManagementSubsequently =
-                            originalArtifact.getGroupId().equals(d.getArtifact().getGroupId())
-                                    && originalArtifact
-                                            .getArtifactId()
-                                            .equals(d.getArtifact().getArtifactId());
+                    if (context.depSelector == null || context.depSelector.selectDependency(d)) {
+                        boolean disableVersionManagementSubsequently = originalArtifact
+                                        .getGroupId()
+                                        .equals(d.getArtifact().getGroupId())
+                                && originalArtifact
+                                        .getArtifactId()
+                                        .equals(d.getArtifact().getArtifactId());
 
-                    PremanagedDependency premanagedDependency = createPremanagedDependency(
-                            context.depManager, d, disableVersionManagementSubsequently, args.premanagedState);
-                    DependencyProcessingContext relocatedContext = new DependencyProcessingContext(
-                            context.depSelector,
-                            context.depManager,
-                            context.depTraverser,
-                            context.verFilter,
-                            context.trace,
-                            context.repositories,
-                            descriptorResult.getManagedDependencies(),
-                            context.parents,
-                            d,
-                            premanagedDependency);
+                        PremanagedDependency premanagedDependency = createPremanagedDependency(
+                                context.depManager, d, disableVersionManagementSubsequently, args.premanagedState);
+                        DependencyProcessingContext relocatedContext = new DependencyProcessingContext(
+                                context.depSelector,
+                                context.depManager,
+                                context.depTraverser,
+                                context.verFilter,
+                                context.trace,
+                                context.repositories,
+                                descriptorResult.getManagedDependencies(),
+                                context.parents,
+                                d,
+                                premanagedDependency);
 
-                    if (!filter(relocatedContext)) {
                         relocatedContext.withDependency(premanagedDependency.getManagedDependency());
                         resolveArtifactDescriptorAsync(args, relocatedContext, results);
                         processDependency(
@@ -312,7 +314,6 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                                 descriptorResult.getRelocations(),
                                 disableVersionManagementSubsequently);
                     }
-
                     return;
                 } else {
                     d = args.pool.intern(d.setArtifact(args.pool.intern(d.getArtifact())));
@@ -404,6 +405,9 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                 parents.addAll(parentContext.parents);
                 parents.add(child);
                 for (Dependency dependency : descriptorResult.getDependencies()) {
+                    if (childSelector != null && !childSelector.selectDependency(dependency)) {
+                        continue;
+                    }
                     RequestTrace childTrace = collectStepTrace(
                             parentContext.trace, args.request.getRequestContext(), parents, dependency);
                     PremanagedDependency premanagedDependency = createPremanagedDependency(
@@ -419,12 +423,10 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                             parents,
                             dependency,
                             premanagedDependency);
-                    if (!filter(processingContext)) {
-                        // resolve descriptors ahead for managed dependency
-                        processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
-                        resolveArtifactDescriptorAsync(args, processingContext, results);
-                        args.dependencyProcessingQueue.add(processingContext);
-                    }
+                    // resolve descriptors ahead for managed dependency
+                    processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
+                    resolveArtifactDescriptorAsync(args, processingContext, results);
+                    args.dependencyProcessingQueue.add(processingContext);
                 }
                 args.pool.putChildren(key, child.getChildren());
                 args.skipper.cache(child, parents);
@@ -432,10 +434,6 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         } else {
             child.setChildren(children);
         }
-    }
-
-    private boolean filter(DependencyProcessingContext context) {
-        return context.depSelector != null && !context.depSelector.selectDependency(context.dependency);
     }
 
     private void resolveArtifactDescriptorAsync(Args args, DependencyProcessingContext context, Results results) {

@@ -19,11 +19,12 @@
 package org.eclipse.aether.impl.scope;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.collection.CollectResult;
-import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.scope.DependencyScope;
 import org.eclipse.aether.scope.ResolutionScope;
 import org.eclipse.aether.scope.ScopeManager;
@@ -52,12 +53,6 @@ public interface InternalScopeManager extends ScopeManager {
      * Returns the {@link BuildScope} that this scope deem as main.
      */
     Optional<BuildScope> getDependencyScopeMainProjectBuildScope(DependencyScope dependencyScope);
-
-    /**
-     * Resolver specific: dependency selector to be used to support this scope (with its dependency
-     * and resolution scopes).
-     */
-    DependencySelector getDependencySelector(RepositorySystemSession session, ResolutionScope resolutionScope);
 
     /**
      * Resolver specific: post-processing to be used to support this scope (with its dependency
@@ -105,8 +100,26 @@ public interface InternalScopeManager extends ScopeManager {
      * <p>
      * Should be invoked only via {@link ScopeManagerConfiguration#buildResolutionScopes(InternalScopeManager)}.
      */
+    default ResolutionScope createResolutionScope(
+            String id,
+            Mode mode,
+            Collection<BuildScopeQuery> wantedPresence,
+            Collection<DependencyScope> explicitlyIncluded,
+            Collection<DependencyScope> transitivelyExcluded) {
+        return createResolutionScope(
+                id, Collections.emptySet(), mode, wantedPresence, explicitlyIncluded, transitivelyExcluded);
+    }
+
+    /**
+     * Creates resolution scope instance with aliases.
+     * <p>
+     * Should be invoked only via {@link ScopeManagerConfiguration#buildResolutionScopes(InternalScopeManager)}.
+     *
+     * @since 2.0.18
+     */
     ResolutionScope createResolutionScope(
             String id,
+            Set<String> aliases,
             Mode mode,
             Collection<BuildScopeQuery> wantedPresence,
             Collection<DependencyScope> explicitlyIncluded,

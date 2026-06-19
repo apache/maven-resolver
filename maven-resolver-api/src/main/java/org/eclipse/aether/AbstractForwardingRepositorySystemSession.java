@@ -21,6 +21,7 @@ package org.eclipse.aether;
 import java.util.Map;
 
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.collection.DependencyCollectionChecker;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
@@ -196,6 +197,11 @@ public abstract class AbstractForwardingRepositorySystemSession implements Repos
     @Override
     public ScopeManager getScopeManager() {
         return getSession().getScopeManager();
+    }
+
+    @Override
+    public DependencyCollectionChecker getDependencyCollectionChecker() {
+        return getSession().getDependencyCollectionChecker();
     }
 
     @Override

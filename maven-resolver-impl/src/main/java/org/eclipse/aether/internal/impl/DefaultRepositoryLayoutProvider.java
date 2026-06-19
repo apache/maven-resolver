@@ -62,13 +62,39 @@ public final class DefaultRepositoryLayoutProvider implements RepositoryLayoutPr
         PrioritizedComponents<RepositoryLayoutFactory> factories = PrioritizedComponents.reuseOrCreate(
                 session, RepositoryLayoutFactory.class, layoutFactories, RepositoryLayoutFactory::getPriority);
 
+        LOGGER.debug("Selecting RepositoryLayout for {}", repository);
+
         List<NoRepositoryLayoutException> errors = new ArrayList<>();
         for (PrioritizedComponent<RepositoryLayoutFactory> factory : factories.getEnabled()) {
             try {
-                return factory.getComponent().newInstance(session, repository);
+                RepositoryLayout repositoryLayout = factory.getComponent().newInstance(session, repository);
+
+                if (LOGGER.isDebugEnabled()) {
+                    StringBuilder buffer = new StringBuilder(256);
+                    buffer.append("Using layout ")
+                            .append(repositoryLayout.getClass().getSimpleName());
+                    Utils.appendClassLoader(buffer, repositoryLayout);
+                    buffer.append(" with priority ").append(factory.getPriority());
+                    buffer.append(" for ").append(repository.getUrl());
+                    LOGGER.debug(buffer.toString());
+                }
+
+                return repositoryLayout;
             } catch (NoRepositoryLayoutException e) {
                 // continue and try next factory
-                LOGGER.debug("Could not obtain layout factory for {}", repository, e);
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace(
+                            "Layout factory {} did not provide layout for {}",
+                            factory.getComponent().getClass(),
+                            repository,
+                            e);
+                } else {
+                    LOGGER.debug(
+                            "Layout factory {} did not provide layout for {}: {}",
+                            factory.getComponent().getClass(),
+                            repository,
+                            e.getMessage());
+                }
                 errors.add(e);
             }
         }

@@ -111,6 +111,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final boolean preemptivePutAuth;
 
+    private final boolean sendRfc9457Accept;
+
     private final boolean insecure;
 
     private final AtomicReference<BasicAuthentication.BasicResult> basicServerAuthenticationResult;
@@ -128,24 +130,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
-            URI uri = new URI(repository.getUrl()).parseServerAuthority();
-            if (uri.isOpaque()) {
-                throw new URISyntaxException(repository.getUrl(), "URL must not be opaque");
-            }
-            if (uri.getRawFragment() != null || uri.getRawQuery() != null) {
-                throw new URISyntaxException(repository.getUrl(), "URL must not have fragment or query");
-            }
-            String path = uri.getPath();
-            if (path == null) {
-                path = "/";
-            }
-            if (!path.startsWith("/")) {
-                path = "/" + path;
-            }
-            if (!path.endsWith("/")) {
-                path = path + "/";
-            }
-            this.baseUri = URI.create(uri.getScheme() + "://" + uri.getRawAuthority() + path);
+            this.baseUri = HttpTransporterUtils.getBaseUri(repository);
         } catch (URISyntaxException e) {
             throw new NoTransporterException(repository, e.getMessage(), e);
         }
@@ -166,6 +151,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         this.requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
+        this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
         final String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
@@ -212,7 +198,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             if (preemptiveAuth) {
                 mayApplyPreemptiveAuth(request);
             }
-
+            if (sendRfc9457Accept) {
+                JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
+            }
             if (resume) {
                 long resumeOffset = task.getResumeOffset();
                 long lastModified =
@@ -309,14 +297,18 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
     protected void implPut(PutTask task) throws Exception {
         Request request = client.newRequest(resolve(task)).method("PUT");
         request.headers(m -> headers.forEach(m::add));
+        if (sendRfc9457Accept) {
+            JettyRFC9457Reporter.INSTANCE.prepareRequest(request);
+        }
         if (preemptiveAuth || preemptivePutAuth) {
             mayApplyPreemptiveAuth(request);
         }
         request.body(PutTaskRequestContent.from(task));
         AtomicBoolean started = new AtomicBoolean(false);
         Response response;
+        InputStreamResponseListener listener = new InputStreamResponseListener();
         try {
-            response = request.onRequestCommit(r -> {
+            request.onRequestCommit(r -> {
                         if (task.getDataLength() == 0) {
                             if (started.compareAndSet(false, true)) {
                                 try {
@@ -342,7 +334,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                             r.abort(e);
                         }
                     })
-                    .send();
+                    .send(listener);
+            response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof IOException ioex) {
@@ -357,8 +350,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 throw new RuntimeException(t);
             }
         }
+
         if (response.getStatus() >= MULTIPLE_CHOICES) {
-            throw new HttpTransporterException(response.getStatus());
+            JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
+                throw new HttpTransporterException(statusCode);
+            });
         }
     }
 

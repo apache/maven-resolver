@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.maven.resolver</groupId>
     <artifactId>maven-resolver</artifactId>
-    <version>2.0.17-SNAPSHOT</version>
+    <version>2.0.19-SNAPSHOT</version>
   </parent>
 
   <artifactId>maven-resolver-transport-minio</artifactId>
@@ -35,7 +35,7 @@
   <properties>
     <javaVersion>8</javaVersion>
 
-    <okhttpVersion>5.3.2</okhttpVersion>
+    <okhttpVersion>5.4.0</okhttpVersion>
   </properties>
 
   <dependencyManagement>
@@ -77,7 +77,7 @@
     <dependency>
       <groupId>io.minio</groupId>
       <artifactId>minio</artifactId>
-      <version>9.0.0</version>
+      <version>9.0.3</version>
     </dependency>
 
     <!-- Overrides/Updates for Minio Java -->
@@ -89,7 +89,7 @@
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>1.21.0</version>
+      <version>1.22.0</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>

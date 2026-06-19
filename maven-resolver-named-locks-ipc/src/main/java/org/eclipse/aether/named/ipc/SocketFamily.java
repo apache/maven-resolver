@@ -38,14 +38,11 @@ public enum SocketFamily {
     unix;
 
     public ServerSocketChannel openServerSocket() throws IOException {
-        switch (this) {
-            case inet:
-                return ServerSocketChannel.open().bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
-            case unix:
-                return ServerSocketChannel.open(StandardProtocolFamily.UNIX).bind(null, 0);
-            default:
-                throw new IllegalStateException();
-        }
+        return switch (this) {
+            case inet -> ServerSocketChannel.open().bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+            case unix -> ServerSocketChannel.open(StandardProtocolFamily.UNIX).bind(null, 0);
+            default -> throw new IllegalStateException();
+        };
     }
 
     public static SocketAddress fromString(String str) {

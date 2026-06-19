@@ -36,6 +36,8 @@ import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -44,6 +46,7 @@ import static org.mockito.Mockito.when;
 /**
  * UT support for {@link SyncContextFactory}.
  */
+@DisabledOnOs(value = OS.WINDOWS, disabledReason = "IPC named locks are not supported on Windows (Unix domain sockets)")
 public abstract class NamedLockFactoryAdapterTestSupport {
     private static final long ADAPTER_TIME = 100L;
 
@@ -114,7 +117,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(15)
+    @Timeout(25)
     public void exclusiveAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser

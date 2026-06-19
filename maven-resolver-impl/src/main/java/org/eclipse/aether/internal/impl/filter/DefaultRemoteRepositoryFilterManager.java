@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.RemoteRepositoryFilterManager;
@@ -48,8 +49,6 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public final class DefaultRemoteRepositoryFilterManager implements RemoteRepositoryFilterManager {
-    private static final String INSTANCE_KEY = DefaultRemoteRepositoryFilterManager.class.getName() + ".instance";
-
     private final Map<String, RemoteRepositoryFilterSource> sources;
 
     @Inject
@@ -60,21 +59,27 @@ public final class DefaultRemoteRepositoryFilterManager implements RemoteReposit
     @Override
     public RemoteRepositoryFilter getRemoteRepositoryFilter(RepositorySystemSession session) {
         // use session specific key to distinguish between "derived" sessions
-        String instanceSpecificKey = INSTANCE_KEY + "." + session.hashCode();
-        return (RemoteRepositoryFilter) session.getData().computeIfAbsent(instanceSpecificKey, () -> {
-            HashMap<String, RemoteRepositoryFilter> filters = new HashMap<>();
-            for (Map.Entry<String, RemoteRepositoryFilterSource> entry : sources.entrySet()) {
-                RemoteRepositoryFilter filter = entry.getValue().getRemoteRepositoryFilter(session);
-                if (filter != null) {
-                    filters.put(entry.getKey(), filter);
-                }
-            }
-            if (!filters.isEmpty()) {
-                return new Participants(filters);
-            } else {
-                return null;
-            }
-        });
+        Object sessionDiscriminator;
+        if (session instanceof RepositorySystemSession.CloseableSession) {
+            sessionDiscriminator = ((RepositorySystemSession.CloseableSession) session).sessionId();
+        } else {
+            sessionDiscriminator = System.identityHashCode(session);
+        }
+        return (RemoteRepositoryFilter) session.getData()
+                .computeIfAbsent(Keys.of(DefaultRemoteRepositoryFilterManager.class, sessionDiscriminator), () -> {
+                    HashMap<String, RemoteRepositoryFilter> filters = new HashMap<>();
+                    for (Map.Entry<String, RemoteRepositoryFilterSource> entry : sources.entrySet()) {
+                        RemoteRepositoryFilter filter = entry.getValue().getRemoteRepositoryFilter(session);
+                        if (filter != null) {
+                            filters.put(entry.getKey(), filter);
+                        }
+                    }
+                    if (!filters.isEmpty()) {
+                        return new Participants(filters);
+                    } else {
+                        return null;
+                    }
+                });
     }
 
     /**
@@ -90,16 +95,16 @@ public final class DefaultRemoteRepositoryFilterManager implements RemoteReposit
 
         @Override
         public RemoteRepositoryFilter.Result acceptArtifact(RemoteRepository remoteRepository, Artifact artifact) {
-            return new Consensus(
-                    participants.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()
-                            .acceptArtifact(remoteRepository, artifact))));
+            return new Consensus(participants.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey, e -> e.getValue().acceptArtifact(remoteRepository, artifact))));
         }
 
         @Override
         public RemoteRepositoryFilter.Result acceptMetadata(RemoteRepository remoteRepository, Metadata metadata) {
-            return new Consensus(
-                    participants.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()
-                            .acceptMetadata(remoteRepository, metadata))));
+            return new Consensus(participants.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey, e -> e.getValue().acceptMetadata(remoteRepository, metadata))));
         }
     }
 

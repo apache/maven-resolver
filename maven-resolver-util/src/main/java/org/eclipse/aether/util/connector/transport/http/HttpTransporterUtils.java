@@ -19,6 +19,8 @@
 package org.eclipse.aether.util.connector.transport.http;
 
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -144,6 +146,19 @@ public final class HttpTransporterUtils {
                 ConfigurationProperties.DEFAULT_HTTP_SUPPORT_WEBDAV,
                 ConfigurationProperties.HTTP_SUPPORT_WEBDAV + "." + repository.getId(),
                 ConfigurationProperties.HTTP_SUPPORT_WEBDAV);
+    }
+
+    /**
+     * Getter for {@link ConfigurationProperties#HTTP_SEND_RFC9457_ACCEPT}.
+     *
+     * @since 2.0.19
+     */
+    public static boolean isHttpSendRfc9457Accept(RepositorySystemSession session, RemoteRepository repository) {
+        return ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_SEND_RFC9457_ACCEPT,
+                ConfigurationProperties.HTTP_SEND_RFC9457_ACCEPT + "." + repository.getId(),
+                ConfigurationProperties.HTTP_SEND_RFC9457_ACCEPT);
     }
 
     /**
@@ -298,5 +313,42 @@ public final class HttpTransporterUtils {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Shared code to create "base {@link URI}" for most common HTTP remote repositories and all HTTP transports.
+     * Note: this method just applies common validation and adjustments to URI, but it does not enforce protocol
+     * to be HTTP/HTTPS!
+     * <p>
+     * Validations and adjustments applied:
+     * <ul>
+     *     <li>URI string is parsed from {@link RemoteRepository#getUrl()} returned string</li>
+     *     <li>URI must have parsable {@link URI#parseServerAuthority()}</li>
+     *     <li>URI must not be opaque</li>
+     *     <li>URI must not have fragment or query</li>
+     *     <li>URI path is adjusted to end with {@code /} (slash).</li>
+     * </ul>
+     *
+     * @since 2.0.18
+     */
+    public static URI getBaseUri(RemoteRepository repository) throws URISyntaxException {
+        URI uri = new URI(repository.getUrl()).parseServerAuthority();
+        if (uri.isOpaque()) {
+            throw new URISyntaxException(repository.getUrl(), "URL must not be opaque");
+        }
+        if (uri.getRawFragment() != null || uri.getRawQuery() != null) {
+            throw new URISyntaxException(repository.getUrl(), "URL must not have fragment or query");
+        }
+        String path = uri.getRawPath();
+        if (path == null) {
+            path = "/";
+        }
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        if (!path.endsWith("/")) {
+            path = path + "/";
+        }
+        return new URI(uri.getScheme() + "://" + uri.getRawAuthority() + path);
     }
 }

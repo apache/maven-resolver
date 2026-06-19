@@ -163,6 +163,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final boolean preemptiveAuth;
 
+    private final boolean sendRfc9457Accept;
+
     private PasswordAuthentication serverAuthentication;
 
     private PasswordAuthentication proxyAuthentication;
@@ -177,24 +179,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         this.checksumExtractor = checksumExtractor;
         this.pathProcessor = pathProcessor;
         try {
-            URI uri = new URI(repository.getUrl()).parseServerAuthority();
-            if (uri.isOpaque()) {
-                throw new URISyntaxException(repository.getUrl(), "URL must not be opaque");
-            }
-            if (uri.getRawFragment() != null || uri.getRawQuery() != null) {
-                throw new URISyntaxException(repository.getUrl(), "URL must not have fragment or query");
-            }
-            String path = uri.getPath();
-            if (path == null) {
-                path = "/";
-            }
-            if (!path.startsWith("/")) {
-                path = "/" + path;
-            }
-            if (!path.endsWith("/")) {
-                path = path + "/";
-            }
-            this.baseUri = URI.create(uri.getScheme() + "://" + uri.getRawAuthority() + path);
+            this.baseUri = HttpTransporterUtils.getBaseUri(repository);
         } catch (URISyntaxException e) {
             throw new NoTransporterException(repository, e.getMessage(), e);
         }
@@ -234,6 +219,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
+        this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
 
         this.headers = headers;
         this.client = createClient(session, repository, insecure);
@@ -276,6 +262,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 HttpRequest.Builder request =
                         HttpRequest.newBuilder().uri(resolve(task)).GET();
                 headers.forEach(request::setHeader);
+                if (sendRfc9457Accept) {
+                    JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+                }
 
                 if (resume) {
                     long resumeOffset = task.getResumeOffset();
@@ -396,6 +385,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             request = request.expectContinue(expectContinue);
         }
         headers.forEach(request::setHeader);
+        if (sendRfc9457Accept) {
+            JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+        }
 
         if (task.getDataLength() == 0L) {
             request.PUT(HttpRequest.BodyPublishers.noBody());
@@ -414,9 +406,15 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
         prepare(request);
         try {
-            HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
+            HttpResponse<InputStream> response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
             if (response.statusCode() >= MULTIPLE_CHOICES) {
-                throw new HttpTransporterException(response.statusCode());
+                try {
+                    JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
+                        throw new HttpTransporterException(statusCode);
+                    });
+                } finally {
+                    closeBody(response);
+                }
             }
         } catch (ConnectException e) {
             throw enhance(e);

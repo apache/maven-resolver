@@ -39,4 +39,12 @@ final class WarnChecksumPolicy extends AbstractChecksumPolicy {
                 exception);
         return true;
     }
+
+    @Override
+    public void onNoMoreChecksums() {
+        logger.warn(
+                "Could not validate integrity of download from {}{}: no checksums available",
+                resource.getRepositoryUrl(),
+                resource.getResourceName());
+    }
 }
