@@ -33,8 +33,8 @@
 
   <properties>
     <bnd.instructions.additions><![CDATA[
-      -jpms-module-info
-      -removeheaders Automatic-Module-Name
+      -jpms-module-info:
+      -removeheaders: Automatic-Module-Name
     ]]></bnd.instructions.additions>
   </properties>
 
