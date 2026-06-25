@@ -37,6 +37,7 @@ import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionChecker;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
+import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencyTraverser;
 import org.eclipse.aether.collection.VersionFilter;
 import org.eclipse.aether.graph.DefaultDependencyNode;
@@ -387,8 +388,16 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         return a.getGroupId() + ':' + a.getArtifactId() + ':' + a.getClassifier() + ':' + a.getExtension();
     }
 
+    protected PremanagedDependency createPremanagedDependency(
+            DependencyManager depManager,
+            Dependency dependency,
+            boolean disableVersionManagement,
+            boolean premanagedState) {
+        return PremanagedDependency.create(depManager, dependency, disableVersionManagement, premanagedState);
+    }
+
     @SuppressWarnings("checkstyle:parameternumber")
-    protected static DefaultDependencyNode createDependencyNode(
+    protected DefaultDependencyNode createDependencyNode(
             List<Artifact> relocations,
             PremanagedDependency preManaged,
             VersionRangeResult rangeResult,
@@ -408,7 +417,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         return child;
     }
 
-    protected static DefaultDependencyNode createDependencyNode(
+    protected DefaultDependencyNode createDependencyNodeCycle(
             List<Artifact> relocations,
             PremanagedDependency preManaged,
             VersionRangeResult rangeResult,

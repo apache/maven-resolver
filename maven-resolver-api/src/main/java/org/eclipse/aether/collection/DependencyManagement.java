@@ -19,6 +19,8 @@
 package org.eclipse.aether.collection;
 
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.Map;
 
 import org.eclipse.aether.graph.Exclusion;
@@ -29,22 +31,46 @@ import org.eclipse.aether.graph.Exclusion;
  * @see DependencyManager#manageDependency(org.eclipse.aether.graph.Dependency)
  */
 public final class DependencyManagement {
+    /**
+     * Enumeration of manageable attributes, attributes that can be subjected to dependency management.
+     *
+     * @since 2.0.19
+     */
+    public enum Subject {
+        VERSION,
+        SCOPE,
+        OPTIONAL,
+        EXCLUSIONS,
+        PROPERTIES
+    }
 
-    private String version;
-
-    private String scope;
-
-    private Boolean optional;
-
-    private Collection<Exclusion> exclusions;
-
-    private Map<String, String> properties;
+    private final EnumMap<Subject, Object> managedValues;
+    private final EnumSet<Subject> managedEnforced;
 
     /**
      * Creates an empty management update.
      */
     public DependencyManagement() {
-        // enables default constructor
+        this.managedValues = new EnumMap<>(Subject.class);
+        this.managedEnforced = EnumSet.noneOf(Subject.class);
+    }
+
+    /**
+     * Returns {@code true} if passed in subject is managed.
+     *
+     * @since 2.0.19
+     */
+    public boolean isManagedSubject(Subject subject) {
+        return managedValues.containsKey(subject);
+    }
+
+    /**
+     * Returns {@code true} if passed in subject is managed and is enforced.
+     *
+     * @since 2.0.19
+     */
+    public boolean isManagedSubjectEnforced(Subject subject) {
+        return isManagedSubject(subject) && managedEnforced.contains(subject);
     }
 
     /**
@@ -54,7 +80,7 @@ public final class DependencyManagement {
      *         remain unchanged.
      */
     public String getVersion() {
-        return version;
+        return (String) managedValues.get(Subject.VERSION);
     }
 
     /**
@@ -62,10 +88,23 @@ public final class DependencyManagement {
      *
      * @param version The new version, may be {@code null} if the version is not managed.
      * @return This management update for chaining, never {@code null}.
+     * @deprecated Use {@link #setVersion(String, boolean)} instead.
      */
+    @Deprecated
     public DependencyManagement setVersion(String version) {
-        this.version = version;
-        return this;
+        return setVersion(version, true);
+    }
+
+    /**
+     * Sets the new version to apply to the dependency.
+     *
+     * @param version The new version, may be {@code null} if the version is not managed.
+     * @param enforced The enforcement of new value.
+     * @return This management update for chaining, never {@code null}.
+     * @since 2.0.19
+     */
+    public DependencyManagement setVersion(String version, boolean enforced) {
+        return set(Subject.VERSION, version, enforced);
     }
 
     /**
@@ -75,7 +114,7 @@ public final class DependencyManagement {
      *         unchanged.
      */
     public String getScope() {
-        return scope;
+        return (String) managedValues.get(Subject.SCOPE);
     }
 
     /**
@@ -83,10 +122,23 @@ public final class DependencyManagement {
      *
      * @param scope The new scope, may be {@code null} if the scope is not managed.
      * @return This management update for chaining, never {@code null}.
+     * @deprecated Use {@link #setScope(String, boolean)} instead.
      */
+    @Deprecated
     public DependencyManagement setScope(String scope) {
-        this.scope = scope;
-        return this;
+        return setScope(scope, true);
+    }
+
+    /**
+     * Sets the new scope to apply to the dependency.
+     *
+     * @param scope The new scope, may be {@code null} if the scope is not managed.
+     * @param enforced The enforcement of new value.
+     * @return This management update for chaining, never {@code null}.
+     * @since 2.0.19
+     */
+    public DependencyManagement setScope(String scope, boolean enforced) {
+        return set(Subject.SCOPE, scope, enforced);
     }
 
     /**
@@ -96,7 +148,7 @@ public final class DependencyManagement {
      *         dependency should remain unchanged.
      */
     public Boolean getOptional() {
-        return optional;
+        return (Boolean) managedValues.get(Subject.OPTIONAL);
     }
 
     /**
@@ -104,10 +156,23 @@ public final class DependencyManagement {
      *
      * @param optional The optional flag, may be {@code null} if the flag is not managed.
      * @return This management update for chaining, never {@code null}.
+     * @deprecated Use {@link #setOptional(Boolean, boolean)} instead.
      */
+    @Deprecated
     public DependencyManagement setOptional(Boolean optional) {
-        this.optional = optional;
-        return this;
+        return setOptional(optional, true);
+    }
+
+    /**
+     * Sets the new optional flag to apply to the dependency.
+     *
+     * @param optional The optional flag, may be {@code null} if the flag is not managed.
+     * @param enforced The enforcement of new value.
+     * @return This management update for chaining, never {@code null}.
+     * @since 2.0.19
+     */
+    public DependencyManagement setOptional(Boolean optional, boolean enforced) {
+        return set(Subject.OPTIONAL, optional, enforced);
     }
 
     /**
@@ -118,8 +183,9 @@ public final class DependencyManagement {
      * @return The new exclusions or {@code null} if the exclusions are not managed and the existing dependency
      *         exclusions should remain unchanged.
      */
+    @SuppressWarnings("unchecked")
     public Collection<Exclusion> getExclusions() {
-        return exclusions;
+        return (Collection<Exclusion>) managedValues.get(Subject.EXCLUSIONS);
     }
 
     /**
@@ -129,10 +195,25 @@ public final class DependencyManagement {
      *
      * @param exclusions The new exclusions, may be {@code null} if the exclusions are not managed.
      * @return This management update for chaining, never {@code null}.
+     * @deprecated Use {@link #setExclusions(Collection, boolean)} instead.
      */
+    @Deprecated
     public DependencyManagement setExclusions(Collection<Exclusion> exclusions) {
-        this.exclusions = exclusions;
-        return this;
+        return setExclusions(exclusions, true);
+    }
+
+    /**
+     * Sets the new exclusions to apply to the dependency. Note that this collection denotes the complete set of
+     * exclusions for the dependency, i.e. the dependency manager controls whether any existing exclusions get merged
+     * with information from dependency management or overridden by it.
+     *
+     * @param exclusions The new exclusions, may be {@code null} if the exclusions are not managed.
+     * @param enforced The enforcement of new value.
+     * @return This management update for chaining, never {@code null}.
+     * @since 2.0.19
+     */
+    public DependencyManagement setExclusions(Collection<Exclusion> exclusions, boolean enforced) {
+        return set(Subject.EXCLUSIONS, exclusions, enforced);
     }
 
     /**
@@ -143,8 +224,9 @@ public final class DependencyManagement {
      * @return The new artifact properties or {@code null} if the properties are not managed and the existing properties
      *         should remain unchanged.
      */
+    @SuppressWarnings("unchecked")
     public Map<String, String> getProperties() {
-        return properties;
+        return (Map<String, String>) managedValues.get(Subject.PROPERTIES);
     }
 
     /**
@@ -154,9 +236,42 @@ public final class DependencyManagement {
      *
      * @param properties The new artifact properties, may be {@code null} if the properties are not managed.
      * @return This management update for chaining, never {@code null}.
+     * @deprecated Use {@link #setProperties(Map, boolean)} instead.
      */
+    @Deprecated
     public DependencyManagement setProperties(Map<String, String> properties) {
-        this.properties = properties;
+        return setProperties(properties, true);
+    }
+
+    /**
+     * Sets the new properties to apply to the dependency. Note that this map denotes the complete set of properties,
+     * i.e. the dependency manager controls whether any existing properties get merged with the information from
+     * dependency management or overridden by it.
+     *
+     * @param properties The new artifact properties, may be {@code null} if the properties are not managed.
+     * @param enforced The enforcement of new value.
+     * @return This management update for chaining, never {@code null}.
+     * @since 2.0.19
+     */
+    public DependencyManagement setProperties(Map<String, String> properties, boolean enforced) {
+        return set(Subject.PROPERTIES, properties, enforced);
+    }
+
+    /**
+     * Generic but private setter that applies common logic.
+     */
+    private DependencyManagement set(Subject subject, Object value, boolean enforced) {
+        if (value == null) {
+            this.managedValues.remove(subject);
+            this.managedEnforced.remove(subject);
+        } else {
+            this.managedValues.put(subject, value);
+            if (enforced) {
+                this.managedEnforced.add(subject);
+            } else {
+                this.managedEnforced.remove(subject);
+            }
+        }
         return this;
     }
 }
