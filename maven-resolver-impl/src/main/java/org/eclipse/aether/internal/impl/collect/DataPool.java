@@ -568,10 +568,6 @@ public final class DataPool {
 
         @Override
         public V intern(K key, V value) {
-            V pooled = cache.get(key);
-            if (pooled != null) {
-                return pooled;
-            }
             return cache.putIfAbsent(key, value);
         }
     }

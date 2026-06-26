@@ -121,11 +121,17 @@ public class ConcurrentWeakCache<K, V> {
      * @return the existing value if present, or the given value if newly stored
      */
     public V putIfAbsent(K key, V value) {
+        // Fast path: lock-free lookup, zero allocation (ThreadLocal LookupKey)
+        V existing = get(key);
+        if (existing != null) {
+            return existing;
+        }
+        // Slow path: allocate WeakKey + WeakReference and insert
         expungeStaleEntries();
         WeakReference<V> newRef = new WeakReference<>(value);
-        WeakReference<V> existing = map.putIfAbsent(new WeakKey<>(key, queue), newRef);
-        if (existing != null) {
-            V existingValue = existing.get();
+        WeakReference<V> existingRef = map.putIfAbsent(new WeakKey<>(key, queue), newRef);
+        if (existingRef != null) {
+            V existingValue = existingRef.get();
             if (existingValue != null) {
                 return existingValue;
             }
