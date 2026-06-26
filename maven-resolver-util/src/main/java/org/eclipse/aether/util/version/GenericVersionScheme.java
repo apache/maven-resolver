@@ -19,9 +19,8 @@
 package org.eclipse.aether.util.version;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -54,8 +53,8 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
  */
 public class GenericVersionScheme extends VersionSchemeSupport {
 
-    // Using WeakHashMap wrapped in synchronizedMap for thread safety and memory-sensitive caching
-    private final Map<String, GenericVersion> versionCache = Collections.synchronizedMap(new WeakHashMap<>());
+    // ConcurrentHashMap for lock-striped thread safety without global contention
+    private final Map<String, GenericVersion> versionCache = new ConcurrentHashMap<>();
 
     // Cache statistics
     private final AtomicLong cacheHits = new AtomicLong(0);
@@ -100,13 +99,10 @@ public class GenericVersionScheme extends VersionSchemeSupport {
         GLOBAL_TOTAL_REQUESTS.incrementAndGet();
 
         boolean[] created = {false};
-        GenericVersion result;
-        synchronized (versionCache) {
-            result = versionCache.computeIfAbsent(version, v -> {
-                created[0] = true;
-                return new GenericVersion(v);
-            });
-        }
+        GenericVersion result = versionCache.computeIfAbsent(version, v -> {
+            created[0] = true;
+            return new GenericVersion(v);
+        });
         if (created[0]) {
             cacheMisses.incrementAndGet();
             GLOBAL_CACHE_MISSES.incrementAndGet();
@@ -141,7 +137,7 @@ public class GenericVersionScheme extends VersionSchemeSupport {
         long instances = INSTANCE_COUNT.get();
         double hitRate = total > 0 ? (double) hits / total * 100.0 : 0.0;
 
-        System.err.println("=== GenericVersionScheme Global Cache Statistics (WeakHashMap) ===");
+        System.err.println("=== GenericVersionScheme Global Cache Statistics (ConcurrentHashMap) ===");
         System.err.println(String.format("Total instances created: %d", instances));
         System.err.println(String.format("Total requests: %d", total));
         System.err.println(String.format("Cache hits: %d", hits));
