@@ -633,8 +633,9 @@ public final class PathConflictResolver extends ConflictResolver {
          * Adds node children: this method should be "batch" used, as all (potential) children should be added at once.
          * Method will return really added {@link Path} instances, as this class avoids cycles. Those forming a cycle
          * are added to {@link Path} structure but are not recursed (not returned in list), keeping {@link Path} cycle
-         * free. This method also maintains "conflictIdsSinceRoot", that is a set of "conflict IDs" that were touched
-         * while going from tree root to current node instance.
+         * free. Cycle detection is performed by walking up the parent chain via
+         * {@link #hasConflictIdOnPathToRoot(String)} instead of maintaining a per-node set, trading O(depth) per
+         * check for dramatically reduced memory allocation on large dependency graphs.
          * This implies that this conflict resolver, by its nature "redoes" the
          * {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} calculated by {@link ConflictIdSorter}.
          */

@@ -111,8 +111,13 @@ public class ConcurrentWeakCache<K, V> {
     /**
      * If the key is not already present (or its value has been GC'd), stores the key-value pair
      * and returns the given value. If the key is already present with a live value, returns the
-     * existing value without storing. This ensures concurrent callers for the same key always
-     * receive the same instance.
+     * existing value without storing.
+     * <p>
+     * <b>Concurrency note:</b> Under normal operation (no GC activity), concurrent callers for
+     * the same key will always receive the same instance. In the rare case where a previously
+     * cached value has been garbage-collected and two threads race to replace it, each may
+     * return its own value for that single call; subsequent callers will converge on one instance.
+     * This is an acceptable trade-off to avoid per-key locking on the hot path.
      * <p>
      * Also performs lazy cleanup of entries whose keys have been garbage collected.
      *
@@ -135,7 +140,9 @@ public class ConcurrentWeakCache<K, V> {
             if (existingValue != null) {
                 return existingValue;
             }
-            // Existing entry's value was GC'd — overwrite with new value
+            // Existing entry's value was GC'd — overwrite with new value.
+            // Benign race: two threads may both reach here and each return their own value;
+            // all subsequent callers converge on whichever thread's put() wins.
             map.put(new WeakKey<>(key, queue), newRef);
         }
         return value;
