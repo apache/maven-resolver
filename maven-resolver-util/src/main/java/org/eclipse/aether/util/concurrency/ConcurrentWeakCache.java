@@ -111,13 +111,9 @@ public class ConcurrentWeakCache<K, V> {
     /**
      * If the key is not already present (or its value has been GC'd), stores the key-value pair
      * and returns the given value. If the key is already present with a live value, returns the
-     * existing value without storing.
-     * <p>
-     * <b>Concurrency note:</b> Under normal operation (no GC activity), concurrent callers for
-     * the same key will always receive the same instance. In the rare case where a previously
-     * cached value has been garbage-collected and two threads race to replace it, each may
-     * return its own value for that single call; subsequent callers will converge on one instance.
-     * This is an acceptable trade-off to avoid per-key locking on the hot path.
+     * existing value without storing. Concurrent callers for the same key are guaranteed to
+     * receive the same instance (the insert-or-keep decision is atomic per key via
+     * {@link ConcurrentHashMap#merge}).
      * <p>
      * Also performs lazy cleanup of entries whose keys have been garbage collected.
      *
@@ -131,19 +127,20 @@ public class ConcurrentWeakCache<K, V> {
         if (existing != null) {
             return existing;
         }
-        // Slow path: allocate WeakKey + WeakReference and insert
+        // Slow path: atomic insert-or-keep via merge() — locks only the target bucket,
+        // so contention is per-key, not global. Handles the case where an existing entry's
+        // value has been GC'd by atomically replacing it with the new value.
         expungeStaleEntries();
         WeakReference<V> newRef = new WeakReference<>(value);
-        WeakReference<V> existingRef = map.putIfAbsent(new WeakKey<>(key, queue), newRef);
-        if (existingRef != null) {
+        WeakReference<V> ref = map.merge(new WeakKey<>(key, queue), newRef, (existingRef, incoming) -> {
             V existingValue = existingRef.get();
+            return existingValue != null ? existingRef : incoming;
+        });
+        if (ref != newRef) {
+            V existingValue = ref.get();
             if (existingValue != null) {
                 return existingValue;
             }
-            // Existing entry's value was GC'd — overwrite with new value.
-            // Benign race: two threads may both reach here and each return their own value;
-            // all subsequent callers converge on whichever thread's put() wins.
-            map.put(new WeakKey<>(key, queue), newRef);
         }
         return value;
     }
