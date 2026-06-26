@@ -42,7 +42,6 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.ConfigUtils;
-import org.eclipse.aether.util.concurrency.Cache;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
@@ -551,17 +550,24 @@ public final class DataPool {
         }
     }
 
+    /**
+     * Intern pool backed by ConcurrentHashMap for lock-free concurrent access.
+     * Uses the same implementation as HardInternPool — the pool is session-scoped
+     * and bounded by the dependency tree size, so weak references are unnecessary.
+     * The previous Cache-based implementation had per-lookup overhead (WeakReference
+     * allocation + ReferenceQueue polling) that caused measurable contention.
+     */
     private static class WeakInternPool<K, V> implements InternPool<K, V> {
-        private final Cache<K, V> cache = Cache.newCache(Cache.ReferenceType.WEAK);
+        private final ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>(256);
 
         @Override
         public V get(K key) {
-            return cache.get(key);
+            return map.get(key);
         }
 
         @Override
         public V intern(K key, V value) {
-            return cache.computeIfAbsent(key, k -> value);
+            return map.computeIfAbsent(key, k -> value);
         }
     }
 }
