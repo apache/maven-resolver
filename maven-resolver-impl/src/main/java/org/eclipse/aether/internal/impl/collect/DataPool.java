@@ -556,7 +556,7 @@ public final class DataPool {
      * Lock-free reads (ConcurrentHashMap.get is a volatile read, zero allocation via
      * ThreadLocal lookup key), lock-striped writes, weak keys and values allow GC of
      * interned objects when no longer strongly referenced.
-     * The race in intern() is benign — at worst a duplicate value is created.
+     * Uses putIfAbsent to guarantee concurrent callers for the same key get the same instance.
      */
     private static class WeakInternPool<K, V> implements InternPool<K, V> {
         private final ConcurrentWeakCache<K, V> cache = new ConcurrentWeakCache<>(256);
@@ -572,8 +572,7 @@ public final class DataPool {
             if (pooled != null) {
                 return pooled;
             }
-            cache.put(key, value);
-            return value;
+            return cache.putIfAbsent(key, value);
         }
     }
 }

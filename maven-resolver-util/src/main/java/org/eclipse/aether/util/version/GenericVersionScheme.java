@@ -59,8 +59,7 @@ public class GenericVersionScheme extends VersionSchemeSupport {
     public GenericVersion parseVersion(final String version) throws InvalidVersionSpecificationException {
         GenericVersion v = versionCache.get(version);
         if (v == null) {
-            v = new GenericVersion(version);
-            versionCache.put(version, v);
+            v = versionCache.putIfAbsent(version, new GenericVersion(version));
         }
         return v;
     }

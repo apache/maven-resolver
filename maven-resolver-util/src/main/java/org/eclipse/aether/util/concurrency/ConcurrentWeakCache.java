@@ -109,6 +109,33 @@ public class ConcurrentWeakCache<K, V> {
     }
 
     /**
+     * If the key is not already present (or its value has been GC'd), stores the key-value pair
+     * and returns the given value. If the key is already present with a live value, returns the
+     * existing value without storing. This ensures concurrent callers for the same key always
+     * receive the same instance.
+     * <p>
+     * Also performs lazy cleanup of entries whose keys have been garbage collected.
+     *
+     * @param key   the key
+     * @param value the value to store if absent
+     * @return the existing value if present, or the given value if newly stored
+     */
+    public V putIfAbsent(K key, V value) {
+        expungeStaleEntries();
+        WeakReference<V> newRef = new WeakReference<>(value);
+        WeakReference<V> existing = map.putIfAbsent(new WeakKey<>(key, queue), newRef);
+        if (existing != null) {
+            V existingValue = existing.get();
+            if (existingValue != null) {
+                return existingValue;
+            }
+            // Existing entry's value was GC'd — overwrite with new value
+            map.put(new WeakKey<>(key, queue), newRef);
+        }
+        return value;
+    }
+
+    /**
      * Returns the number of entries in the cache (including possibly stale ones).
      *
      * @return the cache size
