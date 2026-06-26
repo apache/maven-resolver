@@ -19,7 +19,9 @@
 package org.eclipse.aether.util.version;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
@@ -50,13 +52,21 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
  */
 public class GenericVersionScheme extends VersionSchemeSupport {
 
-    // ConcurrentHashMap for lock-free concurrent access — zero allocation on cache hits.
-    // The map is instance-scoped and bounded by the number of unique version strings in the build.
-    private final ConcurrentHashMap<String, GenericVersion> versionCache = new ConcurrentHashMap<>();
+    // WeakHashMap with synchronizedMap wrapper — weak keys allow GC of unused entries,
+    // synchronizedMap provides per-method synchronization with short lock hold times.
+    // No outer synchronized block: the race in computeIfAbsent is benign (at worst a
+    // duplicate GenericVersion is created and one wins the put).
+    private final Map<String, GenericVersion> versionCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     @Override
     public GenericVersion parseVersion(final String version) throws InvalidVersionSpecificationException {
-        return versionCache.computeIfAbsent(version, GenericVersion::new);
+        GenericVersion existing = versionCache.get(version);
+        if (existing != null) {
+            return existing;
+        }
+        GenericVersion created = new GenericVersion(version);
+        versionCache.put(version, created);
+        return created;
     }
 
     /**

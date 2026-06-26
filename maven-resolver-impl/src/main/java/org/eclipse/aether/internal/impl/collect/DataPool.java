@@ -18,10 +18,14 @@
  */
 package org.eclipse.aether.internal.impl.collect;
 
+import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.Keys;
@@ -551,23 +555,32 @@ public final class DataPool {
     }
 
     /**
-     * Intern pool backed by ConcurrentHashMap for lock-free concurrent access.
-     * Uses the same implementation as HardInternPool — the pool is session-scoped
-     * and bounded by the dependency tree size, so weak references are unnecessary.
-     * The previous Cache-based implementation had per-lookup overhead (WeakReference
-     * allocation + ReferenceQueue polling) that caused measurable contention.
+     * Intern pool backed by WeakHashMap with synchronizedMap wrapper.
+     * Weak keys allow GC of unused entries. Each map operation (get/put) acquires
+     * a short-lived lock via synchronizedMap. No outer synchronized block: the
+     * race in intern() is benign — at worst a duplicate value is created and
+     * one wins the put.
      */
     private static class WeakInternPool<K, V> implements InternPool<K, V> {
-        private final ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>(256);
+        private final Map<K, WeakReference<V>> map = Collections.synchronizedMap(new WeakHashMap<>(256));
 
         @Override
         public V get(K key) {
-            return map.get(key);
+            WeakReference<V> ref = map.get(key);
+            return ref != null ? ref.get() : null;
         }
 
         @Override
         public V intern(K key, V value) {
-            return map.computeIfAbsent(key, k -> value);
+            WeakReference<V> pooledRef = map.get(key);
+            if (pooledRef != null) {
+                V pooled = pooledRef.get();
+                if (pooled != null) {
+                    return pooled;
+                }
+            }
+            map.put(key, new WeakReference<>(value));
+            return value;
         }
     }
 }
