@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -175,7 +175,7 @@ public final class PathConflictResolver extends ConflictResolver {
         // loop over topographically sorted conflictIds
         for (String conflictId : sortedConflictIds) {
             // paths in given conflict group to consider
-            List<Path> paths = state.partitions.get(conflictId);
+            Set<Path> paths = state.partitions.get(conflictId);
             if (paths.isEmpty()) {
                 // this means that whole group "fall out of scope" (are all on loser branches); skip
                 continue;
@@ -208,7 +208,7 @@ public final class PathConflictResolver extends ConflictResolver {
             }
             state.resolvedIds.put(conflictId, winnerPath);
 
-            // loop over considered paths and apply selection results; note: node may remove itself from iterated list
+            // loop over considered paths and apply selection results; note: node may remove itself from iterated set
             for (Path path : new ArrayList<>(paths)) {
                 // apply selected properties scope/optional to winner (winner carries version; others are losers)
                 if (path == winnerPath) {
@@ -230,7 +230,7 @@ public final class PathConflictResolver extends ConflictResolver {
             stats.put("ConflictResolver.totalTime", time2 - time1);
             stats.put(
                     "ConflictResolver.conflictItemCount",
-                    state.partitions.values().stream().map(List::size).reduce(0, Integer::sum));
+                    state.partitions.values().stream().map(Set::size).reduce(0, Integer::sum));
         }
 
         return node;
@@ -279,8 +279,9 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * A mapping from conflictId to paths represented as {@link Path}s that exist for each conflictId. In other
          * words all paths to each {@link DependencyNode} that are member of same conflictId group.
+         * Uses {@link LinkedHashSet} for O(1) removal in {@link Path#moveOutOfScope()} while preserving insertion order.
          */
-        private final Map<String, List<Path>> partitions;
+        private final Map<String, Set<Path>> partitions;
 
         /**
          * A mapping from conflictIds to winner {@link Path}, hence {@link DependencyNode}  for given conflictId.
@@ -322,12 +323,7 @@ public final class PathConflictResolver extends ConflictResolver {
          */
         private Path build(DependencyNode node) throws RepositoryException {
             String nodeConflictId = this.conflictIds.get(node);
-            Path root = new Path(
-                    this,
-                    node,
-                    nodeConflictId,
-                    nodeConflictId != null ? Collections.singleton(nodeConflictId) : Collections.emptySet(),
-                    null);
+            Path root = new Path(this, node, nodeConflictId, null);
             gatherCRNodes(root);
             return root;
         }
@@ -381,11 +377,6 @@ public final class PathConflictResolver extends ConflictResolver {
         private DependencyNode dn;
         private final String conflictId;
         private final Path parent;
-        // Set of conflictIds that we "stepped over" from root to here; is a set, and if duplicate element addition is
-        // attempted, it signals we deal with a cycle, as we are about to enter into same tree partition (nodes with
-        // same conflictId) we already have been. This could be a list, but for our purposes "duplication detection"
-        // (loop) is perfectly enough.
-        private final Set<String> conflictIdsSinceRoot;
         // derived
         private final int depth;
         private final List<Path> children;
@@ -393,20 +384,35 @@ public final class PathConflictResolver extends ConflictResolver {
         private String scope;
         private boolean optional;
 
-        private Path(State state, DependencyNode dn, String conflictId, Set<String> conflictIdsSinceRoot, Path parent) {
+        private Path(State state, DependencyNode dn, String conflictId, Path parent) {
             this.state = state;
             this.dn = dn;
             this.conflictId = conflictId;
             this.parent = parent;
-            this.conflictIdsSinceRoot = conflictIdsSinceRoot;
             this.depth = parent != null ? parent.depth + 1 : 0;
             this.children = new ArrayList<>();
             pull(0);
 
             this.state
                     .partitions
-                    .computeIfAbsent(this.conflictId, k -> new ArrayList<>())
+                    .computeIfAbsent(this.conflictId, k -> new LinkedHashSet<>())
                     .add(this);
+        }
+
+        /**
+         * Checks whether the given conflictId appears on the path from this node to the root.
+         * This replaces the previous approach of copying a HashSet at every child, which was the
+         * dominant source of memory consumption (millions of HashMap.Node objects for large graphs).
+         */
+        private boolean hasConflictIdOnPathToRoot(String targetConflictId) {
+            Path current = this;
+            while (current != null) {
+                if (Objects.equals(current.conflictId, targetConflictId)) {
+                    return true;
+                }
+                current = current.parent;
+            }
+            return false;
         }
 
         /**
@@ -614,6 +620,7 @@ public final class PathConflictResolver extends ConflictResolver {
         /**
          * Removes this and all child {@link Path} nodes from winner selection scope; essentially marks whole subtree
          * from "this and below" as loser, to not be considered in subsequent winner selections.
+         * Uses {@link LinkedHashSet} for O(1) removal instead of the previous O(N) ArrayList.remove.
          */
         private void moveOutOfScope() {
             this.state.partitions.get(this.conflictId).remove(this);
@@ -635,9 +642,12 @@ public final class PathConflictResolver extends ConflictResolver {
             ArrayList<Path> added = new ArrayList<>(children.size());
             for (DependencyNode child : children) {
                 String childConflictId = this.state.conflictIds.get(child);
-                Set<String> conflictIdsSinceRoot = new HashSet<>(this.conflictIdsSinceRoot);
-                boolean cycle = !conflictIdsSinceRoot.add(childConflictId);
-                Path c = new Path(this.state, child, childConflictId, conflictIdsSinceRoot, this);
+                // Detect cycles by walking up the parent chain instead of copying a HashSet per child.
+                // This trades O(depth) per check for eliminating the dominant memory consumer:
+                // previously, each Path copied its parent's entire conflict-ID set, creating millions
+                // of HashMap.Node objects for large graphs.
+                boolean cycle = hasConflictIdOnPathToRoot(childConflictId);
+                Path c = new Path(this.state, child, childConflictId, this);
                 this.children.add(c);
                 c.derive(0, false);
                 if (!cycle) {
