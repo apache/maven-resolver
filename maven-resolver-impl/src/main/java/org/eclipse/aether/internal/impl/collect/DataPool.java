@@ -18,16 +18,11 @@
  */
 package org.eclipse.aether.internal.impl.collect;
 
-import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositoryCache;
@@ -47,6 +42,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.concurrency.Cache;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
@@ -556,51 +552,16 @@ public final class DataPool {
     }
 
     private static class WeakInternPool<K, V> implements InternPool<K, V> {
-        private final Map<K, WeakReference<V>> map = new WeakHashMap<>(256);
-        private final ReadWriteLock lock = new ReentrantReadWriteLock();
+        private final Cache<K, V> cache = Cache.newCache(Cache.ReferenceType.WEAK);
 
         @Override
         public V get(K key) {
-            lock.readLock().lock();
-            try {
-                WeakReference<V> ref = map.get(key);
-                return ref != null ? ref.get() : null;
-            } finally {
-                lock.readLock().unlock();
-            }
+            return cache.get(key);
         }
 
         @Override
         public V intern(K key, V value) {
-            // Fast path: read lock allows concurrent cache hits
-            lock.readLock().lock();
-            try {
-                WeakReference<V> ref = map.get(key);
-                if (ref != null) {
-                    V pooled = ref.get();
-                    if (pooled != null) {
-                        return pooled;
-                    }
-                }
-            } finally {
-                lock.readLock().unlock();
-            }
-            // Slow path: write lock for cache miss
-            lock.writeLock().lock();
-            try {
-                // Double-check after acquiring write lock
-                WeakReference<V> ref = map.get(key);
-                if (ref != null) {
-                    V pooled = ref.get();
-                    if (pooled != null) {
-                        return pooled;
-                    }
-                }
-                map.put(key, new WeakReference<>(value));
-                return value;
-            } finally {
-                lock.writeLock().unlock();
-            }
+            return cache.computeIfAbsent(key, k -> value);
         }
     }
 }

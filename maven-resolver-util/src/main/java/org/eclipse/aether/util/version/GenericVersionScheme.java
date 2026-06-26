@@ -19,11 +19,10 @@
 package org.eclipse.aether.util.version;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.util.concurrency.Cache;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /**
@@ -53,8 +52,9 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
  */
 public class GenericVersionScheme extends VersionSchemeSupport {
 
-    // ConcurrentHashMap for lock-striped thread safety without global contention
-    private final Map<String, GenericVersion> versionCache = new ConcurrentHashMap<>();
+    // ConcurrentHashMap-backed cache with weak references for memory-sensitive caching and lock-free concurrency
+    private final Cache<String, GenericVersion> versionCache =
+            Cache.newCache(Cache.ReferenceType.WEAK, "GenericVersionScheme");
 
     // Cache statistics
     private final AtomicLong cacheHits = new AtomicLong(0);
@@ -137,7 +137,7 @@ public class GenericVersionScheme extends VersionSchemeSupport {
         long instances = INSTANCE_COUNT.get();
         double hitRate = total > 0 ? (double) hits / total * 100.0 : 0.0;
 
-        System.err.println("=== GenericVersionScheme Global Cache Statistics (ConcurrentHashMap) ===");
+        System.err.println("=== GenericVersionScheme Global Cache Statistics ===");
         System.err.println(String.format("Total instances created: %d", instances));
         System.err.println(String.format("Total requests: %d", total));
         System.err.println(String.format("Cache hits: %d", hits));
