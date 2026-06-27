@@ -115,14 +115,28 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
     }
 
     protected NamedLock getLockAndRefTrack(final NamedLockKey key, Supplier<NamedLockSupport> supplier) {
+        if (shutdown.get()) {
+            throw new IllegalStateException("factory already shut down");
+        }
+        // Fast path: lock-free volatile read + atomic CAS increment.
+        // ConcurrentHashMap.get() is a volatile read — no bucket locking.
+        // In the common case (lock already exists), this avoids compute()'s
+        // per-bucket exclusive lock entirely.
+        NamedLockHolder holder = locks.get(key);
+        if (holder != null && holder.tryIncRef()) {
+            return holder.namedLock;
+        }
+        // Slow path: holder absent or being closed (refcount hit 0).
+        // Use compute() to atomically create a new holder.
         return locks.compute(key, (k, v) -> {
                     if (shutdown.get()) {
                         throw new IllegalStateException("factory already shut down");
                     }
-                    if (v == null) {
+                    if (v == null || !v.tryIncRef()) {
                         v = new NamedLockHolder(supplier.get());
+                        v.incRef();
                     }
-                    return v.incRef();
+                    return v;
                 })
                 .namedLock;
     }
@@ -170,8 +184,14 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
     public void closeLock(final NamedLockKey key) {
         locks.compute(key, (k, v) -> {
             if (v != null && v.decRef() == 0) {
-                destroyLock(v.namedLock);
-                return null;
+                // Mark as closed to prevent a concurrent tryIncRef (lock-free fast path)
+                // from reviving this holder. CAS ensures atomicity: if tryIncRef already
+                // incremented from 0→1, our CAS fails and we keep the holder alive.
+                if (v.referenceCount.compareAndSet(0, Integer.MIN_VALUE)) {
+                    destroyLock(v.namedLock);
+                    return null;
+                }
+                // A concurrent tryIncRef succeeded — holder is still in use, keep it
             }
             return v;
         });
@@ -204,6 +224,23 @@ public abstract class NamedLockFactorySupport implements NamedLockFactory {
         private NamedLockHolder incRef() {
             referenceCount.incrementAndGet();
             return this;
+        }
+
+        /**
+         * Atomically tries to increment the reference count. Returns {@code false} if the
+         * holder has been closed (refcount &le; 0), preventing revival of a destroyed lock.
+         * Used by the lock-free fast path in {@link #getLockAndRefTrack}.
+         */
+        private boolean tryIncRef() {
+            while (true) {
+                int current = referenceCount.get();
+                if (current <= 0) {
+                    return false;
+                }
+                if (referenceCount.compareAndSet(current, current + 1)) {
+                    return true;
+                }
+            }
         }
 
         private int decRef() {
