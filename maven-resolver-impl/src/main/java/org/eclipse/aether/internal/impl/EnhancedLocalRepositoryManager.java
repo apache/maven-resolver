@@ -75,6 +75,12 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      * Cache of tracking file contents, keyed by tracking file path. Eliminates redundant disk I/O
      * when multiple artifacts in the same directory are resolved — they all share the same
      * {@code _remote.repositories} tracking file. Invalidated on writes via {@link #addRepo}.
+     * <p>
+     * Cached {@link Properties} instances are shared across threads and must be treated as
+     * read-only by callers of {@link #readRepos}. The cache is scoped to this manager instance
+     * (one per session), so concurrent builds in separate JVMs each maintain independent caches.
+     * If another process updates a tracking file after it has been cached here, the stale entry
+     * may cause a redundant (but harmless) download — no data corruption.
      */
     private final ConcurrentHashMap<Path, Properties> trackingFileCache = new ConcurrentHashMap<>();
 
@@ -239,9 +245,11 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
         Path trackingPath = getTrackingFile(artifactPath);
 
-        Properties updated = trackingFileManager.update(trackingPath, updates);
-        // Update cache with the result of the write so subsequent reads see the new state
-        trackingFileCache.put(trackingPath, updated);
+        // Invalidate cache before write: using put() with the returned Properties would be
+        // racy — two concurrent addRepo() calls could reorder their puts, leaving stale data.
+        // Invalidating forces the next readRepos() to re-read from disk.
+        trackingFileCache.remove(trackingPath);
+        trackingFileManager.update(trackingPath, updates);
     }
 
     private Path getTrackingFile(Path artifactPath) {
