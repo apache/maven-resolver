@@ -108,44 +108,51 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
     @Override
     protected NamedLockSupport createLock(final NamedLockKey key) {
         Path path = Paths.get(URI.create(key.name()));
-        FileChannel fileChannel = fileChannels.computeIfAbsent(key, k -> {
-            try {
-                Files.createDirectories(path.getParent());
-                FileChannel channel = retry(
-                        ATTEMPTS,
-                        SLEEP_MILLIS,
-                        () -> {
-                            if (DELETE_LOCK_FILES) {
-                                return FileChannel.open(
-                                        path,
-                                        StandardOpenOption.READ,
-                                        StandardOpenOption.WRITE,
-                                        StandardOpenOption.CREATE,
-                                        StandardOpenOption.DELETE_ON_CLOSE);
-                            } else {
-                                return FileChannel.open(
-                                        path,
-                                        StandardOpenOption.READ,
-                                        StandardOpenOption.WRITE,
-                                        StandardOpenOption.CREATE);
-                            }
-                        },
-                        null,
-                        null);
-
-                if (channel == null) {
-                    throw new IllegalStateException(
-                            "Could not open file channel for '" + key + "' after " + ATTEMPTS + " attempts; giving up");
-                }
-                return channel;
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Interrupted while opening file channel for '" + key + "'", e);
-            } catch (IOException e) {
-                throw new UncheckedIOException("Failed to open file channel for '" + key + "'", e);
-            }
-        });
+        FileChannel fileChannel = fileChannels.computeIfAbsent(key, k -> openFileChannel(key, path));
+        if (!fileChannel.isOpen()) {
+            // Channel was closed externally (I/O error, NFS hiccup, etc.). Evict the stale entry
+            // and open a fresh one. remove(key, fileChannel) is atomic: it only removes if the
+            // value is still this exact (stale) instance, avoiding races with other threads that
+            // may have already replaced it.
+            fileChannels.remove(key, fileChannel);
+            fileChannel = fileChannels.computeIfAbsent(key, k -> openFileChannel(key, path));
+        }
         return new FileLockNamedLock(key, fileChannel, this);
+    }
+
+    private FileChannel openFileChannel(NamedLockKey key, Path path) {
+        try {
+            Files.createDirectories(path.getParent());
+            FileChannel channel = retry(
+                    ATTEMPTS,
+                    SLEEP_MILLIS,
+                    () -> {
+                        if (DELETE_LOCK_FILES) {
+                            return FileChannel.open(
+                                    path,
+                                    StandardOpenOption.READ,
+                                    StandardOpenOption.WRITE,
+                                    StandardOpenOption.CREATE,
+                                    StandardOpenOption.DELETE_ON_CLOSE);
+                        } else {
+                            return FileChannel.open(
+                                    path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+                        }
+                    },
+                    null,
+                    null);
+
+            if (channel == null) {
+                throw new IllegalStateException(
+                        "Could not open file channel for '" + key + "' after " + ATTEMPTS + " attempts; giving up");
+            }
+            return channel;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while opening file channel for '" + key + "'", e);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to open file channel for '" + key + "'", e);
+        }
     }
 
     @Override

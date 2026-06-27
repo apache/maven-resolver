@@ -63,7 +63,26 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private static final String LOCAL_REPO_ID = "";
 
-    private static final Properties EMPTY_PROPERTIES = new Properties();
+    /**
+     * Shared sentinel for "no tracking data". Mutation is forbidden: the instance is shared
+     * across threads via {@link #trackingFileCache} and returned directly from {@link #readRepos}.
+     */
+    private static final Properties EMPTY_PROPERTIES = new Properties() {
+        @Override
+        public synchronized Object put(Object key, Object value) {
+            throw new UnsupportedOperationException("EMPTY_PROPERTIES is read-only");
+        }
+
+        @Override
+        public synchronized Object remove(Object key) {
+            throw new UnsupportedOperationException("EMPTY_PROPERTIES is read-only");
+        }
+
+        @Override
+        public synchronized void clear() {
+            throw new UnsupportedOperationException("EMPTY_PROPERTIES is read-only");
+        }
+    };
 
     private final String trackingFilename;
 
