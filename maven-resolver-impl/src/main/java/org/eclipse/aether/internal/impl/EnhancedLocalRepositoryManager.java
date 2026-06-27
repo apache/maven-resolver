@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -62,11 +63,45 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private static final String LOCAL_REPO_ID = "";
 
+    /**
+     * Shared sentinel for "no tracking data". Mutation is forbidden: the instance is shared
+     * across threads via {@link #trackingFileCache} and returned directly from {@link #readRepos}.
+     */
+    private static final Properties EMPTY_PROPERTIES = new Properties() {
+        @Override
+        public synchronized Object put(Object key, Object value) {
+            throw new UnsupportedOperationException("EMPTY_PROPERTIES is read-only");
+        }
+
+        @Override
+        public synchronized Object remove(Object key) {
+            throw new UnsupportedOperationException("EMPTY_PROPERTIES is read-only");
+        }
+
+        @Override
+        public synchronized void clear() {
+            throw new UnsupportedOperationException("EMPTY_PROPERTIES is read-only");
+        }
+    };
+
     private final String trackingFilename;
 
     private final TrackingFileManager trackingFileManager;
 
     private final LocalPathPrefixComposer localPathPrefixComposer;
+
+    /**
+     * Cache of tracking file contents, keyed by tracking file path. Eliminates redundant disk I/O
+     * when multiple artifacts in the same directory are resolved — they all share the same
+     * {@code _remote.repositories} tracking file. Invalidated on writes via {@link #addRepo}.
+     * <p>
+     * Cached {@link Properties} instances are shared across threads and must be treated as
+     * read-only by callers of {@link #readRepos}. The cache is scoped to this manager instance
+     * (one per session), so concurrent builds in separate JVMs each maintain independent caches.
+     * If another process updates a tracking file after it has been cached here, the stale entry
+     * may cause a redundant (but harmless) download — no data corruption.
+     */
+    private final ConcurrentHashMap<Path, Properties> trackingFileCache = new ConcurrentHashMap<>();
 
     EnhancedLocalRepositoryManager(
             Path basedir,
@@ -215,10 +250,10 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private Properties readRepos(Path artifactPath) {
         Path trackingFile = getTrackingFile(artifactPath);
-
-        Properties props = trackingFileManager.read(trackingFile);
-
-        return (props != null) ? props : new Properties();
+        return trackingFileCache.computeIfAbsent(trackingFile, tf -> {
+            Properties props = trackingFileManager.read(tf);
+            return (props != null) ? props : EMPTY_PROPERTIES;
+        });
     }
 
     private void addRepo(Path artifactPath, Collection<String> repositories) {
@@ -229,6 +264,10 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
         Path trackingPath = getTrackingFile(artifactPath);
 
+        // Invalidate cache before write: using put() with the returned Properties would be
+        // racy — two concurrent addRepo() calls could reorder their puts, leaving stale data.
+        // Invalidating forces the next readRepos() to re-read from disk.
+        trackingFileCache.remove(trackingPath);
         trackingFileManager.update(trackingPath, updates);
     }
 

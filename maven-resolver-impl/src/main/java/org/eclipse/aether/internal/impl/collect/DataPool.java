@@ -18,14 +18,10 @@
  */
 package org.eclipse.aether.internal.impl.collect;
 
-import java.lang.ref.WeakReference;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.Keys;
@@ -46,6 +42,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.concurrency.ConcurrentWeakCache;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
@@ -554,33 +551,24 @@ public final class DataPool {
         }
     }
 
+    /**
+     * Intern pool backed by ConcurrentWeakCache with weak keys and weak values.
+     * Lock-free reads (ConcurrentHashMap.get is a volatile read, zero allocation via
+     * ThreadLocal lookup key), lock-striped writes, weak keys and values allow GC of
+     * interned objects when no longer strongly referenced.
+     * Uses putIfAbsent to guarantee concurrent callers for the same key get the same instance.
+     */
     private static class WeakInternPool<K, V> implements InternPool<K, V> {
-        private final Map<K, WeakReference<V>> map = Collections.synchronizedMap(new WeakHashMap<>(256));
+        private final ConcurrentWeakCache<K, V> cache = new ConcurrentWeakCache<>(256);
 
         @Override
         public V get(K key) {
-            WeakReference<V> ref = map.get(key);
-            return ref != null ? ref.get() : null;
+            return cache.get(key);
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public V intern(K key, V value) {
-            Object[] result = new Object[1];
-            synchronized (map) {
-                map.compute(key, (k, existingRef) -> {
-                    if (existingRef != null) {
-                        V pooled = existingRef.get();
-                        if (pooled != null) {
-                            result[0] = pooled;
-                            return existingRef;
-                        }
-                    }
-                    result[0] = value;
-                    return new WeakReference<>(value);
-                });
-            }
-            return (V) result[0];
+            return cache.putIfAbsent(key, value);
         }
     }
 }

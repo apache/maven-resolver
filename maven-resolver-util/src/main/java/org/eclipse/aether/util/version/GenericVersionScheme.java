@@ -19,12 +19,8 @@
 package org.eclipse.aether.util.version;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
-import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.util.concurrency.ConcurrentWeakCache;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /**
@@ -54,102 +50,18 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
  */
 public class GenericVersionScheme extends VersionSchemeSupport {
 
-    // Using WeakHashMap wrapped in synchronizedMap for thread safety and memory-sensitive caching
-    private final Map<String, GenericVersion> versionCache = Collections.synchronizedMap(new WeakHashMap<>());
-
-    // Cache statistics
-    private final AtomicLong cacheHits = new AtomicLong(0);
-    private final AtomicLong cacheMisses = new AtomicLong(0);
-    private final AtomicLong totalRequests = new AtomicLong(0);
-
-    // Static statistics across all instances
-    private static final AtomicLong GLOBAL_CACHE_HITS = new AtomicLong(0);
-    private static final AtomicLong GLOBAL_CACHE_MISSES = new AtomicLong(0);
-    private static final AtomicLong GLOBAL_TOTAL_REQUESTS = new AtomicLong(0);
-    private static final AtomicLong INSTANCE_COUNT = new AtomicLong(0);
-
-    static {
-        // Register shutdown hook to print statistics if enabled
-        if (isStatisticsEnabled()) {
-            Runtime.getRuntime().addShutdownHook(new Thread(GenericVersionScheme::printGlobalStatistics));
-        }
-    }
-
-    public GenericVersionScheme() {
-        INSTANCE_COUNT.incrementAndGet();
-    }
-
-    /**
-     * Checks if version scheme cache statistics should be printed.
-     * This checks both the system property and the configuration property.
-     */
-    private static boolean isStatisticsEnabled() {
-        // Check system property first (for backwards compatibility and ease of use)
-        String sysProp = System.getProperty(ConfigurationProperties.VERSION_SCHEME_CACHE_DEBUG);
-        if (sysProp != null) {
-            return Boolean.parseBoolean(sysProp);
-        }
-
-        // Default to false if not configured
-        return ConfigurationProperties.DEFAULT_VERSION_SCHEME_CACHE_DEBUG;
-    }
+    // Concurrent cache with weak keys and weak values: lock-free reads (volatile read, no lock
+    // acquisition via ConcurrentHashMap), lock-striped writes, zero allocation on get() via
+    // ThreadLocal lookup key, weak references allow GC under memory pressure.
+    private final ConcurrentWeakCache<String, GenericVersion> versionCache = new ConcurrentWeakCache<>();
 
     @Override
     public GenericVersion parseVersion(final String version) throws InvalidVersionSpecificationException {
-        totalRequests.incrementAndGet();
-        GLOBAL_TOTAL_REQUESTS.incrementAndGet();
-
-        boolean[] created = {false};
-        GenericVersion result;
-        synchronized (versionCache) {
-            result = versionCache.computeIfAbsent(version, v -> {
-                created[0] = true;
-                return new GenericVersion(v);
-            });
+        GenericVersion v = versionCache.get(version);
+        if (v == null) {
+            v = versionCache.putIfAbsent(version, new GenericVersion(version));
         }
-        if (created[0]) {
-            cacheMisses.incrementAndGet();
-            GLOBAL_CACHE_MISSES.incrementAndGet();
-        } else {
-            cacheHits.incrementAndGet();
-            GLOBAL_CACHE_HITS.incrementAndGet();
-        }
-        return result;
-    }
-
-    /**
-     * Get cache statistics for this instance.
-     */
-    public String getCacheStatistics() {
-        long hits = cacheHits.get();
-        long misses = cacheMisses.get();
-        long total = totalRequests.get();
-        double hitRate = total > 0 ? (double) hits / total * 100.0 : 0.0;
-
-        return String.format(
-                "GenericVersionScheme Cache Stats: hits=%d, misses=%d, total=%d, hit-rate=%.2f%%, cache-size=%d",
-                hits, misses, total, hitRate, versionCache.size());
-    }
-
-    /**
-     * Print global statistics across all instances.
-     */
-    private static void printGlobalStatistics() {
-        long hits = GLOBAL_CACHE_HITS.get();
-        long misses = GLOBAL_CACHE_MISSES.get();
-        long total = GLOBAL_TOTAL_REQUESTS.get();
-        long instances = INSTANCE_COUNT.get();
-        double hitRate = total > 0 ? (double) hits / total * 100.0 : 0.0;
-
-        System.err.println("=== GenericVersionScheme Global Cache Statistics (WeakHashMap) ===");
-        System.err.println(String.format("Total instances created: %d", instances));
-        System.err.println(String.format("Total requests: %d", total));
-        System.err.println(String.format("Cache hits: %d", hits));
-        System.err.println(String.format("Cache misses: %d", misses));
-        System.err.println(String.format("Hit rate: %.2f%%", hitRate));
-        System.err.println(
-                String.format("Average requests per instance: %.2f", instances > 0 ? (double) total / instances : 0.0));
-        System.err.println("=== End Cache Statistics ===");
+        return v;
     }
 
     /**
