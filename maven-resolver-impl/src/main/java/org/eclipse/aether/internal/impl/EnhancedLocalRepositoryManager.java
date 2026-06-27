@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -62,11 +63,20 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private static final String LOCAL_REPO_ID = "";
 
+    private static final Properties EMPTY_PROPERTIES = new Properties();
+
     private final String trackingFilename;
 
     private final TrackingFileManager trackingFileManager;
 
     private final LocalPathPrefixComposer localPathPrefixComposer;
+
+    /**
+     * Cache of tracking file contents, keyed by tracking file path. Eliminates redundant disk I/O
+     * when multiple artifacts in the same directory are resolved — they all share the same
+     * {@code _remote.repositories} tracking file. Invalidated on writes via {@link #addRepo}.
+     */
+    private final ConcurrentHashMap<Path, Properties> trackingFileCache = new ConcurrentHashMap<>();
 
     EnhancedLocalRepositoryManager(
             Path basedir,
@@ -215,10 +225,10 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private Properties readRepos(Path artifactPath) {
         Path trackingFile = getTrackingFile(artifactPath);
-
-        Properties props = trackingFileManager.read(trackingFile);
-
-        return (props != null) ? props : new Properties();
+        return trackingFileCache.computeIfAbsent(trackingFile, tf -> {
+            Properties props = trackingFileManager.read(tf);
+            return (props != null) ? props : EMPTY_PROPERTIES;
+        });
     }
 
     private void addRepo(Path artifactPath, Collection<String> repositories) {
@@ -229,7 +239,9 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
         Path trackingPath = getTrackingFile(artifactPath);
 
-        trackingFileManager.update(trackingPath, updates);
+        Properties updated = trackingFileManager.update(trackingPath, updates);
+        // Update cache with the result of the write so subsequent reads see the new state
+        trackingFileCache.put(trackingPath, updated);
     }
 
     private Path getTrackingFile(Path artifactPath) {
