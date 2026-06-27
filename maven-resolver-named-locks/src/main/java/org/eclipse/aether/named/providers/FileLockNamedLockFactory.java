@@ -150,18 +150,21 @@ public class FileLockNamedLockFactory extends NamedLockFactorySupport {
 
     @Override
     protected void destroyLock(final NamedLock namedLock) {
-        if (namedLock instanceof FileLockNamedLock) {
-            final NamedLockKey key = namedLock.key();
-            FileChannel fileChannel = fileChannels.remove(key);
-            if (fileChannel == null) {
-                throw new IllegalStateException("File channel expected, but does not exist: " + key);
-            }
+        // Keep the FileChannel open in the fileChannels map for reuse by future createLock() calls.
+        // Opening a FileChannel is a syscall (open/creat) that shows up as a hotspot when locks are
+        // acquired and released frequently (e.g., per-artifact resolution in primed builds).
+        // Channels are closed on factory shutdown via doShutdown().
+    }
 
+    @Override
+    protected void doShutdown() {
+        for (FileChannel channel : fileChannels.values()) {
             try {
-                fileChannel.close();
+                channel.close();
             } catch (IOException e) {
-                throw new UncheckedIOException("Failed to close file channel for '" + key + "'", e);
+                logger.warn("Failed to close file channel", e);
             }
         }
+        fileChannels.clear();
     }
 }
