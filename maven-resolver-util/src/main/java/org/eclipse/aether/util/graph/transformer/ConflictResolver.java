@@ -18,9 +18,9 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryException;
@@ -291,7 +291,6 @@ public class ConflictResolver implements DependencyGraphTransformer {
      * In such cases, ClassicConflictResolver is used instead — it works in-place with no parallel
      * structure, trading O(N²) worst-case time for O(1) extra space.
      */
-    @SuppressWarnings("unchecked")
     private ConflictResolver selectConflictResolver(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
         // Ensure conflict IDs are computed — both implementations need this anyway
@@ -299,21 +298,43 @@ public class ConflictResolver implements DependencyGraphTransformer {
             new ConflictIdSorter().transformGraph(node, context);
         }
 
-        Map<DependencyNode, String> conflictIds =
-                (Map<DependencyNode, String>) context.get(TransformationContextKeys.CONFLICT_IDS);
-        int nodeCount = conflictIds != null ? conflictIds.size() : 0;
-
-        // Estimate Path tree memory: ~200 bytes per Path (object + right-sized children list + partition entry)
-        long pathTreeEstimate = (long) nodeCount * 200;
         Runtime rt = Runtime.getRuntime();
         long available = rt.maxMemory() - (rt.totalMemory() - rt.freeMemory());
 
-        // Use PathConflictResolver only if the parallel tree fits within 25% of available heap
-        if (pathTreeEstimate < available / 4) {
-            return new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
-        } else {
+        // Estimate the maximum number of Path tree nodes that would fit in 25% of available heap.
+        // Each Path object costs ~200 bytes (object header + fields + children list entry).
+        int maxPathNodes = (int) Math.min(available / (4L * 200), Integer.MAX_VALUE);
+
+        // Walk the dependency tree to count total nodes (including diamond-expanded duplicates).
+        // The Path tree mirrors this structure, so the count directly reflects Path tree size.
+        // Use early-exit: stop counting once we exceed the threshold — no need to measure the
+        // full tree if we already know it's too large.
+        if (treeExceedsThreshold(node, maxPathNodes)) {
             return new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+        } else {
+            return new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
         }
+    }
+
+    /**
+     * Checks whether the total number of nodes in the dependency tree (including diamond-expanded
+     * duplicates) exceeds the given threshold. Uses an iterative walk with early exit to avoid
+     * measuring the full tree when it's clearly too large.
+     */
+    private boolean treeExceedsThreshold(DependencyNode root, int threshold) {
+        int count = 0;
+        ArrayDeque<DependencyNode> stack = new ArrayDeque<>();
+        stack.push(root);
+        while (!stack.isEmpty()) {
+            DependencyNode n = stack.pop();
+            if (++count > threshold) {
+                return true;
+            }
+            for (DependencyNode child : n.getChildren()) {
+                stack.push(child);
+            }
+        }
+        return false;
     }
 
     /**
