@@ -171,6 +171,7 @@ public final class PathConflictResolver extends ConflictResolver {
                 node);
 
         // loop over topographically sorted conflictIds
+        int conflictItemCount = 0;
         for (String conflictId : sortedConflictIds) {
             // paths in given conflict group to consider; filter out those moved out of scope
             List<Path> allPaths = state.partitions.get(conflictId);
@@ -182,10 +183,14 @@ public final class PathConflictResolver extends ConflictResolver {
                     items.add(new ConflictItem(p));
                 }
             }
+            // Replace partition entry with filtered list to release references to out-of-scope
+            // paths (and their detached subtrees), allowing GC during resolution
+            state.partitions.put(conflictId, activePaths);
             if (activePaths.isEmpty()) {
                 // this means that whole group "fall out of scope" (are all on loser branches); skip
                 continue;
             }
+            conflictItemCount += activePaths.size();
 
             // create conflict context for given conflictId
             ConflictContext ctx = new ConflictContext(node, state.conflictIds, items, conflictId);
@@ -234,14 +239,6 @@ public final class PathConflictResolver extends ConflictResolver {
         if (stats != null) {
             long time2 = System.nanoTime();
             stats.put("ConflictResolver.totalTime", time2 - time1);
-            int conflictItemCount = 0;
-            for (List<Path> paths : state.partitions.values()) {
-                for (Path p : paths) {
-                    if (!p.outOfScope) {
-                        conflictItemCount++;
-                    }
-                }
-            }
             stats.put("ConflictResolver.conflictItemCount", conflictItemCount);
         }
 
@@ -663,12 +660,21 @@ public final class PathConflictResolver extends ConflictResolver {
          * from "this and below" as loser, to not be considered in subsequent winner selections.
          * Uses a boolean flag instead of removing from partition collections, avoiding the per-entry
          * overhead of LinkedHashSet (~48 bytes/entry). Out-of-scope paths are filtered at query time.
+         * <p>
+         * Uses an explicit stack instead of recursion to avoid {@link StackOverflowError} on deep
+         * dependency graphs, consistent with the iterative approach in
+         * {@link State#gatherCRNodes(Path)}. Also nulls children references on out-of-scope nodes
+         * to allow GC of detached subtrees during resolution.
          */
         private void moveOutOfScope() {
-            this.outOfScope = true;
-            if (this.children != null) {
-                for (Path child : this.children) {
-                    child.moveOutOfScope();
+            ArrayList<Path> stack = new ArrayList<>();
+            stack.add(this);
+            while (!stack.isEmpty()) {
+                Path node = stack.remove(stack.size() - 1);
+                node.outOfScope = true;
+                if (node.children != null) {
+                    stack.addAll(node.children);
+                    node.children = null;
                 }
             }
         }
