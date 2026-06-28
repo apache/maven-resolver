@@ -167,14 +167,15 @@ public final class PathConflictResolver extends ConflictResolver {
                 scopeDeriver.getInstance(node, context),
                 optionalitySelector.getInstance(node, context),
                 conflictIds,
+                sortedConflictIds.size(),
                 node);
 
         // loop over topographically sorted conflictIds
         for (String conflictId : sortedConflictIds) {
             // paths in given conflict group to consider; filter out those moved out of scope
             List<Path> allPaths = state.partitions.get(conflictId);
-            List<Path> activePaths = new ArrayList<>();
-            List<ConflictItem> items = new ArrayList<>();
+            List<Path> activePaths = new ArrayList<>(allPaths.size());
+            List<ConflictItem> items = new ArrayList<>(allPaths.size());
             for (Path p : allPaths) {
                 if (!p.outOfScope) {
                     activePaths.add(p);
@@ -305,6 +306,12 @@ public final class PathConflictResolver extends ConflictResolver {
          */
         private final Path root;
 
+        /**
+         * Pooled {@link ScopeContext} instance reused across derive() calls to avoid allocating a new
+         * object per node. Reset via {@link ScopeContext#reset(String, String)} before each use.
+         */
+        private final ScopeContext scopeContext;
+
         @SuppressWarnings("checkstyle:ParameterNumber")
         private State(
                 ConflictResolver.Verbosity verbosity,
@@ -314,6 +321,7 @@ public final class PathConflictResolver extends ConflictResolver {
                 ConflictResolver.ScopeDeriver scopeDeriver,
                 ConflictResolver.OptionalitySelector optionalitySelector,
                 Map<DependencyNode, String> conflictIds,
+                int conflictIdCount,
                 DependencyNode node)
                 throws RepositoryException {
             this.verbosity = verbosity;
@@ -323,8 +331,10 @@ public final class PathConflictResolver extends ConflictResolver {
             this.scopeDeriver = scopeDeriver;
             this.optionalitySelector = optionalitySelector;
             this.conflictIds = conflictIds;
-            this.partitions = new HashMap<>();
-            this.resolvedIds = new HashMap<>();
+            // Right-size maps: conflictIdCount gives exact number of partitions and resolved entries
+            this.partitions = new HashMap<>(conflictIdCount * 4 / 3 + 1);
+            this.resolvedIds = new HashMap<>(conflictIdCount * 4 / 3 + 1);
+            this.scopeContext = new ScopeContext(null, null);
             this.root = build(node);
         }
 
@@ -468,9 +478,9 @@ public final class PathConflictResolver extends ConflictResolver {
             if (!winner) {
                 if (this.parent != null) {
                     if ((dn.getManagedBits() & DependencyNode.MANAGED_SCOPE) == 0) {
-                        ScopeContext context = new ScopeContext(this.parent.scope, this.scope);
-                        state.scopeDeriver.deriveScope(context);
-                        this.scope = context.derivedScope;
+                        state.scopeContext.reset(this.parent.scope, this.scope);
+                        state.scopeDeriver.deriveScope(state.scopeContext);
+                        this.scope = state.scopeContext.derivedScope;
                     }
                     if ((dn.getManagedBits() & DependencyNode.MANAGED_OPTIONAL) == 0) {
                         if (!this.optional && this.parent.optional) {
@@ -535,13 +545,12 @@ public final class PathConflictResolver extends ConflictResolver {
                             this.children = null;
                             break;
                         case STANDARD:
-                            String artifactId = ArtifactIdUtils.toId(this.dn.getArtifact());
-                            String winnerArtifactId = ArtifactIdUtils.toId(winner.dn.getArtifact());
                             // is redundant if:
                             // - is not same as winner, and has related siblings (version range)
                             // - same instance of DN is direct dependency on path leading here
-                            boolean isRedundant = (!Objects.equals(artifactId, winnerArtifactId)
-                                    && relatedSiblingsCount(this.dn.getArtifact(), this.parent) > 1);
+                            boolean isRedundant =
+                                    (!ArtifactIdUtils.equalsId(this.dn.getArtifact(), winner.dn.getArtifact())
+                                            && relatedSiblingsCount(this.dn.getArtifact(), this.parent) > 1);
                             if (!this.state.showCyclesInStandardVerbosity) {
                                 isRedundant = isRedundant
                                         || this.parent.isDirectDependencyOnPathToRoot(this.dn.getArtifact());
@@ -601,18 +610,15 @@ public final class PathConflictResolver extends ConflictResolver {
                 }
             }
 
-            int newLevels = levels - 1;
-            if (newLevels >= 0 && this.children != null && !this.children.isEmpty()) {
-                // child may remove itself from iterated list
-                for (Path child : new ArrayList<>(this.children)) {
-                    child.push(newLevels);
-                }
-            }
+            // Note: push() is always called with levels=0, so newLevels would be -1
+            // and the recursive block would never execute. The recursive structure is
+            // intentionally not present; all push() calls happen from the main loop.
         }
 
         /**
-         * Returns {@code true} if given artifactId is direct dependency on the path leading from this toward root.
-         * For some reason "classic" conflict resolver removes these.
+         * Returns {@code true} if given artifact is a direct dependency on the path leading from this toward root.
+         * A "direct dependency" is one at depth 1 (immediate child of root). Rather than recursing through every
+         * ancestor, this walks directly to the depth-1 node and performs one allocation-free comparison.
          * <p>
          * Note: this check and use of this method is ONLY present to make this conflict resolver produce SAME output
          * as {@link ClassicConflictResolver} does, but IMHO this rule here is very arbitrary, moreover, in "standard"
@@ -621,15 +627,14 @@ public final class PathConflictResolver extends ConflictResolver {
          * @see #CONFIG_PROP_SHOW_CYCLES_IN_STANDARD_VERBOSITY
          */
         private boolean isDirectDependencyOnPathToRoot(Artifact artifact) {
-            if (this.depth == 1
-                    && ArtifactIdUtils.toVersionlessId(this.dn.getArtifact())
-                            .equals(ArtifactIdUtils.toVersionlessId(artifact))) {
-                return true;
-            } else if (this.parent != null) {
-                return parent.isDirectDependencyOnPathToRoot(artifact);
-            } else {
-                return false;
+            // Walk up to depth-1 ancestor (direct dependency of root) instead of recursing every level
+            Path current = this;
+            while (current != null && current.depth > 1) {
+                current = current.parent;
             }
+            return current != null
+                    && current.depth == 1
+                    && ArtifactIdUtils.equalsVersionlessId(current.dn.getArtifact(), artifact);
         }
 
         /**
@@ -641,11 +646,12 @@ public final class PathConflictResolver extends ConflictResolver {
             if (parent.children == null) {
                 return 0;
             }
-            String ga = artifact.getGroupId() + ":" + artifact.getArtifactId();
+            String groupId = artifact.getGroupId();
+            String artifactId = artifact.getArtifactId();
             int count = 0;
             for (Path n : parent.children) {
                 Artifact a = n.dn.getArtifact();
-                if (ga.equals(a.getGroupId() + ":" + a.getArtifactId())) {
+                if (Objects.equals(groupId, a.getGroupId()) && Objects.equals(artifactId, a.getArtifactId())) {
                     count++;
                 }
             }
@@ -724,8 +730,8 @@ public final class PathConflictResolver extends ConflictResolver {
      *                change without notice and only exists to enable unit testing
      */
     private static final class ScopeContext extends ConflictResolver.ScopeContext {
-        private final String parentScope;
-        private final String childScope;
+        private String parentScope;
+        private String childScope;
         private String derivedScope;
 
         /**
@@ -737,6 +743,15 @@ public final class PathConflictResolver extends ConflictResolver {
          *              change without notice and only exists to enable unit testing
          */
         private ScopeContext(String parentScope, String childScope) {
+            this.parentScope = (parentScope != null) ? parentScope : "";
+            this.derivedScope = (childScope != null) ? childScope : "";
+            this.childScope = (childScope != null) ? childScope : "";
+        }
+
+        /**
+         * Resets this context for reuse, avoiding allocation of a new instance per derive() call.
+         */
+        private void reset(String parentScope, String childScope) {
             this.parentScope = (parentScope != null) ? parentScope : "";
             this.derivedScope = (childScope != null) ? childScope : "";
             this.childScope = (childScope != null) ? childScope : "";
