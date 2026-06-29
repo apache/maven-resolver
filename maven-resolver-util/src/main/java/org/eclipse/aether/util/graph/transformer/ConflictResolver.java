@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -129,7 +130,11 @@ public class ConflictResolver implements DependencyGraphTransformer {
     public static final String CONFIG_PROP_VERBOSE = ConfigurationProperties.PREFIX_AETHER + "conflictResolver.verbose";
 
     /**
-     * The name of the conflict resolver implementation to use: "path" (default) or "classic" (same as Maven 3).
+     * The name of the conflict resolver implementation to use: "auto" (default), "path", or "classic" (same as Maven 3).
+     * <p>
+     * When set to "auto", the resolver estimates whether the Path tree would fit in available heap memory.
+     * If it would consume more than 25% of available heap, the classic (in-place) resolver is used instead
+     * to avoid OutOfMemoryErrors on very large dependency graphs.
      *
      * @since 2.0.11
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -141,8 +146,9 @@ public class ConflictResolver implements DependencyGraphTransformer {
 
     public static final String CLASSIC_CONFLICT_RESOLVER = "classic";
     public static final String PATH_CONFLICT_RESOLVER = "path";
+    public static final String AUTO_CONFLICT_RESOLVER = "auto";
 
-    public static final String DEFAULT_CONFLICT_RESOLVER_IMPL = PATH_CONFLICT_RESOLVER;
+    public static final String DEFAULT_CONFLICT_RESOLVER_IMPL = AUTO_CONFLICT_RESOLVER;
 
     /**
      * The enum representing verbosity levels of conflict resolver.
@@ -258,20 +264,77 @@ public class ConflictResolver implements DependencyGraphTransformer {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
         String cf = ConfigUtils.getString(
                 context.getSession(), DEFAULT_CONFLICT_RESOLVER_IMPL, CONFIG_PROP_CONFLICT_RESOLVER_IMPL);
         ConflictResolver delegate;
-        if (PATH_CONFLICT_RESOLVER.equals(cf)) {
+        if (AUTO_CONFLICT_RESOLVER.equals(cf)) {
+            delegate = selectConflictResolver(node, context);
+        } else if (PATH_CONFLICT_RESOLVER.equals(cf)) {
             delegate = new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
         } else if (CLASSIC_CONFLICT_RESOLVER.equals(cf)) {
             delegate = new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
         } else {
             throw new IllegalArgumentException("Unknown conflict resolver: " + cf + "; known are "
-                    + Arrays.asList(PATH_CONFLICT_RESOLVER, CLASSIC_CONFLICT_RESOLVER));
+                    + Arrays.asList(AUTO_CONFLICT_RESOLVER, PATH_CONFLICT_RESOLVER, CLASSIC_CONFLICT_RESOLVER));
         }
         return delegate.transformGraph(node, context);
+    }
+
+    /**
+     * Selects the most appropriate conflict resolver based on graph size and available memory.
+     * <p>
+     * PathConflictResolver builds a parallel tree of Path objects that costs ~200 bytes per node.
+     * For very large dependency graphs (millions of nodes), this can exhaust the heap.
+     * In such cases, ClassicConflictResolver is used instead — it works in-place with no parallel
+     * structure, trading O(N²) worst-case time for O(1) extra space.
+     */
+    private ConflictResolver selectConflictResolver(DependencyNode node, DependencyGraphTransformationContext context)
+            throws RepositoryException {
+        // Ensure conflict IDs are computed — both implementations need this anyway
+        if (context.get(TransformationContextKeys.SORTED_CONFLICT_IDS) == null) {
+            new ConflictIdSorter().transformGraph(node, context);
+        }
+
+        Runtime rt = Runtime.getRuntime();
+        long available = rt.maxMemory() - (rt.totalMemory() - rt.freeMemory());
+
+        // Estimate the maximum number of Path tree nodes that would fit in 25% of available heap.
+        // Each Path object costs ~200 bytes (object header + fields + children list entry).
+        int maxPathNodes = (int) Math.min(available / (4L * 200), Integer.MAX_VALUE);
+
+        // Walk the dependency tree to count total nodes (including diamond-expanded duplicates).
+        // The Path tree mirrors this structure, so the count directly reflects Path tree size.
+        // Use early-exit: stop counting once we exceed the threshold — no need to measure the
+        // full tree if we already know it's too large.
+        if (treeExceedsThreshold(node, maxPathNodes)) {
+            return new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+        } else {
+            return new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+        }
+    }
+
+    /**
+     * Checks whether the total number of nodes in the dependency tree (including diamond-expanded
+     * duplicates) exceeds the given threshold. Uses an iterative walk with early exit to avoid
+     * measuring the full tree when it's clearly too large.
+     */
+    private boolean treeExceedsThreshold(DependencyNode root, int threshold) {
+        int count = 0;
+        ArrayDeque<DependencyNode> stack = new ArrayDeque<>();
+        stack.push(root);
+        while (!stack.isEmpty()) {
+            DependencyNode n = stack.pop();
+            if (++count > threshold) {
+                return true;
+            }
+            for (DependencyNode child : n.getChildren()) {
+                stack.push(child);
+            }
+        }
+        return false;
     }
 
     /**
