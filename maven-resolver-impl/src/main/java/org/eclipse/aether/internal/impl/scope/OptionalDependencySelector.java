@@ -103,6 +103,9 @@ public final class OptionalDependencySelector implements DependencySelector {
     @SuppressWarnings("unchecked")
     public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
+        if (depth >= applyFrom) {
+            return this;
+        }
         return new OptionalDependencySelector(
                 seed,
                 depth + 1,
