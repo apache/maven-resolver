@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
-import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -43,31 +42,19 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * <strong>Available Implementations:</strong>
  * <ul>
- * <li><strong>{@link PathConflictResolver}</strong> - Recommended high-performance implementation with O(N) complexity</li>
- * <li><strong>{@link ClassicConflictResolver}</strong> - Legacy implementation for backward compatibility (O(N²) worst-case)</li>
+ * <li><strong>{@link ClassicConflictResolver}</strong> - Original implementation (O(N²) worst-case)</li>
+ * <li><strong>{@link PathConflictResolver}</strong> - Not yet recommended for production; high-performance implementation with O(N) complexity</li>
  * </ul>
  * <p>
  * <strong>Implementation Selection Guide:</strong>
  * <ul>
- * <li><strong>New Projects:</strong> Use {@link PathConflictResolver} for optimal performance</li>
- * <li><strong>Large Multi-Module Projects:</strong> Use {@link PathConflictResolver} to avoid performance bottlenecks</li>
- * <li><strong>Maven 4+ Environments:</strong> Use {@link PathConflictResolver} for best build performance</li>
- * <li><strong>Legacy Compatibility:</strong> Use {@link ClassicConflictResolver} only when exact Maven 3.x behavior is required</li>
+ * <li><strong>All projects:</strong> Use {@link ClassicConflictResolver} for optimal correctness and Maven 3.x behavior</li>
+ * <li><strong>Experimenters:</strong> Use {@link PathConflictResolver} but no guarantees it will work</li>
  * </ul>
  * <p>
  * <strong>Usage Example:</strong>
  * <pre>{@code
- * // Recommended: High-performance path-based resolver
- * DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
- *     new PathConflictResolver(
- *         new NearestVersionSelector(),
- *         new JavaScopeSelector(),
- *         new SimpleOptionalitySelector(),
- *         new JavaScopeDeriver()),
- *     // other transformers...
- * );
- *
- * // Legacy: Classic resolver for backward compatibility
+ * // Classic resolver
  * DependencyGraphTransformer legacyTransformer = new ChainedDependencyGraphTransformer(
  *     new ClassicConflictResolver(
  *         new NearestVersionSelector(),
@@ -112,8 +99,8 @@ import static java.util.Objects.requireNonNull;
  * existing information about conflict ids. In absence of this information, it will automatically invoke the
  * {@link ConflictIdSorter} to calculate it.
  *
- * @see PathConflictResolver
  * @see ClassicConflictResolver
+ * @see PathConflictResolver
  */
 public class ConflictResolver implements DependencyGraphTransformer {
 
@@ -132,9 +119,8 @@ public class ConflictResolver implements DependencyGraphTransformer {
     /**
      * The name of the conflict resolver implementation to use: "auto" (default), "path", or "classic" (same as Maven 3).
      * <p>
-     * When set to "auto", the resolver estimates whether the Path tree would fit in available heap memory.
-     * If it would consume more than 25% of available heap, the classic (in-place) resolver is used instead
-     * to avoid OutOfMemoryErrors on very large dependency graphs.
+     * When set to "auto", the resolver will currently just use "classic". The idea here, is that this value will
+     * always select the best (most robust, most performant) one, which currently is "classic".
      *
      * @since 2.0.11
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -264,77 +250,20 @@ public class ConflictResolver implements DependencyGraphTransformer {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public DependencyNode transformGraph(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
         String cf = ConfigUtils.getString(
                 context.getSession(), DEFAULT_CONFLICT_RESOLVER_IMPL, CONFIG_PROP_CONFLICT_RESOLVER_IMPL);
         ConflictResolver delegate;
-        if (AUTO_CONFLICT_RESOLVER.equals(cf)) {
-            delegate = selectConflictResolver(node, context);
+        if (AUTO_CONFLICT_RESOLVER.equals(cf) || CLASSIC_CONFLICT_RESOLVER.equals(cf)) {
+            delegate = new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
         } else if (PATH_CONFLICT_RESOLVER.equals(cf)) {
             delegate = new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
-        } else if (CLASSIC_CONFLICT_RESOLVER.equals(cf)) {
-            delegate = new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
         } else {
             throw new IllegalArgumentException("Unknown conflict resolver: " + cf + "; known are "
                     + Arrays.asList(AUTO_CONFLICT_RESOLVER, PATH_CONFLICT_RESOLVER, CLASSIC_CONFLICT_RESOLVER));
         }
         return delegate.transformGraph(node, context);
-    }
-
-    /**
-     * Selects the most appropriate conflict resolver based on graph size and available memory.
-     * <p>
-     * PathConflictResolver builds a parallel tree of Path objects that costs ~200 bytes per node.
-     * For very large dependency graphs (millions of nodes), this can exhaust the heap.
-     * In such cases, ClassicConflictResolver is used instead — it works in-place with no parallel
-     * structure, trading O(N²) worst-case time for O(1) extra space.
-     */
-    private ConflictResolver selectConflictResolver(DependencyNode node, DependencyGraphTransformationContext context)
-            throws RepositoryException {
-        // Ensure conflict IDs are computed — both implementations need this anyway
-        if (context.get(TransformationContextKeys.SORTED_CONFLICT_IDS) == null) {
-            new ConflictIdSorter().transformGraph(node, context);
-        }
-
-        Runtime rt = Runtime.getRuntime();
-        long available = rt.maxMemory() - (rt.totalMemory() - rt.freeMemory());
-
-        // Estimate the maximum number of Path tree nodes that would fit in 25% of available heap.
-        // Each Path object costs ~200 bytes (object header + fields + children list entry).
-        int maxPathNodes = (int) Math.min(available / (4L * 200), Integer.MAX_VALUE);
-
-        // Walk the dependency tree to count total nodes (including diamond-expanded duplicates).
-        // The Path tree mirrors this structure, so the count directly reflects Path tree size.
-        // Use early-exit: stop counting once we exceed the threshold — no need to measure the
-        // full tree if we already know it's too large.
-        if (treeExceedsThreshold(node, maxPathNodes)) {
-            return new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
-        } else {
-            return new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
-        }
-    }
-
-    /**
-     * Checks whether the total number of nodes in the dependency tree (including diamond-expanded
-     * duplicates) exceeds the given threshold. Uses an iterative walk with early exit to avoid
-     * measuring the full tree when it's clearly too large.
-     */
-    private boolean treeExceedsThreshold(DependencyNode root, int threshold) {
-        int count = 0;
-        ArrayDeque<DependencyNode> stack = new ArrayDeque<>();
-        stack.push(root);
-        while (!stack.isEmpty()) {
-            DependencyNode n = stack.pop();
-            if (++count > threshold) {
-                return true;
-            }
-            for (DependencyNode child : n.getChildren()) {
-                stack.push(child);
-            }
-        }
-        return false;
     }
 
     /**
