@@ -90,12 +90,16 @@ public abstract class AbstractTransporter implements Transporter {
      */
     protected void utilGet(GetTask task, InputStream is, boolean close, long length, boolean resume)
             throws IOException, TransferCancelledException {
-        try (OutputStream os = task.newOutputStream(resume)) {
-            task.getListener().transportStarted(resume ? task.getResumeOffset() : 0L, length);
-            copy(os, is, task.getListener());
-        } finally {
-            if (close) {
-                is.close();
+        if (close) {
+            try (InputStream input = is;
+                    OutputStream os = task.newOutputStream(resume)) {
+                task.getListener().transportStarted(resume ? task.getResumeOffset() : 0L, length);
+                copy(os, input, task.getListener());
+            }
+        } else {
+            try (OutputStream os = task.newOutputStream(resume)) {
+                task.getListener().transportStarted(resume ? task.getResumeOffset() : 0L, length);
+                copy(os, is, task.getListener());
             }
         }
     }
@@ -129,13 +133,17 @@ public abstract class AbstractTransporter implements Transporter {
      */
     protected void utilPut(PutTask task, OutputStream os, boolean close)
             throws IOException, TransferCancelledException {
-        try (InputStream is = task.newInputStream()) {
-            task.getListener().transportStarted(0, task.getDataLength());
-            copy(os, is, task.getListener());
-        } finally {
-            if (close) {
-                os.close();
-            } else {
+        if (close) {
+            try (OutputStream output = os;
+                    InputStream is = task.newInputStream()) {
+                task.getListener().transportStarted(0, task.getDataLength());
+                copy(output, is, task.getListener());
+            }
+        } else {
+            try (InputStream is = task.newInputStream()) {
+                task.getListener().transportStarted(0, task.getDataLength());
+                copy(os, is, task.getListener());
+            } finally {
                 os.flush();
             }
         }
