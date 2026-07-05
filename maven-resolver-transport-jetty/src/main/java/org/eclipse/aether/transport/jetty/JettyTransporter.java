@@ -147,7 +147,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
         this.headers = headers;
 
-        this.connectTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
+        this.connectTimeout = HttpTransporterUtils.getHttpConnectTimeout(session, repository);
         this.requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
