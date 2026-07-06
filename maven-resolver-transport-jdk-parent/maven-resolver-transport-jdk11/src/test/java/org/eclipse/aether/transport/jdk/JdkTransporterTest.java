@@ -106,6 +106,8 @@ class JdkTransporterTest extends HttpTransporterTest {
     @EnabledForJreRange(min = JRE.JAVA_26)
     @Test
     protected void testGet_HTTP3() throws Exception {
+        // System.setProperty("jdk.httpclient.HttpClient.log", "ssl");
+        // System.setProperty("jdk.internal.httpclient.debug", "out");
         super.testGet_HTTP3();
     }
 

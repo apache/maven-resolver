@@ -44,6 +44,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.net.http.HttpClient;
+import java.net.http.HttpOption;
+import java.net.http.HttpOption.Http3DiscoveryMode;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
@@ -443,6 +445,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         getBasicAuthValue(proxyAuthentication.getUserName(), proxyAuthentication.getPassword()));
             }
         }
+        requestBuilder.setOption(HttpOption.H3_DISCOVERY, Http3DiscoveryMode.HTTP_3_URI_ONLY);
+        // requestBuilder.requestTimeout(Duration.ofMillis(requestTimeout))
     }
 
     static String getBasicAuthValue(String username, char[] password) {
@@ -575,6 +579,16 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             }
         }
 
+        HttpClient.Builder builder = HttpClient.newBuilder()
+                .version(getHttpVersion(session, repository))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(Duration.ofMillis(connectTimeout))
+                // this only considers the time until the response header is received, see
+                // https://bugs.openjdk.org/browse/JDK-8208693
+                // but better than nothing
+                // .requestTimeout(Duration.ofMillis(requestTimeout))
+                .sslContext(sslContext);
+        /*
         Methanol.Builder builder = Methanol.newBuilder()
                 .version(getHttpVersion(session, repository))
                 .followRedirects(HttpClient.Redirect.NORMAL)
@@ -583,7 +597,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 // https://bugs.openjdk.org/browse/JDK-8208693
                 // but better than nothing
                 .requestTimeout(Duration.ofMillis(requestTimeout))
-                .sslContext(sslContext);
+                .sslContext(sslContext);*/
 
         if (insecure) {
             SSLParameters sslParameters = sslContext.getDefaultSSLParameters();
@@ -623,7 +637,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             });
         }
 
-        configureRetryHandler(session, repository, builder);
+        // configureRetryHandler(session, repository, builder);
 
         return builder.build();
     }

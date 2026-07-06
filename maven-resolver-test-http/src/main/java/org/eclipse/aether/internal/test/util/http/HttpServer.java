@@ -537,7 +537,11 @@ public class HttpServer {
 
             Map<String, String> requestHeaders =
                     toUnmodifiableMap(req.getHeaders()); // capture request headers before other handlers modify them
-            LogEntry logEntry = new LogEntry(req.getConnectionMetaData().getHttpVersion(), req.getMethod(), req.getHttpURI().getPathQuery(), requestHeaders);
+            LogEntry logEntry = new LogEntry(
+                    req.getConnectionMetaData().getHttpVersion(),
+                    req.getMethod(),
+                    req.getHttpURI().getPathQuery(),
+                    requestHeaders);
             logEntries.add(logEntry);
             // prevent closing the response before logging (assume all writes are synchronous for simplicity)
             boolean result = super.handle(req, response, callback);

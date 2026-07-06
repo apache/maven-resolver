@@ -33,7 +33,7 @@
   <description>Maven Artifact Transport JDK HTTP Client.</description>
 
   <properties>
-    <javaVersion>11</javaVersion>
+    <javaVersion>26</javaVersion>
   </properties>
 
   <dependencies>
@@ -75,6 +75,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
+      <version>${slf4jVersion}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-test-util</artifactId>
       <scope>test</scope>
@@ -93,6 +99,14 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <test>JdkTransporterTest#testGet_HTTP3</test>
+          <argLine>-Djdk.internal.httpclient.debug=true</argLine>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>sisu-maven-plugin</artifactId>

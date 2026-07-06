@@ -79,7 +79,8 @@ class JettyTransporterTest extends HttpTransporterTest {
     @Override
     @Test
     protected void testGet_HTTP3() throws Exception {
-        // Jetty's HTTP/3 support is based on Quiche which does not consider the default SSL context (https://github.com/jetty/jetty.project/issues/15370)
+        // Jetty's HTTP/3 support is based on Quiche which does not consider the default SSL context
+        // (https://github.com/jetty/jetty.project/issues/15370)
         session.setConfigProperty(
                 ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
         super.testGet_HTTP3();
