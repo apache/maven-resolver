@@ -20,8 +20,11 @@ package org.eclipse.aether.transport.jdk;
 
 import java.net.ConnectException;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpClient.Version;
 import java.util.stream.Stream;
 
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.internal.impl.DefaultPathProcessor;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
@@ -29,7 +32,10 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * JDK Transporter UT.
  * Related: <a href="https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a">No TLS proxy supported</a>.
  */
+@TestMethodOrder(MethodOrderer.MethodName.class)
 class JdkTransporterTest extends HttpTransporterTest {
 
     private boolean isBetweenJava17and21() {
@@ -95,6 +102,13 @@ class JdkTransporterTest extends HttpTransporterTest {
         }
     }
 
+    @Override
+    @EnabledForJreRange(min = JRE.JAVA_26)
+    @Test
+    protected void testGet_HTTP3() throws Exception {
+        super.testGet_HTTP3();
+    }
+
     public JdkTransporterTest() {
         super(() -> new JdkTransporterFactory(standardChecksumExtractor(), new DefaultPathProcessor()));
     }
@@ -125,5 +139,22 @@ class JdkTransporterTest extends HttpTransporterTest {
         assertEquals(
                 "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
                 JdkTransporter.getBasicAuthValue("Aladdin", "open sesame".toCharArray()));
+    }
+
+    @Test
+    void testMaximumHttpVersionAtRuntime() throws Exception {
+        RepositorySystemSession session = TestUtils.newSession();
+        RemoteRepository remoteRepository =
+                new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/").build();
+        JdkTransporterFactory factory = new JdkTransporterFactory(s -> null, new DefaultPathProcessor());
+
+        try (Transporter transporter = factory.newInstance(session, remoteRepository)) {
+            JdkTransporter jdkTransporter = (JdkTransporter) transporter;
+            HttpClient.Version[] versions = HttpClient.Version.values();
+            HttpClient.Version maximumSupported = versions[versions.length - 1];
+            assertEquals(maximumSupported, jdkTransporter.getMaximumSupportedHttpVersion());
+            // default should be returned which is HTTP_2 for all JRE versions
+            assertEquals(Version.HTTP_2, jdkTransporter.getHttpVersion(session, remoteRepository));
+        }
     }
 }

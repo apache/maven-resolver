@@ -71,6 +71,7 @@ import com.github.mizosoft.methanol.Methanol;
 import com.github.mizosoft.methanol.RetryInterceptor;
 import com.github.mizosoft.methanol.RetryInterceptor.Context;
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.ConfigurationProperties.HttpVersion;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -105,7 +106,6 @@ import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.RANG
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.USER_AGENT;
 import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.CONFIG_PROP_HTTP_VERSION;
 import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.CONFIG_PROP_MAX_CONCURRENT_REQUESTS;
-import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.DEFAULT_HTTP_VERSION;
 import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.DEFAULT_MAX_CONCURRENT_REQUESTS;
 
 /**
@@ -468,6 +468,53 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
+    HttpClient.Version getHttpVersion(RepositorySystemSession session, RemoteRepository repository) {
+        HttpVersion httpVersion = HttpTransporterUtils.getHttpVersion(session, repository);
+        if (httpVersion == ConfigurationProperties.DEFAULT_HTTP_VERSION) {
+            // Fall back to legacy JDK Transporter specific property when it is explicitly configured.
+            String configuredLegacyHttpVersion = ConfigUtils.getString(
+                    session, null, CONFIG_PROP_HTTP_VERSION + "." + repository.getId(), CONFIG_PROP_HTTP_VERSION);
+            if (configuredLegacyHttpVersion != null) {
+                return resolveHttpVersion(configuredLegacyHttpVersion);
+            }
+            return HttpClient.Version.HTTP_2;
+        } else {
+            switch (httpVersion) {
+                case MAXIMUM:
+                    return getMaximumSupportedHttpVersion();
+                case HTTP_1_1:
+                    return HttpClient.Version.HTTP_1_1;
+                case HTTP_2:
+                case DEFAULT:
+                    return HttpClient.Version.HTTP_2;
+                case HTTP_3:
+                    return resolveHttpVersion("HTTP_3");
+                default:
+                    throw new IllegalArgumentException("Unsupported HTTP version: " + httpVersion);
+            }
+        }
+    }
+
+    private HttpClient.Version resolveHttpVersion(String requestedVersion) {
+        HttpClient.Version maximumHttpVersion = getMaximumSupportedHttpVersion();
+        HttpClient.Version resolved;
+        try {
+            resolved = HttpClient.Version.valueOf(requestedVersion);
+        } catch (IllegalArgumentException e) {
+            LOGGER.warn(
+                    "HTTP version '{}' is not supported by the running JRE, using '{}' instead",
+                    requestedVersion,
+                    maximumHttpVersion);
+            return maximumHttpVersion;
+        }
+        return resolved;
+    }
+
+    HttpClient.Version getMaximumSupportedHttpVersion() {
+        HttpClient.Version[] values = HttpClient.Version.values();
+        return values[values.length - 1];
+    }
+
     private HttpClient createClient(RepositorySystemSession session, RemoteRepository repository, boolean insecure)
             throws RuntimeException {
 
@@ -488,6 +535,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             try {
                 if (insecure) {
                     sslContext = SSLContext.getInstance("TLS");
+                    // custom trust manager not supported for HTTP/3 (Quic)
+                    // (https://github.com/openjdk/jdk/blob/631b675d7949a0e6312d8d6f45e2515d53b12f05/src/java.base/share/classes/sun/security/ssl/SSLContextImpl.java#L529)
+                    // https://openjdk.org/jeps/517
                     X509ExtendedTrustManager tm = new X509ExtendedTrustManager() {
                         @Override
                         public void checkClientTrusted(X509Certificate[] chain, String authType) {}
@@ -526,11 +576,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
 
         Methanol.Builder builder = Methanol.newBuilder()
-                .version(HttpClient.Version.valueOf(ConfigUtils.getString(
-                        session,
-                        DEFAULT_HTTP_VERSION,
-                        CONFIG_PROP_HTTP_VERSION + "." + repository.getId(),
-                        CONFIG_PROP_HTTP_VERSION)))
+                .version(getHttpVersion(session, repository))
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofMillis(connectTimeout))
                 // this only considers the time until the response header is received, see

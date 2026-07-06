@@ -72,6 +72,14 @@
       <groupId>org.eclipse.jetty.http2</groupId>
       <artifactId>jetty-http2-client-transport</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.http3</groupId>
+      <artifactId>jetty-http3-client-transport</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.quic</groupId>
+      <artifactId>jetty-quic-quiche-client</artifactId>
+    </dependency>
     <!-- supported compressions -->
     <dependency>
       <groupId>org.eclipse.jetty.compression</groupId>

@@ -29,7 +29,6 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.ServerSocket;
 import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,6 +68,7 @@ import org.eclipse.aether.spi.connector.transport.http.RFC9457.HttpRFC9457Except
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.eclipse.jetty.http.HttpVersion;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -100,6 +100,8 @@ public abstract class HttpTransporterTest {
 
     protected static final Path TRUST_STORE_PATH = Paths.get("target/trustStore");
 
+    protected static final Path PEM_QUICHE_SERVER_PATH = Paths.get("target/pems");
+
     protected static SSLContext defaultSslContext;
 
     static {
@@ -110,18 +112,22 @@ public abstract class HttpTransporterTest {
     @BeforeAll
     protected static void beforeAll() throws NoSuchAlgorithmException {
         // populate custom keystore and truststore
-        URL keyStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store");
-        URL keyStoreSelfSignedUrl =
-                HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store-selfsigned");
-        URL trustStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/client-store");
-
         try {
-            try (InputStream keyStoreStream = keyStoreUrl.openStream();
-                    InputStream keyStoreSelfSignedStream = keyStoreSelfSignedUrl.openStream();
-                    InputStream trustStoreStream = trustStoreUrl.openStream()) {
+            try (InputStream keyStoreStream =
+                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/server-store");
+                    InputStream keyStoreSelfSignedStream = HttpTransporterTest.class
+                            .getClassLoader()
+                            .getResourceAsStream("ssl/server-store-selfsigned");
+                    InputStream trustStoreStream =
+                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/client-store");
+                    InputStream serverPemStream =
+                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/server.pem");
+                    InputStream serverSelfsignedPemStream =
+                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/selfsigned.pem")) {
                 Files.copy(keyStoreStream, KEY_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
                 Files.copy(keyStoreSelfSignedStream, KEY_STORE_SELF_SIGNED_PATH, StandardCopyOption.REPLACE_EXISTING);
                 Files.copy(trustStoreStream, TRUST_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                Files.createDirectories(PEM_QUICHE_SERVER_PATH);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -805,8 +811,6 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {
-        // here we use alternate server-store-selfigned key (as the key set it static initializer is probably already
-        // used to init SSLContext/SSLSocketFactory/etc
         enableHttp2Protocol();
         session.setConfigProperty(
                 ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
@@ -821,9 +825,33 @@ public abstract class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+        httpServer.getLogEntries().forEach(log -> {
+            assertEquals(HttpVersion.HTTP_2, log.getVersion());
+        });
     }
 
     protected void enableHttp2Protocol() {}
+
+    @Test
+    protected void testGet_HTTP3() throws Exception {
+        // self-signed cert should be accepted through default SSL context
+        session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_3);
+        httpServer.addHttp3Connector(false);
+        httpServer.start();
+        newTransporter(httpServer.getHttp3Url());
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+        assertEquals(0L, listener.getDataOffset());
+        assertEquals(4L, listener.getDataLength());
+        assertEquals(1, listener.getStartedCount());
+        assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
+        assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+        httpServer.getLogEntries().forEach(log -> {
+            assertEquals(HttpVersion.HTTP_3, log.getVersion());
+        });
+    }
 
     @Test
     protected void testGet_Redirect() throws Exception {
