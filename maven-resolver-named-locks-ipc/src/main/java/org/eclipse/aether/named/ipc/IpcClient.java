@@ -263,11 +263,7 @@ public class IpcClient {
     private String getJarPath(Class<?> clazz) {
         String classpath;
         String className = clazz.getName().replace('.', '/') + ".class";
-        ClassLoader classLoader = clazz.getClassLoader();
-        if (classLoader == null) {
-            classLoader = ClassLoader.getSystemClassLoader();
-        }
-        URL resource = classLoader.getResource(className);
+        URL resource = clazz.getResource("/" + className);
         if (resource == null) {
             throw new IllegalStateException("Unable to find resource for class " + clazz.getName());
         }
