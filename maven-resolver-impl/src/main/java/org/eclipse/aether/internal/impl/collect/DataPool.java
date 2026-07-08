@@ -18,16 +18,13 @@
  */
 package org.eclipse.aether.internal.impl.collect;
 
-import java.lang.ref.WeakReference;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -45,6 +42,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.concurrency.ConcurrentWeakCache;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 
@@ -125,13 +123,13 @@ public final class DataPool {
     public static final String CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES =
             "aether.dependencyCollector.pool.internArtifactDescriptorManagedDependencies";
 
-    private static final String ARTIFACT_POOL = DataPool.class.getName() + "$Artifact";
+    private static final Object ARTIFACT_POOL = Keys.of(DataPool.class, "artifact");
 
-    private static final String DEPENDENCY_POOL = DataPool.class.getName() + "$Dependency";
+    private static final Object DEPENDENCY_POOL = Keys.of(DataPool.class, "dependency");
 
-    private static final String DESCRIPTORS = DataPool.class.getName() + "$Descriptors";
+    private static final Object DESCRIPTORS = Keys.of(DataPool.class, "descriptors");
 
-    private static final String DEPENDENCY_LISTS_POOL = DataPool.class.getName() + "$DependencyLists";
+    private static final Object DEPENDENCY_LISTS_POOL = Keys.of(DataPool.class, "dependencyLists");
 
     public static final ArtifactDescriptorResult NO_DESCRIPTOR =
             new ArtifactDescriptorResult(new ArtifactDescriptorRequest());
@@ -179,53 +177,34 @@ public final class DataPool {
         internArtifactDescriptorManagedDependencies = ConfigUtils.getBoolean(
                 session, true, CONFIG_PROP_COLLECTOR_POOL_INTERN_ARTIFACT_DESCRIPTOR_MANAGED_DEPENDENCIES);
 
-        InternPool<Artifact, Artifact> artifactsPool = null;
-        InternPool<Dependency, Dependency> dependenciesPool = null;
-        InternPool<DescriptorKey, Descriptor> descriptorsPool = null;
-        InternPool<List<Dependency>, List<Dependency>> dependencyListsPool = null;
+        InternPool<Artifact, Artifact> artifactsPool;
+        InternPool<Dependency, Dependency> dependenciesPool;
+        InternPool<DescriptorKey, Descriptor> descriptorsPool;
+        InternPool<List<Dependency>, List<Dependency>> dependencyListsPool;
         if (cache != null) {
-            artifactsPool = (InternPool<Artifact, Artifact>) cache.get(session, ARTIFACT_POOL);
-            dependenciesPool = (InternPool<Dependency, Dependency>) cache.get(session, DEPENDENCY_POOL);
-            descriptorsPool = (InternPool<DescriptorKey, Descriptor>) cache.get(session, DESCRIPTORS);
+            artifactsPool = (InternPool<Artifact, Artifact>) cache.computeIfAbsent(
+                    session,
+                    ARTIFACT_POOL,
+                    () -> createPool(ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT)));
+            dependenciesPool = (InternPool<Dependency, Dependency>) cache.computeIfAbsent(
+                    session,
+                    DEPENDENCY_POOL,
+                    () -> createPool(ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY)));
+            descriptorsPool = (InternPool<DescriptorKey, Descriptor>) cache.computeIfAbsent(
+                    session,
+                    DESCRIPTORS,
+                    () -> createPool(ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR)));
+            dependencyListsPool = (InternPool<List<Dependency>, List<Dependency>>) cache.computeIfAbsent(
+                    session,
+                    DEPENDENCY_LISTS_POOL,
+                    () -> createPool(
+                            ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY_LISTS)));
+        } else {
+            artifactsPool = createPool(ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT));
+            dependenciesPool = createPool(ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY));
+            descriptorsPool = createPool(ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR));
             dependencyListsPool =
-                    (InternPool<List<Dependency>, List<Dependency>>) cache.get(session, DEPENDENCY_LISTS_POOL);
-        }
-
-        if (artifactsPool == null) {
-            String artifactPoolType = ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_ARTIFACT);
-
-            artifactsPool = createPool(artifactPoolType);
-            if (cache != null) {
-                cache.put(session, ARTIFACT_POOL, artifactsPool);
-            }
-        }
-
-        if (dependenciesPool == null) {
-            String dependencyPoolType = ConfigUtils.getString(session, WEAK, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY);
-
-            dependenciesPool = createPool(dependencyPoolType);
-            if (cache != null) {
-                cache.put(session, DEPENDENCY_POOL, dependenciesPool);
-            }
-        }
-
-        if (descriptorsPool == null) {
-            String descriptorPoolType = ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DESCRIPTOR);
-
-            descriptorsPool = createPool(descriptorPoolType);
-            if (cache != null) {
-                cache.put(session, DESCRIPTORS, descriptorsPool);
-            }
-        }
-
-        if (dependencyListsPool == null) {
-            String dependencyListsPoolType =
-                    ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY_LISTS);
-
-            dependencyListsPool = createPool(dependencyListsPoolType);
-            if (cache != null) {
-                cache.put(session, DEPENDENCY_LISTS_POOL, dependencyListsPool);
-            }
+                    createPool(ConfigUtils.getString(session, HARD, CONFIG_PROP_COLLECTOR_POOL_DEPENDENCY_LISTS));
         }
 
         this.artifacts = artifactsPool;
@@ -572,26 +551,24 @@ public final class DataPool {
         }
     }
 
+    /**
+     * Intern pool backed by ConcurrentWeakCache with weak keys and weak values.
+     * Lock-free reads (ConcurrentHashMap.get is a volatile read, zero allocation via
+     * ThreadLocal lookup key), lock-striped writes, weak keys and values allow GC of
+     * interned objects when no longer strongly referenced.
+     * Uses putIfAbsent to guarantee concurrent callers for the same key get the same instance.
+     */
     private static class WeakInternPool<K, V> implements InternPool<K, V> {
-        private final Map<K, WeakReference<V>> map = Collections.synchronizedMap(new WeakHashMap<>(256));
+        private final ConcurrentWeakCache<K, V> cache = new ConcurrentWeakCache<>(256);
 
         @Override
         public V get(K key) {
-            WeakReference<V> ref = map.get(key);
-            return ref != null ? ref.get() : null;
+            return cache.get(key);
         }
 
         @Override
         public V intern(K key, V value) {
-            WeakReference<V> pooledRef = map.get(key);
-            if (pooledRef != null) {
-                V pooled = pooledRef.get();
-                if (pooled != null) {
-                    return pooled;
-                }
-            }
-            map.put(key, new WeakReference<>(value));
-            return value;
+            return cache.putIfAbsent(key, value);
         }
     }
 }

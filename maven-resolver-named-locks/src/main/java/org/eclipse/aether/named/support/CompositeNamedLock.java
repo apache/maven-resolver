@@ -85,17 +85,13 @@ public final class CompositeNamedLock extends NamedLockSupport {
                         timeStr);
 
                 unlockAll(step);
-                break;
+                return false;
             } else {
                 step.push(namedLock);
             }
         }
-        if (step.size() == locks.size()) {
-            steps.push(step);
-            return true;
-        }
-        unlockAll(step);
-        return false;
+        steps.push(step);
+        return true;
     }
 
     @Override

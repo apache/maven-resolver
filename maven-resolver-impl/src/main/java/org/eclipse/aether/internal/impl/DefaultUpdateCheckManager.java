@@ -33,8 +33,8 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.SessionData;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.UpdateCheck;
 import org.eclipse.aether.impl.UpdateCheckManager;
@@ -69,12 +69,13 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
 
     private static final String NOT_FOUND = "";
 
-    static final Object SESSION_CHECKS = new Object() {
+    // instance bound private key
+    static final Object SESSION_CHECKS = Keys.of(new Object() {
         @Override
         public String toString() {
             return "updateCheckManager.checks";
         }
-    };
+    });
 
     /**
      * Manages the session state, i.e. influences if the same download requests to artifacts/metadata will happen
@@ -434,12 +435,11 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         }
     }
 
-    private boolean isAlreadyUpdated(RepositorySystemSession session, Object updateKey) {
+    private boolean isAlreadyUpdated(RepositorySystemSession session, String updateKey) {
         if (getSessionState(session) >= STATE_BYPASS) {
             return false;
         }
-        SessionData data = session.getData();
-        Object checkedFiles = data.get(SESSION_CHECKS);
+        Object checkedFiles = session.getData().get(SESSION_CHECKS);
         if (!(checkedFiles instanceof Map)) {
             return false;
         }
@@ -447,13 +447,12 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
     }
 
     @SuppressWarnings("unchecked")
-    private void setUpdated(RepositorySystemSession session, Object updateKey) {
+    private void setUpdated(RepositorySystemSession session, String updateKey) {
         if (getSessionState(session) >= STATE_DISABLED) {
             return;
         }
-        SessionData data = session.getData();
-        Object checkedFiles = data.computeIfAbsent(SESSION_CHECKS, () -> new ConcurrentHashMap<>(256));
-        ((Map<Object, Boolean>) checkedFiles).put(updateKey, Boolean.TRUE);
+        Object checkedFiles = session.getData().computeIfAbsent(SESSION_CHECKS, () -> new ConcurrentHashMap<>(256));
+        ((Map<String, Boolean>) checkedFiles).put(updateKey, Boolean.TRUE);
     }
 
     private boolean isUpdatedRequired(RepositorySystemSession session, long lastModified, String policy) {

@@ -312,7 +312,7 @@ final class WagonTransporter implements Transporter {
             try {
                 connectWagon(wagon);
             } catch (Exception e) {
-                wagons.add(wagon);
+                releaseWagon(wagon);
                 throw e;
             }
         }
@@ -357,7 +357,12 @@ final class WagonTransporter implements Transporter {
                 runner.run(wagon);
             } finally {
                 wagon.removeTransferListener(listener);
-                wagons.add(wagon);
+                if (closed.get()) {
+                    disconnectWagon(wagon);
+                    releaseWagon(wagon);
+                } else {
+                    wagons.add(wagon);
+                }
             }
         } catch (RuntimeException e) {
             throw WagonCancelledException.unwrap(e);

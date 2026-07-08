@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryKeyFunction;
@@ -75,9 +76,7 @@ public class DefaultRepositoryKeyFunctionFactory implements RepositoryKeyFunctio
             return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
                             session.getCache()
                                     .computeIfAbsent(
-                                            session,
-                                            owner.getName() + ".repositoryKeyFunction",
-                                            ConcurrentHashMap::new))
+                                            session, Keys.of(owner, "repositoryKeyFunction"), ConcurrentHashMap::new))
                     .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
                     .computeIfAbsent(
                             context == null ? "" : context, k2 -> repositoryKeyFunction.apply(repository, context));

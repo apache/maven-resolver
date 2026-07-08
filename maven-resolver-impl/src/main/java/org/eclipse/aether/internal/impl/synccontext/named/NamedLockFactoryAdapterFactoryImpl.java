@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.NamedLockFactorySelector;
 import org.eclipse.aether.named.NamedLockFactory;
@@ -110,7 +111,7 @@ public class NamedLockFactoryAdapterFactoryImpl implements NamedLockFactoryAdapt
                 nameMappers.keySet());
     }
 
-    private static final String ADAPTER_KEY = NamedLockFactoryAdapterFactoryImpl.class.getName() + ".adapter";
+    private static final Object ADAPTER_KEY = Keys.of(NamedLockFactoryAdapterFactoryImpl.class, "adapter");
 
     /**
      * Current implementation memoize instance in session or delegates to {@link #createAdapter(RepositorySystemSession)}.

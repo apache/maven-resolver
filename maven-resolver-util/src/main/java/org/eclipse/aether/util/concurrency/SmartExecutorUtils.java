@@ -20,6 +20,7 @@ package org.eclipse.aether.util.concurrency;
 
 import java.util.concurrent.Executors;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 
 import static java.util.Objects.requireNonNull;
@@ -91,12 +92,11 @@ public final class SmartExecutorUtils {
     public static SmartExecutor smartExecutor(
             RepositorySystemSession session, Integer tasks, int maxConcurrentTasks, String namePrefix) {
         if (tasks == null && maxConcurrentTasks > 1) {
-            return (SmartExecutor) session.getData()
-                    .computeIfAbsent(SmartExecutor.class.getSimpleName() + "-" + namePrefix, () -> {
-                        SmartExecutor smartExecutor = newSmartExecutor(null, maxConcurrentTasks, namePrefix);
-                        session.addOnSessionEndedHandler(smartExecutor::close);
-                        return new SmartExecutor.NonClosing(smartExecutor);
-                    });
+            return (SmartExecutor) session.getData().computeIfAbsent(Keys.of(SmartExecutor.class, namePrefix), () -> {
+                SmartExecutor smartExecutor = newSmartExecutor(null, maxConcurrentTasks, namePrefix);
+                session.addOnSessionEndedHandler(smartExecutor::close);
+                return new SmartExecutor.NonClosing(smartExecutor);
+            });
         } else {
             return newSmartExecutor(tasks, maxConcurrentTasks, namePrefix);
         }

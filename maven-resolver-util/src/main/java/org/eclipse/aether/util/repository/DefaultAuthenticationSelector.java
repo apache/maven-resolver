@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.util.repository;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.repository.Authentication;
 import org.eclipse.aether.repository.AuthenticationSelector;
@@ -32,7 +32,7 @@ import static java.util.Objects.requireNonNull;
  */
 public final class DefaultAuthenticationSelector implements AuthenticationSelector {
 
-    private final Map<String, Authentication> repos = new HashMap<>();
+    private final Map<String, Authentication> repos = new ConcurrentHashMap<>();
 
     /**
      * Adds the specified authentication info for the given repository identifier.

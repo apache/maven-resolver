@@ -81,8 +81,11 @@ class JdkTransporterTest extends HttpTransporterTest {
     @Override
     @Test
     protected void testRetryHandler_defaultCount_negative() throws Exception {
-        // internally JDK client uses its own retry mechanism with 1 retry for ConnectionExpiredException, therefore
-        // close more connections to trigger failed retries
+        // internally JDK client uses its own retry mechanism with
+        // 2 attempts for ConnectionExpiredException (prior Java 26) and 5 (default for
+        // system property "jdk.httpclient.redirects.retrylimit") attempts after,
+        // therefore explicitly limit the internal retry count to 1
+        System.setProperty("jdk.httpclient.redirects.retrylimit", "1"); // this only affects Java 26+
         // Compare with https://github.com/mizosoft/methanol/issues/174
         httpServer.setConnectionsToClose(8);
         try {

@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.internal.impl.collect;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.ArtifactType;
@@ -45,17 +45,10 @@ public class CachingArtifactTypeRegistry implements ArtifactTypeRegistry {
 
     private CachingArtifactTypeRegistry(ArtifactTypeRegistry delegate) {
         this.delegate = delegate;
-        types = new HashMap<>();
+        types = new ConcurrentHashMap<>();
     }
 
     public ArtifactType get(String typeId) {
-        ArtifactType type = types.get(typeId);
-
-        if (type == null) {
-            type = delegate.get(typeId);
-            types.put(typeId, type);
-        }
-
-        return type;
+        return types.computeIfAbsent(typeId, delegate::get);
     }
 }

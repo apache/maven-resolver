@@ -141,10 +141,11 @@ public final class ScopeDependencySelector implements DependencySelector {
         if (depth == 0 && shiftIfRootNull && context.getDependency() == null) {
             return new ScopeDependencySelector(
                     seed, shiftIfRootNull, depth + 1, applyFrom + 1, applyTo, included, excluded);
-        } else {
-            return new ScopeDependencySelector(
-                    seed, shiftIfRootNull, depth + 1, applyFrom, applyTo, included, excluded);
         }
+        if (depth >= applyFrom && depth != applyTo) {
+            return this;
+        }
+        return new ScopeDependencySelector(seed, shiftIfRootNull, depth + 1, applyFrom, applyTo, included, excluded);
     }
 
     @Override

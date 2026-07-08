@@ -43,6 +43,7 @@ import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLInitializationException;
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.util.ConfigUtils;
@@ -52,6 +53,16 @@ import org.eclipse.aether.util.ConfigUtils;
  * communication with servers.
  */
 final class GlobalState implements Closeable {
+
+    static {
+        // force initialization of SSLConnectionSocketFactory class:
+        // ensure that the connection socket factory is initialized before we start using it in any multithreaded
+        // environment, otherwise we may run into a deadlock.
+        // References:
+        // https://github.com/quarkusio/quarkus/issues/55317
+        // https://github.com/quarkusio/quarkus/pull/55345
+        SSLConnectionSocketFactory.getDefaultHostnameVerifier();
+    }
 
     static class CompoundKey {
 
@@ -86,7 +97,7 @@ final class GlobalState implements Closeable {
         }
     }
 
-    private static final String KEY = GlobalState.class.getName();
+    private static final Object KEY = Keys.of(GlobalState.class);
 
     private static final String CONFIG_PROP_CACHE_STATE =
             ApacheTransporterConfigurationKeys.CONFIG_PROPS_PREFIX + "cacheState";

@@ -57,7 +57,7 @@ public final class BasicRepositoryConnectorFactory implements RepositoryConnecto
 
     private final Map<String, ProvidedChecksumsSource> providedChecksumsSources;
 
-    private float priority;
+    private volatile float priority;
 
     @Inject
     public BasicRepositoryConnectorFactory(

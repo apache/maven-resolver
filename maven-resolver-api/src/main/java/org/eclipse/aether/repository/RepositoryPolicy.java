@@ -44,17 +44,17 @@ public final class RepositoryPolicy {
     public static final String UPDATE_POLICY_INTERVAL = "interval";
 
     /**
-     * Verify checksums and fail the resolution if they do not match.
+     * Enforce presence of checksums and fail the resolution if they do not match or are absent.
      */
     public static final String CHECKSUM_POLICY_FAIL = "fail";
 
     /**
-     * Verify checksums and warn if they do not match.
+     * Expect presence of checksums and warn if they do not match or are absent.
      */
     public static final String CHECKSUM_POLICY_WARN = "warn";
 
     /**
-     * Do not verify checksums.
+     * Ignore presence and verification of checksums.
      */
     public static final String CHECKSUM_POLICY_IGNORE = "ignore";
 

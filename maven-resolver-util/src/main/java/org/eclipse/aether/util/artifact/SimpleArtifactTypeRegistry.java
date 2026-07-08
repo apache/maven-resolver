@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.util.artifact;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.artifact.ArtifactType;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -36,7 +36,7 @@ class SimpleArtifactTypeRegistry implements ArtifactTypeRegistry {
      * to populate the registry.
      */
     SimpleArtifactTypeRegistry() {
-        types = new HashMap<>();
+        types = new ConcurrentHashMap<>();
     }
 
     /**

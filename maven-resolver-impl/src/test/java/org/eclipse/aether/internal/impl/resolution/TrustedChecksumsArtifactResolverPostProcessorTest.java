@@ -206,12 +206,9 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
         subject.postProcess(session, Collections.singletonList(artifactResult));
         assertFalse(artifactResult.isResolved());
         assertFalse(artifactResult.getExceptions().isEmpty());
-        assertTrue(artifactResult.getExceptions().get(0).getMessage().contains("trusted checksum mismatch"));
-        assertTrue(artifactResult
-                .getExceptions()
-                .get(0)
-                .getMessage()
-                .contains(TRUSTED_SOURCE_NAME + "=" + artifactTrustedChecksum));
+        assertEquals(
+                "Checksum validation failed, expected 'foobar' (PROVIDED) but is actually 'da39a3ee5e6b4b0d3255bfef95601890afd80709' (Trusted Checksums Source: test)",
+                artifactResult.getExceptions().get(0).getMessage());
     }
 
     @Test

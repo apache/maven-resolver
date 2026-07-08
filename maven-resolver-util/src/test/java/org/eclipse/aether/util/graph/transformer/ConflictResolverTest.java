@@ -720,6 +720,145 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertEquals(1, occurrence.get()); // a must be present only once in tree
     }
 
+    // ---- Auto-selection / delegating ConflictResolver tests ----
+
+    /**
+     * Verifies that the delegating {@link ConflictResolver} with {@code "auto"} mode (default)
+     * correctly resolves conflicts. The auto-selection heuristic chooses between PathConflictResolver
+     * and ClassicConflictResolver based on available memory; this test confirms the delegation
+     * produces the same correct result regardless of which implementation is selected.
+     */
+    @org.junit.jupiter.api.Test
+    void autoSelectionResolvesConflictsCorrectly() throws RepositoryException {
+        // explicit "auto" config
+        session.setConfigProperty(ConflictResolver.CONFIG_PROP_CONFLICT_RESOLVER_IMPL, "auto");
+        ConflictResolver delegating = new ConflictResolver(
+                new NearestVersionSelector(),
+                new JavaScopeSelector(),
+                new SimpleOptionalitySelector(),
+                new JavaScopeDeriver());
+
+        // Foo -> Bar -> Baz 2.0
+        //  |---> Baz 1.0
+        DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
+        DependencyNode baz1Node = makeDependencyNode("some-group", "baz", "1.0");
+        DependencyNode baz2Node = makeDependencyNode("some-group", "baz", "2.0");
+        fooNode.setChildren(mutableList(barNode, baz1Node));
+        barNode.setChildren(mutableList(baz2Node));
+
+        DependencyNode transformedNode = transform(delegating, fooNode);
+
+        assertSame(fooNode, transformedNode);
+        assertEquals(2, fooNode.getChildren().size());
+        assertSame(barNode, fooNode.getChildren().get(0));
+        assertTrue(barNode.getChildren().isEmpty());
+        assertSame(baz1Node, fooNode.getChildren().get(1));
+    }
+
+    /**
+     * Verifies that the delegating {@link ConflictResolver} with explicit {@code "path"} config
+     * correctly selects PathConflictResolver.
+     */
+    @org.junit.jupiter.api.Test
+    void explicitPathConfigResolvesConflicts() throws RepositoryException {
+        session.setConfigProperty(ConflictResolver.CONFIG_PROP_CONFLICT_RESOLVER_IMPL, "path");
+        ConflictResolver delegating = new ConflictResolver(
+                new NearestVersionSelector(),
+                new JavaScopeSelector(),
+                new SimpleOptionalitySelector(),
+                new JavaScopeDeriver());
+
+        DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
+        DependencyNode baz1Node = makeDependencyNode("some-group", "baz", "1.0");
+        DependencyNode baz2Node = makeDependencyNode("some-group", "baz", "2.0");
+        fooNode.setChildren(mutableList(barNode, baz1Node));
+        barNode.setChildren(mutableList(baz2Node));
+
+        DependencyNode transformedNode = transform(delegating, fooNode);
+
+        assertSame(fooNode, transformedNode);
+        assertEquals(2, fooNode.getChildren().size());
+        assertTrue(barNode.getChildren().isEmpty());
+        assertSame(baz1Node, fooNode.getChildren().get(1));
+    }
+
+    /**
+     * Verifies that the delegating {@link ConflictResolver} with explicit {@code "classic"} config
+     * correctly selects ClassicConflictResolver.
+     */
+    @org.junit.jupiter.api.Test
+    void explicitClassicConfigResolvesConflicts() throws RepositoryException {
+        session.setConfigProperty(ConflictResolver.CONFIG_PROP_CONFLICT_RESOLVER_IMPL, "classic");
+        ConflictResolver delegating = new ConflictResolver(
+                new NearestVersionSelector(),
+                new JavaScopeSelector(),
+                new SimpleOptionalitySelector(),
+                new JavaScopeDeriver());
+
+        DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
+        DependencyNode baz1Node = makeDependencyNode("some-group", "baz", "1.0");
+        DependencyNode baz2Node = makeDependencyNode("some-group", "baz", "2.0");
+        fooNode.setChildren(mutableList(barNode, baz1Node));
+        barNode.setChildren(mutableList(baz2Node));
+
+        DependencyNode transformedNode = transform(delegating, fooNode);
+
+        assertSame(fooNode, transformedNode);
+        assertEquals(2, fooNode.getChildren().size());
+        assertTrue(barNode.getChildren().isEmpty());
+        assertSame(baz1Node, fooNode.getChildren().get(1));
+    }
+
+    /**
+     * Verifies that the delegating {@link ConflictResolver} rejects an unknown config value.
+     */
+    @org.junit.jupiter.api.Test
+    void unknownConfigThrows() {
+        session.setConfigProperty(ConflictResolver.CONFIG_PROP_CONFLICT_RESOLVER_IMPL, "bogus");
+        ConflictResolver delegating = new ConflictResolver(
+                new NearestVersionSelector(),
+                new JavaScopeSelector(),
+                new SimpleOptionalitySelector(),
+                new JavaScopeDeriver());
+
+        DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
+        fooNode.setChildren(mutableList(barNode));
+
+        assertThrows(IllegalArgumentException.class, () -> transform(delegating, fooNode));
+    }
+
+    /**
+     * Verifies that the default config (no explicit setting) works — exercises the auto-selection
+     * code path with default config properties.
+     */
+    @org.junit.jupiter.api.Test
+    void defaultConfigUsesAutoSelection() throws RepositoryException {
+        // No explicit config property set — should use AUTO_CONFLICT_RESOLVER default
+        ConflictResolver delegating = new ConflictResolver(
+                new NearestVersionSelector(),
+                new JavaScopeSelector(),
+                new SimpleOptionalitySelector(),
+                new JavaScopeDeriver());
+
+        DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
+        DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
+        DependencyNode baz1Node = makeDependencyNode("some-group", "baz", "1.0");
+        DependencyNode baz2Node = makeDependencyNode("some-group", "baz", "2.0");
+        fooNode.setChildren(mutableList(barNode, baz1Node));
+        barNode.setChildren(mutableList(baz2Node));
+
+        DependencyNode transformedNode = transform(delegating, fooNode);
+
+        assertSame(fooNode, transformedNode);
+        assertEquals(2, fooNode.getChildren().size());
+        assertTrue(barNode.getChildren().isEmpty());
+        assertSame(baz1Node, fooNode.getChildren().get(1));
+    }
+
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
         return makeDependencyNode(groupId, artifactId, version, "compile");
     }

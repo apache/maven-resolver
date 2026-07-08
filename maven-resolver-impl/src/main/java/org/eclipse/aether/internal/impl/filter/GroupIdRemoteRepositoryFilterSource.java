@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.MultiRuntimeException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -182,27 +183,35 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
         this.pathProcessor = requireNonNull(pathProcessor);
     }
 
+    private static final Object RULES = Keys.of(GroupIdRemoteRepositoryFilterSource.class, "rules");
+
     @SuppressWarnings("unchecked")
     private ConcurrentMap<RemoteRepository, GroupTree> rules(RepositorySystemSession session) {
         return (ConcurrentMap<RemoteRepository, GroupTree>)
-                session.getData().computeIfAbsent(getClass().getName() + ".rules", ConcurrentHashMap::new);
+                session.getData().computeIfAbsent(RULES, ConcurrentHashMap::new);
     }
+
+    private static final Object RULE_FILES = Keys.of(GroupIdRemoteRepositoryFilterSource.class, "ruleFiles");
 
     @SuppressWarnings("unchecked")
     private ConcurrentMap<RemoteRepository, Path> ruleFiles(RepositorySystemSession session) {
         return (ConcurrentMap<RemoteRepository, Path>)
-                session.getData().computeIfAbsent(getClass().getName() + ".ruleFiles", ConcurrentHashMap::new);
+                session.getData().computeIfAbsent(RULE_FILES, ConcurrentHashMap::new);
     }
+
+    private static final Object RECORDED_RULES = Keys.of(GroupIdRemoteRepositoryFilterSource.class, "recordedRules");
 
     @SuppressWarnings("unchecked")
     private ConcurrentMap<RemoteRepository, Set<String>> recordedRules(RepositorySystemSession session) {
         return (ConcurrentMap<RemoteRepository, Set<String>>)
-                session.getData().computeIfAbsent(getClass().getName() + ".recordedRules", ConcurrentHashMap::new);
+                session.getData().computeIfAbsent(RECORDED_RULES, ConcurrentHashMap::new);
     }
 
+    private static final Object SHUTDOWN_HANDLER_REGISTERED =
+            Keys.of(GroupIdRemoteRepositoryFilterSource.class, "onShutdownHandlerRegistered");
+
     private AtomicBoolean onShutdownHandlerRegistered(RepositorySystemSession session) {
-        return (AtomicBoolean) session.getData()
-                .computeIfAbsent(getClass().getName() + ".onShutdownHandlerRegistered", AtomicBoolean::new);
+        return (AtomicBoolean) session.getData().computeIfAbsent(SHUTDOWN_HANDLER_REGISTERED, AtomicBoolean::new);
     }
 
     @Override

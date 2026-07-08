@@ -42,31 +42,19 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * <strong>Available Implementations:</strong>
  * <ul>
- * <li><strong>{@link PathConflictResolver}</strong> - Recommended high-performance implementation with O(N) complexity</li>
- * <li><strong>{@link ClassicConflictResolver}</strong> - Legacy implementation for backward compatibility (O(N²) worst-case)</li>
+ * <li><strong>{@link ClassicConflictResolver}</strong> - Original implementation (O(N²) worst-case)</li>
+ * <li><strong>{@link PathConflictResolver}</strong> - Not yet recommended for production; high-performance implementation with O(N) complexity</li>
  * </ul>
  * <p>
  * <strong>Implementation Selection Guide:</strong>
  * <ul>
- * <li><strong>New Projects:</strong> Use {@link PathConflictResolver} for optimal performance</li>
- * <li><strong>Large Multi-Module Projects:</strong> Use {@link PathConflictResolver} to avoid performance bottlenecks</li>
- * <li><strong>Maven 4+ Environments:</strong> Use {@link PathConflictResolver} for best build performance</li>
- * <li><strong>Legacy Compatibility:</strong> Use {@link ClassicConflictResolver} only when exact Maven 3.x behavior is required</li>
+ * <li><strong>All projects:</strong> Use {@link ClassicConflictResolver} for optimal correctness and Maven 3.x behavior</li>
+ * <li><strong>Experimenters:</strong> Use {@link PathConflictResolver} but no guarantees it will work</li>
  * </ul>
  * <p>
  * <strong>Usage Example:</strong>
  * <pre>{@code
- * // Recommended: High-performance path-based resolver
- * DependencyGraphTransformer transformer = new ChainedDependencyGraphTransformer(
- *     new PathConflictResolver(
- *         new NearestVersionSelector(),
- *         new JavaScopeSelector(),
- *         new SimpleOptionalitySelector(),
- *         new JavaScopeDeriver()),
- *     // other transformers...
- * );
- *
- * // Legacy: Classic resolver for backward compatibility
+ * // Classic resolver
  * DependencyGraphTransformer legacyTransformer = new ChainedDependencyGraphTransformer(
  *     new ClassicConflictResolver(
  *         new NearestVersionSelector(),
@@ -111,8 +99,8 @@ import static java.util.Objects.requireNonNull;
  * existing information about conflict ids. In absence of this information, it will automatically invoke the
  * {@link ConflictIdSorter} to calculate it.
  *
- * @see PathConflictResolver
  * @see ClassicConflictResolver
+ * @see PathConflictResolver
  */
 public class ConflictResolver implements DependencyGraphTransformer {
 
@@ -129,7 +117,10 @@ public class ConflictResolver implements DependencyGraphTransformer {
     public static final String CONFIG_PROP_VERBOSE = ConfigurationProperties.PREFIX_AETHER + "conflictResolver.verbose";
 
     /**
-     * The name of the conflict resolver implementation to use: "path" (default) or "classic" (same as Maven 3).
+     * The name of the conflict resolver implementation to use: "auto" (default), "path", or "classic" (same as Maven 3).
+     * <p>
+     * When set to "auto", the resolver will currently just use "classic". The idea here, is that this value will
+     * always select the best (most robust, most performant) one, which currently is "classic".
      *
      * @since 2.0.11
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -141,8 +132,9 @@ public class ConflictResolver implements DependencyGraphTransformer {
 
     public static final String CLASSIC_CONFLICT_RESOLVER = "classic";
     public static final String PATH_CONFLICT_RESOLVER = "path";
+    public static final String AUTO_CONFLICT_RESOLVER = "auto";
 
-    public static final String DEFAULT_CONFLICT_RESOLVER_IMPL = PATH_CONFLICT_RESOLVER;
+    public static final String DEFAULT_CONFLICT_RESOLVER_IMPL = AUTO_CONFLICT_RESOLVER;
 
     /**
      * The enum representing verbosity levels of conflict resolver.
@@ -263,13 +255,13 @@ public class ConflictResolver implements DependencyGraphTransformer {
         String cf = ConfigUtils.getString(
                 context.getSession(), DEFAULT_CONFLICT_RESOLVER_IMPL, CONFIG_PROP_CONFLICT_RESOLVER_IMPL);
         ConflictResolver delegate;
-        if (PATH_CONFLICT_RESOLVER.equals(cf)) {
-            delegate = new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
-        } else if (CLASSIC_CONFLICT_RESOLVER.equals(cf)) {
+        if (AUTO_CONFLICT_RESOLVER.equals(cf) || CLASSIC_CONFLICT_RESOLVER.equals(cf)) {
             delegate = new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+        } else if (PATH_CONFLICT_RESOLVER.equals(cf)) {
+            delegate = new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
         } else {
             throw new IllegalArgumentException("Unknown conflict resolver: " + cf + "; known are "
-                    + Arrays.asList(PATH_CONFLICT_RESOLVER, CLASSIC_CONFLICT_RESOLVER));
+                    + Arrays.asList(AUTO_CONFLICT_RESOLVER, PATH_CONFLICT_RESOLVER, CLASSIC_CONFLICT_RESOLVER));
         }
         return delegate.transformGraph(node, context);
     }

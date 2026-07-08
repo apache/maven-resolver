@@ -158,14 +158,15 @@ public class DependencyGraphParser {
             throw new IOException("Could not find classpath resource " + prefix + resource);
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(res.openStream(), StandardCharsets.UTF_8));
-
-        List<DependencyNode> ret = new ArrayList<>();
-        DependencyNode root = null;
-        while ((root = parse(reader)) != null) {
-            ret.add(root);
+        try (BufferedReader reader =
+                new BufferedReader(new InputStreamReader(res.openStream(), StandardCharsets.UTF_8))) {
+            List<DependencyNode> ret = new ArrayList<>();
+            DependencyNode root = null;
+            while ((root = parse(reader)) != null) {
+                ret.add(root);
+            }
+            return ret;
         }
-        return ret;
     }
 
     /**

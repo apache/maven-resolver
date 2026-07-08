@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import org.eclipse.aether.repository.Proxy;
@@ -37,7 +38,7 @@ import static java.util.Objects.requireNonNull;
  */
 public final class DefaultProxySelector implements ProxySelector {
 
-    private final List<ProxyDef> proxies = new ArrayList<>();
+    private final List<ProxyDef> proxies = new CopyOnWriteArrayList<>();
 
     /**
      * Adds the specified proxy definition to the selector. Proxy definitions are ordered, the first matching proxy for

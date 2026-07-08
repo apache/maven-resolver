@@ -50,7 +50,9 @@ public class RedissonSemaphoreNamedLockFactory extends RedissonNamedLockFactoryS
     protected AdaptedSemaphoreNamedLock createLock(final NamedLockKey key) {
         RSemaphore semaphore = semaphores.computeIfAbsent(key, k -> {
             RSemaphore result = redissonClient.getSemaphore(TYPED_NAME_PREFIX + k.name());
-            result.trySetPermits(Integer.MAX_VALUE);
+            if (!result.trySetPermits(Integer.MAX_VALUE)) {
+                logger.warn("Failed to set permits on semaphore '{}'; it may be in a stale state", k.name());
+            }
             return result;
         });
         return new AdaptedSemaphoreNamedLock(key, this, new RedissonSemaphore(semaphore));

@@ -46,9 +46,9 @@ public final class TransferResource {
 
     private final RequestTrace trace;
 
-    private long contentLength = -1L;
+    private volatile long contentLength = -1L;
 
-    private long resumeOffset;
+    private volatile long resumeOffset;
 
     public static Clock getClock() {
         return clock;

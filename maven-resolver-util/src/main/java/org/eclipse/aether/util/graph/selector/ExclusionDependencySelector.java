@@ -41,13 +41,14 @@ public final class ExclusionDependencySelector implements DependencySelector {
     // sorted and dupe-free array, faster to iterate than LinkedHashSet
     private final Exclusion[] exclusions;
 
-    private int hashCode;
+    private final int hashCode;
 
     /**
      * Creates a new selector without any exclusions.
      */
     public ExclusionDependencySelector() {
         this.exclusions = new Exclusion[0];
+        this.hashCode = getClass().hashCode() * 31 + Arrays.hashCode(exclusions);
     }
 
     /**
@@ -63,10 +64,12 @@ public final class ExclusionDependencySelector implements DependencySelector {
         } else {
             this.exclusions = new Exclusion[0];
         }
+        this.hashCode = getClass().hashCode() * 31 + Arrays.hashCode(this.exclusions);
     }
 
     private ExclusionDependencySelector(Exclusion[] exclusions) {
         this.exclusions = exclusions;
+        this.hashCode = getClass().hashCode() * 31 + Arrays.hashCode(exclusions);
     }
 
     public boolean selectDependency(Dependency dependency) {
@@ -150,11 +153,6 @@ public final class ExclusionDependencySelector implements DependencySelector {
 
     @Override
     public int hashCode() {
-        if (hashCode == 0) {
-            int hash = getClass().hashCode();
-            hash = hash * 31 + Arrays.hashCode(exclusions);
-            hashCode = hash;
-        }
         return hashCode;
     }
 

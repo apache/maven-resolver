@@ -29,6 +29,7 @@ import java.io.InterruptedIOException;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.SocketAddress;
+import java.net.URL;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.Channels;
 import java.nio.channels.FileLock;
@@ -81,10 +82,10 @@ public class IpcClient {
     protected final Path syncPath;
     protected final boolean noFork;
 
-    protected SocketChannel socket;
-    protected DataOutputStream output;
-    protected DataInputStream input;
-    protected Thread receiver;
+    protected volatile SocketChannel socket;
+    protected volatile DataOutputStream output;
+    protected volatile DataInputStream input;
+    protected volatile Thread receiver;
 
     protected final AtomicInteger requestId = new AtomicInteger();
     protected final Map<Integer, CompletableFuture<List<String>>> responses = new ConcurrentHashMap<>();
@@ -262,7 +263,11 @@ public class IpcClient {
     private String getJarPath(Class<?> clazz) {
         String classpath;
         String className = clazz.getName().replace('.', '/') + ".class";
-        String url = clazz.getClassLoader().getResource(className).toString();
+        URL resource = clazz.getResource("/" + className);
+        if (resource == null) {
+            throw new IllegalStateException("Unable to find resource for class " + clazz.getName());
+        }
+        String url = resource.toString();
         if (url.startsWith("jar:")) {
             url = url.substring("jar:".length(), url.indexOf("!/"));
             if (url.startsWith("file:")) {
@@ -288,11 +293,15 @@ public class IpcClient {
     void receive() {
         try {
             while (true) {
-                int id = input.readInt();
-                int sz = input.readInt();
+                DataInputStream in = input;
+                if (in == null) {
+                    throw new IOException("Connection closed");
+                }
+                int id = in.readInt();
+                int sz = in.readInt();
                 List<String> s = new ArrayList<>(sz);
                 for (int i = 0; i < sz; i++) {
-                    s.add(input.readUTF());
+                    s.add(in.readUTF());
                 }
                 CompletableFuture<List<String>> f = responses.remove(id);
                 if (f == null) {
@@ -445,8 +454,12 @@ public class IpcClient {
     }
 
     private String getAddress() {
+        SocketChannel s = socket;
+        if (s == null) {
+            return "[closed]";
+        }
         try {
-            return SocketFamily.toString(socket.getLocalAddress());
+            return SocketFamily.toString(s.getLocalAddress());
         } catch (IOException e) {
             return "[not bound]";
         }

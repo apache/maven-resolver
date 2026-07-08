@@ -18,9 +18,9 @@
  */
 package org.eclipse.aether.internal.impl.synccontext.named;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -54,16 +54,45 @@ public class InhibitingNameMapper implements NameMapper {
             RepositorySystemSession session,
             Collection<? extends Artifact> artifacts,
             Collection<? extends Metadata> metadatas) {
-        if (artifacts != null) {
-            artifacts = artifacts.stream()
-                    .filter(a -> lockingInhibitors.stream().noneMatch(i -> i.preventArtifactLocking(a)))
-                    .collect(Collectors.toList());
+        if (lockingInhibitors.isEmpty()) {
+            return delegate.nameLocks(session, artifacts, metadatas);
         }
-        if (metadatas != null) {
-            metadatas = metadatas.stream()
-                    .filter(m -> lockingInhibitors.stream().noneMatch(i -> i.preventMetadataLocking(m)))
-                    .collect(Collectors.toList());
+        if (artifacts != null && !artifacts.isEmpty()) {
+            List<Artifact> filtered = new ArrayList<>(artifacts.size());
+            for (Artifact a : artifacts) {
+                if (!isArtifactInhibited(a)) {
+                    filtered.add(a);
+                }
+            }
+            artifacts = filtered;
+        }
+        if (metadatas != null && !metadatas.isEmpty()) {
+            List<Metadata> filtered = new ArrayList<>(metadatas.size());
+            for (Metadata m : metadatas) {
+                if (!isMetadataInhibited(m)) {
+                    filtered.add(m);
+                }
+            }
+            metadatas = filtered;
         }
         return delegate.nameLocks(session, artifacts, metadatas);
+    }
+
+    private boolean isArtifactInhibited(Artifact artifact) {
+        for (LockingInhibitor inhibitor : lockingInhibitors) {
+            if (inhibitor.preventArtifactLocking(artifact)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isMetadataInhibited(Metadata metadata) {
+        for (LockingInhibitor inhibitor : lockingInhibitors) {
+            if (inhibitor.preventMetadataLocking(metadata)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
