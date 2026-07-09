@@ -171,6 +171,8 @@ public class HttpServer {
 
     private ServerConnector httpsConnector;
 
+    private QuicheServerConnector http3Connector;
+
     private String username;
 
     private String password;
@@ -215,21 +217,21 @@ public class HttpServer {
         return "https://" + getHost() + ":" + getHttp3Port();
     }
 
-    public HttpServer addSslConnector() {
-        return addSslConnector(true, true);
+    public HttpServer addHttp2ConnectorWithMutualTLS() {
+        return addHttp2Connector(true, true);
     }
 
-    public HttpServer addSelfSignedSslConnector() {
-        return addSslConnector(false, true);
+    public HttpServer addHttp2OnlyConnectorWithMutualTLS() {
+        return addHttp2Connector(false, true);
     }
 
-    public HttpServer addSelfSignedSslConnectorHttp2Only() {
-        return addSslConnector(false, false);
+    public HttpServer addHttp2OnlyConnector() {
+        return addHttp2Connector(false, false);
     }
 
-    private HttpServer addSslConnector(boolean needClientAuth, boolean needHttp11) {
+    private HttpServer addHttp2Connector(boolean needClientAuth, boolean needHttp11) {
         if (httpsConnector == null) {
-            SslContextFactory.Server ssl = createSslContextFactory(needClientAuth);
+            SslContextFactory.Server ssl = createServerSslContextFactory(needClientAuth);
 
             HttpConfiguration httpsConfig = new HttpConfiguration();
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
@@ -262,23 +264,17 @@ public class HttpServer {
         return this;
     }
 
-    private SslContextFactory.Server createSslContextFactory(boolean needClientAuth) {
+    private SslContextFactory.Server createServerSslContextFactory(boolean needClientAuth) {
         SslContextFactory.Server ssl = new SslContextFactory.Server();
+        ssl.setSniRequired(false);
+        ssl.setKeyStorePath(
+                HttpTransporterTest.SERVER_STORE_PATH.toAbsolutePath().toString());
+        ssl.setKeyStorePassword("server-pwd");
         ssl.setNeedClientAuth(needClientAuth);
-        if (!needClientAuth) {
-            ssl.setKeyStorePath(HttpTransporterTest.KEY_STORE_SELF_SIGNED_PATH
-                    .toAbsolutePath()
-                    .toString());
-            ssl.setKeyStorePassword("server-pwd");
-            ssl.setSniRequired(false);
-        } else {
-            ssl.setKeyStorePath(
-                    HttpTransporterTest.KEY_STORE_PATH.toAbsolutePath().toString());
-            ssl.setKeyStorePassword("server-pwd");
+        if (needClientAuth) {
             ssl.setTrustStorePath(
-                    HttpTransporterTest.TRUST_STORE_PATH.toAbsolutePath().toString());
+                    HttpTransporterTest.CLIENT_STORE_PATH.toAbsolutePath().toString());
             ssl.setTrustStorePassword("client-pwd");
-            ssl.setSniRequired(false);
         }
         return ssl;
     }
@@ -289,7 +285,7 @@ public class HttpServer {
                     new QuicheServerQuicConfiguration(HttpTransporterTest.PEM_QUICHE_SERVER_PATH));
             http3Connector = new QuicheServerConnector(
                     server,
-                    createSslContextFactory(needClientAuth),
+                    createServerSslContextFactory(needClientAuth),
                     serverQuicConfig,
                     new HTTP3ServerConnectionFactory());
             // TODO: should share same port as https connector, so that the client can use the same port for both
@@ -367,6 +363,7 @@ public class HttpServer {
 
         server = new Server();
         httpConnector = new ServerConnector(server);
+        // always add the HTTP 1.1 connector
         server.addConnector(httpConnector);
 
         server.setHandler(new LogHandler(new CompressionEnforcingHandler(new Handler.Sequence(
@@ -565,8 +562,6 @@ public class HttpServer {
 
     private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
 
-    private QuicheServerConnector http3Connector;
-
     private class RepoHandler extends Handler.Abstract {
         @Override
         public boolean handle(Request req, Response response, Callback callback) throws Exception {
@@ -654,6 +649,7 @@ public class HttpServer {
                         Content.copy(req, Content.Sink.from(channel), fileWriteCallback);
                         fileWriteCallback.block();
                     } catch (IOException e) {
+                        LOGGER.warn("Failed to write file {}", file.getAbsolutePath(), e);
                         file.delete();
                         throw e;
                     }

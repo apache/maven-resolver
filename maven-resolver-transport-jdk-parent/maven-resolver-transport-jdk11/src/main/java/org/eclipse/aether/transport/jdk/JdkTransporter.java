@@ -44,8 +44,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.net.http.HttpClient;
-import java.net.http.HttpOption;
-import java.net.http.HttpOption.Http3DiscoveryMode;
+import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
@@ -445,8 +444,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         getBasicAuthValue(proxyAuthentication.getUserName(), proxyAuthentication.getPassword()));
             }
         }
-        requestBuilder.setOption(HttpOption.H3_DISCOVERY, Http3DiscoveryMode.HTTP_3_URI_ONLY);
-        // requestBuilder.requestTimeout(Duration.ofMillis(requestTimeout))
     }
 
     static String getBasicAuthValue(String username, char[] password) {
@@ -500,18 +497,16 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     }
 
     private HttpClient.Version resolveHttpVersion(String requestedVersion) {
-        HttpClient.Version maximumHttpVersion = getMaximumSupportedHttpVersion();
-        HttpClient.Version resolved;
         try {
-            resolved = HttpClient.Version.valueOf(requestedVersion);
+            return HttpClient.Version.valueOf(requestedVersion);
         } catch (IllegalArgumentException e) {
+            HttpClient.Version maximumHttpVersion = getMaximumSupportedHttpVersion();
             LOGGER.warn(
                     "HTTP version '{}' is not supported by the running JRE, using '{}' instead",
                     requestedVersion,
                     maximumHttpVersion);
             return maximumHttpVersion;
         }
-        return resolved;
     }
 
     HttpClient.Version getMaximumSupportedHttpVersion() {
@@ -535,13 +530,19 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             }
         }
 
+        Version httpVersion = getHttpVersion(session, repository);
         if (sslContext == null) {
             try {
                 if (insecure) {
+                    if (httpVersion.name().equals("HTTP_3")) {
+                        // custom trust manager not supported for HTTP/3 (Quic)
+                        // (https://github.com/openjdk/jdk/blob/631b675d7949a0e6312d8d6f45e2515d53b12f05/src/java.base/share/classes/sun/security/ssl/SSLContextImpl.java#L529)
+                        // https://openjdk.org/jeps/517
+                        // https://mail.openjdk.org/archives/list/net-dev@openjdk.org/thread/LHSC7MWRFDJE2KGS2QMPFJPZX3XEQKOQ/
+                        throw new IllegalStateException(
+                                "Insecure HTTPS connections are not supported for HTTP/3 (Quic)");
+                    }
                     sslContext = SSLContext.getInstance("TLS");
-                    // custom trust manager not supported for HTTP/3 (Quic)
-                    // (https://github.com/openjdk/jdk/blob/631b675d7949a0e6312d8d6f45e2515d53b12f05/src/java.base/share/classes/sun/security/ssl/SSLContextImpl.java#L529)
-                    // https://openjdk.org/jeps/517
                     X509ExtendedTrustManager tm = new X509ExtendedTrustManager() {
                         @Override
                         public void checkClientTrusted(X509Certificate[] chain, String authType) {}
@@ -577,27 +578,22 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     throw new IllegalStateException("SSL Context setup failure", e);
                 }
             }
+        } else {
+            if (insecure) {
+                throw new IllegalStateException(
+                        "Insecure HTTPS connections are not supported when a custom SSLContext is configured");
+            }
         }
 
-        HttpClient.Builder builder = HttpClient.newBuilder()
-                .version(getHttpVersion(session, repository))
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(Duration.ofMillis(connectTimeout))
-                // this only considers the time until the response header is received, see
-                // https://bugs.openjdk.org/browse/JDK-8208693
-                // but better than nothing
-                // .requestTimeout(Duration.ofMillis(requestTimeout))
-                .sslContext(sslContext);
-        /*
         Methanol.Builder builder = Methanol.newBuilder()
-                .version(getHttpVersion(session, repository))
+                .version(httpVersion)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofMillis(connectTimeout))
                 // this only considers the time until the response header is received, see
                 // https://bugs.openjdk.org/browse/JDK-8208693
                 // but better than nothing
                 .requestTimeout(Duration.ofMillis(requestTimeout))
-                .sslContext(sslContext);*/
+                .sslContext(sslContext);
 
         if (insecure) {
             SSLParameters sslParameters = sslContext.getDefaultSSLParameters();
@@ -637,7 +633,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             });
         }
 
-        // configureRetryHandler(session, repository, builder);
+        configureRetryHandler(session, repository, builder);
 
         return builder.build();
     }

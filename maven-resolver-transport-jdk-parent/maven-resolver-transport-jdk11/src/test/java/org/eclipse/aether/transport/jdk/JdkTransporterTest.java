@@ -115,11 +115,6 @@ class JdkTransporterTest extends HttpTransporterTest {
         super(() -> new JdkTransporterFactory(standardChecksumExtractor(), new DefaultPathProcessor()));
     }
 
-    @Override
-    protected void enableHttp2Protocol() {
-        session.setConfigProperty(JdkTransporterConfigurationKeys.CONFIG_PROP_HTTP_VERSION, "HTTP_2");
-    }
-
     @Test
     void enhanceConnectExceptionMessages() {
         String uri = "https://localhost:12345/";

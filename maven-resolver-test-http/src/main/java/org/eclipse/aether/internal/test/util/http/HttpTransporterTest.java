@@ -94,11 +94,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @SuppressWarnings({"checkstyle:MethodName"})
 public abstract class HttpTransporterTest {
 
-    protected static final Path KEY_STORE_PATH = Paths.get("target/keystore");
+    protected static final Path SERVER_STORE_PATH = Paths.get("target/server-store");
 
-    protected static final Path KEY_STORE_SELF_SIGNED_PATH = Paths.get("target/keystore-self-signed");
-
-    protected static final Path TRUST_STORE_PATH = Paths.get("target/trustStore");
+    protected static final Path CLIENT_STORE_PATH = Paths.get("target/client-store");
 
     protected static final Path PEM_QUICHE_SERVER_PATH = Paths.get("target/pems");
 
@@ -115,18 +113,10 @@ public abstract class HttpTransporterTest {
         try {
             try (InputStream keyStoreStream =
                             HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/server-store");
-                    InputStream keyStoreSelfSignedStream = HttpTransporterTest.class
-                            .getClassLoader()
-                            .getResourceAsStream("ssl/server-store-selfsigned");
                     InputStream trustStoreStream =
-                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/client-store");
-                    InputStream serverPemStream =
-                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/server.pem");
-                    InputStream serverSelfsignedPemStream =
-                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/selfsigned.pem")) {
-                Files.copy(keyStoreStream, KEY_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(keyStoreSelfSignedStream, KEY_STORE_SELF_SIGNED_PATH, StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(trustStoreStream, TRUST_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/client-store"); ) {
+                Files.copy(keyStoreStream, SERVER_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(trustStoreStream, CLIENT_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
                 Files.createDirectories(PEM_QUICHE_SERVER_PATH);
             }
         } catch (IOException e) {
@@ -135,7 +125,7 @@ public abstract class HttpTransporterTest {
         // override default SSLContext to include our custom keystore and truststore (which are "cross connected" with
         // HttpServer)
         defaultSslContext = SSLContext.getDefault();
-        SSLContext.setDefault(createSSLContext());
+        SSLContext.setDefault(createClientSSLContext());
     }
 
     @AfterAll
@@ -146,23 +136,23 @@ public abstract class HttpTransporterTest {
     }
 
     /**
-     * Creates an {@link SSLContext} that extends the default keystore and truststore with the entries
-     * from {@link #KEY_STORE_PATH} (password {@code "server-pwd"}) and {@link #TRUST_STORE_PATH}
+     * Creates an {@link SSLContext} for the client that extends the default keystore and truststore with the entries
+     * from {@link #SERVER_STORE_PATH} (password {@code "server-pwd"}) and {@link #CLIENT_STORE_PATH}
      * (password {@code "client-pwd"}).
      *
      * @return an {@link SSLContext} combining default and custom key/trust material
      */
-    protected static SSLContext createSSLContext() {
+    protected static SSLContext createClientSSLContext() {
         try {
             // Load custom key store (KEY_STORE_PATH acts as truststore in "cross connected" setup)
-            KeyStore customTrustStore = KeyStore.getInstance("jks");
-            try (InputStream is = Files.newInputStream(KEY_STORE_PATH)) {
+            KeyStore customTrustStore = KeyStore.getInstance("pkcs12");
+            try (InputStream is = Files.newInputStream(SERVER_STORE_PATH)) {
                 customTrustStore.load(is, "server-pwd".toCharArray());
             }
 
             // Load custom trust store (TRUST_STORE_PATH acts as keystore in "cross connected" setup)
-            KeyStore customKeyStore = KeyStore.getInstance("jks");
-            try (InputStream is = Files.newInputStream(TRUST_STORE_PATH)) {
+            KeyStore customKeyStore = KeyStore.getInstance("pkcs12");
+            try (InputStream is = Files.newInputStream(CLIENT_STORE_PATH)) {
                 customKeyStore.load(is, "client-pwd".toCharArray());
             }
 
@@ -291,6 +281,7 @@ public abstract class HttpTransporterTest {
         TestFileUtils.writeString(resumable, "resumable");
         resumable.setLastModified(System.currentTimeMillis() - 90 * 1000);
         httpServer = new HttpServer().setRepoDir(repoDir).start();
+        // always create a transporter connecting to the Http URL
         newTransporter(httpServer.getHttpUrl());
     }
 
@@ -489,14 +480,14 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testPeek_SSL() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         newTransporter(httpServer.getHttpsUrl());
         transporter.peek(new PeekTask(URI.create("repo/file.txt")));
     }
 
     @Test
     protected void testPeek_Redirect() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         transporter.peek(new PeekTask(URI.create("redirect/file.txt")));
         transporter.peek(new PeekTask(URI.create("redirect/file.txt?scheme=https")));
     }
@@ -743,7 +734,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_SSL() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
@@ -759,7 +750,7 @@ public abstract class HttpTransporterTest {
     @Test
     protected void testGet_SSL_WithServerErrors() throws Exception {
         httpServer.setServerErrorsBeforeWorks(1);
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         newTransporter(httpServer.getHttpsUrl());
         for (int i = 1; i < 3; i++) {
             try {
@@ -781,7 +772,7 @@ public abstract class HttpTransporterTest {
     @Test
     protected void testGet_HTTPS_Unknown_SecurityMode() throws Exception {
         session.setConfigProperty(ConfigurationProperties.HTTPS_SECURITY_MODE, "unknown");
-        httpServer.addSelfSignedSslConnector();
+        httpServer.addHttp2OnlyConnectorWithMutualTLS();
         try {
             newTransporter(httpServer.getHttpsUrl());
             fail("Unsupported security mode");
@@ -792,11 +783,12 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_HTTPS_Insecure_SecurityMode() throws Exception {
-        // here we use alternate server-store-selfigned key (as the key set it static initializer is probably already
-        // used to init SSLContext/SSLSocketFactory/etc
+        // we have to reset the default ssl context to avoid the default truststore being used, which would make the
+        // test pass even if the security mode is not set to insecure
+        SSLContext.setDefault(defaultSslContext);
         session.setConfigProperty(
                 ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
-        httpServer.addSelfSignedSslConnector();
+        httpServer.addHttp2OnlyConnectorWithMutualTLS();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
@@ -807,14 +799,16 @@ public abstract class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+        // restore the default SSL context used for all other tests
+        SSLContext.setDefault(createClientSSLContext());
     }
 
     @Test
     protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {
-        enableHttp2Protocol();
+        session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_2);
         session.setConfigProperty(
                 ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
-        httpServer.addSelfSignedSslConnectorHttp2Only();
+        httpServer.addHttp2OnlyConnector();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
@@ -830,11 +824,8 @@ public abstract class HttpTransporterTest {
         });
     }
 
-    protected void enableHttp2Protocol() {}
-
     @Test
     protected void testGet_HTTP3() throws Exception {
-        // self-signed cert should be accepted through default SSL context
         session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_3);
         httpServer.addHttp3Connector(false);
         httpServer.start();
@@ -855,7 +846,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_Redirect() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("redirect/file.txt?scheme=https")).setListener(listener);
         transporter.get(task);
@@ -1243,7 +1234,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testPut_SSL() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")

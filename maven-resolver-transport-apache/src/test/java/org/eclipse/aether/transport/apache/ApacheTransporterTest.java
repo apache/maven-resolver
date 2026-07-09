@@ -106,7 +106,7 @@ class ApacheTransporterTest extends HttpTransporterTest {
 
     @Test
     void testConnectionReuse() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         session.setCache(new DefaultRepositoryCache());
         for (int i = 0; i < 3; i++) {
             newTransporter(httpServer.getHttpsUrl());
@@ -122,7 +122,7 @@ class ApacheTransporterTest extends HttpTransporterTest {
 
     @Test
     void testConnectionNoReuse() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         session.setCache(new DefaultRepositoryCache());
         session.setConfigProperty(ConfigurationProperties.HTTP_REUSE_CONNECTIONS, false);
         for (int i = 0; i < 3; i++) {

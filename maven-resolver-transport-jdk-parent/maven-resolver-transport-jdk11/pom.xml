@@ -33,7 +33,7 @@
   <description>Maven Artifact Transport JDK HTTP Client.</description>
 
   <properties>
-    <javaVersion>26</javaVersion>
+    <javaVersion>11</javaVersion>
   </properties>
 
   <dependencies>
@@ -99,14 +99,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <test>JdkTransporterTest#testGet_HTTP3</test>
-          <argLine>-Djdk.internal.httpclient.debug=true</argLine>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>sisu-maven-plugin</artifactId>
