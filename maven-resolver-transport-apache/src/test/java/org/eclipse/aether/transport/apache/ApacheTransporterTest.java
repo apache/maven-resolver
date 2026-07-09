@@ -36,7 +36,8 @@ import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Apache Transporter UT.
@@ -57,6 +58,11 @@ class ApacheTransporterTest extends HttpTransporterTest {
     @Disabled
     @Test
     protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testGet_HTTP3() {}
 
     @Test
     void testGet_WebDav() throws Exception {
