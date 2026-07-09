@@ -19,7 +19,6 @@
 package org.eclipse.aether.spi.connector.transport.http.RFC9457;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 
 /**
  * A reporter for RFC 9457 messages.
@@ -93,12 +92,6 @@ public abstract class RFC9457Reporter<T, E extends Exception, R> {
                 throw new HttpRFC9457Exception(statusCode, reasonPhrase, rfc9457Payload);
             }
             throw new HttpRFC9457Exception(statusCode, reasonPhrase, RFC9457Payload.INSTANCE);
-        } else {
-            try {
-                System.err.println("Received " + statusCode + " with body :" + getBody(response));
-            } catch (IOException e) {
-                throw new UncheckedIOException("Failed to read response body", e);
-            }
         }
         baseException.accept(statusCode, reasonPhrase);
     }

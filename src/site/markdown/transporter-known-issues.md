@@ -26,6 +26,7 @@ Given this transporter uses the Java HttpClient (available since Java 11), it is
 to use latest patch version of Java, as HttpClient is getting bugfixes regularly.
 
 ### Known issues:
+
 * Does not properly support `aether.transport.http.requestTimeout` configuration prior Java 26, see [JDK-8208693](https://bugs.openjdk.org/browse/JDK-8208693)
 * No TLS Proxy support, see [here](https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a)
 * No SOCKS proxy support, see [JDK-8214516](https://bugs.openjdk.org/browse/JDK-8214516)
@@ -50,7 +51,7 @@ To use this transporter in Maven 4, you need to specify `-Dmaven.resolver.transp
 
 ## The `jetty` (Jetty HttpClient) Transporter
 
-Transporter based on Jetty HttpClient. 
+Transporter based on Jetty HttpClient. It requires Java 17 or above.
 
 In Maven 4 this transport is not available by default (is not bundled). To use it, 
 you need to add `org.apache.maven.resolver.transport:transport-http-jetty` artifact with its runtime dependencies to
