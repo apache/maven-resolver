@@ -1235,11 +1235,11 @@ public abstract class HttpTransporterTest {
     @Test
     protected void testPut_SSL() throws Exception {
         httpServer.addHttp2ConnectorWithMutualTLS();
-        /*httpServer.setAuthentication("testuser", "testpass");
+        httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
                 .addPassword("testpass")
-                .build();*/
+                .build();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
@@ -1247,7 +1247,7 @@ public abstract class HttpTransporterTest {
         transporter.put(task);
         assertEquals(0L, listener.getDataOffset());
         assertEquals(6L, listener.getDataLength());
-        assertEquals(1, listener.getStartedCount());
+        assertEquals(supportsPreemptiveAuth() ? 1 : 2, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
