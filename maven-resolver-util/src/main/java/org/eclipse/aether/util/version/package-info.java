@@ -27,8 +27,8 @@
  * "unions" of various {@link org.eclipse.aether.version.VersionRange} instances.
  * <p>
  * A version string is parsed according to the
- * <href='https://maven.apache.org/pom.html#Version_Order_Specification'>Version Order Specification</a>.
- * These rules are summarized here :
+ * <a href='https://maven.apache.org/pom.html#Version_Order_Specification'>Version Order Specification</a>.
+ * These rules are summarized here:
  * <ul>
  *     <li>The version string is parsed into segments, from left to right.</li>
  *     <li>Segments are explicitly delimited by a single {@code "." (dot)}, {@code "-" (hyphen)}, or {@code "_" (underscore)} character.</li>
