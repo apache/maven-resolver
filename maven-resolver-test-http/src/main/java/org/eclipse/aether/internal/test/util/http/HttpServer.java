@@ -545,9 +545,6 @@ public class HttpServer {
             // capture response headers after other handlers modified them
             // at this point in time the connection may have been already closed (i.e. last chunk already sent)
             logEntry.setResponseHeaders(toUnmodifiableMap(response.getHeaders()));
-            // make sure to always consume the request body to avoid connection reset, even if the handler did not read
-            // it
-            Content.Source.consumeAll(req);
             if (result) {
                 callback.succeeded();
             }

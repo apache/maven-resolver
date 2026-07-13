@@ -35,6 +35,9 @@ to use latest patch version of Java, as HttpClient is getting bugfixes regularly
   Basic authentication disabled, see [here](https://www.oracle.com/java/technologies/javase/8u111-relnotes.html). To 
   enable HTTP Basic authentication for Proxy TLS tunneling, one must set `jdk.http.auth.tunneling.disabledScheme` to 
   empty string, e.g. by adding `-Djdk.http.auth.tunneling.disabledScheme=""` JVM argument.
+* Preemptive basic authentication is only supported on Java 16 and below and on Java 24 and above, see [JDK-8326949](https://bugs.openjdk.org/browse/JDK-8326949).
+* HTTP/2 GOAWAY frames incorrectly handled in Java < 17.0.17, Java 18 till Java < 21.0.8 and Java 22 till Java < 24, see [JDK-8335181](https://bugs.openjdk.org/browse/JDK-8335181).
+* HTTP/2 GOAWAY does not lead to proper connection shutdown, see [JDK-8385131](https://bugs.openjdk.org/browse/JDK-8385131).
 * HTTP/3 is only supported with [Java 26 and above](https://inside.java/2025/10/22/http3-support/).
 
 Maven 4 uses this transport by default for HTTP(S) protocol.
