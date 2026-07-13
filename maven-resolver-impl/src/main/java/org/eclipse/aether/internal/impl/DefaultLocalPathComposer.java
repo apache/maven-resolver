@@ -38,6 +38,13 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
     public String getPathForArtifact(Artifact artifact, boolean local) {
         requireNonNull(artifact);
 
+        validatePathComponent(artifact.getGroupId(), "groupId");
+        validatePathComponent(artifact.getArtifactId(), "artifactId");
+        validatePathComponent(artifact.getBaseVersion(), "baseVersion");
+        validatePathComponent(artifact.getVersion(), "version");
+        validatePathComponent(artifact.getClassifier(), "classifier");
+        validatePathComponent(artifact.getExtension(), "extension");
+
         StringBuilder path = new StringBuilder(128);
 
         path.append(artifact.getGroupId().replace('.', '/')).append('/');
@@ -69,6 +76,10 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
         requireNonNull(metadata);
         requireNonNull(repositoryKey);
 
+        validatePathComponent(metadata.getGroupId(), "groupId");
+        validatePathComponent(metadata.getArtifactId(), "artifactId");
+        validatePathComponent(metadata.getVersion(), "version");
+
         StringBuilder path = new StringBuilder(128);
 
         if (!metadata.getGroupId().isEmpty()) {
@@ -86,6 +97,20 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
         path.append(insertRepositoryKey(metadata.getType(), repositoryKey));
 
         return path.toString();
+    }
+
+    /**
+     * Validates that a coordinate component does not contain path traversal sequences
+     * or path separator characters that could cause the composed path to escape
+     * the local repository directory.
+     */
+    private static void validatePathComponent(String value, String label) {
+        if (value != null && !value.isEmpty()) {
+            if (value.contains("..") || value.contains("/") || value.contains("\\")) {
+                throw new IllegalArgumentException(
+                        "Invalid " + label + ": must not contain '..', '/' or '\\': " + value);
+            }
+        }
     }
 
     private String insertRepositoryKey(String metadataType, String repositoryKey) {
