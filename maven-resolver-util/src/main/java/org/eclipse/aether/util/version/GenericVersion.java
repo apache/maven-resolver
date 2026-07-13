@@ -27,7 +27,6 @@ import java.util.Locale;
 import org.eclipse.aether.version.Version;
 
 import static java.util.Objects.requireNonNull;
-import static org.eclipse.aether.util.PathUtils.validatePathComponent;
 
 /**
  * A generic version, that is a version that accepts any input string and tries to apply common sense sorting. See
@@ -48,7 +47,6 @@ public final class GenericVersion implements Version {
      */
     GenericVersion(String version) {
         this.version = requireNonNull(version, "version cannot be null");
-        validatePathComponent(version, "version");
         items = parse(version);
         hash = items.hashCode();
     }
