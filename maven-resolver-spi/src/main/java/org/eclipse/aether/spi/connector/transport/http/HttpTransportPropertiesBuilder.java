@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.spi.connector.transport.http;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -63,6 +64,6 @@ public final class HttpTransportPropertiesBuilder {
     }
 
     public Map<TransferEvent.TransportPropertyKey, Object> build() {
-        return properties;
+        return Collections.unmodifiableMap(properties);
     }
 }

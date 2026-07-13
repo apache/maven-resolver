@@ -19,10 +19,11 @@
 package org.eclipse.aether.spi.connector.transport;
 
 import java.net.URI;
+import java.util.Map;
 
 /**
  * A task to check the existence of a resource in the remote repository. <em>Note:</em> The listener returned from
- * {@link #getListener()} is always a noop given that none of its event methods are relevant in context of this task.
+ * {@link #getListener()} is only used in the context of {@link TransportListener#transportPropertiesAvailable(Map)}.
  *
  * @see Transporter#peek(PeekTask)
  */
@@ -40,5 +41,16 @@ public final class PeekTask extends TransportTask {
     @Override
     public String toString() {
         return "?? " + getLocation();
+    }
+
+    /**
+     * Sets the listener that is to be notified during the transfer.
+     *
+     * @param listener The listener to notify of progress, may be {@code null}.
+     * @return This task for chaining, never {@code null}.
+     */
+    public PeekTask setListener(TransportListener listener) {
+        super.setListener(listener);
+        return this;
     }
 }

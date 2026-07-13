@@ -486,7 +486,12 @@ public abstract class HttpTransporterTest {
     protected void testPeek_SSL() throws Exception {
         httpServer.addSslConnector();
         newTransporter(httpServer.getHttpsUrl());
-        transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+        RecordingTransportListener listener = new RecordingTransportListener();
+        PeekTask task = new PeekTask(URI.create("repo/file.txt")).setListener(listener);
+        transporter.peek(task);
+        assertEquals(
+                HttpTransportProperty.SslProtocol.TLS_1_3,
+                listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_PROTOCOL));
     }
 
     @Test
@@ -1248,6 +1253,9 @@ public abstract class HttpTransporterTest {
         assertEquals(supportsPreemptiveAuth() ? 1 : 2, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
+        assertEquals(
+                HttpTransportProperty.SslProtocol.TLS_1_3,
+                listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_PROTOCOL));
     }
 
     @Test

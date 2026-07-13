@@ -27,6 +27,7 @@ import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferEvent.EventType;
+import org.eclipse.aether.transfer.TransferEvent.TransportPropertyKey;
 import org.eclipse.aether.transfer.TransferListener;
 
 class TransferTransportListener<T extends Transfer> extends TransportListener {
@@ -39,10 +40,13 @@ class TransferTransportListener<T extends Transfer> extends TransportListener {
 
     private ChecksumCalculator checksumCalculator;
 
+    private Map<TransportPropertyKey, Object> transportProperties;
+
     protected TransferTransportListener(T transfer, TransferEvent.Builder eventBuilder) {
         this.transfer = transfer;
         this.listener = transfer.getListener();
         this.eventBuilder = eventBuilder;
+        this.transportProperties = Collections.emptyMap();
     }
 
     protected T getTransfer() {
@@ -57,15 +61,12 @@ class TransferTransportListener<T extends Transfer> extends TransportListener {
     }
 
     @Override
-    public void transportStarted(
-            long dataOffset, long dataLength, Map<TransferEvent.TransportPropertyKey, Object> transportProperties)
-            throws TransferCancelledException {
+    public void transportStarted(long dataOffset, long dataLength) throws TransferCancelledException {
         if (checksumCalculator != null) {
             checksumCalculator.init(dataOffset);
         }
         if (listener != null) {
             eventBuilder.resetType(EventType.STARTED).setTransferredBytes(dataOffset);
-            eventBuilder.setTransportProperties(transportProperties);
             TransferEvent event = eventBuilder.build();
             event.getResource().setContentLength(dataLength).setResumeOffset(dataOffset);
             listener.transferStarted(event);
@@ -86,9 +87,16 @@ class TransferTransportListener<T extends Transfer> extends TransportListener {
         }
     }
 
+    @Override
+    public void transportPropertiesAvailable(Map<TransportPropertyKey, Object> transportProperties)
+            throws TransferCancelledException {
+        this.transportProperties = transportProperties;
+    }
+
     public void transferCorrupted(Exception exception) throws TransferCancelledException {
         if (listener != null) {
             eventBuilder.resetType(EventType.CORRUPTED).setException(exception);
+            eventBuilder.setTransportProperties(transportProperties);
             listener.transferCorrupted(eventBuilder.build());
         }
     }
@@ -96,6 +104,7 @@ class TransferTransportListener<T extends Transfer> extends TransportListener {
     public void transferFailed(Exception exception, int classification) {
         if (listener != null) {
             eventBuilder.resetType(EventType.FAILED).setException(exception);
+            eventBuilder.setTransportProperties(transportProperties);
             listener.transferFailed(eventBuilder.build());
         }
     }
@@ -103,6 +112,7 @@ class TransferTransportListener<T extends Transfer> extends TransportListener {
     public void transferSucceeded() {
         if (listener != null) {
             eventBuilder.resetType(EventType.SUCCEEDED);
+            eventBuilder.setTransportProperties(transportProperties);
             listener.transferSucceeded(eventBuilder.build());
         }
     }

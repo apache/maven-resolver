@@ -86,8 +86,6 @@ public final class HttpTransportProperty {
      * SSL protocol including version used for the HTTP transport.
      */
     public enum SslProtocol {
-        SSL_1_0("SSLv1"),
-        SSL_2_0("SSLv2"),
         SSL_3_0("SSLv3"),
         TLS_1_0("TLSv1"),
         TLS_1_1("TLSv1.1"),

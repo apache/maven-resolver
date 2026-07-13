@@ -26,7 +26,6 @@ import org.eclipse.aether.spi.connector.transport.Transporter;
  * @since 2.0.0
  */
 public interface HttpTransporter extends Transporter {
-
     @Override
     default int classify(Throwable error) {
         if (error instanceof HttpTransporterException) {

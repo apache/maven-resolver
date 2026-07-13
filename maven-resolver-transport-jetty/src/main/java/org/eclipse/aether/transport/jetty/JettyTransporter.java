@@ -29,7 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -186,7 +185,16 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         if (preemptiveAuth) {
             mayApplyPreemptiveAuth(request);
         }
+        // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+        Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+        request.onResponseHeader((r, field) -> {
+            rawResponseHeaders.put(field.getLowerCaseName(), field);
+            return true; // continue processing
+        });
         Response response = request.send();
+        Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                createTransportProperties(request, rawResponseHeaders);
+        task.getListener().transportPropertiesAvailable(transportProperties);
         if (response.getStatus() >= MULTIPLE_CHOICES) {
             throw new HttpTransporterException(response.getStatus());
         }
@@ -197,7 +205,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         boolean resume = task.getResumeOffset() > 0L && task.getDataPath() != null;
         Response response;
         InputStreamResponseListener listener;
-        Map<TransferEvent.TransportPropertyKey, Object> transportProperties;
 
         while (true) {
             Request request = client.newRequest(resolve(task)).method("GET");
@@ -220,8 +227,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 });
             }
 
-            Map<String, HttpField> rawResponseHeaders = new HashMap<>();
             // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+            Map<String, HttpField> rawResponseHeaders = new HashMap<>();
             request.onResponseHeader((r, field) -> {
                 rawResponseHeaders.put(field.getLowerCaseName(), field);
                 return true; // continue processing
@@ -238,6 +245,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     throw new RuntimeException(t);
                 }
             }
+            Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                    createTransportProperties(request, rawResponseHeaders);
+            task.getListener().transportPropertiesAvailable(transportProperties);
             if (response.getStatus() >= MULTIPLE_CHOICES) {
                 if (resume && response.getStatus() == PRECONDITION_FAILED) {
                     resume = false;
@@ -247,7 +257,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     throw new HttpTransporterException(statusCode);
                 });
             }
-            transportProperties = createTransportProperties(request, rawResponseHeaders);
             break;
         }
 
@@ -272,7 +281,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         final Path dataFile = task.getDataPath();
         if (dataFile == null) {
             try (InputStream is = listener.getInputStream()) {
-                utilGet(task, is, true, length, downloadResumed, transportProperties);
+                utilGet(task, is, true, length, downloadResumed);
             }
         } else {
             try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
@@ -283,7 +292,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     }
                 }
                 try (InputStream is = listener.getInputStream()) {
-                    utilGet(task, is, true, length, downloadResumed, transportProperties);
+                    utilGet(task, is, true, length, downloadResumed);
                 }
                 tempFile.move();
             } finally {
@@ -350,6 +359,12 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             mayApplyPreemptiveAuth(request);
         }
         request.body(PutTaskRequestContent.from(task));
+        // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+        Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+        request.onResponseHeader((r, field) -> {
+            rawResponseHeaders.put(field.getLowerCaseName(), field);
+            return true; // continue processing
+        });
         AtomicBoolean started = new AtomicBoolean(false);
         Response response;
         InputStreamResponseListener listener = new InputStreamResponseListener();
@@ -358,11 +373,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                         if (task.getDataLength() == 0) {
                             if (started.compareAndSet(false, true)) {
                                 try {
-                                    task.getListener()
-                                            .transportStarted(
-                                                    0,
-                                                    task.getDataLength(),
-                                                    createTransportProperties(r, Collections.emptyMap()));
+                                    task.getListener().transportStarted(0, task.getDataLength());
                                 } catch (TransferCancelledException e) {
                                     r.abort(e);
                                 }
@@ -372,11 +383,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     .onRequestContent((r, b) -> {
                         if (started.compareAndSet(false, true)) {
                             try {
-                                task.getListener()
-                                        .transportStarted(
-                                                0,
-                                                task.getDataLength(),
-                                                createTransportProperties(r, Collections.emptyMap()));
+                                task.getListener().transportStarted(0, task.getDataLength());
                             } catch (TransferCancelledException e) {
                                 r.abort(e);
                                 return;
@@ -390,6 +397,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     })
                     .send(listener);
             response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
+            task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof IOException ioex) {

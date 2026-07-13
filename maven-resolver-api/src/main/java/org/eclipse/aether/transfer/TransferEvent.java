@@ -105,7 +105,7 @@ public final class TransferEvent {
 
     private final Exception exception;
 
-    Map<TransportPropertyKey, Object> transportProperties;
+    private final Map<TransportPropertyKey, Object> transportProperties;
 
     TransferEvent(Builder builder) {
         type = builder.type;
@@ -204,6 +204,12 @@ public final class TransferEvent {
     /**
      * Get the transport properties associated with this transfer.
      * The keys are transporter specific and the value types are key specific.
+     * This is only potentially not empty for the following events:
+     * <ul>
+     * <li>{@link EventType#CORRUPTED}</li>
+     * <li>{@link EventType#FAILED}</li>
+     * <li>{@link EventType#SUCCEEDED}</li>
+     * </ul>
      * @return The immutable transport properties associated with this transfer, may be empty.
      * @since NEXT
      * @see HttpTransportProperty.Key HttpTransportProperty.Key for HTTP specific keys
@@ -249,6 +255,7 @@ public final class TransferEvent {
             this.resource = requireNonNull(resource, "transfer resource cannot be null");
             type = EventType.INITIATED;
             requestType = RequestType.GET;
+            transportProperties = Collections.emptyMap();
         }
 
         private Builder(Builder prototype) {
@@ -259,6 +266,7 @@ public final class TransferEvent {
             dataBuffer = prototype.dataBuffer;
             transferredBytes = prototype.transferredBytes;
             exception = prototype.exception;
+            transportProperties = prototype.transportProperties;
         }
 
         /**
@@ -385,7 +393,13 @@ public final class TransferEvent {
             return this;
         }
 
+        /**
+         * Sets the transport properties associated with this transfer. The keys are transporter specific and the value types are key specific.
+         * @param transportProperties The transport properties used in the underlying transfer, must not be {@code null}.
+         * @return This event builder for chaining, never {@code null}.
+         */
         public Builder setTransportProperties(Map<TransportPropertyKey, Object> transportProperties) {
+            requireNonNull(transportProperties, "transportProperties cannot be null");
             this.transportProperties = Collections.unmodifiableMap(transportProperties);
             return this;
         }

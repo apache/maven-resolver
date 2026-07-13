@@ -34,17 +34,19 @@ import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
 import org.apache.http.Header;
+import org.apache.http.HttpClientConnection;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.ProtocolVersion;
@@ -87,6 +89,7 @@ import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
+import org.apache.http.protocol.HttpRequestExecutor;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
@@ -97,6 +100,7 @@ import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.eclipse.aether.spi.connector.transport.TransportListener;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransportPropertiesBuilder;
@@ -107,7 +111,6 @@ import org.eclipse.aether.transfer.HttpTransportProperty.HttpVersion;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
-import org.eclipse.aether.transport.apache.ApacheTransporter.ConcurrentAuthCache;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
@@ -132,6 +135,11 @@ import static org.eclipse.aether.transport.apache.ApacheTransporterConfiguration
  * A transporter for HTTP/HTTPS.
  */
 final class ApacheTransporter extends AbstractTransporter implements HttpTransporter {
+    /**
+     * Custom context attribute name to store the SSL session in the HTTP context. This is populated by a custom request executor.
+     */
+    private static final String CONTEXT_ATTRIBUTE_NAME_SSL_SESSION = "ssl.session";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ApacheTransporter.class);
 
     private final ChecksumExtractor checksumExtractor;
@@ -293,6 +301,20 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             builder.useSystemProperties();
         }
 
+        // capture SSL session for logging purposes (https://issues.apache.org/jira/browse/HTTPCLIENT-2164)
+        builder.setRequestExecutor(new HttpRequestExecutor() {
+
+            @Override
+            public HttpResponse execute(HttpRequest request, HttpClientConnection conn, HttpContext context)
+                    throws IOException, HttpException {
+                if (conn instanceof ManagedHttpClientConnection) {
+                    context.setAttribute(
+                            CONTEXT_ATTRIBUTE_NAME_SSL_SESSION, ((ManagedHttpClientConnection) conn).getSSLSession());
+                }
+                return super.execute(request, conn, context);
+            }
+        });
+
         HttpTransporterUtils.getHttpExpectContinue(session, repository).ifPresent(state::setExpectContinue);
         if (!HttpTransporterUtils.isHttpReuseConnections(session, repository)) {
             builder.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE);
@@ -358,7 +380,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     protected void implPeek(PeekTask task) throws Exception {
         HttpHead request = commonHeaders(new HttpHead(resolve(task)));
         try {
-            execute(request, null);
+            execute(request, null, task.getListener());
         } catch (HttpResponseException e) {
             throw new HttpTransporterException(e.getStatusCode());
         }
@@ -378,7 +400,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 if (resume) {
                     resume(request, task);
                 }
-                execute(request, getter);
+                execute(request, getter, task.getListener());
                 break;
             } catch (HttpResponseException e) {
                 if (resume
@@ -401,28 +423,31 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
         }
         try {
-            execute(request, null);
+            execute(request, null, task.getListener());
         } catch (HttpResponseException e) {
             if (e.getStatusCode() == HttpStatus.SC_EXPECTATION_FAILED && request.containsHeader(HttpHeaders.EXPECT)) {
                 state.setExpectContinue(false);
                 request = commonHeaders(entity(new HttpPut(request.getURI()), entity));
-                execute(request, null);
+                execute(request, null, task.getListener());
                 return;
             }
             throw new HttpTransporterException(e.getStatusCode());
         }
     }
 
-    private void execute(HttpUriRequest request, EntityGetter getter) throws Exception {
+    private void execute(HttpUriRequest request, EntityGetter getter, TransportListener listener) throws Exception {
         try {
             SharingHttpContext context = new SharingHttpContext(state);
             context.setAuthCache(authCache);
             prepare(request, context);
             try (CloseableHttpResponse response = client.execute(server, request, context)) {
                 try {
+                    Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                            createTransportProperties(response, context);
+                    listener.transportPropertiesAvailable(transportProperties);
                     handleStatus(response);
                     if (getter != null) {
-                        getter.handle(response, context);
+                        getter.handle(response);
                     }
                 } finally {
                     EntityUtils.consumeQuietly(response.getEntity());
@@ -572,8 +597,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             this.task = task;
         }
 
-        public void handle(CloseableHttpResponse response, SharingHttpContext context)
-                throws IOException, TransferCancelledException {
+        public void handle(CloseableHttpResponse response) throws IOException, TransferCancelledException {
             HttpEntity entity = response.getEntity();
             if (entity == null) {
                 entity = new ByteArrayEntity(new byte[0]);
@@ -595,13 +619,11 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 }
             }
 
-            Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
-                    createTransportProperties(response, context);
             final boolean resume = offset > 0L;
             final Path dataFile = task.getDataPath();
             if (dataFile == null) {
                 try (InputStream is = entity.getContent()) {
-                    utilGet(task, is, true, length, resume, transportProperties);
+                    utilGet(task, is, true, length, resume);
                     extractChecksums(response);
                 }
             } else {
@@ -613,7 +635,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                         }
                     }
                     try (InputStream is = entity.getContent()) {
-                        utilGet(task, is, true, length, resume, transportProperties);
+                        utilGet(task, is, true, length, resume);
                     }
                     tempFile.move();
                 } finally {
@@ -642,16 +664,10 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     }
 
     private static Map<TransferEvent.TransportPropertyKey, Object> createTransportProperties(
-            CloseableHttpResponse response, HttpContext context) {
+            CloseableHttpResponse response, HttpCoreContext context) {
         HttpTransportPropertiesBuilder builder =
                 new HttpTransportPropertiesBuilder(toHttpVersion(response.getProtocolVersion()));
-        HttpCoreContext coreContext = HttpCoreContext.adapt(context);
-        SSLSession sslSession = Optional.ofNullable(coreContext.getConnection(ManagedHttpClientConnection.class))
-                .filter(ManagedHttpClientConnection::isOpen)
-                // might throw an exception if the connection is closed
-                // (https://issues.apache.org/jira/browse/HTTPCLIENT-2427)
-                .map(ManagedHttpClientConnection::getSSLSession)
-                .orElse(null);
+        SSLSession sslSession = context.getAttribute(CONTEXT_ATTRIBUTE_NAME_SSL_SESSION, SSLSession.class);
         if (sslSession != null) {
             builder.withSslProtocol(sslSession.getProtocol());
             builder.withSslCipherSuite(sslSession.getCipherSuite());

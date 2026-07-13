@@ -22,12 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.eclipse.aether.transfer.HttpTransportProperty;
 import org.eclipse.aether.transfer.TransferCancelledException;
-import org.eclipse.aether.transfer.TransferEvent;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,13 +38,6 @@ class TransportListenerNotifyingInputStreamTest {
 
     private static final byte[] TEST_DATA = new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     private static final long TEST_SIZE = TEST_DATA.length;
-    private static final Map<TransferEvent.TransportPropertyKey, Object> TEST_TRANSPORT_PROPERTIES;
-
-    static {
-        TEST_TRANSPORT_PROPERTIES = new HashMap<>();
-        TEST_TRANSPORT_PROPERTIES.put(
-                HttpTransportProperty.Key.HTTP_VERSION, HttpTransportProperty.HttpVersion.HTTP_1_1);
-    }
 
     /**
      * Test that progress is notified when reading a single byte.
@@ -56,8 +45,8 @@ class TransportListenerNotifyingInputStreamTest {
     @Test
     void testReadSingleByte() throws IOException {
         MockTransportListener listener = new MockTransportListener();
-        try (TransportListenerNotifyingInputStream input = new TransportListenerNotifyingInputStream(
-                new ByteArrayInputStream(TEST_DATA), listener, TEST_TRANSPORT_PROPERTIES, TEST_SIZE)) {
+        try (TransportListenerNotifyingInputStream input =
+                new TransportListenerNotifyingInputStream(new ByteArrayInputStream(TEST_DATA), listener, TEST_SIZE)) {
             int byte1 = input.read();
 
             assertEquals(1, byte1);
@@ -65,7 +54,6 @@ class TransportListenerNotifyingInputStreamTest {
             assertEquals(1, listener.getProgressedCount());
             assertEquals(1, listener.getLastProgressedSize());
             assertEquals(TEST_SIZE, listener.getLastProgressedTotalSize());
-            assertEquals(TEST_TRANSPORT_PROPERTIES, listener.getTransportProperties());
         }
     }
 
@@ -75,8 +63,8 @@ class TransportListenerNotifyingInputStreamTest {
     @Test
     void testReadMultipleBytes() throws IOException {
         MockTransportListener listener = new MockTransportListener();
-        try (TransportListenerNotifyingInputStream input = new TransportListenerNotifyingInputStream(
-                new ByteArrayInputStream(TEST_DATA), listener, TEST_TRANSPORT_PROPERTIES, TEST_SIZE)) {
+        try (TransportListenerNotifyingInputStream input =
+                new TransportListenerNotifyingInputStream(new ByteArrayInputStream(TEST_DATA), listener, TEST_SIZE)) {
             byte[] buffer = new byte[5];
             int numBytesRead = input.read(buffer);
 
@@ -85,7 +73,6 @@ class TransportListenerNotifyingInputStreamTest {
             // Getting 2 progress notifications instead of 1 - may be due to internal behavior
             assertTrue(listener.getProgressedCount() >= 1, "Should have at least one progress notification");
             assertEquals(5, listener.getLastProgressedSize());
-            assertEquals(TEST_TRANSPORT_PROPERTIES, listener.getTransportProperties());
         }
     }
 
@@ -95,8 +82,8 @@ class TransportListenerNotifyingInputStreamTest {
     @Test
     void testReadWithOffsetAndLength() throws IOException {
         MockTransportListener listener = new MockTransportListener();
-        try (TransportListenerNotifyingInputStream input = new TransportListenerNotifyingInputStream(
-                new ByteArrayInputStream(TEST_DATA), listener, TEST_TRANSPORT_PROPERTIES, TEST_SIZE)) {
+        try (TransportListenerNotifyingInputStream input =
+                new TransportListenerNotifyingInputStream(new ByteArrayInputStream(TEST_DATA), listener, TEST_SIZE)) {
             byte[] buffer = new byte[10];
             int numBytesRead = input.read(buffer, 2, 5);
 
@@ -104,7 +91,6 @@ class TransportListenerNotifyingInputStreamTest {
             assertEquals(1, listener.getStartedCount());
             assertEquals(1, listener.getProgressedCount());
             assertEquals(5, listener.getLastProgressedSize());
-            assertEquals(TEST_TRANSPORT_PROPERTIES, listener.getTransportProperties());
         }
     }
 
@@ -114,8 +100,8 @@ class TransportListenerNotifyingInputStreamTest {
     @Test
     void testLazyStart() throws IOException {
         MockTransportListener listener = new MockTransportListener();
-        TransportListenerNotifyingInputStream input = new TransportListenerNotifyingInputStream(
-                new ByteArrayInputStream(TEST_DATA), listener, TEST_TRANSPORT_PROPERTIES, TEST_SIZE);
+        TransportListenerNotifyingInputStream input =
+                new TransportListenerNotifyingInputStream(new ByteArrayInputStream(TEST_DATA), listener, TEST_SIZE);
 
         assertEquals(0, listener.getStartedCount(), "Start should not be notified yet");
 
@@ -131,8 +117,8 @@ class TransportListenerNotifyingInputStreamTest {
     @Test
     void testMultipleReads() throws IOException {
         MockTransportListener listener = new MockTransportListener();
-        try (TransportListenerNotifyingInputStream input = new TransportListenerNotifyingInputStream(
-                new ByteArrayInputStream(TEST_DATA), listener, TEST_TRANSPORT_PROPERTIES, TEST_SIZE)) {
+        try (TransportListenerNotifyingInputStream input =
+                new TransportListenerNotifyingInputStream(new ByteArrayInputStream(TEST_DATA), listener, TEST_SIZE)) {
             byte[] buffer = new byte[3];
 
             input.read(buffer);
@@ -157,8 +143,8 @@ class TransportListenerNotifyingInputStreamTest {
         MockTransportListener listener = new MockTransportListener();
         listener.setCancelOnProgress(true);
 
-        TransportListenerNotifyingInputStream input = new TransportListenerNotifyingInputStream(
-                new ByteArrayInputStream(TEST_DATA), listener, TEST_TRANSPORT_PROPERTIES, TEST_SIZE);
+        TransportListenerNotifyingInputStream input =
+                new TransportListenerNotifyingInputStream(new ByteArrayInputStream(TEST_DATA), listener, TEST_SIZE);
 
         InterruptedIOException exception = assertThrows(InterruptedIOException.class, input::read);
         assertNotNull(exception.getCause());
@@ -173,8 +159,8 @@ class TransportListenerNotifyingInputStreamTest {
         MockTransportListener listener = new MockTransportListener();
         listener.setCancelOnStart(true);
 
-        TransportListenerNotifyingInputStream input = new TransportListenerNotifyingInputStream(
-                new ByteArrayInputStream(TEST_DATA), listener, TEST_TRANSPORT_PROPERTIES, TEST_SIZE);
+        TransportListenerNotifyingInputStream input =
+                new TransportListenerNotifyingInputStream(new ByteArrayInputStream(TEST_DATA), listener, TEST_SIZE);
 
         InterruptedIOException exception = assertThrows(InterruptedIOException.class, input::read);
         assertNotNull(exception.getCause());
@@ -188,8 +174,8 @@ class TransportListenerNotifyingInputStreamTest {
     void testReadAtEndOfStream() throws IOException {
         MockTransportListener listener = new MockTransportListener();
         byte[] emptyData = new byte[0];
-        try (TransportListenerNotifyingInputStream input = new TransportListenerNotifyingInputStream(
-                new ByteArrayInputStream(emptyData), listener, TEST_TRANSPORT_PROPERTIES, 0)) {
+        try (TransportListenerNotifyingInputStream input =
+                new TransportListenerNotifyingInputStream(new ByteArrayInputStream(emptyData), listener, 0)) {
             int byteRead = input.read();
 
             assertEquals(-1, byteRead);
@@ -204,8 +190,8 @@ class TransportListenerNotifyingInputStreamTest {
     void testCorrectSizeNotified() throws IOException {
         MockTransportListener listener = new MockTransportListener();
         long customSize = 12345L;
-        try (TransportListenerNotifyingInputStream input = new TransportListenerNotifyingInputStream(
-                new ByteArrayInputStream(TEST_DATA), listener, TEST_TRANSPORT_PROPERTIES, customSize)) {
+        try (TransportListenerNotifyingInputStream input =
+                new TransportListenerNotifyingInputStream(new ByteArrayInputStream(TEST_DATA), listener, customSize)) {
             input.read();
 
             assertEquals(customSize, listener.getLastProgressedTotalSize());
@@ -218,7 +204,6 @@ class TransportListenerNotifyingInputStreamTest {
     private static class MockTransportListener extends TransportListener {
 
         private int startedCount = 0;
-        private Map<TransferEvent.TransportPropertyKey, Object> transportProperties;
         private int progressedCount = 0;
         private long lastProgressedSize = 0;
         private long lastProgressedTotalSize = 0;
@@ -226,14 +211,11 @@ class TransportListenerNotifyingInputStreamTest {
         private boolean cancelOnProgress = false;
 
         @Override
-        public void transportStarted(
-                long startOffset, long totalSize, Map<TransferEvent.TransportPropertyKey, Object> transportProperties)
-                throws TransferCancelledException {
+        public void transportStarted(long startOffset, long totalSize) throws TransferCancelledException {
             if (cancelOnStart) {
                 throw new TransferCancelledException("Cancelled on start");
             }
             this.startedCount++;
-            this.transportProperties = transportProperties;
             this.lastProgressedTotalSize = totalSize;
         }
 
@@ -248,10 +230,6 @@ class TransportListenerNotifyingInputStreamTest {
 
         public int getStartedCount() {
             return startedCount;
-        }
-
-        public Map<TransferEvent.TransportPropertyKey, Object> getTransportProperties() {
-            return transportProperties;
         }
 
         public int getProgressedCount() {

@@ -57,7 +57,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -248,7 +247,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         prepare(request);
         try {
             HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
-            task.getListener().transportStarted(0, 0, createTransportProperties(response));
+            task.getListener().transportPropertiesAvailable(createTransportProperties(response));
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 throw new HttpTransporterException(response.statusCode());
             }
@@ -284,6 +283,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 prepare(request);
                 try {
                     response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+                    task.getListener().transportPropertiesAvailable(createTransportProperties(response));
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
                         if (resume && response.statusCode() == PRECONDITION_FAILED) {
                             closeBody(response);
@@ -325,11 +325,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
             final boolean downloadResumed = offset > 0L;
             final Path dataFile = task.getDataPath();
-            final Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
-                    createTransportProperties(response);
             if (dataFile == null) {
                 try (InputStream is = response.body()) {
-                    utilGet(task, is, true, length, downloadResumed, transportProperties);
+                    utilGet(task, is, true, length, downloadResumed);
                 }
             } else {
                 try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
@@ -340,7 +338,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         }
                     }
                     try (InputStream is = response.body()) {
-                        utilGet(task, is, true, length, downloadResumed, transportProperties);
+                        utilGet(task, is, true, length, downloadResumed);
                     }
                     tempFile.move();
                 } finally {
@@ -424,10 +422,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         try {
                             // transport properties are not available for outgoing requests
                             return new TransportListenerNotifyingInputStream(
-                                    task.newInputStream(),
-                                    task.getListener(),
-                                    Collections.emptyMap(),
-                                    task.getDataLength());
+                                    task.newInputStream(), task.getListener(), task.getDataLength());
                         } catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }
@@ -438,6 +433,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         prepare(request);
         try {
             HttpResponse<InputStream> response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+            task.getListener().transportPropertiesAvailable(createTransportProperties(response));
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 try {
                     JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
