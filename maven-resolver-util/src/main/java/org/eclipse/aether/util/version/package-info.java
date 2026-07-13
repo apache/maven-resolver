@@ -36,7 +36,7 @@
  *     <li>Segments are classified as numeric, string, qualifiers (special case of string), and min/max.</li>
  *     <li>Numeric segments are composed of the ASCII digits 0-9. Non-ASCII digits are treated as letters.
  *     <li>Numeric segments are sorted numerically, ascending.</li>
- *     <li>Non-numeric segments may be qualifiers (predefined) or strings (non-empty letter sequence). All of them are interpreted as being case-insensitive in the ROOT locale.</li>
+ *     <li>Non-numeric segments may be qualifiers (predefined) or strings (non-empty letter sequences). All of them are interpreted as being case-insensitive in the ROOT locale.</li>
  *     <li>Qualifier segments (strings listed below) and their sort order (ascending) are:
  *         <ul>
  *             <li>"alpha" (== "a" when immediately followed by number)</li>
