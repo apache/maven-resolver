@@ -491,7 +491,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 case HTTP_3:
                     return resolveHttpVersion("HTTP_3");
                 default:
-                    throw new IllegalArgumentException("Unsupported HTTP version: " + httpVersion);
+                    // unreachable but necessary for Checkstyle to not complain about missing default case
+                    throw new IllegalStateException("Unknown HTTP version: " + httpVersion);
             }
         }
     }

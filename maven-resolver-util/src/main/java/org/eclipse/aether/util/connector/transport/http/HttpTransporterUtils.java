@@ -315,6 +315,9 @@ public final class HttpTransporterUtils {
         return Optional.empty();
     }
 
+    /**
+     * Getter for {@link ConfigurationProperties#HTTP_VERSION}.
+     */
     public static ConfigurationProperties.HttpVersion getHttpVersion(
             RepositorySystemSession session, RemoteRepository repository) {
         return ConfigUtils.getEnum(
