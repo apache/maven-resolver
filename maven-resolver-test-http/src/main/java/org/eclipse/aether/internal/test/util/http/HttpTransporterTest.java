@@ -88,6 +88,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -323,6 +324,13 @@ public abstract class HttpTransporterTest {
      * @return {@code true} if HTTP/3 is supported, {@code false} otherwise.
      */
     protected boolean supportsHttp3() {
+        // skip on ASF Jenkins due to incompatible GLIBC version
+        // (https://github.com/jetty-project/jetty-quiche-native/issues/180 and
+        // https://issues.apache.org/jira/browse/INFRA-28128)
+        // identified via property "os.version" exposed in https://ci-maven.apache.org/computer/maven6/systemInfo
+        assumeFalse(
+                System.getProperty("os.version").equals("5.15.0-1089-azure"),
+                "Skipping HTTP/3 tests on ASF Jenkins Linux Nodes");
         return true;
     }
 
