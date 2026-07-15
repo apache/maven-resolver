@@ -37,11 +37,11 @@ public final class HttpTransportProperty {
      */
     public enum Key implements TransferEvent.TransportPropertyKey {
         /**
-         * Transport property key for HTTP version. Value is a {@link #HttpVersion} representing the HTTP version used.
+         * Transport property key for HTTP version. Value is a {@link HttpVersion} representing the HTTP version used.
          */
         HTTP_VERSION,
         /**
-         * Transport property key for SSL protocol. Value is a {@link #SSL_PROTOCOL} representing the SSL protocol used.
+         * Transport property key for SSL protocol. Value is a {@link SslProtocol} representing the SSL protocol used.
          */
         SSL_PROTOCOL,
         /**
@@ -54,11 +54,6 @@ public final class HttpTransportProperty {
          * @see <a href="https://www.iana.org/assignments/http-parameters/http-parameters.xhtml#content-coding">Content Coding Values</a>
          */
         CONTENT_CODING,
-        /**
-         * Transport property key for number of bytes transferred. Value is a Long representing the total number of bytes transferred during the transport operation.
-         * This may be less than the content length in case compression is used.
-         */
-        NUM_BYTES_TRANSFERRED;
     }
 
     /**

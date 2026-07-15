@@ -29,11 +29,11 @@ import org.eclipse.aether.transfer.HttpTransportProperty.SslProtocol;
 import org.eclipse.aether.transfer.TransferEvent;
 
 /**
- * Builder for HTTP transport properties used in {@link TransportListener#transportStarted(long, long, Map)}.
+ * Builder for HTTP transport properties used in {@link TransportListener#transportPropertiesAvailable(Map)}.
  * @since NEXT
  */
 public final class HttpTransportPropertiesBuilder {
-    Map<TransferEvent.TransportPropertyKey, Object> properties = new HashMap<>();
+    private final Map<TransferEvent.TransportPropertyKey, Object> properties = new HashMap<>();
 
     public HttpTransportPropertiesBuilder(HttpVersion version) {
         this.properties.put(Key.HTTP_VERSION, version);
@@ -58,12 +58,7 @@ public final class HttpTransportPropertiesBuilder {
         return this;
     }
 
-    public HttpTransportPropertiesBuilder withNumBytesTransferred(long numBytes) {
-        this.properties.put(Key.NUM_BYTES_TRANSFERRED, numBytes);
-        return this;
-    }
-
     public Map<TransferEvent.TransportPropertyKey, Object> build() {
-        return Collections.unmodifiableMap(properties);
+        return Collections.unmodifiableMap(new HashMap<>(properties));
     }
 }

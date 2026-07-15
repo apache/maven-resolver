@@ -324,8 +324,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         if (rawResponseHeaders.containsKey("content-encoding")) {
             builder.withContentCoding(rawResponseHeaders.get("content-encoding").getValue());
         }
-        // TODO: how to get number of bytes transferred?
-
         return builder.build();
     }
 
