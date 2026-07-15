@@ -63,4 +63,7 @@ you need to add `org.apache.maven.resolver.transport:transport-http-jetty` artif
 ### Known issues:
 
 * Leveraging HTTP/3 with Jetty suffers from [poor performance due to usage of the native Quiche Rust library]
-(https://github.com/jetty/jetty.project/discussions/13469#discussioncomment-14125855).
+  (https://github.com/jetty/jetty.project/discussions/13469#discussioncomment-14125855). This situation is 
+  probably improving with Jetty 13 (which is supposed to be shipping with a Java QUIC implementation).
+* When HTTP/3 is configured there is [no fallback to lower versions]
+  (https://github.com/jetty/jetty.project/issues/15423). The request will just time out.

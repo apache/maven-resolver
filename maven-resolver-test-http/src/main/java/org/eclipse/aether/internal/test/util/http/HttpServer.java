@@ -221,12 +221,16 @@ public class HttpServer {
         return addHttp2Connector(true, true);
     }
 
-    public HttpServer addHttp2OnlyConnectorWithMutualTLS() {
+    public HttpServer addHttp2Connector() {
         return addHttp2Connector(false, true);
     }
 
     public HttpServer addHttp2OnlyConnector() {
         return addHttp2Connector(false, false);
+    }
+
+    public HttpServer addHttp2OnlyConnectorWithMutualTLS() {
+        return addHttp2Connector(true, false);
     }
 
     private HttpServer addHttp2Connector(boolean needClientAuth, boolean needHttp11) {
@@ -280,6 +284,10 @@ public class HttpServer {
     }
 
     public HttpServer addHttp3Connector(boolean needClientAuth) {
+        return addHttp3Connector(needClientAuth, -1);
+    }
+
+    public HttpServer addHttp3Connector(boolean needClientAuth, int port) {
         if (http3Connector == null) {
             QuicheServerQuicConfiguration serverQuicConfig = HTTP3ServerQuicConfiguration.configure(
                     new QuicheServerQuicConfiguration(HttpTransporterTest.PEM_QUICHE_SERVER_PATH));
@@ -288,8 +296,9 @@ public class HttpServer {
                     createServerSslContextFactory(needClientAuth),
                     serverQuicConfig,
                     new HTTP3ServerConnectionFactory());
-            // TODO: should share same port as https connector, so that the client can use the same port for both
-            // TCP/UDP
+            if (port != -1) {
+                http3Connector.setPort(port);
+            }
             server.addConnector(http3Connector);
             try {
                 http3Connector.start();

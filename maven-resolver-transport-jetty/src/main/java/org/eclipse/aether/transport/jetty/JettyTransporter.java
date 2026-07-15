@@ -422,27 +422,25 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         ClientConnector clientConnector = new ClientConnector();
         clientConnector.setSslContextFactory(sslContextFactory);
 
-        HTTP2Client http2Client = new HTTP2Client(clientConnector);
-        ClientConnectionFactoryOverHTTP2.HTTP2 http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
-
-        QuicheClientQuicConfiguration clientQuicConfig =
-                HTTP3ClientQuicConfiguration.configure(new QuicheClientQuicConfiguration());
-        HTTP3Client http3Client = new HTTP3Client(clientQuicConfig, clientConnector);
-        QuicheTransport transport = new QuicheTransport(clientQuicConfig);
-        ClientConnectionFactoryOverHTTP3.HTTP3 http3 =
-                new ClientConnectionFactoryOverHTTP3.HTTP3(http3Client, transport);
-
         Collection<ClientConnectionFactory.Info> connectors = new ArrayList<>();
         if ("https".equalsIgnoreCase(repository.getProtocol())) {
             HttpVersion httpVersion = HttpTransporterUtils.getHttpVersion(session, repository);
             switch (httpVersion) {
                 case MAXIMUM:
                 case HTTP_3:
+                    QuicheClientQuicConfiguration clientQuicConfig =
+                            HTTP3ClientQuicConfiguration.configure(new QuicheClientQuicConfiguration());
+                    HTTP3Client http3Client = new HTTP3Client(clientQuicConfig, clientConnector);
+                    QuicheTransport transport = new QuicheTransport(clientQuicConfig);
+                    ClientConnectionFactoryOverHTTP3.HTTP3 http3 =
+                            new ClientConnectionFactoryOverHTTP3.HTTP3(http3Client, transport);
                     connectors.add(http3);
-                    break;
-                // always support HTTP/2 as fallback for HTTP/3
+                    break; // fallback to HTTP/2 not supported yet (https://github.com/jetty/jetty.project/issues/15423)
                 case HTTP_2:
                 case DEFAULT:
+                    HTTP2Client http2Client = new HTTP2Client(clientConnector);
+                    ClientConnectionFactoryOverHTTP2.HTTP2 http2 =
+                            new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
                     connectors.add(http2);
                     break;
                 default:

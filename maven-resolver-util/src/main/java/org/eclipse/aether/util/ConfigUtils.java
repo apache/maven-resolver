@@ -385,8 +385,8 @@ public final class ConfigUtils {
         for (String key : keys) {
             Object value = properties.get(key);
 
-            if (value instanceof Enum) {
-                return (T) value;
+            if (enumClass.isInstance(value)) { // validate type
+                return enumClass.cast(value);
             } else if (value instanceof String) {
                 return Enum.valueOf(enumClass, (String) value);
             }

@@ -32,9 +32,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 
@@ -46,8 +44,15 @@ import static org.junit.jupiter.api.Assertions.fail;
  * JDK Transporter UT.
  * Related: <a href="https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a">No TLS proxy supported</a>.
  */
-@TestMethodOrder(MethodOrderer.MethodName.class)
 class JdkTransporterTest extends HttpTransporterTest {
+
+    static {
+        // uncomment to enable http client logging
+        // https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/module-summary.html#jdk.httpclient.HttpClient.log
+        // System.setProperty("jdk.httpclient.HttpClient.log", "all");
+        // even more fine-grained logging
+        // System.setProperty("jdk.internal.httpclient.debug", "true");
+    }
 
     private boolean isBetweenJava17and21() {
         JRE currentJre = JRE.currentJre();
@@ -61,8 +66,22 @@ class JdkTransporterTest extends HttpTransporterTest {
     }
 
     @Override
+    protected boolean supportsHttp3() {
+        JRE currentJre = JRE.currentJre();
+        return currentJre.compareTo(JRE.JAVA_26) >= 0;
+    }
+
+    @Override
     protected Stream<String> supportedCompressionAlgorithms() {
         return Stream.of("gzip", "deflate");
+    }
+
+    @Override
+    @Disabled
+    @Test
+    protected void testPut_SSL() throws Exception {
+        // fails due to 500 status being returned by Jetty
+        // (https://github.com/jetty/jetty.project/issues/13157#issuecomment-4980954802).
     }
 
     @Override
@@ -102,15 +121,6 @@ class JdkTransporterTest extends HttpTransporterTest {
             fail("Expected error");
         } catch (Exception expected) {
         }
-    }
-
-    @Override
-    @EnabledForJreRange(min = JRE.JAVA_26)
-    @Test
-    protected void testGet_HTTP3() throws Exception {
-        // System.setProperty("jdk.httpclient.HttpClient.log", "ssl");
-        // System.setProperty("jdk.internal.httpclient.debug", "out");
-        super.testGet_HTTP3();
     }
 
     public JdkTransporterTest() {

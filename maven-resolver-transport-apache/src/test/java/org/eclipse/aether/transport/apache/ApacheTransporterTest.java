@@ -33,7 +33,6 @@ import org.eclipse.aether.internal.test.util.http.RecordingTransportListener;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.io.PathProcessorSupport;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,14 +54,14 @@ class ApacheTransporterTest extends HttpTransporterTest {
     }
 
     @Override
-    @Disabled
-    @Test
-    protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {}
+    protected boolean supportsHttp3() {
+        return false;
+    }
 
     @Override
-    @Disabled
-    @Test
-    protected void testGet_HTTP3() {}
+    protected boolean supportsHttp2() {
+        return false;
+    }
 
     @Test
     void testGet_WebDav() throws Exception {
