@@ -18,48 +18,38 @@
  */
 package org.eclipse.aether.tools;
 
-import java.io.IOException;
+import javax.tools.DiagnosticCollector;
+import javax.tools.DocumentationTool;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
+import javax.tools.ToolProvider;
+
+import java.io.File;
 import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.UncheckedIOException;
+import java.io.Reader;
 import java.io.Writer;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.spi.ToolProvider;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.codehaus.plexus.util.io.CachingWriter;
-import org.jboss.forge.roaster.Roaster;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AST;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ASTNode;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Javadoc;
-import org.jboss.forge.roaster.model.JavaDoc;
-import org.jboss.forge.roaster.model.JavaDocCapable;
-import org.jboss.forge.roaster.model.JavaDocTag;
-import org.jboss.forge.roaster.model.JavaType;
-import org.jboss.forge.roaster.model.impl.JavaDocImpl;
-import org.jboss.forge.roaster.model.source.FieldSource;
-import org.jboss.forge.roaster.model.source.JavaClassSource;
-import org.jboss.forge.roaster.model.source.JavaDocSource;
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Opcodes;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "docgen", description = "Maven Documentation Generator")
@@ -70,17 +60,23 @@ public class CollectConfiguration implements Callable<Integer> {
 
     protected static final String KEY = "key";
 
-    public enum Mode {
-        maven,
-        resolver
-    }
+    /**
+     * The metadata fields collected per configuration key and written to / read from the intermediate properties file.
+     */
+    protected static final List<String> FIELDS = List.of(
+            KEY,
+            "defaultValue",
+            "fqName",
+            "description",
+            "since",
+            "configurationSource",
+            "configurationType",
+            "supportRepoIdSuffix");
 
-    @CommandLine.Option(
-            names = {"-m", "--mode"},
-            arity = "1",
-            paramLabel = "mode",
-            description = "The mode of generator (what is being scanned?), supported modes are 'maven', 'resolver'")
-    protected Mode mode;
+    /**
+     * Javadoc block tag marking a constant field as a configuration key.
+     */
+    protected static final String CONFIGURATION_MARKER = "@configurationSource";
 
     @CommandLine.Option(
             names = {"-t", "--templates"},
@@ -102,44 +98,15 @@ public class CollectConfiguration implements Callable<Integer> {
             rootDirectory = rootDirectory.toAbsolutePath().normalize();
             outputDirectory = outputDirectory.toAbsolutePath().normalize();
 
-            ArrayList<Map<String, String>> discoveredKeys = new ArrayList<>();
-            try (Stream<Path> stream = Files.walk(rootDirectory)) {
-                if (mode == Mode.maven) {
-                    System.out.println("Processing Maven sources from " + rootDirectory);
-                    stream.map(Path::toAbsolutePath)
-                            .filter(p -> p.getFileName().toString().endsWith(".class"))
-                            .filter(p -> p.toString().contains("/target/classes/"))
-                            .forEach(p -> processMavenClass(p, discoveredKeys));
-                } else if (mode == Mode.resolver) {
-                    System.out.println("Processing Resolver sources from " + rootDirectory);
-                    stream.map(Path::toAbsolutePath)
-                            .filter(p -> p.getFileName().toString().endsWith(".java"))
-                            .filter(p -> p.toString().contains("/src/main/java/"))
-                            .filter(p -> !p.toString().endsWith("/module-info.java"))
-                            .forEach(p -> processResolverClass(p, discoveredKeys));
-                } else {
-                    throw new IllegalStateException("Unsupported mode " + mode);
-                }
-            }
-
-            discoveredKeys.sort(Comparator.comparing(e -> e.get(KEY)));
-
-            Properties properties = new Properties();
-            properties.setProperty("resource.loaders", "classpath");
-            properties.setProperty("resource.loader.classpath.class", ClasspathResourceLoader.class.getName());
-            VelocityEngine velocityEngine = new VelocityEngine();
-            velocityEngine.init(properties);
-
-            VelocityContext context = new VelocityContext();
-            context.put("keys", discoveredKeys);
-
-            for (String template : templates) {
-                Path output = outputDirectory.resolve(template);
-                Files.createDirectories(output.getParent());
-                System.out.println("Writing out to " + output);
-                try (Writer fileWriter = new CachingWriter(output, StandardCharsets.UTF_8)) {
-                    velocityEngine.getTemplate(template + ".vm").merge(context, fileWriter);
-                }
+            System.out.println("Processing sources from " + rootDirectory);
+            Path intermediateFile = Files.createTempFile("configuration-keys", ".properties");
+            try {
+                runDoclet(intermediateFile);
+                List<Map<String, String>> discoveredKeys = readDiscoveredKeys(intermediateFile);
+                discoveredKeys.sort(Comparator.comparing(e -> e.get(KEY)));
+                render(discoveredKeys);
+            } finally {
+                Files.deleteIfExists(intermediateFile);
             }
             return 0;
         } catch (Exception e) {
@@ -148,294 +115,128 @@ public class CollectConfiguration implements Callable<Integer> {
         }
     }
 
-    protected void processMavenClass(Path path, List<Map<String, String>> discoveredKeys) {
+    /**
+     * Collects the source files under {@link #rootDirectory} and runs {@link ConfigurationCollectorDoclet} against them,
+     * having it write the discovered configuration keys into the given intermediate properties file.
+     */
+    protected void runDoclet(Path intermediateFile) throws Exception {
+        // Only feed javadoc the files that actually declare configuration keys. This keeps the set of types that
+        // javadoc must resolve small, avoiding failures caused by unrelated sources referencing dependencies that
+        // are not on this module's classpath (e.g. gson, jetty).
+        List<File> sourceFiles;
+        try (Stream<Path> stream = Files.walk(rootDirectory)) {
+            sourceFiles = stream.map(Path::toAbsolutePath)
+                    .filter(p -> p.getFileName().toString().endsWith(".java"))
+                    .filter(p -> p.toString().contains("/src/main/java/"))
+                    .filter(p -> !p.toString().endsWith("/module-info.java"))
+                    .filter(p -> !p.toString().contains("/maven-resolver-tools/"))
+                    .filter(p -> fileContains(p, CONFIGURATION_MARKER))
+                    .map(Path::toFile)
+                    .collect(Collectors.toList());
+        }
+        if (sourceFiles.isEmpty()) {
+            throw new IllegalStateException(
+                    "No Java sources declaring configuration keys found under " + rootDirectory);
+        }
+
+        DocumentationTool documentationTool = ToolProvider.getSystemDocumentationTool();
+        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+        try (StandardJavaFileManager fileManager =
+                documentationTool.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8)) {
+            // Configure the classpath on the file manager (the -classpath option is not honored when a file manager
+            // is supplied to getTask()). Note that under exec:java the project dependencies are on the context
+            // classloader, not on the JVM's java.class.path.
+            fileManager.setLocation(StandardLocation.CLASS_PATH, resolveClasspath());
+
+            Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(sourceFiles);
+
+            List<String> options =
+                    new ArrayList<>(Arrays.asList("--output", intermediateFile.toString(), "-encoding", "UTF-8"));
+
+            Writer out = new PrintWriter(System.err);
+            DocumentationTool.DocumentationTask task = documentationTool.getTask(
+                    out, fileManager, diagnostics, ConfigurationCollectorDoclet.class, options, compilationUnits);
+            boolean ok = task.call();
+            out.flush();
+            if (!ok) {
+                diagnostics.getDiagnostics().forEach(d -> System.err.println(d));
+                throw new IllegalStateException("Javadoc doclet execution failed");
+            }
+        }
+    }
+
+    private static boolean fileContains(Path path, String marker) {
         try {
-            ClassReader classReader = new ClassReader(Files.newInputStream(path));
-            classReader.accept(
-                    new ClassVisitor(Opcodes.ASM9) {
-                        @Override
-                        public FieldVisitor visitField(
-                                int fieldAccess,
-                                String fieldName,
-                                String fieldDescriptor,
-                                String fieldSignature,
-                                Object fieldValue) {
-                            return new FieldVisitor(Opcodes.ASM9) {
-                                @Override
-                                public AnnotationVisitor visitAnnotation(
-                                        String annotationDescriptor, boolean annotationVisible) {
-                                    if (annotationDescriptor.equals("Lorg/apache/maven/api/annotations/Config;")) {
-                                        return new AnnotationVisitor(Opcodes.ASM9) {
-                                            final Map<String, Object> values = new HashMap<>();
-
-                                            @Override
-                                            public void visit(String name, Object value) {
-                                                values.put(name, value);
-                                            }
-
-                                            @Override
-                                            public void visitEnum(String name, String descriptor, String value) {
-                                                values.put(name, value);
-                                            }
-
-                                            @Override
-                                            public void visitEnd() {
-                                                JavaType<?> jtype = parse(Paths.get(path.toString()
-                                                        .replace("/target/classes/", "/src/main/java/")
-                                                        .replace(".class", ".java")));
-                                                FieldSource<JavaClassSource> f =
-                                                        ((JavaClassSource) jtype).getField(fieldName);
-
-                                                String fqName = null;
-                                                String desc = cloneJavadoc(f.getJavaDoc())
-                                                        .removeAllTags()
-                                                        .getFullText()
-                                                        .replace("*", "\\*");
-                                                String since = getSince(f);
-                                                String source = (values.get("source") != null
-                                                                ? (String) values.get("source")
-                                                                : "USER_PROPERTIES") // TODO: enum
-                                                        .toLowerCase();
-                                                source = switch (source) {
-                                                    case "model" -> "Model properties";
-                                                    case "user_properties" -> "User properties";
-                                                    default -> source;
-                                                };
-                                                String type = (values.get("type") != null
-                                                        ? (String) values.get("type")
-                                                        : "java.lang.String");
-                                                if (type.startsWith("java.lang.")) {
-                                                    type = type.substring("java.lang.".length());
-                                                } else if (type.startsWith("java.util.")) {
-                                                    type = type.substring("java.util.".length());
-                                                }
-                                                discoveredKeys.add(Map.of(
-                                                        KEY,
-                                                        fieldValue.toString(),
-                                                        "defaultValue",
-                                                        values.get("defaultValue") != null
-                                                                ? values.get("defaultValue")
-                                                                        .toString()
-                                                                : "",
-                                                        "fqName",
-                                                        nvl(fqName, ""),
-                                                        "description",
-                                                        desc,
-                                                        "since",
-                                                        nvl(since, ""),
-                                                        "configurationSource",
-                                                        source,
-                                                        "configurationType",
-                                                        type));
-                                            }
-                                        };
-                                    }
-                                    return null;
-                                }
-                            };
-                        }
-                    },
-                    0);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return Files.readString(path, StandardCharsets.UTF_8).contains(marker);
+        } catch (Exception e) {
+            return false;
         }
     }
-
-    protected void processResolverClass(Path path, List<Map<String, String>> discoveredKeys) {
-        JavaType<?> type = parse(path);
-        if (type instanceof JavaClassSource javaClassSource) {
-            javaClassSource.getFields().stream()
-                    .filter(this::hasConfigurationSource)
-                    .forEach(f -> {
-                        Map<String, String> constants = extractConstants(Paths.get(path.toString()
-                                .replace("/src/main/java/", "/target/classes/")
-                                .replace(".java", ".class")));
-
-                        String name = f.getName();
-                        String key = constants.get(name);
-                        String fqName = f.getOrigin().getCanonicalName() + "." + name;
-                        String configurationType = getConfigurationType(f);
-                        String defValue = getTag(f, "@configurationDefaultValue");
-                        if (defValue != null && defValue.startsWith("{@link #") && defValue.endsWith("}")) {
-                            // constant "lookup"
-                            String lookupValue = constants.get(defValue.substring(8, defValue.length() - 1));
-                            if (lookupValue == null) {
-                                // currently we hard fail if javadoc cannot be looked up
-                                // workaround: at cost of redundancy, but declare constants in situ for now
-                                // (in same class)
-                                throw new IllegalArgumentException(
-                                        "Could not look up " + defValue + " for configuration " + fqName);
-                            }
-                            defValue = lookupValue;
-                            if ("java.lang.Long".equals(configurationType)
-                                    && (defValue.endsWith("l") || defValue.endsWith("L"))) {
-                                defValue = defValue.substring(0, defValue.length() - 1);
-                            }
-                        }
-                        discoveredKeys.add(Map.of(
-                                KEY,
-                                key,
-                                "defaultValue",
-                                nvl(defValue, ""),
-                                "fqName",
-                                fqName,
-                                "description",
-                                cleanseJavadoc(f),
-                                "since",
-                                nvl(getSince(f), ""),
-                                "configurationSource",
-                                getConfigurationSource(f),
-                                "configurationType",
-                                configurationType,
-                                "supportRepoIdSuffix",
-                                toYesNo(getTag(f, "@configurationRepoIdSuffix"))));
-                    });
-        }
-    }
-
-    protected JavaDocSource<Object> cloneJavadoc(JavaDocSource<?> javaDoc) {
-        Javadoc jd = (Javadoc) javaDoc.getInternal();
-        return new JavaDocImpl<>(javaDoc.getOrigin(), (Javadoc)
-                ASTNode.copySubtree(AST.newAST(jd.getAST().apiLevel(), false), jd));
-    }
-
-    protected String cleanseJavadoc(FieldSource<JavaClassSource> javaClassSource) {
-        JavaDoc<FieldSource<JavaClassSource>> javaDoc = javaClassSource.getJavaDoc();
-        String[] text = javaDoc.getFullText().split("\n");
-        StringBuilder result = new StringBuilder();
-        for (String line : text) {
-            if (!line.startsWith("@") && !line.trim().isEmpty()) {
-                result.append(line);
-            }
-        }
-        return cleanseTags(result.toString());
-    }
-
-    protected String cleanseTags(String text) {
-        // {@code XXX} -> <pre>XXX</pre>
-        // {@link XXX} -> ??? pre for now
-        Pattern pattern = Pattern.compile("(\\{@\\w\\w\\w\\w (.+?)})");
-        Matcher matcher = pattern.matcher(text);
-        if (!matcher.find()) {
-            return text;
-        }
-        int prevEnd = 0;
-        StringBuilder result = new StringBuilder();
-        do {
-            result.append(text, prevEnd, matcher.start(1));
-            result.append("<code>");
-            result.append(matcher.group(2));
-            result.append("</code>");
-            prevEnd = matcher.end(1);
-        } while (matcher.find());
-        result.append(text, prevEnd, text.length());
-        return result.toString();
-    }
-
-    protected JavaType<?> parse(Path path) {
-        try {
-            return Roaster.parse(path.toFile());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    protected String toYesNo(String value) {
-        return "yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value) ? "Yes" : "No";
-    }
-
-    protected String nvl(String string, String def) {
-        return string == null ? def : string;
-    }
-
-    protected boolean hasConfigurationSource(JavaDocCapable<?> javaDocCapable) {
-        return getTag(javaDocCapable, "@configurationSource") != null;
-    }
-
-    protected String getConfigurationType(JavaDocCapable<?> javaDocCapable) {
-        String type = getTag(javaDocCapable, "@configurationType");
-        if (type != null) {
-            String linkPrefix = "{@link ";
-            String linkSuffix = "}";
-            if (type.startsWith(linkPrefix) && type.endsWith(linkSuffix)) {
-                type = type.substring(linkPrefix.length(), type.length() - linkSuffix.length());
-            }
-            String javaLangPackage = "java.lang.";
-            if (type.startsWith(javaLangPackage)) {
-                type = type.substring(javaLangPackage.length());
-            }
-        }
-        return nvl(type, "n/a");
-    }
-
-    protected String getConfigurationSource(JavaDocCapable<?> javaDocCapable) {
-        String source = getTag(javaDocCapable, "@configurationSource");
-        if ("{@link RepositorySystemSession#getConfigProperties()}".equals(source)) {
-            return "Session Configuration";
-        } else if ("{@link System#getProperty(String,String)}".equals(source)) {
-            return "Java System Properties";
-        } else {
-            return source;
-        }
-    }
-
-    protected String getSince(JavaDocCapable<?> javaDocCapable) {
-        List<JavaDocTag> tags;
-        if (javaDocCapable != null) {
-            if (javaDocCapable instanceof FieldSource<?> fieldSource) {
-                tags = fieldSource.getJavaDoc().getTags("@since");
-                if (tags.isEmpty()) {
-                    return getSince(fieldSource.getOrigin());
-                } else {
-                    return tags.get(0).getValue();
-                }
-            } else if (javaDocCapable instanceof JavaClassSource classSource) {
-                tags = classSource.getJavaDoc().getTags("@since");
-                if (!tags.isEmpty()) {
-                    return tags.get(0).getValue();
-                }
-            }
-        }
-        return null;
-    }
-
-    protected String getTag(JavaDocCapable<?> javaDocCapable, String tagName) {
-        List<JavaDocTag> tags;
-        if (javaDocCapable != null) {
-            if (javaDocCapable instanceof FieldSource<?> fieldSource) {
-                tags = fieldSource.getJavaDoc().getTags(tagName);
-                if (tags.isEmpty()) {
-                    return getTag(fieldSource.getOrigin(), tagName);
-                } else {
-                    return tags.get(0).getValue();
-                }
-            }
-        }
-        return null;
-    }
-
-    protected static final Pattern CONSTANT_PATTERN = Pattern.compile(".*static final.* ([A-Z0-9_]+) = (.*);");
-
-    protected static final ToolProvider JAVAP = ToolProvider.findFirst("javap").orElseThrow();
 
     /**
-     * Builds "constant table" for one single class.
-     * <p>
-     * Limitations:
-     * - works only for single class (no inherited constants)
-     * - does not work for fields that are Enum.name()
-     * - more to come
+     * Resolves the classpath to use for symbol resolution during the javadoc run. Under {@code exec:java} the project
+     * dependencies live on the context classloader (a {@link URLClassLoader}), not on the JVM's
+     * {@code java.class.path}, so both sources are combined.
      */
-    protected static Map<String, String> extractConstants(Path file) {
-        StringWriter out = new StringWriter();
-        JAVAP.run(new PrintWriter(out), new PrintWriter(System.err), "-constants", file.toString());
-        Map<String, String> result = new HashMap<>();
-        out.getBuffer().toString().lines().forEach(l -> {
-            Matcher matcher = CONSTANT_PATTERN.matcher(l);
-            if (matcher.matches()) {
-                result.put(matcher.group(1), matcher.group(2));
+    private static List<File> resolveClasspath() {
+        List<File> classpath = new ArrayList<>();
+        for (ClassLoader cl = Thread.currentThread().getContextClassLoader(); cl != null; cl = cl.getParent()) {
+            if (cl instanceof URLClassLoader) {
+                for (URL url : ((URLClassLoader) cl).getURLs()) {
+                    if ("file".equals(url.getProtocol())) {
+                        try {
+                            classpath.add(new File(url.toURI()));
+                        } catch (URISyntaxException e) {
+                            classpath.add(new File(url.getPath()));
+                        }
+                    }
+                }
             }
-        });
-        return result;
+        }
+        for (String element : System.getProperty("java.class.path").split(File.pathSeparator)) {
+            classpath.add(new File(element));
+        }
+        return classpath;
+    }
+
+    /**
+     * Reads back the intermediate properties file produced by {@link ConfigurationCollectorDoclet} into the list of
+     * maps consumed by the Velocity templates.
+     */
+    protected List<Map<String, String>> readDiscoveredKeys(Path intermediateFile) throws Exception {
+        Properties properties = new Properties();
+        try (Reader reader = Files.newBufferedReader(intermediateFile, StandardCharsets.UTF_8)) {
+            properties.load(reader);
+        }
+        int count = Integer.parseInt(properties.getProperty("keys.count", "0"));
+        List<Map<String, String>> discoveredKeys = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            Map<String, String> entry = new LinkedHashMap<>();
+            for (String field : FIELDS) {
+                entry.put(field, properties.getProperty("keys." + i + "." + field, ""));
+            }
+            discoveredKeys.add(entry);
+        }
+        return discoveredKeys;
+    }
+
+    protected void render(List<Map<String, String>> discoveredKeys) throws Exception {
+        Properties properties = new Properties();
+        properties.setProperty("resource.loaders", "classpath");
+        properties.setProperty("resource.loader.classpath.class", ClasspathResourceLoader.class.getName());
+        VelocityEngine velocityEngine = new VelocityEngine();
+        velocityEngine.init(properties);
+
+        VelocityContext context = new VelocityContext();
+        context.put("keys", discoveredKeys);
+
+        for (String template : templates) {
+            Path output = outputDirectory.resolve(template);
+            Files.createDirectories(output.getParent());
+            System.out.println("Writing out to " + output);
+            try (Writer fileWriter = new CachingWriter(output, StandardCharsets.UTF_8)) {
+                velocityEngine.getTemplate(template + ".vm").merge(context, fileWriter);
+            }
+        }
     }
 }
