@@ -25,7 +25,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -76,6 +76,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     private final int connectTimeout;
     private final int requestTimeout;
     private final boolean preemptiveAuth;
+    private final Charset authEncoding;
     private final String auth;
     private final Proxy proxy;
     private final String proxyAuth;
@@ -118,6 +119,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
                 }
             }
         }
+        this.authEncoding = HttpTransporterUtils.getHttpCredentialsEncoding(session, repository);
         this.auth = authString;
         this.preemptiveAuth = this.auth != null && HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
 
@@ -286,8 +288,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         return con;
     }
 
-    private static String basicAuthorization(String credentials) {
-        return AUTH_SCHEME_BASIC + " "
-                + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+    private String basicAuthorization(String credentials) {
+        return AUTH_SCHEME_BASIC + " " + Base64.getEncoder().encodeToString(credentials.getBytes(authEncoding));
     }
 }
