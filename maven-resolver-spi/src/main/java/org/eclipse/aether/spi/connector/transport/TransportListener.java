@@ -70,7 +70,7 @@ public abstract class TransportListener {
      * </ul>
      * @param transportProperties The transport properties associated with this transfer, may be empty. The keys are transporter specific and the value types are key specific.
      * @throws TransferCancelledException If the transfer should be aborted.
-     * @since NEXT
+     * @since 2.0.21
      */
     public void transportPropertiesAvailable(Map<TransferEvent.TransportPropertyKey, Object> transportProperties)
             throws TransferCancelledException {}

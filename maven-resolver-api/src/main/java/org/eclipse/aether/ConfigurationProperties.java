@@ -537,14 +537,14 @@ public final class ConfigurationProperties {
      * @configurationType {@link ConfigurationProperties.HttpVersion}
      * @configurationDefaultValue {@link #DEFAULT_HTTP_VERSION}
      * @configurationRepoIdSuffix Yes
-     * @since NEXT
+     * @since 2.0.21
      */
     public static final String HTTP_VERSION = PREFIX_TRANSPORT_HTTP + "version";
 
     /**
      * Default value if {@link #HTTP_VERSION} is not set.
      *
-     * @since NEXT
+     * @since 2.0.21
      */
     public static final HttpVersion DEFAULT_HTTP_VERSION = HttpVersion.DEFAULT;
 

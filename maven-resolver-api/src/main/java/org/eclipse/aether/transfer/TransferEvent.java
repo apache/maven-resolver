@@ -211,7 +211,7 @@ public final class TransferEvent {
      * <li>{@link EventType#SUCCEEDED}</li>
      * </ul>
      * @return The immutable transport properties associated with this transfer, may be empty.
-     * @since NEXT
+     * @since 2.0.21
      * @see HttpTransportProperty.Key HttpTransportProperty.Key for HTTP specific keys
      */
     public Map<TransportPropertyKey, Object> getTransportProperties() {

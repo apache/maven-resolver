@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * This class also "bridges" between {@link DependencyScope} and Resolver that uses plain string labels for scopes.
  *
- * @since 4.0.0
+ * @since 2.0.0-alpha-9
  */
 public final class ManagedScopeDeriver extends ScopeDeriver {
     private final InternalScopeManager scopeManager;

@@ -354,7 +354,7 @@ public final class ConfigUtils {
      * @param keys the property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a enum type {@code T} or a string (parsed using {@link Enum#valueOf(Class, String)} is found.
      * @return the property value or {@code defaultValue} if none found
-     * @since NEXT
+     * @since 2.0.21
      */
     public static <T extends Enum<T>> T getEnum(
             Map<?, ?> properties, Class<T> enumClass, T defaultValue, String... keys) {
@@ -381,7 +381,7 @@ public final class ConfigUtils {
      * @param keys the property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a enum type {@code T} or a string (parsed using {@link Enum#valueOf(Class, String)} is found.
      * @return the property value or {@code defaultValue} if none found
-     * @since NEXT
+     * @since 2.0.21
      */
     public static <T extends Enum<T>> T getEnum(
             RepositorySystemSession session, Class<T> enumClass, T defaultValue, String... keys) {
