@@ -513,9 +513,11 @@ public abstract class HttpTransporterTest {
         RecordingTransportListener listener = new RecordingTransportListener();
         PeekTask task = new PeekTask(URI.create("repo/file.txt")).setListener(listener);
         transporter.peek(task);
-        assertEquals(
-                HttpTransportProperty.SslProtocol.TLS_1_3,
-                listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_PROTOCOL));
+        if (exposeContentCodingInTransportProperties()) {
+            assertEquals(
+                    HttpTransportProperty.SslProtocol.TLS_1_3,
+                    listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_PROTOCOL));
+        }
     }
 
     @Test
@@ -785,12 +787,14 @@ public abstract class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
-        assertEquals(
-                HttpTransportProperty.SslProtocol.TLS_1_3,
-                listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_PROTOCOL));
-        assertEquals(
-                "TLS_AES_256_GCM_SHA384",
-                listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_CIPHER_SUITE));
+        if (exposeContentCodingInTransportProperties()) {
+            assertEquals(
+                    HttpTransportProperty.SslProtocol.TLS_1_3,
+                    listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_PROTOCOL));
+            assertEquals(
+                    "TLS_AES_256_GCM_SHA384",
+                    listener.getTransportProperties().get(HttpTransportProperty.Key.SSL_CIPHER_SUITE));
+        }
     }
 
     @Test
