@@ -54,7 +54,7 @@ import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 
 /**
  * A special, "read only" and limited capability transport usable for bootstrapping. It provides HTTP with minimal
- * support (only basic auth, only GET/HEAD).
+ * support (only basic auth, only GET/HEAD). It is implemented using {@link java.net.HttpURLConnection} class.
  *
  * @since 2.0.21
  */
