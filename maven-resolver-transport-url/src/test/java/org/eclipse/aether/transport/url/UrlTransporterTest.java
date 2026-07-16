@@ -40,6 +40,16 @@ class UrlTransporterTest extends HttpTransporterTest {
     }
 
     @Override
+    protected boolean supportsHttp3() {
+        return false;
+    }
+
+    @Override
+    protected boolean supportsHttp2() {
+        return false;
+    }
+
+    @Override
     @Disabled("HTTP2 unsupported")
     @Test
     protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() {}
