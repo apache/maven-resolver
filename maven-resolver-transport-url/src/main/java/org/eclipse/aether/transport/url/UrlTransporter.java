@@ -162,8 +162,8 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     @Override
     protected void implPeek(PeekTask task) throws Exception {
         HttpURLConnection con = perform(METHOD_HEAD, baseUri.resolve(task.getLocation()), null);
-        int responseCode = con.getResponseCode();
         try {
+            int responseCode = con.getResponseCode();
             if (HttpURLConnection.HTTP_OK != responseCode) {
                 throw new HttpTransporterException(responseCode);
             }
@@ -175,43 +175,46 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     @Override
     protected void implGet(GetTask task) throws Exception {
         HttpURLConnection con = perform(METHOD_GET, baseUri.resolve(task.getLocation()), task);
-        int responseCode = con.getResponseCode();
-        if (HttpURLConnection.HTTP_OK != responseCode) {
-            con.disconnect();
-            throw new HttpTransporterException(responseCode);
-        }
-        IOSupplier<InputStream> inputStreamSupplier = () -> {
-            String contentEncoding = con.getHeaderField("Content-Encoding");
-            if (contentEncoding != null) {
-                if ("gzip".equalsIgnoreCase(contentEncoding)) {
-                    return new GZIPInputStream(con.getInputStream());
-                } else if ("deflate".equalsIgnoreCase(contentEncoding)) {
-                    return new InflaterInputStream(con.getInputStream());
+        try {
+            int responseCode = con.getResponseCode();
+            if (HttpURLConnection.HTTP_OK != responseCode) {
+                throw new HttpTransporterException(responseCode);
+            }
+            IOSupplier<InputStream> inputStreamSupplier = () -> {
+                String contentEncoding = con.getHeaderField("Content-Encoding");
+                if (contentEncoding != null) {
+                    if ("gzip".equalsIgnoreCase(contentEncoding)) {
+                        return new GZIPInputStream(con.getInputStream());
+                    } else if ("deflate".equalsIgnoreCase(contentEncoding)) {
+                        return new InflaterInputStream(con.getInputStream());
+                    }
                 }
-            }
-            return con.getInputStream();
-        };
-        final Path dataFile = task.getDataPath();
-        if (dataFile == null) {
-            try (InputStream is = inputStreamSupplier.get()) {
-                utilGet(task, is, true, con.getContentLengthLong(), false);
-            }
-        } else {
-            try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
-                task.setDataPath(tempFile.getPath(), false);
+                return con.getInputStream();
+            };
+            final Path dataFile = task.getDataPath();
+            if (dataFile == null) {
                 try (InputStream is = inputStreamSupplier.get()) {
                     utilGet(task, is, true, con.getContentLengthLong(), false);
                 }
-                tempFile.move();
-            } finally {
-                task.setDataPath(dataFile);
+            } else {
+                try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(dataFile)) {
+                    task.setDataPath(tempFile.getPath(), false);
+                    try (InputStream is = inputStreamSupplier.get()) {
+                        utilGet(task, is, true, con.getContentLengthLong(), false);
+                    }
+                    tempFile.move();
+                } finally {
+                    task.setDataPath(dataFile);
+                }
             }
-        }
-        if (task.getDataPath() != null) {
-            long lastModified = con.getLastModified();
-            if (lastModified != 0) {
-                pathProcessor.setLastModified(task.getDataPath(), lastModified);
+            if (task.getDataPath() != null) {
+                long lastModified = con.getLastModified();
+                if (lastModified != 0) {
+                    pathProcessor.setLastModified(task.getDataPath(), lastModified);
+                }
             }
+        } finally {
+            con.disconnect();
         }
     }
 
