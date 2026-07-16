@@ -208,13 +208,13 @@ public class ConfigUtilsTest {
     @Test
     void testGetEnum() {
         config.put("some-enum", TestEnum.SECOND);
-        assertEquals(TestEnum.SECOND, ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
+        assertEquals(TestEnum.SECOND, ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST.name(), "some-enum"));
     }
 
     @Test
     void testGetEnum_StringConversion() {
         config.put("some-enum", "SECOND");
-        assertEquals(TestEnum.SECOND, ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
+        assertEquals(TestEnum.SECOND, ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST.name(), "some-enum"));
     }
 
     @Test
@@ -222,6 +222,6 @@ public class ConfigUtilsTest {
         config.put("some-enum", "second");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
+                () -> ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST.name(), "some-enum"));
     }
 }

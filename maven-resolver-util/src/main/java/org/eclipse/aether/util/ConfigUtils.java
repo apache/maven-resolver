@@ -357,7 +357,7 @@ public final class ConfigUtils {
      * @since 2.0.21
      */
     public static <T extends Enum<T>> T getEnum(
-            Map<?, ?> properties, Class<T> enumClass, T defaultValue, String... keys) {
+            Map<?, ?> properties, Class<T> enumClass, String defaultValue, String... keys) {
         for (String key : keys) {
             Object value = properties.get(key);
 
@@ -367,7 +367,7 @@ public final class ConfigUtils {
                 return Enum.valueOf(enumClass, (String) value);
             }
         }
-        return defaultValue;
+        return Enum.valueOf(enumClass, defaultValue);
     }
 
     /**
@@ -384,7 +384,7 @@ public final class ConfigUtils {
      * @since 2.0.21
      */
     public static <T extends Enum<T>> T getEnum(
-            RepositorySystemSession session, Class<T> enumClass, T defaultValue, String... keys) {
+            RepositorySystemSession session, Class<T> enumClass, String defaultValue, String... keys) {
         return getEnum(session.getConfigProperties(), enumClass, defaultValue, keys);
     }
 

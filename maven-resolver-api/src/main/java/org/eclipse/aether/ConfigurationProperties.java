@@ -546,7 +546,7 @@ public final class ConfigurationProperties {
      *
      * @since 2.0.21
      */
-    public static final HttpVersion DEFAULT_HTTP_VERSION = HttpVersion.DEFAULT;
+    public static final String DEFAULT_HTTP_VERSION = "DEFAULT";
 
     /**
      * A flag indicating which visitor should be used to "flatten" the dependency graph into list. In Maven 4
