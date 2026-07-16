@@ -33,10 +33,10 @@ import org.eclipse.aether.internal.test.util.http.RecordingTransportListener;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.io.PathProcessorSupport;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Apache Transporter UT.
@@ -54,9 +54,14 @@ class ApacheTransporterTest extends HttpTransporterTest {
     }
 
     @Override
-    @Disabled
-    @Test
-    protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {}
+    protected boolean supportsHttp3() {
+        return false;
+    }
+
+    @Override
+    protected boolean supportsHttp2() {
+        return false;
+    }
 
     @Test
     void testGet_WebDav() throws Exception {
@@ -106,7 +111,7 @@ class ApacheTransporterTest extends HttpTransporterTest {
 
     @Test
     void testConnectionReuse() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         session.setCache(new DefaultRepositoryCache());
         for (int i = 0; i < 3; i++) {
             newTransporter(httpServer.getHttpsUrl());
@@ -122,7 +127,7 @@ class ApacheTransporterTest extends HttpTransporterTest {
 
     @Test
     void testConnectionNoReuse() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         session.setCache(new DefaultRepositoryCache());
         session.setConfigProperty(ConfigurationProperties.HTTP_REUSE_CONNECTIONS, false);
         for (int i = 0; i < 3; i++) {

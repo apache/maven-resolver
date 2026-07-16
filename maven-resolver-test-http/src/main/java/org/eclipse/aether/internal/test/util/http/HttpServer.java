@@ -51,12 +51,17 @@ import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpURI;
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.http.pathmap.MatchedResource;
 import org.eclipse.jetty.http.pathmap.PathMappings;
 import org.eclipse.jetty.http.pathmap.PathSpec;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
+import org.eclipse.jetty.http3.server.HTTP3ServerConnectionFactory;
+import org.eclipse.jetty.http3.server.HTTP3ServerQuicConfiguration;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.quic.quiche.server.QuicheServerConnector;
+import org.eclipse.jetty.quic.quiche.server.QuicheServerQuicConfiguration;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -75,6 +80,7 @@ import org.slf4j.LoggerFactory;
 public class HttpServer {
 
     public static class LogEntry {
+        private final HttpVersion version;
 
         private final String method;
 
@@ -86,10 +92,15 @@ public class HttpServer {
 
         CountDownLatch responseHeadersAvailableSignal = new CountDownLatch(1);
 
-        public LogEntry(String method, String path, Map<String, String> requestHeaders) {
+        public LogEntry(HttpVersion version, String method, String path, Map<String, String> requestHeaders) {
+            this.version = version;
             this.method = method;
             this.path = path;
             this.requestHeaders = requestHeaders;
+        }
+
+        public HttpVersion getVersion() {
+            return version;
         }
 
         public String getMethod() {
@@ -127,7 +138,7 @@ public class HttpServer {
 
         @Override
         public String toString() {
-            return method + " " + path;
+            return version + " " + method + " " + path;
         }
     }
 
@@ -160,6 +171,8 @@ public class HttpServer {
 
     private ServerConnector httpsConnector;
 
+    private QuicheServerConnector http3Connector;
+
     private String username;
 
     private String password;
@@ -188,6 +201,10 @@ public class HttpServer {
         return httpsConnector != null ? httpsConnector.getLocalPort() : -1;
     }
 
+    public int getHttp3Port() {
+        return http3Connector != null ? http3Connector.getLocalPort() : -1;
+    }
+
     public String getHttpUrl() {
         return "http://" + getHost() + ":" + getHttpPort();
     }
@@ -196,37 +213,29 @@ public class HttpServer {
         return "https://" + getHost() + ":" + getHttpsPort();
     }
 
-    public HttpServer addSslConnector() {
-        return addSslConnector(true, true);
+    public String getHttp3Url() {
+        return "https://" + getHost() + ":" + getHttp3Port();
     }
 
-    public HttpServer addSelfSignedSslConnector() {
-        return addSslConnector(false, true);
+    public HttpServer addHttp2ConnectorWithMutualTLS() {
+        return addHttp2Connector(true, true);
     }
 
-    public HttpServer addSelfSignedSslConnectorHttp2Only() {
-        return addSslConnector(false, false);
+    public HttpServer addHttp2Connector() {
+        return addHttp2Connector(false, true);
     }
 
-    private HttpServer addSslConnector(boolean needClientAuth, boolean needHttp11) {
+    public HttpServer addHttp2OnlyConnector() {
+        return addHttp2Connector(false, false);
+    }
+
+    public HttpServer addHttp2OnlyConnectorWithMutualTLS() {
+        return addHttp2Connector(true, false);
+    }
+
+    private HttpServer addHttp2Connector(boolean needClientAuth, boolean needHttp11) {
         if (httpsConnector == null) {
-            SslContextFactory.Server ssl = new SslContextFactory.Server();
-            ssl.setNeedClientAuth(needClientAuth);
-            if (!needClientAuth) {
-                ssl.setKeyStorePath(HttpTransporterTest.KEY_STORE_SELF_SIGNED_PATH
-                        .toAbsolutePath()
-                        .toString());
-                ssl.setKeyStorePassword("server-pwd");
-                ssl.setSniRequired(false);
-            } else {
-                ssl.setKeyStorePath(
-                        HttpTransporterTest.KEY_STORE_PATH.toAbsolutePath().toString());
-                ssl.setKeyStorePassword("server-pwd");
-                ssl.setTrustStorePath(
-                        HttpTransporterTest.TRUST_STORE_PATH.toAbsolutePath().toString());
-                ssl.setTrustStorePassword("client-pwd");
-                ssl.setSniRequired(false);
-            }
+            SslContextFactory.Server ssl = createServerSslContextFactory(needClientAuth);
 
             HttpConfiguration httpsConfig = new HttpConfiguration();
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
@@ -252,6 +261,47 @@ public class HttpServer {
             server.addConnector(httpsConnector);
             try {
                 httpsConnector.start();
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        return this;
+    }
+
+    private SslContextFactory.Server createServerSslContextFactory(boolean needClientAuth) {
+        SslContextFactory.Server ssl = new SslContextFactory.Server();
+        ssl.setSniRequired(false);
+        ssl.setKeyStorePath(
+                HttpTransporterTest.SERVER_STORE_PATH.toAbsolutePath().toString());
+        ssl.setKeyStorePassword("server-pwd");
+        ssl.setNeedClientAuth(needClientAuth);
+        if (needClientAuth) {
+            ssl.setTrustStorePath(
+                    HttpTransporterTest.CLIENT_STORE_PATH.toAbsolutePath().toString());
+            ssl.setTrustStorePassword("client-pwd");
+        }
+        return ssl;
+    }
+
+    public HttpServer addHttp3Connector(boolean needClientAuth) {
+        return addHttp3Connector(needClientAuth, -1);
+    }
+
+    public HttpServer addHttp3Connector(boolean needClientAuth, int port) {
+        if (http3Connector == null) {
+            QuicheServerQuicConfiguration serverQuicConfig = HTTP3ServerQuicConfiguration.configure(
+                    new QuicheServerQuicConfiguration(HttpTransporterTest.PEM_QUICHE_SERVER_PATH));
+            http3Connector = new QuicheServerConnector(
+                    server,
+                    createServerSslContextFactory(needClientAuth),
+                    serverQuicConfig,
+                    new HTTP3ServerConnectionFactory());
+            if (port != -1) {
+                http3Connector.setPort(port);
+            }
+            server.addConnector(http3Connector);
+            try {
+                http3Connector.start();
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
@@ -322,6 +372,7 @@ public class HttpServer {
 
         server = new Server();
         httpConnector = new ServerConnector(server);
+        // always add the HTTP 1.1 connector
         server.addConnector(httpConnector);
 
         server.setHandler(new LogHandler(new CompressionEnforcingHandler(new Handler.Sequence(
@@ -484,14 +535,19 @@ public class HttpServer {
         public boolean handle(Request req, Response response, Callback callback) throws Exception {
 
             LOGGER.info(
-                    "{} {}{}",
+                    "{} {} {}{}",
+                    req.getConnectionMetaData().getHttpVersion(),
                     req.getMethod(),
                     req.getHttpURI().getDecodedPath(),
                     req.getHttpURI().getQuery() != null ? "?" + req.getHttpURI().getQuery() : "");
 
             Map<String, String> requestHeaders =
                     toUnmodifiableMap(req.getHeaders()); // capture request headers before other handlers modify them
-            LogEntry logEntry = new LogEntry(req.getMethod(), req.getHttpURI().getPathQuery(), requestHeaders);
+            LogEntry logEntry = new LogEntry(
+                    req.getConnectionMetaData().getHttpVersion(),
+                    req.getMethod(),
+                    req.getHttpURI().getPathQuery(),
+                    requestHeaders);
             logEntries.add(logEntry);
             // prevent closing the response before logging (assume all writes are synchronous for simplicity)
             boolean result = super.handle(req, response, callback);
@@ -602,6 +658,7 @@ public class HttpServer {
                         Content.copy(req, Content.Sink.from(channel), fileWriteCallback);
                         fileWriteCallback.block();
                     } catch (IOException e) {
+                        LOGGER.warn("Failed to write file {}", file.getAbsolutePath(), e);
                         file.delete();
                         throw e;
                     }

@@ -514,6 +514,40 @@ public final class ConfigurationProperties {
      */
     public static final String HTTPS_SECURITY_MODE_INSECURE = "insecure";
 
+    public enum HttpVersion {
+        /**
+         * The default HTTP version supported by the respective transporter (the most recent stable one, usually HTTP/2)
+         */
+        DEFAULT,
+        HTTP_1_1,
+        HTTP_2,
+        HTTP_3,
+        /**
+         * The maximum HTTP version supported by the respective transporter (may be unstable).
+         */
+        MAXIMUM;
+    }
+
+    /**
+     * The maximum and preferred HTTP version. Some transporters transparently fall back to lower versions if remote server does not
+     * support the requested version, while other may just simply fail the request.
+     * Value must be a {@link HttpVersion} enum value or its String representation. Default is {@link #DEFAULT_HTTP_VERSION}.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link ConfigurationProperties.HttpVersion}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_VERSION}
+     * @configurationRepoIdSuffix Yes
+     * @since NEXT
+     */
+    public static final String HTTP_VERSION = PREFIX_TRANSPORT_HTTP + "version";
+
+    /**
+     * Default value if {@link #HTTP_VERSION} is not set.
+     *
+     * @since NEXT
+     */
+    public static final HttpVersion DEFAULT_HTTP_VERSION = HttpVersion.DEFAULT;
+
     /**
      * A flag indicating which visitor should be used to "flatten" the dependency graph into list. In Maven 4
      * the default is new "levelOrder", while Maven 3 used "preOrder". This property accepts values

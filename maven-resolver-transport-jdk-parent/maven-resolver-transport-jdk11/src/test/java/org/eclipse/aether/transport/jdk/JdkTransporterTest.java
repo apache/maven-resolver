@@ -20,8 +20,11 @@ package org.eclipse.aether.transport.jdk;
 
 import java.net.ConnectException;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpClient.Version;
 import java.util.stream.Stream;
 
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.internal.impl.DefaultPathProcessor;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
@@ -30,6 +33,7 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +45,14 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Related: <a href="https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a">No TLS proxy supported</a>.
  */
 class JdkTransporterTest extends HttpTransporterTest {
+
+    static {
+        // uncomment to enable http client logging
+        // https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/module-summary.html#jdk.httpclient.HttpClient.log
+        // System.setProperty("jdk.httpclient.HttpClient.log", "all");
+        // even more fine-grained logging
+        // System.setProperty("jdk.internal.httpclient.debug", "true");
+    }
 
     private boolean isBetweenJava17and21() {
         JRE currentJre = JRE.currentJre();
@@ -54,8 +66,22 @@ class JdkTransporterTest extends HttpTransporterTest {
     }
 
     @Override
+    protected boolean supportsHttp3() {
+        JRE currentJre = JRE.currentJre();
+        return currentJre.compareTo(JRE.JAVA_26) >= 0;
+    }
+
+    @Override
     protected Stream<String> supportedCompressionAlgorithms() {
         return Stream.of("gzip", "deflate");
+    }
+
+    @Override
+    @Disabled
+    @Test
+    protected void testPut_SSL() throws Exception {
+        // fails due to 500 status being returned by Jetty
+        // (https://github.com/jetty/jetty.project/issues/13157#issuecomment-4980954802).
     }
 
     @Override
@@ -80,12 +106,14 @@ class JdkTransporterTest extends HttpTransporterTest {
 
     @Override
     @Test
+    @EnabledForJreRange(max = JRE.JAVA_25)
     protected void testRetryHandler_defaultCount_negative() throws Exception {
         // internally JDK client uses its own retry mechanism with
-        // 2 attempts for ConnectionExpiredException (prior Java 26) and 5 (default for
-        // system property "jdk.httpclient.redirects.retrylimit") attempts after,
-        // therefore explicitly limit the internal retry count to 1
-        System.setProperty("jdk.httpclient.redirects.retrylimit", "1"); // this only affects Java 26+
+        // 2 attempts for ConnectionExpiredException (prior Java 26)
+        // afterwards it uses 5 (default for
+        // system property "jdk.httpclient.redirects.retrylimit") attempts,
+        // limit the internal retry count to 1 has global effect and is too late here anyway therefore we skip this test
+        // for Java 26+.
         // Compare with https://github.com/mizosoft/methanol/issues/174
         httpServer.setConnectionsToClose(8);
         try {
@@ -97,11 +125,6 @@ class JdkTransporterTest extends HttpTransporterTest {
 
     public JdkTransporterTest() {
         super(() -> new JdkTransporterFactory(standardChecksumExtractor(), new DefaultPathProcessor()));
-    }
-
-    @Override
-    protected void enableHttp2Protocol() {
-        session.setConfigProperty(JdkTransporterConfigurationKeys.CONFIG_PROP_HTTP_VERSION, "HTTP_2");
     }
 
     @Test
@@ -125,5 +148,22 @@ class JdkTransporterTest extends HttpTransporterTest {
         assertEquals(
                 "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
                 JdkTransporter.getBasicAuthValue("Aladdin", "open sesame".toCharArray()));
+    }
+
+    @Test
+    void testMaximumHttpVersionAtRuntime() throws Exception {
+        RepositorySystemSession session = TestUtils.newSession();
+        RemoteRepository remoteRepository =
+                new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/").build();
+        JdkTransporterFactory factory = new JdkTransporterFactory(s -> null, new DefaultPathProcessor());
+
+        try (Transporter transporter = factory.newInstance(session, remoteRepository)) {
+            JdkTransporter jdkTransporter = (JdkTransporter) transporter;
+            HttpClient.Version[] versions = HttpClient.Version.values();
+            HttpClient.Version maximumSupported = versions[versions.length - 1];
+            assertEquals(maximumSupported, jdkTransporter.getMaximumSupportedHttpVersion());
+            // default should be returned which is HTTP_2 for all JRE versions
+            assertEquals(Version.HTTP_2, jdkTransporter.getHttpVersion(session, remoteRepository));
+        }
     }
 }

@@ -21,8 +21,9 @@ package org.eclipse.aether.transport.jdk;
 import java.net.http.HttpClient;
 
 /**
- * JDK Transport that properly closes {@link HttpClient} on Java 11-20.
+ * JDK Transport that properly closes {@link HttpClient} on Java 21+.
  *
+ * @see <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.html#closing">HttpClient Closing</a>
  * @since 2.0.0
  */
 public final class JdkTransporterCloser {
