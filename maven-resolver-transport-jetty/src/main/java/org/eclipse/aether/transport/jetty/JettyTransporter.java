@@ -50,11 +50,14 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransportPropertiesBuilder;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.transfer.HttpTransportProperty;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.eclipse.jetty.client.Authentication;
@@ -66,6 +69,7 @@ import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.transport.HttpClientConnectionFactory;
 import org.eclipse.jetty.client.transport.HttpClientTransportDynamic;
+import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.transport.ClientConnectionFactoryOverHTTP2;
@@ -74,6 +78,7 @@ import org.eclipse.jetty.http3.client.HTTP3ClientQuicConfiguration;
 import org.eclipse.jetty.http3.client.transport.ClientConnectionFactoryOverHTTP3;
 import org.eclipse.jetty.io.ClientConnectionFactory;
 import org.eclipse.jetty.io.ClientConnector;
+import org.eclipse.jetty.io.EndPoint.SslSessionData;
 import org.eclipse.jetty.quic.quiche.client.QuicheClientQuicConfiguration;
 import org.eclipse.jetty.quic.quiche.client.QuicheTransport;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -188,7 +193,16 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         if (preemptiveAuth) {
             mayApplyPreemptiveAuth(request);
         }
+        // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+        Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+        request.onResponseHeader((r, field) -> {
+            rawResponseHeaders.put(field.getLowerCaseName(), field);
+            return true; // continue processing
+        });
         Response response = request.send();
+        Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                createTransportProperties(request, rawResponseHeaders);
+        task.getListener().transportPropertiesAvailable(transportProperties);
         if (response.getStatus() >= MULTIPLE_CHOICES) {
             throw new HttpTransporterException(response.getStatus());
         }
@@ -221,6 +235,12 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 });
             }
 
+            // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+            Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+            request.onResponseHeader((r, field) -> {
+                rawResponseHeaders.put(field.getLowerCaseName(), field);
+                return true; // continue processing
+            });
             listener = new InputStreamResponseListener();
             request.send(listener);
             try {
@@ -233,6 +253,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     throw new RuntimeException(t);
                 }
             }
+            Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                    createTransportProperties(request, rawResponseHeaders);
+            task.getListener().transportPropertiesAvailable(transportProperties);
             if (response.getStatus() >= MULTIPLE_CHOICES) {
                 if (resume && response.getStatus() == PRECONDITION_FAILED) {
                     resume = false;
@@ -297,6 +320,36 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
     }
 
+    private Map<TransferEvent.TransportPropertyKey, Object> createTransportProperties(
+            Request request, Map<String, HttpField> rawResponseHeaders) {
+        HttpTransportPropertiesBuilder builder =
+                new HttpTransportPropertiesBuilder(toHttpVersion(request.getVersion()));
+        SslSessionData sslSessionData = request.getConnection().getSslSessionData();
+        if (sslSessionData != null && sslSessionData.sslSession() != null) {
+            builder.withSslProtocol(sslSessionData.sslSession().getProtocol());
+            builder.withSslCipherSuite(sslSessionData.sslSession().getCipherSuite());
+        }
+        if (rawResponseHeaders.containsKey("content-encoding")) {
+            builder.withContentCoding(rawResponseHeaders.get("content-encoding").getValue());
+        }
+        return builder.build();
+    }
+
+    static HttpTransportProperty.HttpVersion toHttpVersion(org.eclipse.jetty.http.HttpVersion version) {
+        switch (version) {
+            case HTTP_1_0:
+                return HttpTransportProperty.HttpVersion.HTTP_1_0;
+            case HTTP_1_1:
+                return HttpTransportProperty.HttpVersion.HTTP_1_1;
+            case HTTP_2:
+                return HttpTransportProperty.HttpVersion.HTTP_2;
+            case HTTP_3:
+                return HttpTransportProperty.HttpVersion.HTTP_3;
+            default:
+                throw new IllegalArgumentException("Unknown version " + version.toString());
+        }
+    }
+
     private static Function<String, String> headerGetter(Response response) {
         return s -> response.getHeaders().get(s);
     }
@@ -312,6 +365,12 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             mayApplyPreemptiveAuth(request);
         }
         request.body(PutTaskRequestContent.from(task));
+        // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+        Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+        request.onResponseHeader((r, field) -> {
+            rawResponseHeaders.put(field.getLowerCaseName(), field);
+            return true; // continue processing
+        });
         AtomicBoolean started = new AtomicBoolean(false);
         Response response;
         InputStreamResponseListener listener = new InputStreamResponseListener();
@@ -344,6 +403,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     })
                     .send(listener);
             response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
+            task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof IOException ioex) {

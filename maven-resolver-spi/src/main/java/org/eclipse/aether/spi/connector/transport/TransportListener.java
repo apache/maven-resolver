@@ -19,8 +19,10 @@
 package org.eclipse.aether.spi.connector.transport;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transfer.TransferEvent;
 
 /**
  * A skeleton class for listeners used to monitor transport operations. Reusing common regular expression syntax, the
@@ -57,4 +59,19 @@ public abstract class TransportListener {
      * @throws TransferCancelledException If the transfer should be aborted.
      */
     public void transportProgressed(ByteBuffer data) throws TransferCancelledException {}
+
+    /**
+     * Notifies the listener about the transport properties that are available for this transfer.
+     * This method is called either before or after other notifications are sent:
+     * <ul>
+     * <li>for remote put tasks this is called after {@link #transportStarted(long, long)}</li>
+     * <li>for remote peek tasks this is is the only event that is called</li>
+     * <li>for all other remote tasks this is called before {@link #transportStarted(long, long)}</li>
+     * </ul>
+     * @param transportProperties The transport properties associated with this transfer, may be empty. The keys are transporter specific and the value types are key specific.
+     * @throws TransferCancelledException If the transfer should be aborted.
+     * @since NEXT
+     */
+    public void transportPropertiesAvailable(Map<TransferEvent.TransportPropertyKey, Object> transportProperties)
+            throws TransferCancelledException {}
 }
