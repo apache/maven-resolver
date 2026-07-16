@@ -172,10 +172,10 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         IOSupplier<InputStream> inputStreamSupplier = () -> {
             String contentEncoding = con.getHeaderField("Content-Encoding");
             if (contentEncoding != null) {
-                if ("gzip".equals(contentEncoding)) {
+                if ("gzip".equalsIgnoreCase(contentEncoding)) {
                     return new GZIPInputStream(con.getInputStream());
-                } else if ("deflate".equals(contentEncoding)) {
-                    return new DeflaterInputStream(con.getInputStream());
+                } else if ("deflate".equalsIgnoreCase(contentEncoding)) {
+                    return new java.util.zip.InflaterInputStream(con.getInputStream());
                 }
             }
             return con.getInputStream();
