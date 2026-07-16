@@ -63,7 +63,7 @@ class ConfigurationCollectorDocletTest {
         runDoclet(sourceFile, output);
 
         Map<String, Map<String, String>> keys = readKeys(output);
-        assertEquals(4, keys.size(), "expected three configuration keys");
+        assertEquals(4, keys.size(), "expected four configuration keys");
 
         Map<String, String> bool = keys.get("sample.bool");
         assertNotNull(bool, "boolean key missing");

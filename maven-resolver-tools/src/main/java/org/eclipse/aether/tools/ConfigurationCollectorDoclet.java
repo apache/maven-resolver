@@ -383,17 +383,17 @@ public class ConfigurationCollectorDoclet implements Doclet {
      * Returns {@code null} if the field's initializer is not a simple enum reference.
      */
     private String resolveEnumReference(VariableElement field) {
-        if (!(docTrees.getTree(field) instanceof VariableTree)) {
+        if (!(docTrees.getTree(field) instanceof VariableTree variableTree)) {
             return null;
         }
-        ExpressionTree initializer = ((VariableTree) docTrees.getTree(field)).getInitializer();
+        ExpressionTree initializer = variableTree.getInitializer();
         String enumConstant = null;
-        if (initializer instanceof MemberSelectTree) {
+        if (initializer instanceof MemberSelectTree memberSelectTree) {
             // e.g. SomeEnum.VALUE -> VALUE
-            enumConstant = ((MemberSelectTree) initializer).getIdentifier().toString();
-        } else if (initializer instanceof IdentifierTree) {
+            enumConstant = memberSelectTree.getIdentifier().toString();
+        } else if (initializer instanceof IdentifierTree identifierTree) {
             // e.g. statically imported VALUE -> VALUE
-            enumConstant = ((IdentifierTree) initializer).getName().toString();
+            enumConstant = identifierTree.getName().toString();
         }
         if (enumConstant == null) {
             return null;
