@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,8 @@ import org.eclipse.jetty.http3.server.HTTP3ServerConnectionFactory;
 import org.eclipse.jetty.http3.server.HTTP3ServerQuicConfiguration;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.io.DatagramChannelEndPoint;
+import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.quic.quiche.server.QuicheServerConnector;
 import org.eclipse.jetty.quic.quiche.server.QuicheServerQuicConfiguration;
 import org.eclipse.jetty.server.Handler;
@@ -188,6 +191,8 @@ public class HttpServer {
     private int serverErrorStatusCode;
 
     private final List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
+
+    private String responseBodyForPut;
 
     public String getHost() {
         return "localhost";
@@ -323,6 +328,11 @@ public class HttpServer {
         return this;
     }
 
+    public HttpServer setResponseBodyForPut(String body) {
+        this.responseBodyForPut = body;
+        return this;
+    }
+
     public HttpServer setWebDav(boolean webDav) {
         this.webDav = webDav;
         return this;
@@ -395,6 +405,26 @@ public class HttpServer {
             httpConnector = null;
             httpsConnector = null;
         }
+    }
+
+    public int getNumConnectedEndPoints() {
+        if (server.isStopped()) {
+            throw new IllegalStateException("Server is stopped");
+        }
+        Collection<EndPoint> connectedEndPoints = new ArrayList<>();
+        if (httpConnector != null) {
+            connectedEndPoints.addAll(httpConnector.getConnectedEndPoints());
+        }
+        if (httpsConnector != null) {
+            connectedEndPoints.addAll(httpsConnector.getConnectedEndPoints());
+        }
+        if (http3Connector != null) {
+            // filter out the always present DatagramChannelEndPoint, which is not a real live connection
+            http3Connector.getConnectedEndPoints().stream()
+                    .filter(endPoint -> !(endPoint instanceof DatagramChannelEndPoint))
+                    .forEach(connectedEndPoints::add);
+        }
+        return connectedEndPoints.size();
     }
 
     private class CompressionEnforcingHandler extends CompressionHandler {
@@ -661,6 +691,11 @@ public class HttpServer {
                         LOGGER.warn("Failed to write file {}", file.getAbsolutePath(), e);
                         file.delete();
                         throw e;
+                    }
+                    // optionally add some response body to test that the client can handle it, even though Maven
+                    // Repository Protocol doesn't mention it
+                    if (responseBodyForPut != null) {
+                        writeResponseBodyMessage(req, response, responseBodyForPut);
                     }
                     response.setStatus(HttpServletResponse.SC_NO_CONTENT);
                 } else {

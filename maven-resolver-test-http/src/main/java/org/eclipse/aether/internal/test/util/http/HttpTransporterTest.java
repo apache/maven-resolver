@@ -39,10 +39,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.awaitility.Awaitility;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -304,6 +306,8 @@ public abstract class HttpTransporterTest {
             closer.run();
             closer = null;
         }
+        // check for leaked connections (e.g., due to not closing response body streams)
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> httpServer.getNumConnectedEndPoints() == 0);
         if (httpServer != null) {
             httpServer.stop();
             httpServer = null;
@@ -1493,6 +1497,20 @@ public abstract class HttpTransporterTest {
         task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
         transporter.put(task);
         assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
+    }
+
+    @Test
+    protected void testPut_WithResponseBody() throws Exception {
+        httpServer.setAuthentication("testuser", "testpass");
+        httpServer.setResponseBodyForPut("Some dummy response body");
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+        newTransporter(httpServer.getHttpUrl());
+        PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        transporter.put(task);
+        // this leads to stuck threads in some transporters if the response body is not consumed
     }
 
     @Test
