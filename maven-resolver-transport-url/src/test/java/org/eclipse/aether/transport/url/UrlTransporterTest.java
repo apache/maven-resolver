@@ -40,6 +40,11 @@ class UrlTransporterTest extends HttpTransporterTest {
     }
 
     @Override
+    protected boolean exposeContentCodingInTransportProperties() {
+        return false;
+    }
+
+    @Override
     protected boolean supportsHttp3() {
         return false;
     }
