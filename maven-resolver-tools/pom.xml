@@ -33,7 +33,6 @@
 
   <properties>
     <javaVersion>17</javaVersion>
-    <roasterVersion>2.31.1.Final</roasterVersion>
   </properties>
 
   <dependencies>
@@ -61,6 +60,12 @@
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-named-locks</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-named-locks-ipc</artifactId>
+      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -105,6 +110,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-transport-minio</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-wagon</artifactId>
       <scope>provided</scope>
     </dependency>
@@ -119,25 +130,17 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- Needed so the javadoc doclet can resolve javax.inject.* referenced by the scanned resolver sources. -->
     <dependency>
-      <groupId>org.jboss.forge.roaster</groupId>
-      <artifactId>roaster-api</artifactId>
-      <version>${roasterVersion}</version>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.jboss.forge.roaster</groupId>
-      <artifactId>roaster-jdt</artifactId>
-      <version>${roasterVersion}</version>
-    </dependency>
+
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
       <version>${plexusUtils4Version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.ow2.asm</groupId>
-      <artifactId>asm</artifactId>
-      <version>9.10.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.velocity</groupId>
@@ -165,6 +168,18 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-nop</artifactId>
       <scope>runtime</scope>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -202,6 +217,9 @@
             <phase>package</phase>
             <configuration>
               <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
+              <!-- 'test' scope classpath includes the provided-scope resolver artifacts, which the javadoc doclet
+                   needs to resolve the types referenced by the scanned configuration sources. -->
+              <classpathScope>test</classpathScope>
               <arguments>
                 <argument>--mode=resolver</argument>
                 <argument>--templates=configuration.md</argument>
@@ -218,6 +236,7 @@
             <phase>package</phase>
             <configuration>
               <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
+              <classpathScope>test</classpathScope>
               <arguments>
                 <argument>--mode=resolver</argument>
                 <argument>--templates=configuration.properties,configuration.yaml</argument>

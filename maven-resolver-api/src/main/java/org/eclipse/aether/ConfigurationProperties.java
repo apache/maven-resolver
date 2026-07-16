@@ -531,7 +531,7 @@ public final class ConfigurationProperties {
     /**
      * The maximum and preferred HTTP version. Some transporters transparently fall back to lower versions if remote server does not
      * support the requested version, while other may just simply fail the request.
-     * Value must be a {@link HttpVersion} enum value or its String representation. Default is {@link #DEFAULT_HTTP_VERSION}.
+     * Value must be a {@link HttpVersion} enum value or its String representation.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link ConfigurationProperties.HttpVersion}
