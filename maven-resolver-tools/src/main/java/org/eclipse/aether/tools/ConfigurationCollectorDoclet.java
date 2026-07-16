@@ -151,8 +151,10 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 DocCommentTree docComment = docTrees.getDocCommentTree(field);
                 if ("maven".equals(mode)) {
                     processMavenField(type, field, docComment, discoveredKeys);
-                } else {
+                } else if ("resolver".equals(mode)) {
                     processResolverField(type, field, docComment, discoveredKeys);
+                } else {
+                    throw new IllegalArgumentException("Unknown mode: " + mode);
                 }
             }
         }
@@ -191,6 +193,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
      * {@code org.apache.maven.api.annotations.Config} annotation (rather than the custom Javadoc block tags used by
      * Resolver), so the metadata is read from that annotation's attributes.
      */
+    // TODO: move to Maven repository module and use the Maven annotation type directly (currently we don't have a
+    // dependency on Maven API)
     private void processMavenField(
             TypeElement type, VariableElement field, DocCommentTree docComment, List<Map<String, String>> discovered) {
         AnnotationMirror config = getAnnotation(field, MAVEN_CONFIG_ANNOTATION);
@@ -230,6 +234,9 @@ public class ConfigurationCollectorDoclet implements Doclet {
             case "user_properties":
                 source = "User properties";
                 break;
+            case "system_properties":
+                source = "System properties";
+                break;
             default:
                 break;
         }
@@ -241,9 +248,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
         }
 
         String description = docComment != null ? renderContent(docComment.getFullBody()) : "";
-        if (description != null) {
-            description = description.replace("*", "\\*");
-        }
+        description = description.replace("*", "\\*");
 
         Map<String, String> entry = new LinkedHashMap<>();
         entry.put("key", String.valueOf(field.getConstantValue()));
