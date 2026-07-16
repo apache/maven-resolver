@@ -33,8 +33,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
@@ -175,7 +175,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
                 if ("gzip".equalsIgnoreCase(contentEncoding)) {
                     return new GZIPInputStream(con.getInputStream());
                 } else if ("deflate".equalsIgnoreCase(contentEncoding)) {
-                    return new java.util.zip.InflaterInputStream(con.getInputStream());
+                    return new InflaterInputStream(con.getInputStream());
                 }
             }
             return con.getInputStream();
@@ -238,13 +238,13 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         con.setRequestMethod(method);
         con.setUseCaches(false);
         con.setInstanceFollowRedirects(false);
-        con.setRequestProperty(HttpConstants.ACCEPT_ENCODING, "gzip");
+        con.setRequestProperty(HttpConstants.ACCEPT_ENCODING, "gzip,deflate");
         con.setRequestProperty(HttpConstants.CACHE_CONTROL, "no-cache, no-store");
         con.setRequestProperty("Pragma", "no-cache");
         con.setRequestProperty(HttpConstants.USER_AGENT, userAgent);
         headers.forEach(con::setRequestProperty);
         if (currAuth != null) {
-            con.setRequestProperty(HEADER_AUTHORIZATION, basicAuthorization(auth));
+            con.setRequestProperty(HEADER_AUTHORIZATION, basicAuthorization(currAuth));
         }
         if (currProxyAuth != null) {
             con.setRequestProperty(HEADER_PROXY_AUTHORIZATION, basicAuthorization(currProxyAuth));
@@ -259,7 +259,16 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
         } else if (responseCode == HttpURLConnection.HTTP_MOVED_PERM
                 || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
-            target.add(0, URI.create(con.getHeaderField(HEADER_LOCATION)));
+            String location = con.getHeaderField(HEADER_LOCATION);
+            if (location == null) {
+                throw new IOException("Redirect response missing Location header");
+            }
+            URI redirectUri = URI.create(con.getURL().toString()).resolve(location);
+            String scheme = redirectUri.getScheme();
+            if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+                throw new IOException("Unsupported redirect protocol: " + scheme);
+            }
+            target.add(0, redirectUri);
             return perform(method, target, currAuth, currProxyAuth, task);
         } else if (currAuth == null && this.auth != null && responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
             return perform(method, target, this.auth, currProxyAuth, task);
