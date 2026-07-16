@@ -299,12 +299,12 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             target.add(0, redirectUri);
             con.disconnect();
             return perform(method, target, currAuth, currProxyAuth, task);
-        } else if (currAuth == null && this.auth != null && responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+        } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED && currAuth == null && this.auth != null) {
             con.disconnect();
             return perform(method, target, this.auth, currProxyAuth, task);
-        } else if (currProxyAuth == null
-                && this.proxyAuth != null
-                && responseCode == HttpURLConnection.HTTP_PROXY_AUTH) {
+        } else if (responseCode == HttpURLConnection.HTTP_PROXY_AUTH
+                && currProxyAuth == null
+                && this.proxyAuth != null) {
             con.disconnect();
             return perform(method, target, currAuth, this.proxyAuth, task);
         }
