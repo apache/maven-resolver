@@ -53,7 +53,14 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.codehaus.plexus.util.io.CachingWriter;
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "docgen", description = "Maven Documentation Generator")
+/**
+ * This tool is used both from <a href="https://github.com/apache/maven-resolver/blob/79d102b66235f33ad1e6134e18451ac3ee91b44a/maven-resolver-tools/pom.xml#L185">Resolver</a>
+ * as well as from <a href="https://github.com/apache/maven/blob/7aa3c8a37b091a5a86d3dae3a7d99ce910fd6caa/pom.xml#L1043">Maven</a>
+ * to generate documentation for configuration keys. It scans the source files under a given root directory, collects the configuration keys declared in them and renders them into Velocity templates.
+ * It relies on javadoc with a custom doclet to extract the configuration keys from the source files.
+ * The doclet writes the discovered keys into an intermediate properties file, which is then read back and used to render the Velocity templates.
+ */
+@CommandLine.Command(name = "docgen", description = "Configuration Documentation Generator")
 public class CollectConfiguration implements Callable<Integer> {
     public static void main(String[] args) {
         new CommandLine(new CollectConfiguration()).execute(args);
@@ -78,6 +85,27 @@ public class CollectConfiguration implements Callable<Integer> {
      * Javadoc block tag marking a constant field as a configuration key.
      */
     protected static final String CONFIGURATION_MARKER = "@configurationSource";
+
+    /**
+     * Text marker used to pre-select the source files to feed the doclet when scanning Maven sources. Maven declares
+     * configuration keys via the {@code org.apache.maven.api.annotations.Config} annotation.
+     */
+    protected static final String MAVEN_CONFIGURATION_MARKER = "@Config";
+
+    /**
+     * The mode of the generator, i.e. what kind of sources are being scanned.
+     */
+    public enum Mode {
+        maven,
+        resolver
+    }
+
+    @CommandLine.Option(
+            names = {"-m", "--mode"},
+            arity = "1",
+            paramLabel = "mode",
+            description = "The mode of generator (what is being scanned?), supported modes are 'maven', 'resolver'")
+    protected Mode mode = Mode.resolver;
 
     @CommandLine.Option(
             names = {"-t", "--templates"},
@@ -124,6 +152,7 @@ public class CollectConfiguration implements Callable<Integer> {
         // Only feed javadoc the files that actually declare configuration keys. This keeps the set of types that
         // javadoc must resolve small, avoiding failures caused by unrelated sources referencing dependencies that
         // are not on this module's classpath (e.g. gson, jetty).
+        String marker = mode == Mode.maven ? MAVEN_CONFIGURATION_MARKER : CONFIGURATION_MARKER;
         List<File> sourceFiles;
         try (Stream<Path> stream = Files.walk(rootDirectory)) {
             sourceFiles = stream.map(Path::toAbsolutePath)
@@ -131,7 +160,7 @@ public class CollectConfiguration implements Callable<Integer> {
                     .filter(p -> p.toString().contains("/src/main/java/"))
                     .filter(p -> !p.toString().endsWith("/module-info.java"))
                     .filter(p -> !p.toString().contains("/maven-resolver-tools/"))
-                    .filter(p -> fileContains(p, CONFIGURATION_MARKER))
+                    .filter(p -> fileContains(p, marker))
                     .map(Path::toFile)
                     .collect(Collectors.toList());
         }
@@ -151,8 +180,8 @@ public class CollectConfiguration implements Callable<Integer> {
 
             Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(sourceFiles);
 
-            List<String> options =
-                    new ArrayList<>(Arrays.asList("--output", intermediateFile.toString(), "-encoding", "UTF-8"));
+            List<String> options = new ArrayList<>(Arrays.asList(
+                    "--output", intermediateFile.toString(), "--mode", mode.name(), "-encoding", "UTF-8"));
 
             Writer out = new PrintWriter(System.err);
             DocumentationTool.DocumentationTask task = documentationTool.getTask(

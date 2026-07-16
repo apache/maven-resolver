@@ -19,8 +19,11 @@
 package org.eclipse.aether.tools;
 
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
@@ -75,7 +78,19 @@ import jdk.javadoc.doclet.Reporter;
  */
 public class ConfigurationCollectorDoclet implements Doclet {
 
+    /**
+     * Fully qualified name of the Maven annotation that marks a configuration key when scanning Maven sources.
+     */
+    private static final String MAVEN_CONFIG_ANNOTATION = "org.apache.maven.api.annotations.Config";
+
     private Path output;
+
+    /**
+     * The scanning mode; either {@code resolver} (Javadoc block tags) or {@code maven} (the {@code @Config}
+     * annotation). Defaults to {@code resolver}.
+     */
+    private String mode = "resolver";
+
     private DocTrees docTrees;
 
     @Override
@@ -90,12 +105,19 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
     @Override
     public Set<? extends Option> getSupportedOptions() {
-        return Set.of(new SimpleOption(
-                List.of("--output", "-o"),
-                1,
-                "The intermediate properties file to write discovered keys to",
-                "<file>",
-                args -> output = Paths.get(args.get(0))));
+        return Set.of(
+                new SimpleOption(
+                        List.of("--output", "-o"),
+                        1,
+                        "The intermediate properties file to write discovered keys to",
+                        "<file>",
+                        args -> output = Paths.get(args.get(0))),
+                new SimpleOption(
+                        List.of("--mode", "-m"),
+                        1,
+                        "The scanning mode, either 'resolver' or 'maven'",
+                        "<mode>",
+                        args -> mode = args.get(0)));
     }
 
     @Override
@@ -127,7 +149,11 @@ public class ConfigurationCollectorDoclet implements Doclet {
                     continue;
                 }
                 DocCommentTree docComment = docTrees.getDocCommentTree(field);
-                processField(type, field, docComment, discoveredKeys);
+                if ("maven".equals(mode)) {
+                    processMavenField(type, field, docComment, discoveredKeys);
+                } else {
+                    processResolverField(type, field, docComment, discoveredKeys);
+                }
             }
         }
 
@@ -135,7 +161,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
         return true;
     }
 
-    private void processField(
+    private void processResolverField(
             TypeElement type, VariableElement field, DocCommentTree docComment, List<Map<String, String>> discovered) {
         if (docComment == null) {
             return;
@@ -158,6 +184,88 @@ public class ConfigurationCollectorDoclet implements Doclet {
         entry.put("configurationType", configurationType);
         entry.put("supportRepoIdSuffix", toYesNo(renderContent(blockTags.get("configurationRepoIdSuffix"))));
         discovered.add(entry);
+    }
+
+    /**
+     * Processes a constant field declared in Maven sources. Maven declares configuration keys via the
+     * {@code org.apache.maven.api.annotations.Config} annotation (rather than the custom Javadoc block tags used by
+     * Resolver), so the metadata is read from that annotation's attributes.
+     */
+    private void processMavenField(
+            TypeElement type, VariableElement field, DocCommentTree docComment, List<Map<String, String>> discovered) {
+        AnnotationMirror config = getAnnotation(field, MAVEN_CONFIG_ANNOTATION);
+        if (config == null) {
+            return;
+        }
+
+        String source = "USER_PROPERTIES";
+        String defaultValue = "";
+        String configurationType = "java.lang.String";
+        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> attribute :
+                config.getElementValues().entrySet()) {
+            String name = attribute.getKey().getSimpleName().toString();
+            Object value = attribute.getValue().getValue();
+            switch (name) {
+                case "source":
+                    source = value instanceof VariableElement
+                            ? ((VariableElement) value).getSimpleName().toString()
+                            : String.valueOf(value);
+                    break;
+                case "defaultValue":
+                    defaultValue = String.valueOf(value);
+                    break;
+                case "type":
+                    configurationType = String.valueOf(value);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        source = source.toLowerCase(Locale.ROOT);
+        switch (source) {
+            case "model":
+                source = "Model properties";
+                break;
+            case "user_properties":
+                source = "User properties";
+                break;
+            default:
+                break;
+        }
+
+        if (configurationType.startsWith("java.lang.")) {
+            configurationType = configurationType.substring("java.lang.".length());
+        } else if (configurationType.startsWith("java.util.")) {
+            configurationType = configurationType.substring("java.util.".length());
+        }
+
+        String description = docComment != null ? renderContent(docComment.getFullBody()) : "";
+        if (description != null) {
+            description = description.replace("*", "\\*");
+        }
+
+        Map<String, String> entry = new LinkedHashMap<>();
+        entry.put("key", String.valueOf(field.getConstantValue()));
+        entry.put("defaultValue", nvl(defaultValue, ""));
+        entry.put("fqName", "");
+        entry.put("description", nvl(description, ""));
+        entry.put("since", nvl(getSince(type, docComment), ""));
+        entry.put("configurationSource", source);
+        entry.put("configurationType", configurationType);
+        entry.put("supportRepoIdSuffix", "");
+        discovered.add(entry);
+    }
+
+    private AnnotationMirror getAnnotation(Element element, String fqName) {
+        for (AnnotationMirror annotation : element.getAnnotationMirrors()) {
+            Element annotationElement = annotation.getAnnotationType().asElement();
+            if (annotationElement instanceof TypeElement
+                    && ((TypeElement) annotationElement).getQualifiedName().contentEquals(fqName)) {
+                return annotation;
+            }
+        }
+        return null;
     }
 
     private void writeProperties(List<Map<String, String>> discoveredKeys) {

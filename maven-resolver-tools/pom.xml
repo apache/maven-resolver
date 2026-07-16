@@ -221,6 +221,7 @@
                    needs to resolve the types referenced by the scanned configuration sources. -->
               <classpathScope>test</classpathScope>
               <arguments>
+                <argument>--mode=resolver</argument>
                 <argument>--templates=configuration.md</argument>
                 <argument>${basedir}/..</argument>
                 <argument>${basedir}/../target/generated-site/markdown/</argument>
@@ -237,6 +238,7 @@
               <mainClass>org.eclipse.aether.tools.CollectConfiguration</mainClass>
               <classpathScope>test</classpathScope>
               <arguments>
+                <argument>--mode=resolver</argument>
                 <argument>--templates=configuration.properties,configuration.yaml</argument>
                 <argument>${basedir}/..</argument>
                 <argument>${basedir}/target/</argument>
