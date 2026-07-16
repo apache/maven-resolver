@@ -160,16 +160,23 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     @Override
     protected void implPeek(PeekTask task) throws Exception {
         HttpURLConnection con = perform(METHOD_HEAD, baseUri.resolve(task.getLocation()), null);
-        if (HttpURLConnection.HTTP_OK != con.getResponseCode()) {
-            throw new HttpTransporterException(con.getResponseCode());
+        int responseCode = con.getResponseCode();
+        try {
+            if (HttpURLConnection.HTTP_OK != responseCode) {
+                throw new HttpTransporterException(responseCode);
+            }
+        } finally {
+            con.disconnect();
         }
     }
 
     @Override
     protected void implGet(GetTask task) throws Exception {
         HttpURLConnection con = perform(METHOD_GET, baseUri.resolve(task.getLocation()), task);
-        if (HttpURLConnection.HTTP_OK != con.getResponseCode()) {
-            throw new HttpTransporterException(con.getResponseCode());
+        int responseCode = con.getResponseCode();
+        if (HttpURLConnection.HTTP_OK != responseCode) {
+            con.disconnect();
+            throw new HttpTransporterException(responseCode);
         }
         IOSupplier<InputStream> inputStreamSupplier = () -> {
             String contentEncoding = con.getHeaderField("Content-Encoding");
@@ -263,20 +270,38 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
                 || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
             String location = con.getHeaderField(HEADER_LOCATION);
             if (location == null) {
+                con.disconnect();
                 throw new IOException("Redirect response missing Location header");
             }
-            URI redirectUri = URI.create(con.getURL().toString()).resolve(location);
-            String scheme = redirectUri.getScheme();
-            if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
-                throw new IOException("Unsupported redirect protocol: " + scheme);
+            URI currentUri = URI.create(con.getURL().toString());
+            URI redirectUri = currentUri.resolve(location);
+            // forbid HTTPS -> HTTP downgrade during redirect
+            if ("https".equalsIgnoreCase(currentUri.getScheme()) && "http".equalsIgnoreCase(redirectUri.getScheme())) {
+                con.disconnect();
+                throw new IOException("Refusing to follow redirect from https to http");
+            }
+            // ensure we are HTTP or HTTPS after redirect
+            if (!"http".equalsIgnoreCase(redirectUri.getScheme())
+                    && !"https".equalsIgnoreCase(redirectUri.getScheme())) {
+                con.disconnect();
+                throw new IOException("Unsupported redirect protocol: " + redirectUri.getScheme());
+            }
+            // reset auth if authority differs after redirect
+            String currentAuthority = currentUri.getAuthority();
+            String redirectAuthority = redirectUri.getAuthority();
+            if (currentAuthority == null || !currentAuthority.equalsIgnoreCase(redirectAuthority)) {
+                currAuth = null;
             }
             target.add(0, redirectUri);
+            con.disconnect();
             return perform(method, target, currAuth, currProxyAuth, task);
         } else if (currAuth == null && this.auth != null && responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            con.disconnect();
             return perform(method, target, this.auth, currProxyAuth, task);
         } else if (currProxyAuth == null
                 && this.proxyAuth != null
                 && responseCode == HttpURLConnection.HTTP_PROXY_AUTH) {
+            con.disconnect();
             return perform(method, target, currAuth, this.proxyAuth, task);
         }
         if (currAuth != null) {
