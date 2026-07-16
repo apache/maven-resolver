@@ -30,7 +30,7 @@ import org.eclipse.aether.transfer.TransferEvent;
 
 /**
  * Builder for HTTP transport properties used in {@link TransportListener#transportPropertiesAvailable(Map)}.
- * @since NEXT
+ * @since 2.0.21
  */
 public final class HttpTransportPropertiesBuilder {
     private final Map<TransferEvent.TransportPropertyKey, Object> properties = new HashMap<>();

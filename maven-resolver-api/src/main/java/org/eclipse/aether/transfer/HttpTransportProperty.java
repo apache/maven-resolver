@@ -23,7 +23,7 @@ package org.eclipse.aether.transfer;
  * These keys can be used to expose additional information about the HTTP transport operation.
  * Additionally it defines types for the values of these keys, such as {@link HttpVersion} and {@link SslProtocol}.
  * @see TransferEvent#getTransportProperties()
- * @since NEXT
+ * @since 2.0.21
  */
 public final class HttpTransportProperty {
 
