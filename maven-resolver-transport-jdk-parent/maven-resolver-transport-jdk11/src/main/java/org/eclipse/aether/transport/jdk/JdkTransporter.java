@@ -44,6 +44,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.net.http.HttpClient;
+import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
@@ -71,6 +72,7 @@ import com.github.mizosoft.methanol.Methanol;
 import com.github.mizosoft.methanol.RetryInterceptor;
 import com.github.mizosoft.methanol.RetryInterceptor.Context;
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.ConfigurationProperties.HttpVersion;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -81,11 +83,14 @@ import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportListenerNotifyingInputStream;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransportPropertiesBuilder;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.transfer.HttpTransportProperty;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.slf4j.Logger;
@@ -105,7 +110,6 @@ import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.RANG
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.USER_AGENT;
 import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.CONFIG_PROP_HTTP_VERSION;
 import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.CONFIG_PROP_MAX_CONCURRENT_REQUESTS;
-import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.DEFAULT_HTTP_VERSION;
 import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.DEFAULT_MAX_CONCURRENT_REQUESTS;
 
 /**
@@ -244,6 +248,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         prepare(request);
         try {
             HttpResponse<Void> response = send(request.build(), HttpResponse.BodyHandlers.discarding());
+            task.getListener().transportPropertiesAvailable(createTransportProperties(response));
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 throw new HttpTransporterException(response.statusCode());
             }
@@ -279,6 +284,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 prepare(request);
                 try {
                     response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+                    task.getListener().transportPropertiesAvailable(createTransportProperties(response));
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
                         if (resume && response.statusCode() == PRECONDITION_FAILED) {
                             closeBody(response);
@@ -365,6 +371,27 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
+    private Map<TransferEvent.TransportPropertyKey, Object> createTransportProperties(HttpResponse<?> response) {
+        HttpTransportPropertiesBuilder builder = new HttpTransportPropertiesBuilder(toHttpVersion(response.version()));
+        response.sslSession().ifPresent(ssl -> {
+            builder.withSslProtocol(ssl.getProtocol());
+            builder.withSslCipherSuite(ssl.getCipherSuite());
+        });
+        // TODO: add compression algorithm if any (https://github.com/mizosoft/methanol/issues/182)
+        return builder.build();
+    }
+
+    static HttpTransportProperty.HttpVersion toHttpVersion(HttpClient.Version version) {
+        switch (version) {
+            case HTTP_1_1:
+                return HttpTransportProperty.HttpVersion.HTTP_1_1;
+            case HTTP_2:
+                return HttpTransportProperty.HttpVersion.HTTP_2;
+            default:
+                throw new IllegalArgumentException("Unsupported HTTP version: " + version);
+        }
+    }
+
     private static Function<String, String> headerGetter(HttpResponse<?> response) {
         return s -> response.headers().firstValue(s).orElse(null);
     }
@@ -388,13 +415,13 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         if (sendRfc9457Accept) {
             JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
         }
-
         if (task.getDataLength() == 0L) {
             request.PUT(HttpRequest.BodyPublishers.noBody());
         } else {
             request.PUT(HttpRequest.BodyPublishers.fromPublisher(
                     HttpRequest.BodyPublishers.ofInputStream(() -> {
                         try {
+                            // transport properties are not available for outgoing requests
                             return new TransportListenerNotifyingInputStream(
                                     task.newInputStream(), task.getListener(), task.getDataLength());
                         } catch (IOException e) {
@@ -407,6 +434,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         prepare(request);
         try {
             HttpResponse<InputStream> response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+            task.getListener().transportPropertiesAvailable(createTransportProperties(response));
             if (response.statusCode() >= MULTIPLE_CHOICES) {
                 try {
                     JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
@@ -468,6 +496,52 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
     }
 
+    HttpClient.Version getHttpVersion(RepositorySystemSession session, RemoteRepository repository) {
+        HttpVersion httpVersion = HttpTransporterUtils.getHttpVersion(session, repository);
+        if (httpVersion == ConfigurationProperties.DEFAULT_HTTP_VERSION) {
+            // Fall back to legacy JDK Transporter specific property when it is explicitly configured.
+            String configuredLegacyHttpVersion = ConfigUtils.getString(
+                    session, null, CONFIG_PROP_HTTP_VERSION + "." + repository.getId(), CONFIG_PROP_HTTP_VERSION);
+            if (configuredLegacyHttpVersion != null) {
+                return resolveHttpVersion(configuredLegacyHttpVersion);
+            }
+            return HttpClient.Version.HTTP_2;
+        } else {
+            switch (httpVersion) {
+                case MAXIMUM:
+                    return getMaximumSupportedHttpVersion();
+                case HTTP_1_1:
+                    return HttpClient.Version.HTTP_1_1;
+                case HTTP_2:
+                case DEFAULT:
+                    return HttpClient.Version.HTTP_2;
+                case HTTP_3:
+                    return resolveHttpVersion("HTTP_3");
+                default:
+                    // unreachable but necessary for Checkstyle to not complain about missing default case
+                    throw new IllegalStateException("Unknown HTTP version: " + httpVersion);
+            }
+        }
+    }
+
+    private HttpClient.Version resolveHttpVersion(String requestedVersion) {
+        try {
+            return HttpClient.Version.valueOf(requestedVersion);
+        } catch (IllegalArgumentException e) {
+            HttpClient.Version maximumHttpVersion = getMaximumSupportedHttpVersion();
+            LOGGER.warn(
+                    "HTTP version '{}' is not supported by the running JRE, using '{}' instead",
+                    requestedVersion,
+                    maximumHttpVersion);
+            return maximumHttpVersion;
+        }
+    }
+
+    HttpClient.Version getMaximumSupportedHttpVersion() {
+        HttpClient.Version[] values = HttpClient.Version.values();
+        return values[values.length - 1];
+    }
+
     private HttpClient createClient(RepositorySystemSession session, RemoteRepository repository, boolean insecure)
             throws RuntimeException {
 
@@ -484,9 +558,18 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             }
         }
 
+        Version httpVersion = getHttpVersion(session, repository);
         if (sslContext == null) {
             try {
                 if (insecure) {
+                    if (httpVersion.name().equals("HTTP_3")) {
+                        // custom trust manager not supported for HTTP/3 (Quic)
+                        // (https://github.com/openjdk/jdk/blob/631b675d7949a0e6312d8d6f45e2515d53b12f05/src/java.base/share/classes/sun/security/ssl/SSLContextImpl.java#L529)
+                        // https://openjdk.org/jeps/517
+                        // https://mail.openjdk.org/archives/list/net-dev@openjdk.org/thread/LHSC7MWRFDJE2KGS2QMPFJPZX3XEQKOQ/
+                        throw new IllegalStateException(
+                                "Insecure HTTPS connections are not supported for HTTP/3 (Quic)");
+                    }
                     sslContext = SSLContext.getInstance("TLS");
                     X509ExtendedTrustManager tm = new X509ExtendedTrustManager() {
                         @Override
@@ -523,14 +606,15 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     throw new IllegalStateException("SSL Context setup failure", e);
                 }
             }
+        } else {
+            if (insecure) {
+                throw new IllegalStateException(
+                        "Insecure HTTPS connections are not supported when a custom SSLContext is configured");
+            }
         }
 
         Methanol.Builder builder = Methanol.newBuilder()
-                .version(HttpClient.Version.valueOf(ConfigUtils.getString(
-                        session,
-                        DEFAULT_HTTP_VERSION,
-                        CONFIG_PROP_HTTP_VERSION + "." + repository.getId(),
-                        CONFIG_PROP_HTTP_VERSION)))
+                .version(httpVersion)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofMillis(connectTimeout))
                 // this only considers the time until the response header is received, see

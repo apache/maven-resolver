@@ -68,6 +68,7 @@ From | To | With
 `String` | `int` | [`Integer.parseInt(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Integer.html#parseInt(java.lang.String))
 `String` | `long` | [`Long.parseLong(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Long.html#parseLong(java.lang.String))
 `String` | `float` | [`Float.parseFloat(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Float.html#parseFloat(java.lang.String))
+`String` | `T extends Enum<T>` | [`Enum.valueOf(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Enum.html#valueOf(java.lang.Class,%20java.lang.String))
 
 ## Set Configuration from Apache Maven
 

@@ -72,6 +72,18 @@
       <groupId>org.eclipse.jetty.http2</groupId>
       <artifactId>jetty-http2-client-transport</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.http3</groupId>
+      <artifactId>jetty-http3-client-transport</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.quic</groupId>
+      <artifactId>jetty-quic-quiche-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.quic</groupId>
+      <artifactId>jetty-quic-quiche-jna</artifactId>
+    </dependency>
     <!-- supported compressions -->
     <dependency>
       <groupId>org.eclipse.jetty.compression</groupId>
@@ -114,6 +126,25 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-bytecode-version</id>
+            <configuration>
+              <rules>
+                <enforceBytecodeVersion>
+                  <excludes>
+                    <!-- this requires Java 22 but is optional only -->
+                    <exclude>org.eclipse.jetty.quic:jetty-quic-quiche-foreign</exclude>
+                  </excludes>
+                </enforceBytecodeVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>sisu-maven-plugin</artifactId>

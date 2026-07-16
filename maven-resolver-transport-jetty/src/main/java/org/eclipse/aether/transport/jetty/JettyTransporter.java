@@ -19,7 +19,6 @@
 package org.eclipse.aether.transport.jetty;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.X509TrustManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +27,9 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.cert.X509Certificate;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -39,6 +40,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.ConfigurationProperties.HttpVersion;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -48,11 +50,14 @@ import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.TransportTask;
 import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractor;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransportPropertiesBuilder;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
+import org.eclipse.aether.transfer.HttpTransportProperty;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
+import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.eclipse.jetty.client.Authentication;
@@ -64,10 +69,18 @@ import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.transport.HttpClientConnectionFactory;
 import org.eclipse.jetty.client.transport.HttpClientTransportDynamic;
+import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.transport.ClientConnectionFactoryOverHTTP2;
+import org.eclipse.jetty.http3.client.HTTP3Client;
+import org.eclipse.jetty.http3.client.HTTP3ClientQuicConfiguration;
+import org.eclipse.jetty.http3.client.transport.ClientConnectionFactoryOverHTTP3;
+import org.eclipse.jetty.io.ClientConnectionFactory;
 import org.eclipse.jetty.io.ClientConnector;
+import org.eclipse.jetty.io.EndPoint.SslSessionData;
+import org.eclipse.jetty.quic.quiche.client.QuicheClientQuicConfiguration;
+import org.eclipse.jetty.quic.quiche.client.QuicheTransport;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.ACCEPT_ENCODING;
@@ -180,7 +193,16 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         if (preemptiveAuth) {
             mayApplyPreemptiveAuth(request);
         }
+        // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+        Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+        request.onResponseHeader((r, field) -> {
+            rawResponseHeaders.put(field.getLowerCaseName(), field);
+            return true; // continue processing
+        });
         Response response = request.send();
+        Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                createTransportProperties(request, rawResponseHeaders);
+        task.getListener().transportPropertiesAvailable(transportProperties);
         if (response.getStatus() >= MULTIPLE_CHOICES) {
             throw new HttpTransporterException(response.getStatus());
         }
@@ -213,6 +235,12 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 });
             }
 
+            // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+            Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+            request.onResponseHeader((r, field) -> {
+                rawResponseHeaders.put(field.getLowerCaseName(), field);
+                return true; // continue processing
+            });
             listener = new InputStreamResponseListener();
             request.send(listener);
             try {
@@ -225,6 +253,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     throw new RuntimeException(t);
                 }
             }
+            Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                    createTransportProperties(request, rawResponseHeaders);
+            task.getListener().transportPropertiesAvailable(transportProperties);
             if (response.getStatus() >= MULTIPLE_CHOICES) {
                 if (resume && response.getStatus() == PRECONDITION_FAILED) {
                     resume = false;
@@ -289,6 +320,36 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
     }
 
+    private Map<TransferEvent.TransportPropertyKey, Object> createTransportProperties(
+            Request request, Map<String, HttpField> rawResponseHeaders) {
+        HttpTransportPropertiesBuilder builder =
+                new HttpTransportPropertiesBuilder(toHttpVersion(request.getVersion()));
+        SslSessionData sslSessionData = request.getConnection().getSslSessionData();
+        if (sslSessionData != null && sslSessionData.sslSession() != null) {
+            builder.withSslProtocol(sslSessionData.sslSession().getProtocol());
+            builder.withSslCipherSuite(sslSessionData.sslSession().getCipherSuite());
+        }
+        if (rawResponseHeaders.containsKey("content-encoding")) {
+            builder.withContentCoding(rawResponseHeaders.get("content-encoding").getValue());
+        }
+        return builder.build();
+    }
+
+    static HttpTransportProperty.HttpVersion toHttpVersion(org.eclipse.jetty.http.HttpVersion version) {
+        switch (version) {
+            case HTTP_1_0:
+                return HttpTransportProperty.HttpVersion.HTTP_1_0;
+            case HTTP_1_1:
+                return HttpTransportProperty.HttpVersion.HTTP_1_1;
+            case HTTP_2:
+                return HttpTransportProperty.HttpVersion.HTTP_2;
+            case HTTP_3:
+                return HttpTransportProperty.HttpVersion.HTTP_3;
+            default:
+                throw new IllegalArgumentException("Unknown version " + version.toString());
+        }
+    }
+
     private static Function<String, String> headerGetter(Response response) {
         return s -> response.getHeaders().get(s);
     }
@@ -304,6 +365,12 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             mayApplyPreemptiveAuth(request);
         }
         request.body(PutTaskRequestContent.from(task));
+        // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+        Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+        request.onResponseHeader((r, field) -> {
+            rawResponseHeaders.put(field.getLowerCaseName(), field);
+            return true; // continue processing
+        });
         AtomicBoolean started = new AtomicBoolean(false);
         Response response;
         InputStreamResponseListener listener = new InputStreamResponseListener();
@@ -336,6 +403,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     })
                     .send(listener);
             response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
+            task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof IOException ioex) {
@@ -388,58 +456,62 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             }
         }
 
-        if (sslContext == null) {
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        if (insecure) {
+            // this is also passed on to Quiche for HTTP/3
+            sslContextFactory.setEndpointIdentificationAlgorithm(null);
+            sslContextFactory.setHostnameVerifier((name, context) -> true);
+            sslContextFactory.setTrustAll(true);
+        } else {
             try {
-                if (insecure) {
-                    sslContext = SSLContext.getInstance("TLS");
-                    X509TrustManager tm = new X509TrustManager() {
-                        @Override
-                        public void checkClientTrusted(X509Certificate[] chain, String authType) {}
-
-                        @Override
-                        public void checkServerTrusted(X509Certificate[] chain, String authType) {}
-
-                        @Override
-                        public X509Certificate[] getAcceptedIssuers() {
-                            return new X509Certificate[0];
-                        }
-                    };
-                    sslContext.init(null, new X509TrustManager[] {tm}, null);
-                } else {
+                if (sslContext == null) {
+                    // use the JVM's default SSL context (potentially with custom keystores/truststores)
+                    // https://github.com/jetty/jetty.project/issues/15378
                     sslContext = SSLContext.getDefault();
                 }
-            } catch (Exception e) {
-                if (e instanceof RuntimeException) {
-                    throw (RuntimeException) e;
-                } else {
-                    throw new IllegalStateException("SSL Context setup failure", e);
-                }
+            } catch (NoSuchAlgorithmException e) {
+                throw new IllegalStateException("SSL Context setup failure", e);
             }
         }
 
-        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-        sslContextFactory.setSslContext(sslContext);
-        if (insecure) {
-            sslContextFactory.setEndpointIdentificationAlgorithm(null);
-            sslContextFactory.setHostnameVerifier((name, context) -> true);
+        if (sslContext != null) {
+            // not properly supported by Quiche for HTTP/3, but Jetty will use it for HTTP/2 and HTTP/1.1
+            sslContextFactory.setSslContext(sslContext);
         }
 
         ClientConnector clientConnector = new ClientConnector();
         clientConnector.setSslContextFactory(sslContextFactory);
 
-        HTTP2Client http2Client = new HTTP2Client(clientConnector);
-        ClientConnectionFactoryOverHTTP2.HTTP2 http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
-
-        HttpClientTransportDynamic transport;
+        Collection<ClientConnectionFactory.Info> connectors = new ArrayList<>();
         if ("https".equalsIgnoreCase(repository.getProtocol())) {
-            transport = new HttpClientTransportDynamic(
-                    clientConnector, http2, HttpClientConnectionFactory.HTTP11); // HTTPS, prefer H2
-        } else {
-            transport = new HttpClientTransportDynamic(
-                    clientConnector, HttpClientConnectionFactory.HTTP11, http2); // plaintext HTTP, H2 cannot be used
+            HttpVersion httpVersion = HttpTransporterUtils.getHttpVersion(session, repository);
+            switch (httpVersion) {
+                case MAXIMUM:
+                case HTTP_3:
+                    QuicheClientQuicConfiguration clientQuicConfig =
+                            HTTP3ClientQuicConfiguration.configure(new QuicheClientQuicConfiguration());
+                    HTTP3Client http3Client = new HTTP3Client(clientQuicConfig, clientConnector);
+                    QuicheTransport transport = new QuicheTransport(clientQuicConfig);
+                    ClientConnectionFactoryOverHTTP3.HTTP3 http3 =
+                            new ClientConnectionFactoryOverHTTP3.HTTP3(http3Client, transport);
+                    connectors.add(http3);
+                    break; // fallback to HTTP/2 not supported yet (https://github.com/jetty/jetty.project/issues/15423)
+                case HTTP_2:
+                case DEFAULT:
+                    HTTP2Client http2Client = new HTTP2Client(clientConnector);
+                    ClientConnectionFactoryOverHTTP2.HTTP2 http2 =
+                            new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
+                    connectors.add(http2);
+                    break;
+                default:
+                    break;
+            }
         }
+        connectors.add(HttpClientConnectionFactory.HTTP11); // HTTP/1.1, always supported but has least priority
 
-        HttpClient httpClient = new HttpClient(transport);
+        HttpClientTransportDynamic dynamicTransport = new HttpClientTransportDynamic(
+                clientConnector, connectors.toArray(new ClientConnectionFactory.Info[0]));
+        HttpClient httpClient = new HttpClient(dynamicTransport);
         httpClient.setConnectTimeout(connectTimeout);
         httpClient.setIdleTimeout(requestTimeout);
         httpClient.setFollowRedirects(ConfigUtils.getBoolean(

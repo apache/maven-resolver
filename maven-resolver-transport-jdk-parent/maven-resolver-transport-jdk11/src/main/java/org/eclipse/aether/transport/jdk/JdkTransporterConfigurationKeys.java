@@ -39,7 +39,9 @@ public final class JdkTransporterConfigurationKeys {
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_HTTP_VERSION}
      * @configurationRepoIdSuffix Yes
+     * @deprecated Use {@link ConfigurationProperties#HTTP_VERSION} instead. This property is kept for backward compatibility and will be removed in future versions.
      */
+    @Deprecated
     public static final String CONFIG_PROP_HTTP_VERSION = CONFIG_PROPS_PREFIX + "httpVersion";
 
     public static final String DEFAULT_HTTP_VERSION = "HTTP_1_1";

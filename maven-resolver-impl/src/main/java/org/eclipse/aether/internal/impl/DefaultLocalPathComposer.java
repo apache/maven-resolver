@@ -25,6 +25,8 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.aether.util.PathUtils.validateArtifactComponents;
+import static org.eclipse.aether.util.PathUtils.validateMetadataComponents;
 
 /**
  * Default implementation of {@link LocalPathComposer}.
@@ -37,6 +39,7 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
     @Override
     public String getPathForArtifact(Artifact artifact, boolean local) {
         requireNonNull(artifact);
+        validateArtifactComponents(artifact);
 
         StringBuilder path = new StringBuilder(128);
 
@@ -68,6 +71,7 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
     public String getPathForMetadata(Metadata metadata, String repositoryKey) {
         requireNonNull(metadata);
         requireNonNull(repositoryKey);
+        validateMetadataComponents(metadata);
 
         StringBuilder path = new StringBuilder(128);
 
