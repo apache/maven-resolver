@@ -388,7 +388,12 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             case HTTP_2:
                 return HttpTransportProperty.HttpVersion.HTTP_2;
             default:
-                throw new IllegalArgumentException("Unsupported HTTP version: " + version);
+                // support HTTP_3 via name (as only part of Java 26+ API)
+                if ("HTTP_3".equals(version.name())) {
+                    return HttpTransportProperty.HttpVersion.HTTP_3;
+                } else {
+                    throw new IllegalArgumentException("Unsupported HTTP version: " + version);
+                }
         }
     }
 
