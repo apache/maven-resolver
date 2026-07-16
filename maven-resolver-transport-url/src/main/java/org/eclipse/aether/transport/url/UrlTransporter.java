@@ -253,8 +253,8 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     }
 
     @Override
-    protected void implPut(PutTask task) throws Exception {
-        throw new IOException("unsupported operation");
+    protected void implPut(PutTask task) {
+        throw new UnsupportedOperationException("PUT method unsupported");
     }
 
     @Override
@@ -314,13 +314,20 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
                 con.disconnect();
                 throw new IOException("Refusing to follow redirects");
             }
-            String location = con.getHeaderField(HEADER_LOCATION);
+            final String location = con.getHeaderField(HEADER_LOCATION);
             if (location == null) {
                 con.disconnect();
                 throw new IOException("Redirect response missing Location header");
             }
-            URI currentUri = URI.create(con.getURL().toString());
-            URI redirectUri = currentUri.resolve(location);
+            final URI currentUri;
+            final URI redirectUri;
+            try {
+                currentUri = URI.create(con.getURL().toString());
+                redirectUri = currentUri.resolve(location);
+            } catch (IllegalArgumentException e) {
+                con.disconnect();
+                throw new IOException("Redirect response has invalid Location header: " + location, e);
+            }
             // ensure we are HTTP or HTTPS after redirect
             if (!"http".equalsIgnoreCase(redirectUri.getScheme())
                     && !"https".equalsIgnoreCase(redirectUri.getScheme())) {
@@ -332,7 +339,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             if (currentAuthority == null || !currentAuthority.equalsIgnoreCase(redirectAuthority)) {
                 if (redirectMode == RedirectMode.SAME_AUTHORITY) {
                     con.disconnect();
-                    throw new IOException("Refusing to follow redirect to different authority");
+                    throw new IOException("Refusing to follow redirect to different authority: " + redirectAuthority);
                 } else {
                     // reset auth if authority differs after redirect
                     currAuth = null;

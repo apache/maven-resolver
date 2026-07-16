@@ -18,7 +18,7 @@
 # Maven Resolver URL Transport
 
 Special Transport with limited HTTP capabilities. The main use case of this transport is outside of
-Maven, but in case of other apps that are Java 8, and integrate Resolver only for **consumption purposes**.
+Maven, in apps that are Java 8+ and integrate Resolver only for **consumption purposes**.
 Before this transport, the only option was to either bump Java level to 11 and use JDK transport, or to use
 the heavyweight Apache HttpClient transport, which is not always desirable.
 
