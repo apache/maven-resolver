@@ -50,3 +50,8 @@ Transporter based on Jetty HttpClient.
 In Maven 4 this transport is not available by default (is not bundled). To use it, 
 you need to add `org.apache.maven.resolver.transport:transport-http-jetty` artifact with its runtime dependencies to
 `/lib` directory of Maven. Once added to core classpath, it will take over the role of default transport.
+
+## The `url` (Consumer Only) Transporter
+
+This transport is limited functionality transport, usable only in **consumer use cases** (resolving artifacts).
+It is implemented using `java.net.HttpURLConnection` class.
