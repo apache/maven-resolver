@@ -54,6 +54,16 @@ import org.eclipse.aether.util.ConfigUtils;
  */
 final class GlobalState implements Closeable {
 
+    static {
+        // force initialization of SSLConnectionSocketFactory class:
+        // ensure that the connection socket factory is initialized before we start using it in any multithreaded
+        // environment, otherwise we may run into a deadlock.
+        // References:
+        // https://github.com/quarkusio/quarkus/issues/55317
+        // https://github.com/quarkusio/quarkus/pull/55345
+        SSLConnectionSocketFactory.getDefaultHostnameVerifier();
+    }
+
     static class CompoundKey {
 
         private final Object[] keys;

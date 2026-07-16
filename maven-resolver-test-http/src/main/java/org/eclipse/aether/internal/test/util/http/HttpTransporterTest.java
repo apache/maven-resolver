@@ -29,7 +29,6 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.ServerSocket;
 import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -70,12 +69,15 @@ import org.eclipse.aether.transfer.HttpTransportProperty;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.eclipse.jetty.http.HttpVersion;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -87,19 +89,21 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Common set of tests against Http transporter.
  */
 @SuppressWarnings({"checkstyle:MethodName"})
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public abstract class HttpTransporterTest {
 
-    protected static final Path KEY_STORE_PATH = Paths.get("target/keystore");
+    protected static final Path SERVER_STORE_PATH = Paths.get("target/server-store");
 
-    protected static final Path KEY_STORE_SELF_SIGNED_PATH = Paths.get("target/keystore-self-signed");
+    protected static final Path CLIENT_STORE_PATH = Paths.get("target/client-store");
 
-    protected static final Path TRUST_STORE_PATH = Paths.get("target/trustStore");
+    protected static final Path PEM_QUICHE_SERVER_PATH = Paths.get("target/pems");
 
     protected static SSLContext defaultSslContext;
 
@@ -111,18 +115,14 @@ public abstract class HttpTransporterTest {
     @BeforeAll
     protected static void beforeAll() throws NoSuchAlgorithmException {
         // populate custom keystore and truststore
-        URL keyStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store");
-        URL keyStoreSelfSignedUrl =
-                HttpTransporterTest.class.getClassLoader().getResource("ssl/server-store-selfsigned");
-        URL trustStoreUrl = HttpTransporterTest.class.getClassLoader().getResource("ssl/client-store");
-
         try {
-            try (InputStream keyStoreStream = keyStoreUrl.openStream();
-                    InputStream keyStoreSelfSignedStream = keyStoreSelfSignedUrl.openStream();
-                    InputStream trustStoreStream = trustStoreUrl.openStream()) {
-                Files.copy(keyStoreStream, KEY_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(keyStoreSelfSignedStream, KEY_STORE_SELF_SIGNED_PATH, StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(trustStoreStream, TRUST_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream keyStoreStream =
+                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/server-store");
+                    InputStream trustStoreStream =
+                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/client-store"); ) {
+                Files.copy(keyStoreStream, SERVER_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(trustStoreStream, CLIENT_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
+                Files.createDirectories(PEM_QUICHE_SERVER_PATH);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -130,7 +130,7 @@ public abstract class HttpTransporterTest {
         // override default SSLContext to include our custom keystore and truststore (which are "cross connected" with
         // HttpServer)
         defaultSslContext = SSLContext.getDefault();
-        SSLContext.setDefault(createSSLContext());
+        SSLContext.setDefault(createClientSSLContext());
     }
 
     @AfterAll
@@ -141,23 +141,23 @@ public abstract class HttpTransporterTest {
     }
 
     /**
-     * Creates an {@link SSLContext} that extends the default keystore and truststore with the entries
-     * from {@link #KEY_STORE_PATH} (password {@code "server-pwd"}) and {@link #TRUST_STORE_PATH}
+     * Creates an {@link SSLContext} for the client that extends the default keystore and truststore with the entries
+     * from {@link #SERVER_STORE_PATH} (password {@code "server-pwd"}) and {@link #CLIENT_STORE_PATH}
      * (password {@code "client-pwd"}).
      *
      * @return an {@link SSLContext} combining default and custom key/trust material
      */
-    protected static SSLContext createSSLContext() {
+    protected static SSLContext createClientSSLContext() {
         try {
             // Load custom key store (KEY_STORE_PATH acts as truststore in "cross connected" setup)
-            KeyStore customTrustStore = KeyStore.getInstance("jks");
-            try (InputStream is = Files.newInputStream(KEY_STORE_PATH)) {
+            KeyStore customTrustStore = KeyStore.getInstance("pkcs12");
+            try (InputStream is = Files.newInputStream(SERVER_STORE_PATH)) {
                 customTrustStore.load(is, "server-pwd".toCharArray());
             }
 
             // Load custom trust store (TRUST_STORE_PATH acts as keystore in "cross connected" setup)
-            KeyStore customKeyStore = KeyStore.getInstance("jks");
-            try (InputStream is = Files.newInputStream(TRUST_STORE_PATH)) {
+            KeyStore customKeyStore = KeyStore.getInstance("pkcs12");
+            try (InputStream is = Files.newInputStream(CLIENT_STORE_PATH)) {
                 customKeyStore.load(is, "client-pwd".toCharArray());
             }
 
@@ -286,6 +286,7 @@ public abstract class HttpTransporterTest {
         TestFileUtils.writeString(resumable, "resumable");
         resumable.setLastModified(System.currentTimeMillis() - 90 * 1000);
         httpServer = new HttpServer().setRepoDir(repoDir).start();
+        // always create a transporter connecting to the Http URL
         newTransporter(httpServer.getHttpUrl());
     }
 
@@ -316,6 +317,29 @@ public abstract class HttpTransporterTest {
      * @return {@code true} if preemptive authentication is supported, {@code false} otherwise.
      */
     protected boolean supportsPreemptiveAuth() {
+        return true;
+    }
+
+    /**
+     * Indicates whether the transporter implementation supports HTTP/3.
+     * @return {@code true} if HTTP/3 is supported, {@code false} otherwise.
+     */
+    protected boolean supportsHttp3() {
+        // skip on ASF Jenkins due to incompatible GLIBC version
+        // (https://github.com/jetty-project/jetty-quiche-native/issues/180 and
+        // https://issues.apache.org/jira/browse/INFRA-28128)
+        // identified via property "os.version" exposed in https://ci-maven.apache.org/computer/maven6/systemInfo
+        assumeFalse(
+                System.getProperty("os.version").equals("5.15.0-1089-azure"),
+                "Skipping HTTP/3 tests on ASF Jenkins Linux Nodes");
+        return true;
+    }
+
+    /**
+     * Indicates whether the transporter implementation supports HTTP/2.
+     * @return {@code true} if HTTP/2 is supported, {@code false} otherwise.
+     */
+    protected boolean supportsHttp2() {
         return true;
     }
 
@@ -484,7 +508,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testPeek_SSL() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
         PeekTask task = new PeekTask(URI.create("repo/file.txt")).setListener(listener);
@@ -496,7 +520,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testPeek_Redirect() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         transporter.peek(new PeekTask(URI.create("redirect/file.txt")));
         transporter.peek(new PeekTask(URI.create("redirect/file.txt?scheme=https")));
     }
@@ -750,7 +774,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_SSL() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
@@ -772,7 +796,7 @@ public abstract class HttpTransporterTest {
     @Test
     protected void testGet_SSL_WithServerErrors() throws Exception {
         httpServer.setServerErrorsBeforeWorks(1);
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         newTransporter(httpServer.getHttpsUrl());
         for (int i = 1; i < 3; i++) {
             try {
@@ -794,7 +818,7 @@ public abstract class HttpTransporterTest {
     @Test
     protected void testGet_HTTPS_Unknown_SecurityMode() throws Exception {
         session.setConfigProperty(ConfigurationProperties.HTTPS_SECURITY_MODE, "unknown");
-        httpServer.addSelfSignedSslConnector();
+        httpServer.addHttp2Connector();
         try {
             newTransporter(httpServer.getHttpsUrl());
             fail("Unsupported security mode");
@@ -805,12 +829,66 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_HTTPS_Insecure_SecurityMode() throws Exception {
-        // here we use alternate server-store-selfigned key (as the key set it static initializer is probably already
-        // used to init SSLContext/SSLSocketFactory/etc
-        session.setConfigProperty(
-                ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
-        httpServer.addSelfSignedSslConnector();
-        newTransporter(httpServer.getHttpsUrl());
+        // we have to reset the default ssl context to avoid the default truststore being used, which would make the
+        // test pass even if the security mode is not set to insecure
+        SSLContext.setDefault(defaultSslContext);
+        try {
+            session.setConfigProperty(
+                    ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
+            httpServer.addHttp2Connector();
+            newTransporter(httpServer.getHttpsUrl());
+            RecordingTransportListener listener = new RecordingTransportListener();
+            GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
+            transporter.get(task);
+            assertEquals("test", task.getDataString());
+            assertEquals(0L, listener.getDataOffset());
+            assertEquals(4L, listener.getDataLength());
+            assertEquals(1, listener.getStartedCount());
+            assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
+            assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+        } finally {
+            // restore the default SSL context used for all other tests
+            SSLContext.setDefault(createClientSSLContext());
+        }
+    }
+
+    @Test
+    protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {
+        assumeTrue(supportsHttp2(), "Transporter does not support HTTP/2");
+        // we have to reset the default ssl context to avoid the default truststore being used, which would make the
+        // test pass even if the security mode is not set to insecure
+        SSLContext.setDefault(defaultSslContext);
+        try {
+            session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_2);
+            session.setConfigProperty(
+                    ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
+            httpServer.addHttp2OnlyConnector();
+            newTransporter(httpServer.getHttpsUrl());
+            RecordingTransportListener listener = new RecordingTransportListener();
+            GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
+            transporter.get(task);
+            assertEquals("test", task.getDataString());
+            assertEquals(0L, listener.getDataOffset());
+            assertEquals(4L, listener.getDataLength());
+            assertEquals(1, listener.getStartedCount());
+            assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
+            assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+            httpServer.getLogEntries().forEach(log -> {
+                assertEquals(HttpVersion.HTTP_2, log.getVersion());
+            });
+        } finally {
+            // restore the default SSL context used for all other tests
+            SSLContext.setDefault(createClientSSLContext());
+        }
+    }
+
+    @Test
+    protected void testGet_HTTP3Only() throws Exception {
+        assumeTrue(supportsHttp3(), "Transporter does not support HTTP/3");
+        session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_3);
+        httpServer.addHttp3Connector(false);
+        httpServer.start();
+        newTransporter(httpServer.getHttp3Url());
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
         transporter.get(task);
@@ -820,16 +898,48 @@ public abstract class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+        httpServer.getLogEntries().forEach(log -> {
+            assertEquals(HttpVersion.HTTP_3, log.getVersion());
+        });
     }
 
     @Test
-    protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() throws Exception {
-        // here we use alternate server-store-selfigned key (as the key set it static initializer is probably already
-        // used to init SSLContext/SSLSocketFactory/etc
-        enableHttp2Protocol();
-        session.setConfigProperty(
-                ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
-        httpServer.addSelfSignedSslConnectorHttp2Only();
+    protected void testGet_HTTP3() throws Exception {
+        assumeTrue(supportsHttp3(), "Transporter does not support HTTP/3");
+        session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_3);
+        // both HTTP2 and HTTP3 endpoints are available at the same port
+        httpServer.addHttp2OnlyConnectorWithMutualTLS();
+        httpServer.addHttp3Connector(false, httpServer.getHttpsPort());
+        // alt-svc header should point to http/3
+        httpServer.start();
+        newTransporter(httpServer.getHttp3Url());
+        RecordingTransportListener listener = new RecordingTransportListener();
+        GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
+        // issue 2 requests to ensure that the second request is HTTP/3 (the first one may be HTTP/2 if the TCP
+        // connection is faster)
+        transporter.get(task);
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+        assertEquals(0L, listener.getDataOffset());
+        assertEquals(4L, listener.getDataLength());
+        assertEquals(2, listener.getStartedCount());
+        assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
+        assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+        // the last request should be HTTP/3 finally
+        assertEquals(
+                HttpVersion.HTTP_3,
+                httpServer
+                        .getLogEntries()
+                        .get(httpServer.getLogEntries().size() - 1)
+                        .getVersion());
+    }
+
+    @Test
+    protected void testGet_HTTP3FallbackToHTTP2() throws Exception {
+        assumeTrue(supportsHttp3(), "Transporter does not support HTTP/3");
+        session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_3);
+        httpServer.addHttp2OnlyConnectorWithMutualTLS();
+        httpServer.start();
         newTransporter(httpServer.getHttpsUrl());
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/file.txt")).setListener(listener);
@@ -843,13 +953,14 @@ public abstract class HttpTransporterTest {
         assertEquals(
                 HttpTransportProperty.HttpVersion.HTTP_2,
                 listener.getTransportProperties().get(HttpTransportProperty.Key.HTTP_VERSION));
+        httpServer.getLogEntries().forEach(log -> {
+            assertEquals(HttpVersion.HTTP_2, log.getVersion());
+        });
     }
-
-    protected void enableHttp2Protocol() {}
 
     @Test
     protected void testGet_Redirect() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("redirect/file.txt?scheme=https")).setListener(listener);
         transporter.get(task);
@@ -1237,7 +1348,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testPut_SSL() throws Exception {
-        httpServer.addSslConnector();
+        httpServer.addHttp2ConnectorWithMutualTLS();
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")

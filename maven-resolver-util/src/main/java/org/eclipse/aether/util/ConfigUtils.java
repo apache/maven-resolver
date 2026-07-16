@@ -345,6 +345,50 @@ public final class ConfigUtils {
     }
 
     /**
+     * Gets the specified configuration property.
+     * @param <T> the enum type
+     *
+     * @param properties the configuration properties to read, must not be {@code null}
+     * @param enumClass the enum class to read, must not be {@code null}
+     * @param defaultValue the default value to return in case none of the property keys is set to a convertible String or T.
+     * @param keys the property keys to read, must not be {@code null}. The specified keys are read one after one until
+     *            a enum type {@code T} or a string (parsed using {@link Enum#valueOf(Class, String)} is found.
+     * @return the property value or {@code defaultValue} if none found
+     * @since NEXT
+     */
+    public static <T extends Enum<T>> T getEnum(
+            Map<?, ?> properties, Class<T> enumClass, T defaultValue, String... keys) {
+        for (String key : keys) {
+            Object value = properties.get(key);
+
+            if (enumClass.isInstance(value)) { // validate type
+                return enumClass.cast(value);
+            } else if (value instanceof String) {
+                return Enum.valueOf(enumClass, (String) value);
+            }
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Gets the specified configuration property.
+     * @param <T> the enum type
+     *
+     * @param session the repository system session from which to read the configuration property, must not be
+     *            {@code null}
+     * @param enumClass the enum class to read, must not be {@code null}
+     * @param defaultValue the default value to return in case none of the property keys is set to a convertible String or T.
+     * @param keys the property keys to read, must not be {@code null}. The specified keys are read one after one until
+     *            a enum type {@code T} or a string (parsed using {@link Enum#valueOf(Class, String)} is found.
+     * @return the property value or {@code defaultValue} if none found
+     * @since NEXT
+     */
+    public static <T extends Enum<T>> T getEnum(
+            RepositorySystemSession session, Class<T> enumClass, T defaultValue, String... keys) {
+        return getEnum(session.getConfigProperties(), enumClass, defaultValue, keys);
+    }
+
+    /**
      * Utility method to parse configuration string that contains comma separated list of names into
      * {@code List<String>}, never returns {@code null}.
      *
