@@ -50,6 +50,7 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 
 /**
@@ -60,7 +61,6 @@ import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
  */
 public class UrlTransporter extends AbstractTransporter implements HttpTransporter {
 
-    private static final int MAX_REDIRECTS = 5;
     private static final String METHOD_GET = "GET";
     private static final String METHOD_HEAD = "HEAD";
     private static final String HEADER_LOCATION = "Location";
@@ -69,6 +69,21 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     private static final String AUTH_SCHEME_BASIC = "Basic";
     private static final int HTTP_STATUS_TEMPORARY_REDIRECT = 307;
     private static final int HTTP_STATUS_PERMANENT_REDIRECT = 308;
+
+    private enum RedirectMode {
+        /**
+         * No redirects allowed.
+         */
+        NONE,
+        /**
+         * Redirects only within same authority.
+         */
+        SAME_AUTHORITY,
+        /**
+         * Any redirect is followed.
+         */
+        ANY
+    }
 
     private final ChecksumExtractor checksumExtractor;
     private final PathProcessor pathProcessor;
@@ -82,6 +97,9 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     private final String auth;
     private final Proxy proxy;
     private final String proxyAuth;
+    private final RedirectMode redirectMode;
+    private final boolean redirectAllowDowngrade;
+    private final int maxRedirects;
 
     private final Object authKey;
     private final Object proxyAuthKey;
@@ -140,6 +158,22 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
         }
         this.proxyAuth = proxyAuthString;
+
+        this.redirectMode = RedirectMode.valueOf(ConfigUtils.getString(
+                session,
+                UrlTransporterConfigurationKeys.DEFAULT_REDIRECT_MODE,
+                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE + "." + repository.getId(),
+                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE));
+        this.redirectAllowDowngrade = ConfigUtils.getBoolean(
+                session,
+                UrlTransporterConfigurationKeys.DEFAULT_REDIRECT_ALLOW_DOWNGRADE,
+                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE + "." + repository.getId(),
+                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE);
+        this.maxRedirects = ConfigUtils.getInteger(
+                session,
+                UrlTransporterConfigurationKeys.DEFAULT_MAX_REDIRECT_COUNT,
+                UrlTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECT_COUNT + "." + repository.getId(),
+                UrlTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECT_COUNT);
 
         this.authKey = Keys.of(UrlTransporter.class, repository, "auth");
         this.proxyAuthKey = Keys.of(UrlTransporter.class, repository, "proxyAuth");
@@ -243,7 +277,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     private HttpURLConnection perform(
             String method, ArrayList<URI> target, String currAuth, String currProxyAuth, GetTask task)
             throws IOException {
-        if (target.size() > MAX_REDIRECTS) {
+        if (target.size() - 1 > maxRedirects) {
             throw new IOException("Too many redirects");
         }
         HttpURLConnection con = (HttpURLConnection) target.get(0).toURL().openConnection(proxy);
@@ -276,6 +310,10 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
                 || responseCode == HttpURLConnection.HTTP_SEE_OTHER
                 || responseCode == HTTP_STATUS_TEMPORARY_REDIRECT
                 || responseCode == HTTP_STATUS_PERMANENT_REDIRECT) {
+            if (redirectMode == RedirectMode.NONE) {
+                con.disconnect();
+                throw new IOException("Refusing to follow redirects");
+            }
             String location = con.getHeaderField(HEADER_LOCATION);
             if (location == null) {
                 con.disconnect();
@@ -283,22 +321,29 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
             URI currentUri = URI.create(con.getURL().toString());
             URI redirectUri = currentUri.resolve(location);
-            // forbid HTTPS -> HTTP downgrade during redirect
-            if ("https".equalsIgnoreCase(currentUri.getScheme()) && "http".equalsIgnoreCase(redirectUri.getScheme())) {
-                con.disconnect();
-                throw new IOException("Refusing to follow redirect from https to http");
-            }
             // ensure we are HTTP or HTTPS after redirect
             if (!"http".equalsIgnoreCase(redirectUri.getScheme())
                     && !"https".equalsIgnoreCase(redirectUri.getScheme())) {
                 con.disconnect();
                 throw new IOException("Unsupported redirect protocol: " + redirectUri.getScheme());
             }
-            // reset auth if authority differs after redirect
             String currentAuthority = currentUri.getAuthority();
             String redirectAuthority = redirectUri.getAuthority();
             if (currentAuthority == null || !currentAuthority.equalsIgnoreCase(redirectAuthority)) {
-                currAuth = null;
+                if (redirectMode == RedirectMode.SAME_AUTHORITY) {
+                    con.disconnect();
+                    throw new IOException("Refusing to follow redirect to different authority");
+                } else {
+                    // reset auth if authority differs after redirect
+                    currAuth = null;
+                }
+            }
+            if ("https".equalsIgnoreCase(currentUri.getScheme())
+                    && "http".equalsIgnoreCase(redirectUri.getScheme())
+                    && !redirectAllowDowngrade) {
+                // forbid HTTPS -> HTTP downgrade during redirect
+                con.disconnect();
+                throw new IOException("Refusing to downgrade from HTTPS to HTTP protocol");
             }
             target.add(0, redirectUri);
             con.disconnect();
