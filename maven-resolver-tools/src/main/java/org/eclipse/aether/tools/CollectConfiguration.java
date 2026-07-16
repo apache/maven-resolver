@@ -26,6 +26,7 @@ import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
@@ -168,7 +169,7 @@ public class CollectConfiguration implements Callable<Integer> {
     private static boolean fileContains(Path path, String marker) {
         try {
             return Files.readString(path, StandardCharsets.UTF_8).contains(marker);
-        } catch (Exception e) {
+        } catch (IOException e) {
             return false;
         }
     }
