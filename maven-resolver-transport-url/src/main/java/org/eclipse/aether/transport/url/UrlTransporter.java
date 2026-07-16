@@ -67,6 +67,8 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     private static final String HEADER_AUTHORIZATION = "Authorization";
     private static final String HEADER_PROXY_AUTHORIZATION = "Proxy-Authorization";
     private static final String AUTH_SCHEME_BASIC = "Basic";
+    private static final int HTTP_STATUS_TEMPORARY_REDIRECT = 307;
+    private static final int HTTP_STATUS_PERMANENT_REDIRECT = 308;
 
     private final ChecksumExtractor checksumExtractor;
     private final PathProcessor pathProcessor;
@@ -267,7 +269,9 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
                 }
             }
         } else if (responseCode == HttpURLConnection.HTTP_MOVED_PERM
-                || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
+                || responseCode == HttpURLConnection.HTTP_MOVED_TEMP
+                || responseCode == HTTP_STATUS_TEMPORARY_REDIRECT
+                || responseCode == HTTP_STATUS_PERMANENT_REDIRECT) {
             String location = con.getHeaderField(HEADER_LOCATION);
             if (location == null) {
                 con.disconnect();
