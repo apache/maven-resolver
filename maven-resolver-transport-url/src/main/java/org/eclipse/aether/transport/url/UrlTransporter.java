@@ -273,6 +273,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
         } else if (responseCode == HttpURLConnection.HTTP_MOVED_PERM
                 || responseCode == HttpURLConnection.HTTP_MOVED_TEMP
+                || responseCode == HttpURLConnection.HTTP_SEE_OTHER
                 || responseCode == HTTP_STATUS_TEMPORARY_REDIRECT
                 || responseCode == HTTP_STATUS_PERMANENT_REDIRECT) {
             String location = con.getHeaderField(HEADER_LOCATION);

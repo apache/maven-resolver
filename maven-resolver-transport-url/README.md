@@ -29,7 +29,7 @@ Supported features:
 * HTTP gzip and deflate compression support
 * HTTP Basic authentication (w/ preemptive support)
 * HTTP proxy support (w/ Basic proxy authentication)
-* HTTP auth caching (lowers "known to needed" HTTP round-trips)
+* HTTP auth caching (lowers "known to be needed" HTTP round-trips)
 * Smart checksums (extracts checksums from response headers, potentially halves the HTTP round-trips)
 * Timeout for connection and request
 
