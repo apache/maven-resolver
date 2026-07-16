@@ -116,6 +116,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-transport-url</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-transport-wagon</artifactId>
       <scope>provided</scope>
     </dependency>
