@@ -77,25 +77,21 @@ class ConfigurationCollectorDocletTest {
         Map<String, String> string = keys.get("sample.string");
         assertNotNull(string, "string key missing");
         assertEquals("String", string.get("configurationType"));
-        assertEquals("hello", string.get("defaultValue"));
+        assertEquals("\"hello\"", string.get("defaultValue"));
         assertEquals("Yes", string.get("supportRepoIdSuffix"));
         assertEquals("", string.get("since"), "no @since expected");
 
         Map<String, String> enumKey = keys.get("sample.enum");
         assertNotNull(enumKey, "enum key missing");
-        assertTrue(
-                enumKey.get("configurationType").contains("SampleEnum"),
-                "expected the custom enum type, got: " + enumKey.get("configurationType"));
-        assertEquals("SampleEnum.VALUE_A", enumKey.get("defaultValue"));
+        assertEquals("org.eclipse.aether.sample.SampleConfigurationKeys.SampleEnum", enumKey.get("configurationType"));
+        assertEquals("VALUE_A", enumKey.get("defaultValue"));
         // no @configurationRepoIdSuffix -> defaults to "No"
         assertEquals("No", enumKey.get("supportRepoIdSuffix"));
 
         Map<String, String> enum2Key = keys.get("sample.enum2");
         assertNotNull(enum2Key, "enum key missing");
-        assertTrue(
-                enum2Key.get("configurationType").contains("SampleEnum"),
-                "expected the custom enum type, got: " + enum2Key.get("configurationType"));
-        assertEquals("SampleEnum.VALUE_B", enum2Key.get("defaultValue"));
+        assertEquals("org.eclipse.aether.sample.SampleConfigurationKeys.SampleEnum", enum2Key.get("configurationType"));
+        assertEquals("VALUE_B", enum2Key.get("defaultValue"));
         // no @configurationRepoIdSuffix -> defaults to "No"
         assertEquals("No", enum2Key.get("supportRepoIdSuffix"));
     }

@@ -27,6 +27,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
+import javax.tools.Diagnostic;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -83,6 +84,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
      */
     private static final String MAVEN_CONFIG_ANNOTATION = "org.apache.maven.api.annotations.Config";
 
+    private Reporter reporter;
+
     private Path output;
 
     /**
@@ -95,7 +98,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
     @Override
     public void init(Locale locale, Reporter reporter) {
-        // no state to initialize
+        this.reporter = reporter;
     }
 
     @Override
@@ -130,7 +133,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
         try {
             return doRun(environment);
         } catch (RuntimeException e) {
-            e.printStackTrace(System.err);
+            reporter.print(Diagnostic.Kind.ERROR, "Error running ConfigurationCollectorDoclet: " + e.getMessage());
+            e.printStackTrace(reporter.getStandardWriter());
             return false;
         }
     }
@@ -173,7 +177,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
             return;
         }
 
-        String configurationType = getConfigurationType(renderContent(blockTags.get("configurationType")));
+        String configurationType =
+                getConfigurationType(extractClassLink(field, docComment, blockTags.get("configurationType")));
         String defValue = resolveDefaultValue(type, field, docComment, blockTags.get("configurationDefaultValue"));
 
         Map<String, String> entry = new LinkedHashMap<>();
@@ -371,11 +376,16 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
     private String lookupConstant(VariableElement field) {
         if (field.getConstantValue() != null) {
-            return String.valueOf(field.getConstantValue());
+            Object value = field.getConstantValue();
+            if (value instanceof String) {
+                return "\"" + value + "\"";
+            } else {
+                return String.valueOf(field.getConstantValue());
+            }
         }
         // enum constants don't expose a constant value, fall back to the enum value's name
         if (field.getKind() == ElementKind.ENUM_CONSTANT) {
-            return createQualifiedEnumValueConstant(field, field.getSimpleName().toString());
+            return field.getSimpleName().toString();
         }
         // the field may indirectly reference an enum variable, e.g. "SomeEnum.VALUE";
         // resolve it from the field's initializer
@@ -403,20 +413,48 @@ public class ConfigurationCollectorDoclet implements Doclet {
         if (enumConstant == null) {
             return null;
         }
-        return createQualifiedEnumValueConstant(field, enumConstant);
+        return enumConstant;
+    }
+
+    private String extractClassLink(
+            VariableElement contextField, DocCommentTree docComment, List<? extends DocTree> content) {
+        if (content == null || content.isEmpty()) {
+            throw new IllegalArgumentException("Missing content for @configurationDefaultValue");
+        }
+        for (DocTree tree : content) {
+            // just use the first link, ignore any other content (e.g. text) in the tag
+            if (tree instanceof LinkTree link) {
+                String signature = link.getReference().getSignature();
+                if (signature.contains("#")) {
+                    throw new IllegalArgumentException(
+                            "Expected a class link in @configurationDefaultValue, but got a member reference: "
+                                    + signature);
+                }
+                return resolveReferencedType(contextField, docComment, link, signature);
+            }
+        }
+        throw new IllegalArgumentException("No valid {@link ...} reference found in @configurationDefaultValue");
     }
 
     /**
-     * Creates a qualified enum value constant for a field, e.g. {@code SomeEnum.VALUE}.
+     * Resolves the fully qualified class name a {@code {@link ...}} class reference points to (so that simple names
+     * declared via imports are expanded). Falls back to the raw signature if the reference cannot be resolved to a
+     * type.
      */
-    private String createQualifiedEnumValueConstant(VariableElement field, String enumConstant) {
-        // prefix the constant with its (simple) enum type name, e.g. SomeEnum.VALUE
-        String typeName = field.asType().toString();
-        int lastDot = typeName.lastIndexOf('.');
-        if (lastDot >= 0) {
-            typeName = typeName.substring(lastDot + 1);
+    private String resolveReferencedType(
+            VariableElement contextField, DocCommentTree docComment, LinkTree link, String signature) {
+        if (contextField == null || docComment == null) {
+            return signature;
         }
-        return typeName + "." + enumConstant;
+        DocTreePath rootPath = new DocTreePath(docTrees.getPath(contextField), docComment);
+        DocTreePath refPath = DocTreePath.getPath(rootPath, link.getReference());
+        if (refPath == null) {
+            return signature;
+        }
+        Element element = docTrees.getElement(refPath);
+        return element instanceof TypeElement
+                ? ((TypeElement) element).getQualifiedName().toString()
+                : signature;
     }
 
     private String renderContent(List<? extends DocTree> content) {
@@ -462,8 +500,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
             return null;
         }
         for (DocTree tag : docComment.getBlockTags()) {
-            if (tag instanceof SinceTree) {
-                return renderContent(((SinceTree) tag).getBody());
+            if (tag instanceof SinceTree sinceTree) {
+                return renderContent(sinceTree.getBody());
             }
         }
         return null;
