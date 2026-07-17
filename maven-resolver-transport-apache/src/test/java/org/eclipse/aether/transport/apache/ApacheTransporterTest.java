@@ -33,6 +33,7 @@ import org.eclipse.aether.internal.test.util.http.RecordingTransportListener;
 import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.io.PathProcessorSupport;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,6 +67,18 @@ class ApacheTransporterTest extends HttpTransporterTest {
     @Override
     protected boolean supportsHttp2() {
         return false;
+    }
+
+    @AfterEach
+    @Override
+    protected void tearDown() throws Exception {
+        // make sure to also release any connection in the global state (otherwise the check for connection leaks will
+        // fail)
+        GlobalState globalState = GlobalState.get(session);
+        if (globalState != null) {
+            globalState.close();
+        }
+        super.tearDown();
     }
 
     @Test

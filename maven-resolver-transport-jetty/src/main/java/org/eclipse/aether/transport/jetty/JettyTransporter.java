@@ -373,8 +373,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         });
         AtomicBoolean started = new AtomicBoolean(false);
         Response response;
-        InputStreamResponseListener listener = new InputStreamResponseListener();
-        try {
+        try (InputStreamResponseListener listener = new InputStreamResponseListener()) {
             request.onRequestCommit(r -> {
                         if (task.getDataLength() == 0) {
                             if (started.compareAndSet(false, true)) {
@@ -404,6 +403,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     .send(listener);
             response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
             task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
+            if (response.getStatus() >= MULTIPLE_CHOICES) {
+                JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
+                    throw new HttpTransporterException(statusCode);
+                });
+            }
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof IOException ioex) {
@@ -417,12 +421,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             } else {
                 throw new RuntimeException(t);
             }
-        }
-
-        if (response.getStatus() >= MULTIPLE_CHOICES) {
-            JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
-                throw new HttpTransporterException(statusCode);
-            });
         }
     }
 
