@@ -306,9 +306,9 @@ public abstract class HttpTransporterTest {
             closer.run();
             closer = null;
         }
-        // check for leaked connections (e.g., due to not closing response body streams)
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> httpServer.getNumConnectedEndPoints() == 0);
         if (httpServer != null) {
+            // check for leaked connections (e.g., due to not closing response body streams)
+            Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> httpServer.getNumConnectedEndPoints() == 0);
             httpServer.stop();
             httpServer = null;
         }

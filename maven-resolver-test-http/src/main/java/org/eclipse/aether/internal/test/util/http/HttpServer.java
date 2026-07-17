@@ -696,8 +696,10 @@ public class HttpServer {
                     // Repository Protocol doesn't mention it
                     if (responseBodyForPut != null) {
                         writeResponseBodyMessage(req, response, responseBodyForPut);
+                        response.setStatus(HttpServletResponse.SC_CREATED);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
                     }
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
                 } else {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 }

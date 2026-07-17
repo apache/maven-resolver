@@ -337,6 +337,12 @@
         <artifactId>jmh-generator-annprocess</artifactId>
         <version>${jmhVersion}</version>
       </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <!-- release 4.3.1 was not successful (https://github.com/awaitility/awaitility/issues/306) -->
+        <version>4.3.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
