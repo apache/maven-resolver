@@ -277,8 +277,11 @@ public class DefaultRepositorySystem implements RepositorySystem {
             throws ArtifactResolutionException {
         requireNonNull(requests, "requests cannot be null");
         // All requests in a batch share the same trace context, so checking any one is sufficient.
-        RequestTrace firstTrace =
-                requests.stream().map(ArtifactRequest::getTrace).findFirst().orElse(null);
+        RequestTrace firstTrace = requests.stream()
+                .map(ArtifactRequest::getTrace)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
         if (!isReentrant(firstTrace)) {
             validateSession(session);
             repositorySystemValidator.validateArtifactRequests(session, requests);
@@ -294,8 +297,11 @@ public class DefaultRepositorySystem implements RepositorySystem {
             RepositorySystemSession session, Collection<? extends MetadataRequest> requests) {
         requireNonNull(requests, "requests cannot be null");
         // All requests in a batch share the same trace context, so checking any one is sufficient.
-        RequestTrace firstTrace =
-                requests.stream().map(MetadataRequest::getTrace).findFirst().orElse(null);
+        RequestTrace firstTrace = requests.stream()
+                .map(MetadataRequest::getTrace)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
         if (!isReentrant(firstTrace)) {
             validateSession(session);
             repositorySystemValidator.validateMetadataRequests(session, requests);
