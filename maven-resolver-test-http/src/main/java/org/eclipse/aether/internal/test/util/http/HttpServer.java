@@ -420,6 +420,7 @@ public class HttpServer {
         }
         if (http3Connector != null) {
             // filter out the always present DatagramChannelEndPoint, which is not a real live connection
+            // (https://github.com/jetty/jetty.project/issues/15436)
             http3Connector.getConnectedEndPoints().stream()
                     .filter(endPoint -> !(endPoint instanceof DatagramChannelEndPoint))
                     .forEach(connectedEndPoints::add);
