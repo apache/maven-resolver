@@ -232,6 +232,18 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
     }
 
     @Test
+    void brokenPrefixesDroppedButNoInputOutcomeFalseStillDenies() throws Exception {
+        session.setConfigProperty("aether.remoteRepositoryFilter.prefixes.noInputOutcome", "false");
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        // the broken file is detected and dropped (peek happened), but the user explicitly asked for
+        // strict filtering when no trustworthy input is available: the path stays denied
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        verify(transporter, times(1)).peek(any(PeekTask.class));
+    }
+
+    @Test
     void userProvidedPrefixesAreAuthoritative() throws Exception {
         Path baseDir = session.getLocalRepository()
                 .getBasePath()
