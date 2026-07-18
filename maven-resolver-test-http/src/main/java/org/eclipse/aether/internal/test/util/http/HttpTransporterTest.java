@@ -307,13 +307,23 @@ public abstract class HttpTransporterTest {
             closer = null;
         }
         if (httpServer != null) {
-            // check for leaked connections (e.g., due to not closing response body streams)
-            Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> httpServer.getNumConnectedEndPoints() == 0);
+            if (closesAllConnectionsOnTransporterClose()) {
+                // check for leaked connections (e.g., due to not closing response body streams)
+                Awaitility.await().atMost(3, TimeUnit.SECONDS).until(() -> httpServer.getNumConnectedEndPoints() == 0);
+            }
             httpServer.stop();
             httpServer = null;
         }
         factory = null;
         session = null;
+    }
+
+    /**
+     * Indicates whether the transporter implementation closes all connections when the transporter is closed.
+     * @return {@code true} if all connections are closed on transporter close, {@code false} otherwise.
+     */
+    protected boolean closesAllConnectionsOnTransporterClose() {
+        return true;
     }
 
     /**

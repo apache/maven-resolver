@@ -69,4 +69,21 @@ public final class UrlTransporterConfigurationKeys {
     public static final String CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE = CONFIG_PROPS_PREFIX + "redirectAllowDowngrade";
 
     public static final boolean DEFAULT_REDIRECT_ALLOW_DOWNGRADE = false;
+
+    /**
+     * Whether this transport should close the HTTP connection at the end of each transaction, effectively
+     * disabling persistent connections (keep-alive). This configuration affects only this transport.
+     * Important to note, that globally, on JVM-wide level persistent connections are controlled by
+     * <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/net/http-keepalive.html">{@code http.keepAlive}</a>
+     * Java system property, that is {@code true} by default. If this system property is set to {@code false}, this
+     * transport cannot use persistent connections either.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_CLOSE_CONNECTION}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_CLOSE_CONNECTION = CONFIG_PROPS_PREFIX + "closeConnection";
+
+    public static final boolean DEFAULT_CLOSE_CONNECTION = false;
 }
