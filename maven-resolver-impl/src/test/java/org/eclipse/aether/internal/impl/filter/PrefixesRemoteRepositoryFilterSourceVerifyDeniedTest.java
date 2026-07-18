@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.internal.impl.filter;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,15 +41,23 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
+import org.eclipse.aether.spi.connector.transport.PeekTask;
+import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.eclipse.aether.internal.impl.checksum.Checksums.checksumsSelector;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -99,8 +106,10 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
 
     private PrefixesRemoteRepositoryFilterSource subject;
 
+    private Transporter transporter;
+
     @BeforeEach
-    void setup() throws IOException {
+    void setup() throws Exception {
         remoteRepository =
                 new RemoteRepository.Builder("jenkins-public", "default", "https://irrelevant.example/").build();
         session = TestUtils.newSession();
@@ -138,11 +147,16 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
                 Maven2RepositoryLayoutFactory.NAME,
                 new Maven2RepositoryLayoutFactory(
                         checksumsSelector(), new DefaultArtifactPredicateFactory(checksumsSelector()))));
+        // existence checks against the remote repository: peek succeeds unless a test says otherwise
+        transporter = mock(Transporter.class);
+        TransporterProvider transporterProvider = mock(TransporterProvider.class);
+        when(transporterProvider.newTransporter(any(), any())).thenReturn(transporter);
         subject = new PrefixesRemoteRepositoryFilterSource(
                 new DefaultRepositoryKeyFunctionFactory(),
                 () -> metadataResolver,
                 () -> remoteRepositoryManager,
-                layoutProvider);
+                layoutProvider,
+                transporterProvider);
     }
 
     @Test
@@ -159,9 +173,20 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
                 "provably broken auto-discovered prefixes must be dropped, got: " + result.reasoning());
     }
 
+    @Test
+    void brokenPrefixesAreDroppedForWholeRepository() throws Exception {
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        assertTrue(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        // once dropped, other denied paths are accepted as well, without further existence checks
+        assertTrue(filter.acceptArtifact(remoteRepository, new DefaultArtifact("io.jenkins:other:1.0"))
+                .isAccepted());
+        verify(transporter, times(1)).peek(any(PeekTask.class));
+    }
 
     @Test
-    void prefixesListedPathStaysAccepted() {
+    void prefixesListedPathStaysAccepted() throws Exception {
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
 
@@ -169,9 +194,55 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
                 filter.acceptArtifact(remoteRepository, new DefaultArtifact("org.eclipse.foo:bar:1.0"));
 
         assertTrue(result.isAccepted());
+        verify(transporter, never()).peek(any(PeekTask.class));
     }
 
+    @Test
+    void deniedPathAbsentFromRemoteStaysDenied() throws Exception {
+        doThrow(new Exception("404")).when(transporter).peek(any(PeekTask.class));
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
 
+        // the artifact is neither covered by the prefixes file nor present on the remote repository:
+        // the file is consistent with reality, the filter must keep denying
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        // and verification cost is bounded: only the first denial is checked
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        verify(transporter, times(1)).peek(any(PeekTask.class));
+    }
 
+    @Test
+    void verificationCanBeDisabled() throws Exception {
+        session.setConfigProperty("aether.remoteRepositoryFilter.prefixes.verifyDenied", "false");
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
 
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        verify(transporter, never()).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void offlineSessionSkipsVerification() throws Exception {
+        session.setOffline(true);
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        verify(transporter, never()).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void userProvidedPrefixesAreAuthoritative() throws Exception {
+        Path baseDir = session.getLocalRepository()
+                .getBasePath()
+                .resolve(PrefixesRemoteRepositoryFilterSource.LOCAL_REPO_PREFIX_DIR);
+        Files.createDirectories(baseDir);
+        Files.write(baseDir.resolve("prefixes-jenkins-public.txt"), LEAKED_PREFIXES.getBytes(StandardCharsets.UTF_8));
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        // deliberately user-authored prefixes are never second-guessed
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        verify(transporter, never()).peek(any(PeekTask.class));
+    }
 }

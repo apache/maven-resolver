@@ -42,6 +42,8 @@ import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
+import org.eclipse.aether.spi.connector.transport.TransporterProvider;
+import org.eclipse.aether.transfer.NoTransporterException;
 import org.junit.jupiter.api.Test;
 
 import static org.eclipse.aether.internal.impl.checksum.Checksums.checksumsSelector;
@@ -84,11 +86,19 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
                 Maven2RepositoryLayoutFactory.NAME,
                 new Maven2RepositoryLayoutFactory(
                         checksumsSelector(), new DefaultArtifactPredicateFactory(checksumsSelector()))));
+        TransporterProvider transporterProvider = mock(TransporterProvider.class);
+        try {
+            when(transporterProvider.newTransporter(any(), any()))
+                    .thenThrow(new NoTransporterException(remoteRepository));
+        } catch (NoTransporterException e) {
+            throw new IllegalStateException(e);
+        }
         return new PrefixesRemoteRepositoryFilterSource(
                 new DefaultRepositoryKeyFunctionFactory(),
                 () -> metadataResolver,
                 () -> remoteRepositoryManager,
-                layoutProvider);
+                layoutProvider,
+                transporterProvider);
     }
 
     @Override

@@ -586,7 +586,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                         getRepositoryKeyFunctionFactory(),
                         this::getMetadataResolver,
                         this::getRemoteRepositoryManager,
-                        getRepositoryLayoutProvider()));
+                        getRepositoryLayoutProvider(),
+                        getTransporterProvider()));
         return result;
     }
 
