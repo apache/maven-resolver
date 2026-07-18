@@ -415,7 +415,7 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                             Exception exception =
                                     new ArtifactNotFoundException(request.getArtifact(), (RemoteRepository) null);
                             // Note: result.getRepository() MAY BE null; in cases when
-                            // no artifact was not even tried by any remote repository (snapshot vs repo policy)
+                            // the artifact was not even tried by any remote repository (snapshot vs repo policy)
                             // and local repository does not have it either
                             result.addException(
                                     result.getRepository() != null
