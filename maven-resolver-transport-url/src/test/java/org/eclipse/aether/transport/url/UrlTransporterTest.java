@@ -35,6 +35,12 @@ class UrlTransporterTest extends HttpTransporterTest {
     }
 
     @Override
+    protected boolean closesAllConnectionsOnTransporterClose() {
+        // compare with https://docs.oracle.com/javase/6/docs/technotes/guides/net/http-keepalive.html
+        return false;
+    }
+
+    @Override
     protected Stream<String> supportedCompressionAlgorithms() {
         return Stream.of("gzip", "deflate");
     }
@@ -203,6 +209,11 @@ class UrlTransporterTest extends HttpTransporterTest {
     @Disabled("PUT unsupported")
     @Test
     protected void testPut_Unauthenticated() {}
+
+    @Override
+    @Disabled("PUT unsupported")
+    @Test
+    protected void testPut_WithResponseBody() {}
 
     @Override
     @Disabled
