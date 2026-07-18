@@ -35,6 +35,18 @@ class UrlTransporterTest extends HttpTransporterTest {
     }
 
     @Override
+    protected void newTransporter(String url) throws Exception {
+        super.newTransporter(url);
+        // Note: unlike other transport with dedicated clients that can be closed at test end,
+        // this client uses JVM wide HttpUrlConnection and is not "closed", and connection
+        // pool is not controllable either. Hence, we disable keep alive here, as otherwise
+        // connection leak would be detected, which, in fact, is not a leak, despite
+        // JVM keeps connections open after test ended (as connections are kept JVM-wide).
+        // Simply put: this transport is unable to control the underlying connection pool.
+        session.setConfigProperty(UrlTransporterConfigurationKeys.CONFIG_PROP_KEEP_ALIVE, false);
+    }
+
+    @Override
     protected Stream<String> supportedCompressionAlgorithms() {
         return Stream.of("gzip", "deflate");
     }
@@ -203,6 +215,11 @@ class UrlTransporterTest extends HttpTransporterTest {
     @Disabled("PUT unsupported")
     @Test
     protected void testPut_Unauthenticated() {}
+
+    @Override
+    @Disabled("PUT unsupported")
+    @Test
+    protected void testPut_WithResponseBody() {}
 
     @Override
     @Disabled

@@ -100,6 +100,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     private final RedirectMode redirectMode;
     private final boolean redirectAllowDowngrade;
     private final int maxRedirects;
+    private final boolean keepAlive;
 
     private final Object authKey;
     private final Object proxyAuthKey;
@@ -174,6 +175,11 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
                 UrlTransporterConfigurationKeys.DEFAULT_MAX_REDIRECT_COUNT,
                 UrlTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECT_COUNT + "." + repository.getId(),
                 UrlTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECT_COUNT);
+        this.keepAlive = ConfigUtils.getBoolean(
+                session,
+                Boolean.parseBoolean(System.getProperty("http.keepAlive")),
+                UrlTransporterConfigurationKeys.CONFIG_PROP_KEEP_ALIVE + "." + repository.getId(),
+                UrlTransporterConfigurationKeys.CONFIG_PROP_KEEP_ALIVE);
 
         this.authKey = Keys.of(UrlTransporter.class, repository, "auth");
         this.proxyAuthKey = Keys.of(UrlTransporter.class, repository, "proxyAuth");
@@ -291,6 +297,9 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         con.setRequestProperty("Pragma", "no-cache");
         con.setRequestProperty(HttpConstants.USER_AGENT, userAgent);
         headers.forEach(con::setRequestProperty);
+        if (!keepAlive) {
+            con.setRequestProperty("Connection", "close");
+        }
         if (currAuth != null) {
             con.setRequestProperty(HEADER_AUTHORIZATION, basicAuthorization(currAuth));
         }

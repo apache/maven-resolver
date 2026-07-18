@@ -69,4 +69,15 @@ public final class UrlTransporterConfigurationKeys {
     public static final String CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE = CONFIG_PROPS_PREFIX + "redirectAllowDowngrade";
 
     public static final boolean DEFAULT_REDIRECT_ALLOW_DOWNGRADE = false;
+
+    /**
+     * Whether persistent connections should be used by this transport. This configuration allows controlling only this transport,
+     * while the default value (that is JVM-wide) comes from {@code http.keepAlive} Java system property, that is {@code true}
+     * by default.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_KEEP_ALIVE = CONFIG_PROPS_PREFIX + "keepAlive";
 }
