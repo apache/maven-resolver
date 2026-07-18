@@ -223,7 +223,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
         if (!isReentrant(request.getTrace())) {
             validateSession(session);
             repositorySystemValidator.validateVersionRequest(session, request);
-            request.setTrace(RequestTrace.newChild(request.getTrace(), REPOSITORY_SYSTEM_CALL));
+            request.setTrace(stampReentrancyMarker(request.getTrace()));
         }
         return versionResolver.resolveVersion(session, request);
     }
@@ -235,7 +235,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
         if (!isReentrant(request.getTrace())) {
             validateSession(session);
             repositorySystemValidator.validateVersionRangeRequest(session, request);
-            request.setTrace(RequestTrace.newChild(request.getTrace(), REPOSITORY_SYSTEM_CALL));
+            request.setTrace(stampReentrancyMarker(request.getTrace()));
         }
         return versionRangeResolver.resolveVersionRange(session, request);
     }
@@ -248,7 +248,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
         if (outermost) {
             validateSession(session);
             repositorySystemValidator.validateArtifactDescriptorRequest(session, request);
-            request.setTrace(RequestTrace.newChild(request.getTrace(), REPOSITORY_SYSTEM_CALL));
+            request.setTrace(stampReentrancyMarker(request.getTrace()));
         }
         ArtifactDescriptorResult descriptorResult = artifactDescriptorReader.readArtifactDescriptor(session, request);
         if (outermost) {
@@ -266,7 +266,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
         if (!isReentrant(request.getTrace())) {
             validateSession(session);
             repositorySystemValidator.validateArtifactRequests(session, Collections.singleton(request));
-            request.setTrace(RequestTrace.newChild(request.getTrace(), REPOSITORY_SYSTEM_CALL));
+            request.setTrace(stampReentrancyMarker(request.getTrace()));
         }
         return artifactResolver.resolveArtifact(session, request);
     }
@@ -286,7 +286,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
             validateSession(session);
             repositorySystemValidator.validateArtifactRequests(session, requests);
             for (ArtifactRequest request : requests) {
-                request.setTrace(RequestTrace.newChild(request.getTrace(), REPOSITORY_SYSTEM_CALL));
+                request.setTrace(stampReentrancyMarker(request.getTrace()));
             }
         }
         return artifactResolver.resolveArtifacts(session, requests);
@@ -306,7 +306,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
             validateSession(session);
             repositorySystemValidator.validateMetadataRequests(session, requests);
             for (MetadataRequest request : requests) {
-                request.setTrace(RequestTrace.newChild(request.getTrace(), REPOSITORY_SYSTEM_CALL));
+                request.setTrace(stampReentrancyMarker(request.getTrace()));
             }
         }
         return metadataResolver.resolveMetadata(session, requests);
@@ -319,7 +319,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
         if (!isReentrant(request.getTrace())) {
             validateSession(session);
             repositorySystemValidator.validateCollectRequest(session, request);
-            request.setTrace(RequestTrace.newChild(request.getTrace(), REPOSITORY_SYSTEM_CALL));
+            request.setTrace(stampReentrancyMarker(request.getTrace()));
         }
         return dependencyCollector.collectDependencies(session, request);
     }
@@ -331,7 +331,7 @@ public class DefaultRepositorySystem implements RepositorySystem {
         if (!isReentrant(request.getTrace())) {
             validateSession(session);
             repositorySystemValidator.validateDependencyRequest(session, request);
-            request.setTrace(RequestTrace.newChild(request.getTrace(), REPOSITORY_SYSTEM_CALL));
+            request.setTrace(stampReentrancyMarker(request.getTrace()));
         }
         RequestTrace trace = RequestTrace.newChild(request.getTrace(), request);
 
@@ -555,6 +555,21 @@ public class DefaultRepositorySystem implements RepositorySystem {
         if (shutdown.compareAndSet(false, true)) {
             repositorySystemLifecycle.systemEnded();
         }
+    }
+
+    /**
+     * Stamps the {@link #REPOSITORY_SYSTEM_CALL} re-entrancy marker into the trace chain
+     * while preserving the original trace tip data. The marker is inserted <em>below</em>
+     * the tip so that code walking the trace and casting {@code getData()} to its expected
+     * type (e.g. {@code org.apache.maven.artifact.Artifact}) still finds the original data
+     * at the tip rather than the anonymous marker object.
+     *
+     * @param currentTrace the current request trace (may be {@code null})
+     * @return a new trace with the marker inserted and original tip data preserved
+     */
+    private static RequestTrace stampReentrancyMarker(RequestTrace currentTrace) {
+        RequestTrace markerTrace = RequestTrace.newChild(currentTrace, REPOSITORY_SYSTEM_CALL);
+        return currentTrace != null ? RequestTrace.newChild(markerTrace, currentTrace.getData()) : markerTrace;
     }
 
     /**
