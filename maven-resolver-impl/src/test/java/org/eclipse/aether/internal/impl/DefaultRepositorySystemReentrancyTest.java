@@ -279,6 +279,8 @@ public class DefaultRepositorySystemReentrancyTest {
         // The marker should be present deeper in the chain (parent of the tip)
         RequestTrace parent = resultTrace.getParent();
         assertNotNull(parent, "Trace should have a parent containing the re-entrancy marker");
+        assertEquals(
+                "RepositorySystem", parent.getData().toString(), "Parent trace data should be the re-entrancy marker");
     }
 
     @Test
