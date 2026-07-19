@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.tools;
 
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticListener;
 import javax.tools.DocumentationTool;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -26,19 +28,24 @@ import javax.tools.ToolProvider;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -50,17 +57,37 @@ class ConfigurationCollectorDocletTest {
      */
     private static final String FIXTURE = "/org/eclipse/aether/sample/SampleConfigurationKeys.java";
 
-    @Test
-    void extractsBooleanStringAndEnumConfigurations(@TempDir Path tempDir) throws Exception {
-        Path sourceDir = Files.createDirectories(tempDir.resolve("org/eclipse/aether/sample"));
-        Path sourceFile = sourceDir.resolve("SampleConfigurationKeys.java");
-        try (InputStream in = ConfigurationCollectorDocletTest.class.getResourceAsStream(FIXTURE)) {
-            assertNotNull(in, "fixture source not found on classpath: " + FIXTURE);
+    /**
+     * Classpath location of the a fixture with invalid javadoc (missing/invalid elements).
+     */
+    private static final String INVALID_FIXTURE = "/org/eclipse/aether/sample/InvalidSampleConfigurationKeys.java";
+
+    private Path output;
+
+    @BeforeEach
+    void setUp(@TempDir Path tempDir) {
+        output = tempDir.resolve("configuration-keys.properties");
+    }
+
+    private Path getSourceFile(String resourcePath, Path tempDir) throws Exception {
+        if (!resourcePath.startsWith("/")) {
+            throw new IllegalArgumentException("resource path must start with '/': " + resourcePath);
+        }
+        Path sourceDir =
+                Files.createDirectories(tempDir.resolve(resourcePath.substring(1, resourcePath.lastIndexOf('/'))));
+        Path sourceFile = sourceDir.resolve(resourcePath.substring(resourcePath.lastIndexOf('/') + 1));
+        try (InputStream in = ConfigurationCollectorDocletTest.class.getResourceAsStream(resourcePath)) {
+            assertNotNull(in, "resource path not found on classpath: " + resourcePath);
             Files.copy(in, sourceFile);
         }
-        Path output = tempDir.resolve("configuration-keys.properties");
+        return sourceFile;
+    }
 
-        runDoclet(sourceFile, output);
+    @Test
+    void extractsBooleanStringAndEnumConfigurations(@TempDir Path tempDir) throws Exception {
+        StringWriter out = new StringWriter();
+        assertTrue(
+                runDoclet(out, getSourceFile(FIXTURE, tempDir), output), "doclet run should succeed, output:\n" + out);
 
         Map<String, Map<String, String>> keys = readKeys(output);
         assertEquals(4, keys.size(), "expected four configuration keys");
@@ -96,17 +123,85 @@ class ConfigurationCollectorDocletTest {
         assertEquals("No", enum2Key.get("supportRepoIdSuffix"));
     }
 
-    private static void runDoclet(Path sourceFile, Path output) throws Exception {
+    static final class CapturingDiagnosticsListener<T extends JavaFileObject>
+            implements javax.tools.DiagnosticListener<T> {
+        private final javax.tools.Diagnostic.Kind threshold;
+        private final Collection<Diagnostic<? extends JavaFileObject>> diagnostics = new ArrayList<>();
+
+        public CapturingDiagnosticsListener(javax.tools.Diagnostic.Kind threshold) {
+            this.threshold = threshold;
+        }
+
+        @Override
+        public void report(javax.tools.Diagnostic<? extends T> diagnostic) {
+            if (diagnostic.getKind().compareTo(threshold) <= 0) {
+                diagnostics.add(diagnostic);
+            }
+        }
+
+        public Collection<Diagnostic<? extends JavaFileObject>> getDiagnostics() {
+            return diagnostics;
+        }
+    }
+
+    @Test
+    void invalidMode() throws Exception {
+        CapturingDiagnosticsListener<JavaFileObject> listener =
+                new CapturingDiagnosticsListener<>(javax.tools.Diagnostic.Kind.ERROR);
+        StringWriter out = new StringWriter();
+        assertFalse(runDoclet(out, getSourceFile(FIXTURE, output.getParent()), output, "invalid-mode", listener));
+        // check that the diagnostics contain an error message about the invalid mode
+        Diagnostic<? extends JavaFileObject> diagnostic =
+                listener.getDiagnostics().iterator().next();
+        assertEquals(javax.tools.Diagnostic.Kind.ERROR, diagnostic.getKind());
+        assertEquals("Unknown mode: invalid-mode", diagnostic.getMessage(null));
+        assertEquals(1, listener.getDiagnostics().size(), "expected one error diagnostic");
+    }
+
+    @Test
+    void invalidTaglets() throws Exception {
+        CapturingDiagnosticsListener<JavaFileObject> listener =
+                new CapturingDiagnosticsListener<>(javax.tools.Diagnostic.Kind.ERROR);
+        StringWriter out = new StringWriter();
+        Path sourceFile = getSourceFile(INVALID_FIXTURE, output.getParent());
+        assertFalse(runDoclet(out, sourceFile, output, "resolver", listener));
+        // check that the diagnostics contain two error messages
+        Iterator<Diagnostic<? extends JavaFileObject>> iterator =
+                listener.getDiagnostics().iterator();
+        Diagnostic<? extends JavaFileObject> diagnostic = iterator.next();
+        assertEquals(javax.tools.Diagnostic.Kind.ERROR, diagnostic.getKind());
+        assertEquals("Missing content for @configurationType", diagnostic.getMessage(null));
+        assertEquals(sourceFile.toString(), diagnostic.getSource().getName());
+        assertEquals(30, diagnostic.getLineNumber());
+        assertEquals(2, listener.getDiagnostics().size(), "expected two error diagnostics");
+        diagnostic = iterator.next();
+        assertEquals(javax.tools.Diagnostic.Kind.ERROR, diagnostic.getKind());
+        assertEquals("No valid {@link ...} reference found in @configurationType", diagnostic.getMessage(null));
+        assertEquals(sourceFile.toString(), diagnostic.getSource().getName());
+        assertEquals(46, diagnostic.getLineNumber());
+    }
+
+    private static Boolean runDoclet(Writer writer, Path sourceFile, Path output) throws Exception {
+        return runDoclet(writer, sourceFile, output, null, null);
+    }
+
+    private static Boolean runDoclet(
+            Writer writer, Path sourceFile, Path output, String mode, DiagnosticListener<JavaFileObject> listener)
+            throws Exception {
         DocumentationTool documentationTool = ToolProvider.getSystemDocumentationTool();
         try (StandardJavaFileManager fileManager =
                 documentationTool.getStandardFileManager(null, null, StandardCharsets.UTF_8)) {
             Iterable<? extends JavaFileObject> units =
                     fileManager.getJavaFileObjectsFromFiles(List.of(sourceFile.toFile()));
-            List<String> options = List.of("--output", output.toString(), "-encoding", "UTF-8");
-            StringWriter out = new StringWriter();
+            final List<String> options;
+            if (mode != null) {
+                options = List.of("--output", output.toString(), "--mode", mode, "-encoding", "UTF-8");
+            } else {
+                options = List.of("--output", output.toString(), "-encoding", "UTF-8");
+            }
             DocumentationTool.DocumentationTask task = documentationTool.getTask(
-                    out, fileManager, null, ConfigurationCollectorDoclet.class, options, units);
-            assertTrue(task.call(), "doclet run should succeed, output:\n" + out);
+                    writer, fileManager, listener, ConfigurationCollectorDoclet.class, options, units);
+            return task.call();
         }
     }
 
