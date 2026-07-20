@@ -574,16 +574,11 @@ public class ConfigurationCollectorDoclet implements Doclet {
         for (DocTree tree : content) {
             sb.append(tree.accept(visitor, null));
         }
-        // normalized whitespace not relevant for HTML rendering
         if (trim) {
-            String[] lines = sb.toString().split("\n");
-            StringBuilder result = new StringBuilder();
-            for (String line : lines) {
-                if (!line.trim().isEmpty()) {
-                    result.append(line);
-                }
-            }
-            return result.toString().trim();
+            // normalize whitespace not relevant for HTML rendering,
+            // trimming behaviour already differs between different Javadoc
+            // versions (Java > 21 trims leading whitespace per line)
+            return sb.toString().trim().replaceAll("\\s+", " ");
         } else {
             return sb.toString();
         }
