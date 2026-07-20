@@ -41,24 +41,30 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import com.sun.source.doctree.AttributeTree;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
+import com.sun.source.doctree.EndElementTree;
+import com.sun.source.doctree.EntityTree;
 import com.sun.source.doctree.LinkTree;
 import com.sun.source.doctree.LiteralTree;
 import com.sun.source.doctree.SinceTree;
+import com.sun.source.doctree.StartElementTree;
+import com.sun.source.doctree.SystemPropertyTree;
 import com.sun.source.doctree.TextTree;
 import com.sun.source.doctree.UnknownBlockTagTree;
+import com.sun.source.doctree.ValueTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.DocTreePath;
 import com.sun.source.util.DocTrees;
+import com.sun.source.util.SimpleDocTreeVisitor;
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
@@ -183,13 +189,17 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
         Map<String, String> entry = new LinkedHashMap<>();
         entry.put("key", String.valueOf(field.getConstantValue()));
-        entry.put("defaultValue", nvl(defValue, ""));
+        entry.put("defaultValue", Objects.toString(defValue, ""));
         entry.put("fqName", type.getQualifiedName() + "." + field.getSimpleName());
-        entry.put("description", cleanseJavadoc(renderContent(docComment.getFullBody())));
-        entry.put("since", nvl(getSince(type, docComment), ""));
-        entry.put("configurationSource", getConfigurationSource(renderContent(blockTags.get("configurationSource"))));
+        entry.put("description", renderContent(docComment.getFullBody(), field, docComment, true));
+        entry.put("since", Objects.toString(getSince(type, docComment, field), ""));
+        entry.put(
+                "configurationSource",
+                getConfigurationSource(renderContent(blockTags.get("configurationSource"), field, docComment, true)));
         entry.put("configurationType", configurationType);
-        entry.put("supportRepoIdSuffix", toYesNo(renderContent(blockTags.get("configurationRepoIdSuffix"))));
+        entry.put(
+                "supportRepoIdSuffix",
+                toYesNo(renderContent(blockTags.get("configurationRepoIdSuffix"), field, docComment, true)));
         discovered.add(entry);
     }
 
@@ -252,15 +262,15 @@ public class ConfigurationCollectorDoclet implements Doclet {
             configurationType = configurationType.substring("java.util.".length());
         }
 
-        String description = docComment != null ? renderContent(docComment.getFullBody()) : "";
+        String description = docComment != null ? renderContent(docComment.getFullBody(), field, docComment, true) : "";
         description = description.replace("*", "\\*");
 
         Map<String, String> entry = new LinkedHashMap<>();
         entry.put("key", String.valueOf(field.getConstantValue()));
-        entry.put("defaultValue", nvl(defaultValue, ""));
+        entry.put("defaultValue", Objects.toString(defaultValue, ""));
         entry.put("fqName", "");
-        entry.put("description", nvl(description, ""));
-        entry.put("since", nvl(getSince(type, docComment), ""));
+        entry.put("description", Objects.toString(description, ""));
+        entry.put("since", Objects.toString(getSince(type, docComment, field), ""));
         entry.put("configurationSource", source);
         entry.put("configurationType", configurationType);
         entry.put("supportRepoIdSuffix", "");
@@ -340,7 +350,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 }
             }
         }
-        return renderContent(content);
+        return renderContent(content, contextField, docComment, true);
     }
 
     /**
@@ -457,51 +467,148 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 : signature;
     }
 
-    private String renderContent(List<? extends DocTree> content) {
+    /**
+     * Renders the content of a Javadoc tag into a string, escaping HTML special characters and rendering inline tags.
+     * @param content
+     * @param context
+     * @param contextDoc
+     * @param trim if true, trims the result string
+     * @return
+     * @see <a href="https://docs.oracle.com/en/java/javase/25/docs/specs/javadoc/doc-comment-spec.html#standard-tags">Javadoc tags</a>
+     * @see <a href="https://docs.oracle.com/en/java/javase/25/docs/api/jdk.compiler/com/sun/source/doctree/InlineTagTree.html">InlineTagTree (common superinterface of all inline tags)</a>
+     */
+    private String renderContent(
+            List<? extends DocTree> content, VariableElement context, DocCommentTree contextDoc, boolean trim) {
         if (content == null) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
+        SimpleDocTreeVisitor<String, Void> visitor = new SimpleDocTreeVisitor<String, Void>() {
+            @Override
+            public String visitText(TextTree node, Void p) {
+                return escapeHtml(node.getBody());
+            }
+
+            @Override
+            public String visitLink(LinkTree node, Void p) {
+                String ref = node.getReference() != null ? node.getReference().getSignature() : "";
+                String label = renderContent(node.getLabel(), null, null, false);
+                String text = label == null || label.isEmpty() ? ref : label;
+                return node.getKind() == DocTree.Kind.LINK_PLAIN ? escapeHtml(text) : renderAsCode(text);
+            }
+
+            @Override
+            public String visitLiteral(LiteralTree node, Void p) {
+                if (node.getKind() == DocTree.Kind.LITERAL) {
+                    return renderAsCode(node.getBody().getBody());
+                } else {
+                    return escapeHtml(node.getBody().getBody());
+                }
+            }
+
+            @Override
+            public String visitSystemProperty(SystemPropertyTree node, Void p) {
+                return renderAsCode(node.getPropertyName().toString());
+            }
+
+            private String renderAsCode(String text) {
+                return "<code>" + escapeHtml(text) + "</code>";
+            }
+
+            @Override
+            public String visitValue(ValueTree node, Void p) {
+                if (node.getReference() != null && context != null && contextDoc != null) {
+                    DocTreePath rootPath = new DocTreePath(docTrees.getPath(context), contextDoc);
+                    DocTreePath refPath = DocTreePath.getPath(rootPath, node.getReference());
+                    if (refPath != null) {
+                        Element element = docTrees.getElement(refPath);
+                        if (element instanceof VariableElement ve) {
+                            String value = lookupConstant(ve);
+                            if (value != null) {
+                                return renderAsCode(value);
+                            }
+                        }
+                    }
+                }
+                // fall back to showing the reference signature
+                String ref = node.getReference() != null ? node.getReference().getSignature() : "";
+                return renderAsCode(ref);
+            }
+
+            @Override
+            public String visitStartElement(StartElementTree node, Void p) {
+                StringBuilder sb = new StringBuilder("<");
+                sb.append(node.getName());
+                for (DocTree attr : node.getAttributes()) {
+                    if (attr instanceof AttributeTree a) {
+                        sb.append(" ").append(a.getName());
+                        if (a.getValueKind() != AttributeTree.ValueKind.EMPTY) {
+                            String quote = a.getValueKind() == AttributeTree.ValueKind.SINGLE ? "'" : "\"";
+                            sb.append("=").append(quote);
+                            sb.append(renderContent(a.getValue(), null, null, false));
+                            sb.append(quote);
+                        }
+                    } else {
+                        sb.append(attr.toString());
+                    }
+                }
+                sb.append(node.isSelfClosing() ? "/>" : ">");
+                return sb.toString();
+            }
+
+            @Override
+            public String visitEndElement(EndElementTree node, Void p) {
+                return "</" + node.getName() + ">";
+            }
+
+            @Override
+            public String visitEntity(EntityTree node, Void p) {
+                return "&" + node.getName() + ";";
+            }
+
+            @Override
+            protected String defaultAction(DocTree node, Void p) {
+                return node.toString();
+            }
+        };
         for (DocTree tree : content) {
-            sb.append(renderTree(tree));
+            sb.append(tree.accept(visitor, null));
         }
-        return sb.toString().trim();
-    }
-
-    private String renderTree(DocTree tree) {
-        switch (tree.getKind()) {
-            case TEXT:
-                return ((TextTree) tree).getBody();
-            case LINK:
-            case LINK_PLAIN:
-                LinkTree link = (LinkTree) tree;
-                String ref = link.getReference() != null ? link.getReference().getSignature() : "";
-                return "{@link " + ref + "}";
-            case CODE:
-                return "{@code " + ((LiteralTree) tree).getBody().getBody() + "}";
-            case LITERAL:
-                return "{@literal " + ((LiteralTree) tree).getBody().getBody() + "}";
-            default:
-                return tree.toString();
+        // normalized whitespace not relevant for HTML rendering
+        if (trim) {
+            String[] lines = sb.toString().split("\n");
+            StringBuilder result = new StringBuilder();
+            for (String line : lines) {
+                if (!line.trim().isEmpty()) {
+                    result.append(line);
+                }
+            }
+            return result.toString().trim();
+        } else {
+            return sb.toString();
         }
     }
 
-    private String getSince(TypeElement type, DocCommentTree docComment) {
-        String since = getSinceTag(docComment);
+    private String escapeHtml(String text) {
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    private String getSince(TypeElement type, DocCommentTree docComment, VariableElement fieldContext) {
+        String since = getSinceTag(docComment, fieldContext);
         if (since == null && type != null) {
             // fall back to the enclosing type's @since
-            since = getSinceTag(docTrees.getDocCommentTree(type));
+            since = getSinceTag(docTrees.getDocCommentTree(type), null);
         }
         return since;
     }
 
-    private String getSinceTag(DocCommentTree docComment) {
+    private String getSinceTag(DocCommentTree docComment, VariableElement fieldContext) {
         if (docComment == null) {
             return null;
         }
         for (DocTree tag : docComment.getBlockTags()) {
             if (tag instanceof SinceTree sinceTree) {
-                return renderContent(sinceTree.getBody());
+                return renderContent(sinceTree.getBody(), fieldContext, docComment, true);
             }
         }
         return null;
@@ -509,67 +616,26 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
     private String getConfigurationType(String type) {
         if (type != null) {
-            String linkPrefix = "{@link ";
-            String linkSuffix = "}";
-            if (type.startsWith(linkPrefix) && type.endsWith(linkSuffix)) {
-                type = type.substring(linkPrefix.length(), type.length() - linkSuffix.length());
-            }
             String javaLangPackage = "java.lang.";
             if (type.startsWith(javaLangPackage)) {
                 type = type.substring(javaLangPackage.length());
             }
         }
-        return nvl(type, "n/a");
+        return Objects.toString(type, "n/a");
     }
 
     private String getConfigurationSource(String source) {
-        if ("{@link RepositorySystemSession#getConfigProperties()}".equals(source)) {
+        if ("<code>RepositorySystemSession#getConfigProperties()</code>".equals(source)) {
             return "Session Configuration";
-        } else if ("{@link System#getProperty(String,String)}".equals(source)) {
+        } else if ("<code>System#getProperty(String,String)</code>".equals(source)) {
             return "Java System Properties";
         } else {
             return source;
         }
     }
 
-    private String cleanseJavadoc(String fullText) {
-        String[] lines = fullText.split("\n");
-        StringBuilder result = new StringBuilder();
-        for (String line : lines) {
-            if (!line.startsWith("@") && !line.trim().isEmpty()) {
-                result.append(line);
-            }
-        }
-        return cleanseTags(result.toString());
-    }
-
-    private String cleanseTags(String text) {
-        // {@code XXX} -> <code>XXX</code>
-        // {@link XXX} -> <code>XXX</code>
-        Pattern pattern = Pattern.compile("(\\{@\\w\\w\\w\\w (.+?)})");
-        Matcher matcher = pattern.matcher(text);
-        if (!matcher.find()) {
-            return text;
-        }
-        int prevEnd = 0;
-        StringBuilder result = new StringBuilder();
-        do {
-            result.append(text, prevEnd, matcher.start(1));
-            result.append("<code>");
-            result.append(matcher.group(2));
-            result.append("</code>");
-            prevEnd = matcher.end(1);
-        } while (matcher.find());
-        result.append(text, prevEnd, text.length());
-        return result.toString();
-    }
-
     private String toYesNo(String value) {
         return "yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value) ? "Yes" : "No";
-    }
-
-    private String nvl(String string, String def) {
-        return string == null ? def : string;
     }
 
     /**

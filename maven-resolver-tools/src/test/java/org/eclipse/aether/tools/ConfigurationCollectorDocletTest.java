@@ -78,8 +78,11 @@ class ConfigurationCollectorDocletTest {
         assertNotNull(string, "string key missing");
         assertEquals("String", string.get("configurationType"));
         assertEquals("\"hello\"", string.get("defaultValue"));
-        assertEquals("Yes", string.get("supportRepoIdSuffix"));
         assertEquals("", string.get("since"), "no @since expected");
+        assertEquals("Yes", string.get("supportRepoIdSuffix"));
+        assertEquals(
+                "A string value with some inline tags. Value <code>\"hello\"</code> is the default. <code>some.property</code> is used. This text is code. <code>This text is literal.</code> <code>java.lang.String</code> is the type.",
+                string.get("description"));
 
         Map<String, String> enumKey = keys.get("sample.enum");
         assertNotNull(enumKey, "enum key missing");
