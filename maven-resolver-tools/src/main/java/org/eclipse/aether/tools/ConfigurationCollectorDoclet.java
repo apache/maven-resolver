@@ -26,21 +26,30 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -51,6 +60,7 @@ import com.sun.source.doctree.EndElementTree;
 import com.sun.source.doctree.EntityTree;
 import com.sun.source.doctree.LinkTree;
 import com.sun.source.doctree.LiteralTree;
+import com.sun.source.doctree.ReferenceTree;
 import com.sun.source.doctree.SinceTree;
 import com.sun.source.doctree.StartElementTree;
 import com.sun.source.doctree.SystemPropertyTree;
@@ -89,15 +99,52 @@ public class ConfigurationCollectorDoclet implements Doclet {
      */
     private static final String MAVEN_CONFIG_ANNOTATION = "org.apache.maven.api.annotations.Config";
 
+    private static final MethodReference METHOD_REFERENCE_SESSION_CONFIGURATION = new MethodReference(
+            "org.eclipse.aether.RepositorySystemSession", "getConfigProperties", "java.util.Map", List.of());
+    private static final MethodReference METHOD_REFERENCE_SYSTEM_PROPERTY = new MethodReference(
+            "java.lang.System", "getProperty", "java.lang.String", List.of("java.lang.String", "java.lang.String"));
+
     private Reporter reporter;
 
     private Path output;
+
+    private enum Mode {
+        RESOLVER,
+        MAVEN
+    }
+
+    /**
+     * Represents a configuration key and its associated metadata.
+     * @param key The configuration key (e.g. {@code "aether.connector.resume"}).
+     * @param description The description of the configuration key, rendered as HTML.
+     * @param defaultValue The default value of the configuration key, if any.
+     * @param fqName The fully qualified name of the field that declares the configuration key.
+     * @param since The {@code @since} version of the configuration key, if any.
+     * @param source From where the configuration key is sourced (e.g. "Session Configuration", "User Properties", "System Properties").
+     * @param type The Java type of the configuration key (e.g. "String", "Integer", "Boolean").
+     * @param supportsRepoIdSuffix Whether the configuration key supports a repository ID suffix (e.g. {@code "aether.connector.resume.<repoId>"}).
+     */
+    public record ConfigurationEntry(
+            String key,
+            String description,
+            String defaultValue,
+            String fqName,
+            String since,
+            String source,
+            String type,
+            boolean supportsRepoIdSuffix) {
+
+        public ConfigurationEntry {
+            Objects.requireNonNull(key);
+            Objects.requireNonNull(description);
+        }
+    }
 
     /**
      * The scanning mode; either {@code resolver} (Javadoc block tags) or {@code maven} (the {@code @Config}
      * annotation). Defaults to {@code resolver}.
      */
-    private String mode = "resolver";
+    private Mode mode = Mode.RESOLVER;
 
     private DocTrees docTrees;
 
@@ -114,18 +161,31 @@ public class ConfigurationCollectorDoclet implements Doclet {
     @Override
     public Set<? extends Option> getSupportedOptions() {
         return Set.of(
-                new SimpleOption(
+                new SingleArgumentOption(
                         List.of("--output", "-o"),
-                        1,
                         "The intermediate properties file to write discovered keys to",
                         "<file>",
-                        args -> output = Paths.get(args.get(0))),
-                new SimpleOption(
-                        List.of("--mode", "-m"),
-                        1,
-                        "The scanning mode, either 'resolver' or 'maven'",
-                        "<mode>",
-                        args -> mode = args.get(0)));
+                        arg -> {
+                            try {
+                                output = Paths.get(arg);
+                            } catch (InvalidPathException e) {
+                                throw new IllegalArgumentException("Invalid output file path: " + arg, e);
+                            }
+                        }),
+                new SingleArgumentOption(
+                        List.of("--mode", "-m"), "The scanning mode, either 'resolver' or 'maven'", "<mode>", arg -> {
+                            try {
+                                Mode.valueOf(arg.toUpperCase(Locale.ROOT));
+                            } catch (IllegalArgumentException e) {
+                                throw new IllegalArgumentException(
+                                        "Invalid mode: " + arg + ". Must be one of (case-insensitive): "
+                                                + String.join(
+                                                        ", ",
+                                                        Arrays.stream(Mode.values())
+                                                                .map(Enum::name)
+                                                                .toArray(String[]::new)));
+                            }
+                        }));
     }
 
     @Override
@@ -149,41 +209,72 @@ public class ConfigurationCollectorDoclet implements Doclet {
             return false;
         }
         docTrees = environment.getDocTrees();
-        List<Map<String, String>> discoveredKeys = new ArrayList<>();
+        List<ConfigurationEntry> configurationEntries = new ArrayList<>();
 
         Set<TypeElement> types = ElementFilter.typesIn(environment.getIncludedElements());
         for (TypeElement type : types) {
             for (VariableElement field : ElementFilter.fieldsIn(type.getEnclosedElements())) {
+                // check if relevant metadata is present before processing the field, so that we can skip any fields
+                // that don't have a constant value or Javadoc
                 if (field.getConstantValue() == null) {
                     continue;
                 }
                 DocCommentTree docComment = docTrees.getDocCommentTree(field);
+                if (docComment == null) {
+                    // javadoc is mandatory for configuration keys, so skip any fields that don't have a doc comment
+                    // reporter.print(Diagnostic.Kind., field, "Skipping field because it has no Javadoc");
+                    continue;
+                }
+                DocTreePath rootPath = new DocTreePath(docTrees.getPath(field), docComment);
                 try {
-                    if ("maven".equals(mode)) {
-                        processMavenField(type, field, docComment, discoveredKeys);
-                    } else if ("resolver".equals(mode)) {
-                        processResolverField(type, field, docComment, discoveredKeys);
-                    } else {
-                        // TODO: move to beginning of run() and validate mode before processing any types
-                        reportError("Unknown mode: " + mode);
-                        return false;
+                    ConfigurationEntry entry;
+                    switch (mode) {
+                        case MAVEN:
+                            entry = processMavenField(rootPath, type, field);
+                            break;
+                        case RESOLVER:
+                            entry = processResolverField(rootPath, type, field);
+                            break;
+                        default:
+                            throw new IllegalStateException("Unknown mode: " + mode);
+                    }
+                    if (entry != null) {
+                        configurationEntries.add(entry);
                     }
                 } catch (DocTreePathAwareRuntimeException e) {
                     reportError(e.getDocTreePath(), e.getMessage());
-                } catch (RuntimeException e) {
-                    DocTreePath rootPath = new DocTreePath(docTrees.getPath(field), docComment);
+                } catch (IllegalArgumentException e) {
                     reportError(rootPath, e.getMessage());
+                } catch (RuntimeException e) {
+                    // log with stacktrace for unexpected errors, but continue
+                    reportError(rootPath, e);
                 }
             }
         }
 
         try {
-            writeProperties(discoveredKeys);
+            writeProperties(configurationEntries);
         } catch (IOException e) {
             reportError("Failed to write properties file: " + e.getMessage());
             return false;
         }
         return true;
+    }
+
+    /**
+     * Reports an error message at a specific DocTreePath location.
+     *
+     * @param path the DocTreePath where the error occurred
+     * @param message the error message
+     */
+    private void reportError(DocTreePath path, Throwable throwable) {
+        reportError(path, throwable.getMessage());
+        // also emit stack trace
+        PrintWriter pw = reporter.getDiagnosticWriter();
+        if (pw == null) {
+            pw = new PrintWriter(System.err);
+        }
+        throwable.printStackTrace(pw);
     }
 
     /**
@@ -209,49 +300,52 @@ public class ConfigurationCollectorDoclet implements Doclet {
         reporter.print(Diagnostic.Kind.ERROR, message);
     }
 
-    private void processResolverField(
-            TypeElement type, VariableElement field, DocCommentTree docComment, List<Map<String, String>> discovered) {
-        if (docComment == null) {
-            return;
-        }
-        Map<String, UnknownBlockTagTree> blockTags = collectBlockTags(docComment);
+    /**
+     * Processes a configuration key field declared in Javadoc sources.
+     * @param path
+     * @param type
+     * @param field
+     * @return the extracted configuration entry (or {@code null})
+     */
+    private ConfigurationEntry processResolverField(DocTreePath path, TypeElement type, VariableElement field) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(field);
+        Map<String, UnknownBlockTagTree> blockTags = collectBlockTags(path.getDocComment());
         if (!blockTags.containsKey("configurationSource")) {
-            return;
+            return null;
         }
+        return new ConfigurationEntry(
+                String.valueOf(field.getConstantValue()),
+                getFullBodyContent(path),
+                resolveDefaultValue(path, blockTags).orElse(""),
+                type.getQualifiedName() + "." + field.getSimpleName(),
+                getSince(path, type).orElse(""),
+                getConfigurationSource(path, blockTags).orElse(""),
+                getConfigurationType(path, blockTags),
+                isSupportsRepoIdSuffix(path, blockTags));
+    }
 
-        String configurationType =
-                getConfigurationType(extractClassLink(field, docComment, blockTags, "configurationType"));
-        String defValue = resolveDefaultValue(type, field, docComment, blockTags.get("configurationDefaultValue"));
-
-        UnknownBlockTagTree sourceTag = blockTags.get("configurationSource");
+    private boolean isSupportsRepoIdSuffix(DocTreePath path, Map<String, UnknownBlockTagTree> blockTags) {
         UnknownBlockTagTree repoIdTag = blockTags.get("configurationRepoIdSuffix");
-
-        Map<String, String> entry = new LinkedHashMap<>();
-        entry.put("key", String.valueOf(field.getConstantValue()));
-        entry.put("defaultValue", Objects.toString(defValue, ""));
-        entry.put("fqName", type.getQualifiedName() + "." + field.getSimpleName());
-        entry.put("description", renderContent(docComment.getFullBody(), field, docComment, true));
-        entry.put("since", Objects.toString(getSince(type, docComment, field), ""));
-        entry.put(
-                "configurationSource",
-                getConfigurationSource(renderContent(sourceTag != null ? sourceTag.getContent() : null)));
-        entry.put("configurationType", configurationType);
-        entry.put("supportRepoIdSuffix", toYesNo(renderContent(repoIdTag != null ? repoIdTag.getContent() : null)));
-        discovered.add(entry);
+        if (repoIdTag != null) {
+            String content = renderContent(DocTreePath.getPath(path, repoIdTag), RenderMode.PLAIN, true);
+            return "yes".equalsIgnoreCase(content) || "true".equalsIgnoreCase(content);
+        }
+        return false;
     }
 
     /**
      * Processes a constant field declared in Maven sources. Maven declares configuration keys via the
      * {@code org.apache.maven.api.annotations.Config} annotation (rather than the custom Javadoc block tags used by
      * Resolver), so the metadata is read from that annotation's attributes.
+     * @return
      */
     // TODO: move to Maven repository module and use the Maven annotation type directly (currently we don't have a
     // dependency on Maven API)
-    private void processMavenField(
-            TypeElement type, VariableElement field, DocCommentTree docComment, List<Map<String, String>> discovered) {
+    private ConfigurationEntry processMavenField(DocTreePath path, TypeElement type, VariableElement field) {
         AnnotationMirror config = getAnnotation(field, MAVEN_CONFIG_ANNOTATION);
         if (config == null) {
-            return;
+            return null;
         }
 
         String source = "USER_PROPERTIES";
@@ -299,19 +393,15 @@ public class ConfigurationCollectorDoclet implements Doclet {
             configurationType = configurationType.substring("java.util.".length());
         }
 
-        String description = docComment != null ? renderContent(docComment.getFullBody(), field, docComment, true) : "";
-        description = description.replace("*", "\\*");
-
-        Map<String, String> entry = new LinkedHashMap<>();
-        entry.put("key", String.valueOf(field.getConstantValue()));
-        entry.put("defaultValue", Objects.toString(defaultValue, ""));
-        entry.put("fqName", "");
-        entry.put("description", Objects.toString(description, ""));
-        entry.put("since", Objects.toString(getSince(type, docComment, field), ""));
-        entry.put("configurationSource", source);
-        entry.put("configurationType", configurationType);
-        entry.put("supportRepoIdSuffix", "");
-        discovered.add(entry);
+        return new ConfigurationEntry(
+                String.valueOf(field.getConstantValue()),
+                path.getDocComment() != null ? getFullBodyContent(path) : "",
+                Objects.toString(defaultValue, ""),
+                type.getQualifiedName() + "." + field.getSimpleName(),
+                Objects.toString(getSince(path, type), ""),
+                source,
+                configurationType,
+                false);
     }
 
     private AnnotationMirror getAnnotation(Element element, String fqName) {
@@ -325,14 +415,12 @@ public class ConfigurationCollectorDoclet implements Doclet {
         return null;
     }
 
-    private void writeProperties(List<Map<String, String>> discoveredKeys) throws IOException {
+    private void writeProperties(List<ConfigurationEntry> configurationEntries) throws IOException {
         Properties properties = new Properties();
-        properties.setProperty("keys.count", String.valueOf(discoveredKeys.size()));
-        for (int i = 0; i < discoveredKeys.size(); i++) {
-            Map<String, String> entry = discoveredKeys.get(i);
-            for (Map.Entry<String, String> field : entry.entrySet()) {
-                properties.setProperty("keys." + i + "." + field.getKey(), field.getValue());
-            }
+        properties.setProperty("keys.count", String.valueOf(configurationEntries.size()));
+        for (int i = 0; i < configurationEntries.size(); i++) {
+            ConfigurationEntry entry = configurationEntries.get(i);
+            writeEntry(properties, entry, "keys." + i + ".");
         }
         if (output.getParent() != null) {
             Files.createDirectories(output.getParent());
@@ -340,6 +428,17 @@ public class ConfigurationCollectorDoclet implements Doclet {
         try (Writer writer = Files.newBufferedWriter(output, StandardCharsets.UTF_8)) {
             properties.store(writer, "Generated by ConfigurationCollectorDoclet - DO NOT EDIT");
         }
+    }
+
+    private void writeEntry(Properties properties, ConfigurationEntry entry, String prefix) {
+        properties.setProperty(prefix + "key", entry.key());
+        properties.setProperty(prefix + "defaultValue", entry.defaultValue());
+        properties.setProperty(prefix + "fqName", entry.fqName());
+        properties.setProperty(prefix + "description", entry.description());
+        properties.setProperty(prefix + "since", entry.since());
+        properties.setProperty(prefix + "configurationSource", entry.source());
+        properties.setProperty(prefix + "configurationType", entry.type());
+        properties.setProperty(prefix + "supportRepoIdSuffix", toYesNo(entry.supportsRepoIdSuffix()));
     }
 
     // --- Javadoc extraction helpers -------------------------------------------------------------------------------
@@ -354,51 +453,38 @@ public class ConfigurationCollectorDoclet implements Doclet {
         return result;
     }
 
-    /**
-     * Builds a {@link DocTreePath} pointing to a specific block tag within a field's doc comment, enabling
-     * precise Javadoc-level error messages via {@link Reporter#print(Diagnostic.Kind, DocTreePath, String)}.
-     */
-    private DocTreePath buildTagPath(VariableElement field, DocCommentTree docComment, UnknownBlockTagTree tag) {
-        if (field == null || docComment == null || tag == null) {
-            return null;
-        }
-        DocTreePath docCommentPath = new DocTreePath(docTrees.getPath(field), docComment);
-        return new DocTreePath(docCommentPath, tag);
+    private String getFullBodyContent(DocTreePath path) {
+        return renderContent(path, RenderMode.HTML, true, path.getDocComment().getFullBody());
     }
 
-    private String resolveDefaultValue(
-            TypeElement type, VariableElement contextField, DocCommentTree docComment, UnknownBlockTagTree contentTag) {
-        if (contentTag == null) {
-            return null;
+    private Optional<String> resolveDefaultValue(DocTreePath path, Map<String, UnknownBlockTagTree> blockTags) {
+        UnknownBlockTagTree defaultValueTag = blockTags.get("configurationDefaultValue");
+        if (defaultValueTag == null) {
+            return Optional.empty();
         }
-        List<? extends DocTree> content = contentTag.getContent();
-        if (content.isEmpty()) {
-            return null;
-        }
-        DocTreePath tagPath = buildTagPath(contextField, docComment, contentTag);
-        for (DocTree tree : content) {
+        DocTreePath defaultValuePath = DocTreePath.getPath(path, defaultValueTag);
+        for (DocTree tree : defaultValueTag.getContent()) {
             if (tree instanceof LinkTree link) {
-                if (link.getReference() != null) {
-                    String signature = link.getReference().getSignature();
-                    // resolve the referenced constant using the fully qualified signature, so that references
-                    // to constants declared in other types (e.g. {@link OtherType#CONSTANT}) can be resolved
-                    VariableElement referenced = resolveReferencedField(contextField, docComment, link);
-                    String value = referenced != null
-                            ? lookupConstant(referenced)
-                            : lookupConstant(type, signature.substring(signature.indexOf('#') + 1));
-                    if (value == null) {
-                        // hard fail: default value constants must be resolvable; report at the precise
-                        // link-reference location if we can resolve a path to it, otherwise at the block tag
-                        DocTreePath rootPath = new DocTreePath(docTrees.getPath(contextField), docComment);
-                        DocTreePath linkRefPath = DocTreePath.getPath(rootPath, link.getReference());
-                        throw new DocTreePathAwareRuntimeException(
-                                linkRefPath != null ? linkRefPath : tagPath, "Could not resolve link: " + signature);
-                    }
-                    return value;
+                String signature = link.getReference().getSignature();
+                DocTreePath linkTreePath = DocTreePath.getPath(path, tree);
+                // resolve the referenced constant using the fully qualified signature, so that references
+                // to constants declared in other types (e.g. {@link OtherType#CONSTANT}) can be resolved
+                VariableElement referenced = resolveReferencedField(linkTreePath, link);
+                String value = referenced != null ? lookupConstant(referenced) : null;
+                if (value == null) {
+                    // hard fail: default value constants must be resolvable; report at the precise
+                    // link-reference location if we can resolve a path to it, otherwise at the block tag
+                    DocTreePath linkRefPath = DocTreePath.getPath(linkTreePath, link.getReference());
+                    throw new DocTreePathAwareRuntimeException(
+                            linkRefPath != null ? linkRefPath : linkTreePath,
+                            "Could not resolve link to determine default value: " + signature);
                 }
+                return Optional.ofNullable(value);
             }
         }
-        return renderContent(content, contextField, docComment, true);
+        // fallback: render the content of the block tag as-is (e.g. if it contains a literal value rather than a {@code
+        // {@link ...}} reference)
+        return Optional.of(renderContent(defaultValuePath, RenderMode.PLAIN, true));
     }
 
     /**
@@ -406,30 +492,13 @@ public class ConfigurationCollectorDoclet implements Doclet {
      * signature (so references into other types are supported). Returns {@code null} if the reference cannot be
      * resolved to a field.
      */
-    private VariableElement resolveReferencedField(
-            VariableElement contextField, DocCommentTree docComment, LinkTree link) {
-        if (contextField == null || docComment == null) {
-            return null;
-        }
-        DocTreePath rootPath = new DocTreePath(docTrees.getPath(contextField), docComment);
-        DocTreePath refPath = DocTreePath.getPath(rootPath, link.getReference());
+    private VariableElement resolveReferencedField(DocTreePath path, LinkTree link) {
+        DocTreePath refPath = DocTreePath.getPath(path, link.getReference());
         if (refPath == null) {
             return null;
         }
         Element element = docTrees.getElement(refPath);
         return element instanceof VariableElement variableElement ? variableElement : null;
-    }
-
-    private String lookupConstant(TypeElement type, String constantName) {
-        for (VariableElement field : ElementFilter.fieldsIn(type.getEnclosedElements())) {
-            if (field.getSimpleName().contentEquals(constantName)) {
-                String value = lookupConstant(field);
-                if (value != null) {
-                    return value;
-                }
-            }
-        }
-        return null;
     }
 
     private String lookupConstant(VariableElement field) {
@@ -474,33 +543,35 @@ public class ConfigurationCollectorDoclet implements Doclet {
         return enumConstant;
     }
 
-    private String extractClassLink(
-            VariableElement contextField,
-            DocCommentTree docComment,
-            Map<String, UnknownBlockTagTree> blockTags,
-            String tagName) {
-        UnknownBlockTagTree tag = blockTags.get(tagName);
-        if (tag == null || tag.getContent().isEmpty()) {
-
-            throw new IllegalArgumentException("Missing content for @" + tagName);
-        }
-        DocTreePath tagPath = buildTagPath(contextField, docComment, tag);
+    private Optional<LinkTree> getFirstLinkInBlockTag(UnknownBlockTagTree tag) {
         for (DocTree tree : tag.getContent()) {
-            // just use the first link, ignore any other content (e.g. text) in the tag
             if (tree instanceof LinkTree link) {
-                String signature = link.getReference().getSignature();
-                if (signature.contains("#")) {
-                    // report at the precise link reference node within the block tag
-                    DocTreePath rootPath = new DocTreePath(docTrees.getPath(contextField), docComment);
-                    DocTreePath linkRefPath = DocTreePath.getPath(rootPath, link.getReference());
-                    throw new DocTreePathAwareRuntimeException(
-                            linkRefPath != null ? linkRefPath : tagPath,
-                            "Expected a class link in @" + tagName + ", but got a member reference: " + signature);
-                }
-                return resolveReferencedType(contextField, docComment, link, signature);
+                return Optional.of(link);
             }
         }
-        throw new DocTreePathAwareRuntimeException(tagPath, "No valid {@link ...} reference found in @" + tagName);
+        return Optional.empty();
+    }
+
+    /**
+     * Resolves the fully qualified type name a {@code {@link ...}} reference points to.
+     * @param path the path of the given inline link tag
+     * @param link the inline link tag
+     * @return
+     */
+    private String getType(DocTreePath path, LinkTree link) {
+        String signature = link.getReference().getSignature();
+        if (signature.contains("#")) {
+            // report at the precise link reference node within the block tag
+            DocTreePath linkRefPath = DocTreePath.getPath(path, link.getReference());
+            throw new DocTreePathAwareRuntimeException(
+                    linkRefPath != null ? linkRefPath : path,
+                    "Expected a class link, but got a member reference: " + signature);
+        }
+        // resolve the referenced type and return its fully qualified name, falling back to the raw signature if it
+        // cannot be resolved
+        return resolveReferencedType(path, link.getReference())
+                .map(t -> t.getQualifiedName().toString())
+                .orElse(signature);
     }
 
     /**
@@ -508,50 +579,54 @@ public class ConfigurationCollectorDoclet implements Doclet {
      * declared via imports are expanded). Falls back to the raw signature if the reference cannot be resolved to a
      * type.
      */
-    private String resolveReferencedType(
-            VariableElement contextField, DocCommentTree docComment, LinkTree link, String signature) {
-        if (contextField == null || docComment == null) {
-            return signature;
-        }
-        DocTreePath rootPath = new DocTreePath(docTrees.getPath(contextField), docComment);
-        DocTreePath refPath = DocTreePath.getPath(rootPath, link.getReference());
+    private Optional<TypeElement> resolveReferencedType(DocTreePath path, ReferenceTree reference) {
+        // TODO: try to resolve from type outside the current compilation unit (e.g. from imports)
+        DocTreePath refPath = DocTreePath.getPath(path, reference);
         if (refPath == null) {
-            return signature;
+            return Optional.empty();
         }
         Element element = docTrees.getElement(refPath);
-        return element instanceof TypeElement typeElement
-                ? typeElement.getQualifiedName().toString()
-                : signature;
+        return element instanceof TypeElement typeElement ? Optional.of(typeElement) : Optional.empty();
+    }
+
+    enum RenderMode {
+        /** Render the content as plain text. Stripping any rich text markup */
+        PLAIN,
+        /** Render the content as HTML, escaping special characters and rendering inline tags. */
+        HTML
+    }
+
+    private String renderContent(DocTreePath docTreePath, RenderMode mode, boolean trim) {
+        return renderContent(docTreePath, mode, trim, null);
     }
 
     /**
      * Renders the content of a Javadoc tag into an HTML string, escaping HTML special characters and rendering inline tags.
-     * @param content the javadoc content to render, e.g. the body of a {@code @configurationSource} tag
-     * @param context the field element the content is associated with, used for resolving {@code {@link ...}} references
-     * @param contextDoc the top-level doc comment tree the content is associated with, used for resolving {@code {@link ...}} references
+     *
+     * @param docTreePath encapsulates the doc comment tree and the path to the content being rendered.
+     * The latter is used for resolving {@code {@link ...}} references and emitting error messages.
      * @param trim if true, trims the result string (may destroy {@code <pre> </pre>} formatting).
-     * @return the rendered content, or null if the input content is null
+     * @param docTrees the doc trees for which to render the content. If {@code null}, the leaf of the {@code docTreePath} is rendered.
+     * @return the rendered content (never {@code null})
      * @see <a href="https://docs.oracle.com/en/java/javase/25/docs/specs/javadoc/doc-comment-spec.html#standard-tags">Javadoc tags</a>
      * @see <a href="https://docs.oracle.com/en/java/javase/25/docs/api/jdk.compiler/com/sun/source/doctree/InlineTagTree.html">InlineTagTree (common superinterface of all inline tags)</a>
      */
     private String renderContent(
-            List<? extends DocTree> content, VariableElement context, DocCommentTree contextDoc, boolean trim) {
-        if (content == null) {
-            return null;
-        }
+            DocTreePath docTreePath, RenderMode mode, boolean trim, Collection<? extends DocTree> docTreesToRender) {
+        Objects.requireNonNull(docTreePath, "docTreePath must not be null");
         StringBuilder sb = new StringBuilder();
         SimpleDocTreeVisitor<String, Void> visitor = new SimpleDocTreeVisitor<String, Void>() {
             @Override
             public String visitText(TextTree node, Void p) {
-                return escapeHtml(node.getBody());
+                return escape(mode, node.getBody());
             }
 
             @Override
             public String visitLink(LinkTree node, Void p) {
                 String ref = node.getReference() != null ? node.getReference().getSignature() : "";
-                String label = renderContent(node.getLabel(), null, null, false);
+                String label = renderContent(DocTreePath.getPath(docTreePath, node.getReference()), mode, false);
                 String text = label == null || label.isEmpty() ? ref : label;
-                return node.getKind() == DocTree.Kind.LINK_PLAIN ? escapeHtml(text) : renderAsCode(text);
+                return node.getKind() == DocTree.Kind.LINK_PLAIN ? escape(mode, text) : renderAsCode(text);
             }
 
             @Override
@@ -559,7 +634,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 if (node.getKind() == DocTree.Kind.CODE) {
                     return renderAsCode(node.getBody().getBody());
                 } else {
-                    return escapeHtml(node.getBody().getBody());
+                    return escape(mode, node.getBody().getBody());
                 }
             }
 
@@ -569,14 +644,17 @@ public class ConfigurationCollectorDoclet implements Doclet {
             }
 
             private String renderAsCode(String text) {
-                return "<code>" + escapeHtml(text) + "</code>";
+                if (mode == RenderMode.HTML) {
+                    return "<code>" + escape(mode, text) + "</code>";
+                } else {
+                    return escape(mode, text);
+                }
             }
 
             @Override
             public String visitValue(ValueTree node, Void p) {
-                if (node.getReference() != null && context != null && contextDoc != null) {
-                    DocTreePath rootPath = new DocTreePath(docTrees.getPath(context), contextDoc);
-                    DocTreePath refPath = DocTreePath.getPath(rootPath, node.getReference());
+                if (node.getReference() != null) {
+                    DocTreePath refPath = DocTreePath.getPath(docTreePath, node.getReference());
                     if (refPath != null) {
                         Element element = docTrees.getElement(refPath);
                         if (element instanceof VariableElement ve) {
@@ -602,7 +680,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
                         if (a.getValueKind() != AttributeTree.ValueKind.EMPTY) {
                             String quote = a.getValueKind() == AttributeTree.ValueKind.SINGLE ? "'" : "\"";
                             sb.append("=").append(quote);
-                            sb.append(renderContent(a.getValue(), null, null, false));
+                            sb.append(renderContent(DocTreePath.getPath(docTreePath, a), mode, trim));
                             sb.append(quote);
                         }
                     } else {
@@ -624,13 +702,29 @@ public class ConfigurationCollectorDoclet implements Doclet {
             }
 
             @Override
+            public String visitUnknownBlockTag(UnknownBlockTagTree node, Void p) {
+                StringBuilder sb = new StringBuilder();
+                node.getContent().forEach(child -> sb.append(child.accept(this, p)));
+                return sb.toString();
+            }
+
+            @Override
+            public String visitSince(SinceTree node, Void p) {
+                return escape(mode, node.getBody().toString());
+            }
+
+            @Override
             protected String defaultAction(DocTree node, Void p) {
                 return node.toString();
             }
         };
-        for (DocTree tree : content) {
-            sb.append(tree.accept(visitor, null));
+        if (docTreesToRender == null) {
+            docTreesToRender = Collections.singleton(docTreePath.getLeaf());
         }
+        for (DocTree docTreeToRender : docTreesToRender) {
+            sb.append(docTreeToRender.accept(visitor, null));
+        }
+
         if (trim) {
             // normalize whitespace not relevant for HTML rendering,
             // trimming behaviour already differs between different Javadoc
@@ -641,73 +735,158 @@ public class ConfigurationCollectorDoclet implements Doclet {
         }
     }
 
-    private String escapeHtml(String text) {
-        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    private static String escape(RenderMode mode, String text) {
+        if (mode == RenderMode.HTML) {
+            return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        } else {
+            return text;
+        }
     }
 
-    private String getSince(TypeElement type, DocCommentTree docComment, VariableElement fieldContext) {
-        String since = getSinceTag(docComment, fieldContext);
+    private Optional<String> getSince(DocTreePath path, TypeElement type) {
+        String since = getSinceTag(path);
         if (since == null && type != null) {
             // fall back to the enclosing type's @since
-            since = getSinceTag(docTrees.getDocCommentTree(type), null);
+            DocCommentTree typeDocTree = docTrees.getDocCommentTree(type);
+            if (typeDocTree != null) {
+                since = getSinceTag(DocTreePath.getPath(path, docTrees.getDocCommentTree(type)));
+            }
         }
-        return since;
+        return Optional.ofNullable(since);
     }
 
-    private String getSinceTag(DocCommentTree docComment, VariableElement fieldContext) {
-        if (docComment == null) {
+    private String getSinceTag(DocTreePath path) {
+        if (path == null) {
+            // may be non existent
             return null;
         }
-        for (DocTree tag : docComment.getBlockTags()) {
-            if (tag instanceof SinceTree sinceTree) {
-                return renderContent(sinceTree.getBody(), fieldContext, docComment, true);
+        for (DocTree tag : path.getDocComment().getBlockTags()) {
+            if (tag instanceof SinceTree) {
+                return renderContent(DocTreePath.getPath(path, tag), RenderMode.PLAIN, true);
             }
         }
         return null;
     }
 
-    private String getConfigurationType(String type) {
-        if (type != null) {
-            String javaLangPackage = "java.lang.";
-            if (type.startsWith(javaLangPackage)) {
-                type = type.substring(javaLangPackage.length());
-            }
+    private String getConfigurationType(DocTreePath path, Map<String, UnknownBlockTagTree> blockTags) {
+        UnknownBlockTagTree typeTag = blockTags.get("configurationType");
+        if (typeTag == null) {
+            throw new IllegalStateException("Missing block tag @configurationType");
         }
-        return Objects.toString(type, "n/a");
+        DocTreePath configurationTypePath = DocTreePath.getPath(path, typeTag);
+        LinkTree linkTree = getFirstLinkInBlockTag(typeTag)
+                .orElseThrow(() -> new DocTreePathAwareRuntimeException(
+                        configurationTypePath, "No valid {@link ...} reference found in @" + typeTag.getTagName()));
+
+        String type = getType(configurationTypePath, linkTree);
+        String javaLangPackage = "java.lang.";
+        if (type.startsWith(javaLangPackage)) {
+            type = type.substring(javaLangPackage.length());
+        }
+        return type;
     }
 
-    private String getConfigurationSource(String source) {
-        if ("<code>RepositorySystemSession#getConfigProperties()</code>".equals(source)) {
-            return "Session Configuration";
-        } else if ("<code>System#getProperty(String,String)</code>".equals(source)) {
-            return "Java System Properties";
+    private Optional<String> getConfigurationSource(DocTreePath path, Map<String, UnknownBlockTagTree> blockTags) {
+        UnknownBlockTagTree configurationSourceTag = blockTags.get("configurationSource");
+        if (configurationSourceTag == null) {
+            return Optional.empty();
+        }
+        DocTreePath configurationSourcePath = DocTreePath.getPath(path, configurationSourceTag);
+        LinkTree linkTree = getFirstLinkInBlockTag(configurationSourceTag)
+                .orElseThrow(() -> new DocTreePathAwareRuntimeException(
+                        configurationSourcePath,
+                        "No valid {@link ...} reference found in @" + configurationSourceTag.getTagName()));
+
+        // javadoc signature is not normalized, use the resolved reference (leveraging ReferenceParser) to get a unique
+        // canonical representation of the referenced method
+        MethodReference methodReference = getReferencedMethod(configurationSourcePath, linkTree);
+        if (methodReference.equals(METHOD_REFERENCE_SESSION_CONFIGURATION)) {
+            return Optional.of("Session Configuration");
+        } else if (methodReference.equals(METHOD_REFERENCE_SYSTEM_PROPERTY)) {
+            return Optional.of("Java System Properties");
         } else {
-            return source;
+            reporter.print(
+                    Diagnostic.Kind.WARNING,
+                    path,
+                    "Unknown configuration source: " + linkTree.getReference().getSignature()
+                            + ", using raw signature as source");
+            return Optional.of(linkTree.getReference().getSignature());
         }
     }
 
-    private String toYesNo(String value) {
-        return "yes".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value) ? "Yes" : "No";
+    /**
+     * Represents a reference to a method, including the fully qualified class name, method name, return type, and parameter types.
+     * This is supposed to be unique as well as canonical.
+     * @param fullyQualifiedClassName the fully qualified name of the class containing the method
+     * @param methodName the name of the method
+     * @param returnType the fully qualified name (for declared types) or the simple name (for primitive types) of the return type of the method
+     * @param fullyQualifiedParameterTypes a list of fully qualified names (for declared types) or simple names (for primitive types) of the parameter types of the method
+     */
+    public record MethodReference(
+            String fullyQualifiedClassName,
+            String methodName,
+            String returnType,
+            List<String> fullyQualifiedParameterTypes) {}
+
+    private MethodReference getReferencedMethod(DocTreePath path, LinkTree link) {
+        ExecutableElement ee = getReferencedExecutableElement(path, link);
+        String fullyQualifiedClassName =
+                ((TypeElement) ee.getEnclosingElement()).getQualifiedName().toString();
+        String methodName = ee.getSimpleName().toString();
+        String returnType = getFullyQualifiedOrSimpleTypeName(ee.getReturnType());
+        List<String> parameterTypes = ee.getParameters().stream()
+                .map(p -> getFullyQualifiedOrSimpleTypeName(p.asType()))
+                .toList();
+        return new MethodReference(fullyQualifiedClassName, methodName, returnType, parameterTypes);
+    }
+
+    static String getFullyQualifiedOrSimpleTypeName(TypeMirror typeMirror) {
+        if (typeMirror instanceof DeclaredType declaredType) {
+            Element element = declaredType.asElement();
+            if (element instanceof TypeElement typeElement) {
+                return typeElement.getQualifiedName().toString();
+            }
+        } else if (typeMirror instanceof PrimitiveType primitiveType) {
+            return primitiveType.toString();
+        }
+        throw new IllegalArgumentException("TypeMirror is neither a declared type nor primitive type: " + typeMirror);
+    }
+
+    private ExecutableElement getReferencedExecutableElement(DocTreePath path, LinkTree link) {
+        DocTreePath linkRefPath = DocTreePath.getPath(path, link.getReference());
+        if (linkRefPath == null) {
+            throw new DocTreePathAwareRuntimeException(
+                    path,
+                    "Could not resolve link reference: " + link.getReference().getSignature());
+        }
+        Element element = docTrees.getElement(linkRefPath);
+        if (element instanceof ExecutableElement ee) {
+            return ee;
+        } else {
+            throw new DocTreePathAwareRuntimeException(
+                    linkRefPath, "Expected an executable element, but got: " + element);
+        }
+    }
+
+    private static String toYesNo(boolean value) {
+        return value ? "Yes" : "No";
     }
 
     /**
      * Minimal {@link Option} implementation.
      */
-    private static final class SimpleOption implements Option {
+    private static final class SingleArgumentOption implements Option {
         private final List<String> names;
-        private final int argumentCount;
         private final String description;
         private final String parameters;
-        private final java.util.function.Consumer<List<String>> processor;
+        private final java.util.function.Consumer<String> processor;
 
-        SimpleOption(
+        SingleArgumentOption(
                 List<String> names,
-                int argumentCount,
                 String description,
                 String parameters,
-                java.util.function.Consumer<List<String>> processor) {
+                java.util.function.Consumer<String> processor) {
             this.names = names;
-            this.argumentCount = argumentCount;
             this.description = description;
             this.parameters = parameters;
             this.processor = processor;
@@ -715,7 +894,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
         @Override
         public int getArgumentCount() {
-            return argumentCount;
+            return 1;
         }
 
         @Override
@@ -740,7 +919,9 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
         @Override
         public boolean process(String option, List<String> arguments) {
-            processor.accept(arguments);
+            processor.accept(arguments.get(0));
+            // returning false just leads to a very generic error message (not even exposing the affected option) so
+            // rather rely on custom runtime exceptions for validation errors
             return true;
         }
     }

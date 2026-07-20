@@ -39,6 +39,7 @@ public final class InvalidSampleConfigurationKeys {
     public static final boolean DEFAULT_BOOL = true;
     
     // invalid @configurationType tag value, should be reported as an error by the doclet
+    // also unknown @configurationSource tag value, should be reported as a warning by the doclet
     /**
      * A string value.
      *

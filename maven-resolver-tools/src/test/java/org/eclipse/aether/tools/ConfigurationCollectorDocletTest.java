@@ -26,7 +26,6 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import java.io.InputStream;
-import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -35,14 +34,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -51,15 +50,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConfigurationCollectorDocletTest {
 
-    /**
-     * Classpath location of the fixture source declaring configuration keys of type {@link Boolean}, {@link String}
-     * and a custom enum, using the same Javadoc block tags that the doclet extracts.
-     */
+    /** Classpath location of the fixture source declaring configuration keys of type {@link Boolean}, {@link String} and a custom enum,
+     * using the same Javadoc block tags that the doclet extracts. */
     private static final String FIXTURE = "/org/eclipse/aether/sample/SampleConfigurationKeys.java";
 
-    /**
-     * Classpath location of the a fixture with invalid javadoc (missing/invalid elements).
-     */
+    /** Classpath location of the a fixture with invalid javadoc (missing/invalid elements). */
     private static final String INVALID_FIXTURE = "/org/eclipse/aether/sample/InvalidSampleConfigurationKeys.java";
 
     private Path output;
@@ -147,6 +142,36 @@ class ConfigurationCollectorDocletTest {
         }
     }
 
+    static final class LoggingDiagnosticsListener<T extends JavaFileObject>
+            implements javax.tools.DiagnosticListener<T> {
+        private final Logger logger;
+
+        public LoggingDiagnosticsListener(Logger logger) {
+            this.logger = logger;
+        }
+
+        @Override
+        public void report(javax.tools.Diagnostic<? extends T> diagnostic) {
+            switch (diagnostic.getKind()) {
+                case ERROR:
+                    logger.error(diagnostic.getMessage(null));
+                    break;
+                case WARNING:
+                    logger.warn(diagnostic.getMessage(null));
+                    break;
+                case MANDATORY_WARNING:
+                    logger.warn(diagnostic.getMessage(null));
+                    break;
+                case NOTE:
+                    logger.info(diagnostic.getMessage(null));
+                    break;
+                case OTHER:
+                    logger.debug(diagnostic.getMessage(null));
+                    break;
+            }
+        }
+    }
+
     @Test
     void invalidMode() throws Exception {
         CapturingDiagnosticsListener<JavaFileObject> listener =
@@ -157,8 +182,11 @@ class ConfigurationCollectorDocletTest {
         Diagnostic<? extends JavaFileObject> diagnostic =
                 listener.getDiagnostics().iterator().next();
         assertEquals(javax.tools.Diagnostic.Kind.ERROR, diagnostic.getKind());
-        assertEquals("Unknown mode: invalid-mode", diagnostic.getMessage(null));
-        assertEquals(1, listener.getDiagnostics().size(), "expected one error diagnostic");
+        // IAE thrown via Doclet.Option#parseOptions, which is caught and reported as a diagnostic
+        String substring = "java.lang.IllegalArgumentException: Invalid mode: invalid-mode";
+        assertTrue(
+                diagnostic.getMessage(null).contains(substring),
+                "expected diagnostic message to contain: " + substring + " but was: " + diagnostic.getMessage(null));
     }
 
     @Test
@@ -173,7 +201,7 @@ class ConfigurationCollectorDocletTest {
                 listener.getDiagnostics().iterator();
         Diagnostic<? extends JavaFileObject> diagnostic = iterator.next();
         assertEquals(javax.tools.Diagnostic.Kind.ERROR, diagnostic.getKind());
-        assertEquals("Missing content for @configurationType", diagnostic.getMessage(null));
+        assertEquals("Missing block tag @configurationType", diagnostic.getMessage(null));
         assertEquals(sourceFile.toString(), diagnostic.getSource().getName());
         assertEquals(30, diagnostic.getLineNumber());
         assertEquals(2, listener.getDiagnostics().size(), "expected two error diagnostics");
@@ -181,11 +209,17 @@ class ConfigurationCollectorDocletTest {
         assertEquals(javax.tools.Diagnostic.Kind.ERROR, diagnostic.getKind());
         assertEquals("No valid {@link ...} reference found in @configurationType", diagnostic.getMessage(null));
         assertEquals(sourceFile.toString(), diagnostic.getSource().getName());
-        assertEquals(46, diagnostic.getLineNumber());
+        assertEquals(47, diagnostic.getLineNumber());
     }
 
     private static Boolean runDoclet(Writer writer, Path sourceFile, Path output) throws Exception {
-        return runDoclet(writer, sourceFile, output, null, null);
+        return runDoclet(
+                writer,
+                sourceFile,
+                output,
+                null,
+                new LoggingDiagnosticsListener<>(
+                        org.slf4j.LoggerFactory.getLogger(ConfigurationCollectorDocletTest.class)));
     }
 
     private static Boolean runDoclet(
@@ -209,28 +243,7 @@ class ConfigurationCollectorDocletTest {
     }
 
     private static Map<String, Map<String, String>> readKeys(Path output) throws Exception {
-        Properties properties = new Properties();
-        try (Reader reader = Files.newBufferedReader(output, StandardCharsets.UTF_8)) {
-            properties.load(reader);
-        }
-        int count = Integer.parseInt(properties.getProperty("keys.count", "0"));
-        List<String> fields = new ArrayList<>(List.of(
-                "key",
-                "defaultValue",
-                "fqName",
-                "description",
-                "since",
-                "configurationSource",
-                "configurationType",
-                "supportRepoIdSuffix"));
-        Map<String, Map<String, String>> result = new LinkedHashMap<>();
-        for (int i = 0; i < count; i++) {
-            Map<String, String> entry = new LinkedHashMap<>();
-            for (String field : fields) {
-                entry.put(field, properties.getProperty("keys." + i + "." + field, ""));
-            }
-            result.put(entry.get("key"), entry);
-        }
-        return result;
+        Collection<Map<String, String>> keys = CollectConfiguration.readDiscoveredKeys(output);
+        return keys.stream().collect(Collectors.toMap(key -> key.get(CollectConfiguration.KEY), key -> key));
     }
 }
