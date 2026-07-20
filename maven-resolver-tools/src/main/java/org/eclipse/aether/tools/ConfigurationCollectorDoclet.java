@@ -217,11 +217,6 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 getConfigurationType(extractClassLink(field, docComment, blockTags, "configurationType"));
         String defValue = resolveDefaultValue(type, field, docComment, blockTags.get("configurationDefaultValue"));
 
-        if (defValue == null) {
-            // Error was already reported, skip this field
-            return;
-        }
-
         UnknownBlockTagTree sourceTag = blockTags.get("configurationSource");
         UnknownBlockTagTree repoIdTag = blockTags.get("configurationRepoIdSuffix");
 
