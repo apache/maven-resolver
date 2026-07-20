@@ -27,9 +27,9 @@ project:
   metadata:
     key: maven-resolver
     committee: maven
-    name: Apache Maven Artifact Resolver
-    description: Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.
-    short_description: Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.
+    name: Apache Maven Resolver
+    description: Apache Maven Resolver is a library for working with artifact repositories and dependency resolution.
+    short_description: Apache Maven Resolver is a library for working with artifact repositories and dependency resolution.
     homepage: https://maven.apache.org/resolver/
     download_page: https://maven.apache.org/resolver/download.cgi
     bug_database: https://maven.apache.org/resolver/issue-management.html
