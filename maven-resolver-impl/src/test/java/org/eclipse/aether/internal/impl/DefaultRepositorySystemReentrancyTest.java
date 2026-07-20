@@ -36,6 +36,7 @@ import org.eclipse.aether.impl.StubArtifactDescriptorReader;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRequest;
 import org.eclipse.aether.spi.artifact.decorator.ArtifactDecorator;
 import org.eclipse.aether.spi.artifact.decorator.ArtifactDecoratorFactory;
 import org.eclipse.aether.spi.validator.Validator;
@@ -250,5 +251,56 @@ public class DefaultRepositorySystemReentrancyTest {
         system.resolveVersionRange(session, request2);
 
         assertEquals(2, validationCount.get(), "Two independent calls should each validate");
+    }
+
+    @Test
+    void outerCallPreservesOriginalTraceData() throws Exception {
+        // Plugins (e.g. pgpverify-maven-plugin) walk the RequestTrace chain and cast
+        // getData() to Artifact without an instanceof check. The re-entrancy marker
+        // must NOT replace the original tip data — it should be inserted below it.
+        Object originalData = new Object();
+        RequestTrace originalTrace = RequestTrace.newChild(null, originalData);
+
+        VersionRequest request = new VersionRequest();
+        request.setArtifact(new DefaultArtifact("g:a:1"));
+        request.setRepositories(Collections.emptyList());
+        request.setTrace(originalTrace);
+
+        system.resolveVersion(session, request);
+
+        // After the call, the trace tip should still expose the original data
+        RequestTrace resultTrace = request.getTrace();
+        assertNotNull(resultTrace, "Request should have a trace after the call");
+        assertSame(
+                originalData,
+                resultTrace.getData(),
+                "Trace tip data should be the original data, not the re-entrancy marker");
+
+        // The marker should be present deeper in the chain (parent of the tip)
+        RequestTrace parent = resultTrace.getParent();
+        assertNotNull(parent, "Trace should have a parent containing the re-entrancy marker");
+        assertEquals(
+                "RepositorySystem", parent.getData().toString(), "Parent trace data should be the re-entrancy marker");
+    }
+
+    @Test
+    void outerCallWithNullTraceStillStampsMarker() throws Exception {
+        // When the original trace is null, the marker should still be stamped
+        // (as the tip, since there is no original data to preserve)
+        VersionRangeRequest request =
+                new VersionRangeRequest(new DefaultArtifact("g:a:1.0"), Collections.emptyList(), null);
+        assertNull(request.getTrace(), "Request should start with null trace");
+
+        system.resolveVersionRange(session, request);
+
+        RequestTrace resultTrace = request.getTrace();
+        assertNotNull(resultTrace, "Request should have a trace after the call");
+        // Re-entrant check should detect the marker
+        VersionRangeRequest innerRequest =
+                new VersionRangeRequest(new DefaultArtifact("g:b:2.0"), Collections.emptyList(), null);
+        innerRequest.setTrace(RequestTrace.newChild(resultTrace, "ModelResolver"));
+        int countBefore = validationCount.get();
+        system.resolveVersionRange(session, innerRequest);
+        assertEquals(countBefore, validationCount.get(), "Re-entrant call should skip validation");
     }
 }
