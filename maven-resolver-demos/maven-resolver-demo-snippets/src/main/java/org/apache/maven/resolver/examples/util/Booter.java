@@ -108,7 +108,7 @@ public class Booter {
                 try {
                     localRepository.getFileSystem().close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.err.println("Failed to close file system: " + e.getMessage());
                 }
             });
         }

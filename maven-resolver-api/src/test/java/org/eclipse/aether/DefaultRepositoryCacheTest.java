@@ -79,7 +79,6 @@ public class DefaultRepositoryCacheTest {
                             assertEquals(Boolean.TRUE, get(key));
                         } catch (Throwable t) {
                             error.compareAndSet(null, t);
-                            t.printStackTrace();
                         }
                     }
                 }
