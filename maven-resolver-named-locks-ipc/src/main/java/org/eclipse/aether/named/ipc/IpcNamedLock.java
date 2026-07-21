@@ -109,9 +109,7 @@ class IpcNamedLock extends NamedLockSupport {
         try {
             client.unlock(contextId);
         } catch (Exception e) {
-            // Best-effort cleanup: if unlock fails during timeout handling,
-            // we must not propagate the exception — doing so would crash the
-            // calling thread and skip latch countdowns in tests, causing hangs.
+            logger.debug("Failed to unlock {} during timeout cleanup", contextId, e);
         }
     }
 
