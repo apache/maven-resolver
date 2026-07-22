@@ -229,7 +229,7 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
                 }
                 for (Dependency managedDependency : request.getManagedDependencies()) {
                     try {
-                        validator.validateDependency(managedDependency);
+                        validator.validateManagedDependency(managedDependency);
                     } catch (Exception e) {
                         exceptions.add(e);
                     }

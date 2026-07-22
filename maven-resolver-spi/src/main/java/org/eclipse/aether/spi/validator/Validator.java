@@ -55,6 +55,20 @@ public interface Validator {
     default void validateDependency(Dependency dependency) throws IllegalArgumentException {}
 
     /**
+     * Validates managed dependency.
+     * <em>Important:</em> They are declarative constraints (version/scope/exclusion overrides) that only take effect
+     * when a matching dependency is encountered during collection. Validating them eagerly may reject valid builds
+     * where a BOM imports managed dependencies with uninterpolated property expressions (e.g. {@code ${osgi.version}})
+     * that are never actually used. If a managed dependency IS matched and its coordinates are invalid, the error
+     * will surface naturally during version resolution or artifact resolution.
+     *
+     * @param managedDependency The managed dependency to validate, never {@code null}.
+     * @throws IllegalArgumentException if dependency is invalid.
+     * @since 2.0.22
+     */
+    default void validateManagedDependency(Dependency managedDependency) throws IllegalArgumentException {}
+
+    /**
      * Validates local repository.
      *
      * @param localRepository The local repository to validate, never {@code null}.
