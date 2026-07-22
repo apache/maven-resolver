@@ -202,13 +202,13 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
                     exceptions.add(e);
                 }
             }
-            for (Dependency managedDependency : request.getManagedDependencies()) {
-                try {
-                    validator.validateDependency(managedDependency);
-                } catch (Exception e) {
-                    exceptions.add(e);
-                }
-            }
+            // Managed dependencies are intentionally NOT validated here. They are declarative
+            // constraints (version/scope/exclusion overrides) that only take effect when a
+            // matching dependency is encountered during collection. Validating them eagerly
+            // rejects valid builds where a BOM imports managed dependencies with uninterpolated
+            // property expressions (e.g. ${osgi.version}) that are never actually used.
+            // If a managed dependency IS matched and its coordinates are invalid, the error
+            // will surface naturally during version resolution or artifact resolution.
             for (RemoteRepository repository : request.getRepositories()) {
                 try {
                     validator.validateRemoteRepository(repository);
