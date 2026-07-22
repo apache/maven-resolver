@@ -404,8 +404,8 @@ public class DefaultRepositorySystemReentrancyTest {
         // (like ${osgi.version} from a BOM import)
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setRootArtifact(new DefaultArtifact("g:project:1.0"));
-        collectRequest.addManagedDependency(
-                new Dependency(new DefaultArtifact("org.example:lib-with-undefined-version:${undefined.version}"), "provided"));
+        collectRequest.addManagedDependency(new Dependency(
+                new DefaultArtifact("org.example:lib-with-undefined-version:${undefined.version}"), "provided"));
 
         // This should succeed — managed dependencies are not validated because they are
         // declarative constraints, not actual resolution targets
