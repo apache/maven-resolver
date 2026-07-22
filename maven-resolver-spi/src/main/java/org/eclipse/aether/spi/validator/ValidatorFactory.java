@@ -27,10 +27,12 @@ import org.eclipse.aether.RepositorySystemSession;
  */
 public interface ValidatorFactory {
     /**
-     * Creates a new validator for the session.
+     * Creates a new validator for the session, or {@code null} to abstain from validation. Factory is consulted
+     * once per session (if cache present in session) and returned instances (even {@code null}s) are cached and reused
+     * across single session.
      *
      * @param session The repository system session from which to configure the validator, must not be {@code null}.
-     * @return The validator for the session, never {@code null}.
+     * @return The validator to be used for the session, or {@code null} to abstain from validation.
      */
     Validator newInstance(RepositorySystemSession session);
 }
