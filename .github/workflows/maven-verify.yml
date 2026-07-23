@@ -19,7 +19,14 @@ name: Verify
 
 on:
   push:
+    branches: [ master ]
   pull_request:
+    branches: [ master ]
+
+# allow single build per branch or PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
