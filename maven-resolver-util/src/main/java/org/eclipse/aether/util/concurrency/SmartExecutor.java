@@ -176,6 +176,7 @@ public interface SmartExecutor extends AutoCloseable {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
             }
         }
 
