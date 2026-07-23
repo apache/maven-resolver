@@ -30,18 +30,17 @@ represented by an instance of
 setup can be done like this:
 
 ```java
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
 
 ...
     private static RepositorySystemSession newSession( RepositorySystem system )
     {
-        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+        RepositorySystemSession.SessionBuilder sessionBuilder = system.createSessionBuilder();
 
         LocalRepository localRepo = new LocalRepository( "target/local-repo" );
-        session.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepo ) );
+        sessionBuilder.withLocalRepositories( localRepo );
 
-        return session;
+        return sessionBuilder.build();
     }
 ```
 

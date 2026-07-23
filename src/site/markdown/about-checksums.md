@@ -51,7 +51,7 @@ bad use case. The notion of transport validation and secure hashes are being con
 reasons explained above.
 
 Hence, the Maven Resolver team decided to make the supported set of checksum algorithms more controlled. Instead of directly exposing
-`MessageDigest` algorithms, we introduced an SPI around checksums. This not only prevents incorrect use cases  by not
+`MessageDigest` algorithms, we introduced an SPI around checksums. This not only prevents incorrect use cases by not
 exposing all supported algorithms of `MessageDigest` to users, but also makes it possible to introduce real checksum
 algorithms. Finally, the set of supported checksum algorithms remains extensible: if some required algorithm is
 not provided by Resolver, it can easily be added by creating a factory component for it.
