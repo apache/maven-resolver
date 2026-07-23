@@ -31,9 +31,9 @@ algorithms require way more CPU cycles to compute than a simple checksum. Howeve
 integrity validation, nothing more. There is no security or trust implied or expected from
 them. Checksums do not protect against man-in-the-middle or supply chain attacks.
 
-To actually trust that artifacts have not been tampered with, you need signatures such
+To actually trust that artifacts have not been tampered with, you need signatures such as
 those provided by the 
-[Maven GPG Plugin](https://maven.apache.org/plugins/maven-gpg-plugin/)).
+[Maven GPG Plugin](https://maven.apache.org/plugins/maven-gpg-plugin/).
 
 Hence, the usual argument that "XXX algorithm is unsafe, deprecated, not secure anymore" does not apply in the case
 of Maven Resolver. Moreover, this is true not only for SHA-1
