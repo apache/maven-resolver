@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.Keys;
@@ -53,10 +54,10 @@ import static java.util.Objects.requireNonNull;
 @Named
 public class DefaultRepositorySystemValidator implements RepositorySystemValidator {
     private static final Object SESSION_VALIDATORS = Keys.of(DefaultRepositorySystemValidator.class, "validators");
-    private final List<ValidatorFactory> validatorFactories;
+    private final Map<String, ValidatorFactory> validatorFactories;
 
     @Inject
-    public DefaultRepositorySystemValidator(List<ValidatorFactory> validatorFactories) {
+    public DefaultRepositorySystemValidator(Map<String, ValidatorFactory> validatorFactories) {
         this.validatorFactories = requireNonNull(validatorFactories, "validatorFactories cannot be null");
     }
 
@@ -69,11 +70,11 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     }
 
     @SuppressWarnings("unchecked")
-    private Validator newInstance(RepositorySystemSession session, ValidatorFactory factory) {
+    private Validator newInstance(RepositorySystemSession session, String name, ValidatorFactory factory) {
         if (session.getCache() != null) {
-            return ((ConcurrentHashMap<Integer, Validator>)
+            return ((ConcurrentHashMap<String, Validator>)
                             session.getCache().computeIfAbsent(session, SESSION_VALIDATORS, ConcurrentHashMap::new))
-                    .computeIfAbsent(System.identityHashCode(factory), key -> factory.newInstance(session));
+                    .computeIfAbsent(name, key -> requireNonNull(factory.newInstance(session)));
         } else {
             return factory.newInstance(session);
         }
@@ -82,9 +83,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     @Override
     public void validateVersionRequest(RepositorySystemSession session, VersionRequest request) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 try {
                     validator.validateArtifact(request.getArtifact());
                 } catch (Exception e) {
@@ -105,9 +106,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     @Override
     public void validateVersionRangeRequest(RepositorySystemSession session, VersionRangeRequest request) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 try {
                     validator.validateArtifact(request.getArtifact());
                 } catch (Exception e) {
@@ -128,9 +129,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     @Override
     public void validateArtifactDescriptorRequest(RepositorySystemSession session, ArtifactDescriptorRequest request) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 try {
                     validator.validateArtifact(request.getArtifact());
                 } catch (Exception e) {
@@ -152,9 +153,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     public void validateArtifactRequests(
             RepositorySystemSession session, Collection<? extends ArtifactRequest> requests) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 for (ArtifactRequest request : requests) {
                     try {
                         validator.validateArtifact(request.getArtifact());
@@ -178,9 +179,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     public void validateMetadataRequests(
             RepositorySystemSession session, Collection<? extends MetadataRequest> requests) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 for (MetadataRequest request : requests) {
                     try {
                         validator.validateMetadata(request.getMetadata());
@@ -203,9 +204,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     @Override
     public void validateCollectRequest(RepositorySystemSession session, CollectRequest request) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 if (request.getRootArtifact() != null) {
                     try {
                         validator.validateArtifact(request.getRootArtifact());
@@ -260,9 +261,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     @Override
     public void validateInstallRequest(RepositorySystemSession session, InstallRequest request) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 for (Artifact artifact : request.getArtifacts()) {
                     try {
                         validator.validateArtifact(artifact);
@@ -285,9 +286,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     @Override
     public void validateDeployRequest(RepositorySystemSession session, DeployRequest request) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 for (Artifact artifact : request.getArtifacts()) {
                     try {
                         validator.validateArtifact(artifact);
@@ -317,9 +318,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     @Override
     public void validateLocalRepositories(RepositorySystemSession session, Collection<LocalRepository> repositories) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 for (LocalRepository repository : repositories) {
                     try {
                         validator.validateLocalRepository(repository);
@@ -335,9 +336,9 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     @Override
     public void validateRemoteRepositories(RepositorySystemSession session, Collection<RemoteRepository> repositories) {
         ArrayList<Exception> exceptions = new ArrayList<>();
-        for (ValidatorFactory factory : validatorFactories) {
-            Validator validator = newInstance(session, factory);
-            if (validator != null) {
+        for (Map.Entry<String, ValidatorFactory> entry : validatorFactories.entrySet()) {
+            Validator validator = newInstance(session, entry.getKey(), entry.getValue());
+            if (validator != ValidatorFactory.NOOP) {
                 for (RemoteRepository repository : repositories) {
                     try {
                         validator.validateRemoteRepository(repository);
