@@ -82,7 +82,7 @@ a showcase how Resolver works.
 
 **Wrong**. As can be seen from above, for runtime graph we leave out "test" scoped
 dependencies. It was true in Maven2, where test graph really was a superset of runtime, 
-but this does not stand anymore in Maven3. And this have interesting consequences. Let me show an example:
+but this does not stand anymore in Maven3. And this has interesting consequences. Let me show an example:
 
 (Note: very same scenario, as explained below for Guice+Guava would work for Jackson Databind+Core, etc.)
 
@@ -98,9 +98,9 @@ Assume your project is using Google Guice, so you have declared it as a dependen
 
 All fine and dandy. At the same time, you want to avoid any use of Guava. We all know Guava is a direct dependency 
 of Guice. This is fine, since as we know, the best practice is to declare all dependencies your code compiles 
-against. By not having Guava here, analyse tools will report if code touches Guava as "undeclared dependency".
+against. By not having Guava here, analysis tools will report if code touches Guava as an "undeclared dependency".
 
-But let's go one step further: turns out, to set up your unit tests, you **do need** Guava. So what now? Nothing, just 
+But let's go one step further: to set up your unit tests, you **do need** Guava. So what now? Nothing, just 
 add it as a test dependency, so your POM looks like this:
 
 ```
@@ -136,17 +136,18 @@ The `dependency:tree` plugin for this project outputs this verbose tree:
 [INFO]    \- com.google.j2objc:j2objc-annotations:jar:1.3:test
 ```
 
-And is right, this IS the "test graph" **of the project** and contains a conflict as noted by "omitted for duplicate"
+This IS the "test graph" **of the project** and contains a conflict as noted by "omitted for duplicate"
 and "scope not updated to compile" remarks next to Guava nodes.
 
 So this setup results that:
-* when you compile, it ensures Guava is NOT on compile classpath, so you cannot even touch it (by mistake)
-* when test-compile and test-execute runs, Guava will be present on classpath, as expected
 
-So far good, but what happens when this library is consumed downstream by someone? When it becomes used as a library?
+* when you compile, Guava is NOT on compile classpath, so you cannot even touch it (by mistake)
+* when test-compile and test-execute run, Guava will be present on classpath, as expected
+
+So far so good, but what happens when this library is consumed downstream by someone? When it becomes used as a library?
 Nothing, all works as expected!
 
-When a downstream dependency declares dependency on this project, the downstream project will get this graph (from
+When a downstream dependency declares a dependency on this project, the downstream project will get this graph (from
 the node that is your library):
 
 ```
@@ -166,29 +167,29 @@ the node that is your library):
 [INFO]          \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
 ```
 
-So what happens here? First, revisit "How Resolver Works", there you will see that for "runtime graph" of the
+So what happens here? First, revisit "How Resolver Works". There you will see that for "runtime graph" of the
 dependency the "test" and "provided" scopes of the dependency artifact **are not even considered**. They are simply
-omitted. Not skipped, but completely omitted, like they do not even exists. Hence, in the graph there is 
+omitted. Not skipped, but completely omitted, like they do not even exist. Hence, in the graph there is 
 **no conflict happening** (as "test" Guava is completely omitted during "collect" step). Hence, everything 
 goes as expected.
 
 ### Important Consequences
 
-One, maybe not so obvious consequence can be explained with use of `maven-assembly-plugin`. Let assume you want to
+One, maybe not so obvious consequence can be explained with use of `maven-assembly-plugin`. Assume you want to
 assemble your module "runtime" dependencies.
 
-If you do it from "within" of the project, for example in package phase, your packaging will be incomplete: 
+If you do it from "within" the project, for example in the package phase, your packaging will be incomplete. 
 Guava will be missing! But if you do it from "outside" of the project (i.e. subsequent module of the build, or 
 downstream dependency), the assembly will contain Guava as well.
 
 This is a [Maven Assembly plugin bug](https://issues.apache.org/jira/browse/MASSEMBLY-1008), somewhat explained 
-in [MRESOLVER-391](https://issues.apache.org/jira/browse/MRESOLVER-391). In short, Maven Assembly plugin considers 
+in [MRESOLVER-391](https://issues.apache.org/jira/browse/MRESOLVER-391). In short, the Maven Assembly plugin considers 
 "project test graph", and then "cherry-picks runtime scoped nodes" from it, which, as we can see in this case, 
-is wrong. You need to build different graphs for "runtime" and "test" classpath, unlike as it was true in Maven2.
+is wrong. You need to build different graphs for "runtime" and "test" classpath.
 For Assembly plugin, the problem is that as Mojo, it requests "test graph", then it reads configuration
 (assembly descriptor, and this is the point where it learns about required scopes), and then it "filters"
 the resolved "test graph" for runtime scopes. And it is wrong, as Guava is in test scope. Instead, the plugin
 should read the configuration first, and ask Resolver for "runtime graph" and filter that. In turn, this problem
 does not stand with `maven-war-plugin`, as the "war" Mojo asks resolution of "compile+runtime" scope. Of course, 
-WAR use case is much simpler than Assembly use case is, as former always packages same scope, while Assembly receives 
+the WAR use case is much simpler than the Assembly use case is, as the former always packages the same scope, while Assembly receives 
 a complex configuration and exposes much more complex "modus operandi".
