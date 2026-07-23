@@ -41,17 +41,17 @@ validation" or "error detection" (aka "bit-rot detection").
 
 ## Checksum Algorithms SPI
 
-From a technical perspective, the above written facts imply following consequences: as checksum algorithms are exposed
-to the user, so one can set them via configuration, users are not prevented to ask for SHA-256 or even SHA-512, even if
+From a technical perspective, the above written facts imply the following consequences: because checksum algorithms are exposed
+to the user, one can set them via configuration, and thus users are not prevented from asking for SHA-256 or even SHA-512, even if
 these algorithms are not part of standard Maven process. Moreover, nothing prevents users (integrating
-Maven Resolver) registering with Java an alternate Java Cryptography Provider and use even broader (or exotic) set
-of message digests for checksums. While this is not wrong or even mistake in any case, we do consider this as
-wrong use case. The notion of transport validation and secure hashes are being constantly mixed up due to historical
+Maven Resolver) registering an alternate Java Cryptography Provider and using even broader (or exotic)
+message digest algorithms for checksums. While this is not wrong, we do consider this as a
+bad use case. The notion of transport validation and secure hashes are being constantly mixed up due to historical
 reasons explained above.
 
-Hence, Maven Resolver team decided to make supported set of checksums more controlled. Instead of directly exposing
+Hence, the Maven Resolver team decided to make the supported set of checksum algorithms more controlled. Instead of directly exposing
 `MessageDigest` algorithms, we introduced an SPI around checksums. This not only prevents wrong use cases (not
-exposing all supported algorithms of `MessageDigest` to users), but also makes possible to introduce real checksum
+exposing all supported algorithms of `MessageDigest` to users), but also makes it possible to introduce real checksum
 algorithms. Finally, the set of supported checksum algorithms remains extensible: if some required algorithm is
 not provided by Resolver, it can be easily added by creating a factory component for it.
 
