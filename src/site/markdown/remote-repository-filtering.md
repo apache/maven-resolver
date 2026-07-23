@@ -43,7 +43,7 @@ and artifacts are resolved using a loop and a "first found wins" strategy. This 
 ### What It Is
 
 You can instruct Maven which repository can contain which artifacts. Instead of "ordered loop" searching
-for artifacts in remote repositories, Maven can query a repository that has the artifact first,.
+for artifacts in remote repositories, Maven can query a repository that has the artifact first.
 
 With RRF, the Maven build does not slow down when new remote repositories are added, and does not leak
 build information unnecessarily.
@@ -193,7 +193,7 @@ applied. Ideally, user should keep files sorted or handle them in a way one can 
 
 To make RRF filters operate, as they are by default enabled, you have to make sure that:
 * prefix file can be discovered (if not for any reason, you may provide alternate input for it)
-* groupId is procided.
+* groupId is provided.
 
 As said above, enabled filters does not make them active (participate in filtering): if a given remote repository does not have 
 any input available, the filter pulls out from "voting" (does not participate in filtering, will abstain 
@@ -217,6 +217,6 @@ This leads to the following "constraints":
 
 Users of certain Maven Repository Managers (MRM) reported issues with filtering, breaking their builds. Usually the issue involves grouped/virtual repositories where MRM leaks random resources from member repositories, like the `prefixes.txt` is. Naturally, as MRM leaks one member prefixes file, and Maven is "tricked" into belief it got proper prefixes file from remote repository, builds will fail with message like **Prefix `$PREFIX` NOT allowed from `$SERVER_ID`** (where `$PREFIX` is some artifact prefix, and `$SERVER_ID` is some remote repository ID).
 
-In this case, user should disable prefix discovery by using `-Daether.remoteRepositoryFilter.prefixes.resolvePrefixFiles=false` user property to prevent Maven attempting to resolve prefixes file from such broken MRMs.
+In this case, user should disable prefix discovery by using `-Daether.remoteRepositoryFilter.prefixes.resolvePrefixFiles=false` user property to prevent Maven from attempting to resolve the prefixes file from such broken MRMs.
 
 Since 2.0.21, Resolver protects itself against this failure mode: when an auto-discovered prefixes file denies a path, the very first denial per remote repository is verified against the remote repository itself using a lightweight existence check. If the repository actually serves the denied path, the auto-discovered prefixes file is provably wrong; a warning naming the repository is emitted (report it to the repository administrator) and the file is ignored for the rest of the session, so the build proceeds as if no prefixes file was published. If the denied path is indeed absent remotely, the file remains trusted and no further checks are performed, keeping the extra cost bounded at one existence check per remote repository per session. User-provided prefix files are considered deliberate and are never second-guessed. The verification can be disabled with `-Daether.remoteRepositoryFilter.prefixes.verifyDenied=false` (supports repository ID suffix as well).

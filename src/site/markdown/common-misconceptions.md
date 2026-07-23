@@ -22,9 +22,9 @@ Due to smooth transitions from Maven2 into Maven3 (and soon
 Maven4), and the fact that Maven2 plugins kept working with Maven3, maybe
 even without change, there were some misconceptions crept in 
 as well. Despite the marvel of "compatibility", Maven3 resolution
-differs quite much from Maven2, and the sole reason is actual improvement
+differs considerably from Maven2, and the sole reason is actual improvement
 in area of resolution, it became much more precise (and, due
-that lost some "bad" habits present in Maven2). Here, we will try to
+to that, lost some "bad" habits present in Maven2). Here, we will try to
 enumerate some of the most common misconceptions.
 
 ## Misconception No1: How Resolver Works
@@ -36,7 +36,7 @@ dependencies. Resolver, to achieve this, internally (but these are
 exposed via API as distinguished API calls as well) performs 3 steps:
 "collect", "transform" and "resolve".
 
-The "collect" step is first, where it builds the "dirty tree" (dirty graph)
+The "collect" step is first, where it builds the "dirty tree" (or dirty graph)
 of artifacts. It is important to remark, that in "collect" step, while 
 the graph is being built, Maven uses only POMs. Hence, if collecting an 
 Artifact that was never downloaded to your local repository, it will 
@@ -81,8 +81,8 @@ a showcase how Resolver works.
 ## Misconception No2: "Test graph" Is Superset Of "Runtime graph"
 
 **Wrong**. As can be seen from above, for runtime graph we leave out "test" scoped
-dependencies. It was true in Maven2, where test graph really was superset of runtime, 
-this does not stand anymore in Maven3. And this have interesting consequences. Let me show an example:
+dependencies. It was true in Maven2, where test graph really was a superset of runtime, 
+but this does not stand anymore in Maven3. And this have interesting consequences. Let me show an example:
 
 (Note: very same scenario, as explained below for Guice+Guava would work for Jackson Databind+Core, etc.)
 

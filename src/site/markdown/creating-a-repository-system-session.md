@@ -35,12 +35,12 @@ import org.eclipse.aether.supplier.RepositorySystemSupplier;
 ...
     private static RepositorySystemSession newSession( RepositorySystem system )
     {
-        RepositorySystemSession.SessionBuilder sessionBuilder = SessionBuilderSupplier.get();
+        RepositorySystemSession.SessionBuilder sessionBuilder = system.createSessionBuilder();
 
         LocalRepository localRepo = new LocalRepository( "target/local-repo" );
-        sessionBuilder.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepo ) );
+        sessionBuilder.setLocalRepositoryManager( system.newLocalRepositoryManager( sessionBuilder, localRepo ) );
 
-        return session.build();
+        return sessionBuilder.build();
     }
 ```
 

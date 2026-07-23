@@ -23,7 +23,7 @@ metadata. Checksums are usually laid out in repositories next to the file in que
 extension telling the checksum algorithm that produced the given checksum file content. Currently,
 most Maven repositories contain SHA-1 and MD5 checksums by default (they are produced by Resolver by default).
 
-Historically, Maven Resolver used `java.security.MessageDigest` to implement checksums. So to say, secure one-way
+Historically, Maven Resolver used `java.security.MessageDigest` to implement checksums. So to speak, secure one-way
 hashes provided by Java Cryptography Architecture were (mis)used to implement checksums for transport integrity
 validation. There is no misunderstanding here, secure hashes MAY be used as checksums, as there is quite some
 overlap between checksums and hashes in general. But this simplicity comes at a price: cryptographically safe
@@ -41,12 +41,12 @@ validation" or "error detection" (aka "bit-rot detection").
 
 ## Checksum Algorithms SPI
 
-From a technical perspective, the above written facts infer following consequences: as checksum algorithms are exposed
+From a technical perspective, the above written facts imply following consequences: as checksum algorithms are exposed
 to the user, so one can set them via configuration, users are not prevented to ask for SHA-256 or even SHA-512, even if
-these algorithms are not part of standard Maven process. Moreover, nothing prevent users (integrating
+these algorithms are not part of standard Maven process. Moreover, nothing prevents users (integrating
 Maven Resolver) registering with Java an alternate Java Cryptography Provider and use even broader (or exotic) set
 of message digests for checksums. While this is not wrong or even mistake in any case, we do consider this as
-wrong use case. The notion of transport validation and secure hashes are being constantly mixed up due historical
+wrong use case. The notion of transport validation and secure hashes are being constantly mixed up due to historical
 reasons explained above.
 
 Hence, Maven Resolver team decided to make supported set of checksums more controlled. Instead of directly exposing

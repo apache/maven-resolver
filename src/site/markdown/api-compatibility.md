@@ -70,11 +70,9 @@ changes using version number. We use "major.minor.patch" versioning on resolver 
 semantics:
 
 * On major version change, one should NOT expect any backward compatibility.
-* On minor version change, we TRY to keep backward compatibility for those "exposed" 3 modules: 
-  API, SPI and Util. Still, there are examples when we failed to do so, usually driven by new 
-  features.
-* On minor version change, we ENSURE backward compatibility for those "exposed" 3 modules: API, 
-  SPI and Util.
+ * On minor version change, we ENSURE backward compatibility for those "exposed" 3 modules: API, 
+   SPI and Util. Still, there are examples when we failed to do so, usually driven by new 
+   features.
 
 In any of three version changes above, in areas where we do not offer guarantees, everything
 can happen.
@@ -88,9 +86,9 @@ above.
 
 ## Inside of Maven
 
-Historically, Maven 3.1 (as Maven 3.0 used resolver from different package) provided API, SPI 
-and Impl from its own embedded resolver, while Util, Connector, if some plugin or extension
-depended on those, was resolved. This caused that a plugin may work with different versions
+Historically, Maven 3.1 (as Maven 3.0 used a resolver from a different package) provided API, SPI 
+and Impl from its own embedded resolver, while Util and Connector, if some plugin or extension
+depended on them, were resolved separately. This caused that a plugin may work with different versions
 of API, SPI, Impl or Connector. Given Resolver had API "frozen" for too long time, this was essentially
 not a problem, but still weird.
 

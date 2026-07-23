@@ -22,9 +22,9 @@ Deploying artifacts and related metadata to a (remote) repository can be achieve
 
 The most prominent consumer of this API is probably [maven-deploy-plugin](https://maven.apache.org/plugins/maven-deploy-plugin/).
 
-# Repository Connector
+## Repository Connector
 
-The default repository connector implementation at [`BasicRepositoryConnectorFactory`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-connector-basic/src/main/java/org/eclipse/aether/connector/basic/BasicRepositoryConnector.java) uses a `RepositoryLayout` to calculate the URL and a `Transporter` to achieve the actual upload/write of artifacts/metadata.
+The default repository connector implementation at [`BasicRepositoryConnector`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-connector-basic/src/main/java/org/eclipse/aether/connector/basic/BasicRepositoryConnector.java) uses a `RepositoryLayout` to calculate the URL and a `Transporter` to achieve the actual upload/write of artifacts/metadata.
 
 ## Repository Layout
 

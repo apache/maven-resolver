@@ -102,7 +102,7 @@ can happen based even on origin repository (if split by remote repository
 was enabled beforehand).
 
 Example configuration with split by remote repository:
-```java
+```sh
 $ mvn ... -Daether.enhancedLocalRepository.split \
           -Daether.enhancedLocalRepository.splitRemoteRepository
 ```
@@ -124,9 +124,9 @@ coexist in local repository. They will land in different places, due different
 prefixes.
 
 Example configuration for branches:
-```java
+```sh
 $ mvn ... -Daether.enhancedLocalRepository.split \
-          -Daether.enhancedLocalRepository.localPrefix=maven-resolver/mresolver-253
+          -Daether.enhancedLocalRepository.localPrefix=maven-resolver/mresolver-253 \
           -Daether.enhancedLocalRepository.splitRemoteRepository
 ```
 
@@ -197,7 +197,7 @@ Each artifact/metadata which cannot be resolved leads to an error either classif
 1. *not found* error or
 2. (any) *other* error (for authentication issues, timeouts etc.)
 
-The caching behavior for both error types can be be configured programmatically via `org.eclipse.aether.DefaultRepositorySystemSession.setResolutionErrorPolicy(...)`.
+The caching behavior for both error types can be configured programmatically via `org.eclipse.aether.DefaultRepositorySystemSession.setResolutionErrorPolicy(...)`.
 
 In case caching is enabled for any of the two classifications a Java Properties file is created/updated (with the same filename as the cached artifact in the success case would get but with the additional suffix `.lastUpdated`) in the local repository. Within that file the key `<canonical-remote-url>.error` is updated/added. Its value either contains the error message (for type 2 resolver errors) or is empty (for type 1 resolver errors).
 
