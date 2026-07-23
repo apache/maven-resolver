@@ -21,7 +21,7 @@ under the License.
 Maven Resolver uses checksums to verify the integrity of downloaded artifacts and
 metadata. Checksums are usually placed in repositories next to the file in question, with the file
 extension indicating the checksum algorithm that produced the given file. Currently,
-most Maven repositories contain SHA-1 and MD5 checksums as they are produced by Resolver by default).
+most Maven repositories contain SHA-1 and MD5 checksums as they are produced by Resolver by default.
 
 Historically, Maven Resolver used `java.security.MessageDigest` to implement checksums. Secure one-way
 hashes provided by the Java Cryptography Architecture were (mis)used to implement checksums for transport integrity
