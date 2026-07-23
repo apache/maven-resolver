@@ -70,9 +70,9 @@ changes using version number. We use "major.minor.patch" versioning on resolver 
 semantics:
 
 * On major version change, one should NOT expect any backward compatibility.
- * On minor version change, we ENSURE backward compatibility for those "exposed" 3 modules: API, 
-   SPI and Util. Still, there are examples when we failed to do so, usually driven by new 
-   features.
+* On minor version change, we ENSURE backward compatibility for those "exposed" 3 modules: API, 
+  SPI and Util. Still, there are examples when we failed to do so, usually driven by new 
+  features.
 
 In any of three version changes above, in areas where we do not offer guarantees, everything
 can happen.
