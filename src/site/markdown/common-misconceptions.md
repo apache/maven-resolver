@@ -20,10 +20,10 @@ under the License.
 
 Due to smooth transitions from Maven2 into Maven3 (and soon
 Maven4), and the fact that Maven2 plugins kept working with Maven3, maybe
-even without change, there were some misconceptions crept in 
+even without change, some misconceptions crept in 
 as well. Despite the marvel of "compatibility", Maven3 resolution
 differs considerably from Maven2, and the sole reason is actual improvement
-in area of resolution, it became much more precise (and, due
+in area of resolution. It became much more precise (and, due
 to that, lost some "bad" habits present in Maven2). Here, we will try to
 enumerate some of the most common misconceptions.
 
