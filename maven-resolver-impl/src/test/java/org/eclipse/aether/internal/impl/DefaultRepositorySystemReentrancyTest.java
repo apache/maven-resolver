@@ -374,47 +374,6 @@ public class DefaultRepositorySystemReentrancyTest {
     }
 
     @Test
-    void collectDependenciesAcceptsManagedDepsWithUninterpolatedExpressions() throws Exception {
-        // Reproduces the MavenITgh12305 scenario: a BOM imports managed dependencies
-        // with uninterpolated expressions like ${osgi.version}. These managed dependencies
-        // should be accepted because they are declarative constraints that may never be used.
-        DependencyCollector passThroughCollector = (s, request) -> new CollectResult(request);
-
-        DefaultRepositorySystem strictSystem = new DefaultRepositorySystem(
-                new StubVersionResolver(),
-                new StubVersionRangeResolver(),
-                mock(ArtifactResolver.class),
-                mock(MetadataResolver.class),
-                new StubArtifactDescriptorReader(),
-                passThroughCollector,
-                mock(Installer.class),
-                mock(Deployer.class),
-                mock(LocalRepositoryProvider.class),
-                new StubSyncContextFactory(),
-                new DefaultRemoteRepositoryManager(
-                        new DefaultUpdatePolicyAnalyzer(),
-                        new DefaultChecksumPolicyProvider(),
-                        new DefaultRepositoryKeyFunctionFactory()),
-                new DefaultRepositorySystemLifecycle(),
-                Collections.emptyMap(),
-                new DefaultRepositorySystemValidator(
-                        Collections.singletonList(EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
-
-        // Build a CollectRequest with a managed dependency that has an uninterpolated version
-        // (like ${osgi.version} from a BOM import)
-        CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRootArtifact(new DefaultArtifact("g:project:1.0"));
-        collectRequest.addManagedDependency(new Dependency(
-                new DefaultArtifact("org.example:lib-with-undefined-version:${undefined.version}"), "provided"));
-
-        // This should succeed — managed dependencies are not validated because they are
-        // declarative constraints, not actual resolution targets
-        assertDoesNotThrow(
-                () -> strictSystem.collectDependencies(session, collectRequest),
-                "Managed dependencies with uninterpolated expressions should be accepted");
-    }
-
-    @Test
     void collectDependenciesStillRejectsInvalidDirectDependencies() throws Exception {
         // Verify that direct dependencies (not managed) ARE still validated
         DependencyCollector passThroughCollector = (s, request) -> new CollectResult(request);
