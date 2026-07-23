@@ -737,7 +737,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
                 return result;
             }
@@ -749,7 +749,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
                 return result;
             }
@@ -802,7 +802,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
                 return result;
             }
@@ -871,7 +871,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
                 return result;
             }
@@ -972,7 +972,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
                 return result;
             }
@@ -984,7 +984,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
                 return result;
             }
