@@ -26,11 +26,21 @@ import org.eclipse.aether.RepositorySystemSession;
  * @since 2.0.8
  */
 public interface ValidatorFactory {
+
     /**
-     * Creates a new validator for the session.
+     * The no-op (does not validate anything) instance of validator.
      *
-     * @param session The repository system session from which to configure the validator, must not be {@code null}.
-     * @return The validator for the session, never {@code null}.
+     * @since 2.0.22
+     */
+    Validator NOOP = new Validator() {};
+
+    /**
+     * Creates a new validator for the session, or {@link #NOOP} to abstain from validation. Factory is consulted
+     * once per session (if cache present in session) and returned instances are cached and reused
+     * across single session.
+     *
+     * @param session the repository system session from which to configure the validator, must not be {@code null}.
+     * @return the validator to be used for the session, or {@link #NOOP} to abstain from validation, never {@code null}.
      */
     Validator newInstance(RepositorySystemSession session);
 }

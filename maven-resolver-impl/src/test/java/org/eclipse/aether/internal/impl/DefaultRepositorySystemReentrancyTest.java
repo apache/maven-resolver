@@ -100,7 +100,7 @@ public class DefaultRepositorySystemReentrancyTest {
                         new DefaultRepositoryKeyFunctionFactory()),
                 new DefaultRepositorySystemLifecycle(),
                 Collections.emptyMap(),
-                new DefaultRepositorySystemValidator(Collections.singletonList(countingValidator)));
+                new DefaultRepositorySystemValidator(Collections.singletonMap("counting", countingValidator)));
         session = TestUtils.newSession();
     }
 
@@ -162,7 +162,7 @@ public class DefaultRepositorySystemReentrancyTest {
                 new DefaultRepositorySystemLifecycle(),
                 Collections.emptyMap(),
                 new DefaultRepositorySystemValidator(
-                        Collections.singletonList(EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
+                        Collections.singletonMap("expressionRejecting", EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
 
         // An outermost call with an uninterpolated expression MUST fail validation
         VersionRangeRequest outerBadRequest =
@@ -221,7 +221,7 @@ public class DefaultRepositorySystemReentrancyTest {
                         new DefaultRepositoryKeyFunctionFactory()),
                 new DefaultRepositorySystemLifecycle(),
                 Collections.singletonMap("test", decoratorFactory),
-                new DefaultRepositorySystemValidator(Collections.emptyList()));
+                new DefaultRepositorySystemValidator(Collections.emptyMap()));
 
         // Outermost call: decorator should run
         ArtifactDescriptorRequest outerRequest =
