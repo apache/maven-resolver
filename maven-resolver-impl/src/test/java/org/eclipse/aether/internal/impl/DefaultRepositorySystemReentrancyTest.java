@@ -21,11 +21,15 @@ package org.eclipse.aether.internal.impl;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.DependencyCollector;
 import org.eclipse.aether.impl.Deployer;
@@ -57,7 +61,7 @@ import static org.mockito.Mockito.mock;
 public class DefaultRepositorySystemReentrancyTest {
 
     /**
-     * A validator that rejects any artifact whose version contains "${".
+     * A validator that rejects any artifact or dependency whose version contains "${".
      * This simulates Maven's MavenValidator rejecting uninterpolated expressions.
      */
     private static final ValidatorFactory EXPRESSION_REJECTING_VALIDATOR_FACTORY = session -> new Validator() {
@@ -66,6 +70,11 @@ public class DefaultRepositorySystemReentrancyTest {
             if (artifact.getVersion().contains("${")) {
                 throw new IllegalArgumentException("Uninterpolated expression in version: " + artifact.getVersion());
             }
+        }
+
+        @Override
+        public void validateDependency(Dependency dependency) {
+            validateArtifact(dependency.getArtifact());
         }
     };
 
@@ -302,5 +311,121 @@ public class DefaultRepositorySystemReentrancyTest {
         int countBefore = validationCount.get();
         system.resolveVersionRange(session, innerRequest);
         assertEquals(countBefore, validationCount.get(), "Re-entrant call should skip validation");
+    }
+
+    @Test
+    void sessionScopedDetectionSkipsValidationWhenTraceChainIsBroken() throws Exception {
+        // Simulates Maven 4's flow where the model builder converts between Maven API traces
+        // and resolver traces via RequestTraceHelper, losing the REPOSITORY_SYSTEM_CALL marker.
+        //
+        // The DependencyCollector, called from within collectDependencies, re-enters
+        // RepositorySystem.resolveVersionRange with a FRESH trace (no marker in ancestry)
+        // and an uninterpolated expression like ${project.version}. Without session-scoped
+        // detection, the validator would reject the expression; with it, the call is
+        // detected as re-entrant and validation is skipped.
+        AtomicReference<DefaultRepositorySystem> systemRef = new AtomicReference<>();
+
+        DependencyCollector reentrantCollector = (s, request) -> {
+            // Inside collectDependencies, simulate a re-entrant call with a FRESH trace
+            // (no marker in ancestry — this is the broken path) and an uninterpolated
+            // expression. If session-scoped detection fails, the validator rejects this.
+            VersionRangeRequest innerRequest = new VersionRangeRequest(
+                    new DefaultArtifact("g:inner:${project.version}"), Collections.emptyList(), null);
+            // Fresh trace — no REPOSITORY_SYSTEM_CALL marker (simulates Maven's trace conversion)
+            innerRequest.setTrace(RequestTrace.newChild(null, "MavenModelResolver"));
+            try {
+                systemRef.get().resolveVersionRange(s, innerRequest);
+            } catch (Exception e) {
+                fail("Re-entrant call with broken trace chain should succeed via session-scoped detection: " + e);
+            }
+            return new CollectResult(request);
+        };
+
+        DefaultRepositorySystem strictSystem = new DefaultRepositorySystem(
+                new StubVersionResolver(),
+                new StubVersionRangeResolver(),
+                mock(ArtifactResolver.class),
+                mock(MetadataResolver.class),
+                new StubArtifactDescriptorReader(),
+                reentrantCollector,
+                mock(Installer.class),
+                mock(Deployer.class),
+                mock(LocalRepositoryProvider.class),
+                new StubSyncContextFactory(),
+                new DefaultRemoteRepositoryManager(
+                        new DefaultUpdatePolicyAnalyzer(),
+                        new DefaultChecksumPolicyProvider(),
+                        new DefaultRepositoryKeyFunctionFactory()),
+                new DefaultRepositorySystemLifecycle(),
+                Collections.emptyMap(),
+                new DefaultRepositorySystemValidator(
+                        Collections.singletonList(EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
+        systemRef.set(strictSystem);
+
+        // The outermost collectDependencies call should succeed, and the inner
+        // resolveVersionRange call (with broken trace and uninterpolated expression)
+        // should be detected as re-entrant via the session-scoped depth counter.
+        CollectRequest collectRequest = new CollectRequest();
+        collectRequest.setRootArtifact(new DefaultArtifact("g:root:1.0"));
+
+        assertDoesNotThrow(
+                () -> strictSystem.collectDependencies(session, collectRequest),
+                "Inner call with broken trace chain should succeed via session-scoped detection");
+    }
+
+    @Test
+    void collectDependenciesStillRejectsInvalidDirectDependencies() throws Exception {
+        // Verify that direct dependencies (not managed) ARE still validated
+        DependencyCollector passThroughCollector = (s, request) -> new CollectResult(request);
+
+        DefaultRepositorySystem strictSystem = new DefaultRepositorySystem(
+                new StubVersionResolver(),
+                new StubVersionRangeResolver(),
+                mock(ArtifactResolver.class),
+                mock(MetadataResolver.class),
+                new StubArtifactDescriptorReader(),
+                passThroughCollector,
+                mock(Installer.class),
+                mock(Deployer.class),
+                mock(LocalRepositoryProvider.class),
+                new StubSyncContextFactory(),
+                new DefaultRemoteRepositoryManager(
+                        new DefaultUpdatePolicyAnalyzer(),
+                        new DefaultChecksumPolicyProvider(),
+                        new DefaultRepositoryKeyFunctionFactory()),
+                new DefaultRepositorySystemLifecycle(),
+                Collections.emptyMap(),
+                new DefaultRepositorySystemValidator(
+                        Collections.singletonList(EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
+
+        // Direct dependency with uninterpolated expression should still be rejected
+        CollectRequest collectRequest = new CollectRequest();
+        collectRequest.setRootArtifact(new DefaultArtifact("g:project:1.0"));
+        collectRequest.addDependency(
+                new Dependency(new DefaultArtifact("org.example:lib:${undefined.version}"), "compile"));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> strictSystem.collectDependencies(session, collectRequest),
+                "Direct dependencies with uninterpolated expressions should still be rejected");
+    }
+
+    @Test
+    void sessionScopedDepthIsProperlyDecrementedOnExit() throws Exception {
+        // Verify that the session-scoped depth counter is properly decremented after
+        // a RepositorySystem call completes, so independent calls are still validated
+        VersionRangeRequest request1 =
+                new VersionRangeRequest(new DefaultArtifact("g:a:1.0"), Collections.emptyList(), null);
+        VersionRangeRequest request2 =
+                new VersionRangeRequest(new DefaultArtifact("g:b:2.0"), Collections.emptyList(), null);
+
+        system.resolveVersionRange(session, request1);
+        int countAfterFirst = validationCount.get();
+        assertEquals(1, countAfterFirst, "First call should validate");
+
+        // Second independent call (no shared trace) should also validate
+        // because the depth counter should have been decremented on exit
+        system.resolveVersionRange(session, request2);
+        assertEquals(2, validationCount.get(), "Second independent call should also validate");
     }
 }
