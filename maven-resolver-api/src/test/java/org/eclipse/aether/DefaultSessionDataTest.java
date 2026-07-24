@@ -115,7 +115,6 @@ public class DefaultSessionDataTest {
                             assertEquals(Boolean.TRUE, get(key));
                         } catch (Throwable t) {
                             error.compareAndSet(null, t);
-                            t.printStackTrace();
                         }
                     }
                 }
@@ -127,6 +126,9 @@ public class DefaultSessionDataTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        assertNull(error.get(), String.valueOf(error.get()));
+        Throwable t = error.get();
+        if (t != null) {
+            throw new AssertionError(t);
+        }
     }
 }
