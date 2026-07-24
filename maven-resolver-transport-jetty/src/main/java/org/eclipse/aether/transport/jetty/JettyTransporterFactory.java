@@ -68,10 +68,7 @@ public final class JettyTransporterFactory implements HttpTransporterFactory {
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        if (!"http".equalsIgnoreCase(repository.getProtocol()) && !"https".equalsIgnoreCase(repository.getProtocol())) {
-            throw new NoTransporterException(repository);
-        }
-
+        // repository protocol already checked in canHandle
         return new JettyTransporter(session, repository, checksumExtractor, pathProcessor);
     }
 }
