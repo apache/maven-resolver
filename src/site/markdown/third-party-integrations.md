@@ -21,7 +21,7 @@ from the beginning. Back when SL was implemented, the DI container in use with R
 Maven was the Plexus DI container, that had its own limitations: no constructor injection
 among others. Hence, the two was somewhat aligned with each other. Today, with Sisu DI, 
 this is not true anymore: we want to use constructor injection for components, but
-SL is always getting into our way forcing us to always add default constructor to components.
+SL is always getting in our way forcing us to always add default constructor to components.
 Hence, decision was made, and SL was deprecated while ago, and is about to be 
 dropped in Resolver 2.0.0 release.
 

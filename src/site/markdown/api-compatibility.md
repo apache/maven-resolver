@@ -70,11 +70,9 @@ changes using version number. We use "major.minor.patch" versioning on resolver 
 semantics:
 
 * On major version change, one should NOT expect any backward compatibility.
-* On minor version change, we TRY to keep backward compatibility for those "exposed" 3 modules: 
-  API, SPI and Util. Still, there are examples when we failed to do so, usually driven by new 
-  features.
 * On minor version change, we ENSURE backward compatibility for those "exposed" 3 modules: API, 
-  SPI and Util.
+  SPI and Util. Still, there are examples when we failed to do so, usually driven by new 
+  features.
 
 In any of three version changes above, in areas where we do not offer guarantees, everything
 can happen.
@@ -88,26 +86,26 @@ above.
 
 ## Inside of Maven
 
-Historically, Maven 3.1 (as Maven 3.0 used resolver from different package) provided API, SPI 
-and Impl from its own embedded resolver, while Util, Connector, if some plugin or extension
-depended on those, was resolved. This caused that a plugin may work with different versions
-of API, SPI, Impl or Connector. Given Resolver had API "frozen" for too long time, this was essentially
+Historically, Maven 3.1 provided API, SPI 
+and Impl from its own embedded resolver, while Util and Connector, if some plugin or extension
+depended on them, were resolved separately. This meant that a plugin could work with different versions
+of API, SPI, Impl or Connector. Because the Resolver API was "frozen" for too long a time, this was essentially
 not a problem, but still weird.
 
-This changes in Maven 3.9+: Maven starting with version 3.9.0 will provide API, SPI, Impl 
+This changes in Maven 3.9+: Maven starting with version 3.9.0 will provide API, SPI, Impl, 
 **and Util and Connector**. Reason for this change is that Impl and Connector bundled in Maven 
-implements things from both, API and SPI, and there was a binary incompatible change between 
+implement things from both API and SPI, and there was a binary incompatible change between 
 Resolver 1.8.0 and previous versions.
 
 Most Resolver users should not be affected by this change.
 
-The binary incompatible change happened in SPI class `RepositoryLayout` as part of work done for 
+The binary incompatible change happened in the SPI class `RepositoryLayout` as part of work done for 
 [MRESOLVER-230](https://issues.apache.org/jira/browse/MRESOLVER-230), and affects both, Connector
 and Impl.
 
 ## Backward Compatibility Checks
 
-To ensure backward compatibility, starting from 1.9.0 version Maven Resolver uses 
+To ensure backward compatibility, starting from 1.9.0 Maven Resolver uses 
 [JApiCmp](https://siom79.github.io/japicmp/MavenPlugin.html),
 with two executions (for source and binary level checks). The plugin is enabled on 3 modules of
 Resolver mentioned at page top: API, SPI and Util. For "baseline" we use version 1.8.0.
