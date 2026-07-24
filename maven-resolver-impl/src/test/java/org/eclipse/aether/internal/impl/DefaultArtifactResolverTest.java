@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -737,7 +738,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new UncheckedIOException(e);
                 }
                 return result;
             }
@@ -749,7 +750,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new UncheckedIOException(e);
                 }
                 return result;
             }
@@ -802,7 +803,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new UncheckedIOException(e);
                 }
                 return result;
             }
@@ -871,7 +872,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new UncheckedIOException(e);
                 }
                 return result;
             }
@@ -972,7 +973,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new UncheckedIOException(e);
                 }
                 return result;
             }
@@ -984,7 +985,7 @@ public class DefaultArtifactResolverTest {
                 try {
                     result.setFile(TestFileUtils.createTempFile(""));
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new UncheckedIOException(e);
                 }
                 return result;
             }

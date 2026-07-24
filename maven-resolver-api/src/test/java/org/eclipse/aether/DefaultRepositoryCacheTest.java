@@ -90,6 +90,9 @@ public class DefaultRepositoryCacheTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        assertNull(error.get(), String.valueOf(error.get()));
+        Throwable t = error.get();
+        if (t != null) {
+            throw new AssertionError(t);
+        }
     }
 }
