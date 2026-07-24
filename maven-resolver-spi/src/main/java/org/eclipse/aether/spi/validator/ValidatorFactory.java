@@ -36,7 +36,7 @@ public interface ValidatorFactory {
 
     /**
      * Creates a new validator for the session, or {@link #NOOP} to abstain from validation. Factory is consulted
-     * once per session (if cache present in session) and returned instances (even {@code null}s) are cached and reused
+     * once per session (if cache present in session) and returned instances are cached and reused
      * across single session.
      *
      * @param session The repository system session from which to configure the validator, must not be {@code null}.

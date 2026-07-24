@@ -73,10 +73,10 @@ public class DefaultRepositorySystemValidator implements RepositorySystemValidat
     private Validator newInstance(RepositorySystemSession session, String name, ValidatorFactory factory) {
         if (session.getCache() != null) {
             return ((ConcurrentHashMap<String, Validator>)
+                            session.getCache().computeIfAbsent(session, SESSION_VALIDATORS, ConcurrentHashMap::new))
+                    .computeIfAbsent(name, k -> requireNonNull(factory.newInstance(session)));
         } else {
             return requireNonNull(factory.newInstance(session));
-        }
-            return factory.newInstance(session);
         }
     }
 
