@@ -33,7 +33,7 @@ public interface Validator {
     /**
      * Validates artifact.
      *
-     * @param artifact The artifact to validate, never {@code null}.
+     * @param artifact the artifact to validate, never {@code null}.
      * @throws IllegalArgumentException if artifact is invalid.
      */
     default void validateArtifact(Artifact artifact) throws IllegalArgumentException {}
@@ -41,15 +41,15 @@ public interface Validator {
     /**
      * Validates metadata.
      *
-     * @param metadata The metadata to validate, never {@code null}.
-     * @throws IllegalArgumentException if artifact is invalid.
+     * @param metadata the metadata to validate, never {@code null}.
+     * @throws IllegalArgumentException if metadata is invalid.
      */
     default void validateMetadata(Metadata metadata) throws IllegalArgumentException {}
 
     /**
      * Validates dependency.
      *
-     * @param dependency The dependency to validate, never {@code null}.
+     * @param dependency the dependency to validate, never {@code null}.
      * @throws IllegalArgumentException if dependency is invalid.
      */
     default void validateDependency(Dependency dependency) throws IllegalArgumentException {}
@@ -62,7 +62,7 @@ public interface Validator {
      * that are never actually used. If a managed dependency IS matched and its coordinates are invalid, the error
      * will surface naturally during version resolution or artifact resolution.
      *
-     * @param managedDependency The managed dependency to validate, never {@code null}.
+     * @param managedDependency the managed dependency to validate, never {@code null}.
      * @throws IllegalArgumentException if dependency is invalid.
      * @since 2.0.22
      */
@@ -71,7 +71,7 @@ public interface Validator {
     /**
      * Validates local repository.
      *
-     * @param localRepository The local repository to validate, never {@code null}.
+     * @param localRepository the local repository to validate, never {@code null}.
      * @throws IllegalArgumentException if local repository is invalid.
      */
     default void validateLocalRepository(LocalRepository localRepository) throws IllegalArgumentException {}
@@ -79,7 +79,7 @@ public interface Validator {
     /**
      * Validates remote repository.
      *
-     * @param remoteRepository The remote repository to validate, never {@code null}.
+     * @param remoteRepository the remote repository to validate, never {@code null}.
      * @throws IllegalArgumentException if remote repository is invalid.
      */
     default void validateRemoteRepository(RemoteRepository remoteRepository) throws IllegalArgumentException {}

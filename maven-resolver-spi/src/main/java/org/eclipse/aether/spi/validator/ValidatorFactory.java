@@ -39,8 +39,8 @@ public interface ValidatorFactory {
      * once per session (if cache present in session) and returned instances are cached and reused
      * across single session.
      *
-     * @param session The repository system session from which to configure the validator, must not be {@code null}.
-     * @return The validator to be used for the session, or {@link #NOOP} to abstain from validation, never {@code null}.
+     * @param session the repository system session from which to configure the validator, must not be {@code null}.
+     * @return the validator to be used for the session, or {@link #NOOP} to abstain from validation, never {@code null}.
      */
     Validator newInstance(RepositorySystemSession session);
 }
