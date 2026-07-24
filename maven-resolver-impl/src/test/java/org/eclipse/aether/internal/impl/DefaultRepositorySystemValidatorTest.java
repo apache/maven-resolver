@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DefaultRepositorySystemValidatorTest {
     @Test
@@ -52,7 +53,7 @@ public class DefaultRepositorySystemValidatorTest {
     @Test
     void fail() {
         DefaultRepositorySystemValidator validator =
-                new DefaultRepositorySystemValidator(Collections.singletonMap("abstain", session -> new Validator() {
+                new DefaultRepositorySystemValidator(Collections.singletonMap("fail", session -> new Validator() {
                     @Override
                     public void validateArtifact(Artifact artifact) throws IllegalArgumentException {
                         throw new IllegalArgumentException("Artifact validation failed");
@@ -136,17 +137,15 @@ public class DefaultRepositorySystemValidatorTest {
                 "dependencies", session -> new Validator() {
                     @Override
                     public void validateDependency(Dependency dependency) throws IllegalArgumentException {
-                        if (dependency.getArtifact().getArtifactId().equals("bar")) {
-                            validateDependencies.incrementAndGet();
-                        }
+                        assertTrue(dependencies.contains(dependency));
+                        validateDependencies.incrementAndGet();
                     }
 
                     @Override
                     public void validateManagedDependency(Dependency managedDependency)
                             throws IllegalArgumentException {
-                        if (managedDependency.getArtifact().getArtifactId().equals("foo")) {
-                            validateManagedDependencies.incrementAndGet();
-                        }
+                        assertTrue(managedDependencies.contains(managedDependency));
+                        validateManagedDependencies.incrementAndGet();
                     }
                 }));
         assertDoesNotThrow(() -> validator.validateCollectRequest(
