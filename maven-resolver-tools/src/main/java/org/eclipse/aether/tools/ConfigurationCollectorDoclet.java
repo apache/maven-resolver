@@ -468,12 +468,12 @@ public class ConfigurationCollectorDoclet implements Doclet {
     }
 
     /**
-     * Renders the content of a Javadoc tag into a string, escaping HTML special characters and rendering inline tags.
-     * @param content
-     * @param context
-     * @param contextDoc
-     * @param trim if true, trims the result string
-     * @return
+     * Renders the content of a Javadoc tag into an HTML string, escaping HTML special characters and rendering inline tags.
+     * @param content the javadoc content to render, e.g. the body of a {@code @configurationSource} tag
+     * @param context the field element the content is associated with, used for resolving {@code {@link ...}} references
+     * @param contextDoc the top-level doc comment tree the content is associated with, used for resolving {@code {@link ...}} references
+     * @param trim if true, trims the result string (may destroy {@code <pre> </pre>} formatting).
+     * @return the rendered content, or null if the input content is null
      * @see <a href="https://docs.oracle.com/en/java/javase/25/docs/specs/javadoc/doc-comment-spec.html#standard-tags">Javadoc tags</a>
      * @see <a href="https://docs.oracle.com/en/java/javase/25/docs/api/jdk.compiler/com/sun/source/doctree/InlineTagTree.html">InlineTagTree (common superinterface of all inline tags)</a>
      */
@@ -499,7 +499,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
             @Override
             public String visitLiteral(LiteralTree node, Void p) {
-                if (node.getKind() == DocTree.Kind.LITERAL) {
+                if (node.getKind() == DocTree.Kind.CODE) {
                     return renderAsCode(node.getBody().getBody());
                 } else {
                     return escapeHtml(node.getBody().getBody());
