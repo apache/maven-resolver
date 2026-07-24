@@ -379,6 +379,23 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             }
         }
 
+        // Optimization: when no new management data was collected at this depth and management
+        // is already being applied (depth >= applyFrom), reuse this instance. This avoids creating
+        // unnecessarily distinct DependencyManager instances that would defeat the BF collector's
+        // pool cache — the pool key includes the manager, so distinct-but-semantically-equal
+        // managers cause pool misses, which in turn lets the skipper prune subtrees that should
+        // have been served from the cache. This is the common case for transitive dependencies
+        // whose POMs do not declare <dependencyManagement>.
+        // See https://github.com/apache/maven-resolver/issues/2013
+        if (managedVersions == null
+                && managedScopes == null
+                && managedOptionals == null
+                && managedLocalPaths == null
+                && managedExclusions == null
+                && isApplied()) {
+            return this;
+        }
+
         return newInstance(
                 managedVersions != null ? managedVersions.done() : null,
                 managedScopes != null ? managedScopes.done() : null,

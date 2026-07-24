@@ -204,6 +204,38 @@ public class DependencyManagerTest {
         assertNull(mngt);
     }
 
+    /**
+     * Verifies the instance-reuse optimization in {@link AbstractDependencyManager#deriveChildManager}:
+     * when no new management data is collected and management is already being applied
+     * (depth >= applyFrom), deriveChildManager should return the same instance.
+     * This is critical for BF collector pool cache transparency (issue #2013).
+     */
+    @Test
+    void testDeriveChildManagerReusesInstanceWhenNoNewManagementData() {
+        DependencyManager manager = new TransitiveDependencyManager(null);
+
+        // depth=0 → depth=1: root → first level (applyFrom=2, so not yet applied)
+        DependencyManager depth1 = manager.deriveChildManager(newContext());
+        assertNotSame(manager, depth1, "depth 0→1: must return new instance (not yet applied)");
+
+        // depth=1 → depth=2: no managed deps, now at applyFrom=2 (applied)
+        DependencyManager depth2 = depth1.deriveChildManager(newContext());
+        assertNotSame(depth1, depth2, "depth 1→2: must return new instance (crossing applyFrom boundary)");
+
+        // depth=2 → depth=3: no managed deps, already applied → should reuse
+        DependencyManager depth3 = depth2.deriveChildManager(newContext());
+        assertSame(depth2, depth3, "depth 2→3 with no managed deps: should reuse instance");
+
+        // depth=3 → depth=4: still no managed deps → should keep reusing
+        DependencyManager depth4 = depth3.deriveChildManager(newContext());
+        assertSame(depth3, depth4, "depth 3→4 with no managed deps: should reuse instance");
+
+        // depth=2 → depth=3 with managed deps: should NOT reuse
+        DependencyManager depth3WithMgmt =
+                depth2.deriveChildManager(newContext(new Dependency(new DefaultArtifact("new:dep:1.0"), "compile")));
+        assertNotSame(depth2, depth3WithMgmt, "depth 2→3 with managed deps: must return new instance");
+    }
+
     @Test
     void testDefault() {
         DependencyManager manager = new DefaultDependencyManager(null);
