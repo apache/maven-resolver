@@ -38,7 +38,12 @@ public final class SampleConfigurationKeys {
     public static final boolean DEFAULT_BOOL = true;
 
     /**
-     * A string value.
+     * A string value with some inline tags.
+     * Value {@value #DEFAULT_STRING} is the default.
+     * {@systemProperty some.property} is used.
+     * {@code This text is code.}
+     * {@literal This text is literal.}
+     * {@link java.lang.String} is the type.
      *
      * @configurationSource {@link System#getProperty(String,String)}
      * @configurationType {@link java.lang.String}
