@@ -236,6 +236,69 @@ public class DependencyManagerTest {
         assertNotSame(depth2, depth3WithMgmt, "depth 2→3 with managed deps: must return new instance");
     }
 
+    /**
+     * Verifies the instance-reuse optimization with {@link DefaultDependencyManager} (applyFrom=0).
+     * Since management is applied from depth 0, the optimization should fire at the very first
+     * derivation when no management data is collected.
+     */
+    @Test
+    void testDeriveChildManagerReusesInstanceWithDefaultManager() {
+        DependencyManager manager = new DefaultDependencyManager(null);
+
+        // DefaultDependencyManager has applyFrom=0, so isApplied() is true from the start.
+        // depth=0 → depth=1: no managed deps → should reuse (already applied)
+        DependencyManager depth1 = manager.deriveChildManager(newContext());
+        assertSame(manager, depth1, "depth 0→1 with no managed deps: should reuse (applyFrom=0)");
+
+        // depth=0 → depth=1 with managed deps: should NOT reuse
+        DependencyManager depth1WithMgmt =
+                manager.deriveChildManager(newContext(new Dependency(new DefaultArtifact("mgd:dep:1.0"), "compile")));
+        assertNotSame(manager, depth1WithMgmt, "depth 0→1 with managed deps: must return new instance");
+
+        // depth=1 (with mgmt) → depth=2: no managed deps → should reuse
+        DependencyManager depth2 = depth1WithMgmt.deriveChildManager(newContext());
+        assertSame(depth1WithMgmt, depth2, "depth 1→2 with no managed deps: should reuse");
+    }
+
+    /**
+     * Verifies that the "nearer-to-root wins" invariant holds when the optimization
+     * reuses instances. Scenario: root contributes version management at depth 1,
+     * the optimization fires at depth 2→3 (empty context), and a deeper POM tries
+     * to override the same key — the root's version must still win.
+     */
+    @Test
+    void testNearerToRootWinsAfterOptimizationReusesInstance() {
+        DependencyManager manager = new TransitiveDependencyManager(null);
+
+        // depth=0 → depth=1: root contributes version 1.0 for artifact "x"
+        DependencyManager depth1 =
+                manager.deriveChildManager(newContext(new Dependency(new DefaultArtifact("test:x:1.0"), "compile")));
+
+        // depth=1 → depth=2: empty context (new instance because applyFrom boundary)
+        DependencyManager depth2 = depth1.deriveChildManager(newContext());
+        assertNotSame(depth1, depth2, "depth 1→2: new instance (crossing applyFrom boundary)");
+
+        // depth=2 → depth=3: empty context, optimization fires
+        DependencyManager depth3 = depth2.deriveChildManager(newContext());
+        assertSame(depth2, depth3, "depth 2→3: optimization should reuse instance");
+
+        // Verify root's version still applies after optimization reuse
+        DependencyManagement mngt = depth3.manageDependency(new Dependency(new DefaultArtifact("test:x:9.0"), null));
+        assertNotNull(mngt, "management should apply at depth >= applyFrom");
+        assertEquals("1.0", mngt.getVersion(), "root's version must apply after optimization reuse");
+
+        // depth=3 → depth=4: context tries to override "x" with 2.0, but containsManagedVersion
+        // finds it in ancestors → no new data collected → optimization fires again
+        DependencyManager depth4 =
+                depth3.deriveChildManager(newContext(new Dependency(new DefaultArtifact("test:x:2.0"), "compile")));
+        assertSame(depth3, depth4, "optimization should fire when context only has already-managed keys");
+
+        // Root's version still wins ("nearer-to-root wins" invariant)
+        mngt = depth4.manageDependency(new Dependency(new DefaultArtifact("test:x:9.0"), null));
+        assertNotNull(mngt, "management should still apply");
+        assertEquals("1.0", mngt.getVersion(), "nearer-to-root version must win over deeper override attempt");
+    }
+
     @Test
     void testDefault() {
         DependencyManager manager = new DefaultDependencyManager(null);
