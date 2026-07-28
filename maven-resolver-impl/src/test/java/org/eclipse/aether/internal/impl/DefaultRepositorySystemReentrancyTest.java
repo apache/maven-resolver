@@ -465,8 +465,8 @@ public class DefaultRepositorySystemReentrancyTest {
         // Second call: resolveVersionRange should still validate (depth counter was reset
         // by the try-finally guard despite the exception). If the depth counter leaked,
         // this call would skip validation and accept the uninterpolated expression.
-        VersionRangeRequest request = new VersionRangeRequest(
-                new DefaultArtifact("g:bad:${unresolved}"), Collections.emptyList(), null);
+        VersionRangeRequest request =
+                new VersionRangeRequest(new DefaultArtifact("g:bad:${unresolved}"), Collections.emptyList(), null);
         assertThrows(
                 IllegalArgumentException.class,
                 () -> throwingSystem.resolveVersionRange(session, request),
