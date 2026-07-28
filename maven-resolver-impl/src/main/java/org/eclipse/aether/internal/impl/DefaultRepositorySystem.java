@@ -623,22 +623,17 @@ public class DefaultRepositorySystem implements RepositorySystem {
     }
 
     /**
-     * Session data key for the re-entrancy depth counter. This supplements the
-     * {@link RequestTrace}-based detection for consumers that rebuild the trace chain
-     * from a different tracing system (e.g. Maven 4's {@code RequestTraceHelper} converts
-     * between Maven API traces and resolver traces, losing the
-     * {@link #REPOSITORY_SYSTEM_CALL} marker).
+     * Thread-scoped re-entrancy depth counter. This supplements the {@link RequestTrace}-based
+     * detection for consumers that rebuild the trace chain from a different tracing system
+     * (e.g. Maven 4's {@code RequestTraceHelper} converts between Maven API traces and
+     * resolver traces, losing the {@link #REPOSITORY_SYSTEM_CALL} marker).
      * <p>
-     * The value stored under this key is an {@link AtomicInteger} tracking how many
-     * {@code RepositorySystem} public methods are currently on the call stack for this
-     * session. A value &gt; 0 on entry means the call is re-entrant.
+     * Re-entrancy is inherently per-call-stack (per-thread), so a {@code ThreadLocal} is the
+     * correct semantic. A value &gt; 0 on entry means the current thread is already inside
+     * a {@code RepositorySystem} public method. Unlike a session-scoped counter, this avoids
+     * false positives in parallel builds where multiple threads share a single session.
      */
-    private static final Object SESSION_REENTRY_DEPTH_KEY = new Object() {
-        @Override
-        public String toString() {
-            return "RepositorySystem.reentryDepth";
-        }
-    };
+    private static final ThreadLocal<int[]> REENTRY_DEPTH = ThreadLocal.withInitial(() -> new int[] {0});
 
     /**
      * Stamps the {@link #REPOSITORY_SYSTEM_CALL} re-entrancy marker into the trace chain
@@ -671,38 +666,34 @@ public class DefaultRepositorySystem implements RepositorySystem {
     }
 
     /**
-     * Combined re-entrancy check using both {@link RequestTrace} ancestry and session-scoped
+     * Combined re-entrancy check using both {@link RequestTrace} ancestry and thread-scoped
      * depth tracking. Either mechanism detecting re-entrancy is sufficient to skip validation.
      * <p>
      * The trace-based check is the primary mechanism and works when callers properly propagate
-     * traces. The session-based check is a fallback for callers that rebuild the trace chain
+     * traces. The thread-scoped check is a fallback for callers that rebuild the trace chain
      * from a different tracing system (e.g. Maven 4's trace conversion loses the resolver's
      * re-entrancy marker).
      *
      * @param trace   the current request trace (may be {@code null})
-     * @param session the current repository system session
+     * @param session the current repository system session (unused, kept for signature consistency)
      * @return {@code true} if this is a re-entrant call, {@code false} if it is the outermost call
      */
     private static boolean isReentrant(RequestTrace trace, RepositorySystemSession session) {
-        return isReentrant(trace) || getReentryDepth(session).get() > 0;
+        return isReentrant(trace) || REENTRY_DEPTH.get()[0] > 0;
     }
 
     /**
-     * Increments the session-scoped re-entrancy depth counter. Must be called on every outermost
+     * Increments the thread-scoped re-entrancy depth counter. Must be called on every outermost
      * entry into a public {@code RepositorySystem} method, and the returned {@link Runnable} must
      * be invoked in a {@code finally} block to decrement the counter on exit.
      *
-     * @param session the current repository system session
+     * @param session the current repository system session (unused, kept for signature consistency)
      * @return a {@link Runnable} that decrements the depth counter when invoked
      */
     private static Runnable enterSessionScope(RepositorySystemSession session) {
-        AtomicInteger depth = getReentryDepth(session);
-        depth.incrementAndGet();
-        return depth::decrementAndGet;
-    }
-
-    private static AtomicInteger getReentryDepth(RepositorySystemSession session) {
-        return (AtomicInteger) session.getData().computeIfAbsent(SESSION_REENTRY_DEPTH_KEY, () -> new AtomicInteger(0));
+        int[] depth = REENTRY_DEPTH.get();
+        depth[0]++;
+        return () -> depth[0]--;
     }
 
     private void validateSession(RepositorySystemSession session) {

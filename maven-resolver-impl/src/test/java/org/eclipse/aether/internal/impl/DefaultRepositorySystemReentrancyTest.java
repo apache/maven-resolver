@@ -314,13 +314,13 @@ public class DefaultRepositorySystemReentrancyTest {
     }
 
     @Test
-    void sessionScopedDetectionSkipsValidationWhenTraceChainIsBroken() throws Exception {
+    void threadScopedDetectionSkipsValidationWhenTraceChainIsBroken() throws Exception {
         // Simulates Maven 4's flow where the model builder converts between Maven API traces
         // and resolver traces via RequestTraceHelper, losing the REPOSITORY_SYSTEM_CALL marker.
         //
         // The DependencyCollector, called from within collectDependencies, re-enters
         // RepositorySystem.resolveVersionRange with a FRESH trace (no marker in ancestry)
-        // and an uninterpolated expression like ${project.version}. Without session-scoped
+        // and an uninterpolated expression like ${project.version}. Without thread-scoped
         // detection, the validator would reject the expression; with it, the call is
         // detected as re-entrant and validation is skipped.
         AtomicReference<DefaultRepositorySystem> systemRef = new AtomicReference<>();
@@ -328,7 +328,7 @@ public class DefaultRepositorySystemReentrancyTest {
         DependencyCollector reentrantCollector = (s, request) -> {
             // Inside collectDependencies, simulate a re-entrant call with a FRESH trace
             // (no marker in ancestry — this is the broken path) and an uninterpolated
-            // expression. If session-scoped detection fails, the validator rejects this.
+            // expression. If thread-scoped detection fails, the validator rejects this.
             VersionRangeRequest innerRequest = new VersionRangeRequest(
                     new DefaultArtifact("g:inner:${project.version}"), Collections.emptyList(), null);
             // Fresh trace — no REPOSITORY_SYSTEM_CALL marker (simulates Maven's trace conversion)
@@ -336,7 +336,7 @@ public class DefaultRepositorySystemReentrancyTest {
             try {
                 systemRef.get().resolveVersionRange(s, innerRequest);
             } catch (Exception e) {
-                fail("Re-entrant call with broken trace chain should succeed via session-scoped detection: " + e);
+                fail("Re-entrant call with broken trace chain should succeed via thread-scoped detection", e);
             }
             return new CollectResult(request);
         };
@@ -364,13 +364,13 @@ public class DefaultRepositorySystemReentrancyTest {
 
         // The outermost collectDependencies call should succeed, and the inner
         // resolveVersionRange call (with broken trace and uninterpolated expression)
-        // should be detected as re-entrant via the session-scoped depth counter.
+        // should be detected as re-entrant via the thread-scoped depth counter.
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setRootArtifact(new DefaultArtifact("g:root:1.0"));
 
         assertDoesNotThrow(
                 () -> strictSystem.collectDependencies(session, collectRequest),
-                "Inner call with broken trace chain should succeed via session-scoped detection");
+                "Inner call with broken trace chain should succeed via thread-scoped detection");
     }
 
     @Test
@@ -411,8 +411,8 @@ public class DefaultRepositorySystemReentrancyTest {
     }
 
     @Test
-    void sessionScopedDepthIsProperlyDecrementedOnExit() throws Exception {
-        // Verify that the session-scoped depth counter is properly decremented after
+    void threadScopedDepthIsProperlyDecrementedOnExit() throws Exception {
+        // Verify that the thread-scoped depth counter is properly decremented after
         // a RepositorySystem call completes, so independent calls are still validated
         VersionRangeRequest request1 =
                 new VersionRangeRequest(new DefaultArtifact("g:a:1.0"), Collections.emptyList(), null);
@@ -427,5 +427,49 @@ public class DefaultRepositorySystemReentrancyTest {
         // because the depth counter should have been decremented on exit
         system.resolveVersionRange(session, request2);
         assertEquals(2, validationCount.get(), "Second independent call should also validate");
+    }
+
+    @Test
+    void threadScopedDepthIsDecrementedWhenDelegateThrows() throws Exception {
+        // Verify that the depth counter is properly cleaned up even when the delegate
+        // throws an exception, ensuring subsequent outermost calls are still validated.
+        DependencyCollector throwingCollector = (s, request) -> {
+            throw new RuntimeException("Simulated delegate failure");
+        };
+
+        DefaultRepositorySystem throwingSystem = new DefaultRepositorySystem(
+                new StubVersionResolver(),
+                new StubVersionRangeResolver(),
+                mock(ArtifactResolver.class),
+                mock(MetadataResolver.class),
+                new StubArtifactDescriptorReader(),
+                throwingCollector,
+                mock(Installer.class),
+                mock(Deployer.class),
+                mock(LocalRepositoryProvider.class),
+                new StubSyncContextFactory(),
+                new DefaultRemoteRepositoryManager(
+                        new DefaultUpdatePolicyAnalyzer(),
+                        new DefaultChecksumPolicyProvider(),
+                        new DefaultRepositoryKeyFunctionFactory()),
+                new DefaultRepositorySystemLifecycle(),
+                Collections.emptyMap(),
+                new DefaultRepositorySystemValidator(
+                        Collections.singletonList(EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
+
+        // First call: collectDependencies should throw because the collector throws
+        CollectRequest collectRequest = new CollectRequest();
+        collectRequest.setRootArtifact(new DefaultArtifact("g:root:1.0"));
+        assertThrows(RuntimeException.class, () -> throwingSystem.collectDependencies(session, collectRequest));
+
+        // Second call: resolveVersionRange should still validate (depth counter was reset
+        // by the try-finally guard despite the exception). If the depth counter leaked,
+        // this call would skip validation and accept the uninterpolated expression.
+        VersionRangeRequest request = new VersionRangeRequest(
+                new DefaultArtifact("g:bad:${unresolved}"), Collections.emptyList(), null);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> throwingSystem.resolveVersionRange(session, request),
+                "Depth counter should be reset after exception — validation must still run");
     }
 }
