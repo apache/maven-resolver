@@ -131,10 +131,9 @@ public class DependencyGraphParser {
      * Parse the given graph definition.
      */
     public DependencyNode parseLiteral(String dependencyGraph) throws IOException {
-        BufferedReader reader = new BufferedReader(new StringReader(dependencyGraph));
-        DependencyNode node = parse(reader);
-        reader.close();
-        return node;
+        try (BufferedReader reader = new BufferedReader(new StringReader(dependencyGraph))) {
+            return parse(reader);
+        }
     }
 
     /**
