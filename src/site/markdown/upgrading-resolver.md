@@ -51,9 +51,9 @@ Required changes in **consumer project code managing Resolver 2.x**:
 ## Consumer Project Changes (if more needed)
 
 Maven Resolver 2.x now fully delegates multiple aspects to the consumer project, itself remaining "oblivious" about
-them. This was done to lessen (or better, fully remove) any overlap between the logic of the Resolver, and it's major
+them. This was done to lessen (or better, fully remove) any overlap between the logic of the Resolver, and its major
 consumer project: Maven. The following aspects are fully delegated to consumer projects:
-* Most of the `ArtifactProperties` is deprecated (sans two "core" ones: type and language), as it is really matter of the consumer project assign semantics to them.
+* Most of the `ArtifactProperties` is deprecated (except two "core" ones: type and language), as it is really a matter of the consumer project to assign semantics to them.
 * The `ArtifactType` default implementation is deprecated, should be provided by consumer project instead, Resolver 2.x should not provide implementations for it.
 * Class path generation (in NodeListGenerator class variations in `org.eclipse.aether.util.graph.visitor` package) and class path filtering (in `DependencyFilterUtils`) is deprecated. It is the consumer app, based on own artifact properties, that can deduce how to build class path (or module path, or anything alike).
 * Dependency Scopes are fully removed. For Resolver, they were always "just labels". Resolver is now fully unaware of scopes (and for "system" artifacts has a dedicated handler exposed on session).

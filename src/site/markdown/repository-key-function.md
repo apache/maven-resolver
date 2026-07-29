@@ -64,7 +64,7 @@ Furthermore, repository key function (possibly different one) is used in two com
 * Trusted Checksums Source
 * Remote Repository Filter
 
-In these cases, the repository key function only role is to provide "file system friendly" path segments based on
+In these cases, the repository key function's only role is to provide "file system friendly" path segments based on
 `RemoteRepository` instances.
 
 **Important implication:** When Resolver/Maven is reconfigured to use alternative repository key function, it is

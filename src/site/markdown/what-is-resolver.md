@@ -52,13 +52,13 @@ interoperability with other tools that work with Maven repositories.
 
 ## Embedding Resolver
 
-As noted above, Resolver alone is not "complete", in a way, it does not
-know how to deal even with Maven repositories (and models). To "minimally
-complete" Resolver, one needs `maven-resolver-provider` module, that 
+As noted above, Resolver alone is not "complete". It does not even
+know how to deal with Maven repositories (and models). To "minimally
+complete" Resolver, one needs the `maven-resolver-provider` module. That 
 makes Resolver "minimally complete" (contains required component implementations
 and introduces required models for Maven repositories). But this is still
 just "basic resolver functionality". Next functionality
 level is add "Maven environment awareness" (like honoring settings.xml and alike). This 
-can be achieved by using libraries like [MIMA](https://github.com/maveniverse/mima)
-is. And finally, Maven (that incorporates Resolver) offers full experience (while
+can be achieved by using libraries like [MIMA](https://github.com/maveniverse/mima).
+And finally, Maven (that incorporates Resolver) offers full experience (while
 embedding Maven is really not trivial).
