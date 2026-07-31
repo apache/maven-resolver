@@ -35,6 +35,12 @@ import org.eclipse.aether.scope.SystemDependencyScope;
 
 import static java.util.Objects.requireNonNull;
 
+// Note on lookup semantics: management rules follow "nearest to root wins" precedence.
+// The parent pointer forms a linked list from leaf toward root. Lookups walk the full
+// chain and keep the last hit (closest to root). Since containsManagedXxx() during
+// derive blocks duplicate entries for most properties, there is typically at most one
+// hit per key in the chain, making the walk direction irrelevant in practice.
+
 /**
  * A dependency manager support class for Maven-specific dependency graph management.
  *
@@ -105,8 +111,12 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.0
  */
 public abstract class AbstractDependencyManager implements DependencyManager {
-    /** The path of parent managers from root to current level. */
-    protected final ArrayList<AbstractDependencyManager> path;
+    /**
+     * Parent manager in the dependency graph (forms a linked list from leaf toward root).
+     * Replaces the previous {@code ArrayList<AbstractDependencyManager> path} field —
+     * siblings share the same parent reference (O(1) derive instead of O(depth) copy).
+     */
+    protected final AbstractDependencyManager parent;
 
     /** The current depth in the dependency graph (0 = factory, 1 = root, 2+ = descendants). */
     protected final int depth;
@@ -135,7 +145,11 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     /** System dependency scope handler, may be null if no system scope is defined. */
     protected final SystemDependencyScope systemDependencyScope;
 
-    /** Pre-computed hash code (excludes managedLocalPaths). */
+    /**
+     * Pre-computed hash code (excludes managedLocalPaths).
+     * Cascading: incorporates the parent's hashCode so a single int comparison
+     * reflects the entire ancestor chain without walking it.
+     */
     private final int hashCode;
 
     /**
@@ -148,7 +162,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      */
     protected AbstractDependencyManager(int deriveUntil, int applyFrom, ScopeManager scopeManager) {
         this(
-                new ArrayList<>(),
+                null,
                 0,
                 deriveUntil,
                 applyFrom,
@@ -164,7 +178,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     protected AbstractDependencyManager(
-            ArrayList<AbstractDependencyManager> path,
+            AbstractDependencyManager parent,
             int depth,
             int deriveUntil,
             int applyFrom,
@@ -174,7 +188,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             MMap<Key, String> managedLocalPaths,
             MMap<Key, Holder<Collection<Exclusion>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
-        this.path = path;
+        this.parent = parent;
         this.depth = depth;
         this.deriveUntil = deriveUntil;
         this.applyFrom = applyFrom;
@@ -186,8 +200,15 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // nullable: if using scope manager, but there is no system scope defined
         this.systemDependencyScope = systemDependencyScope;
 
-        // exclude managedLocalPaths
-        this.hashCode = Objects.hash(path, depth, managedVersions, managedScopes, managedOptionals, managedExclusions);
+        // Cascading hash: incorporates the parent's pre-computed hash so a single int
+        // comparison reflects the entire ancestor chain. Excludes managedLocalPaths.
+        this.hashCode = Objects.hash(
+                parent != null ? parent.hashCode : 0,
+                depth,
+                managedVersions,
+                managedScopes,
+                managedOptionals,
+                managedExclusions);
     }
 
     protected abstract DependencyManager newInstance(
@@ -198,7 +219,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             MMap<Key, Holder<Collection<Exclusion>>> managedExclusions);
 
     private boolean containsManagedVersion(Key key, MMap<Key, String> managedVersions) {
-        for (AbstractDependencyManager ancestor : path) {
+        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
                 return true;
             }
@@ -206,20 +227,27 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedVersions != null && managedVersions.containsKey(key);
     }
 
+    /**
+     * Walks the parent chain from leaf toward root, returning the value closest to root
+     * ("nearest to root wins"). At depth 1, also checks own data (root self-application).
+     */
     private String getManagedVersion(Key key) {
-        for (AbstractDependencyManager ancestor : path) {
+        String result = null;
+        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
-                return ancestor.managedVersions.get(key);
+                result = ancestor.managedVersions.get(key);
             }
         }
         if (depth == 1 && managedVersions != null && managedVersions.containsKey(key)) {
-            return managedVersions.get(key);
+            // At depth 1, own data IS root data — apply onto self.
+            // This is always root-level, so it wins (nearest to root).
+            result = managedVersions.get(key);
         }
-        return null;
+        return result;
     }
 
     private boolean containsManagedScope(Key key, MMap<Key, String> managedScopes) {
-        for (AbstractDependencyManager ancestor : path) {
+        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
                 return true;
             }
@@ -227,20 +255,24 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedScopes != null && managedScopes.containsKey(key);
     }
 
+    /**
+     * Walks the parent chain from leaf toward root, returning the value closest to root.
+     */
     private String getManagedScope(Key key) {
-        for (AbstractDependencyManager ancestor : path) {
+        String result = null;
+        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
-                return ancestor.managedScopes.get(key);
+                result = ancestor.managedScopes.get(key);
             }
         }
         if (depth == 1 && managedScopes != null && managedScopes.containsKey(key)) {
-            return managedScopes.get(key);
+            result = managedScopes.get(key);
         }
-        return null;
+        return result;
     }
 
     private boolean containsManagedOptional(Key key, MMap<Key, Boolean> managedOptionals) {
-        for (AbstractDependencyManager ancestor : path) {
+        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
                 return true;
             }
@@ -248,20 +280,24 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedOptionals != null && managedOptionals.containsKey(key);
     }
 
+    /**
+     * Walks the parent chain from leaf toward root, returning the value closest to root.
+     */
     private Boolean getManagedOptional(Key key) {
-        for (AbstractDependencyManager ancestor : path) {
+        Boolean result = null;
+        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
-                return ancestor.managedOptionals.get(key);
+                result = ancestor.managedOptionals.get(key);
             }
         }
         if (depth == 1 && managedOptionals != null && managedOptionals.containsKey(key)) {
-            return managedOptionals.get(key);
+            result = managedOptionals.get(key);
         }
-        return null;
+        return result;
     }
 
     private boolean containsManagedLocalPath(Key key, MMap<Key, String> managedLocalPaths) {
-        for (AbstractDependencyManager ancestor : path) {
+        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
                 return true;
             }
@@ -272,33 +308,33 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     /**
      * Gets the managed local path for system dependencies.
      * Note: Local paths don't follow the depth=1 special rule like versions/scopes.
-     *
-     * @param key the dependency key
-     * @return the managed local path, or null if not managed
+     * Walks the parent chain from leaf toward root, returning the value closest to root.
      */
     private String getManagedLocalPath(Key key) {
-        for (AbstractDependencyManager ancestor : path) {
+        String result = null;
+        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
-                return ancestor.managedLocalPaths.get(key);
+                result = ancestor.managedLocalPaths.get(key);
             }
         }
         if (managedLocalPaths != null && managedLocalPaths.containsKey(key)) {
-            return managedLocalPaths.get(key);
+            result = managedLocalPaths.get(key);
         }
-        return null;
+        return result;
     }
 
     /**
      * Merges exclusions from all levels in the dependency path.
      * Unlike other managed properties, exclusions are accumulated additively
      * from root to current level throughout the entire dependency path.
+     * Walk direction is irrelevant since all levels contribute.
      *
      * @param key the dependency key
      * @return merged collection of exclusions, or null if none exist
      */
     private Collection<Exclusion> getManagedExclusions(Key key) {
         ArrayList<Exclusion> result = new ArrayList<>();
-        for (AbstractDependencyManager ancestor : path) {
+        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedExclusions != null && ancestor.managedExclusions.containsKey(key)) {
                 result.addAll(ancestor.managedExclusions.get(key).value);
             }
@@ -535,19 +571,21 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         }
 
         AbstractDependencyManager that = (AbstractDependencyManager) obj;
-        // Fast rejection: hashCode is pre-computed, so a mismatch avoids
-        // the expensive path/map equality checks below.
+        // Fast rejection: cascading hashCode reflects the entire ancestor chain,
+        // so a single int mismatch rejects without walking any parent pointers.
         if (hashCode != that.hashCode) {
             return false;
         }
         // exclude managedLocalPaths
-        // Check cheap fields (depth) before expensive ones (path, maps)
+        // Check cheap fields (depth) before expensive ones (maps, parent chain).
+        // Parent comparison is recursive but each level is hash-guarded, and
+        // shared parents (same identity) short-circuit via the this==obj check.
         return depth == that.depth
                 && Objects.equals(managedVersions, that.managedVersions)
                 && Objects.equals(managedScopes, that.managedScopes)
                 && Objects.equals(managedOptionals, that.managedOptionals)
                 && Objects.equals(managedExclusions, that.managedExclusions)
-                && Objects.equals(path, that.path);
+                && Objects.equals(parent, that.parent);
     }
 
     @Override

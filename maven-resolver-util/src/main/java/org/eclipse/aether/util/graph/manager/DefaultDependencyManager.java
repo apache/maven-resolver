@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.util.graph.manager;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.eclipse.aether.collection.DependencyManager;
@@ -97,7 +96,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     private DefaultDependencyManager(
-            ArrayList<AbstractDependencyManager> path,
+            AbstractDependencyManager parent,
             int depth,
             int deriveUntil,
             int applyFrom,
@@ -108,7 +107,7 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
             MMap<Key, Holder<Collection<Exclusion>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
         super(
-                path,
+                parent,
                 depth,
                 deriveUntil,
                 applyFrom,
@@ -127,10 +126,8 @@ public final class DefaultDependencyManager extends AbstractDependencyManager {
             MMap<Key, Boolean> managedOptionals,
             MMap<Key, String> managedLocalPaths,
             MMap<Key, Holder<Collection<Exclusion>>> managedExclusions) {
-        ArrayList<AbstractDependencyManager> path = new ArrayList<>(this.path);
-        path.add(this);
         return new DefaultDependencyManager(
-                path,
+                this,
                 depth + 1,
                 deriveUntil,
                 applyFrom,
