@@ -535,13 +535,19 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         }
 
         AbstractDependencyManager that = (AbstractDependencyManager) obj;
+        // Fast rejection: hashCode is pre-computed, so a mismatch avoids
+        // the expensive path/map equality checks below.
+        if (hashCode != that.hashCode) {
+            return false;
+        }
         // exclude managedLocalPaths
-        return Objects.equals(path, that.path)
-                && depth == that.depth
+        // Check cheap fields (depth) before expensive ones (path, maps)
+        return depth == that.depth
                 && Objects.equals(managedVersions, that.managedVersions)
                 && Objects.equals(managedScopes, that.managedScopes)
                 && Objects.equals(managedOptionals, that.managedOptionals)
-                && Objects.equals(managedExclusions, that.managedExclusions);
+                && Objects.equals(managedExclusions, that.managedExclusions)
+                && Objects.equals(path, that.path);
     }
 
     @Override
@@ -554,18 +560,26 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      * GACE = Group, Artifact, Classifier, Extension (excludes version for management purposes).
      */
     protected static class Key {
-        private final Artifact artifact;
+        private final String groupId;
+        private final String artifactId;
+        private final String extension;
+        private final String classifier;
         private final int hashCode;
 
         /**
          * Creates a new key from the given artifact's GACE coordinates.
+         * Coordinate strings are cached eagerly to avoid repeated virtual dispatch
+         * through delegation wrappers like {@code RelocatedArtifact} during
+         * {@link #equals} comparisons in hash maps.
          *
          * @param artifact the artifact to create a key for
          */
         Key(Artifact artifact) {
-            this.artifact = artifact;
-            this.hashCode = Objects.hash(
-                    artifact.getArtifactId(), artifact.getGroupId(), artifact.getExtension(), artifact.getClassifier());
+            this.groupId = artifact.getGroupId();
+            this.artifactId = artifact.getArtifactId();
+            this.extension = artifact.getExtension();
+            this.classifier = artifact.getClassifier();
+            this.hashCode = Objects.hash(artifactId, groupId, extension, classifier);
         }
 
         @Override
@@ -576,10 +590,10 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 return false;
             }
             Key that = (Key) obj;
-            return artifact.getArtifactId().equals(that.artifact.getArtifactId())
-                    && artifact.getGroupId().equals(that.artifact.getGroupId())
-                    && artifact.getExtension().equals(that.artifact.getExtension())
-                    && artifact.getClassifier().equals(that.artifact.getClassifier());
+            return artifactId.equals(that.artifactId)
+                    && groupId.equals(that.groupId)
+                    && extension.equals(that.extension)
+                    && classifier.equals(that.classifier);
         }
 
         @Override
@@ -589,7 +603,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
         @Override
         public String toString() {
-            return String.valueOf(artifact);
+            return groupId + ":" + artifactId + ":" + extension + (classifier.isEmpty() ? "" : ":" + classifier);
         }
     }
 
