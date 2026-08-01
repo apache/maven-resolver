@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -151,6 +152,23 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      * reflects the entire ancestor chain without walking it.
      */
     private final int hashCode;
+
+    /**
+     * Single-entry memoization cache for {@link #deriveChildManager(DependencyCollectionContext)}:
+     * remembers the last managed-dependency list (by reference identity) and the result it produced.
+     * <p>
+     * In BFS dependency collection, consecutive siblings typically share the same parent artifact
+     * descriptor and hence the same interned managed-dependency list (guaranteed by DataPool's
+     * {@code internArtifactDescriptorManagedDependencies}). A single-entry cache therefore hits
+     * on nearly every call while using only two fields of constant memory — unlike an unbounded
+     * {@code IdentityHashMap} which would retain every derived {@code DependencyManager} and
+     * prevent GC of the dependency subtrees they reference.
+     * <p>
+     * The BFS collector's traversal loop is single-threaded, so no synchronization is needed.
+     */
+    private transient List<Dependency> lastManagedDeps;
+
+    private transient DependencyManager lastDeriveResult;
 
     /**
      * Creates a new dependency manager with the specified derivation and application parameters.
@@ -352,13 +370,22 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             return this;
         }
 
+        // Memoization: if this is the same managed dependencies list we saw last time
+        // (same object reference — guaranteed by DataPool's descriptor/list interning),
+        // return the cached result immediately. This turns the common case from O(managedDeps)
+        // iteration + Key hashing into a single O(1) identity check.
+        List<Dependency> managedDeps = context.getManagedDependencies();
+        if (managedDeps == lastManagedDeps && lastDeriveResult != null) {
+            return lastDeriveResult;
+        }
+
         MMap<Key, String> managedVersions = null;
         MMap<Key, String> managedScopes = null;
         MMap<Key, Boolean> managedOptionals = null;
         MMap<Key, String> managedLocalPaths = null;
         MMap<Key, Holder<Collection<Exclusion>>> managedExclusions = null;
 
-        for (Dependency managedDependency : context.getManagedDependencies()) {
+        for (Dependency managedDependency : managedDeps) {
             Artifact artifact = managedDependency.getArtifact();
             Key key = new Key(artifact);
 
@@ -423,21 +450,27 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // have been served from the cache. This is the common case for transitive dependencies
         // whose POMs do not declare <dependencyManagement>.
         // See https://github.com/apache/maven-resolver/issues/2013
+        DependencyManager result;
         if (managedVersions == null
                 && managedScopes == null
                 && managedOptionals == null
                 && managedLocalPaths == null
                 && managedExclusions == null
                 && isApplied()) {
-            return this;
+            result = this;
+        } else {
+            result = newInstance(
+                    managedVersions != null ? managedVersions.done() : null,
+                    managedScopes != null ? managedScopes.done() : null,
+                    managedOptionals != null ? managedOptionals.done() : null,
+                    managedLocalPaths != null ? managedLocalPaths.done() : null,
+                    managedExclusions != null ? managedExclusions.done() : null);
         }
 
-        return newInstance(
-                managedVersions != null ? managedVersions.done() : null,
-                managedScopes != null ? managedScopes.done() : null,
-                managedOptionals != null ? managedOptionals.done() : null,
-                managedLocalPaths != null ? managedLocalPaths.done() : null,
-                managedExclusions != null ? managedExclusions.done() : null);
+        // Cache the result for future calls with the same managed deps list identity
+        lastManagedDeps = managedDeps;
+        lastDeriveResult = result;
+        return result;
     }
 
     @Override

@@ -18,8 +18,10 @@
  */
 package org.eclipse.aether.util.graph.manager;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -362,5 +364,107 @@ public class DependencyManagerTest {
         mngt = manager.manageDependency(new Dependency(E1, null));
         // DO NOT APPLY ONTO ITSELF
         assertNull(mngt);
+    }
+
+    /**
+     * Verifies the memoization cache in {@link AbstractDependencyManager#deriveChildManager}:
+     * when the same managed dependencies list (same object reference) is passed multiple times,
+     * the result must be identical (same object reference). This simulates the BFS collector
+     * processing multiple siblings that share the same artifact descriptor — each call sees
+     * the same interned managed deps list from the DataPool.
+     */
+    @Test
+    void testDeriveChildManagerMemoizationOnListIdentity() {
+        DependencyManager manager = new TransitiveDependencyManager(null);
+
+        // Get to depth >= applyFrom (depth 2) so the optimization can fire
+        manager =
+                manager.deriveChildManager(newContext(new Dependency(new DefaultArtifact("root:dep:1.0"), "compile")));
+        manager = manager.deriveChildManager(newContext());
+
+        // Create a SINGLE managed deps list — simulates interned list from DataPool
+        List<Dependency> sharedManagedDeps = Arrays.asList(
+                new Dependency(new DefaultArtifact("mgd:a:1.0"), "compile"),
+                new Dependency(new DefaultArtifact("mgd:b:2.0"), "runtime"));
+
+        // First call: processes the list, caches the result
+        DependencyCollectionContext ctx1 = TestUtils.newCollectionContext(session, null, sharedManagedDeps);
+        DependencyManager result1 = manager.deriveChildManager(ctx1);
+
+        // Second call with the SAME list object: should return the cached result
+        DependencyCollectionContext ctx2 = TestUtils.newCollectionContext(session, null, sharedManagedDeps);
+        DependencyManager result2 = manager.deriveChildManager(ctx2);
+
+        assertSame(result1, result2, "memoization must return same instance for same list identity");
+
+        // Third call with a DIFFERENT list object (same content): must NOT use cache
+        // (identity mismatch — different object reference)
+        List<Dependency> differentList = new ArrayList<>(sharedManagedDeps);
+        DependencyCollectionContext ctx3 = TestUtils.newCollectionContext(session, null, differentList);
+        DependencyManager result3 = manager.deriveChildManager(ctx3);
+
+        // result3 should be equal to result1 (same content), but NOT necessarily the same object
+        // (identity-based cache misses on different list objects)
+        assertEquals(result1, result3, "same content should produce equal results");
+    }
+
+    /**
+     * Verifies that the single-entry memoization cache correctly distinguishes between different
+     * managed dependency lists. A cached result for list L1 must not be returned for list L2.
+     * Since the cache is single-entry (last-seen), calling with L2 evicts L1.
+     */
+    @Test
+    void testDeriveChildManagerMemoizationDistinguishesDifferentLists() {
+        DependencyManager manager = new TransitiveDependencyManager(null);
+
+        // Get to depth >= applyFrom
+        manager =
+                manager.deriveChildManager(newContext(new Dependency(new DefaultArtifact("root:dep:1.0"), "compile")));
+        manager = manager.deriveChildManager(newContext());
+
+        // Two different list objects with different content
+        List<Dependency> list1 = Collections.singletonList(new Dependency(new DefaultArtifact("mgd:a:1.0"), "compile"));
+        List<Dependency> list2 = Collections.singletonList(new Dependency(new DefaultArtifact("mgd:b:2.0"), "runtime"));
+
+        DependencyManager result1 = manager.deriveChildManager(TestUtils.newCollectionContext(session, null, list1));
+        DependencyManager result2 = manager.deriveChildManager(TestUtils.newCollectionContext(session, null, list2));
+
+        // Different lists should produce different managers (different managed data)
+        assertNotSame(result1, result2, "different lists must not share cached result");
+
+        // Single-entry cache: last call was list2, so list2 should hit
+        DependencyManager result2Again =
+                manager.deriveChildManager(TestUtils.newCollectionContext(session, null, list2));
+        assertSame(result2, result2Again, "list2 should return memoized result (last seen)");
+
+        // list1 was evicted by list2, so calling with list1 recomputes (equal but not same object)
+        DependencyManager result1Again =
+                manager.deriveChildManager(TestUtils.newCollectionContext(session, null, list1));
+        assertEquals(result1, result1Again, "list1 should produce equal result after eviction");
+    }
+
+    /**
+     * Verifies that the memoization cache for empty managed deps lists works correctly.
+     * This is the most common case (leaf artifacts without dependencyManagement).
+     */
+    @Test
+    void testDeriveChildManagerMemoizationWithEmptyList() {
+        DependencyManager manager = new TransitiveDependencyManager(null);
+
+        // Get to depth >= applyFrom
+        manager = manager.deriveChildManager(newContext());
+        manager = manager.deriveChildManager(newContext());
+
+        // Use the SAME empty list (e.g. Collections.emptyList() is a singleton)
+        List<Dependency> emptyList = Collections.emptyList();
+
+        DependencyManager result1 =
+                manager.deriveChildManager(TestUtils.newCollectionContext(session, null, emptyList));
+        DependencyManager result2 =
+                manager.deriveChildManager(TestUtils.newCollectionContext(session, null, emptyList));
+
+        // Both should return `this` (no new data + isApplied) and be memoized
+        assertSame(manager, result1, "empty list should return this");
+        assertSame(result1, result2, "memoization should return same instance for empty list");
     }
 }
