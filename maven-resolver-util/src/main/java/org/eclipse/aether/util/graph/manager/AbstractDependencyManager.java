@@ -37,10 +37,12 @@ import org.eclipse.aether.scope.SystemDependencyScope;
 import static java.util.Objects.requireNonNull;
 
 // Note on lookup semantics: management rules follow "nearest to root wins" precedence.
-// The parent pointer forms a linked list from leaf toward root. Lookups walk the full
-// chain and keep the last hit (closest to root). Since containsManagedXxx() during
-// derive blocks duplicate entries for most properties, there is typically at most one
-// hit per key in the chain, making the walk direction irrelevant in practice.
+// Each instance maintains a cumulative ancestor HashMap that flattens the full parent
+// chain into a single map, providing O(1) lookups instead of O(depth) chain walks.
+// The cumulative map is built incrementally at construction time: child.ancestors =
+// parent.ancestors + parent.ownData. When the parent has no per-level data, the
+// reference is shared (zero copy). Since containsManagedXxx() during derive blocks
+// duplicate entries for most properties, there is at most one value per key.
 
 /**
  * A dependency manager support class for Maven-specific dependency graph management.
@@ -146,6 +148,27 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     /** System dependency scope handler, may be null if no system scope is defined. */
     protected final SystemDependencyScope systemDependencyScope;
 
+    // ── Cumulative ancestor maps ──────────────────────────────────────────────
+    // Flattened view of ALL management entries from root through parent.
+    // Provides O(1) lookups instead of O(depth) parent-chain walks.
+    // When the parent has no per-level data, the child shares the same reference
+    // (zero-copy). These are derived data, excluded from equals/hashCode.
+
+    /** Union of all ancestor version entries (root through parent). */
+    private final HashMap<Key, String> ancestorVersions;
+
+    /** Union of all ancestor scope entries (root through parent). */
+    private final HashMap<Key, String> ancestorScopes;
+
+    /** Union of all ancestor optional entries (root through parent). */
+    private final HashMap<Key, Boolean> ancestorOptionals;
+
+    /** Union of all ancestor local-path entries (root through parent). */
+    private final HashMap<Key, String> ancestorLocalPaths;
+
+    /** Union of all ancestor exclusion entries (root through parent), merged additively. */
+    private final HashMap<Key, Collection<Exclusion>> ancestorExclusions;
+
     /**
      * Pre-computed hash code (excludes managedLocalPaths).
      * Cascading: incorporates the parent's hashCode so a single int comparison
@@ -218,6 +241,22 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // nullable: if using scope manager, but there is no system scope defined
         this.systemDependencyScope = systemDependencyScope;
 
+        // Build cumulative ancestor maps: parent's ancestors + parent's own per-level data.
+        // When parent has no per-level data, the child shares the parent's reference (zero copy).
+        if (parent != null) {
+            this.ancestorVersions = mergeAncestors(parent.ancestorVersions, parent.managedVersions);
+            this.ancestorScopes = mergeAncestors(parent.ancestorScopes, parent.managedScopes);
+            this.ancestorOptionals = mergeAncestors(parent.ancestorOptionals, parent.managedOptionals);
+            this.ancestorLocalPaths = mergeAncestors(parent.ancestorLocalPaths, parent.managedLocalPaths);
+            this.ancestorExclusions = mergeAncestorExclusions(parent.ancestorExclusions, parent.managedExclusions);
+        } else {
+            this.ancestorVersions = null;
+            this.ancestorScopes = null;
+            this.ancestorOptionals = null;
+            this.ancestorLocalPaths = null;
+            this.ancestorExclusions = null;
+        }
+
         // Cascading hash: incorporates the parent's pre-computed hash so a single int
         // comparison reflects the entire ancestor chain. Excludes managedLocalPaths.
         this.hashCode = Objects.hash(
@@ -227,6 +266,45 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 managedScopes,
                 managedOptionals,
                 managedExclusions);
+    }
+
+    /**
+     * Merges the parent's cumulative ancestor map with the parent's own per-level MMap,
+     * producing the child's cumulative ancestor map. When the parent has no per-level data,
+     * the parent's cumulative map is returned as-is (zero copy).
+     */
+    private static <V> HashMap<Key, V> mergeAncestors(HashMap<Key, V> parentAncestors, MMap<Key, V> parentOwn) {
+        if (parentAncestors == null && parentOwn == null) {
+            return null;
+        }
+        if (parentOwn == null) {
+            return parentAncestors; // share reference — no new data at this level
+        }
+        HashMap<Key, V> result = parentAncestors != null ? new HashMap<>(parentAncestors) : new HashMap<>();
+        result.putAll(parentOwn.delegate);
+        return result;
+    }
+
+    /**
+     * Merges the parent's cumulative ancestor exclusions with the parent's own per-level exclusions.
+     * Unlike other properties, exclusions are accumulated additively (same key → merge collections).
+     */
+    private static HashMap<Key, Collection<Exclusion>> mergeAncestorExclusions(
+            HashMap<Key, Collection<Exclusion>> parentAncestors, MMap<Key, Holder<Collection<Exclusion>>> parentOwn) {
+        if (parentAncestors == null && parentOwn == null) {
+            return null;
+        }
+        if (parentOwn == null) {
+            return parentAncestors; // share reference
+        }
+        HashMap<Key, Collection<Exclusion>> result =
+                parentAncestors != null ? new HashMap<>(parentAncestors) : new HashMap<>();
+        parentOwn.delegate.forEach((key, holder) -> result.merge(key, holder.getValue(), (existing, newExcl) -> {
+            ArrayList<Exclusion> merged = new ArrayList<>(existing);
+            merged.addAll(newExcl);
+            return merged;
+        }));
+        return result;
     }
 
     protected abstract DependencyManager newInstance(
@@ -242,28 +320,22 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         if (this.managedVersions != null && this.managedVersions.containsKey(key)) {
             return true;
         }
-        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
-                return true;
-            }
+        // O(1) lookup in cumulative ancestor map (replaces O(depth) parent chain walk)
+        if (ancestorVersions != null && ancestorVersions.containsKey(key)) {
+            return true;
         }
         // Check in-progress new map for duplicates within the same derivation step.
         return managedVersions != null && managedVersions.containsKey(key);
     }
 
     /**
-     * Walks the parent chain from leaf toward root, returning the value closest to root
-     * ("nearest to root wins"). At depth 1, also checks own data (root self-application):
-     * when DefaultDependencyManager applies management from depth 0, the root-level rules
-     * are stored in DM1.managedVersions and must be visible to DM1.manageDependency().
+     * O(1) lookup in the cumulative ancestor map for the managed version.
+     * At depth 1, also checks own data (root self-application): when DefaultDependencyManager
+     * applies management from depth 0, the root-level rules are stored in DM1.managedVersions
+     * and must be visible to DM1.manageDependency().
      */
     private String getManagedVersion(Key key) {
-        String result = null;
-        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
-                result = ancestor.managedVersions.get(key);
-            }
-        }
+        String result = ancestorVersions != null ? ancestorVersions.get(key) : null;
         if (depth == 1 && managedVersions != null && managedVersions.containsKey(key)) {
             result = managedVersions.get(key);
         }
@@ -274,21 +346,14 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         if (this.managedScopes != null && this.managedScopes.containsKey(key)) {
             return true;
         }
-        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
-                return true;
-            }
+        if (ancestorScopes != null && ancestorScopes.containsKey(key)) {
+            return true;
         }
         return managedScopes != null && managedScopes.containsKey(key);
     }
 
     private String getManagedScope(Key key) {
-        String result = null;
-        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
-                result = ancestor.managedScopes.get(key);
-            }
-        }
+        String result = ancestorScopes != null ? ancestorScopes.get(key) : null;
         if (depth == 1 && managedScopes != null && managedScopes.containsKey(key)) {
             result = managedScopes.get(key);
         }
@@ -299,21 +364,14 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         if (this.managedOptionals != null && this.managedOptionals.containsKey(key)) {
             return true;
         }
-        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
-                return true;
-            }
+        if (ancestorOptionals != null && ancestorOptionals.containsKey(key)) {
+            return true;
         }
         return managedOptionals != null && managedOptionals.containsKey(key);
     }
 
     private Boolean getManagedOptional(Key key) {
-        Boolean result = null;
-        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
-                result = ancestor.managedOptionals.get(key);
-            }
-        }
+        Boolean result = ancestorOptionals != null ? ancestorOptionals.get(key) : null;
         if (depth == 1 && managedOptionals != null && managedOptionals.containsKey(key)) {
             result = managedOptionals.get(key);
         }
@@ -324,26 +382,19 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         if (this.managedLocalPaths != null && this.managedLocalPaths.containsKey(key)) {
             return true;
         }
-        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
-                return true;
-            }
+        if (ancestorLocalPaths != null && ancestorLocalPaths.containsKey(key)) {
+            return true;
         }
         return managedLocalPaths != null && managedLocalPaths.containsKey(key);
     }
 
     /**
      * Gets the managed local path for system dependencies.
-     * Note: Local paths don't follow the depth=1 special rule like versions/scopes.
-     * Walks the parent chain from leaf toward root, returning the value closest to root.
+     * Note: Local paths don't follow the depth=1 special rule like versions/scopes —
+     * own data is always checked (system path alignment across the graph).
      */
     private String getManagedLocalPath(Key key) {
-        String result = null;
-        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
-                result = ancestor.managedLocalPaths.get(key);
-            }
-        }
+        String result = ancestorLocalPaths != null ? ancestorLocalPaths.get(key) : null;
         if (managedLocalPaths != null && managedLocalPaths.containsKey(key)) {
             result = managedLocalPaths.get(key);
         }
@@ -351,25 +402,30 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     /**
-     * Merges exclusions from all levels in the dependency path.
+     * Returns merged exclusions from the cumulative ancestor map plus own exclusions.
      * Unlike other managed properties, exclusions are accumulated additively
-     * from root to current level throughout the entire dependency path.
-     * Walk direction is irrelevant since all levels contribute.
+     * from all levels in the dependency path.
      *
      * @param key the dependency key
      * @return merged collection of exclusions, or null if none exist
      */
     private Collection<Exclusion> getManagedExclusions(Key key) {
-        ArrayList<Exclusion> result = new ArrayList<>();
-        for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-            if (ancestor.managedExclusions != null && ancestor.managedExclusions.containsKey(key)) {
-                result.addAll(ancestor.managedExclusions.get(key).value);
-            }
+        Collection<Exclusion> ancestorExcl = ancestorExclusions != null ? ancestorExclusions.get(key) : null;
+        Holder<Collection<Exclusion>> ownExcl = managedExclusions != null ? managedExclusions.get(key) : null;
+
+        if (ancestorExcl == null && ownExcl == null) {
+            return null;
         }
-        if (managedExclusions != null && managedExclusions.containsKey(key)) {
-            result.addAll(managedExclusions.get(key).value);
+        if (ancestorExcl != null && ownExcl == null) {
+            return ancestorExcl;
         }
-        return result.isEmpty() ? null : result;
+        if (ancestorExcl == null) {
+            return ownExcl.value;
+        }
+        // Both present: merge additively
+        ArrayList<Exclusion> result = new ArrayList<>(ancestorExcl);
+        result.addAll(ownExcl.value);
+        return result;
     }
 
     @Override
