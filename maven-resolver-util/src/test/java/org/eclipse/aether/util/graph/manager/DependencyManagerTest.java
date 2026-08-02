@@ -257,9 +257,15 @@ public class DependencyManagerTest {
                 manager.deriveChildManager(newContext(new Dependency(new DefaultArtifact("mgd:dep:1.0"), "compile")));
         assertNotSame(manager, depth1WithMgmt, "depth 0→1 with managed deps: must return new instance");
 
-        // depth=1 (with mgmt) → depth=2: no managed deps → should reuse
+        // depth=1 (with mgmt) → depth=2: no managed deps but parent has management data,
+        // so a new instance must be created to move the management data onto the parent chain
+        // where getManagedVersion() can find it ("do not apply onto itself" semantics).
         DependencyManager depth2 = depth1WithMgmt.deriveChildManager(newContext());
-        assertSame(depth1WithMgmt, depth2, "depth 1→2 with no managed deps: should reuse");
+        assertNotSame(depth1WithMgmt, depth2, "depth 1→2 with parent mgmt: must create new child");
+
+        // depth=2 (no own mgmt) → depth=3: no managed deps → should reuse (no mgmt data)
+        DependencyManager depth3 = depth2.deriveChildManager(newContext());
+        assertSame(depth2, depth3, "depth 2→3 with no managed deps: should reuse");
     }
 
     /**

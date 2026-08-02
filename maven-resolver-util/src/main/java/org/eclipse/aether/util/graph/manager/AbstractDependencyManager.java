@@ -237,17 +237,25 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             MMap<Key, Holder<Collection<Exclusion>>> managedExclusions);
 
     private boolean containsManagedVersion(Key key, MMap<Key, String> managedVersions) {
+        // Check current instance's own managed versions first (restores the pre-d4035d3a
+        // check that was accidentally dropped when the parameter was introduced).
+        if (this.managedVersions != null && this.managedVersions.containsKey(key)) {
+            return true;
+        }
         for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
                 return true;
             }
         }
+        // Check in-progress new map for duplicates within the same derivation step.
         return managedVersions != null && managedVersions.containsKey(key);
     }
 
     /**
      * Walks the parent chain from leaf toward root, returning the value closest to root
-     * ("nearest to root wins"). At depth 1, also checks own data (root self-application).
+     * ("nearest to root wins"). At depth 1, also checks own data (root self-application):
+     * when DefaultDependencyManager applies management from depth 0, the root-level rules
+     * are stored in DM1.managedVersions and must be visible to DM1.manageDependency().
      */
     private String getManagedVersion(Key key) {
         String result = null;
@@ -257,14 +265,15 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             }
         }
         if (depth == 1 && managedVersions != null && managedVersions.containsKey(key)) {
-            // At depth 1, own data IS root data — apply onto self.
-            // This is always root-level, so it wins (nearest to root).
             result = managedVersions.get(key);
         }
         return result;
     }
 
     private boolean containsManagedScope(Key key, MMap<Key, String> managedScopes) {
+        if (this.managedScopes != null && this.managedScopes.containsKey(key)) {
+            return true;
+        }
         for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
                 return true;
@@ -273,9 +282,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedScopes != null && managedScopes.containsKey(key);
     }
 
-    /**
-     * Walks the parent chain from leaf toward root, returning the value closest to root.
-     */
     private String getManagedScope(Key key) {
         String result = null;
         for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
@@ -290,6 +296,9 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     private boolean containsManagedOptional(Key key, MMap<Key, Boolean> managedOptionals) {
+        if (this.managedOptionals != null && this.managedOptionals.containsKey(key)) {
+            return true;
+        }
         for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
                 return true;
@@ -298,9 +307,6 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return managedOptionals != null && managedOptionals.containsKey(key);
     }
 
-    /**
-     * Walks the parent chain from leaf toward root, returning the value closest to root.
-     */
     private Boolean getManagedOptional(Key key) {
         Boolean result = null;
         for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
@@ -315,6 +321,9 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     private boolean containsManagedLocalPath(Key key, MMap<Key, String> managedLocalPaths) {
+        if (this.managedLocalPaths != null && this.managedLocalPaths.containsKey(key)) {
+            return true;
+        }
         for (AbstractDependencyManager ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
             if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
                 return true;
@@ -449,6 +458,13 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // managers cause pool misses, which in turn lets the skipper prune subtrees that should
         // have been served from the cache. This is the common case for transitive dependencies
         // whose POMs do not declare <dependencyManagement>.
+        //
+        // However, we can only reuse `this` when it carries no management data of its own.
+        // If `this` has management data (e.g. managedVersions != null), returning `this` would
+        // hide that data from the child: getManagedVersion() only checks the parent chain (not
+        // `this.managedVersions`), so a reused instance's own rules become invisible. In that
+        // case we must create a new child with null maps, making `this` the parent and putting
+        // the management data on the parent chain where getManagedVersion() can find it.
         // See https://github.com/apache/maven-resolver/issues/2013
         DependencyManager result;
         if (managedVersions == null
@@ -456,7 +472,12 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 && managedOptionals == null
                 && managedLocalPaths == null
                 && managedExclusions == null
-                && isApplied()) {
+                && isApplied()
+                && this.managedVersions == null
+                && this.managedScopes == null
+                && this.managedOptionals == null
+                && this.managedLocalPaths == null
+                && this.managedExclusions == null) {
             result = this;
         } else {
             result = newInstance(
