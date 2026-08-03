@@ -30,4 +30,4 @@ The `maven-resolver-provider` from the [Apache Maven](https://maven.apache.org/)
 
 As noted earlier, Resolver alone does not know how to handle Maven repositories and models. To make Resolver minimally functional, you need the `maven-resolver-provider` module. That module contains the required component implementations and the required models for Maven repositories. It gives Resolver basic functionality.
 
-The next level adds Maven environment awareness. This awareness honors files such as `settings.xml`. You can achieve it with libraries such as MIMA.
+The next level adds Maven environment awareness. This awareness honors files such as `settings.xml`. You can achieve it with libraries such as [MIMA](https://github.com/maveniverse/mima).
