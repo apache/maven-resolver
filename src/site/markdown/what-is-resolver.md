@@ -18,8 +18,8 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Did you ever want to integrate the Maven dependency resolution mechanism into your application? Did you then try to embed Plexus and an entire Maven distribution? Did you want to use the mechanism in a multithreaded way? The stateful singletons in Maven caused problems. Did you ever want more control over the resolved dependency graph? For example, to can use another strategy for conflict resolution, or inspect an intermediate graph?
 Did you ever want to integrate the Maven dependency resolution mechanism into your application? Did you then try to embed Plexus and an entire Maven distribution? Did you want to use the mechanism in a multithreaded way? The stateful singletons in Maven caused problems. Did you ever want more control over the resolved dependency graph? For example, to use another strategy for conflict resolution or inspect an intermediate graph?
+
 Resolver (formerly Aether) is the answer. It is an *embeddable Java library that works with artifact repositories*. It can fetch artifacts from remote repositories for local consumption. It can also publish local artifacts to remote repositories to share with others.
 
 There are many ways to transfer artifacts, describe their relationships, and use them. Resolver was designed to be customizable, so you can augment or replace the stock functionality. The Resolver Core itself does not know how to handle Maven repositories, for example. It is tool agnostic. It provides a general artifact resolution and deployment framework and leaves details such as the repository format to extensions.
