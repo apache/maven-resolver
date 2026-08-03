@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -37,12 +38,12 @@ import org.eclipse.aether.scope.SystemDependencyScope;
 import static java.util.Objects.requireNonNull;
 
 // Note on lookup semantics: management rules follow "nearest to root wins" precedence.
-// Each instance maintains a cumulative ancestor HashMap that flattens the full parent
-// chain into a single map, providing O(1) lookups instead of O(depth) chain walks.
-// The cumulative map is built incrementally at construction time: child.ancestors =
-// parent.ancestors + parent.ownData. When the parent has no per-level data, the
-// reference is shared (zero copy). Since containsManagedXxx() during derive blocks
-// duplicate entries for most properties, there is at most one value per key.
+// Each instance maintains a cumulative ancestor LayeredMap — a zero-copy cons-list of
+// map fragments — providing O(layers) lookups instead of O(depth) chain walks.
+// The layered map is built incrementally at construction time: child.ancestors =
+// new layer(parent.ancestors, parent.ownData). When the parent has no per-level data,
+// the reference is shared. Since containsManagedXxx() during derive blocks duplicate
+// entries for most properties, there is at most one value per key across all layers.
 
 /**
  * A dependency manager support class for Maven-specific dependency graph management.
@@ -149,25 +150,27 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     protected final SystemDependencyScope systemDependencyScope;
 
     // ── Cumulative ancestor maps ──────────────────────────────────────────────
-    // Flattened view of ALL management entries from root through parent.
-    // Provides O(1) lookups instead of O(depth) parent-chain walks.
-    // When the parent has no per-level data, the child shares the same reference
-    // (zero-copy). These are derived data, excluded from equals/hashCode.
+    // Zero-copy layered view of ALL management entries from root through parent.
+    // Each layer holds a reference to the parent layer (older data) and its own entries.
+    // Lookups traverse the chain from newest to oldest — first match wins (O(layers)).
+    // Adding a new level is O(1): just link on top. No HashMap copying.
+    // When the parent has no per-level data, the child shares the same reference.
+    // These are derived data, excluded from equals/hashCode.
 
     /** Union of all ancestor version entries (root through parent). */
-    private final HashMap<Key, String> ancestorVersions;
+    private final LayeredMap<Key, String> ancestorVersions;
 
     /** Union of all ancestor scope entries (root through parent). */
-    private final HashMap<Key, String> ancestorScopes;
+    private final LayeredMap<Key, String> ancestorScopes;
 
     /** Union of all ancestor optional entries (root through parent). */
-    private final HashMap<Key, Boolean> ancestorOptionals;
+    private final LayeredMap<Key, Boolean> ancestorOptionals;
 
     /** Union of all ancestor local-path entries (root through parent). */
-    private final HashMap<Key, String> ancestorLocalPaths;
+    private final LayeredMap<Key, String> ancestorLocalPaths;
 
-    /** Union of all ancestor exclusion entries (root through parent), merged additively. */
-    private final HashMap<Key, Collection<Exclusion>> ancestorExclusions;
+    /** Union of all ancestor exclusion entries (root through parent), layered additively. */
+    private final LayeredMap<Key, Collection<Exclusion>> ancestorExclusions;
 
     /**
      * Pre-computed hash code (excludes managedLocalPaths).
@@ -177,21 +180,25 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     private final int hashCode;
 
     /**
-     * Single-entry memoization cache for {@link #deriveChildManager(DependencyCollectionContext)}:
-     * remembers the last managed-dependency list (by reference identity) and the result it produced.
+     * Multi-entry memoization cache for {@link #deriveChildManager(DependencyCollectionContext)}:
+     * remembers recent managed-dependency lists (by reference identity) and their results.
      * <p>
-     * In BFS dependency collection, consecutive siblings typically share the same parent artifact
-     * descriptor and hence the same interned managed-dependency list (guaranteed by DataPool's
-     * {@code internArtifactDescriptorManagedDependencies}). A single-entry cache therefore hits
-     * on nearly every call while using only two fields of constant memory — unlike an unbounded
+     * In BFS dependency collection, siblings typically share the same interned managed-dependency
+     * list (guaranteed by DataPool's {@code internArtifactDescriptorManagedDependencies}), but
+     * a reactor with several distinct BOM patterns may alternate between a few lists. A 4-entry
+     * ring buffer captures these patterns while keeping constant memory — unlike an unbounded
      * {@code IdentityHashMap} which would retain every derived {@code DependencyManager} and
      * prevent GC of the dependency subtrees they reference.
      * <p>
      * The BFS collector's traversal loop is single-threaded, so no synchronization is needed.
      */
-    private transient List<Dependency> lastManagedDeps;
+    private static final int MEMO_CACHE_SIZE = 4;
 
-    private transient DependencyManager lastDeriveResult;
+    @SuppressWarnings("unchecked")
+    private transient List<Dependency>[] memoKeys = new List[MEMO_CACHE_SIZE];
+
+    private transient DependencyManager[] memoValues = new DependencyManager[MEMO_CACHE_SIZE];
+    private transient int memoIndex;
 
     /**
      * Creates a new dependency manager with the specified derivation and application parameters.
@@ -269,42 +276,38 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     /**
-     * Merges the parent's cumulative ancestor map with the parent's own per-level MMap,
-     * producing the child's cumulative ancestor map. When the parent has no per-level data,
-     * the parent's cumulative map is returned as-is (zero copy).
+     * Links the parent's own per-level MMap on top of the parent's cumulative ancestor layers,
+     * producing the child's cumulative ancestor map. O(1) — no HashMap copying.
+     * When the parent has no per-level data, the parent's layered map is returned as-is.
      */
-    private static <V> HashMap<Key, V> mergeAncestors(HashMap<Key, V> parentAncestors, MMap<Key, V> parentOwn) {
+    private static <V> LayeredMap<Key, V> mergeAncestors(LayeredMap<Key, V> parentAncestors, MMap<Key, V> parentOwn) {
         if (parentAncestors == null && parentOwn == null) {
             return null;
         }
         if (parentOwn == null) {
             return parentAncestors; // share reference — no new data at this level
         }
-        HashMap<Key, V> result = parentAncestors != null ? new HashMap<>(parentAncestors) : new HashMap<>();
-        result.putAll(parentOwn.delegate);
-        return result;
+        return new LayeredMap<>(parentAncestors, parentOwn.delegate);
     }
 
     /**
-     * Merges the parent's cumulative ancestor exclusions with the parent's own per-level exclusions.
-     * Unlike other properties, exclusions are accumulated additively (same key → merge collections).
+     * Links the parent's own per-level exclusions on top of the parent's cumulative ancestor layers.
+     * O(1) — no HashMap copying. Unlike other properties, exclusions use additive semantics:
+     * {@link #getManagedExclusions(Key)} walks all layers to collect the union.
      */
-    private static HashMap<Key, Collection<Exclusion>> mergeAncestorExclusions(
-            HashMap<Key, Collection<Exclusion>> parentAncestors, MMap<Key, Holder<Collection<Exclusion>>> parentOwn) {
+    private static LayeredMap<Key, Collection<Exclusion>> mergeAncestorExclusions(
+            LayeredMap<Key, Collection<Exclusion>> parentAncestors,
+            MMap<Key, Holder<Collection<Exclusion>>> parentOwn) {
         if (parentAncestors == null && parentOwn == null) {
             return null;
         }
         if (parentOwn == null) {
             return parentAncestors; // share reference
         }
-        HashMap<Key, Collection<Exclusion>> result =
-                parentAncestors != null ? new HashMap<>(parentAncestors) : new HashMap<>();
-        parentOwn.delegate.forEach((key, holder) -> result.merge(key, holder.getValue(), (existing, newExcl) -> {
-            ArrayList<Exclusion> merged = new ArrayList<>(existing);
-            merged.addAll(newExcl);
-            return merged;
-        }));
-        return result;
+        // Unwrap Holder values into a plain map for this layer
+        HashMap<Key, Collection<Exclusion>> ownEntries = new HashMap<>();
+        parentOwn.delegate.forEach((key, holder) -> ownEntries.put(key, holder.getValue()));
+        return new LayeredMap<>(parentAncestors, ownEntries);
     }
 
     protected abstract DependencyManager newInstance(
@@ -402,15 +405,17 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     }
 
     /**
-     * Returns merged exclusions from the cumulative ancestor map plus own exclusions.
+     * Returns merged exclusions from all ancestor layers plus own exclusions.
      * Unlike other managed properties, exclusions are accumulated additively
-     * from all levels in the dependency path.
+     * from all levels in the dependency path — each layer is walked to collect
+     * the full union.
      *
      * @param key the dependency key
      * @return merged collection of exclusions, or null if none exist
      */
     private Collection<Exclusion> getManagedExclusions(Key key) {
-        Collection<Exclusion> ancestorExcl = ancestorExclusions != null ? ancestorExclusions.get(key) : null;
+        // Collect exclusions from all ancestor layers (parent/older layers first)
+        Collection<Exclusion> ancestorExcl = collectExclusionsFromLayers(ancestorExclusions, key);
         Holder<Collection<Exclusion>> ownExcl = managedExclusions != null ? managedExclusions.get(key) : null;
 
         if (ancestorExcl == null && ownExcl == null) {
@@ -428,6 +433,29 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         return result;
     }
 
+    /**
+     * Walks all layers of the layered exclusions map, collecting exclusions for the given key.
+     * Parent (older) layers are collected first via recursion to maintain order.
+     * Recursion depth is bounded by the number of layers (typically 2–5), not tree depth.
+     */
+    private static Collection<Exclusion> collectExclusionsFromLayers(
+            LayeredMap<Key, Collection<Exclusion>> layers, Key key) {
+        if (layers == null) {
+            return null;
+        }
+        // Recurse to parent first (older data)
+        Collection<Exclusion> result = collectExclusionsFromLayers(layers.parent, key);
+        Collection<Exclusion> layerExcl = layers.ownEntries.get(key);
+        if (layerExcl != null) {
+            if (result == null) {
+                result = new ArrayList<>(layerExcl);
+            } else {
+                result.addAll(layerExcl);
+            }
+        }
+        return result;
+    }
+
     @Override
     public DependencyManager deriveChildManager(DependencyCollectionContext context) {
         requireNonNull(context, "context cannot be null");
@@ -435,13 +463,14 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             return this;
         }
 
-        // Memoization: if this is the same managed dependencies list we saw last time
-        // (same object reference — guaranteed by DataPool's descriptor/list interning),
-        // return the cached result immediately. This turns the common case from O(managedDeps)
-        // iteration + Key hashing into a single O(1) identity check.
+        // Memoization: check if we've already derived for this managed dependencies list
+        // (same object reference — guaranteed by DataPool's descriptor/list interning).
+        // A 4-entry ring buffer captures the common BOM patterns in a large reactor.
         List<Dependency> managedDeps = context.getManagedDependencies();
-        if (managedDeps == lastManagedDeps && lastDeriveResult != null) {
-            return lastDeriveResult;
+        for (int i = 0; i < MEMO_CACHE_SIZE; i++) {
+            if (managedDeps == memoKeys[i] && memoValues[i] != null) {
+                return memoValues[i];
+            }
         }
 
         MMap<Key, String> managedVersions = null;
@@ -544,9 +573,10 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                     managedExclusions != null ? managedExclusions.done() : null);
         }
 
-        // Cache the result for future calls with the same managed deps list identity
-        lastManagedDeps = managedDeps;
-        lastDeriveResult = result;
+        // Cache the result in the ring buffer for future calls with the same managed deps list
+        memoKeys[memoIndex] = managedDeps;
+        memoValues[memoIndex] = result;
+        memoIndex = (memoIndex + 1) % MEMO_CACHE_SIZE;
         return result;
     }
 
@@ -727,7 +757,11 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             this.artifactId = artifact.getArtifactId();
             this.extension = artifact.getExtension();
             this.classifier = artifact.getClassifier();
-            this.hashCode = Objects.hash(artifactId, groupId, extension, classifier);
+            int h = artifactId.hashCode();
+            h = 31 * h + groupId.hashCode();
+            h = 31 * h + extension.hashCode();
+            h = 31 * h + classifier.hashCode();
+            this.hashCode = h;
         }
 
         @Override
@@ -785,6 +819,45 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         @Override
         public int hashCode() {
             return hashCode;
+        }
+    }
+
+    /**
+     * A zero-copy layered map built as a cons-list of map fragments.
+     * Each layer holds a reference to its parent (older data) and its own entries.
+     * <p>
+     * For "first match wins" properties (versions, scopes, optionals, local paths),
+     * {@link #get(Object)} returns the first value found traversing from newest to oldest layer.
+     * For additive properties (exclusions), callers walk all layers via the {@link #parent}
+     * pointer to collect the union.
+     * <p>
+     * Adding a new level is O(1) — just link on top. Lookups are O(layers) where layers is
+     * the number of depths that contributed management data (typically 2–5 in practice).
+     *
+     * @param <K> key type
+     * @param <V> value type
+     */
+    static class LayeredMap<K, V> {
+        final LayeredMap<K, V> parent;
+        final Map<K, V> ownEntries;
+
+        LayeredMap(LayeredMap<K, V> parent, Map<K, V> ownEntries) {
+            this.parent = parent;
+            this.ownEntries = ownEntries;
+        }
+
+        /** Lookup: newest layer first, O(layers). */
+        V get(K key) {
+            V value = ownEntries.get(key);
+            if (value != null) {
+                return value;
+            }
+            return parent != null ? parent.get(key) : null;
+        }
+
+        /** Contains check: any layer, O(layers). */
+        boolean containsKey(K key) {
+            return ownEntries.containsKey(key) || (parent != null && parent.containsKey(key));
         }
     }
 }
