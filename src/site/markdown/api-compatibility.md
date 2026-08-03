@@ -59,7 +59,7 @@ Internal Java packages contain the word `impl` or the word `internal`.
 These internal packages do not guarantee compatibility.
 You can use classes from these packages.
 If you use these classes, you must fix source breakages and binary breakages yourself.
-You can request to move a class to the API or the SPI through a ticket in [JIRA](https://issues.apache.org/jira/projects/MRESOLVER).
+You can request to move a class to the API or the SPI through a ticket on [GitHub](https://github.com/apache/maven-resolver/issues).
 
 The number of internal words in a Java package name indicates the risk of breakages.
 A higher number of internal words means a higher risk of breakages in minor releases.
