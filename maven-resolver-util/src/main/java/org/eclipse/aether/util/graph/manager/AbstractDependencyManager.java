@@ -185,14 +185,14 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      * <p>
      * In BFS dependency collection, siblings typically share the same interned managed-dependency
      * list (guaranteed by DataPool's {@code internArtifactDescriptorManagedDependencies}), but
-     * a reactor with several distinct BOM patterns may alternate between a few lists. A 4-entry
+     * a reactor with several distinct BOM patterns may alternate between many lists. A 16-entry
      * ring buffer captures these patterns while keeping constant memory — unlike an unbounded
      * {@code IdentityHashMap} which would retain every derived {@code DependencyManager} and
      * prevent GC of the dependency subtrees they reference.
      * <p>
      * The BFS collector's traversal loop is single-threaded, so no synchronization is needed.
      */
-    private static final int MEMO_CACHE_SIZE = 4;
+    private static final int MEMO_CACHE_SIZE = 16;
 
     @SuppressWarnings("unchecked")
     private transient List<Dependency>[] memoKeys = new List[MEMO_CACHE_SIZE];
@@ -266,13 +266,13 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
         // Cascading hash: incorporates the parent's pre-computed hash so a single int
         // comparison reflects the entire ancestor chain. Excludes managedLocalPaths.
-        this.hashCode = Objects.hash(
-                parent != null ? parent.hashCode : 0,
-                depth,
-                managedVersions,
-                managedScopes,
-                managedOptionals,
-                managedExclusions);
+        int h = parent != null ? parent.hashCode : 0;
+        h = 31 * h + depth;
+        h = 31 * h + Objects.hashCode(managedVersions);
+        h = 31 * h + Objects.hashCode(managedScopes);
+        h = 31 * h + Objects.hashCode(managedOptionals);
+        h = 31 * h + Objects.hashCode(managedExclusions);
+        this.hashCode = h;
     }
 
     /**
@@ -800,7 +800,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
         Holder(T value) {
             this.value = requireNonNull(value);
-            this.hashCode = Objects.hash(value);
+            this.hashCode = value.hashCode();
         }
 
         public T getValue() {
