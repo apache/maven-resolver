@@ -27,9 +27,8 @@ Extensions inherit from classes and implement interfaces.
 * `maven-resolver-spi` (SPI) - Extensions use this module.
 * `maven-resolver-util` (Util) - Client applications and extensions use this module.
 
-If you obey specific rules, each module guarantees source compatibility and binary compatibility.
-If you break these rules, your code can break.
-The Maven Resolver team does not support broken code.
+If you obey specific rules, these modules will be source and binary compatible across minor releases.
+If you break these rules, your code can break when you update these modules.
 
 ## Interface And (Abstract) Class Level Contracts
 
@@ -60,9 +59,6 @@ These internal packages do not guarantee compatibility.
 You can use classes from these packages.
 If you use these classes, you must fix source breakages and binary breakages yourself.
 You can request to move a class to the API or the SPI through a ticket on [GitHub](https://github.com/apache/maven-resolver/issues).
-
-The number of internal words in a Java package name indicates the risk of breakages.
-A higher number of internal words means a higher risk of breakages in minor releases.
 
 ## Version Level Contracts
 
