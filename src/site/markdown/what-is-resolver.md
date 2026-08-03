@@ -18,16 +18,16 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Did you ever want to integrate the Maven dependency resolution mechanism into your application? Did you then try to embed Plexus and an entire Maven distribution? Did you want to use the mechanism in a multithreaded way? The stateful singletons in Maven caused problems in that case. Did you ever want more control over the resolved dependency graph? For example, you can use another strategy for conflict resolution, or inspect an intermediate graph.
+Did you ever want to integrate the Maven dependency resolution mechanism into your application? Did you then try to embed Plexus and an entire Maven distribution? Did you want to use the mechanism in a multithreaded way? The stateful singletons in Maven caused problems. Did you ever want more control over the resolved dependency graph? For example, to can use another strategy for conflict resolution, or inspect an intermediate graph?
 
-Resolver (formerly Aether) is the answer. It is an *embeddable Java library that works with artifact repositories*. You can fetch artifacts from remote repositories for local consumption. You can also publish local artifacts to remote repositories so that others can share them.
+Resolver (formerly Aether) is the answer. It is an *embeddable Java library that works with artifact repositories*. It can fetch artifacts from remote repositories for local consumption. It can also publish local artifacts to remote repositories so that others can share them.
 
-There are many ways to transfer artifacts, describe their relationships, and use them. Resolver was designed to be open to customization of these aspects, so you can augment or replace the stock functionality. The Resolver Core itself does not know how to handle Maven repositories, for example. It is tool agnostic. It provides a general artifact resolution and deployment framework and leaves details such as the repository format to extensions.
+There are many ways to transfer artifacts, describe their relationships, and use them. Resolver was designed to be customizable, so you can augment or replace the stock functionality. The Resolver Core itself does not know how to handle Maven repositories, for example. It is tool agnostic. It provides a general artifact resolution and deployment framework and leaves details such as the repository format to extensions.
 
-The `maven-resolver-provider` from the Apache Maven project is the most interesting extension. It brings support for Maven repositories. If you want to consume artifacts from the Central Repository, Resolver together with the Maven Resolver Provider is the best choice. This use of Resolver eases your work with artifacts. It also ensures interoperability with other tools that work with Maven repositories.
+The `maven-resolver-provider` from the Apache Maven project is the most interesting extension. It brings support for Maven repositories. To consume artifacts from the Central Repository, Resolver together with the Maven Resolver Provider is the best choice. These simplify your work with artifacts and ensure interoperability with other tools that work with Maven repositories.
 
 ## How To Embed Resolver
 
-As noted earlier, Resolver alone is not complete. It does not know how to handle Maven repositories and models. To make Resolver minimally complete, you need the `maven-resolver-provider` module. That module contains the required component implementations and the required models for Maven repositories. It gives Resolver only basic functionality.
+As noted earlier, Resolver alone does not know how to handle Maven repositories and models. To make Resolver minimally functional, you need the `maven-resolver-provider` module. That module contains the required component implementations and the required models for Maven repositories. It gives Resolver basic functionality.
 
-The next level adds Maven environment awareness. This awareness honors files such as `settings.xml`. You can achieve it with libraries such as MIMA. Maven incorporates Resolver and offers the full experience. To embed Maven is not trivial.
+The next level adds Maven environment awareness. This awareness honors files such as `settings.xml`. You can achieve it with libraries such as MIMA.
