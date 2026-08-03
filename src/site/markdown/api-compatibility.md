@@ -19,10 +19,13 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Maven Resolver exposes three modules for clients and developers:
-* `maven-resolver-api` (API) - Clients and developers use this module.
-* `maven-resolver-spi` (SPI) - Developers use this module to extend Maven Resolver.
-* `maven-resolver-util` (Util) - Clients and developers use this module.
+Maven Resolver exposes three modules for client applications and extensions.
+Client applications invoke methods in these modules.
+Extensions inherit from classes and implement interfaces.
+
+* `maven-resolver-api` (API) - Client applications and extensions use this module.
+* `maven-resolver-spi` (SPI) - Extensions use this module.
+* `maven-resolver-util` (Util) - Client applications and extensions use this module.
 
 If you obey specific rules, each module guarantees source compatibility and binary compatibility.
 If you break these rules, your code can break.
@@ -41,7 +44,7 @@ Examples:
 The `RepositorySystem` interface has the `@noextend` tag and the `@noimplement` tag.
 You must not extend or implement this interface.
 The `RepositorySystem` interface is a component interface.
-Developers usually inject this interface into the client application.
+Client applications usually receive this interface through dependency injection.
 
 The `TransferListener` interface has the `@noextend` tag and the `@noimplement` tag.
 The Javadoc points to the `AbstractTransferListener` abstract class.
