@@ -24,7 +24,7 @@ Resolver (formerly Aether) is the answer. It is an *embeddable Java library that
 
 There are many ways to transfer artifacts, describe their relationships, and use them. Resolver was designed to be customizable, so you can augment or replace the stock functionality. The Resolver Core itself does not know how to handle Maven repositories, for example. It is tool agnostic. It provides a general artifact resolution and deployment framework and leaves details such as the repository format to extensions.
 
-The `maven-resolver-provider` from the Apache Maven project is the most interesting extension. It brings support for Maven repositories. To consume artifacts from the Central Repository, Resolver together with the Maven Resolver Provider is the best choice. These simplify your work with artifacts and ensure interoperability with other tools that work with Maven repositories.
+The `maven-resolver-provider` from the [Apache Maven](https://maven.apache.org/) project supports Maven repositories. If you want to consume artifacts from the [Central Repository](https://search.maven.org/?eh=), Resolver together with the Maven Resolver Provider is the best choice. This simplifies your work with artifacts. It also ensures interoperability with other tools that work with Maven repositories.
 
 ## How To Embed Resolver
 
