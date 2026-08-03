@@ -131,10 +131,9 @@ public class DependencyGraphParser {
      * Parse the given graph definition.
      */
     public DependencyNode parseLiteral(String dependencyGraph) throws IOException {
-        BufferedReader reader = new BufferedReader(new StringReader(dependencyGraph));
-        DependencyNode node = parse(reader);
-        reader.close();
-        return node;
+        try (BufferedReader reader = new BufferedReader(new StringReader(dependencyGraph))) {
+            return parse(reader);
+        }
     }
 
     /**
@@ -173,19 +172,9 @@ public class DependencyGraphParser {
      * Parse the graph definition read from the given URL.
      */
     public DependencyNode parse(URL resource) throws IOException {
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new InputStreamReader(resource.openStream(), StandardCharsets.UTF_8));
+        try (BufferedReader reader =
+                new BufferedReader(new InputStreamReader(resource.openStream(), StandardCharsets.UTF_8))) {
             return parse(reader);
-        } finally {
-            try {
-                if (reader != null) {
-                    reader.close();
-                    reader = null;
-                }
-            } catch (final IOException e) {
-                // Suppressed due to an exception already thrown in the try block.
-            }
         }
     }
 
