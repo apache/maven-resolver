@@ -53,11 +53,9 @@ This abstract class protects your code from future breakages.
 
 ## Package Level Contracts
 
-Maven Resolver identifies internal Java packages.
-Internal Java packages contain the word `impl` or the word `internal`.
-These internal packages do not guarantee compatibility.
-You can use classes from these packages.
-If you use these classes, you must fix source breakages and binary breakages yourself.
+Maven Resolver identifies internal Java packages with the words `impl` and `internal`.
+These internal packages do not guarantee compatibility between releases.
+If you use classes from these packages, you must fix source breakages and binary breakages yourself.
 You can request to move a class to the API or the SPI through a ticket on [GitHub](https://github.com/apache/maven-resolver/issues).
 
 ## Version Level Contracts
@@ -65,8 +63,8 @@ You can request to move a class to the API or the SPI through a ticket on [GitHu
 Maven Resolver does not use "semantic versioning".
 However, Maven Resolver uses a "major.minor.patch" version format to indicate changes.
 Major version changes do not provide backward compatibility.
-Minor version changes provide backward compatibility for the API, SPI, and Util modules.
-Sometimes, new features break backward compatibility during minor version changes.
+The API, SPI, and Util modules should be backwards compatible across minor version changes.
+However, we have violated this rule in the past, usually to support new features.
 
 Maven Resolver does not guarantee compatibility for internal modules.
 Internal modules can change in any version update.
