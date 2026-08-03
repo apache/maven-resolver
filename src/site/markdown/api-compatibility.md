@@ -19,93 +19,86 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Maven Resolver exposes three modules for clients and those extending Maven Resolver:
-* maven-resolver-api (in short API) -- for clients and those extending it
-* maven-resolver-spi (in short SPI) -- for those extending it
-* maven-resolver-util (in short Util) -- for client and those extending it
+Maven Resolver exposes three modules for clients and developers:
+* `maven-resolver-api` (API) - Clients and developers use this module.
+* `maven-resolver-spi` (SPI) - Developers use this module to extend Maven Resolver.
+* `maven-resolver-util` (Util) - Clients and developers use this module.
 
-Each module guarantees non-breaking (source and binary) compatibility, as long
-clients and extenders obey some rules. If you break any of these rules, you are
-prone to breakage, and you are on your own.
+If you obey specific rules, each module guarantees source compatibility and binary compatibility.
+If you break these rules, your code can break.
+The Maven Resolver team does not support broken code.
 
 ## Interface And (Abstract) Class Level Contracts
 
-In source, we use two important Javadoc tags to mark intent:
-* `@noextend` -- classes (or interfaces) carrying this tag MUST NOT be extended
-* `@noimplement` -- interfaces carrying this tag MUST NOT be directly or indirectly implemented, 
-  UNLESS the Javadoc of given interface points to an abstract support class that makes indirect
-  implementation possible.
+We use two Javadoc tags in the source code to mark intent:
+* `@noextend` - You must not extend classes or interfaces with this tag.
+* `@noimplement` - You must not implement interfaces with this tag directly or indirectly.
+
+If the Javadoc points to an abstract support class, you can implement the `@noimplement` interface indirectly.
 
 Examples:
 
-* `RepositorySystem` interface. It carries both `@noextend` and `@noimplement` tags. This interface
-  MUST NOT be extended nor implemented. This is a component interface, that is usually injected into
-  client application.
-* `TransferListener` interface. It carries both `@noextend` and `@noimplement` tags, but Javadoc
-  points at `AbstractTransferListener` as extension point. Hence, clients are NOT allowed to extend
-  this interface, nor to directly implement it, but, if custom listener is needed, it is warmly
-  advised to extend the given abstract class. This way we can protect you from future breakage.
+The `RepositorySystem` interface has the `@noextend` tag and the `@noimplement` tag.
+You must not extend or implement this interface.
+The `RepositorySystem` interface is a component interface.
+Developers usually inject this interface into the client application.
+
+The `TransferListener` interface has the `@noextend` tag and the `@noimplement` tag.
+The Javadoc points to the `AbstractTransferListener` abstract class.
+You must not extend or implement the `TransferListener` interface directly.
+If you need a custom listener, you must extend the `AbstractTransferListener` abstract class.
+This abstract class protects your code from future breakages.
 
 ## Package Level Contracts
 
-Maven Resolver implements customary habit to name packages NOT meant to be accessed by clients. 
-If a Java package contains following names:
+Maven Resolver identifies internal Java packages.
+Internal Java packages contain the word `impl` or the word `internal`.
+These internal packages do not guarantee compatibility.
+You can use classes from these packages.
+If you use these classes, you must fix source breakages and binary breakages yourself.
+You can request to move a class to the API or the SPI through a ticket in [JIRA](https://issues.apache.org/jira/projects/MRESOLVER).
 
-* `impl`
-* `internal`
-
-That Java package is meant as "internal" and does NOT offer guarantees of compatibility as API is. You
-may use classes from these packages, but again, you are on your own to deal with (binary or source)
-breakages. If you think a class from such package should be "pulled out" and made part of SPI or
-maybe API, better inform us via [JIRA](https://issues.apache.org/jira/projects/MRESOLVER): create a
-ticket and let's discuss.
-
-As a side note, the count of those names in Java package is directly proportional to possibility of 
-breaking changes: the more, the larger the possibility of breakage even in minor releases.
+The number of internal words in a Java package name indicates the risk of breakages.
+A higher number of internal words means a higher risk of breakages in minor releases.
 
 ## Version Level Contracts
 
-Maven Resolver does NOT use "semantic versioning", but still tries at best to reflect contained
-changes using version number. We use "major.minor.patch" versioning on resolver with following 
-semantics:
+Maven Resolver does not use "semantic versioning".
+However, Maven Resolver uses a "major.minor.patch" version format to indicate changes.
+Major version changes do not provide backward compatibility.
+Minor version changes provide backward compatibility for the API, SPI, and Util modules.
+Sometimes, new features break backward compatibility during minor version changes.
 
-* On major version change, one should NOT expect any backward compatibility.
-* On minor version change, we ENSURE backward compatibility for those "exposed" 3 modules: API, 
-  SPI and Util. Still, there are examples when we failed to do so, usually driven by new 
-  features.
-
-In any of three version changes above, in areas where we do not offer guarantees, everything
-can happen.
+Maven Resolver does not guarantee compatibility for internal modules.
+Internal modules can change in any version update.
 
 ## Outside of Maven
 
-Applications integrating Maven Resolver outside of Maven has really simple job: all they have to
-ensure is that API, SPI, Util and the rest of resolver (impl, basic-connector and transports)
-have all same versions, and they can rely on  these backward compatibility contracts as explained
-above.
+Applications can use Maven Resolver outside of Maven.
+These applications must use the same version for all Maven Resolver modules.
+For example, the API, SPI, Util, `impl`, `basic-connector`, and transports must share the same version.
+If the versions match, the applications can rely on the compatibility guarantees.
 
 ## Inside of Maven
 
-Historically, Maven 3.1 provided API, SPI 
-and Impl from its own embedded resolver, while Util and Connector, if some plugin or extension
-depended on them, were resolved separately. This meant that a plugin could work with different versions
-of API, SPI, Impl or Connector. Because the Resolver API was "frozen" for too long a time, this was essentially
-not a problem, but still weird.
+In the past, Maven 3.1 provided the API, SPI, and `impl` modules from an embedded resolver.
+Plugins resolved the Util and Connector modules separately.
+Therefore, plugins used different versions of these modules.
+The static API prevented major problems.
 
-This changes in Maven 3.9+: Maven starting with version 3.9.0 will provide API, SPI, Impl, 
-**and Util and Connector**. Reason for this change is that Impl and Connector bundled in Maven 
-implement things from both API and SPI, and there was a binary incompatible change between 
-Resolver 1.8.0 and previous versions.
+Maven 3.9.0 provides the API, SPI, `impl`, Util, and Connector modules.
+The bundled `impl` and Connector modules implement the API and the SPI.
+A binary incompatibility occurred between Maven Resolver 1.8.0 and previous versions.
+Because of this incompatibility, Maven 3.9.0 bundles all modules to ensure stability.
 
-Most Resolver users should not be affected by this change.
+This change does not affect most Maven Resolver users.
 
-The binary incompatible change happened in the SPI class `RepositoryLayout` as part of work done for 
-[MRESOLVER-230](https://issues.apache.org/jira/browse/MRESOLVER-230), and affects both, Connector
-and Impl.
+The binary incompatibility occurred in the `RepositoryLayout` SPI class for [MRESOLVER-230](https://issues.apache.org/jira/browse/MRESOLVER-230).
+This incompatibility affects the Connector module and the `impl` module.
 
 ## Backward Compatibility Checks
 
-To ensure backward compatibility, starting from 1.9.0 Maven Resolver uses 
-[JApiCmp](https://siom79.github.io/japicmp/MavenPlugin.html),
-with two executions (for source and binary level checks). The plugin is enabled on 3 modules of
-Resolver mentioned at page top: API, SPI and Util. For "baseline" we use version 1.8.0.
+Maven Resolver uses [JApiCmp](https://siom79.github.io/japicmp/MavenPlugin.html) to verify backward compatibility.
+Maven Resolver 1.9.0 runs this plugin twice to verify source compatibility and binary compatibility.
+The plugin runs on the API, SPI, and Util modules.
+The compatibility baseline is version 1.8.0.
