@@ -153,7 +153,9 @@ public class HttpServer {
 
     public enum ChecksumHeader {
         NEXUS,
-        XCHECKSUM
+        XCHECKSUM,
+        XCHECKSUM_GOOGLE,
+        XCHECKSUM_AMAZON
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServer.class);
@@ -664,6 +666,12 @@ public class HttpServer {
                         response.getHeaders().add(HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get("SHA-1") + "}}");
                     } else if (checksumHeader == ChecksumHeader.XCHECKSUM) {
                         response.getHeaders().add("x-checksum-sha1", checksums.get(Sha1ChecksumAlgorithmFactory.NAME));
+                    } else if (checksumHeader == ChecksumHeader.XCHECKSUM_GOOGLE) {
+                        response.getHeaders()
+                                .add("x-goog-meta-checksum-sha1", checksums.get(Sha1ChecksumAlgorithmFactory.NAME));
+                    } else if (checksumHeader == ChecksumHeader.XCHECKSUM_AMAZON) {
+                        response.getHeaders()
+                                .add("x-amz-meta-checksum-sha1", checksums.get(Sha1ChecksumAlgorithmFactory.NAME));
                     }
                 }
                 if (HttpMethod.HEAD.is(req.getMethod())) {

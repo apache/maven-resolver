@@ -21,7 +21,9 @@ package org.eclipse.aether.internal.impl.transport.http;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -37,33 +39,39 @@ import org.eclipse.aether.spi.connector.transport.http.ChecksumExtractorStrategy
 public final class XChecksumExtractor extends ChecksumExtractorStrategy {
     public static final String NAME = "xChecksum";
 
+    /**
+     * Header name prefixes, to be suffixed by lower case algorithm name. Tried in order, first prefix that yields
+     * any checksum wins.
+     */
+    private static final List<String> HEADER_PREFIXES = Arrays.asList(
+            // Central style: x-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
+            "x-checksum-",
+            // Google style: x-goog-meta-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
+            "x-goog-meta-checksum-",
+            // AWS S3 style: x-amz-meta-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
+            "x-amz-meta-checksum-");
+
     @Override
     public Map<String, String> extractChecksums(Function<String, String> headerGetter) {
-        String value;
+        for (String headerPrefix : HEADER_PREFIXES) {
+            Map<String, String> result = extractChecksums(headerGetter, headerPrefix);
+            if (!result.isEmpty()) {
+                return result;
+            }
+        }
+        return null;
+    }
+
+    private static Map<String, String> extractChecksums(Function<String, String> headerGetter, String headerPrefix) {
         HashMap<String, String> result = new HashMap<>();
-        // Central style: x-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
-        value = headerGetter.apply("x-checksum-sha1");
+        String value = headerGetter.apply(headerPrefix + "sha1");
         if (value != null) {
             result.put(Sha1ChecksumAlgorithmFactory.NAME, value);
         }
-        // Central style: x-checksum-md5: 9ad0d8e3482767c122e85f83567b8ce6
-        value = headerGetter.apply("x-checksum-md5");
+        value = headerGetter.apply(headerPrefix + "md5");
         if (value != null) {
             result.put(Md5ChecksumAlgorithmFactory.NAME, value);
         }
-        if (!result.isEmpty()) {
-            return result;
-        }
-        // Google style: x-goog-meta-checksum-sha1: c74edb60ca2a0b57ef88d9a7da28f591e3d4ce7b
-        value = headerGetter.apply("x-goog-meta-checksum-sha1");
-        if (value != null) {
-            result.put(Sha1ChecksumAlgorithmFactory.NAME, value);
-        }
-        // Central style: x-goog-meta-checksum-sha1: 9ad0d8e3482767c122e85f83567b8ce6
-        value = headerGetter.apply("x-goog-meta-checksum-md5");
-        if (value != null) {
-            result.put(Md5ChecksumAlgorithmFactory.NAME, value);
-        }
-        return result.isEmpty() ? null : result;
+        return result;
     }
 }
