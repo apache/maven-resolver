@@ -51,7 +51,7 @@ The Maven Resolver team discourages this.
 
 To control the supported set of checksums, the Maven Resolver team introduced an SPI for checksums.
 We no longer expose `MessageDigest` algorithms directly.
-Instead it supports four checksum algorithms:
+Instead, the SPI supports four checksum algorithms:
 
 * MD5
 * SHA-1
