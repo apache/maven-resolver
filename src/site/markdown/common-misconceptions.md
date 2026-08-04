@@ -1,92 +1,51 @@
 # Common Misconceptions
-<!--
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"); you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+Maven2 plugins kept working with Maven3, often without change. Some misconceptions appeared because of this. Maven3 resolution differs from Maven2. The reason is improvement in the area of resolution. This document lists the most common misconceptions.
 
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
--->
+## Misconception 1: How Resolver Works
 
-Due to smooth transitions from Maven2 into Maven3 (and soon
-Maven4), and the fact that Maven2 plugins kept working with Maven3, maybe
-even without change, some misconceptions crept in 
-as well. Despite the marvel of "compatibility", Maven3 resolution
-differs considerably from Maven2, and the sole reason is actual improvement
-in area of resolution. It became much more precise (and, due
-to that, lost some "bad" habits present in Maven2). Here, we will try to
-enumerate some of the most common misconceptions.
+The most typical use case for Resolver is to resolve dependencies transitively. Resolver performs three steps to achieve this:
 
-## Misconception No1: How Resolver Works
+1. **Collect** - Resolver builds the dirty graph of artifacts.
+2. **Transform** - Resolver resolves conflicts in the dirty graph.
+3. **Resolve** - Resolver downloads the files for each graph node.
 
-(Simplified)
+### The Collect Step
 
-The most typical use case for Resolver is to "resolve transitively" 
-dependencies. Resolver, to achieve this, internally (but these are
-exposed via API as distinguished API calls as well) performs 3 steps:
-"collect", "transform" and "resolve".
+The collect step builds the dirty graph. Resolver uses only POMs during this step. If an artifact was never downloaded to your local repository, Resolver downloads only its POM file. Resolver uses the POM to build the current node of the graph. It also identifies outgoing vertices and adjacent nodes. Various criteria determine which dependency continues from the current node POM.
 
-The "collect" step is first, where it builds the "dirty tree" (or dirty graph)
-of artifacts. It is important to remark, that in "collect" step, while 
-the graph is being built, Maven uses only POMs. Hence, if collecting an 
-Artifact that was never downloaded to your local repository, it will 
-download **the POMs only**. Using POMs resolver is able to build current 
-"node" of graph, but also figure outgoing vertices and adjacent nodes of 
-current node and so on. Which dependency is chosen to continue with from
-the current node POM is decided by various criteria (configured).
+### The Transform Step
 
-The "transform" step transforms the "dirty graph": this is where conflict resolution
-happens. It is here when resolver applies various rules to resolve conflicting 
-versions, conflicting scopes, and so on. Here, if "verbose tree" is asked for,
-conflict resolution does not remove graph nodes, merely marks the conflicts
-and the conflict "winner". Thus, "verbose tree" cannot be resolved.
+The transform step modifies the dirty graph. Conflict resolution happens during this step. Resolver applies rules to resolve:
 
-Finally, the "resolve" step runs, when the (transformed) graph node artifacts
-are being resolved, basically ensuring (and downloading if needed) their 
-correspondent files (i.e. JAR files) are present in local repository.
+- Conflicting versions
+- Conflicting scopes
 
-It is important to state, that in "collect" step happens the selection of nodes
-by various criteria, among other by the configured scope filters. And here we
-come to the notion of "runtime graph" vs "test graph". 
+If you request a verbose tree, conflict resolution does not remove nodes. It marks the conflicts and the conflict winner. A verbose tree cannot be resolved.
 
-In resolver, maybe un-intuitively, the "scope filter" is usually used (but does 
-not have to, this is just how it IS used in Maven Core, probably for historical
-reasons) as "what should be omitted". The default session filter in Maven 
-is set up as this:
+### The Resolve Step
+
+The resolve step runs after transformation. Resolver ensures that the file for each node artifact exists in the local repository. If a file is missing, Resolver downloads it.
+
+### Scope Filters
+
+The collect step uses scope filters to select nodes. Resolver applies these filters during selection. Maven Core uses scope filters as "what to omit". The default session filter in Maven is:
 
 ```
   new ScopeDependencySelector("test", "provided")
 ```
 
-This means, that "current dependency node" dependencies in "test" and "provided" scope
-will be simply omitted from the graph. In other words, this filter builds
-the "downstream runtime classpath" of supplied artifact (i.e. "what is needed by the 
-artifact at runtime when I depend on it").
+This filter omits dependencies in "test" and "provided" scope. It builds the downstream runtime classpath of the supplied artifact.
 
-Note: these are NOT "Maven related" notions yet, there is nowhere Maven in picture here,
-and these are not the classpath used by Compiler or Surefire plugins, merely just
-a showcase how Resolver works.
+Note: These are not Maven-related notions. Maven is not involved here. These are not the classpaths used by Compiler or Surefire plugins. They show how Resolver works.
 
+## Misconception 2: "Test graph" Is Superset Of "Runtime graph"
 
-## Misconception No2: "Test graph" Is Superset Of "Runtime graph"
+**Wrong**. The runtime graph omits test-scoped dependencies. Maven2 had a test graph that was a superset of the runtime graph. This is not true in Maven3. This has consequences.
 
-**Wrong**. As can be seen from above, for runtime graph we leave out "test" scoped
-dependencies. It was true in Maven2, where test graph really was a superset of runtime, 
-but this does not stand anymore in Maven3. And this has interesting consequences. Let me show an example:
+### Example
 
-(Note: very same scenario, as explained below for Guice+Guava would work for Jackson Databind+Core, etc.)
-
-Assume your project is using Google Guice, so you have declared it as a dependency:
+Assume your project uses Google Guice. You declare it as a dependency:
 
 ```
       <dependency>
@@ -96,12 +55,9 @@ Assume your project is using Google Guice, so you have declared it as a dependen
       </dependency>
 ```
 
-All fine and dandy. At the same time, you want to avoid any use of Guava. We all know Guava is a direct dependency 
-of Guice. This is fine, since as we know, the best practice is to declare all dependencies your code compiles 
-against. By not having Guava here, analysis tools will report if code touches Guava as an "undeclared dependency".
+You want to avoid any use of Guava. Guava is a direct dependency of Guice. Do not declare Guava as a dependency. This ensures that analysis tools report any Guava usage as an undeclared dependency.
 
-But let's go one step further: to set up your unit tests, you **do need** Guava. So what now? Nothing, just 
-add it as a test dependency, so your POM looks like this:
+Your unit tests need Guava. Add Guava as a test dependency:
 
 ```
       <dependency>
@@ -117,7 +73,7 @@ add it as a test dependency, so your POM looks like this:
       </dependency>
 ```
 
-The `dependency:tree` plugin for this project outputs this verbose tree:
+The `dependency:tree` plugin for this project outputs:
 
 ```
 [INFO] --- dependency:3.6.1:tree (default-cli) @ DEMO-PROJECT ---
@@ -136,19 +92,16 @@ The `dependency:tree` plugin for this project outputs this verbose tree:
 [INFO]    \- com.google.j2objc:j2objc-annotations:jar:1.3:test
 ```
 
-This IS the "test graph" **of the project** and contains a conflict as noted by "omitted for duplicate"
-and "scope not updated to compile" remarks next to Guava nodes.
+This is the test graph of the project. It contains a conflict. The "omitted for duplicate" and "scope not updated to compile" remarks confirm the conflict.
 
-So this setup results that:
+This setup has the following results:
 
-* when you compile, Guava is NOT on compile classpath, so you cannot even touch it (by mistake)
-* when test-compile and test-execute run, Guava will be present on classpath, as expected
+- When you compile, Guava is not on the compile classpath. You cannot touch it by mistake.
+- When test-compile and test-execute run, Guava is present on the classpath.
 
-So far so good, but what happens when this library is consumed downstream by someone? When it becomes used as a library?
-Nothing, all works as expected!
+### Downstream Usage
 
-When a downstream dependency declares a dependency on this project, the downstream project will get this graph (from
-the node that is your library):
+When a downstream project depends on your library, it gets this graph:
 
 ```
 [INFO] --- dependency:3.6.1:tree (default-cli) @ DOWNSTREAM-PROJECT ---
@@ -167,29 +120,16 @@ the node that is your library):
 [INFO]          \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
 ```
 
-So what happens here? First, revisit "How Resolver Works". There you will see that for "runtime graph" of the
-dependency the "test" and "provided" scopes of the dependency artifact **are not even considered**. They are simply
-omitted. Not skipped, but completely omitted, like they do not even exist. Hence, in the graph there is 
-**no conflict happening** (as "test" Guava is completely omitted during "collect" step). Hence, everything 
-goes as expected.
+For the runtime graph of the dependency, the test and provided scopes are not considered. They are omitted during the collect step. No conflict occurs in the graph.
 
 ### Important Consequences
 
-One, maybe not so obvious consequence can be explained with use of `maven-assembly-plugin`. Assume you want to
-assemble your module "runtime" dependencies.
+You can see one consequence when you use `maven-assembly-plugin`. Assume you want to assemble the runtime dependencies of your module.
 
-If you do it from "within" the project, for example in the package phase, your packaging will be incomplete. 
-Guava will be missing! But if you do it from "outside" of the project (i.e. subsequent module of the build, or 
-downstream dependency), the assembly will contain Guava as well.
+If you run the assembly from within the project, for example during the package phase, the packaging is incomplete. Guava will be missing. If you run the assembly from outside the project, the assembly contains Guava.
 
-This is a [Maven Assembly plugin bug](https://issues.apache.org/jira/browse/MASSEMBLY-1008), somewhat explained 
-in [MRESOLVER-391](https://issues.apache.org/jira/browse/MRESOLVER-391). In short, the Maven Assembly plugin considers 
-"project test graph", and then "cherry-picks runtime scoped nodes" from it, which, as we can see in this case, 
-is wrong. You need to build different graphs for "runtime" and "test" classpath.
-For Assembly plugin, the problem is that as Mojo, it requests "test graph", then it reads configuration
-(assembly descriptor, and this is the point where it learns about required scopes), and then it "filters"
-the resolved "test graph" for runtime scopes. And it is wrong, as Guava is in test scope. Instead, the plugin
-should read the configuration first, and ask Resolver for "runtime graph" and filter that. In turn, this problem
-does not stand with `maven-war-plugin`, as the "war" Mojo asks resolution of "compile+runtime" scope. Of course, 
-the WAR use case is much simpler than the Assembly use case is, as the former always packages the same scope, while Assembly receives 
-a complex configuration and exposes much more complex "modus operandi".
+This is a Maven Assembly plugin bug. The bug is explained in MRESOLVER-391. The Maven Assembly plugin considers the project test graph. It then selects runtime-scoped nodes from this graph. This approach is wrong. You must build different graphs for the runtime and test classpaths.
+
+The plugin requests the test graph. It then reads the assembly descriptor. It learns about the required scopes at this point. It filters the resolved test graph for runtime scopes. This is wrong because Guava has test scope. The plugin must read the configuration first. It must ask Resolver for the runtime graph and filter that.
+
+The `maven-war-plugin` does not have this problem. The war Mojo asks for resolution of the compile+runtime scope. The WAR use case is simpler than the Assembly use case. The WAR Mojo always packages the same scope. The Assembly Mojo receives a complex configuration.
