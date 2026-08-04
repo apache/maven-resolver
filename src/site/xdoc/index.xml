@@ -36,7 +36,7 @@
       </p>
 
       <p>
-        <img src="images/maven-resolver-deps.png" width="792" height="441" border="0" usemap="#Maven_Resolver_dependencies" />
+        <img src="images/maven-resolver-deps.png" width="792" height="441" border="0" usemap="#Maven_Resolver_dependencies" alt="Maven Resolver module dependency diagram" />
         <map name="Maven_Resolver_dependencies">
           <area shape="rect" coords="285,405,348,441" href="./maven-resolver-api/" />
           <area shape="rect" coords="286,335,349,370" href="./maven-resolver-spi/" />

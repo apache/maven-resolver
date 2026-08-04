@@ -125,9 +125,10 @@ Emitted by: Sonatype Nexus2 only.
 
 Maven Central emits headers `x-checksum-sha1` and `x-checksum-md5` along with artifact response. 
 Google GCS on the other hand uses `x-goog-meta-checksum-sha1` and `x-goog-meta-checksum-md5` 
-headers. Resolver will detect all these and use their value.
+headers. AWS S3 uses `x-amz-meta-checksum-sha1` and `x-amz-meta-checksum-md5` headers.
+Resolver will detect all these and use their value.
 
-Emitted by: Maven Central, GCS, some CDNs and probably more.
+Emitted by: Maven Central, GCS, AWS S3, some CDNs and probably more.
 
 
 ### Remote External checksums

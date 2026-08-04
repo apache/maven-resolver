@@ -69,7 +69,7 @@ public class DefaultRepositorySystemTest {
                         new DefaultRepositoryKeyFunctionFactory()),
                 new DefaultRepositorySystemLifecycle(),
                 Collections.emptyMap(),
-                new DefaultRepositorySystemValidator(Collections.emptyList()));
+                new DefaultRepositorySystemValidator(Collections.emptyMap()));
         session = TestUtils.newSession();
     }
 

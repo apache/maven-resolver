@@ -46,7 +46,7 @@ The term "resolving" is a bit overloaded, but in general it involves following s
 
 We call an artifact "resolvable" if it can be resolved from any available (local or remote) repository. To make an artifact
 "resolvable" from the local repository, one needs to "install" it. To make an artifact "resolvable" from a remote repository, 
-one needs to "deploy" it (this is an over-simplification; publishing is new term, but it also involves deploy step).
+one needs to "deploy" it (this is an over-simplification; publishing is a new term, but it also involves deploy step).
 Furthermore, there are extension points like `WorkspaceReader` that can make artifacts resolvable 
 without installing or deploying them, but that is an integration detail (like Maven does by exposing reactor projects).
 
@@ -61,7 +61,7 @@ The BF collector is now the default, as it offers better performance.
 
 One very important thing, that is constantly misunderstood, is what information is used during graph collection. 
 Only certain parts of the effective model are used, not the whole POM.
-If I am allowed to overly simplify, only the following aspects of the effective model are used during graph collection:
+If I may oversimplify, only the following aspects of the effective model are used during graph collection:
 * `project/dependencies` as direct dependencies on given node
 * `project/dependencyManagement/dependencies` for **subsequent** dependency management on given node
 * `project/repositories` for **subsequent** repositories to be used on given node
@@ -114,7 +114,7 @@ In general, the steps "dependency graph collection" and "conflict resolution" ar
 The "flattening" and "artifact resolving" are also usually done together, and we use for those the term "artifact resolution".
 To make the story more confusing, when all the steps are performed together is also called "dependency resolution".
 The Resolver API reflects this terminology and offers methods doing collection, resolution or both.
-* 
+
 * The method `CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)` performs only the collection step,
 as its name suggests. Hence, only the steps "collection" and "conflict resolution" are performed.
 * Method `List<ArtifactResult> resolveArtifacts(RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)`

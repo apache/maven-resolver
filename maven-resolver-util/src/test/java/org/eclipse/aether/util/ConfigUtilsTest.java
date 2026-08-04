@@ -199,4 +199,29 @@ public class ConfigUtilsTest {
         config.put("some-number", -1234f);
         assertEquals(-1234f, ConfigUtils.getFloat(config, 0, "some-number"), 0.1f);
     }
+
+    private enum TestEnum {
+        FIRST,
+        SECOND
+    }
+
+    @Test
+    void testGetEnum() {
+        config.put("some-enum", TestEnum.SECOND);
+        assertEquals(TestEnum.SECOND, ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
+    }
+
+    @Test
+    void testGetEnum_StringConversion() {
+        config.put("some-enum", "SECOND");
+        assertEquals(TestEnum.SECOND, ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
+    }
+
+    @Test
+    void testGetEnum_StringInvalidValue() {
+        config.put("some-enum", "second");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
+    }
 }

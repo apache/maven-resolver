@@ -552,6 +552,10 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
         volatile String errorPath;
 
+        private int exceptionCount;
+
+        private int cycleCount;
+
         public Results(CollectResult result, RepositorySystemSession session) {
             this.result = result;
 
@@ -569,7 +573,8 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         }
 
         public synchronized void addException(Dependency dependency, Exception e, List<DependencyNode> nodes) {
-            if (maxExceptions < 0 || result.getExceptions().size() < maxExceptions) {
+            if (maxExceptions < 0 || exceptionCount < maxExceptions) {
+                exceptionCount++;
                 result.addException(e);
                 if (errorPath == null) {
                     StringBuilder buffer = new StringBuilder(256);
@@ -592,7 +597,8 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
         }
 
         public synchronized void addCycle(List<DependencyNode> nodes, int cycleEntry, Dependency dependency) {
-            if (maxCycles < 0 || result.getCycles().size() < maxCycles) {
+            if (maxCycles < 0 || cycleCount < maxCycles) {
+                cycleCount++;
                 result.addCycle(new DefaultDependencyCycle(nodes, cycleEntry, dependency));
             }
         }

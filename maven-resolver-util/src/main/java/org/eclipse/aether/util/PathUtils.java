@@ -22,6 +22,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -71,5 +74,51 @@ public final class PathUtils {
             }
         }
         return result.toString();
+    }
+
+    /**
+     * Validates that a coordinate component does not contain path traversal sequences
+     * or path separator characters that could cause the composed path to escape
+     * the local repository directory.
+     *
+     * @since 2.0.21
+     */
+    public static void validatePathComponent(String value, String label) {
+        if (value != null && !value.isEmpty()) {
+            // Important: "equals .." and not "contains ..", as if escape attempted, it will contain path separators
+            // OTOH: version "1.." is valid version string!
+            if (value.equals("..") || value.contains("/") || value.contains("\\")) {
+                throw new IllegalArgumentException(
+                        "Invalid " + label + ": must not contain '..', '/' or '\\': " + value);
+            }
+        }
+    }
+
+    /**
+     * Validates all coordinate components of an {@link Artifact}.
+     *
+     * @see #validatePathComponent(String, String)
+     * @since 2.0.21
+     */
+    public static void validateArtifactComponents(Artifact artifact) {
+        validatePathComponent(artifact.getGroupId(), "groupId");
+        validatePathComponent(artifact.getArtifactId(), "artifactId");
+        validatePathComponent(artifact.getVersion(), "version");
+        validatePathComponent(artifact.getBaseVersion(), "baseVersion");
+        validatePathComponent(artifact.getClassifier(), "classifier");
+        validatePathComponent(artifact.getExtension(), "extension");
+    }
+
+    /**
+     * Validates all coordinate components of a {@link Metadata}.
+     *
+     * @see #validatePathComponent(String, String)
+     * @since 2.0.21
+     */
+    public static void validateMetadataComponents(Metadata metadata) {
+        validatePathComponent(metadata.getGroupId(), "groupId");
+        validatePathComponent(metadata.getArtifactId(), "artifactId");
+        validatePathComponent(metadata.getVersion(), "version");
+        // note: type may contain string like ".meta/prefixes.txt"!
     }
 }

@@ -18,10 +18,8 @@
  */
 package org.eclipse.aether.supplier;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -590,7 +588,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                         getRepositoryKeyFunctionFactory(),
                         this::getMetadataResolver,
                         this::getRemoteRepositoryManager,
-                        getRepositoryLayoutProvider()));
+                        getRepositoryLayoutProvider(),
+                        getTransporterProvider()));
         return result;
     }
 
@@ -1155,9 +1154,9 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return new DefaultModelCacheFactory();
     }
 
-    private List<ValidatorFactory> validatorFactories;
+    private Map<String, ValidatorFactory> validatorFactories;
 
-    public final List<ValidatorFactory> getValidatorFactories() {
+    public final Map<String, ValidatorFactory> getValidatorFactories() {
         checkClosed();
         if (validatorFactories == null) {
             validatorFactories = createValidatorFactories();
@@ -1165,8 +1164,8 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return validatorFactories;
     }
 
-    protected List<ValidatorFactory> createValidatorFactories() {
-        return new ArrayList<>();
+    protected Map<String, ValidatorFactory> createValidatorFactories() {
+        return new HashMap<>();
     }
 
     private RepositorySystemValidator repositorySystemValidator;

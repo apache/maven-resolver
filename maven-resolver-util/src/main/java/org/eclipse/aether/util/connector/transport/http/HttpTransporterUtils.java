@@ -316,6 +316,19 @@ public final class HttpTransporterUtils {
     }
 
     /**
+     * Getter for {@link ConfigurationProperties#HTTP_VERSION}.
+     */
+    public static ConfigurationProperties.HttpVersion getHttpVersion(
+            RepositorySystemSession session, RemoteRepository repository) {
+        return ConfigUtils.getEnum(
+                session,
+                ConfigurationProperties.HttpVersion.class,
+                ConfigurationProperties.DEFAULT_HTTP_VERSION,
+                ConfigurationProperties.HTTP_VERSION + "." + repository.getId(),
+                ConfigurationProperties.HTTP_VERSION);
+    }
+
+    /**
      * Shared code to create "base {@link URI}" for most common HTTP remote repositories and all HTTP transports.
      * Note: this method just applies common validation and adjustments to URI, but it does not enforce protocol
      * to be HTTP/HTTPS!

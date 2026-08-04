@@ -35,8 +35,10 @@ import java.util.concurrent.Semaphore;
 public interface SmartExecutor extends AutoCloseable {
     /**
      * Submits a {@link Runnable} to execution.
+     *
+     * @throws RejectedExecutionException If this executor cannot accept the task.
      */
-    void submit(Runnable runnable);
+    void submit(Runnable runnable) throws RejectedExecutionException;
 
     /**
      * Submits a {@link Callable} to execution, returns a {@link CompletableFuture}.
@@ -176,6 +178,7 @@ public interface SmartExecutor extends AutoCloseable {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                throw new RejectedExecutionException(e);
             }
         }
 

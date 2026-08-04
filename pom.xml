@@ -29,7 +29,7 @@
 
   <groupId>org.apache.maven.resolver</groupId>
   <artifactId>maven-resolver</artifactId>
-  <version>2.0.21-SNAPSHOT</version>
+  <version>2.0.22-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Maven Artifact Resolver</name>
@@ -56,13 +56,14 @@
     <module>maven-resolver-test-util</module>
     <module>maven-resolver-test-http</module>
     <module>maven-resolver-connector-basic</module>
+    <module>maven-resolver-transport-apache</module>
     <module>maven-resolver-transport-classpath</module>
     <module>maven-resolver-transport-file</module>
-    <module>maven-resolver-transport-jetty</module>
     <module>maven-resolver-transport-jdk-parent</module>
-    <module>maven-resolver-transport-apache</module>
-    <module>maven-resolver-transport-wagon</module>
+    <module>maven-resolver-transport-jetty</module>
     <module>maven-resolver-transport-minio</module>
+    <module>maven-resolver-transport-url</module>
+    <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-generator-gnupg</module>
     <module>maven-resolver-generator-sigstore</module>
     <module>maven-resolver-supplier-mvn3</module>
@@ -103,14 +104,14 @@
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
-    <sisuVersion>1.0.1</sisuVersion>
+    <sisuVersion>1.1.0</sisuVersion>
     <guiceVersion>5.1.0</guiceVersion>
     <slf4jVersion>2.0.18</slf4jVersion>
     <testcontainersVersion>2.0.5</testcontainersVersion>
-    <bouncycastleVersion>1.84</bouncycastleVersion>
+    <bouncycastleVersion>1.85</bouncycastleVersion>
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server), 12.1 introduced support for different compressions (https://github.com/jetty/jetty.project/issues/8769) -->
-    <jettyVersion>12.1.10</jettyVersion>
+    <jettyVersion>12.1.11</jettyVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.16</maven3Version>
     <maven4Version>4.0.0-rc-5</maven4Version>
@@ -121,7 +122,7 @@
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
-    <project.build.outputTimestamp>2026-06-30T07:52:31Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-07-20T13:03:11Z</project.build.outputTimestamp>
     <bnd.instructions.additions />
 
     <!-- Parent versions -->
@@ -336,6 +337,12 @@
         <groupId>org.openjdk.jmh</groupId>
         <artifactId>jmh-generator-annprocess</artifactId>
         <version>${jmhVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <!-- release 4.3.1 was not successful (https://github.com/awaitility/awaitility/issues/306) -->
+        <version>4.3.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

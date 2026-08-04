@@ -67,6 +67,9 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
 
     @Override
     protected String getBody(final CloseableHttpResponse response) throws IOException {
+        if (response.getEntity() == null) {
+            return "";
+        }
         return EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
     }
 }
