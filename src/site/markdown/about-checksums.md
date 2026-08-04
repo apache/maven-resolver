@@ -50,9 +50,6 @@ Users can also register an alternate provider for Java Cryptography.
 This provider can supply a broader set of message digests for checksums.
 The Maven Resolver team considers this a wrong use case.
 
-Users constantly mix the concepts of transport verification and secure hashes.
-This confusion occurs because of the historical reasons that we explained previously.
-
 The Maven Resolver team decided to control the supported set of checksums.
 We introduced an SPI for checksums.
 We no longer expose `MessageDigest` algorithms directly.
@@ -67,10 +64,6 @@ We know that users use stronger SHA algorithms.
 We do not want to break these configurations.
 The configuration and operations remain the same for these users.
 However, we want to prevent the future addition of non-standard checksums.
-Maven Resolver uses checksums to verify the integrity of downloaded artifacts and
-metadata. Checksums are usually placed in repositories next to the file in question, with the file
-extension indicating the checksum algorithm that produced the given file. Currently,
-most Maven repositories contain SHA-1 and MD5 checksums as they are produced by Resolver by default.
 
 ## Implemented Checksum Algorithms
 
