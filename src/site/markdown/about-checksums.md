@@ -43,39 +43,32 @@ those provided by the
 
 ## Checksum Algorithms SPI
 
-The user configuration exposes checksum algorithms.
-Users can request SHA-256 or SHA-512 through this configuration.
-These algorithms are not part of the standard Maven process.
-Users can also register an alternate provider for Java Cryptography.
-This provider can supply a broader set of message digests for checksums.
-The Maven Resolver team considers this a wrong use case.
+The user configuration enables POMs to specify arbitrary checksum algorithms,
+even if they are not part of the standard Maven process.
+Users can also register an alternate provider for Java Cryptography that
+supplies a broader set of message digests for checksums.
+The Maven Resolver team discourages this.
 
-The Maven Resolver team decided to control the supported set of checksums.
-We introduced an SPI for checksums.
+To control the supported set of checksums, the Maven Resolver team introduced an SPI for checksums.
 We no longer expose `MessageDigest` algorithms directly.
-This change prevents wrong use cases.
-This change also makes it possible to introduce real checksum algorithms.
-The set of supported checksum algorithms remains extensible.
-
-If Maven Resolver does not provide a required algorithm, you can add it.
-You can create a factory component for the new algorithm.
-
-We know that users use stronger SHA algorithms.
-We do not want to break these configurations.
-The configuration and operations remain the same for these users.
-However, we want to prevent the future addition of non-standard checksums.
-
-## Implemented Checksum Algorithms
-
-Maven Resolver provides these checksum algorithms:
+Instead it supports four checksum algorithms:
 
 * MD5
 * SHA-1
 * SHA-256
 * SHA-512
 
+
 The names of these algorithms are case-sensitive.
+
 You can use the SPI to extend Maven Resolver with other checksum algorithms.
+If Maven Resolver does not provide a required algorithm, you can create a 
+factory component for the new algorithm to add it.
+
+We know that users use stronger SHA algorithms.
+We do not want to break these configurations.
+Configuration and operations remain the same for these users.
+However, we want to prevent the future addition of non-standard checksums.
 
 The [Expected Checksums](expected-checksums.html) page explains how and when Maven Resolver uses checksums.
 
