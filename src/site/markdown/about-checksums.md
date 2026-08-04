@@ -72,29 +72,9 @@ metadata. Checksums are usually placed in repositories next to the file in quest
 extension indicating the checksum algorithm that produced the given file. Currently,
 most Maven repositories contain SHA-1 and MD5 checksums as they are produced by Resolver by default.
 
-## Checksum Algorithms SPI
-
-From a technical perspective, the above facts imply the following consequences: because checksum algorithms are exposed
-to the user, one can set them via configuration, and thus users are not prevented from asking for SHA-256 or even SHA-512, even if
-these algorithms are not part of standard Maven process. Moreover, nothing prevents users (integrating
-Maven Resolver) registering an alternate Java Cryptography Provider and using even broader (or exotic)
-message digest algorithms for checksums. While this is not wrong, we do consider this as a
-bad use case. The notion of transport validation and secure hashes are being constantly mixed up due to historical
-reasons explained above.
-
-Hence, the Maven Resolver team decided to make the supported set of checksum algorithms more controlled. Instead of directly exposing
-`MessageDigest` algorithms, we introduced an SPI around checksums. This not only prevents incorrect use cases by not
-exposing all supported algorithms of `MessageDigest` to users, but also makes it possible to introduce real checksum
-algorithms. Finally, the set of supported checksum algorithms remains extensible: if some required algorithm is
-not provided by Resolver, it can easily be added by creating a factory component for it.
-
-We are aware that users started using "better SHA" algorithms, and we do not want to break them. Nothing for them
-changes (configuration and everything basically remains the same). But we do want to prevent any possible further
-proliferation of non-standard checksums.
-
 ## Implemented Checksum Algorithms
 
-Maven Resolver provides these checksum algorithms by default:
+Maven Resolver provides these checksum algorithms:
 
 * MD5
 * SHA-1
@@ -102,7 +82,7 @@ Maven Resolver provides these checksum algorithms by default:
 * SHA-512
 
 The names of these algorithms are case-sensitive.
-You can use the SPI to extend Maven Resolver with new types of checksum algorithms.
+You can use the SPI to extend Maven Resolver with other checksum algorithms.
 
 The [Expected Checksums](expected-checksums.html) page explains how and when Maven Resolver uses checksums.
 
