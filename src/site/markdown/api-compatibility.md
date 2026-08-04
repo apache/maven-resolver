@@ -96,6 +96,6 @@ This incompatibility affects the Connector module and the `impl` module.
 ## Backward Compatibility Checks
 
 Maven Resolver uses [JApiCmp](https://siom79.github.io/japicmp/MavenPlugin.html) to verify backward compatibility.
-Maven Resolver 1.9.0 runs this plugin twice to verify source compatibility and binary compatibility.
+Starting with version 1.9.0, Maven Resolver runs this plugin twice to verify source compatibility and binary compatibility.
 The plugin runs on the API, SPI, and Util modules.
 The compatibility baseline is version 1.8.0.
