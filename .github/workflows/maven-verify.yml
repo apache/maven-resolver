@@ -29,5 +29,6 @@ jobs:
       ff-run: false
       ff-site-run: false
       maven4-enabled: true
+      maven4-version: '4.0.0-rc-6' # the same as used in project
       verify-fail-fast: false
       jdk-matrix: '[ "21", "25", "26" ]'
