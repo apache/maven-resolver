@@ -48,7 +48,7 @@ Client applications usually receive this interface through dependency injection.
 The `TransferListener` interface has the `@noextend` tag and the `@noimplement` tag.
 The Javadoc points to the `AbstractTransferListener` abstract class.
 You must not extend or implement the `TransferListener` interface directly.
-If you need a custom listener, you must extend the `AbstractTransferListener` abstract class.
+If you need a custom listener, extend the `AbstractTransferListener` abstract class.
 This abstract class protects your code from future breakages.
 
 ## Package Level Contracts
