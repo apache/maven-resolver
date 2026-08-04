@@ -23,23 +23,23 @@ Checksums exist in repositories next to the target file.
 The file extension identifies the checksum algorithm that produced the checksum.
 Most Maven repositories contain SHA-1 and MD5 checksums by default.
 Maven Resolver also produces these checksums by default.
+Checksums only provide integrity verification. They do not provide security or trust.
+They do not protect against man-in-the-middle or supply chain attacks.
 
 In the past, Maven Resolver used `java.security.MessageDigest` to calculate checksums.
 The Java Cryptography Architecture provides secure one-way hashes.
 Maven Resolver used these secure hashes to verify transport integrity.
-You can use secure hashes as checksums because hashes and checksums share some functions.
-
-However, cryptographically safe algorithms require many CPU cycles to calculate a checksum.
-These checksums provide only integrity verification.
-They do not provide security or trust.
-
-If you need trust in your artifacts, you must use signatures.
-For example, you can use [GPG Signatures](https://maven.apache.org/plugins/maven-gpg-plugin/).
+Secure hashes work as checksums, but cryptographically safe algorithms
+require many more CPU cycles to calculate than a simple checksum.
 
 Some users state that specific algorithms are unsafe or deprecated.
 This argument does not apply to Maven Resolver because checksums do not provide security.
 This fact is true for the SHA-1 algorithm and the MD5 algorithm.
 Industry still uses both algorithms today to verify transport integrity and to detect errors.
+
+To prove that artifacts have not been tampered with, you need signatures such as
+those provided by the 
+[Maven GPG Plugin](https://maven.apache.org/plugins/maven-gpg-plugin/).
 
 ## Checksum Algorithms SPI
 
@@ -71,23 +71,6 @@ Maven Resolver uses checksums to verify the integrity of downloaded artifacts an
 metadata. Checksums are usually placed in repositories next to the file in question, with the file
 extension indicating the checksum algorithm that produced the given file. Currently,
 most Maven repositories contain SHA-1 and MD5 checksums as they are produced by Resolver by default.
-
-Historically, Maven Resolver used `java.security.MessageDigest` to implement checksums. Secure one-way
-hashes provided by the Java Cryptography Architecture were (mis)used to implement checksums for transport integrity
-validation. Secure hashes MAY be used as checksums, as there is quite some
-overlap between checksums and hashes in general. But this simplicity comes at a price: cryptographically safe
-algorithms require way more CPU cycles to compute than a simple checksum. However, the purpose of a checksum is just
-integrity validation, nothing more. There is no security or trust implied or expected from
-them. Checksums do not protect against man-in-the-middle or supply chain attacks.
-
-To actually trust that artifacts have not been tampered with, you need signatures such as
-those provided by the 
-[Maven GPG Plugin](https://maven.apache.org/plugins/maven-gpg-plugin/).
-
-Hence, the usual argument that "XXX algorithm is unsafe, deprecated, not secure anymore" does not apply in the case
-of Maven Resolver. Moreover, this is true not only for SHA-1
-algorithm, but even for its "elder brother" MD5. A checksum is not intended to be secure. Both algorithms are still widely used today as "transport integrity
-validation" or "error detection" (a.k.a. "bit-rot detection").
 
 ## Checksum Algorithms SPI
 
