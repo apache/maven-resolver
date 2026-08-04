@@ -659,6 +659,7 @@
               <exclude>src/test/resources/**/*.txt</exclude>
               <exclude>src/test/resources/ssl/*-store</exclude>
               <exclude>.gitattributes</exclude>
+              <exclude>**/*.odg</exclude>
             </excludes>
           </configuration>
         </plugin>
