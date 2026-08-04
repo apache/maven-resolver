@@ -41,9 +41,9 @@ To prove that artifacts have not been tampered with, you need signatures such as
 those provided by the 
 [Maven GPG Plugin](https://maven.apache.org/plugins/maven-gpg-plugin/).
 
-## Checksum Algorithms SPI
+## Checksum Algorithms Service Provider Interface (SPI)
 
-The user configuration enables POMs to specify arbitrary checksum algorithms,
+System properties enable users to specify arbitrary checksum algorithms,
 even if they are not part of the standard Maven process.
 Users can also register an alternate provider for Java Cryptography that
 supplies a broader set of message digests for checksums.
