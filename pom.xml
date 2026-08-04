@@ -114,7 +114,7 @@
     <jettyVersion>12.1.11</jettyVersion>
     <!-- used by supplier and demo only -->
     <maven3Version>3.9.16</maven3Version>
-    <maven4Version>4.0.0-rc-5</maven4Version>
+    <maven4Version>4.0.0-rc-6</maven4Version>
     <plexusUtils3Version>3.6.1</plexusUtils3Version>
     <plexusUtils4Version>4.0.3</plexusUtils4Version>
     <plexusXml4Version>4.1.1</plexusXml4Version>
