@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -34,6 +36,14 @@ import org.eclipse.aether.scope.ScopeManager;
 import org.eclipse.aether.scope.SystemDependencyScope;
 
 import static java.util.Objects.requireNonNull;
+
+// Note on lookup semantics: management rules follow "nearest to root wins" precedence.
+// Each instance maintains a cumulative ancestor LayeredMap — a zero-copy cons-list of
+// map fragments — providing O(layers) lookups instead of O(depth) chain walks.
+// The layered map is built incrementally at construction time: child.ancestors =
+// new layer(parent.ancestors, parent.ownData). When the parent has no per-level data,
+// the reference is shared. Since containsManagedXxx() during derive blocks duplicate
+// entries for most properties, there is at most one value per key across all layers.
 
 /**
  * A dependency manager support class for Maven-specific dependency graph management.
@@ -105,8 +115,12 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.0
  */
 public abstract class AbstractDependencyManager implements DependencyManager {
-    /** The path of parent managers from root to current level. */
-    protected final ArrayList<AbstractDependencyManager> path;
+    /**
+     * Parent manager in the dependency graph (forms a linked list from leaf toward root).
+     * Replaces the previous {@code ArrayList<AbstractDependencyManager> path} field —
+     * siblings share the same parent reference (O(1) derive instead of O(depth) copy).
+     */
+    protected final AbstractDependencyManager parent;
 
     /** The current depth in the dependency graph (0 = factory, 1 = root, 2+ = descendants). */
     protected final int depth;
@@ -135,8 +149,56 @@ public abstract class AbstractDependencyManager implements DependencyManager {
     /** System dependency scope handler, may be null if no system scope is defined. */
     protected final SystemDependencyScope systemDependencyScope;
 
-    /** Pre-computed hash code (excludes managedLocalPaths). */
+    // ── Cumulative ancestor maps ──────────────────────────────────────────────
+    // Zero-copy layered view of ALL management entries from root through parent.
+    // Each layer holds a reference to the parent layer (older data) and its own entries.
+    // Lookups traverse the chain from newest to oldest — first match wins (O(layers)).
+    // Adding a new level is O(1): just link on top. No HashMap copying.
+    // When the parent has no per-level data, the child shares the same reference.
+    // These are derived data, excluded from equals/hashCode.
+
+    /** Union of all ancestor version entries (root through parent). */
+    private final LayeredMap<Key, String> ancestorVersions;
+
+    /** Union of all ancestor scope entries (root through parent). */
+    private final LayeredMap<Key, String> ancestorScopes;
+
+    /** Union of all ancestor optional entries (root through parent). */
+    private final LayeredMap<Key, Boolean> ancestorOptionals;
+
+    /** Union of all ancestor local-path entries (root through parent). */
+    private final LayeredMap<Key, String> ancestorLocalPaths;
+
+    /** Union of all ancestor exclusion entries (root through parent), layered additively. */
+    private final LayeredMap<Key, Collection<Exclusion>> ancestorExclusions;
+
+    /**
+     * Pre-computed hash code (excludes managedLocalPaths).
+     * Cascading: incorporates the parent's hashCode so a single int comparison
+     * reflects the entire ancestor chain without walking it.
+     */
     private final int hashCode;
+
+    /**
+     * Multi-entry memoization cache for {@link #deriveChildManager(DependencyCollectionContext)}:
+     * remembers recent managed-dependency lists (by reference identity) and their results.
+     * <p>
+     * In BFS dependency collection, siblings typically share the same interned managed-dependency
+     * list (guaranteed by DataPool's {@code internArtifactDescriptorManagedDependencies}), but
+     * a reactor with several distinct BOM patterns may alternate between many lists. A 16-entry
+     * ring buffer captures these patterns while keeping constant memory — unlike an unbounded
+     * {@code IdentityHashMap} which would retain every derived {@code DependencyManager} and
+     * prevent GC of the dependency subtrees they reference.
+     * <p>
+     * The BFS collector's traversal loop is single-threaded, so no synchronization is needed.
+     */
+    private static final int MEMO_CACHE_SIZE = 16;
+
+    @SuppressWarnings("unchecked")
+    private transient List<Dependency>[] memoKeys = new List[MEMO_CACHE_SIZE];
+
+    private transient DependencyManager[] memoValues = new DependencyManager[MEMO_CACHE_SIZE];
+    private transient int memoIndex;
 
     /**
      * Creates a new dependency manager with the specified derivation and application parameters.
@@ -148,7 +210,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      */
     protected AbstractDependencyManager(int deriveUntil, int applyFrom, ScopeManager scopeManager) {
         this(
-                new ArrayList<>(),
+                null,
                 0,
                 deriveUntil,
                 applyFrom,
@@ -164,7 +226,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     protected AbstractDependencyManager(
-            ArrayList<AbstractDependencyManager> path,
+            AbstractDependencyManager parent,
             int depth,
             int deriveUntil,
             int applyFrom,
@@ -174,7 +236,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             MMap<Key, String> managedLocalPaths,
             MMap<Key, Holder<Collection<Exclusion>>> managedExclusions,
             SystemDependencyScope systemDependencyScope) {
-        this.path = path;
+        this.parent = parent;
         this.depth = depth;
         this.deriveUntil = deriveUntil;
         this.applyFrom = applyFrom;
@@ -186,8 +248,66 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         // nullable: if using scope manager, but there is no system scope defined
         this.systemDependencyScope = systemDependencyScope;
 
-        // exclude managedLocalPaths
-        this.hashCode = Objects.hash(path, depth, managedVersions, managedScopes, managedOptionals, managedExclusions);
+        // Build cumulative ancestor maps: parent's ancestors + parent's own per-level data.
+        // When parent has no per-level data, the child shares the parent's reference (zero copy).
+        if (parent != null) {
+            this.ancestorVersions = mergeAncestors(parent.ancestorVersions, parent.managedVersions);
+            this.ancestorScopes = mergeAncestors(parent.ancestorScopes, parent.managedScopes);
+            this.ancestorOptionals = mergeAncestors(parent.ancestorOptionals, parent.managedOptionals);
+            this.ancestorLocalPaths = mergeAncestors(parent.ancestorLocalPaths, parent.managedLocalPaths);
+            this.ancestorExclusions = mergeAncestorExclusions(parent.ancestorExclusions, parent.managedExclusions);
+        } else {
+            this.ancestorVersions = null;
+            this.ancestorScopes = null;
+            this.ancestorOptionals = null;
+            this.ancestorLocalPaths = null;
+            this.ancestorExclusions = null;
+        }
+
+        // Cascading hash: incorporates the parent's pre-computed hash so a single int
+        // comparison reflects the entire ancestor chain. Excludes managedLocalPaths.
+        int h = parent != null ? parent.hashCode : 0;
+        h = 31 * h + depth;
+        h = 31 * h + Objects.hashCode(managedVersions);
+        h = 31 * h + Objects.hashCode(managedScopes);
+        h = 31 * h + Objects.hashCode(managedOptionals);
+        h = 31 * h + Objects.hashCode(managedExclusions);
+        this.hashCode = h;
+    }
+
+    /**
+     * Links the parent's own per-level MMap on top of the parent's cumulative ancestor layers,
+     * producing the child's cumulative ancestor map. O(1) — no HashMap copying.
+     * When the parent has no per-level data, the parent's layered map is returned as-is.
+     */
+    private static <V> LayeredMap<Key, V> mergeAncestors(LayeredMap<Key, V> parentAncestors, MMap<Key, V> parentOwn) {
+        if (parentAncestors == null && parentOwn == null) {
+            return null;
+        }
+        if (parentOwn == null) {
+            return parentAncestors; // share reference — no new data at this level
+        }
+        return new LayeredMap<>(parentAncestors, parentOwn.delegate);
+    }
+
+    /**
+     * Links the parent's own per-level exclusions on top of the parent's cumulative ancestor layers.
+     * O(1) — no HashMap copying. Unlike other properties, exclusions use additive semantics:
+     * {@link #getManagedExclusions(Key)} walks all layers to collect the union.
+     */
+    private static LayeredMap<Key, Collection<Exclusion>> mergeAncestorExclusions(
+            LayeredMap<Key, Collection<Exclusion>> parentAncestors,
+            MMap<Key, Holder<Collection<Exclusion>>> parentOwn) {
+        if (parentAncestors == null && parentOwn == null) {
+            return null;
+        }
+        if (parentOwn == null) {
+            return parentAncestors; // share reference
+        }
+        // Unwrap Holder values into a plain map for this layer
+        HashMap<Key, Collection<Exclusion>> ownEntries = new HashMap<>();
+        parentOwn.delegate.forEach((key, holder) -> ownEntries.put(key, holder.getValue()));
+        return new LayeredMap<>(parentAncestors, ownEntries);
     }
 
     protected abstract DependencyManager newInstance(
@@ -198,115 +318,142 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             MMap<Key, Holder<Collection<Exclusion>>> managedExclusions);
 
     private boolean containsManagedVersion(Key key, MMap<Key, String> managedVersions) {
-        for (AbstractDependencyManager ancestor : path) {
-            if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
-                return true;
-            }
+        // Check current instance's own managed versions first (restores the pre-d4035d3a
+        // check that was accidentally dropped when the parameter was introduced).
+        if (this.managedVersions != null && this.managedVersions.containsKey(key)) {
+            return true;
         }
+        // O(1) lookup in cumulative ancestor map (replaces O(depth) parent chain walk)
+        if (ancestorVersions != null && ancestorVersions.containsKey(key)) {
+            return true;
+        }
+        // Check in-progress new map for duplicates within the same derivation step.
         return managedVersions != null && managedVersions.containsKey(key);
     }
 
+    /**
+     * O(1) lookup in the cumulative ancestor map for the managed version.
+     * At depth 1, also checks own data (root self-application): when DefaultDependencyManager
+     * applies management from depth 0, the root-level rules are stored in DM1.managedVersions
+     * and must be visible to DM1.manageDependency().
+     */
     private String getManagedVersion(Key key) {
-        for (AbstractDependencyManager ancestor : path) {
-            if (ancestor.managedVersions != null && ancestor.managedVersions.containsKey(key)) {
-                return ancestor.managedVersions.get(key);
-            }
-        }
+        String result = ancestorVersions != null ? ancestorVersions.get(key) : null;
         if (depth == 1 && managedVersions != null && managedVersions.containsKey(key)) {
-            return managedVersions.get(key);
+            result = managedVersions.get(key);
         }
-        return null;
+        return result;
     }
 
     private boolean containsManagedScope(Key key, MMap<Key, String> managedScopes) {
-        for (AbstractDependencyManager ancestor : path) {
-            if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
-                return true;
-            }
+        if (this.managedScopes != null && this.managedScopes.containsKey(key)) {
+            return true;
+        }
+        if (ancestorScopes != null && ancestorScopes.containsKey(key)) {
+            return true;
         }
         return managedScopes != null && managedScopes.containsKey(key);
     }
 
     private String getManagedScope(Key key) {
-        for (AbstractDependencyManager ancestor : path) {
-            if (ancestor.managedScopes != null && ancestor.managedScopes.containsKey(key)) {
-                return ancestor.managedScopes.get(key);
-            }
-        }
+        String result = ancestorScopes != null ? ancestorScopes.get(key) : null;
         if (depth == 1 && managedScopes != null && managedScopes.containsKey(key)) {
-            return managedScopes.get(key);
+            result = managedScopes.get(key);
         }
-        return null;
+        return result;
     }
 
     private boolean containsManagedOptional(Key key, MMap<Key, Boolean> managedOptionals) {
-        for (AbstractDependencyManager ancestor : path) {
-            if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
-                return true;
-            }
+        if (this.managedOptionals != null && this.managedOptionals.containsKey(key)) {
+            return true;
+        }
+        if (ancestorOptionals != null && ancestorOptionals.containsKey(key)) {
+            return true;
         }
         return managedOptionals != null && managedOptionals.containsKey(key);
     }
 
     private Boolean getManagedOptional(Key key) {
-        for (AbstractDependencyManager ancestor : path) {
-            if (ancestor.managedOptionals != null && ancestor.managedOptionals.containsKey(key)) {
-                return ancestor.managedOptionals.get(key);
-            }
-        }
+        Boolean result = ancestorOptionals != null ? ancestorOptionals.get(key) : null;
         if (depth == 1 && managedOptionals != null && managedOptionals.containsKey(key)) {
-            return managedOptionals.get(key);
+            result = managedOptionals.get(key);
         }
-        return null;
+        return result;
     }
 
     private boolean containsManagedLocalPath(Key key, MMap<Key, String> managedLocalPaths) {
-        for (AbstractDependencyManager ancestor : path) {
-            if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
-                return true;
-            }
+        if (this.managedLocalPaths != null && this.managedLocalPaths.containsKey(key)) {
+            return true;
+        }
+        if (ancestorLocalPaths != null && ancestorLocalPaths.containsKey(key)) {
+            return true;
         }
         return managedLocalPaths != null && managedLocalPaths.containsKey(key);
     }
 
     /**
      * Gets the managed local path for system dependencies.
-     * Note: Local paths don't follow the depth=1 special rule like versions/scopes.
-     *
-     * @param key the dependency key
-     * @return the managed local path, or null if not managed
+     * Note: Local paths don't follow the depth=1 special rule like versions/scopes —
+     * own data is always checked (system path alignment across the graph).
      */
     private String getManagedLocalPath(Key key) {
-        for (AbstractDependencyManager ancestor : path) {
-            if (ancestor.managedLocalPaths != null && ancestor.managedLocalPaths.containsKey(key)) {
-                return ancestor.managedLocalPaths.get(key);
-            }
-        }
+        String result = ancestorLocalPaths != null ? ancestorLocalPaths.get(key) : null;
         if (managedLocalPaths != null && managedLocalPaths.containsKey(key)) {
-            return managedLocalPaths.get(key);
+            result = managedLocalPaths.get(key);
         }
-        return null;
+        return result;
     }
 
     /**
-     * Merges exclusions from all levels in the dependency path.
+     * Returns merged exclusions from all ancestor layers plus own exclusions.
      * Unlike other managed properties, exclusions are accumulated additively
-     * from root to current level throughout the entire dependency path.
+     * from all levels in the dependency path — each layer is walked to collect
+     * the full union.
      *
      * @param key the dependency key
      * @return merged collection of exclusions, or null if none exist
      */
     private Collection<Exclusion> getManagedExclusions(Key key) {
-        ArrayList<Exclusion> result = new ArrayList<>();
-        for (AbstractDependencyManager ancestor : path) {
-            if (ancestor.managedExclusions != null && ancestor.managedExclusions.containsKey(key)) {
-                result.addAll(ancestor.managedExclusions.get(key).value);
+        // Collect exclusions from all ancestor layers (parent/older layers first)
+        Collection<Exclusion> ancestorExcl = collectExclusionsFromLayers(ancestorExclusions, key);
+        Holder<Collection<Exclusion>> ownExcl = managedExclusions != null ? managedExclusions.get(key) : null;
+
+        if (ancestorExcl == null && ownExcl == null) {
+            return null;
+        }
+        if (ancestorExcl != null && ownExcl == null) {
+            return ancestorExcl;
+        }
+        if (ancestorExcl == null) {
+            return ownExcl.value;
+        }
+        // Both present: merge additively
+        ArrayList<Exclusion> result = new ArrayList<>(ancestorExcl);
+        result.addAll(ownExcl.value);
+        return result;
+    }
+
+    /**
+     * Walks all layers of the layered exclusions map, collecting exclusions for the given key.
+     * Parent (older) layers are collected first via recursion to maintain order.
+     * Recursion depth is bounded by the number of layers (typically 2–5), not tree depth.
+     */
+    private static Collection<Exclusion> collectExclusionsFromLayers(
+            LayeredMap<Key, Collection<Exclusion>> layers, Key key) {
+        if (layers == null) {
+            return null;
+        }
+        // Recurse to parent first (older data)
+        Collection<Exclusion> result = collectExclusionsFromLayers(layers.parent, key);
+        Collection<Exclusion> layerExcl = layers.ownEntries.get(key);
+        if (layerExcl != null) {
+            if (result == null) {
+                result = new ArrayList<>(layerExcl);
+            } else {
+                result.addAll(layerExcl);
             }
         }
-        if (managedExclusions != null && managedExclusions.containsKey(key)) {
-            result.addAll(managedExclusions.get(key).value);
-        }
-        return result.isEmpty() ? null : result;
+        return result;
     }
 
     @Override
@@ -316,13 +463,23 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             return this;
         }
 
+        // Memoization: check if we've already derived for this managed dependencies list
+        // (same object reference — guaranteed by DataPool's descriptor/list interning).
+        // A 4-entry ring buffer captures the common BOM patterns in a large reactor.
+        List<Dependency> managedDeps = context.getManagedDependencies();
+        for (int i = 0; i < MEMO_CACHE_SIZE; i++) {
+            if (managedDeps == memoKeys[i] && memoValues[i] != null) {
+                return memoValues[i];
+            }
+        }
+
         MMap<Key, String> managedVersions = null;
         MMap<Key, String> managedScopes = null;
         MMap<Key, Boolean> managedOptionals = null;
         MMap<Key, String> managedLocalPaths = null;
         MMap<Key, Holder<Collection<Exclusion>>> managedExclusions = null;
 
-        for (Dependency managedDependency : context.getManagedDependencies()) {
+        for (Dependency managedDependency : managedDeps) {
             Artifact artifact = managedDependency.getArtifact();
             Key key = new Key(artifact);
 
@@ -379,12 +536,48 @@ public abstract class AbstractDependencyManager implements DependencyManager {
             }
         }
 
-        return newInstance(
-                managedVersions != null ? managedVersions.done() : null,
-                managedScopes != null ? managedScopes.done() : null,
-                managedOptionals != null ? managedOptionals.done() : null,
-                managedLocalPaths != null ? managedLocalPaths.done() : null,
-                managedExclusions != null ? managedExclusions.done() : null);
+        // Optimization: when no new management data was collected at this depth and management
+        // is already being applied (depth >= applyFrom), reuse this instance. This avoids creating
+        // unnecessarily distinct DependencyManager instances that would defeat the BF collector's
+        // pool cache — the pool key includes the manager, so distinct-but-semantically-equal
+        // managers cause pool misses, which in turn lets the skipper prune subtrees that should
+        // have been served from the cache. This is the common case for transitive dependencies
+        // whose POMs do not declare <dependencyManagement>.
+        //
+        // However, we can only reuse `this` when it carries no management data of its own.
+        // If `this` has management data (e.g. managedVersions != null), returning `this` would
+        // hide that data from the child: getManagedVersion() only checks the parent chain (not
+        // `this.managedVersions`), so a reused instance's own rules become invisible. In that
+        // case we must create a new child with null maps, making `this` the parent and putting
+        // the management data on the parent chain where getManagedVersion() can find it.
+        // See https://github.com/apache/maven-resolver/issues/2013
+        DependencyManager result;
+        if (managedVersions == null
+                && managedScopes == null
+                && managedOptionals == null
+                && managedLocalPaths == null
+                && managedExclusions == null
+                && isApplied()
+                && this.managedVersions == null
+                && this.managedScopes == null
+                && this.managedOptionals == null
+                && this.managedLocalPaths == null
+                && this.managedExclusions == null) {
+            result = this;
+        } else {
+            result = newInstance(
+                    managedVersions != null ? managedVersions.done() : null,
+                    managedScopes != null ? managedScopes.done() : null,
+                    managedOptionals != null ? managedOptionals.done() : null,
+                    managedLocalPaths != null ? managedLocalPaths.done() : null,
+                    managedExclusions != null ? managedExclusions.done() : null);
+        }
+
+        // Cache the result in the ring buffer for future calls with the same managed deps list
+        memoKeys[memoIndex] = managedDeps;
+        memoValues[memoIndex] = result;
+        memoIndex = (memoIndex + 1) % MEMO_CACHE_SIZE;
+        return result;
     }
 
     @Override
@@ -518,13 +711,21 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         }
 
         AbstractDependencyManager that = (AbstractDependencyManager) obj;
+        // Fast rejection: cascading hashCode reflects the entire ancestor chain,
+        // so a single int mismatch rejects without walking any parent pointers.
+        if (hashCode != that.hashCode) {
+            return false;
+        }
         // exclude managedLocalPaths
-        return Objects.equals(path, that.path)
-                && depth == that.depth
+        // Check cheap fields (depth) before expensive ones (maps, parent chain).
+        // Parent comparison is recursive but each level is hash-guarded, and
+        // shared parents (same identity) short-circuit via the this==obj check.
+        return depth == that.depth
                 && Objects.equals(managedVersions, that.managedVersions)
                 && Objects.equals(managedScopes, that.managedScopes)
                 && Objects.equals(managedOptionals, that.managedOptionals)
-                && Objects.equals(managedExclusions, that.managedExclusions);
+                && Objects.equals(managedExclusions, that.managedExclusions)
+                && Objects.equals(parent, that.parent);
     }
 
     @Override
@@ -537,18 +738,30 @@ public abstract class AbstractDependencyManager implements DependencyManager {
      * GACE = Group, Artifact, Classifier, Extension (excludes version for management purposes).
      */
     protected static class Key {
-        private final Artifact artifact;
+        private final String groupId;
+        private final String artifactId;
+        private final String extension;
+        private final String classifier;
         private final int hashCode;
 
         /**
          * Creates a new key from the given artifact's GACE coordinates.
+         * Coordinate strings are cached eagerly to avoid repeated virtual dispatch
+         * through delegation wrappers like {@code RelocatedArtifact} during
+         * {@link #equals} comparisons in hash maps.
          *
          * @param artifact the artifact to create a key for
          */
         Key(Artifact artifact) {
-            this.artifact = artifact;
-            this.hashCode = Objects.hash(
-                    artifact.getArtifactId(), artifact.getGroupId(), artifact.getExtension(), artifact.getClassifier());
+            this.groupId = artifact.getGroupId();
+            this.artifactId = artifact.getArtifactId();
+            this.extension = artifact.getExtension();
+            this.classifier = artifact.getClassifier();
+            int h = artifactId.hashCode();
+            h = 31 * h + groupId.hashCode();
+            h = 31 * h + extension.hashCode();
+            h = 31 * h + classifier.hashCode();
+            this.hashCode = h;
         }
 
         @Override
@@ -559,10 +772,10 @@ public abstract class AbstractDependencyManager implements DependencyManager {
                 return false;
             }
             Key that = (Key) obj;
-            return artifact.getArtifactId().equals(that.artifact.getArtifactId())
-                    && artifact.getGroupId().equals(that.artifact.getGroupId())
-                    && artifact.getExtension().equals(that.artifact.getExtension())
-                    && artifact.getClassifier().equals(that.artifact.getClassifier());
+            return artifactId.equals(that.artifactId)
+                    && groupId.equals(that.groupId)
+                    && extension.equals(that.extension)
+                    && classifier.equals(that.classifier);
         }
 
         @Override
@@ -572,7 +785,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
         @Override
         public String toString() {
-            return String.valueOf(artifact);
+            return groupId + ":" + artifactId + ":" + extension + (classifier.isEmpty() ? "" : ":" + classifier);
         }
     }
 
@@ -587,7 +800,7 @@ public abstract class AbstractDependencyManager implements DependencyManager {
 
         Holder(T value) {
             this.value = requireNonNull(value);
-            this.hashCode = Objects.hash(value);
+            this.hashCode = value.hashCode();
         }
 
         public T getValue() {
@@ -606,6 +819,45 @@ public abstract class AbstractDependencyManager implements DependencyManager {
         @Override
         public int hashCode() {
             return hashCode;
+        }
+    }
+
+    /**
+     * A zero-copy layered map built as a cons-list of map fragments.
+     * Each layer holds a reference to its parent (older data) and its own entries.
+     * <p>
+     * For "first match wins" properties (versions, scopes, optionals, local paths),
+     * {@link #get(Object)} returns the first value found traversing from newest to oldest layer.
+     * For additive properties (exclusions), callers walk all layers via the {@link #parent}
+     * pointer to collect the union.
+     * <p>
+     * Adding a new level is O(1) — just link on top. Lookups are O(layers) where layers is
+     * the number of depths that contributed management data (typically 2–5 in practice).
+     *
+     * @param <K> key type
+     * @param <V> value type
+     */
+    static class LayeredMap<K, V> {
+        final LayeredMap<K, V> parent;
+        final Map<K, V> ownEntries;
+
+        LayeredMap(LayeredMap<K, V> parent, Map<K, V> ownEntries) {
+            this.parent = parent;
+            this.ownEntries = ownEntries;
+        }
+
+        /** Lookup: newest layer first, O(layers). */
+        V get(K key) {
+            V value = ownEntries.get(key);
+            if (value != null) {
+                return value;
+            }
+            return parent != null ? parent.get(key) : null;
+        }
+
+        /** Contains check: any layer, O(layers). */
+        boolean containsKey(K key) {
+            return ownEntries.containsKey(key) || (parent != null && parent.containsKey(key));
         }
     }
 }

@@ -377,8 +377,6 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
 
         DependencySelector childSelector =
                 parentContext.depSelector != null ? parentContext.depSelector.deriveChildSelector(context) : null;
-        DependencyManager childManager =
-                parentContext.depManager != null ? parentContext.depManager.deriveChildManager(context) : null;
         DependencyTraverser childTraverser =
                 parentContext.depTraverser != null ? parentContext.depTraverser.deriveChildTraverser(context) : null;
         VersionFilter childFilter =
@@ -389,50 +387,80 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                 : remoteRepositoryManager.aggregateRepositories(
                         args.session, parentContext.repositories, descriptorResult.getRepositories(), true);
 
-        Object key = args.pool.toKey(
+        // Optimization: try pool cache with the parent manager as a speculative key BEFORE
+        // calling deriveChildManager. When deriveChildManager returns `this` (the common case —
+        // no new management data at this depth), the parent manager IS the child manager, so
+        // this speculative key matches any previously stored entry. On pool hit, we skip
+        // deriveChildManager entirely, saving even the memoization cache lookup.
+        Object speculativeKey = args.pool.toKey(
                 parentContext.dependency.getArtifact(),
                 childRepos,
                 childSelector,
-                childManager,
+                parentContext.depManager,
                 childTraverser,
                 childFilter);
-
-        List<DependencyNode> children = args.pool.getChildren(key);
-        if (children == null) {
-            boolean skipResolution = args.skipper.skipResolution(child, parentContext.parents);
-            if (!skipResolution) {
-                List<DependencyNode> parents = new ArrayList<>(parentContext.parents.size() + 1);
-                parents.addAll(parentContext.parents);
-                parents.add(child);
-                for (Dependency dependency : descriptorResult.getDependencies()) {
-                    if (childSelector != null && !childSelector.selectDependency(dependency)) {
-                        continue;
-                    }
-                    RequestTrace childTrace = collectStepTrace(
-                            parentContext.trace, args.request.getRequestContext(), parents, dependency);
-                    PremanagedDependency premanagedDependency = PremanagedDependency.create(
-                            childManager, dependency, disableVersionManagement, args.premanagedState);
-                    DependencyProcessingContext processingContext = new DependencyProcessingContext(
-                            childSelector,
-                            childManager,
-                            childTraverser,
-                            childFilter,
-                            childTrace,
-                            childRepos,
-                            descriptorResult.getManagedDependencies(),
-                            parents,
-                            dependency,
-                            premanagedDependency);
-                    // resolve descriptors ahead for managed dependency
-                    processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
-                    resolveArtifactDescriptorAsync(args, processingContext, results);
-                    args.dependencyProcessingQueue.add(processingContext);
-                }
-                args.pool.putChildren(key, child.getChildren());
-                args.skipper.cache(child, parents);
-            }
-        } else {
+        List<DependencyNode> children = args.pool.getChildren(speculativeKey);
+        if (children != null) {
             child.setChildren(children);
+            return;
+        }
+
+        // Speculative miss — compute the actual derived manager
+        DependencyManager childManager =
+                parentContext.depManager != null ? parentContext.depManager.deriveChildManager(context) : null;
+
+        Object key;
+        if (childManager == parentContext.depManager) {
+            // Manager unchanged — speculative key was correct, already checked and missed
+            key = speculativeKey;
+        } else {
+            // Manager changed — recompute key and check pool again with the correct manager
+            key = args.pool.toKey(
+                    parentContext.dependency.getArtifact(),
+                    childRepos,
+                    childSelector,
+                    childManager,
+                    childTraverser,
+                    childFilter);
+            children = args.pool.getChildren(key);
+            if (children != null) {
+                child.setChildren(children);
+                return;
+            }
+        }
+
+        // True cache miss — do full resolution
+        boolean skipResolution = args.skipper.skipResolution(child, parentContext.parents);
+        if (!skipResolution) {
+            List<DependencyNode> parents = new ArrayList<>(parentContext.parents.size() + 1);
+            parents.addAll(parentContext.parents);
+            parents.add(child);
+            for (Dependency dependency : descriptorResult.getDependencies()) {
+                if (childSelector != null && !childSelector.selectDependency(dependency)) {
+                    continue;
+                }
+                RequestTrace childTrace =
+                        collectStepTrace(parentContext.trace, args.request.getRequestContext(), parents, dependency);
+                PremanagedDependency premanagedDependency = PremanagedDependency.create(
+                        childManager, dependency, disableVersionManagement, args.premanagedState);
+                DependencyProcessingContext processingContext = new DependencyProcessingContext(
+                        childSelector,
+                        childManager,
+                        childTraverser,
+                        childFilter,
+                        childTrace,
+                        childRepos,
+                        descriptorResult.getManagedDependencies(),
+                        parents,
+                        dependency,
+                        premanagedDependency);
+                // resolve descriptors ahead for managed dependency
+                processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
+                resolveArtifactDescriptorAsync(args, processingContext, results);
+                args.dependencyProcessingQueue.add(processingContext);
+            }
+            args.pool.putChildren(key, child.getChildren());
+            args.skipper.cache(child, parents);
         }
     }
 
