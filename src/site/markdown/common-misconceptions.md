@@ -96,7 +96,7 @@ The `dependency:tree` plugin for this project outputs this verbose tree:
 [INFO]    \- com.google.j2objc:j2objc-annotations:jar:1.3:test
 ```
 
-This is the "test graph" of the project. It contains a conflict. The tree shows the remarks "omitted for duplicate" and "scope not updated to compile" next to the Guava nodes.
+This is the "test graph" of the project. It contains a conflict indicated by the remarks "omitted for duplicate" and "scope not updated to compile" next to the Guava nodes.
 
 This setup has these results:
 
