@@ -59,9 +59,9 @@ Your project uses Google Guice. You have declared Guice as a dependency:
       </dependency>
 ```
 
-Now you want to avoid any use of Guava. Guava is a direct dependency of Guice. The best practice is to declare all dependencies that your code compiles against. If you do not declare Guava, the analysis tools report it as an "undeclared dependency."
+The model code does not directly use Guava. However, Guava is a direct dependency of Guice. 
+Your unit tests do need Guava so you add Guava as a test-scoped dependency. The POM now looks like this:
 
-Your unit tests need Guava. You add Guava as a test dependency. Your POM then looks like this:
 
 ```
       <dependency>
