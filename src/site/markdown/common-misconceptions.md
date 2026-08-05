@@ -138,6 +138,4 @@ This is a [Maven Assembly plugin bug](https://issues.apache.org/jira/browse/MASS
 
 You must build different graphs for the "runtime" and "test" classpath. The Assembly plugin is a Mojo. It requests the "test graph". Then it reads the configuration (the assembly descriptor). It learns the required scopes at this point. Then it "filters" the resolved "test graph" for the runtime scopes.
 
-This is wrong, because Guava is in the test scope. The plugin must read the configuration first. Then it must ask Resolver for the "runtime graph". Then it must filter the graph. This problem does not exist with `maven-war-plugin`. The "war" Mojo asks for the "compile+runtime" scope.
-
-The WAR use case is much simpler than the Assembly use case. The WAR plugin always packages the same scope. The Assembly plugin receives a complex configuration. The way the Assembly plugin works is also much more complex.
+This is wrong, because Guava is in the test scope. The plugin must read the configuration first. Then it must ask Resolver for the "runtime graph". Then it must filter the graph. This problem does not exist with `maven-war-plugin`. The "war" Mojo asks for the "compile+runtime" scope. The WAR case is much simpler than the Assembly use case. The WAR plugin always packages the same scope.
