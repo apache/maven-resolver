@@ -34,7 +34,7 @@ Finally, in the "resolve" step, Resolver resolves the artifacts of the transform
 
 During the "collect" step, various criteria select the nodes. The configured scope filters are among these criteria. This leads to the notion of the "runtime graph" and the "test graph".
 
-The "scope filter" selects what to omit. This use of the filter is not intuitive. Maven Core uses the filter this way. Maven Core does not have to use it this way. The default session filter in Maven is set up as follows:
+The "scope filter" selects what to omit. This use of the filter is not intuitive. Maven Core uses the filter this way. The default session filter in Maven is set up as follows:
 
 ```
   new ScopeDependencySelector("test", "provided")
