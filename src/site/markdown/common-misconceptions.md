@@ -18,19 +18,19 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Maven2 plugins kept working with Maven3. Because of this, some misconceptions spread. Maven3 resolution differs from Maven2 resolution. Resolution is now much more precise. Some old behaviors from Maven2 no longer exist. This page lists some of the most common misconceptions.
+Maven 2 plugins kept working with Maven 3 although Maven 3 resolution differs from Maven 2 resolution. Resolution is now much more precise. Some old behaviors from Maven 2 no longer exist. This page lists some of the most common misconceptions.
 
-## Misconception No1: How Resolver Works
+## Misconception Number 1: How Resolver Works
 
 (Simplified)
 
 The most common use of Resolver is to resolve dependencies transitively. Resolver performs three steps: "collect", "transform", and "resolve". Resolver also exposes these steps as separate API calls.
 
-The "collect" step is first. During this step, Resolver builds the "dirty tree" (or dirty graph) of artifacts. While it builds the graph, Maven uses only POMs. If an artifact is not in your local repository, Maven downloads the POMs only. With the POMs, Resolver builds the current node of the graph and finds its outgoing vertices and adjacent nodes. The configured criteria decide which dependency continues from the current node POM.
+The "collect" step is first. During this step, Resolver builds the "dirty tree" (or dirty graph) of artifacts. While it builds the graph, Maven only uses POMs. If an artifact is not in your local repository, Maven downloads the POM only. With the POM, Resolver builds the current node of the graph and finds its outgoing vertices and adjacent nodes. The configured criteria decide which dependency continues from the current node POM.
 
 The "transform" step transforms the "dirty graph". This is where conflict resolution happens. Resolver applies rules to resolve conflicting versions and conflicting scopes. If you ask for the "verbose tree", conflict resolution does not remove graph nodes. It only marks the conflicts and the conflict "winner". Therefore, the "verbose tree" cannot be resolved.
 
-Finally, the "resolve" step runs. Resolver resolves the artifacts of the transformed graph nodes. It ensures that the corresponding files (for example, JAR files) are present in the local repository. It downloads them if needed.
+Finally, in the "resolve" step, Resolver resolves the artifacts of the transformed graph nodes. It ensures that the corresponding files (for example, JAR files) are present in the local repository. It downloads them if needed.
 
 During the "collect" step, various criteria select the nodes. The configured scope filters are among these criteria. This leads to the notion of the "runtime graph" and the "test graph".
 
