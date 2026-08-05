@@ -39,8 +39,8 @@ import org.eclipse.aether.supplier.RepositorySystemSupplier;
 
 Only the local repository must be specified. The other settings are initialized with default values.
 
-Have a look at the API documentation for `RepositorySystemSession.SessionBuilder`. Use the documentation to learn about all the settings for a session.
+Read the API documentation for `RepositorySystemSession.SessionBuilder` to learn about all the settings for a session.
 
 If you use a Maven plugin or run code embedded in Maven, the session is already created for you. You can derive a new session with the copy constructor of `DefaultRepositorySystemSession` if you must alter the session.
 
-If you use [Apache Maven](http://maven.apache.org/) and want to read configuration from the user's `settings.xml`, use the library [MIMA](https://github.com/maveniverse/mima). MIMA provides the necessary parts. Direct any questions about MIMA to the Maven mailing list.
+If you use Maven and want to read configuration from the user's `settings.xml`, use the library [MIMA](https://github.com/maveniverse/mima). MIMA provides the necessary parts. Direct any questions about MIMA to the Maven mailing list.
