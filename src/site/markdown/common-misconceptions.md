@@ -59,7 +59,7 @@ Your project uses Google Guice. You have declared Guice as a dependency:
       </dependency>
 ```
 
-The src/main code does not directly use Guava. However, Guava is a direct dependency of Guice. 
+The src/main code does not directly use Guava. However, Guava is a direct dependency of Guice.
 Your unit tests do need Guava so you add Guava as a test-scoped dependency. The POM now looks like this:
 
 
