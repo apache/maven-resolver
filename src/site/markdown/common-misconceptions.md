@@ -46,7 +46,7 @@ Note: These notions do not relate to Maven yet. Maven does not appear in this ex
 
 ## Misconception Number 2: "Test graph" is a Superset of the "Runtime graph"
 
-**Wrong**. For the runtime graph, Resolver omits the "test" scoped dependencies. In Maven 2, the test graph was really a superset of the runtime graph. This is no longer true in Maven3. This has interesting consequences. The example below shows this.
+**Wrong**. For the runtime graph, Resolver omits the "test" scoped dependencies. This has interesting consequences. The example below shows this.
 
 The example below uses Guice and Guava.
 Your project uses Google Guice. You have declared Guice as a dependency:
