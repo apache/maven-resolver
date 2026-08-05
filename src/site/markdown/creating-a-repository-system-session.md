@@ -18,7 +18,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Resolver (former Aether) and its components are stateless. You must pass all configuration and state into the methods. When you make multiple requests to resolve dependencies, many settings remain the same across the method calls. These settings include the proxy settings and the path to the local repository. An instance of `org.eclipse.aether.RepositorySystemSession` represents the settings that remain the same for the entire usage session of the repository system.
+Resolver (formerly Aether) and its components are stateless. You must pass all configuration and state into the methods. When you make multiple requests to resolve dependencies, many settings remain the same across the method calls. These settings include the proxy settings and the path to the local repository. An instance of `org.eclipse.aether.RepositorySystemSession` represents the settings that remain the same for the entire usage session of the repository system.
 
 You can create such a session with classes from `maven-resolver-supplier`. The code below creates a session that mimics the Maven setup.
 
