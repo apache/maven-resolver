@@ -131,10 +131,10 @@ public abstract class NamedLockFactoryTestSupport {
         Thread t2 = new Thread(new Access(namedLockFactory, keys, true, winners, losers));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     @Test
@@ -147,10 +147,10 @@ public abstract class NamedLockFactoryTestSupport {
         Thread t2 = new Thread(new Access(namedLockFactory, keys, false, winners, losers));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
     }
 
     @Test
@@ -163,10 +163,10 @@ public abstract class NamedLockFactoryTestSupport {
         Thread t2 = new Thread(new Access(namedLockFactory, keys, false, winners, losers));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
     }
 
     private static class Access implements Runnable {
@@ -193,17 +193,17 @@ public abstract class NamedLockFactoryTestSupport {
         public void run() {
             try (NamedLock lock = namedLockFactory.getLock(keys)) {
                 if (shared
-                        ? lock.lockShared(100L, TimeUnit.MILLISECONDS)
-                        : lock.lockExclusively(100L, TimeUnit.MILLISECONDS)) {
+                        ? lock.lockShared(1000L, TimeUnit.MILLISECONDS)
+                        : lock.lockExclusively(1000L, TimeUnit.MILLISECONDS)) {
                     try {
                         winner.countDown();
-                        loser.await();
+                        loser.await(5, TimeUnit.SECONDS);
                     } finally {
                         lock.unlock();
                     }
                 } else {
                     loser.countDown();
-                    winner.await();
+                    winner.await(5, TimeUnit.SECONDS);
                 }
             } catch (InterruptedException e) {
                 fail(e.getMessage());
