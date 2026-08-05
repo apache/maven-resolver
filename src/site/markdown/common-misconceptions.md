@@ -44,12 +44,11 @@ This filter omits the dependencies of the "current dependency node" that are in 
 
 Note: These notions do not relate to Maven yet. Maven does not appear in this example. This is not the classpath that the Compiler or Surefire plugins use. It is only a showcase of how Resolver works.
 
-## Misconception No2: "Test graph" Is Superset Of "Runtime graph"
+## Misconception Number 2: "Test graph" is a Superset of the "Runtime graph"
 
-**Wrong**. For the runtime graph, Resolver omits the "test" scoped dependencies. In Maven2, the test graph was really a superset of the runtime graph. This is no longer true in Maven3. This has interesting consequences. The example below shows this.
+**Wrong**. For the runtime graph, Resolver omits the "test" scoped dependencies. In Maven 2, the test graph was really a superset of the runtime graph. This is no longer true in Maven3. This has interesting consequences. The example below shows this.
 
-Note: The same scenario applies to Jackson Databind and Core. The example below uses Guice and Guava.
-
+The example below uses Guice and Guava.
 Your project uses Google Guice. You have declared Guice as a dependency:
 
 ```
@@ -60,7 +59,7 @@ Your project uses Google Guice. You have declared Guice as a dependency:
       </dependency>
 ```
 
-Now you want to avoid any use of Guava. Guava is a direct dependency of Guice. The best practice is to declare all dependencies that your code compiles against. If you do not declare Guava, the analysis tools report it as an "undeclared dependency" when your code uses Guava.
+Now you want to avoid any use of Guava. Guava is a direct dependency of Guice. The best practice is to declare all dependencies that your code compiles against. If you do not declare Guava, the analysis tools report it as an "undeclared dependency."
 
 Your unit tests need Guava. You add Guava as a test dependency. Your POM then looks like this:
 
