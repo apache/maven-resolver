@@ -18,16 +18,9 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Resolver (former Aether) and its components are designed to be stateless and as such all
-configuration/state has to be passed into the methods. When one makes
-multiple requests to resolve dependencies, a fair amount of settings
-usually remains the same across these method calls, like the proxy
-settings or the path to the local repository. Those settings that tend
-to be the same for an entire usage session of the repository system are
-represented by an instance of
-`org.eclipse.aether.RepositorySystemSession`. Using classes from
-`maven-resolver-supplier`, creating such a session that mimics Maven's
-setup can be done like this:
+Resolver (formerly Aether) and its components are stateless. You must pass all configuration and state into the methods. When you make multiple requests to resolve dependencies, many settings remain the same across the method calls. These settings include the proxy settings and the path to the local repository. An instance of `org.eclipse.aether.RepositorySystemSession` represents the settings that remain the same for the entire usage session of the repository system.
+
+You can create a session with classes from `maven-resolver-supplier`. The code below creates a session that mimics the Maven setup.
 
 ```java
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
@@ -44,18 +37,10 @@ import org.eclipse.aether.supplier.RepositorySystemSupplier;
     }
 ```
 
-As you see, the only setting that must be specified is the local
-repository, other settings are initialized with default values. Please
-have a look at the API docs for `RepositorySystemSession.SessionBuilder` to
-learn about all the other things you can configure for a session.
+Only the local repository must be specified. The other settings have default values.
 
-In case of Maven plugin, or when code runs embedded in Maven, the session
-is already created for you, but you can still "derive" using copy constructor
-of `DefaultRepositorySystemSession` if some session alteration is needed.
+Read the API documentation for `RepositorySystemSession.SessionBuilder` to learn about all the settings for a session.
 
-If you seek a closer cooperation with [Apache
-Maven](http://maven.apache.org/) and want to read configuration from the
-user's `settings.xml`, you should have a look at the library
-[MIMA](https://github.com/maveniverse/mima) which provides the necessary
-bits. Please direct any questions regarding usage of that library to the
-Maven mailing list.
+If you use a Maven plugin or run code embedded in Maven, the session is already created for you. You can derive a new session with the copy constructor of `DefaultRepositorySystemSession` if you must alter the session.
+
+To read configuration from the user's `settings.xml` in a non-Maven project, use the [MIMA](https://github.com/maveniverse/mima) library. MIMA provides the necessary parts. Direct any questions about MIMA to the Maven mailing list.
