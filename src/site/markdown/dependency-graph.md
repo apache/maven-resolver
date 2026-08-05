@@ -18,7 +18,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-During transitive dependency resolution, Resolver (former Aether) constructs a *dependency graph*.
+When resolving transitive dependencies, Resolver (formerly Aether) constructs a *dependency graph*.
 The graph contains `DependencyNode` instances.
 Each node represents one dependency.
 The direct dependencies of a node are its child nodes.
