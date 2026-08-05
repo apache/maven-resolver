@@ -18,27 +18,34 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Deploying artifacts and related metadata to a (remote) repository can be achieved via Resolver API with method [`org.eclipse.aether.RepositorySystem.deploy(RepositorySystemSession session, DeployRequest request)`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-api/src/main/java/org/eclipse/aether/RepositorySystem.java). This writes/uploads the given artifact(s) including metadata to the given repository leveraging a [`RepositoryConnector`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-spi/src/main/java/org/eclipse/aether/spi/connector/RepositoryConnector.java).
+You can deploy artifacts and related metadata to a (remote) repository with the Resolver API method [`org.eclipse.aether.RepositorySystem.deploy(RepositorySystemSession session, DeployRequest request)`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-api/src/main/java/org/eclipse/aether/RepositorySystem.java).
+The method writes or uploads them to the repository through a [`RepositoryConnector`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-spi/src/main/java/org/eclipse/aether/spi/connector/RepositoryConnector.java).
 
-The most prominent consumer of this API is probably [maven-deploy-plugin](https://maven.apache.org/plugins/maven-deploy-plugin/).
+The main consumer of this API is [maven-deploy-plugin](https://maven.apache.org/plugins/maven-deploy-plugin/).
 
 ## Repository Connector
 
-The default repository connector implementation at [`BasicRepositoryConnector`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-connector-basic/src/main/java/org/eclipse/aether/connector/basic/BasicRepositoryConnector.java) uses a `RepositoryLayout` to calculate the URL and a `Transporter` to achieve the actual upload/write of artifacts/metadata.
+The default implementation of the repository connector is [`BasicRepositoryConnector`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-connector-basic/src/main/java/org/eclipse/aether/connector/basic/BasicRepositoryConnector.java).
+It uses a `RepositoryLayout` to calculate the URL.
+It uses a `Transporter` to write or upload the artifacts and metadata.
 
 ## Repository Layout
 
-The repository layout determines the location to which the artifact is being written/uploaded with its `RepositoryLayout.getLocation(Artifact, true)` or `RepositoryLayout.getLocation(Metadata, true)` method. For [Maven 2 repositories](https://maven.apache.org/repositories/layout.html) the logic is implemented in [`Maven2RepositoryLayoutFactory`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-impl/src/main/java/org/eclipse/aether/internal/impl/Maven2RepositoryLayoutFactory.java).
+The repository layout determines the location where the artifact will be written or uploaded.
+It uses the `RepositoryLayout.getLocation(Artifact, true)` or `RepositoryLayout.getLocation(Metadata, true)` method for this.
+For [Maven 2 repositories](https://maven.apache.org/repositories/layout.html), [`Maven2RepositoryLayoutFactory`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-impl/src/main/java/org/eclipse/aether/internal/impl/Maven2RepositoryLayoutFactory.java) implements the logic.
 
 ## Transporter
 
-All transporter implementations have a [`put(...)`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-spi/src/main/java/org/eclipse/aether/spi/connector/transport/Transporter.java) method which is called during deployment. The repository's URL protocol determines which method is used for the deployment. The standard transporters implement `put(...)` like follows:
+All transporter implementations have a [`put(...)`](https://github.com/apache/maven-resolver/blob/master/maven-resolver-spi/src/main/java/org/eclipse/aether/spi/connector/transport/Transporter.java) method.
+Resolver calls the method during deployment.
+The URL protocol of the repository determines which method Resolver uses for the deployment.
+The standard transporters implement `put(...)` as follows:
 
 URL Protocol | Implementation | Description
  --- | --- | ---
-`file`, `bundle` | `org.eclipse.aether.transport.file.FileTransporter` | Writes artifact/metadata to the file system.
-`http`, `https` | multiple | Issues a HTTP PUT request for each given artifact/metadata.
+`file`, `bundle` | `org.eclipse.aether.transport.file.FileTransporter` | Writes the artifact or metadata to the file system.
+`http`, `https` | multiple | Issues an HTTP PUT request for each artifact or metadata.
 `classpath` | `org.eclipse.aether.transport.classpath.ClasspathTransporter` | Unsupported
-`minio+http`, `minio+https`, `s3+http`, `s3+https` | `org.eclipse.aether.transport.minio.MinioTransporter` | Uploads artifact/metadata as object to bucket. The location returned from the `RepositoryLayout` is being converted to an object and bucket name according to the configuration.
-`*` | `org.eclipse.aether.transport.wagon.WagonTransporter` | Calls `StreamingWagon.putFromStream(...)` or `Wagon.put(...)`. See [Apache Wagon](https://maven.apache.org/wagon/) for further details.
-
+`minio+http`, `minio+https`, `s3+http`, `s3+https` | `org.eclipse.aether.transport.minio.MinioTransporter` | Uploads the artifact or metadata as an object to the bucket. The configuration defines how the transporter converts the location from the `RepositoryLayout` into an object name and a bucket name.
+`*` | `org.eclipse.aether.transport.wagon.WagonTransporter` | Calls `StreamingWagon.putFromStream(...)` or `Wagon.put(...)`. [Apache Wagon](https://maven.apache.org/wagon/) provides further details.
