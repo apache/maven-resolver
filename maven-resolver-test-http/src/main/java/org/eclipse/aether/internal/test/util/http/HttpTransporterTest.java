@@ -926,8 +926,11 @@ public abstract class HttpTransporterTest {
         assumeTrue(supportsHttp3(), "Transporter does not support HTTP/3");
         session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_3);
         // both HTTP2 and HTTP3 endpoints are available at the same port
-        httpServer.addHttp2OnlyConnectorWithMutualTLS();
-        httpServer.addHttp3Connector(false, httpServer.getHttpsPort());
+        // reserve a port free for both TCP and UDP, as the same-numbered UDP port of an OS-assigned TCP port may be
+        // taken (https://github.com/apache/maven-resolver/issues/2036)
+        int port = httpServer.findFreeTcpAndUdpPort();
+        httpServer.addHttp2OnlyConnectorWithMutualTLS(port);
+        httpServer.addHttp3Connector(false, port);
         // alt-svc header should point to http/3
         httpServer.start();
         newTransporter(httpServer.getHttp3Url());
