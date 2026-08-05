@@ -18,12 +18,12 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-When resolving transitive dependencies, Resolver (former Aether) constructs a *dependency
-graph* consisting of `DependencyNode` instances where each node
-represents a dependency and its direct dependencies are represented as
-child nodes. During early stages of the resolution process, there are
-usually duplicate dependencies or even cycles in the graph as sketched
-below:
+During transitive dependency resolution, Resolver (former Aether) constructs a *dependency graph*.
+The graph contains `DependencyNode` instances.
+Each node represents one dependency.
+The direct dependencies of a node are its child nodes.
+During the early stages of resolution, the graph usually contains duplicate dependencies and sometimes cycles.
+The example below shows this.
 
 ```
    root
@@ -37,9 +37,9 @@ a:1   b:1  <--+
     +---------+
 ```
 
-Once this dependency graph has undergone conflict resolution, i.e.
-duplicate dependencies have been removed, one actually has a *dependency
-tree*. Taking the previous example, the tree might look like this:
+After conflict resolution, the graph becomes a *dependency tree*.
+Conflict resolution removes duplicate dependencies.
+The tree for the previous example looks like this:
 
 ```
    root
@@ -51,32 +51,26 @@ a:1   b:1
 c:1
 ```
 
-The dependency tree is a handy data structure to get the complete set of
-artifacts one would need to form a classpath etc. as a simple recursive
-traversal is sufficient to gather the relevant dependencies.
+The dependency tree is a useful data structure.
+It provides the complete set of artifacts that are necessary to form a classpath.
+A simple recursive traversal gathers the relevant dependencies.
 
 ## Troubleshooting a Dependency Graph
 
-The dependency tree provides a compact and basic means to end users to
-understand why/how a given artifact ended up among the dependencies. But
-as the examples above illustrate, the dependency tree misses some
-information compared to the dependency graph. For instance, the tree
-does not indicate that `b:1` also depends on `c:1`. To help
-troubleshooting complex dependency graphs, some configuration properties
-exist to keep useful data in the dependency graph returned by
-`RepositorySystem.collectDependencies()`.
+The dependency tree provides a basic way for end users to understand why and how a given artifact became a dependency.
+But the dependency tree misses some information that the dependency graph has.
+The examples above illustrate this.
+For example, the tree does not show that `b:1` also depends on `c:1`.
+To troubleshoot complex dependency graphs, some configuration properties keep useful data in the dependency graph returned by `RepositorySystem.collectDependencies()`.
 
-For instance, the configuration property
-`ConflictResolver.CONFIG_PROP_VERBOSE` can be enabled to produce a graph
-similar to m2e's dependency hierarchy view where conflicting nodes are
-retained. This gives end users a better understanding of all the paths
-that pull in a given dependency.
+For example, the configuration property `ConflictResolver.CONFIG_PROP_VERBOSE` can produce a graph similar to the dependency hierarchy view in m2e.
+The graph keeps the nodes that conflict.
+This helps end users understand all the paths that pull in a given dependency.
 
-The configuration property `DependencyManagerUtils.CONFIG_PROP_VERBOSE`
-can be enabled to record the attributes of a dependency before they were
-updated due to dependency management. This helps end users to understand
-why one version of a dependency and not the other is found in the graph
-or why a dependency ended up in a given scope.
+The configuration property `DependencyManagerUtils.CONFIG_PROP_VERBOSE` can record the attributes of a dependency.
+It records the attributes before dependency management updates them.
+This helps end users understand why the graph contains one version of a dependency instead of another.
+It also helps them understand why a dependency is in a given scope.
 
-Please see the API docs for said configuration properties for details
-regarding their effects and ways to access the additional data.
+The API documentation for these configuration properties describes their effects.
+It also describes how to access the additional data.
