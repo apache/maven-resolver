@@ -130,7 +130,7 @@ Therefore, no conflict happens. Resolver omits the "test" Guava during the "coll
 
 ### Important Consequences
 
-One consequence is not so obvious. It involves `maven-assembly-plugin`. You want to assemble the "runtime" dependencies of your module.
+One consequence is not so obvious. It involves the `maven-assembly-plugin`. You want to assemble the "runtime" dependencies of the module.
 
 If you assemble from within the project, for example in the package phase, the packaging will be incomplete. Guava will be missing. If you assemble from outside the project, the assembly will contain Guava. This includes assembly from a subsequent module of the build or from a downstream dependency.
 
