@@ -63,7 +63,7 @@ The examples above illustrate this.
 For example, the tree does not show that `b:1` also depends on `c:1`.
 To troubleshoot complex dependency graphs, some configuration properties keep useful data in the dependency graph returned by `RepositorySystem.collectDependencies()`.
 
-For example, the configuration property `ConflictResolver.CONFIG_PROP_VERBOSE` can produce a graph similar to the dependency hierarchy view in m2e.
+For example, enable the configuration property `ConflictResolver.CONFIG_PROP_VERBOSE` to produce a graph similar to the dependency hierarchy view in m2e.
 The graph keeps the nodes that conflict.
 This helps end users understand all the paths that pull in a given dependency.
 
