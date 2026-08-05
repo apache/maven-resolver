@@ -58,7 +58,7 @@ A simple recursive traversal gathers the relevant dependencies.
 ## Troubleshooting a Dependency Graph
 
 The dependency tree provides a basic way for end users to understand why and how a given artifact became a dependency.
-But the dependency tree misses some information that the dependency graph has.
+But the dependency tree omits some information that the dependency graph has.
 The examples above illustrate this.
 For example, the tree does not show that `b:1` also depends on `c:1`.
 To troubleshoot complex dependency graphs, some configuration properties keep useful data in the dependency graph returned by `RepositorySystem.collectDependencies()`.
