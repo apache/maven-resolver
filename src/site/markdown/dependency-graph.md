@@ -67,7 +67,7 @@ For example, enable the configuration property `ConflictResolver.CONFIG_PROP_VER
 The graph keeps the nodes that conflict.
 This helps end users understand all the paths that pull in a given dependency.
 
-The configuration property `DependencyManagerUtils.CONFIG_PROP_VERBOSE` can record the attributes of a dependency.
+Enable the configuration property `DependencyManagerUtils.CONFIG_PROP_VERBOSE` to record the attributes of a dependency before the dependency manager modifies them.
 It records the attributes before dependency management updates them.
 This helps end users understand why the graph contains one version of a dependency instead of another.
 It also helps them understand why a dependency is in a given scope.
