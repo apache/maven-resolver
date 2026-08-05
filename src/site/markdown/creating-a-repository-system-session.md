@@ -43,4 +43,4 @@ Read the API documentation for `RepositorySystemSession.SessionBuilder` to learn
 
 If you use a Maven plugin or run code embedded in Maven, the session is already created for you. You can derive a new session with the copy constructor of `DefaultRepositorySystemSession` if you must alter the session.
 
-If you use Maven and want to read configuration from the user's `settings.xml`, use the [MIMA](https://github.com/maveniverse/mima) library. MIMA provides the necessary parts. Direct any questions about MIMA to the Maven mailing list.
+To read configuration from the user's `settings.xml` in a non-Maven project, use the [MIMA](https://github.com/maveniverse/mima) library. MIMA provides the necessary parts. Direct any questions about MIMA to the Maven mailing list.
