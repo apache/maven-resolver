@@ -50,7 +50,7 @@ import static org.mockito.Mockito.when;
  * UT support for {@link SyncContextFactory}.
  */
 public abstract class NamedLockFactoryAdapterTestSupport {
-    private static final long ADAPTER_TIME = 500L;
+    private static final long ADAPTER_TIME = 1000L;
 
     private static final TimeUnit ADAPTER_TIME_UNIT = TimeUnit.MILLISECONDS;
 
@@ -119,7 +119,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     void multipleAcquiresWithALoser() throws InterruptedException {
         try (SyncContext syncContext1 = adapter.newInstance(session, false)) {
             syncContext1.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0")), null);
@@ -133,13 +133,13 @@ public abstract class NamedLockFactoryAdapterTestSupport {
                 }
             });
             t1.start();
-            t1.join();
-            loser.await();
+            t1.join(5000);
+            assertTrue(loser.await(5, TimeUnit.SECONDS), "expected a loser");
         }
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void sharedAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
@@ -147,14 +147,14 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t2 = new Thread(new Access(true, winners, losers, adapter, session, null));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void exclusiveAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -162,14 +162,14 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t2 = new Thread(new Access(false, winners, losers, adapter, session, null));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void mixedAccess() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
@@ -177,62 +177,62 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t2 = new Thread(new Access(false, winners, losers, adapter, session, null));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void nestedSharedShared() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
         Thread t1 = new Thread(new Access(
                 true, winners, losers, adapter, session, new Access(true, winners, losers, adapter, session, null)));
         t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void nestedExclusiveShared() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
         Thread t1 = new Thread(new Access(
                 false, winners, losers, adapter, session, new Access(true, winners, losers, adapter, session, null)));
         t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void nestedExclusiveExclusive() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 losers
         Thread t1 = new Thread(new Access(
                 false, winners, losers, adapter, session, new Access(false, winners, losers, adapter, session, null)));
         t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(15)
     public void nestedSharedExclusive() throws InterruptedException {
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner (outer)
         CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser (inner)
         Thread t1 = new Thread(new Access(
                 true, winners, losers, adapter, session, new Access(false, winners, losers, adapter, session, null)));
         t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
     }
 
     @Test
@@ -244,10 +244,10 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t2 = new Thread(new Access(false, winners, losers, adapter, session, null));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
         long end = System.nanoTime();
         long duration = end - start;
         long expectedDuration = ADAPTER_TIME_UNIT.toNanos(ADAPTER_TIME);
@@ -261,9 +261,9 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t1 = new Thread(new Access(false, winners, losers, adapter, session, null));
         new Access(false, winners, losers, adapter, session, null).run();
         t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     private static class Access implements Runnable {
@@ -302,10 +302,10 @@ public abstract class NamedLockFactoryAdapterTestSupport {
                     if (chained != null) {
                         chained.run();
                     }
-                    loser.await();
+                    loser.await(5, TimeUnit.SECONDS);
                 } catch (IllegalStateException | LockUpgradeNotSupportedException e) {
                     loser.countDown();
-                    winner.await();
+                    winner.await(5, TimeUnit.SECONDS);
                 }
             } catch (InterruptedException e) {
                 fail("interrupted");

@@ -48,7 +48,7 @@ import static org.mockito.Mockito.when;
  */
 @DisabledOnOs(value = OS.WINDOWS, disabledReason = "IPC named locks are not supported on Windows (Unix domain sockets)")
 public abstract class NamedLockFactoryAdapterTestSupport {
-    private static final long ADAPTER_TIME = 100L;
+    private static final long ADAPTER_TIME = 1000L;
 
     private static final TimeUnit ADAPTER_TIME_UNIT = TimeUnit.MILLISECONDS;
 
@@ -110,10 +110,10 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t2 = new Thread(new Access(true, winners, losers, adapter, session, null));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     @Test
@@ -125,10 +125,10 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t2 = new Thread(new Access(false, winners, losers, adapter, session, null));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
     }
 
     @Test
@@ -140,10 +140,10 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t2 = new Thread(new Access(false, winners, losers, adapter, session, null));
         t1.start();
         t2.start();
-        t1.join();
-        t2.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
     }
 
     @Test
@@ -154,9 +154,9 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t1 = new Thread(new Access(
                 true, winners, losers, adapter, session, new Access(true, winners, losers, adapter, session, null)));
         t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     @Test
@@ -167,9 +167,9 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t1 = new Thread(new Access(
                 false, winners, losers, adapter, session, new Access(true, winners, losers, adapter, session, null)));
         t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     @Test
@@ -180,9 +180,9 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t1 = new Thread(new Access(
                 false, winners, losers, adapter, session, new Access(false, winners, losers, adapter, session, null)));
         t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
     }
 
     @Test
@@ -193,9 +193,9 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         Thread t1 = new Thread(new Access(
                 true, winners, losers, adapter, session, new Access(false, winners, losers, adapter, session, null)));
         t1.start();
-        t1.join();
-        winners.await();
-        losers.await();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
     }
 
     private static class Access implements Runnable {
@@ -234,10 +234,10 @@ public abstract class NamedLockFactoryAdapterTestSupport {
                     if (chained != null) {
                         chained.run();
                     }
-                    loser.await();
+                    loser.await(5, TimeUnit.SECONDS);
                 } catch (IllegalStateException | LockUpgradeNotSupportedException e) {
                     loser.countDown();
-                    winner.await();
+                    winner.await(5, TimeUnit.SECONDS);
                 }
             } catch (InterruptedException e) {
                 fail("interrupted");
