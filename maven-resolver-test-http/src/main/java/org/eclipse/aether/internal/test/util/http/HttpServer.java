@@ -330,9 +330,10 @@ public class HttpServer {
      * Finds a port that is free for both TCP and UDP, so that the HTTP/2 (TCP) and HTTP/3 (UDP) connectors can be
      * bound to the same port number. TCP and UDP port spaces are independent, so an OS-assigned TCP port may have its
      * same-numbered UDP port already taken by another process, which makes binding HTTP/3 to the HTTPS port flaky.
+     *
      * @return a port number that is (at probe time) free for both TCP and UDP
      */
-    public int findFreeTcpAndUdpPort() {
+    int findFreeTcpAndUdpPort() {
         for (int i = 0; i < 20; i++) {
             int port;
             try (ServerSocket serverSocket = new ServerSocket(0)) {
