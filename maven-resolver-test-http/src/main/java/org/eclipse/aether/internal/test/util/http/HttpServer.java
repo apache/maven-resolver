@@ -20,6 +20,9 @@ package org.eclipse.aether.internal.test.util.http;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
@@ -225,22 +228,26 @@ public class HttpServer {
     }
 
     public HttpServer addHttp2ConnectorWithMutualTLS() {
-        return addHttp2Connector(true, true);
+        return addHttp2Connector(true, true, -1);
     }
 
     public HttpServer addHttp2Connector() {
-        return addHttp2Connector(false, true);
+        return addHttp2Connector(false, true, -1);
     }
 
     public HttpServer addHttp2OnlyConnector() {
-        return addHttp2Connector(false, false);
+        return addHttp2Connector(false, false, -1);
     }
 
     public HttpServer addHttp2OnlyConnectorWithMutualTLS() {
-        return addHttp2Connector(true, false);
+        return addHttp2Connector(true, false, -1);
     }
 
-    private HttpServer addHttp2Connector(boolean needClientAuth, boolean needHttp11) {
+    public HttpServer addHttp2OnlyConnectorWithMutualTLS(int port) {
+        return addHttp2Connector(true, false, port);
+    }
+
+    private HttpServer addHttp2Connector(boolean needClientAuth, boolean needHttp11, int port) {
         if (httpsConnector == null) {
             SslContextFactory.Server ssl = createServerSslContextFactory(needClientAuth);
 
@@ -264,6 +271,9 @@ public class HttpServer {
                 httpsConnector = new ServerConnector(server, tls, alpn, http2, http1);
             } else {
                 httpsConnector = new ServerConnector(server, tls, alpn, http2);
+            }
+            if (port != -1) {
+                httpsConnector.setPort(port);
             }
             server.addConnector(httpsConnector);
             try {
@@ -314,6 +324,36 @@ public class HttpServer {
             }
         }
         return this;
+    }
+
+    /**
+     * Finds a port that is free for both TCP and UDP, so that the HTTP/2 (TCP) and HTTP/3 (UDP) connectors can be
+     * bound to the same port number. TCP and UDP port spaces are independent, so an OS-assigned TCP port may have its
+     * same-numbered UDP port already taken by another process, which makes binding HTTP/3 to the HTTPS port flaky.
+     * @return a port number that is (at probe time) free for both TCP and UDP
+     */
+    public int findFreeTcpAndUdpPort() {
+        for (int i = 0; i < 20; i++) {
+            int port;
+            try (ServerSocket serverSocket = new ServerSocket(0)) {
+                port = serverSocket.getLocalPort();
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to find a free TCP port", e);
+            }
+            if (isUdpPortFree(port)) {
+                return port;
+            }
+        }
+        throw new IllegalStateException("Failed to find a port free for both TCP and UDP");
+    }
+
+    private static boolean isUdpPortFree(int port) {
+        try (DatagramSocket socket = new DatagramSocket(null)) {
+            socket.bind(new InetSocketAddress(port));
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public List<LogEntry> getLogEntries() {
