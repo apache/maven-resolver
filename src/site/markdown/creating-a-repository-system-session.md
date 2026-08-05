@@ -37,7 +37,7 @@ import org.eclipse.aether.supplier.RepositorySystemSupplier;
     }
 ```
 
-Only the local repository must be specified. The other settings are initialized with default values.
+Only the local repository must be specified. The other settings have default values.
 
 Read the API documentation for `RepositorySystemSession.SessionBuilder` to learn about all the settings for a session.
 
