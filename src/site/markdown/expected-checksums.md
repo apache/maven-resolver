@@ -93,13 +93,10 @@ All the expected checksums above are used only in transport. They relate to URLs
 
 `TrustedChecksumsSource` is an SPI component. It delivers the expected checksums for an artifact. It does not use any transport API element. This API is not bound to transport. It is generic.
 
-The trusted checksums map almost one-to-one into the Provided strategy. Resolver provides an implementation that delegates the Provided checksums to the Trusted checksums. The Provided and Trusted checksums become equivalent for transport.
+Trusted checksums map almost one-to-one into the Provided strategy. Resolver provides an implementation that delegates the Provided checksums to the Trusted checksums. The Provided and Trusted checksums become equivalent for transport.
 
-The biggest advantage of Trusted Checksums is their transport independence. They work in places where there is no transport. One use of Trusted Checksums is the ArtifactResolver post-processing.
-
-This functionality verifies all the resolved artifacts against the Trusted Checksums. It costs checksum calculation overhead. The user provides a known checksum. The checksum can be cryptographically strong.
-
-The functionality can help when the user cannot trust the local repository. An unknown or untrusted party can share the local repository.
+Transport independence is the biggest advantage of Trusted Checksums. They work in places where there is no transport such as ArtifactResolver post-processing. This functionality verifies all the resolved artifacts against the Trusted Checksums. The user provides a known checksum that can be cryptographically strong.
+This helps when the user cannot trust the local repository because an unknown or untrusted party shares the local repository.
 
 You can record the checksums with the Trusted Checksum post-processor. For example, run it in a known and safe environment. Then distribute the produced checksum within your organization.
 
@@ -113,7 +110,7 @@ Related configuration keys:
 
 The summary file source uses one file. The file is compatible with the GNU coreutils format. Each line contains the hash and the relative path of an artifact. The path is relative to the local repository basedir.
 
-You can produce the file with the `sha1sum` command line tool. GNU coreutils provides this tool. You can use the same tools to verify the artifacts in the local repository in a batch.
+You can produce the file with the `sha1sum` command line tool from GNU coreutils. You can use the same tool to verify the artifacts in the local repository.
 
 Each summary file contains information for one checksum algorithm. The file extension represents the algorithm.
 
@@ -153,6 +150,6 @@ The sparse directory can contain checksums for multiple algorithms. The file ext
 
 ### Notes On Using Trusted Checksums
 
-- Use the `--strict-checksums` flag to fail a build if the expected checksums of the downloaded artifacts do not match.
+- Use the `--strict-checksums` flag to fail a build if the expected checksum of a downloaded artifacts does not match the trusted checksum.
 - You can specify more than one checksum algorithm for the `aether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms` system property. The listed checksums must be a subset of the checksums in `aether.checksums.algorithms`.
-- Most dependency management tools do not update trusted checksum files. This is true if the files are stored in version control alongside the source code. We hope that the maintainers of these tools support Maven trusted checksums in the near future.
+- Most dependency management tools do not update trusted checksum files. This is true if the files are stored in version control alongside the source code. We hope that these tools will support Maven trusted checksums in the near future.
