@@ -29,19 +29,20 @@ This page covers the different ways Resolver can retrieve the "expected" checksu
 
 In the past, Resolver got the expected checksum from the artifact checksum URL. This is the artifact URL with an algorithm extension like ".sha1" appended. For example, if the artifact URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar then the SHA-1 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.sha1 and the MD5 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.md5. This logic is still present.
 
-Resolver has three strategies for retrieving the expected checksum: "Provided", "Remote Included", and "Remote External". All three strategies provide the source of the expected checksum. The strategies differ in **how** Resolver gets the checksum.
+Resolver has three strategies for retrieving the expected checksum: "Provided", "Remote Included", and "Remote External". Appending a checksum extension to the artifact URL is an example of the "Remote External" strategy. 
+The strategies differ in **how** Resolver gets the checksum.
 
-**Provided** checksums come to Resolver by some alternative means. The checksums can arrive before any transport operation. Users can implement an SPI extension point. The extension point gives users their own way to provide checksums.
+**Provided** checksums come to Resolver by some means. The checksums can arrive before any transport operation. Users can implement an SPI extension point. The extension point gives users their own way to provide checksums.
 
 Users can also use the Resolver implementation that comes with Resolver. The implementation delegates the provided checksums to the trusted checksums. The section "Trusted Checksums" describes them.
 
-The remote party includes the **Remote Included** checksums in its response. Most modern repository managers send checksums in the response headers. The checksums are usually the standard SHA-1 and MD5. Maven Central sends them as well. The Google Mirror of Maven Central sends them too.
+**Remote Included** checksums are bundled in the same response that the artifact itself arrives in. Most modern repository managers send checksums in the HTTP response headers. Maven Central and the Google Mirror of Maven Central send the SHA-1 checksum as a hexadecimal string in the X-Checksum-Sha1 HTTP header.
+They send the hexadecimal encoded MD5 checksum in the X-Checksum-Md5 HTTP header.
+Resolver gets the content and the checksums in one response.
 
-Resolver extracts the checksums from the response. Then it gets the hashes that the remote repository provided with the content. This saves one HTTP round-trip. Resolver gets the content and the checksums in one response.
+**Remote External** checksums are the classic checksums. The remote repository stores them next to the artifact files. The layout of the remote repository defines the storage position. To get a Remote External checksum, Resolver sends a new HTTP GET request for the artifact checksum URL. The order of the requested checksums follows the order in the layout configuration. Resolver asks for the checksums in the same order as the parameter contains the algorithm names.
 
-The **Remote External** checksums are the classic checksums. The remote repository stores them next to the artifact files. The layout of the remote repository defines the storage position. To get a Remote External checksum, send a new HTTP request to the remote repository. The order of the requested checksums follows the order in the layout configuration. Resolver asks for the checksums in the same order as the parameter contains the algorithm names.
-
-When retrieving an artifact, Resolver runs the strategies in order:
+When retrieving an artifact, Resolver runs the strategies in this order until it finds a checksum:
 
 1. Provided
 2. Remote Included
