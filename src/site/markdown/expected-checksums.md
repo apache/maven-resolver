@@ -18,22 +18,20 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Resolver uses checksums during transport to verify that the artifact is intact. The latest Resolver also uses checksums in other ways. For example, it verifies that the artifact is intact during resolution.
+Resolver uses checksums during transport to verify that the artifact is intact. The latest Resolver also uses checksums at other times. For example, it verifies that the artifact is intact during resolution.
 
-Checksums in Resolver have one purpose: integrity verification. Resolver determines the "calculated" checksum for an artifact by applying a mathematical algorithm to the local copy of the artifact. Then it retrieves the "expected" checksum for the same artifact from he same source it got the artifact from. Then it compares the two checksums.
+Checksums in Resolver have one purpose: integrity verification. Resolver determines the "calculated" checksum for an artifact by applying a mathematical algorithm to its local copy of the artifact. It can read the bytes and calculate the checksum during the download or from a file already present on the local file system. Then it retrieves the "expected" checksum for the same artifact from the same source it got the artifact from. It compares the two checksums to see if the artifact is intact or corrupt.
 
-Resolver calculates a checksum from the bytes of an artifact using a standard algorithm. It can read the bytes and calculate the checksum during the download or from a file already present on the local file system.
-
-This page covers all the "expected" checksum varieties.
+This page covers the different ways Resolver can retrieve the "expected" checksum for an artifact that it compares against the locally calculated checksum.
 
 
 ## Transport Checksum Strategies
 
-In the past, Resolver got the expected checksum from the artifact checksum URL. This is the artifact URL with an algorithm extension like ".sha1" appended. For example, if the artifact URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar then the SHA-1 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.sha1 and the MD5 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.md5. This logic is still present. The current Resolver extends this logic in several ways.
+In the past, Resolver got the expected checksum from the artifact checksum URL. This is the artifact URL with an algorithm extension like ".sha1" appended. For example, if the artifact URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar then the SHA-1 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.sha1 and the MD5 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.md5. This logic is still present.
 
-Resolver added two new strategies to the "obtain checksum" step. The three expected checksum kinds in transport are "Provided", "Remote Included", and "Remote External". All three strategies provide the source of the expected checksum. The strategies differ in **how** Resolver gets the checksum.
+Resolver has three strategies for retrieving the expected checksum: "Provided", "Remote Included", and "Remote External". All three strategies provide the source of the expected checksum. The strategies differ in **how** Resolver gets the checksum.
 
-The **Provided** checksums come to Resolver by some alternative means. The checksums can arrive before any transport operation. Users can implement an SPI extension point. The extension point gives users their own way to provide checksums.
+**Provided** checksums come to Resolver by some alternative means. The checksums can arrive before any transport operation. Users can implement an SPI extension point. The extension point gives users their own way to provide checksums.
 
 Users can also use the Resolver implementation that comes with Resolver. The implementation delegates the provided checksums to the trusted checksums. The section "Trusted Checksums" describes them.
 
@@ -43,29 +41,33 @@ Resolver extracts the checksums from the response. Then it gets the hashes that 
 
 The **Remote External** checksums are the classic checksums. The remote repository stores them next to the artifact files. The layout of the remote repository defines the storage position. To get a Remote External checksum, send a new HTTP request to the remote repository. The order of the requested checksums follows the order in the layout configuration. Resolver asks for the checksums in the same order as the parameter contains the algorithm names.
 
-During one artifact retrieval, Resolver runs the strategies in the order above. If the current strategy has no answer, Resolver tries the next strategy. If Resolver gets the expected checksum from the Provided source, it does not consult the Remote Included and Remote External sources.
+When retrieving an artifact, Resolver runs the strategies in order:
 
-Almost all repository managers and remote repositories send the standard checksums in their response. These repositories include Maven Central and the Google Mirror of Maven Central. If any standard checksum is enabled, the Remote Included strategy usually satisfies the verification. Then Resolver skips the Remote External strategy.
+1. Provided
+2. Remote Included
+3. Remote External
 
-If Resolver gets the hashes with the Remote Included strategy, it halves the number of HTTP requests to download an artifact.
+If Resolver gets the expected checksum from the Provided source, it does not consult the Remote Included and Remote External sources.
+
+Almost all repository managers and remote repositories send standard checksums in their response. These repositories include Maven Central and the Google Mirror of Maven Central. If any standard checksum is enabled, the Remote Included strategy usually satisfies the verification. Then Resolver skips the Remote External strategy. This halves the number of HTTP requests to download an artifact.
 
 Related configuration keys:
 * `aether.layout.maven2.checksumAlgorithms` A comma-separated list of checksum algorithms. The order is important. The transport asks for the checksums in the specified order. The default is "SHA-1,MD5". The first received and matched checksum stops the integrity verification algorithm.
 
-Note: Since Maven 3.9.x you can use the expression `${session.rootDirectory}/.mvn/checksums/` to store checksums along with sources. `session.rootDirectory` becomes an absolute path. The path points to the root directory of your project. The `.mvn` directory is usually in the root directory.
+In Maven 3.9.x and later, you can use the expression `${session.rootDirectory}/.mvn/checksums/` to store checksums alongside sources. `session.rootDirectory` becomes an absolute path. The path points to the root directory of your project. The `.mvn` directory is usually in the root directory.
 
 
 ### Provided Checksums
 
-The Resolver SPI `ProvidedChecksumsSource` feeds the Provided Checksums to Resolver before the actual transport. Resolver uses these checksums only during transport. It uses them to verify the integrity of the transported payload. The Provided checksums cannot verify the integrity of cached artifacts. If you build with an empty repository, all your artifacts go through transport. Then the Provided checksums can verify them.
+The Resolver SPI `ProvidedChecksumsSource` feeds the Provided Checksums to Resolver before the actual transport. Resolver uses these checksums during transport to verify the integrity of the transported payload. Provided checksums cannot verify the integrity of cached artifacts. If you build with an empty repository, all your artifacts go through transport. Then the Provided checksums can verify them.
 
-Resolver provides one SPI implementation with the distribution. The implementation delegates to the trusted checksums.
+Resolver provides one SPI implementation with the distribution. This implementation delegates to the trusted checksums.
 
 ### Remote Included Checksums
 
-**Note:** Remote Included checksums work only with transport-http. They do not work with transport-wagon.
+**Note:** Remote Included checksums only work with transport-http. They do not work with transport-wagon.
 
-Many repository services emit the reference checksums in the artifact response. Maven Central is one of these services. The service emits the checksums as HTTP headers. The Remote Included feature halves the number of HTTP requests. Resolver gets the artifact and the expected checksum with one HTTP round-trip.
+Many repository services include the reference checksums in the HTTP response headers. Maven Central is one of these services. Resolver gets the artifact and the expected checksum with one HTTP round-trip.
 
 Related configuration keys:
 * `aether.connector.basic.smartChecksums` to enable or disable Remote Included checksums.
@@ -73,25 +75,16 @@ Related configuration keys:
 The Remote Included checksums support several "strategies" to extract checksums from the HTTP response header.
 
 
-#### Sonatype Nexus 2
-
-Sonatype Nexus 2 generates the `ETag` header from a SHA-1 hash. It shields the hash in the Plexus Cipher style. Only SHA-1 is available in the artifact response header.
-
-Emitted by: Sonatype Nexus2 only.
-
-
 #### Non-standard `X-` headers
 
-Maven Central emits the headers `x-checksum-sha1` and `x-checksum-md5` along with the artifact response. Google GCS uses the headers `x-goog-meta-checksum-sha1` and `x-goog-meta-checksum-md5`. AWS S3 uses the headers `x-amz-meta-checksum-sha1` and `x-amz-meta-checksum-md5`. Resolver detects all these headers and uses their values.
+Maven Central includes the headers `x-checksum-sha1` and `x-checksum-md5` in the HTTP response. Google Cloud Storage includes the headers `x-goog-meta-checksum-sha1` and `x-goog-meta-checksum-md5`. AWS S3 includes the headers `x-amz-meta-checksum-sha1` and `x-amz-meta-checksum-md5`. Resolver detects all these headers and uses their values.
 
 Emitted by: Maven Central, GCS, AWS S3, some CDNs and probably more.
 
 
 ### Remote External checksums
 
-The Remote External checksums are the classic checksums. They exist since Maven 1. The remote repository stores them next to the payload file. For example, it stores "lib.jar" and the checksum "lib.jar.sha1". They are the oldest kind of Resolver checksums.
-
-Their shortcoming is that only SHA-1 and MD5 are often produced. The consumer is tied to the checksum algorithms that the remote repository provides. The payload and the checksum come from the same origin. If the origin is not trusted, this can be a risk. Maven Central is an example of a trusted origin.
+The Remote External checksums are the classic checksums. The remote repository stores them next to the payload file. For example, it stores "lib.jar" and the checksum "lib.jar.sha1". They are the oldest kind of Resolver checksums.
 
 
 ## Trusted Checksums
