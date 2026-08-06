@@ -29,9 +29,9 @@ This page covers all the "expected" checksum varieties.
 
 ## Transport Checksum Strategies
 
-In the past, Resolver got the expected checksum with a request to the artifact checksum URL. The artifact checksum URL is the artifact URL with ".sha1" appended. This logic is still present in the current Resolver. The current Resolver extends this logic in several ways.
+In the past, Resolver got the expected checksum from the artifact checksum URL. This is the artifact URL with am algorithm extension like ".sha1" appended. For example, if the artifact URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar then the SHA-1 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.sha1 and the MD5 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.md5. This logic is still present. The current Resolver extends this logic in several ways.
 
-Resolver added two new strategies to the "obtain checksum" step. The three expected checksum kinds in transport are "Provided", "Remote Included", and "Remote External". All the strategies provide the source of the expected checksum. The strategies differ in **how** Resolver gets the checksum.
+Resolver added two new strategies to the "obtain checksum" step. The three expected checksum kinds in transport are "Provided", "Remote Included", and "Remote External". All three strategies provide the source of the expected checksum. The strategies differ in **how** Resolver gets the checksum.
 
 The **Provided** checksums come to Resolver by some alternative means. The checksums can arrive before any transport operation. Users can implement an SPI extension point. The extension point gives users their own way to provide checksums.
 
