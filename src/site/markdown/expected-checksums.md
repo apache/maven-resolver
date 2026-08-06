@@ -20,7 +20,7 @@ under the License.
 
 Resolver uses checksums during transport to verify that the artifact is intact. The latest Resolver also uses checksums in other ways. For example, it verifies that the artifact is intact during resolution.
 
-All checksum uses in Resolver have one purpose. That purpose is integrity verification. Resolver calculates the "calculated" checksum for a payload. Then it gets the "expected" checksum for the same payload. Then it compares the two checksums.
+Checksums in Resolver have one purpose. That purpose is integrity verification. Resolver calculates the "calculated" checksum for a payload. Then it gets the "expected" checksum for the same payload. Then it compares the two checksums.
 
 Resolver calculates a checksum for the bytes of an artifact using a standard algorithm. It can read the bytes and calculate the checksum during the download or from a file already present on the local file system.
 
