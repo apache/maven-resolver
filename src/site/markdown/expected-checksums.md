@@ -91,14 +91,14 @@ The Remote External checksums are the classic checksums. The remote repository s
 
 All the expected checksums above are used only in transport. They relate to URLs, HTTP requests, and HTTP responses. Or they require transport related API elements.
 
-`TrustedChecksumsSource` is an SPI component. It delivers the expected checksums for an artifact. It does not use any transport API element. This API is not bound to transport. It is generic.
+`TrustedChecksumsSource` is an SPI component. It delivers the expected checksums for an artifact. This API is not bound to transport. It is generic.
 
-Trusted checksums map almost one-to-one into the Provided strategy. Resolver provides an implementation that delegates the Provided checksums to the Trusted checksums. The Provided and Trusted checksums become equivalent for transport.
+Trusted checksums map almost one-to-one into the Provided strategy. `TrustedChecksumsSource` in the Resolver implementation *provides* the Trusted checksums to the Resolver.
 
 Transport independence is the biggest advantage of Trusted Checksums. They work in places where there is no transport such as ArtifactResolver post-processing. This functionality verifies all the resolved artifacts against the Trusted Checksums. The user provides a known checksum that can be cryptographically strong.
 This helps when the user cannot trust the local repository because an unknown or untrusted party shares the local repository.
 
-You can record the checksums with the Trusted Checksum post-processor. For example, run it in a known and safe environment. Then distribute the produced checksum within your organization.
+You can record the checksums with the Trusted Checksum post-processor. For example, run it in a known and safe environment to record the current checksums. Distribute the produced checksum within your organization. Then the build fails if at some point in the future the artifact changes.
 
 The Trusted Checksums distribution provides two source implementations.
 
