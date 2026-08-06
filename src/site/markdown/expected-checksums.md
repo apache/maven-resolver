@@ -112,7 +112,7 @@ The summary file source uses one file. The file is compatible with the GNU coreu
 
 You can produce the file with the `sha1sum` command line tool from GNU coreutils. You can use the same tool to verify the artifacts in the local repository.
 
-Each summary file contains information for one checksum algorithm. The file extension represents the algorithm.
+Each summary file contains checksums computed by one algorithm. The file extension represents the algorithm.
 
 If you use Maven 3.9.x, use the following procedure to save the summary checksum file alongside your project code:
 
@@ -128,7 +128,7 @@ If you use Maven 3.9.x, use the following procedure to save the summary checksum
    -Daether.artifactResolver.postProcessor.trustedChecksums.failIfMissing=true
    ```
 
-2. Run a build with trusted checksum recording enabled:
+2. Build with trusted checksum recording enabled:
 
    ```sh
    mvn clean install -Daether.artifactResolver.postProcessor.trustedChecksums.record=true
@@ -150,6 +150,6 @@ The sparse directory can contain checksums for multiple algorithms. The file ext
 
 ### Notes On Using Trusted Checksums
 
-- Use the `--strict-checksums` flag to fail a build if the expected checksum of a downloaded artifacts does not match the trusted checksum.
+- Use the `--strict-checksums` flag to fail a build if the expected checksum of a downloaded artifact does not match the trusted checksum.
 - You can specify more than one checksum algorithm for the `aether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms` system property. The listed checksums must be a subset of the checksums in `aether.checksums.algorithms`.
 - Most dependency management tools do not update trusted checksum files. This is true if the files are stored in version control alongside the source code. We hope that these tools will support Maven trusted checksums in the near future.
