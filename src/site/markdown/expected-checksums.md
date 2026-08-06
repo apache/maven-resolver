@@ -37,7 +37,7 @@ Users can also use the trusted checksum SPI bundled with the Resolver implementa
 They send the hexadecimal encoded MD5 checksum in the X-Checksum-Md5 HTTP header.
 Resolver gets the content and the checksums in one HTTP request.
 
-**Remote External** checksums are the classic checksums. The remote repository stores them next to the artifact files. To get a Remote External checksum, Resolver sends a new HTTP GET request for the artifact checksum URL.  This is the artifact URL with an algorithm extension like ".sha1" appended. For example, if the artifact URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar then the SHA-1 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.sha1 and the MD5 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.md5.
+**Remote External** checksums are separate resources in the remote repository. The remote repository stores them next to the artifact files. To get a Remote External checksum, Resolver sends a new HTTP GET request for the artifact checksum URL.  This is the artifact URL with an algorithm extension such as ".sha1" appended. For example, if the artifact URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar, then the SHA-1 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.sha1, and the MD5 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.md5.
 
 
 When retrieving an artifact, Resolver runs the strategies in this order until it finds a checksum:
@@ -48,10 +48,11 @@ When retrieving an artifact, Resolver runs the strategies in this order until it
 
 If Resolver gets the expected checksum from the Provided source, it does not consult the Remote Included and Remote External sources.
 
-Almost all repository managers and remote repositories send standard checksums in their response. These repositories include Maven Central and the Google Mirror of Maven Central. If any standard checksum is enabled, the Remote Included strategy usually satisfies the verification. Then Resolver skips the Remote External strategy. This halves the number of HTTP requests to download an artifact.
+Almost all repository managers and remote repositories send standard checksums in their responses.
+If any standard checksum algorithm is enabled, the Remote Included strategy usually finds a checksum. Then Resolver skips the Remote External strategy.
 
 Related configuration keys:
-* `aether.layout.maven2.checksumAlgorithms` A comma-separated list of checksum algorithms. The order is important. The transport asks for the checksums in the specified order. The default is "SHA-1,MD5". The first received and matched checksum stops the integrity verification algorithm.
+* `aether.layout.maven2.checksumAlgorithms` A comma-separated list of checksum algorithms. The order is important. The transport asks for the checksums in the specified order. The default is "SHA-1,MD5". The first available algorithm will be used. For example, if you prefer MD5 but are willing to use SHA-1, set `aether.layout.maven2.checksumAlgorithms` to "MD5,SHA-1".
 
 In Maven 3.9.x and later, you can use the expression `${session.rootDirectory}/.mvn/checksums/` to store checksums alongside sources. `session.rootDirectory` becomes an absolute path. The path points to the root directory of your project. The `.mvn` directory is usually in the root directory.
 
@@ -71,14 +72,14 @@ Many repository services include the reference checksums in the HTTP response he
 Related configuration keys:
 * `aether.connector.basic.smartChecksums` to enable or disable Remote Included checksums.
 
-The Remote Included checksums support several "strategies" to extract checksums from the HTTP response header.
 
+Resolver checks several non-standard `X-` headers for checksums:
 
-#### Non-standard `X-` headers
+* `x-checksum-sha1` and `x-checksum-md5`: Maven Central and the Google Mirror of Maven Central
+* `x-goog-meta-checksum-sha1` and `x-goog-meta-checksum-md5`: Google Cloud Storage
+* `x-amz-meta-checksum-sha1` and `x-amz-meta-checksum-md5`:  AWS S3
 
-Maven Central includes the headers `x-checksum-sha1` and `x-checksum-md5` in the HTTP response. Google Cloud Storage includes the headers `x-goog-meta-checksum-sha1` and `x-goog-meta-checksum-md5`. AWS S3 includes the headers `x-amz-meta-checksum-sha1` and `x-amz-meta-checksum-md5`. Resolver detects all these headers and uses their values.
-
-Emitted by: Maven Central, GCS, AWS S3, some CDNs and probably more.
+Resolver detects all these headers and uses their values. You don't need to tell it in advance which variant to expect.
 
 
 ### Remote External checksums
