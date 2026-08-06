@@ -84,7 +84,7 @@ Resolver detects all these headers and uses their values. You don't need to tell
 
 ### Remote External checksums
 
-The Remote External checksums are the classic checksums. The remote repository stores them next to the payload file. For example, it stores "lib.jar" and the checksum "lib.jar.sha1". They are the oldest kind of Resolver checksums.
+The Remote External checksums are the classic checksums. The remote repository stores them next to the payload file. For example, it stores "lib.jar" and the checksum "lib.jar.sha1" in the same directory. They are the oldest kind of Resolver checksums.
 
 
 ## Trusted Checksums
