@@ -18,7 +18,8 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Resolver uses checksums during transport to verify that the artifact is intact. The latest Resolver also uses checksums at other times. For example, it verifies that the artifact is intact during resolution.
+Resolver uses checksums during transport to verify that the artifact is intact.
+Resolver also uses checksums at other times. For example, it verifies that the artifact is intact during resolution.
 
 Checksums in Resolver provide integrity verification. Resolver determines the "calculated" checksum for an artifact by applying a mathematical algorithm to its local copy of the artifact. It can read the bytes and calculate the checksum during the download or from a file already present on the local file system. Then it retrieves the "expected" checksum for the same artifact. It compares the two checksums to see if the artifact is intact or corrupt.
 
