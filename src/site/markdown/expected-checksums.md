@@ -152,5 +152,5 @@ The sparse directory can contain checksums for multiple algorithms. The file ext
 ### Notes On Using Trusted Checksums
 
 - Use the `--strict-checksums` flag to fail a build if the expected checksum of a downloaded artifact does not match the trusted checksum.
-- You can specify more than one checksum algorithm for the `aether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms` system property. The listed checksums must be a subset of the checksums in `aether.checksums.algorithms`.
+- You can specify more than one checksum algorithm for the `aether.artifactResolver.postProcessor.trustedChecksums.checksumAlgorithms` system property. The listed checksums must be a subset of the checksums in `aether.checksums.checksumAlgorithms`.
 - Most dependency management tools do not update trusted checksum files. This is true if the files are stored in version control alongside the source code. We hope that these tools will support Maven trusted checksums in the near future.
