@@ -53,7 +53,7 @@ Almost all repository managers and remote repositories send standard checksums i
 If any standard checksum algorithm is enabled, the Remote Included strategy usually finds a checksum. Then Resolver skips the Remote External strategy.
 
 Related configuration keys:
-* `aether.layout.maven2.checksumAlgorithms` A comma-separated list of checksum algorithms. The order is important. The transport asks for the checksums in the specified order. The default is "SHA-1,MD5". The first available algorithm will be used. For example, if you prefer MD5 but are willing to use SHA-1, set `aether.layout.maven2.checksumAlgorithms` to "MD5,SHA-1".
+* `aether.maven2.checksumAlgorithms` A comma-separated list of checksum algorithms. The order is important. The transport asks for the checksums in the specified order. The default is "SHA-1,MD5". The first available algorithm will be used. For example, if you prefer MD5 but are willing to use SHA-1, set `aether.maven2.checksumAlgorithms` to "MD5,SHA-1".
 
 In Maven 3.9.x and later, you can use the expression `${session.rootDirectory}/.mvn/checksums/` to store checksums alongside sources. `session.rootDirectory` becomes an absolute path. The path points to the root directory of the project. The `.mvn` directory is usually in the root directory.
 
@@ -79,7 +79,7 @@ Resolver checks several non-standard `X-` headers for checksums:
 Resolver detects all these headers and uses their values. You don't need to tell it in advance which variant to expect.
 
 Related configuration keys:
-* `aether.connector.basic.smartChecksums` to enable or disable Remote Included checksums.
+* `aether.connector.basic.includedChecksums` to enable or disable Remote Included checksums.
 
 
 ### Remote External checksums
