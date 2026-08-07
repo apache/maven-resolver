@@ -34,8 +34,9 @@ The strategies differ in **how** Resolver gets the checksum.
 **Provided** checksums are supplied to the Resolver through the Resolver's Java API. Users can implement or install an SPI extension point that loads checksums. The checksums can load before any transport operation. 
 Users can also use the trusted checksum SPI bundled with the Resolver implementation. The section "Trusted Checksums" below describes this approach.
 
-**Remote Included** checksums are part of the response that the artifact itself arrives in. Most modern repository managers send checksums in the HTTP response headers. Maven Central and the Google Mirror of Maven Central send the SHA-1 checksum as a hexadecimal string in the X-Checksum-Sha1 HTTP header.
-They send the hexadecimal encoded MD5 checksum in the X-Checksum-Md5 HTTP header.
+**Remote Included** checksums are part of the response that the artifact itself arrives in. Most modern repositories send checksums in the HTTP response headers. Maven Central sends the SHA-1 checksum as a hexadecimal string in the x-checksum-sha1 HTTP header.
+It sends the hexadecimal encoded MD5 checksum in the x-checksum-md5 HTTP header.
+Other repositories send similar HTTP headers.
 Resolver gets the content and the checksums in one HTTP request.
 
 **Remote External** checksums are separate resources in the remote repository. The remote repository stores them next to the artifact files. To get a Remote External checksum, Resolver sends a new HTTP GET request for the artifact checksum URL.  This is the artifact URL with an algorithm extension such as ".sha1" appended. For example, if the artifact URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar, then the SHA-1 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.sha1, and the MD5 checksum URL is https://repo1.maven.org/maven2/xom/xom/1.3.9/xom-1.3.9.jar.md5.
@@ -70,10 +71,10 @@ Resolver provides one SPI implementation with the distribution for loading trust
 
 Maven Central and many other repositories include the reference checksums in the HTTP response headers. Resolver gets the artifact and the expected checksum with one HTTP request.
 
-Resolver checks several non-standard `X-` headers for checksums:
+Resolver checks several unstandardized `X-` headers for checksums:
 
-* `x-checksum-sha1` and `x-checksum-md5`: Maven Central and the Google Mirror of Maven Central
-* `x-goog-meta-checksum-sha1` and `x-goog-meta-checksum-md5`: Google Cloud Storage
+* `x-checksum-sha1` and `x-checksum-md5`: Maven Central
+* `x-goog-meta-checksum-sha1` and `x-goog-meta-checksum-md5`: the Google Mirror of Maven Central
 * `x-amz-meta-checksum-sha1` and `x-amz-meta-checksum-md5`:  AWS S3
 
 Resolver detects all these headers and uses their values. You don't need to tell it in advance which variant to expect.
