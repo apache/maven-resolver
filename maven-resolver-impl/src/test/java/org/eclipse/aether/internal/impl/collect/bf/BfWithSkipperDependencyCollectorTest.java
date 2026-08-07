@@ -25,6 +25,7 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.internal.impl.StubRemoteRepositoryManager;
@@ -37,6 +38,8 @@ import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * UT for {@link BfDependencyCollector}.
@@ -66,6 +69,75 @@ public class BfWithSkipperDependencyCollectorTest extends DependencyCollectorDel
     private Dependency newDep(String coords, String scope, Collection<Exclusion> exclusions) {
         Dependency d = new Dependency(new DefaultArtifact(coords), scope);
         return d.setExclusions(exclusions);
+    }
+
+    /**
+     * Verifies that the pool cache is transparent w.r.t. the DependencyManager: the graph
+     * structure must not depend on whether the pool hits or misses.
+     * <p>
+     * Scenario (from <a href="https://github.com/apache/maven-resolver/issues/2013">#2013</a>):
+     * <pre>
+     *   root
+     *   ├── b      → c → d
+     *   └── b-alt  → c → d   (c is a shared transitive dependency)
+     * </pre>
+     * With {@link TransitiveDependencyManager}, {@code deriveChildManager()} used to always
+     * create a new instance (unique {@code path} field), making every pool key unique.
+     * The pool would miss for {@code c} under {@code b-alt}, the skipper would mark it as
+     * a duplicate, and the node would end up with zero children — even though the same
+     * {@code c} under {@code b} had children.
+     * <p>
+     * The fix in {@code AbstractDependencyManager.deriveChildManager()} reuses the same
+     * manager instance when no new management data is collected, so the pool key matches
+     * and children are preserved.
+     */
+    @Test
+    void testPoolCacheTransparencyWithTransitiveDependencyManager() throws DependencyCollectionException {
+        collector = setupCollector(newReader("pool-cache-transparency/"));
+        parser = new DependencyGraphParser("artifact-descriptions/pool-cache-transparency/");
+        session.setDependencyManager(new TransitiveDependencyManager(null));
+
+        Dependency root = newDep("gid:root:ext:1.0", "compile");
+        CollectRequest request = new CollectRequest(root, Collections.singletonList(repository));
+        CollectResult result = collector.collectDependencies(session, request);
+
+        assertEquals(0, result.getExceptions().size());
+
+        // root has two children: b and b-alt
+        DependencyNode rootNode = result.getRoot();
+        assertEquals(2, rootNode.getChildren().size(), "root should have 2 children (b, b-alt)");
+
+        // b → c
+        DependencyNode b = rootNode.getChildren().get(0);
+        assertEquals("b", b.getArtifact().getArtifactId());
+        assertFalse(b.getChildren().isEmpty(), "b should have children");
+
+        // b → c → d
+        DependencyNode cUnderB = b.getChildren().get(0);
+        assertEquals("c", cUnderB.getArtifact().getArtifactId());
+        assertFalse(cUnderB.getChildren().isEmpty(), "c under b should have children (d)");
+
+        // b-alt → c  (this is the key assertion: c under b-alt must also have children)
+        DependencyNode bAlt = rootNode.getChildren().get(1);
+        assertEquals("b-alt", bAlt.getArtifact().getArtifactId());
+        assertFalse(bAlt.getChildren().isEmpty(), "b-alt should have children");
+
+        DependencyNode cUnderBAlt = bAlt.getChildren().get(0);
+        assertEquals("c", cUnderBAlt.getArtifact().getArtifactId());
+
+        // Before the fix, this assertion would fail: c under b-alt had zero children
+        // because the pool key differed (different DependencyManager instance) and the
+        // skipper marked it as a duplicate.
+        assertFalse(
+                cUnderBAlt.getChildren().isEmpty(),
+                "c under b-alt should have children (d) — pool cache must be transparent");
+
+        // Verify that c's child is d in both subtrees
+        assertEquals("d", cUnderB.getChildren().get(0).getArtifact().getArtifactId());
+        assertTrue(
+                cUnderBAlt.getChildren().stream()
+                        .anyMatch(n -> "d".equals(n.getArtifact().getArtifactId())),
+                "c under b-alt should have d as a child");
     }
 
     @Test

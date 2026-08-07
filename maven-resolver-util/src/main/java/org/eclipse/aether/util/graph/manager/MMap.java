@@ -122,10 +122,19 @@ public class MMap<K, V> {
 
         @Override
         public boolean equals(Object o) {
-            if (!(o instanceof MMap)) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof DoneMMap)) {
                 return false;
             }
-            MMap<?, ?> other = (MMap<?, ?>) o;
+            DoneMMap<?, ?> other = (DoneMMap<?, ?>) o;
+            // Fast rejection: hashCode is pre-computed, so a mismatch avoids
+            // the expensive deep map equality below (which triggers Key.equals
+            // for every entry).
+            if (hashCode != other.hashCode) {
+                return false;
+            }
             return delegate.equals(other.delegate);
         }
     }
