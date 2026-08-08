@@ -87,29 +87,23 @@ The legacy collector traverses in depth-first order.
 The new collector traverses in breadth-first (BF) order.
 The BF collector is faster and is now the default.
 
+During the collection step, Resolver downloads pom.xml files from remote repositories.
+It does not yet download binary JAR files or other artifacts.
+
 During collection, only certain parts of the effective model are used, not the whole POM.
 
-* `project/dependencies` defines the direct dependencies on a given node.
+* `project/dependencies` defines the direct dependencies of a given node.
 * `project/dependencyManagement/dependencies` defines the dependency management
   for subsequent nodes.
 * `project/repositories` defines the repositories to be used on subsequent
   nodes.
 
+In Resolver 1.x, `project/dependencyManagement` only defines versions of dependencies
+for its own pom.xml. It does not affect the versions of the dependencies of the dependencies.
+(*transitive dependencies*).
 
-TODO: what is an artifact descriptor?
-
-TODO: likely don't need this
-Read the API documentation for
-`org.eclipse.aether.resolution.ArtifactDescriptorResult`.
-This class is the peephole for Resolver to see the effective model.
-
-TODO: what is transitive dependency management and do we want to talk about it here?
-Resolver 1.x ignored transitive dependency management by default.
-Resolver 2.x changed this.
-Transitive dependency management is enabled by default in Resolver 2.x.
-
-During the collection step, Resolver downloads pom.xml files from remote repositories.
-It does not yet download binary JAR files or other artifacts.
+In Resolver 2.x, `project/dependencyManagement` does define versions of dependencies
+for the transitive dependencies.
 
 See also [common misconceptions](common-misconceptions.html).
 
