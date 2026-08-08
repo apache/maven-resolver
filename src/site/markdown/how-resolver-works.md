@@ -64,19 +64,22 @@ The repository can be local or remote.
 To make an artifact resolvable from the local repository, you install it.
 To make an artifact resolvable from a remote repository, you deploy it.
 
-Extension points such as `WorkspaceReader` can make artifacts resolvable when
-you do not install or deploy them.
-This is an integration detail.
-Maven does this when it exposes reactor projects.
+<aside>
+Artifacts that are not in repositories also be resolved through extension points such as `WorkspaceReader`.
+Maven does this when it exposes reactor projects, for example.
+Normally you don't need to think about this.
+</aside>
 
 ### Dependency Graph Collection
 
 Collection is the first step.
-The caller usually provides the root artifact and the set of remote
-repositories to use.
-The output of the collection step is a **dependency graph**.
-The graph is also known as the dirty graph.
-It can contain cycles, conflicts, and duplicates.
+Resolver adds a root artifact to the list.
+TODO: breadth first or depth first????
+Then it looks at the dependencies of that root artifact and adds them to the list.
+Then it looks at the dependencies of each of those dependencies and adds each of those 
+it has not already seen to the list.  
+The output of the collection step is a **dependency graph** known as the *dirty graph*.
+It can contain conflicts and duplicates.
 
 Since Resolver 1.9.x, two collector implementations exist.
 The legacy collector uses depth-first (DF) traversal.
@@ -84,9 +87,9 @@ The new collector uses breadth-first (BF) traversal.
 The BF collector is the default now.
 It offers better performance.
 
-People constantly misunderstand the information used during graph collection.
-Only certain parts of the effective model are used, not the whole POM.
-Only the following aspects of the effective model are used:
+WTF???? This is a huge incompatible change that will break projects. 
+
+During collection, only certain parts of the effective model are used, not the whole POM.
 
 * `project/dependencies` defines the direct dependencies on a given node.
 * `project/dependencyManagement/dependencies` defines the dependency management
@@ -94,70 +97,61 @@ Only the following aspects of the effective model are used:
 * `project/repositories` defines the repositories to be used on subsequent
   nodes.
 
+
+TODO: what is an artifact descriptor?
+
+TODO: likely don't need this
 Read the API documentation for
 `org.eclipse.aether.resolution.ArtifactDescriptorResult`.
 This class is the peephole for Resolver to see the effective model.
 
+TODO: what is transitive dependency management and do we want to talk about it here?
 Resolver 1.x ignored transitive dependency management by default.
 Resolver 2.x changed this.
 Transitive dependency management is enabled by default in Resolver 2.x.
 
-These steps operate only on models.
-Only POMs are resolved.
-Their effective models are built during graph collection.
+During the collection step, Resolver downloads pom.xml file from remote repositories.
+It does not yet download binary JAR files or other artifacts.
 
 See also [common misconceptions](common-misconceptions.html).
 
 ### Conflict Resolution
 
-Conflict resolution is the process that removes conflicts, duplicates, and
-cycles from the dependency graph.
+Conflict resolution removes conflicts, duplicates, and cycles from the dependency graph.
 The result is the **dependency tree**.
-Cycles are removed.
 
-Resolver 2.x has two conflict resolver implementations.
+Resolver 2.x has two conflict resolution implementations.
 The legacy implementation does multiple graph passes.
-The path-based implementation does a single graph pass.
-It is faster.
+The faster path-based implementation does a single graph pass.
+TODO: do they give the same result?
 The winner selection strategy is pluggable since Resolver 2.x.
 
 The nearest and highest strategies are available out of the box.
 The version convergence and major version convergence strategies are also
 available.
-They are not enabled by default.
-They are experimental.
+They are experimental and not enabled by default.
 
-This step operates only on the graph stored in memory.
-There is no resolution of any kind.
+This step operates entirely in memory.
+The resolver does not download anything.
 
 ### Flattening
 
-Flattening is the process that transforms the tree into a flat list of
-artifacts.
+Flattening transforms the tree into a list of artifacts.
 The list order becomes the classpath order.
 Filtering is applied here as well.
 
 Resolver historically used pre-order to flatten the tree into a list.
-Resolver 2 offers three strategies.
-They are pre-order, post-order, and level order.
+Resolver 2 offers three strategies: pre-order, post-order, and level order.
 Level order is the default.
 
-This step operates only on the tree stored in memory.
-There is no resolution of any kind.
+This step operates entirely in memory.
+The resolver does not download anything.
 
 ### Artifact Resolution
 
-Artifact resolution is the process that resolves the actual artifact content
-from the local repository.
-When needed, Resolver downloads and caches the content.
-
-Dependency graph collection uses this step implicitly.
-The collector asks for the artifact descriptor of each artifact during graph
-collection.
-The artifact descriptor is the effective model.
-The artifact descriptor call enters the model builder.
-During the build, the model builder resolves POMs as needed.
-Examples are parent POMs, import POMs, and mixins.
+Artifact resolution checks to see if the binary artifact resource, most commonly a JAR file, is
+in the local repository. If it isn't, then Resolver downloads the file
+from a remote repository and caches it in the local repository.
 
 ----
 
