@@ -116,15 +116,11 @@ The resolver does not download anything.
 Resolver 2.x has two conflict resolution implementations.
 The legacy implementation does multiple graph passes.
 The faster path-based implementation does a single graph pass.
-TODO: do they give the same result?
+
 The strategy for selecting winners is pluggable in Resolver 2.x.
-
 Nearest and highest strategies are available out of the box.
-
 Experimental version convergence and major version convergence strategies are also
 available, but these are not enabled by default.
-
-
 
 ### Flattening
 
