@@ -8,7 +8,7 @@ to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    https://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
@@ -55,7 +55,7 @@ It involves the following steps:
    graph. It produces the dependency tree.
 3. **Flattening** transforms the tree into a list of artifacts. The list
    order represents the classpath order.
-4. **Artifact resolution** finds the artifact in one of the available repositories. If necessary, it downloads
+4. **Artifact resolution** finds each artifact in the flattened list in one of the available repositories. If necessary, it downloads
    the artifact from a remote repository and adds it to the local repository.
 
 We call an artifact *resolvable* if it can be resolved from any available
