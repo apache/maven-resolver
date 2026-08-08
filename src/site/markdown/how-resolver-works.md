@@ -118,7 +118,8 @@ See also [common misconceptions](common-misconceptions.html).
 ### Conflict Resolution
 
 Conflict resolution removes conflicts, duplicates, and cycles from the dependency graph.
-The result is the **dependency tree**.
+The result is the **dependency tree**. This step operates entirely in memory.
+The resolver does not download anything.
 
 Resolver 2.x has two conflict resolution implementations.
 The legacy implementation does multiple graph passes.
@@ -127,12 +128,11 @@ TODO: do they give the same result?
 The strategy for selecting winners is pluggable in Resolver 2.x.
 
 Nearest and highest strategies are available out of the box.
-Version convergence and major version convergence strategies are also
-available.
-They are experimental and not enabled by default.
 
-This step operates entirely in memory.
-The resolver does not download anything.
+Experimental version convergence and major version convergence strategies are also
+available, but these are not enabled by default.
+
+
 
 ### Flattening
 
