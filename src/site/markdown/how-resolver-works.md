@@ -73,21 +73,19 @@ Normally you don't need to think about this.
 ### Dependency Graph Collection
 
 Collection is the first step.
-Resolver adds a root artifact to the list.
-TODO: breadth first or depth first????
-Then it looks at the dependencies of that root artifact and adds them to the list.
-Then it looks at the dependencies of each of those dependencies and adds each of those 
-it has not already seen to the list.  
-The output of the collection step is a **dependency graph** known as the *dirty graph*.
+Resolver adds a root artifact to a graph.
+Then it adds the dependencies of the root artifact to the graph.
+Then it adds the dependencies of the dependencies, and so on.
+It stops when there are no more dependencies that haven't been added to the graph. 
+The output of the collection step is a *dependency graph* known as the *dirty graph*.
 It can contain conflicts and duplicates.
 
-Since Resolver 1.9.x, two collector implementations exist.
-The legacy collector uses depth-first (DF) traversal.
-The new collector uses breadth-first (BF) traversal.
-The BF collector is the default now.
-It offers better performance.
-
-WTF???? This is a huge incompatible change that will break projects. 
+The exact procedure for building the dirty graph isn't important as long as 
+it ends with the same graph.
+Starting in Resolver 1.9.x, there are two collector implementations.
+The legacy collector traverses in depth-first order.
+The new collector traverses in breadth-first (BF) order.
+The BF collector is faster and is now the default.
 
 During collection, only certain parts of the effective model are used, not the whole POM.
 
