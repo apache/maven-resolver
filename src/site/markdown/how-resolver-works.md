@@ -124,10 +124,10 @@ Resolver 2.x has two conflict resolution implementations.
 The legacy implementation does multiple graph passes.
 The faster path-based implementation does a single graph pass.
 TODO: do they give the same result?
-The winner selection strategy is pluggable since Resolver 2.x.
+The strategy for selecting winners is pluggable in Resolver 2.x.
 
-The nearest and highest strategies are available out of the box.
-The version convergence and major version convergence strategies are also
+Nearest and highest strategies are available out of the box.
+Version convergence and major version convergence strategies are also
 available.
 They are experimental and not enabled by default.
 
