@@ -18,111 +18,167 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Maven Artifact Resolver (former Aether) is a central piece of Maven.
-This document tries to  explain how resolver works under the hood, and explain the main concepts
-and building blocks of Resolver.
+Maven Artifact Resolver (formerly Aether) is a central piece of Maven.
+This document explains how Resolver works internally.
+It also explains the main concepts and components of Resolver.
 
-Resolver alone is "incomplete". Integrating applications like Maven provide the "glue" (models) and logic to 
-resolve versions and ranges and build effective models. By itself, Resolver is unusable. One needs to complement it 
-with models and implementations of missing components. Historically, the Maven module completing Resolver 
-is `org.apache.maven:maven-resolver-provider`.
-
-
+Resolver alone is incomplete.
+Applications such as Maven provide the glue.
+The glue includes the models and the logic to resolve versions and ranges and
+to build effective models.
+By itself, Resolver is unusable.
+You must complement it with models and implementations of missing components.
+The Maven module `org.apache.maven:maven-resolver-provider` completes Resolver.
 
 ## Core Concepts
 
-At the core of Resolver are **artifacts** and **repositories**. An artifact is basically a 
-"symbolic coordinate" backed by some content. Usually it is a JAR, but it can be really anything, as long as it is
-"addressable" using Maven coordinates: `<groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>` (default value of
-`extension` is `jar`, and default value for `classifier` is `""`, empty string). Repositories
-are places where artifacts are stored and from where they can be retrieved. Resolver, by default operates
-with one local repository (usually a directory on local filesystem) and zero or more remote repositories.
+**Artifacts** and **repositories** are at the core of Resolver.
+An artifact is a symbolic coordinate backed by some content.
+Usually it is a JAR, but it can be anything as long as Maven coordinates can
+address it.
+The Maven coordinates are
+`<groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>`.
+The default value of `extension` is `jar`.
+The default value of `classifier` is an empty string.
 
-The term "resolving" is a bit overloaded, but in general it involves following steps:
-1. **dependency graph collection** builds the "dependency graph"
-2. **conflict resolution** makes the graph free of cycles, conflicts and duplicates, resulting in "dependency tree"
-3. **flattening** transforms the tree into a flat list of artifacts, which also represents classpath ordering
-4. **artifact resolving** is the process of resolving (downloading and caching, if needed) the actual artifact payload
+Repositories are places where artifacts are stored and from where they can be
+retrieved.
+By default, Resolver operates with one local repository and zero or more remote
+repositories.
+The local repository is usually a directory on the local file system.
 
-We call an artifact "resolvable" if it can be resolved from any available (local or remote) repository. To make an artifact
-"resolvable" from the local repository, one needs to "install" it. To make an artifact "resolvable" from a remote repository, 
-one needs to "deploy" it (this is an over-simplification; publishing is a new term, but it also involves deploy step).
-Furthermore, there are extension points like `WorkspaceReader` that can make artifacts resolvable 
-without installing or deploying them, but that is an integration detail (like Maven does by exposing reactor projects).
+The term resolving is overloaded.
+In general, it involves the following steps:
+
+1. **Dependency graph collection** builds the dependency graph.
+2. **Conflict resolution** removes conflicts, duplicates, and cycles from the
+   graph. It produces the dependency tree.
+3. **Flattening** transforms the tree into a flat list of artifacts. The list
+   order represents the classpath order.
+4. **Artifact resolution** resolves the actual artifact payload. It downloads
+   and caches the payload when needed.
+
+We call an artifact resolvable if it can be resolved from any available
+repository.
+The repository can be local or remote.
+To make an artifact resolvable from the local repository, you must install it.
+To make an artifact resolvable from a remote repository, you must deploy it.
+This is an over-simplification.
+Publishing is a new term, but it also involves the deploy step.
+
+Extension points such as `WorkspaceReader` can make artifacts resolvable when
+you do not install or deploy them.
+This is an integration detail.
+Maven does this when it exposes reactor projects.
 
 ### Dependency Graph Collection
 
-Collection is the first step. The caller usually provides the root artifact along with the set of remote repositories to use.
-The output of the collection step is a **dependency graph**; a.k.a. a "dirty graph" that may contain cycles, conflicts, 
-duplicates and the like.
+Collection is the first step.
+The caller usually provides the root artifact and the set of remote
+repositories to use.
+The output of the collection step is a **dependency graph**.
+The graph is also known as the dirty graph.
+It can contain cycles, conflicts, and duplicates.
 
-Since Resolver 1.9.x there are two collector implementations: the legacy depth-first (DF) and the new breadth-first (BF) collector.
-The BF collector is now the default, as it offers better performance.
+Since Resolver 1.9.x, two collector implementations exist.
+The legacy collector uses depth-first (DF) traversal.
+The new collector uses breadth-first (BF) traversal.
+The BF collector is the default now.
+It offers better performance.
 
-One very important thing, that is constantly misunderstood, is what information is used during graph collection. 
+People constantly misunderstand the information used during graph collection.
 Only certain parts of the effective model are used, not the whole POM.
-If I may oversimplify, only the following aspects of the effective model are used during graph collection:
-* `project/dependencies` as direct dependencies on given node
-* `project/dependencyManagement/dependencies` for **subsequent** dependency management on given node
-* `project/repositories` for **subsequent** repositories to be used on given node
+Only the following aspects of the effective model are used:
 
-For more, check out `org.eclipse.aether.resolution.ArtifactDescriptorResult` class, as that is the "peephole" for Resolver
-to see the effective model.
+* `project/dependencies` defines the direct dependencies on a given node.
+* `project/dependencyManagement/dependencies` defines the dependency management
+  for subsequent nodes.
+* `project/repositories` defines the repositories to be used on subsequent
+  nodes.
 
-Another important detail is that Resolver 1.x by default ignored transitive dependency management. This changed in
-Resolver 2.x where transitive dependency management is enabled by default.
+Read the API documentation for
+`org.eclipse.aether.resolution.ArtifactDescriptorResult`.
+This class is the peephole for Resolver to see the effective model.
 
-These steps operate only on models. Only POMs are resolved, and their effective models are built during
-graph collection.
+Resolver 1.x ignored transitive dependency management by default.
+Resolver 2.x changed this.
+Transitive dependency management is enabled by default in Resolver 2.x.
+
+These steps operate only on models.
+Only POMs are resolved.
+Their effective models are built during graph collection.
 
 See also [common misconceptions](common-misconceptions.html).
 
 ### Conflict Resolution
 
-Conflict resolution is the process of removing conflicts, duplicates, and cycles from the dependency graph, resulting 
-in the **dependency tree** (as cycles are removed).
+Conflict resolution is the process that removes conflicts, duplicates, and
+cycles from the dependency graph.
+The result is the **dependency tree**.
+Cycles are removed.
 
-Resolver 2.x has two conflict resolver implementations: "legacy" (doing multiple graph passes) and new, 
-faster "path based" (doing single graph pass) conflict resolver. Winner selection strategy is also pluggable since 
-Resolver 2.x. Out of the box "nearest" and "highest" strategies are available (extras as "version convergence" and
-"major version convergence" are available as well, but not available by default; experimental).
+Resolver 2.x has two conflict resolver implementations.
+The legacy implementation does multiple graph passes.
+The path-based implementation does a single graph pass.
+It is faster.
+The winner selection strategy is pluggable since Resolver 2.x.
 
-This step operates only on the graph stored in memory. There is no resolution of any kind.
+The nearest and highest strategies are available out of the box.
+The version convergence and major version convergence strategies are also
+available.
+They are not enabled by default.
+They are experimental.
+
+This step operates only on the graph stored in memory.
+There is no resolution of any kind.
 
 ### Flattening
 
-Flattening is the process of transforming the tree into a flat list of artifacts. This list order becomes the classpath order.
-This is where filtering is applied as well.
+Flattening is the process that transforms the tree into a flat list of
+artifacts.
+The list order becomes the classpath order.
+Filtering is applied here as well.
 
-Resolver historically used "pre-order" to flatten the tree into a list, but Resolver 2 offers three strategies: "pre-order", 
-"post-order", and "level order" (the default).
+Resolver historically used pre-order to flatten the tree into a list.
+Resolver 2 offers three strategies.
+They are pre-order, post-order, and level order.
+Level order is the default.
 
-This step operates only on the tree stored in memory. There is no resolution of any kind.
+This step operates only on the tree stored in memory.
+There is no resolution of any kind.
 
 ### Artifact Resolution
 
-Artifact resolution is the process of resolving (downloading and caching, if needed) the actual artifact content from 
-local repository.
+Artifact resolution is the process that resolves the actual artifact content
+from the local repository.
+When needed, Resolver downloads and caches the content.
 
-This step is implicitly used by the Dependency Graph Resolution step as well, as collector
-will ask for artifact descriptors (effective model) of each artifact during graph collection, and artifact descriptor calls
-into model builder, that in turn, during building, resolve POMs as needed (parent POMs, import POMs, mixins, etc).
+Dependency graph collection uses this step implicitly.
+The collector asks for the artifact descriptor of each artifact during graph
+collection.
+The artifact descriptor is the effective model.
+The artifact descriptor call enters the model builder.
+During the build, the model builder resolves POMs as needed.
+Examples are parent POMs, import POMs, and mixins.
 
 ----
 
-In general, the steps "dependency graph collection" and "conflict resolution" are performed together. The name we give that operation is "dependency collection".
-The "flattening" and "artifact resolving" are also usually done together, and we use for those the term "artifact resolution".
-To make the story more confusing, when all the steps are performed together is also called "dependency resolution".
-The Resolver API reflects this terminology and offers methods doing collection, resolution or both.
+In general, Resolver performs dependency graph collection and conflict
+resolution together.
+The name for this operation is dependency collection.
+Resolver also usually performs flattening and artifact resolution together.
+The name for this pair is artifact resolution.
+When all the steps are performed together, the process is called dependency
+resolution.
+The Resolver API reflects this terminology and offers methods for collection,
+resolution, or both.
 
-* The method `CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)` performs only the collection step,
-as its name suggests. Hence, only the steps "collection" and "conflict resolution" are performed.
-* Method `List<ArtifactResult> resolveArtifacts(RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)`
-performs only the artifact resolving step.
-* Method `DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)` performs both 
-collection and resolution steps.
+* `CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)` performs only the collection step. Only the collection and conflict resolution steps are performed.
+* `List<ArtifactResult> resolveArtifacts(RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)` performs only the artifact resolution step.
+* `DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)` performs both the collection and resolution steps.
 
-Each subsequent step depends on the previous one. For example a "dirty graph" cannot be flattened (due to possible cycles).
-Many times, what you want depends on your use case. For example, to investigate the dependency graph, one may 
-want to collect the dirty graph, but not conflict resolve it.
-
+Each subsequent step depends on the previous one.
+For example, a dirty graph cannot be flattened because it can contain cycles.
+What you want depends on your use case.
+To investigate the dependency graph, you can collect the dirty graph.
+You can skip conflict resolution.
