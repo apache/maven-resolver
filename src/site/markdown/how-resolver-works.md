@@ -110,7 +110,7 @@ Resolver 1.x ignored transitive dependency management by default.
 Resolver 2.x changed this.
 Transitive dependency management is enabled by default in Resolver 2.x.
 
-During the collection step, Resolver downloads pom.xml file from remote repositories.
+During the collection step, Resolver downloads pom.xml files from remote repositories.
 It does not yet download binary JAR files or other artifacts.
 
 See also [common misconceptions](common-misconceptions.html).
@@ -150,7 +150,7 @@ The resolver does not download anything.
 ### Artifact Resolution
 
 Artifact resolution checks to see if the binary artifact resource, most commonly a JAR file, is
-in the local repository. If it isn't, then Resolver downloads the file
+in the local repository. If it isn't, Resolver downloads the file
 from a remote repository and caches it in the local repository.
 
 ----
