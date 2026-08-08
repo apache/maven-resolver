@@ -199,6 +199,8 @@ public class HttpServer {
 
     private String responseBodyForPut;
 
+    private Map<String, String> serverErrorHeaders = Collections.emptyMap();
+
     public String getHost() {
         return "localhost";
     }
@@ -413,8 +415,14 @@ public class HttpServer {
     }
 
     public HttpServer setServerErrorsBeforeWorks(int serverErrorsBeforeWorks, int errorStatusCode) {
+        return setServerErrorsBeforeWorks(serverErrorsBeforeWorks, errorStatusCode, Collections.emptyMap());
+    }
+
+    public HttpServer setServerErrorsBeforeWorks(
+            int serverErrorsBeforeWorks, int errorStatusCode, Map<String, String> headers) {
         this.serverErrorsBeforeWorks.set(serverErrorsBeforeWorks);
         this.serverErrorStatusCode = errorStatusCode;
+        this.serverErrorHeaders = headers;
         return this;
     }
 
@@ -592,6 +600,9 @@ public class HttpServer {
         public boolean handle(Request request, Response response, Callback callback) throws IOException {
             if (serverErrorsBeforeWorks.getAndDecrement() > 0) {
                 response.setStatus(serverErrorStatusCode);
+                for (Map.Entry<String, String> header : serverErrorHeaders.entrySet()) {
+                    response.getHeaders().add(header.getKey(), header.getValue());
+                }
                 writeResponseBodyMessage(request, response, "Oops, come back later!");
                 return true;
             }
