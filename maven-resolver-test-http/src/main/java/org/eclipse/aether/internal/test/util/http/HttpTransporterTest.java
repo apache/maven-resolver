@@ -411,7 +411,7 @@ public abstract class HttpTransporterTest {
     }
 
     @Test
-    protected void testRetryHandler_tooManyRequestswithRetryAfterHeader_explicitCount_positive() throws Exception {
+    protected void testRetryHandler_tooManyRequests_withRetryAfterHeader_explicitCount_positive() throws Exception {
         // set low retry count as this involves back off delays
         session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 1);
         int retryIntervalMs = 5000;

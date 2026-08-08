@@ -199,7 +199,7 @@ public class HttpServer {
 
     private String responseBodyForPut;
 
-    private Map<String, String> serverErrorHeaders;
+    private Map<String, String> serverErrorHeaders = Collections.emptyMap();
 
     public String getHost() {
         return "localhost";

@@ -69,7 +69,7 @@ class JettyTransporterTest extends HttpTransporterTest {
     @Override
     @Disabled
     @Test
-    protected void testRetryHandler_tooManyRequestswithRetryAfterHeader_explicitCount_positive() {}
+    protected void testRetryHandler_tooManyRequests_withRetryAfterHeader_explicitCount_positive() {}
 
     @Override
     @Disabled
