@@ -705,8 +705,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     .maxRetries(retryCount)
                     .onStatus(HttpTransporterUtils.getHttpServiceUnavailableCodes(session, repository)::contains)
                     .listener(new RetryLoggingListener(retryCount))
-                    .backoff(RetryInterceptor.BackoffStrategy.linear(
-                            Duration.ofMillis(retryInterval), Duration.ofMillis(retryIntervalMax)))
+                    .backoff(RetryInterceptor.BackoffStrategy.retryAfterOr(RetryInterceptor.BackoffStrategy.linear(
+                            Duration.ofMillis(retryInterval), Duration.ofMillis(retryIntervalMax))))
                     .build();
             builder.interceptor(rateLimitingRetryInterceptor);
             Methanol.Interceptor retryIoExceptionsInterceptor = RetryInterceptor.newBuilder()

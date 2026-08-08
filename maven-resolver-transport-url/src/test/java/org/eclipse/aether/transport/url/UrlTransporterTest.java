@@ -234,4 +234,9 @@ class UrlTransporterTest extends HttpTransporterTest {
     @Disabled
     @Test
     protected void testRetryHandler_tooManyRequests_explicitCount_positive() {}
+
+    @Override
+    @Disabled
+    @Test
+    protected void testRetryHandler_tooManyRequestswithRetryAfterHeader_explicitCount_positive() {}
 }

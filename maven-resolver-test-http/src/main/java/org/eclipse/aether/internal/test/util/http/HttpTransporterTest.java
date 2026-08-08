@@ -36,6 +36,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -407,6 +408,25 @@ public abstract class HttpTransporterTest {
         assertTrue(
                 System.currentTimeMillis() - startTime >= retryIntervalMs,
                 "Expected back off delay of at least " + retryIntervalMs);
+    }
+
+    @Test
+    protected void testRetryHandler_tooManyRequestswithRetryAfterHeader_explicitCount_positive() throws Exception {
+        // set low retry count as this involves back off delays
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 1);
+        int retryIntervalMs = 5000;
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL, retryIntervalMs);
+        newTransporter(httpServer.getHttpUrl());
+        Duration retryAfterDuration = Duration.ofSeconds(1);
+        httpServer.setServerErrorsBeforeWorks(
+                1, SC_TOO_MANY_REQUESTS, Map.of("Retry-After", String.valueOf(retryAfterDuration.getSeconds())));
+        long startTime = System.currentTimeMillis();
+        transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+        long elapsedTimeMs = System.currentTimeMillis() - startTime;
+        assertTrue(
+                elapsedTimeMs >= retryAfterDuration.toMillis(),
+                "Expected back off delay of at least " + retryAfterDuration.toMillis() + " ms");
+        assertTrue(elapsedTimeMs < retryIntervalMs, "Expected back off delay of less than " + retryIntervalMs + " ms");
     }
 
     @Test
