@@ -65,7 +65,7 @@ To make an artifact resolvable from the local repository, you install it.
 To make an artifact resolvable from a remote repository, you deploy it.
 
 <aside>
-Artifacts that are not in repositories also be resolved through extension points such as `WorkspaceReader`.
+Artifacts that are not in repositories can also be resolved through extension points such as `WorkspaceReader`.
 Maven does this when it exposes reactor projects, for example.
 Normally you don't need to think about this.
 </aside>
