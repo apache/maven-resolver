@@ -155,22 +155,28 @@ from a remote repository and caches it in the local repository.
 
 ----
 
-In general, Resolver performs dependency graph collection and conflict
-resolution together.
-The name for this operation is dependency collection.
-Resolver also usually performs flattening and artifact resolution together.
-The name for this pair is artifact resolution.
-When all the steps are performed together, the process is called dependency
-resolution.
+In general, Resolver builds the dependency graph and resolves conflicts in that graph in the same pass.
+The name for this operation is *dependency collection*.
+
+Resolver also usually resolves artifacts as it builds the flattened list.
+The name for this combined step is *artifact resolution*.
+
+When all the steps are performed together, the process is called *dependency
+resolution*.
+
+Yes, this is an unfortunate overload of terminology. 
+
 The Resolver API reflects this terminology and offers methods for collection,
 resolution, or both.
 
-* `CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)` performs only the collection step. Only the collection and conflict resolution steps are performed.
-* `List<ArtifactResult> resolveArtifacts(RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)` performs only the artifact resolution step.
+* `CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)` performs the dependency collection step. It builds the dependency graph and resolves conflicts in that graph before returning.
+* `List<ArtifactResult> resolveArtifacts(RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)` performs the artifact resolution step. It builds a flattened list and downloads artifacts before returning.
 * `DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)` performs both the collection and resolution steps.
 
-Each subsequent step depends on the previous one.
+Each step depends on the previous one.
 For example, a dirty graph cannot be flattened because it can contain cycles.
-What you want depends on your use case.
-To investigate the dependency graph, you can collect the dirty graph.
-You can skip conflict resolution.
+
+While a standard Maven build will perform all these steps, 
+you can use them independently if you're doing something else.
+For example, if you're looking for linkage errors, you can collect the dirty graph for inspection
+and skip conflict resolution.
