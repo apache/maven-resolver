@@ -22,49 +22,47 @@ Maven Artifact Resolver (formerly Aether) is a central piece of Maven.
 This document explains how Resolver works internally.
 It also explains the main concepts and components of Resolver.
 
-Resolver alone is incomplete.
-Applications such as Maven provide the glue.
-The glue includes the models and the logic to resolve versions and ranges and
-to build effective models.
-By itself, Resolver is unusable.
-You must complement it with models and implementations of missing components.
-The Maven module `org.apache.maven:maven-resolver-provider` completes Resolver.
+Resolver alone is incomplete. It needs an application such as 
+Maven to resolve versions and build effective models.
+The Maven module `org.apache.maven:maven-resolver-provider` complements it with
+models and implementations of missing components.
+
 
 ## Core Concepts
 
 **Artifacts** and **repositories** are at the core of Resolver.
-An artifact is a symbolic coordinate backed by some content.
-Usually it is a JAR, but it can be anything as long as Maven coordinates can
+An *artifact* is a binary resource with Maven coordinates.
+Usually it is a JAR file, but it can be anything as long as Maven coordinates can
 address it.
 The Maven coordinates are
 `<groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>`.
 The default value of `extension` is `jar`.
 The default value of `classifier` is an empty string.
 
-Repositories are places where artifacts are stored and from where they can be
+A *repository* is a place where artifacts are stored and from where they can be
 retrieved.
 By default, Resolver operates with one local repository and zero or more remote
 repositories.
 The local repository is usually a directory on the local file system.
+Remote repositories are usually HTTP servers.
 
-The term resolving is overloaded.
-In general, it involves the following steps:
+*Resolving* is the process of finding
+an artifact from its coordinates and adding it to the Maven build.
+It involves the following steps:
 
 1. **Dependency graph collection** builds the dependency graph.
 2. **Conflict resolution** removes conflicts, duplicates, and cycles from the
    graph. It produces the dependency tree.
-3. **Flattening** transforms the tree into a flat list of artifacts. The list
+3. **Flattening** transforms the tree into a list of artifacts. The list
    order represents the classpath order.
-4. **Artifact resolution** resolves the actual artifact payload. It downloads
-   and caches the payload when needed.
+4. **Artifact resolution** finds the artifact in one of the available repositories. If necessary, it downloads
+   the artifact from a remote repository and adds it to the local repository.
 
-We call an artifact resolvable if it can be resolved from any available
+We call an artifact *resolvable* if it can be resolved from any available
 repository.
 The repository can be local or remote.
-To make an artifact resolvable from the local repository, you must install it.
-To make an artifact resolvable from a remote repository, you must deploy it.
-This is an over-simplification.
-Publishing is a new term, but it also involves the deploy step.
+To make an artifact resolvable from the local repository, you install it.
+To make an artifact resolvable from a remote repository, you deploy it.
 
 Extension points such as `WorkspaceReader` can make artifacts resolvable when
 you do not install or deploy them.
