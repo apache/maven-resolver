@@ -78,7 +78,7 @@ Then it adds the dependencies of the root artifact to the graph.
 Then it adds the dependencies of the dependencies, and so on.
 It stops when there are no more dependencies that haven't been added to the graph. 
 The output of the collection step is a *dependency graph* known as the *dirty graph*.
-It can contain conflicts and duplicates.
+It can contain conflicts, duplicates, and cycles.
 
 The exact procedure for building the dirty graph isn't important as long as 
 it ends with the same graph.
