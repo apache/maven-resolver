@@ -359,7 +359,7 @@ public class DefaultRepositorySystemReentrancyTest {
                 new DefaultRepositorySystemLifecycle(),
                 Collections.emptyMap(),
                 new DefaultRepositorySystemValidator(
-                        Collections.singletonList(EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
+                        Collections.singletonMap("expressionRejecting", EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
         systemRef.set(strictSystem);
 
         // The outermost collectDependencies call should succeed, and the inner
@@ -396,7 +396,7 @@ public class DefaultRepositorySystemReentrancyTest {
                 new DefaultRepositorySystemLifecycle(),
                 Collections.emptyMap(),
                 new DefaultRepositorySystemValidator(
-                        Collections.singletonList(EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
+                        Collections.singletonMap("expressionRejecting", EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
 
         // Direct dependency with uninterpolated expression should still be rejected
         CollectRequest collectRequest = new CollectRequest();
@@ -455,7 +455,7 @@ public class DefaultRepositorySystemReentrancyTest {
                 new DefaultRepositorySystemLifecycle(),
                 Collections.emptyMap(),
                 new DefaultRepositorySystemValidator(
-                        Collections.singletonList(EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
+                        Collections.singletonMap("expressionRejecting", EXPRESSION_REJECTING_VALIDATOR_FACTORY)));
 
         // First call: collectDependencies should throw because the collector throws
         CollectRequest collectRequest = new CollectRequest();
