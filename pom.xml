@@ -124,9 +124,6 @@
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
     <project.build.outputTimestamp>2026-07-20T13:03:11Z</project.build.outputTimestamp>
     <bnd.instructions.additions />
-
-    <!-- Parent versions -->
-    <versions.junit5>5.14.4</versions.junit5>
   </properties>
 
   <dependencyManagement>
