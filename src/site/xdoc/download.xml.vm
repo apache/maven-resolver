@@ -36,7 +36,7 @@ under the License.
       <p><strong>${project.name}</strong> is distributed under the <a href="https://www.apache.org/licenses/">Apache License, version 2.0</a>.</p>
 
       <subsection name="Files">
-        
+
         <p>This is the current stable version of <strong>${project.name}</strong>.</p>
 
         <table>
@@ -72,4 +72,3 @@ under the License.
     </section>
   </body>
 </document>
-
