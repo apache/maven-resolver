@@ -1,4 +1,8 @@
-<?xml version="1.0"?>
+---
+title: Introduction
+author: 
+  - Hervé Boutemy
+---
 
 <!--
 /*
@@ -19,25 +23,14 @@
  */
 -->
 
-<document>
+# Apache Maven Artifact Resolver
 
-  <properties>
-    <title>Introduction</title>
-    <author email="hboutemy_AT_apache_DOT_org">Hervé Boutemy</author>
-  </properties>
+Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.
 
-  <body>
+Maven Artifact Resolver deals with the specification of local repository, remote repository, developer workspaces, artifact transports, and artifact resolution. It is expected to be extended by a concrete repository implementation, such as [Maven Artifact Resolver Provider](/ref/current/maven-resolver-provider/) for Maven repositories or any other provider for other repository formats. 
 
-    <section name="Apache Maven Artifact Resolver">
-      <p>Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.</p>
-      <p>Maven Artifact Resolver deals with the specification of local repository, remote repository, developer workspaces, artifact transports, and artifact resolution. It is expected to be extended by a concrete repository implementation, such as
-        <a href="/ref/current/maven-resolver-provider/">Maven Artifact Resolver Provider</a> for Maven repositories
-        or any other provider for other repository formats.
-      </p>
-
-      <p>
-        <img src="images/maven-resolver-deps.png" width="792" height="441" border="0" usemap="#Maven_Resolver_dependencies" alt="Maven Resolver module dependency diagram" />
-        <map name="Maven_Resolver_dependencies">
+<img src="images/maven-resolver-deps.png" width="792" height="441" border="0" usemap="#Maven_Resolver_dependencies" alt="Maven Resolver module dependency diagram" />
+<map name="Maven_Resolver_dependencies">
           <area shape="rect" coords="285,405,348,441" href="./maven-resolver-api/" />
           <area shape="rect" coords="286,335,349,370" href="./maven-resolver-spi/" />
           <area shape="rect" coords="375,335,437,370" href="./maven-resolver-util/" />
@@ -61,16 +54,9 @@
           <area shape="rect" coords="689,200,775,236" href="/wagon/" />
           <area shape="rect" coords="689,243,791,278" href="https://hc.apache.org/httpcomponents-client-ga/index.html" />
           <area shape="rect" coords="689,34,774,70"   href="https://ant.apache.org/" />
-        </map>
-      </p>
+        </map> 
 
-      <subsection name="See Also">
-        <ul>
-          <li><a href="/resolver-ant-tasks/">Maven Artifact Resolver Ant Tasks</a></li>
-        </ul>
-      </subsection>
-    </section>
+## See Also
 
-  </body>
+- [Maven Artifact Resolver Ant Tasks](/resolver-ant-tasks/)
 
-</document>
