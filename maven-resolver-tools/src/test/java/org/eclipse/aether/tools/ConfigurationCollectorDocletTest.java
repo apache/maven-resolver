@@ -103,7 +103,7 @@ class ConfigurationCollectorDocletTest {
         assertEquals("", string.get("since"), "no @since expected");
         assertEquals("Yes", string.get("supportRepoIdSuffix"));
         assertEquals(
-                "A string value with some inline tags. Value <code>\"hello\"</code> is the default. <code>some.property</code> is used. <code>This text is code.</code> This text is literal. <code>java.lang.String</code> is the type.",
+                "A string value with some inline tags. Value <code>\"hello\"</code> is the default. <code>some.property</code> is used. <code>This text is code.</code> This text is literal. <code>java.lang.String</code> is the type. See JDK bug <a href=\"https://bugs.openjdk.org/browse/JDK-8225647\">JDK-8225647</a> for details.",
                 string.get("description"));
 
         Map<String, String> enumKey = keys.get("sample.enum");

@@ -44,6 +44,8 @@ public final class SampleConfigurationKeys {
      * {@code This text is code.}
      * {@literal This text is literal.}
      * {@link java.lang.String} is the type.
+     * See JDK bug
+     * <a href="https://bugs.openjdk.org/browse/JDK-8225647">JDK-8225647</a> for details.
      *
      * @configurationSource {@link System#getProperty(String,String)}
      * @configurationType {@link java.lang.String}

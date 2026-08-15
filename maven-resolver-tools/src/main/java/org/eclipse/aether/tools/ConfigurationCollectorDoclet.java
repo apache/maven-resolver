@@ -24,12 +24,16 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.ModuleElement;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.SimpleElementVisitor14;
+import javax.lang.model.util.SimpleTypeVisitor14;
 import javax.tools.Diagnostic;
 
 import java.io.IOException;
@@ -53,16 +57,13 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
-import com.sun.source.doctree.AttributeTree;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
-import com.sun.source.doctree.EndElementTree;
 import com.sun.source.doctree.EntityTree;
 import com.sun.source.doctree.LinkTree;
 import com.sun.source.doctree.LiteralTree;
 import com.sun.source.doctree.ReferenceTree;
 import com.sun.source.doctree.SinceTree;
-import com.sun.source.doctree.StartElementTree;
 import com.sun.source.doctree.SystemPropertyTree;
 import com.sun.source.doctree.TextTree;
 import com.sun.source.doctree.UnknownBlockTagTree;
@@ -99,10 +100,10 @@ public class ConfigurationCollectorDoclet implements Doclet {
      */
     private static final String MAVEN_CONFIG_ANNOTATION = "org.apache.maven.api.annotations.Config";
 
-    private static final MethodReference METHOD_REFERENCE_SESSION_CONFIGURATION = new MethodReference(
-            "org.eclipse.aether.RepositorySystemSession", "getConfigProperties", "java.util.Map", List.of());
-    private static final MethodReference METHOD_REFERENCE_SYSTEM_PROPERTY = new MethodReference(
-            "java.lang.System", "getProperty", "java.lang.String", List.of("java.lang.String", "java.lang.String"));
+    private static final MethodReference METHOD_REFERENCE_SESSION_CONFIGURATION =
+            new MethodReference("org.eclipse.aether.RepositorySystemSession", "getConfigProperties", List.of());
+    private static final MethodReference METHOD_REFERENCE_SYSTEM_PROPERTY =
+            new MethodReference("java.lang.System", "getProperty", List.of("java.lang.String", "java.lang.String"));
 
     private Reporter reporter;
 
@@ -113,18 +114,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
         MAVEN
     }
 
-    /**
-     * Represents a configuration key and its associated metadata.
-     * @param key The configuration key (e.g. {@code "aether.connector.resume"}).
-     * @param description The description of the configuration key, rendered as HTML.
-     * @param defaultValue The default value of the configuration key, if any.
-     * @param fqName The fully qualified name of the field that declares the configuration key.
-     * @param since The {@code @since} version of the configuration key, if any.
-     * @param source From where the configuration key is sourced (e.g. "Session Configuration", "User Properties", "System Properties").
-     * @param type The Java type of the configuration key (e.g. "String", "Integer", "Boolean").
-     * @param supportsRepoIdSuffix Whether the configuration key supports a repository ID suffix (e.g. {@code "aether.connector.resume.<repoId>"}).
-     */
-    public record ConfigurationEntry(
+    private record ConfigurationEntry(
             String key,
             String description,
             String defaultValue,
@@ -230,10 +220,10 @@ public class ConfigurationCollectorDoclet implements Doclet {
                     ConfigurationEntry entry;
                     switch (mode) {
                         case MAVEN:
-                            entry = processMavenField(rootPath, type, field);
+                            entry = processMavenField(rootPath, field);
                             break;
                         case RESOLVER:
-                            entry = processResolverField(rootPath, type, field);
+                            entry = processResolverField(rootPath, field);
                             break;
                         default:
                             throw new IllegalStateException("Unknown mode: " + mode);
@@ -303,11 +293,10 @@ public class ConfigurationCollectorDoclet implements Doclet {
     /**
      * Processes a configuration key field declared in Javadoc sources.
      * @param path
-     * @param type
      * @param field
      * @return the extracted configuration entry (or {@code null})
      */
-    private ConfigurationEntry processResolverField(DocTreePath path, TypeElement type, VariableElement field) {
+    private ConfigurationEntry processResolverField(DocTreePath path, VariableElement field) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(field);
         Map<String, UnknownBlockTagTree> blockTags = collectBlockTags(path.getDocComment());
@@ -318,8 +307,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 String.valueOf(field.getConstantValue()),
                 getFullBodyContent(path),
                 resolveDefaultValue(path, blockTags).orElse(""),
-                type.getQualifiedName() + "." + field.getSimpleName(),
-                getSince(path, type).orElse(""),
+                getFullyQualifiedName(field),
+                getSince(path).orElse(""),
                 getConfigurationSource(path, blockTags).orElse(""),
                 getConfigurationType(path, blockTags),
                 isSupportsRepoIdSuffix(path, blockTags));
@@ -342,7 +331,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
      */
     // TODO: move to Maven repository module and use the Maven annotation type directly (currently we don't have a
     // dependency on Maven API)
-    private ConfigurationEntry processMavenField(DocTreePath path, TypeElement type, VariableElement field) {
+    private ConfigurationEntry processMavenField(DocTreePath path, VariableElement field) {
         AnnotationMirror config = getAnnotation(field, MAVEN_CONFIG_ANNOTATION);
         if (config == null) {
             return null;
@@ -397,8 +386,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 String.valueOf(field.getConstantValue()),
                 path.getDocComment() != null ? getFullBodyContent(path) : "",
                 Objects.toString(defaultValue, ""),
-                type.getQualifiedName() + "." + field.getSimpleName(),
-                Objects.toString(getSince(path, type), ""),
+                getFullyQualifiedName(field),
+                Objects.toString(getSince(path), ""),
                 source,
                 configurationType,
                 false);
@@ -671,32 +660,6 @@ public class ConfigurationCollectorDoclet implements Doclet {
             }
 
             @Override
-            public String visitStartElement(StartElementTree node, Void p) {
-                StringBuilder sb = new StringBuilder("<");
-                sb.append(node.getName());
-                for (DocTree attr : node.getAttributes()) {
-                    if (attr instanceof AttributeTree a) {
-                        sb.append(" ").append(a.getName());
-                        if (a.getValueKind() != AttributeTree.ValueKind.EMPTY) {
-                            String quote = a.getValueKind() == AttributeTree.ValueKind.SINGLE ? "'" : "\"";
-                            sb.append("=").append(quote);
-                            sb.append(renderContent(DocTreePath.getPath(docTreePath, a), mode, trim));
-                            sb.append(quote);
-                        }
-                    } else {
-                        sb.append(attr.toString());
-                    }
-                }
-                sb.append(node.isSelfClosing() ? "/>" : ">");
-                return sb.toString();
-            }
-
-            @Override
-            public String visitEndElement(EndElementTree node, Void p) {
-                return "</" + node.getName() + ">";
-            }
-
-            @Override
             public String visitEntity(EntityTree node, Void p) {
                 return "&" + node.getName() + ";";
             }
@@ -715,6 +678,9 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
             @Override
             protected String defaultAction(DocTree node, Void p) {
+                // the default action internally calls node.toString(), which uses
+                // com.sun.tools.javac.tree.DCTree.toString() which relies on com.sun.tools.javac.tree.DocPretty to
+                // render the node
                 return node.toString();
             }
         };
@@ -743,13 +709,13 @@ public class ConfigurationCollectorDoclet implements Doclet {
         }
     }
 
-    private Optional<String> getSince(DocTreePath path, TypeElement type) {
+    private Optional<String> getSince(DocTreePath path) {
         String since = getSinceTag(path);
-        if (since == null && type != null) {
+        if (since == null) {
             // fall back to the enclosing type's @since
-            DocCommentTree typeDocTree = docTrees.getDocCommentTree(type);
-            if (typeDocTree != null) {
-                since = getSinceTag(DocTreePath.getPath(path, docTrees.getDocCommentTree(type)));
+            DocTreePath parentPath = path.getParentPath();
+            if (parentPath != null) {
+                return getSince(parentPath);
             }
         }
         return Optional.ofNullable(since);
@@ -815,41 +781,73 @@ public class ConfigurationCollectorDoclet implements Doclet {
     }
 
     /**
-     * Represents a reference to a method, including the fully qualified class name, method name, return type, and parameter types.
+     * Represents a reference to a method, including the fully qualified class name, method name, and parameter types.
      * This is supposed to be unique as well as canonical.
+     * The signature within a Javadoc link is not normalized (e.g. may contain spaces or not, may contain argument names or not)
+     * so we need to resolve the reference to get a unique representation of the method.
      * @param fullyQualifiedClassName the fully qualified name of the class containing the method
      * @param methodName the name of the method
-     * @param returnType the fully qualified name (for declared types) or the simple name (for primitive types) of the return type of the method
      * @param fullyQualifiedParameterTypes a list of fully qualified names (for declared types) or simple names (for primitive types) of the parameter types of the method
      */
-    public record MethodReference(
-            String fullyQualifiedClassName,
-            String methodName,
-            String returnType,
-            List<String> fullyQualifiedParameterTypes) {}
+    protected record MethodReference(
+            String fullyQualifiedClassName, String methodName, List<String> fullyQualifiedParameterTypes) {}
 
     private MethodReference getReferencedMethod(DocTreePath path, LinkTree link) {
         ExecutableElement ee = getReferencedExecutableElement(path, link);
         String fullyQualifiedClassName =
                 ((TypeElement) ee.getEnclosingElement()).getQualifiedName().toString();
         String methodName = ee.getSimpleName().toString();
-        String returnType = getFullyQualifiedOrSimpleTypeName(ee.getReturnType());
         List<String> parameterTypes = ee.getParameters().stream()
-                .map(p -> getFullyQualifiedOrSimpleTypeName(p.asType()))
+                .map(p -> getFullyQualifiedName(p.asType()))
                 .toList();
-        return new MethodReference(fullyQualifiedClassName, methodName, returnType, parameterTypes);
+        return new MethodReference(fullyQualifiedClassName, methodName, parameterTypes);
     }
 
-    static String getFullyQualifiedOrSimpleTypeName(TypeMirror typeMirror) {
-        if (typeMirror instanceof DeclaredType declaredType) {
-            Element element = declaredType.asElement();
-            if (element instanceof TypeElement typeElement) {
-                return typeElement.getQualifiedName().toString();
+    static String getFullyQualifiedName(Element e) {
+        return new SimpleElementVisitor14<String, Void>() {
+            @Override
+            public String visitModule(ModuleElement e, Void p) {
+                return e.getQualifiedName().toString();
             }
-        } else if (typeMirror instanceof PrimitiveType primitiveType) {
-            return primitiveType.toString();
-        }
-        throw new IllegalArgumentException("TypeMirror is neither a declared type nor primitive type: " + typeMirror);
+
+            @Override
+            public String visitPackage(PackageElement e, Void p) {
+                return e.getQualifiedName().toString();
+            }
+
+            @Override
+            public String visitType(TypeElement e, Void p) {
+                return e.getQualifiedName().toString();
+            }
+
+            @Override
+            protected String defaultAction(Element e, Void p) {
+                return visit(e.getEnclosingElement());
+            }
+        }.visit(e);
+    }
+
+    static String getFullyQualifiedName(TypeMirror e) {
+        return new SimpleTypeVisitor14<String, Void>() {
+            @Override
+            public String visitDeclared(DeclaredType t, Void p) {
+                Element e = t.asElement();
+                if (e instanceof TypeElement typeElement) {
+                    return typeElement.getQualifiedName().toString();
+                }
+                return super.visitDeclared(t, p);
+            }
+
+            @Override
+            public String visitPrimitive(PrimitiveType t, Void p) {
+                return t.toString();
+            }
+
+            @Override
+            protected String defaultAction(TypeMirror e, Void p) {
+                return e.toString();
+            }
+        }.visit(e);
     }
 
     private ExecutableElement getReferencedExecutableElement(DocTreePath path, LinkTree link) {
