@@ -54,7 +54,7 @@ class ConfigurationCollectorDocletTest {
      * using the same Javadoc block tags that the doclet extracts. */
     private static final String FIXTURE = "/org/eclipse/aether/sample/SampleConfigurationKeys.java";
 
-    /** Classpath location of the a fixture with invalid javadoc (missing/invalid elements). */
+    /** Classpath location of the fixture with invalid javadoc (missing/invalid elements). */
     private static final String INVALID_FIXTURE = "/org/eclipse/aether/sample/InvalidSampleConfigurationKeys.java";
 
     private Path output;

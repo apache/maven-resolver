@@ -165,7 +165,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 new SingleArgumentOption(
                         List.of("--mode", "-m"), "The scanning mode, either 'resolver' or 'maven'", "<mode>", arg -> {
                             try {
-                                Mode.valueOf(arg.toUpperCase(Locale.ROOT));
+                                mode = Mode.valueOf(arg.toUpperCase(Locale.ROOT));
                             } catch (IllegalArgumentException e) {
                                 throw new IllegalArgumentException(
                                         "Invalid mode: " + arg + ". Must be one of (case-insensitive): "
@@ -212,7 +212,6 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 DocCommentTree docComment = docTrees.getDocCommentTree(field);
                 if (docComment == null) {
                     // javadoc is mandatory for configuration keys, so skip any fields that don't have a doc comment
-                    // reporter.print(Diagnostic.Kind., field, "Skipping field because it has no Javadoc");
                     continue;
                 }
                 DocTreePath rootPath = new DocTreePath(docTrees.getPath(field), docComment);
@@ -327,7 +326,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
      * Processes a constant field declared in Maven sources. Maven declares configuration keys via the
      * {@code org.apache.maven.api.annotations.Config} annotation (rather than the custom Javadoc block tags used by
      * Resolver), so the metadata is read from that annotation's attributes.
-     * @return
+     * @return the extracted configuration entry (or {@code null} if the field is not annotated with {@code @Config})
      */
     // TODO: move to Maven repository module and use the Maven annotation type directly (currently we don't have a
     // dependency on Maven API)
@@ -387,7 +386,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 path.getDocComment() != null ? getFullBodyContent(path) : "",
                 Objects.toString(defaultValue, ""),
                 getFullyQualifiedName(field),
-                Objects.toString(getSince(path), ""),
+                getSince(path).orElse(""),
                 source,
                 configurationType,
                 false);
@@ -822,7 +821,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
             @Override
             protected String defaultAction(Element e, Void p) {
-                return visit(e.getEnclosingElement());
+                return visit(e.getEnclosingElement()) + "." + e.getSimpleName();
             }
         }.visit(e);
     }
