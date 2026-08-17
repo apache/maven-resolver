@@ -233,7 +233,7 @@ public class CollectConfiguration implements Callable<Integer> {
      * Reads back the intermediate properties file produced by {@link ConfigurationCollectorDoclet} into the list of
      * maps consumed by the Velocity templates.
      */
-    protected List<Map<String, String>> readDiscoveredKeys(Path intermediateFile) throws Exception {
+    static List<Map<String, String>> readDiscoveredKeys(Path intermediateFile) throws Exception {
         Properties properties = new Properties();
         try (Reader reader = Files.newBufferedReader(intermediateFile, StandardCharsets.UTF_8)) {
             properties.load(reader);

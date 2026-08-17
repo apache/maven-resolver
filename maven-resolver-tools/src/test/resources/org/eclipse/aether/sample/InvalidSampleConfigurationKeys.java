@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   https://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,37 +18,33 @@
  */
 package org.eclipse.aether.sample;
 
+
 /**
  * Sample source declaring configuration keys of type {@link Boolean}, {@link String} and a custom enum, using the same
  * Javadoc block tags that {@code ConfigurationCollectorDoclet} extracts. Used as a fixture by the doclet test.
  */
-public final class SampleConfigurationKeys {
+public final class InvalidSampleConfigurationKeys {
 
+    // missing mandatory @configurationType tag, should be reported as an error by the doclet
     /**
      * A boolean flag.
      *
      * @since 1.2.3
      * @configurationSource {@link System#getProperty(String,String)}
-     * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_BOOL}
      * @configurationRepoIdSuffix No
      */
     public static final String BOOL_KEY = "sample.bool";
 
     public static final boolean DEFAULT_BOOL = true;
-
+    
+    // invalid @configurationType tag value, should be reported as an error by the doclet
+    // also unknown @configurationSource tag value, should be reported as a warning by the doclet
     /**
-     * A string value with some inline tags.
-     * Value {@value #DEFAULT_STRING} is the default.
-     * {@systemProperty some.property} is used.
-     * {@code This text is code.}
-     * {@literal This text is literal.}
-     * {@link java.lang.String} is the type.
-     * See JDK bug
-     * <a href="https://bugs.openjdk.org/browse/JDK-8225647">JDK-8225647</a> for details.
+     * A string value.
      *
      * @configurationSource {@link System#getProperty(String,String)}
-     * @configurationType {@link java.lang.String}
+     * @configurationType invalid
      * @configurationDefaultValue {@link #DEFAULT_STRING}
      * @configurationRepoIdSuffix Yes
      */
@@ -56,30 +52,5 @@ public final class SampleConfigurationKeys {
 
     public static final String DEFAULT_STRING = "hello";
 
-    /**
-     * An enum value. The type is a custom enum with a default value declared as a variable referencing an enum value.
-     *
-     * @configurationSource {@link System#getProperty(String,String)}
-     * @configurationType {@link SampleEnum}
-     * @configurationDefaultValue {@link #DEFAULT_ENUM}
-     */
-    public static final String ENUM_KEY = "sample.enum";
-
-    public static final SampleEnum DEFAULT_ENUM = SampleEnum.VALUE_A;
-
-    public enum SampleEnum {
-        VALUE_A,
-        VALUE_B
-    }
-
-    /**
-     * An enum value. The type is a custom enum with a default value referencing the enum value directly.
-     *
-     * @configurationSource {@link System#getProperty(String,String)}
-     * @configurationType {@link SampleEnum}
-     * @configurationDefaultValue {@link SampleEnum#VALUE_B}
-     */
-    public static final String ENUM2_KEY = "sample.enum2";
-
-    private SampleConfigurationKeys() {}
+    private InvalidSampleConfigurationKeys() {}
 }
