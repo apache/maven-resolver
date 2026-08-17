@@ -54,6 +54,8 @@ class ConfigurationCollectorDocletTest {
      * using the same Javadoc block tags that the doclet extracts. */
     private static final String FIXTURE = "/org/eclipse/aether/sample/SampleConfigurationKeys.java";
 
+    private static final String FIXTURE_PACKAGE_INFO = "/org/eclipse/aether/sample/package-info.java";
+
     /** Classpath location of the fixture with invalid javadoc (missing/invalid elements). */
     private static final String INVALID_FIXTURE = "/org/eclipse/aether/sample/InvalidSampleConfigurationKeys.java";
 
@@ -82,7 +84,11 @@ class ConfigurationCollectorDocletTest {
     void extractsBooleanStringAndEnumConfigurations(@TempDir Path tempDir) throws Exception {
         StringWriter out = new StringWriter();
         assertTrue(
-                runDoclet(out, getSourceFile(FIXTURE, tempDir), output), "doclet run should succeed, output:\n" + out);
+                runDoclet(
+                        out,
+                        List.of(getSourceFile(FIXTURE, tempDir), getSourceFile(FIXTURE_PACKAGE_INFO, tempDir)),
+                        output),
+                "doclet run should succeed, output:\n" + out);
 
         Map<String, Map<String, String>> keys = readKeys(output);
         assertEquals(4, keys.size(), "expected four configuration keys");
@@ -100,7 +106,7 @@ class ConfigurationCollectorDocletTest {
         assertNotNull(string, "string key missing");
         assertEquals("String", string.get("configurationType"));
         assertEquals("\"hello\"", string.get("defaultValue"));
-        assertEquals("", string.get("since"), "no @since expected");
+        assertEquals("2.0", string.get("since")); // from package-info.java
         assertEquals("Yes", string.get("supportRepoIdSuffix"));
         assertEquals(
                 "A string value with some inline tags. Value <code>\"hello\"</code> is the default. <code>some.property</code> is used. <code>This text is code.</code> This text is literal. <code>java.lang.String</code> is the type. See JDK bug <a href=\"https://bugs.openjdk.org/browse/JDK-8225647\">JDK-8225647</a> for details.",
@@ -177,7 +183,8 @@ class ConfigurationCollectorDocletTest {
         CapturingDiagnosticsListener<JavaFileObject> listener =
                 new CapturingDiagnosticsListener<>(javax.tools.Diagnostic.Kind.ERROR);
         StringWriter out = new StringWriter();
-        assertFalse(runDoclet(out, getSourceFile(FIXTURE, output.getParent()), output, "invalid-mode", listener));
+        assertFalse(
+                runDoclet(out, List.of(getSourceFile(FIXTURE, output.getParent())), output, "invalid-mode", listener));
         // check that the diagnostics contain an error message about the invalid mode
         Diagnostic<? extends JavaFileObject> diagnostic =
                 listener.getDiagnostics().iterator().next();
@@ -195,7 +202,7 @@ class ConfigurationCollectorDocletTest {
                 new CapturingDiagnosticsListener<>(javax.tools.Diagnostic.Kind.ERROR);
         StringWriter out = new StringWriter();
         Path sourceFile = getSourceFile(INVALID_FIXTURE, output.getParent());
-        assertFalse(runDoclet(out, sourceFile, output, "resolver", listener));
+        assertFalse(runDoclet(out, List.of(sourceFile), output, "resolver", listener));
         // check that the diagnostics contain two error messages
         Iterator<Diagnostic<? extends JavaFileObject>> iterator =
                 listener.getDiagnostics().iterator();
@@ -212,10 +219,10 @@ class ConfigurationCollectorDocletTest {
         assertEquals(47, diagnostic.getLineNumber());
     }
 
-    private static Boolean runDoclet(Writer writer, Path sourceFile, Path output) throws Exception {
+    private static Boolean runDoclet(Writer writer, Collection<Path> sourceFiles, Path output) throws Exception {
         return runDoclet(
                 writer,
-                sourceFile,
+                sourceFiles,
                 output,
                 null,
                 new LoggingDiagnosticsListener<>(
@@ -223,13 +230,16 @@ class ConfigurationCollectorDocletTest {
     }
 
     private static Boolean runDoclet(
-            Writer writer, Path sourceFile, Path output, String mode, DiagnosticListener<JavaFileObject> listener)
+            Writer writer,
+            Collection<Path> sourceFiles,
+            Path output,
+            String mode,
+            DiagnosticListener<JavaFileObject> listener)
             throws Exception {
         DocumentationTool documentationTool = ToolProvider.getSystemDocumentationTool();
         try (StandardJavaFileManager fileManager =
                 documentationTool.getStandardFileManager(null, null, StandardCharsets.UTF_8)) {
-            Iterable<? extends JavaFileObject> units =
-                    fileManager.getJavaFileObjectsFromFiles(List.of(sourceFile.toFile()));
+            Iterable<? extends JavaFileObject> units = fileManager.getJavaFileObjectsFromPaths(sourceFiles);
             final List<String> options;
             if (mode != null) {
                 options = List.of("--output", output.toString(), "--mode", mode, "-encoding", "UTF-8");

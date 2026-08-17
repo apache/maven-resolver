@@ -710,14 +710,27 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
     private Optional<String> getSince(DocTreePath path) {
         String since = getSinceTag(path);
-        if (since == null) {
-            // fall back to the enclosing type's @since
-            DocTreePath parentPath = path.getParentPath();
-            if (parentPath != null) {
-                return getSince(parentPath);
-            }
+        if (since == null && path.getTreePath().getParentPath() != null) {
+            // get the @since tag from the enclosing element (e.g. the enclosing class or package)
+            return getSince(docTrees.getElement(path.getTreePath().getParentPath()));
         }
         return Optional.ofNullable(since);
+    }
+
+    private Optional<String> getSince(Element element) {
+        if (element == null) {
+            return Optional.empty();
+        }
+        DocCommentTree docComment = docTrees.getDocCommentTree(element);
+        if (docComment != null) {
+            DocTreePath path = new DocTreePath(docTrees.getPath(element), docComment);
+            Optional<String> since = getSince(path);
+            if (since.isPresent()) {
+                return since;
+            }
+        }
+        // traverse up the enclosing elements to find a @since tag in the closest enclosing type or package
+        return getSince(element.getEnclosingElement());
     }
 
     private String getSinceTag(DocTreePath path) {
