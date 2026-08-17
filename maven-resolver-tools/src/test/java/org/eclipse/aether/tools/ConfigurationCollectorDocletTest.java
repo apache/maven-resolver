@@ -101,6 +101,7 @@ class ConfigurationCollectorDocletTest {
         assertEquals("No", bool.get("supportRepoIdSuffix"));
         assertEquals("Java System Properties", bool.get("configurationSource"));
         assertEquals("A boolean flag.", bool.get("description"));
+        assertEquals("", bool.get("deprecated"));
 
         Map<String, String> string = keys.get("sample.string");
         assertNotNull(string, "string key missing");
@@ -118,6 +119,7 @@ class ConfigurationCollectorDocletTest {
         assertEquals("VALUE_A", enumKey.get("defaultValue"));
         // no @configurationRepoIdSuffix -> defaults to "No"
         assertEquals("No", enumKey.get("supportRepoIdSuffix"));
+        assertEquals("Use <code>#ENUM2_KEY</code> instead", enumKey.get("deprecated"));
 
         Map<String, String> enum2Key = keys.get("sample.enum2");
         assertNotNull(enum2Key, "enum key missing");
