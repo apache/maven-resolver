@@ -62,7 +62,9 @@ public final class SampleConfigurationKeys {
      * @configurationSource {@link System#getProperty(String,String)}
      * @configurationType {@link SampleEnum}
      * @configurationDefaultValue {@link #DEFAULT_ENUM}
+     * @deprecated Use {@link #ENUM2_KEY} instead
      */
+    @Deprecated()
     public static final String ENUM_KEY = "sample.enum";
 
     public static final SampleEnum DEFAULT_ENUM = SampleEnum.VALUE_A;
