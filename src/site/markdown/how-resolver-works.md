@@ -157,7 +157,7 @@ The Resolver API reflects this terminology and offers methods for collection,
 resolution, or both.
 
 * `CollectResult collectDependencies(RepositorySystemSession session, CollectRequest request)` performs the dependency collection step. It builds the dependency graph and resolves conflicts in that graph before returning.
-* `List<ArtifactResult> resolveArtifacts(RepositorySystemSession session, Collection<? extends ArtifactRequest> requests)` performs the artifact resolution step. It builds a flattened list and downloads artifacts before returning.
+* `List<ArtifactResult> resolveArtifacts(RepositorySystemSession session, Collection<ArtifactRequest> requests)` performs the artifact resolution step. It builds a flattened list and downloads artifacts before returning.
 * `DependencyResult resolveDependencies(RepositorySystemSession session, DependencyRequest request)` performs both the collection and resolution steps.
 
 Each step depends on the previous one.
