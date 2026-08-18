@@ -79,6 +79,7 @@ public class CollectConfiguration implements Callable<Integer> {
             "since",
             "configurationSource",
             "configurationType",
+            "configurationTypeJavadocUrl",
             "supportRepoIdSuffix");
 
     /**

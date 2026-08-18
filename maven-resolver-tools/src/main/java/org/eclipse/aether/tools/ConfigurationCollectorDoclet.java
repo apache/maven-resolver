@@ -122,6 +122,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
             String since,
             String source,
             String type,
+            String typeJavadocUrl,
             boolean supportsRepoIdSuffix) {
 
         public ConfigurationEntry {
@@ -129,6 +130,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
             Objects.requireNonNull(description);
         }
     }
+
+    private record ConfigurationType(String name, String javadocUrl) {}
 
     /**
      * The scanning mode; either {@code resolver} (Javadoc block tags) or {@code maven} (the {@code @Config}
@@ -302,6 +305,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
         if (!blockTags.containsKey("configurationSource")) {
             return null;
         }
+        ConfigurationType configurationType = getConfigurationType(path, blockTags);
         return new ConfigurationEntry(
                 String.valueOf(field.getConstantValue()),
                 getFullBodyContent(path),
@@ -309,7 +313,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 getFullyQualifiedName(field),
                 getSince(path).orElse(""),
                 getConfigurationSource(path, blockTags).orElse(""),
-                getConfigurationType(path, blockTags),
+                configurationType.name(),
+                configurationType.javadocUrl(),
                 isSupportsRepoIdSuffix(path, blockTags));
     }
 
@@ -389,6 +394,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 getSince(path).orElse(""),
                 source,
                 configurationType,
+                "",
                 false);
     }
 
@@ -426,6 +432,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
         properties.setProperty(prefix + "since", entry.since());
         properties.setProperty(prefix + "configurationSource", entry.source());
         properties.setProperty(prefix + "configurationType", entry.type());
+        properties.setProperty(prefix + "configurationTypeJavadocUrl", entry.typeJavadocUrl());
         properties.setProperty(prefix + "supportRepoIdSuffix", toYesNo(entry.supportsRepoIdSuffix()));
     }
 
@@ -614,7 +621,15 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 String ref = node.getReference() != null ? node.getReference().getSignature() : "";
                 String label = renderContent(DocTreePath.getPath(docTreePath, node.getReference()), mode, false);
                 String text = label == null || label.isEmpty() ? ref : label;
-                return node.getKind() == DocTree.Kind.LINK_PLAIN ? escape(mode, text) : renderAsCode(text);
+                String rendered = node.getKind() == DocTree.Kind.LINK_PLAIN ? escape(mode, text) : renderAsCode(text);
+                if (mode == RenderMode.HTML) {
+                    VariableElement referenced = resolveReferencedField(docTreePath, node);
+                    String configurationKey = getConfigurationKey(referenced);
+                    if (configurationKey != null) {
+                        return "<a href=\"#" + escape(mode, configurationKey) + "\">" + rendered + "</a>";
+                    }
+                }
+                return rendered;
             }
 
             @Override
@@ -746,7 +761,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
         return null;
     }
 
-    private String getConfigurationType(DocTreePath path, Map<String, UnknownBlockTagTree> blockTags) {
+    private ConfigurationType getConfigurationType(DocTreePath path, Map<String, UnknownBlockTagTree> blockTags) {
         UnknownBlockTagTree typeTag = blockTags.get("configurationType");
         if (typeTag == null) {
             throw new IllegalStateException("Missing block tag @configurationType");
@@ -757,11 +772,39 @@ public class ConfigurationCollectorDoclet implements Doclet {
                         configurationTypePath, "No valid {@link ...} reference found in @" + typeTag.getTagName()));
 
         String type = getType(configurationTypePath, linkTree);
+        String javadocUrl = resolveReferencedType(configurationTypePath, linkTree.getReference())
+                .filter(typeElement ->
+                        !typeElement.getQualifiedName().toString().startsWith("java."))
+                .map(ConfigurationCollectorDoclet::getJavadocUrl)
+                .orElse("");
         String javaLangPackage = "java.lang.";
         if (type.startsWith(javaLangPackage)) {
             type = type.substring(javaLangPackage.length());
         }
-        return type;
+        return new ConfigurationType(type, javadocUrl);
+    }
+
+    private String getConfigurationKey(VariableElement field) {
+        if (field == null || !(field.getConstantValue() instanceof String key)) {
+            return null;
+        }
+        if (mode == Mode.MAVEN) {
+            return getAnnotation(field, MAVEN_CONFIG_ANNOTATION) != null ? key : null;
+        }
+        DocCommentTree docComment = docTrees.getDocCommentTree(field);
+        return docComment != null && collectBlockTags(docComment).containsKey("configurationSource") ? key : null;
+    }
+
+    private static String getJavadocUrl(TypeElement type) {
+        Element enclosing = type;
+        while (!(enclosing instanceof PackageElement)) {
+            enclosing = enclosing.getEnclosingElement();
+        }
+        String packageName = ((PackageElement) enclosing).getQualifiedName().toString();
+        String qualifiedName = type.getQualifiedName().toString();
+        String className = packageName.isEmpty() ? qualifiedName : qualifiedName.substring(packageName.length() + 1);
+        String packagePath = packageName.replace('.', '/');
+        return "apidocs/" + (packagePath.isEmpty() ? "" : packagePath + "/") + className + ".html";
     }
 
     private Optional<String> getConfigurationSource(DocTreePath path, Map<String, UnknownBlockTagTree> blockTags) {

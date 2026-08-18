@@ -57,7 +57,8 @@ public final class SampleConfigurationKeys {
     public static final String DEFAULT_STRING = "hello";
 
     /**
-     * An enum value. The type is a custom enum with a default value declared as a variable referencing an enum value.
+     * An enum value. See {@link #STRING_KEY}. The type is a custom enum with a default value declared as a variable
+     * referencing an enum value.
      *
      * @configurationSource {@link System#getProperty(String,String)}
      * @configurationType {@link SampleEnum}

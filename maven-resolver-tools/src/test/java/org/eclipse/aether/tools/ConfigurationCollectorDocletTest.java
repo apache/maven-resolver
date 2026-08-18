@@ -96,6 +96,7 @@ class ConfigurationCollectorDocletTest {
         Map<String, String> bool = keys.get("sample.bool");
         assertNotNull(bool, "boolean key missing");
         assertEquals("Boolean", bool.get("configurationType"));
+        assertEquals("", bool.get("configurationTypeJavadocUrl"));
         assertEquals("true", bool.get("defaultValue"));
         assertEquals("1.2.3", bool.get("since"));
         assertEquals("No", bool.get("supportRepoIdSuffix"));
@@ -115,7 +116,13 @@ class ConfigurationCollectorDocletTest {
         Map<String, String> enumKey = keys.get("sample.enum");
         assertNotNull(enumKey, "enum key missing");
         assertEquals("org.eclipse.aether.sample.SampleConfigurationKeys.SampleEnum", enumKey.get("configurationType"));
+        assertEquals(
+                "apidocs/org/eclipse/aether/sample/SampleConfigurationKeys.SampleEnum.html",
+                enumKey.get("configurationTypeJavadocUrl"));
         assertEquals("VALUE_A", enumKey.get("defaultValue"));
+        assertEquals(
+                "An enum value. See <a href=\"#sample.string\"><code>#STRING_KEY</code></a>. The type is a custom enum with a default value declared as a variable referencing an enum value.",
+                enumKey.get("description"));
         // no @configurationRepoIdSuffix -> defaults to "No"
         assertEquals("No", enumKey.get("supportRepoIdSuffix"));
 
@@ -125,6 +132,29 @@ class ConfigurationCollectorDocletTest {
         assertEquals("VALUE_B", enum2Key.get("defaultValue"));
         // no @configurationRepoIdSuffix -> defaults to "No"
         assertEquals("No", enum2Key.get("supportRepoIdSuffix"));
+    }
+
+    @Test
+    void rendersConfigurationAnchorsAndTypeJavadocLinks(@TempDir Path tempDir) throws Exception {
+        StringWriter out = new StringWriter();
+        assertTrue(
+                runDoclet(
+                        out,
+                        List.of(getSourceFile(FIXTURE, tempDir), getSourceFile(FIXTURE_PACKAGE_INFO, tempDir)),
+                        output),
+                "doclet run should succeed, output:\n" + out);
+
+        CollectConfiguration collector = new CollectConfiguration();
+        collector.templates = List.of("configuration.md");
+        collector.outputDirectory = tempDir.resolve("generated");
+        collector.render(CollectConfiguration.readDiscoveredKeys(output));
+
+        String markdown = Files.readString(collector.outputDirectory.resolve("configuration.md"));
+        assertTrue(markdown.contains("<a id=\"sample.enum\"></a>`sample.enum`"));
+        assertTrue(
+                markdown.contains(
+                        "[`org.eclipse.aether.sample.SampleConfigurationKeys.SampleEnum`](apidocs/org/eclipse/aether/sample/SampleConfigurationKeys.SampleEnum.html)"));
+        assertTrue(markdown.contains("<a href=\"#sample.string\"><code>#STRING_KEY</code></a>"));
     }
 
     static final class CapturingDiagnosticsListener<T extends JavaFileObject>
