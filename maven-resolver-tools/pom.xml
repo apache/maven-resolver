@@ -197,6 +197,8 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!-- JavadocLinkGenerator's constructor signature references Settings; declare it directly because maven-core is
+         excluded above. -->
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-settings</artifactId>
