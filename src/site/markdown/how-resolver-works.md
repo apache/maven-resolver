@@ -47,7 +47,7 @@ The local repository is usually a directory on the local file system.
 Remote repositories are usually HTTP servers.
 
 *Resolving* is the process of finding
-an artifact from its coordinates and adding it to the Maven build.
+*Resolving* is the process of locating an artifact from its coordinates and obtaining its content.
 It involves the following steps:
 
 1. **Dependency graph collection** builds the dependency graph.
