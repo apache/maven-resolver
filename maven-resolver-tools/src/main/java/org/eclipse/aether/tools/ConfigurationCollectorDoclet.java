@@ -57,6 +57,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
+import com.sun.source.doctree.DeprecatedTree;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
 import com.sun.source.doctree.EntityTree;
@@ -123,7 +124,9 @@ public class ConfigurationCollectorDoclet implements Doclet {
             String source,
             String type,
             String typeJavadocUrl,
-            boolean supportsRepoIdSuffix) {
+            boolean supportsRepoIdSuffix,
+            // is empty if not deprecated
+            String deprecated) {
 
         public ConfigurationEntry {
             Objects.requireNonNull(key);
@@ -191,7 +194,9 @@ public class ConfigurationCollectorDoclet implements Doclet {
         try {
             return doRun(environment);
         } catch (RuntimeException e) {
-            reportError("Error running ConfigurationCollectorDoclet: " + e.getMessage());
+            // catch all runtime exception, as the default javadoc tool emits a confusing message about reporting
+            // something with Oracle
+            reportError("Error running ConfigurationCollectorDoclet", e);
             return false;
         }
     }
@@ -261,6 +266,10 @@ public class ConfigurationCollectorDoclet implements Doclet {
      */
     private void reportError(DocTreePath path, Throwable throwable) {
         reportError(path, throwable.getMessage());
+        reportError(throwable);
+    }
+
+    private void reportError(Throwable throwable) {
         // also emit stack trace
         PrintWriter pw = reporter.getDiagnosticWriter();
         if (pw == null) {
@@ -281,6 +290,17 @@ public class ConfigurationCollectorDoclet implements Doclet {
         } else {
             reportError(message);
         }
+    }
+
+    /**
+     * Reports a global error message without location information.
+     *
+     * @param message the error message
+     * @param throwable the exception whose stack trace is printed
+     */
+    private void reportError(String message, Throwable throwable) {
+        reporter.print(Diagnostic.Kind.ERROR, message);
+        reportError(throwable);
     }
 
     /**
@@ -315,7 +335,42 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 getConfigurationSource(path, blockTags).orElse(""),
                 configurationType.name(),
                 configurationType.javadocUrl(),
-                isSupportsRepoIdSuffix(path, blockTags));
+                isSupportsRepoIdSuffix(path, blockTags),
+                getDeprecated(path, field).orElse(""));
+    }
+
+    private Optional<String> getDeprecated(DocTreePath path, Element element) {
+        Objects.requireNonNull(path, "path must not be null");
+        Objects.requireNonNull(element, "field must not be null");
+
+        // first check for deprecated annotation
+        if (element.getAnnotation(Deprecated.class) == null) {
+            // if not existing check enclosing elements recursively
+            return getDeprecated(element.getEnclosingElement());
+        }
+        Optional<? extends DocTree> deprecatedTag = path.getDocComment().getBlockTags().stream()
+                .filter(t -> com.sun.source.doctree.DocTree.Kind.DEPRECATED == t.getKind())
+                .findFirst();
+        if (deprecatedTag.isPresent()) {
+            return Optional.of(renderContent(DocTreePath.getPath(path, deprecatedTag.get()), RenderMode.HTML, true));
+        }
+        return Optional.of("");
+    }
+
+    private Optional<String> getDeprecated(Element element) {
+        if (element == null) {
+            return Optional.empty();
+        }
+        DocCommentTree docCommentTree = docTrees.getDocCommentTree(element);
+        if (docCommentTree == null) {
+            if (element.getAnnotation(Deprecated.class) != null) {
+                return Optional.of("");
+            }
+            // traverse to enclosing element
+            return getDeprecated(element.getEnclosingElement());
+        } else {
+            return getDeprecated(new DocTreePath(docTrees.getPath(element), docCommentTree), element);
+        }
     }
 
     private boolean isSupportsRepoIdSuffix(DocTreePath path, Map<String, UnknownBlockTagTree> blockTags) {
@@ -385,7 +440,6 @@ public class ConfigurationCollectorDoclet implements Doclet {
         } else if (configurationType.startsWith("java.util.")) {
             configurationType = configurationType.substring("java.util.".length());
         }
-
         return new ConfigurationEntry(
                 String.valueOf(field.getConstantValue()),
                 path.getDocComment() != null ? getFullBodyContent(path) : "",
@@ -395,7 +449,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 source,
                 configurationType,
                 "",
-                false);
+                false,
+                getDeprecated(path, field).orElse(""));
     }
 
     private AnnotationMirror getAnnotation(Element element, String fqName) {
@@ -434,12 +489,16 @@ public class ConfigurationCollectorDoclet implements Doclet {
         properties.setProperty(prefix + "configurationType", entry.type());
         properties.setProperty(prefix + "configurationTypeJavadocUrl", entry.typeJavadocUrl());
         properties.setProperty(prefix + "supportRepoIdSuffix", toYesNo(entry.supportsRepoIdSuffix()));
+        properties.setProperty(prefix + "deprecated", entry.deprecated());
     }
 
     // --- Javadoc extraction helpers -------------------------------------------------------------------------------
 
     private Map<String, UnknownBlockTagTree> collectBlockTags(DocCommentTree docComment) {
         Map<String, UnknownBlockTagTree> result = new LinkedHashMap<>();
+        if (docComment == null) {
+            return result;
+        }
         for (DocTree tag : docComment.getBlockTags()) {
             if (tag instanceof UnknownBlockTagTree unknownBlockTree) {
                 result.put(unknownBlockTree.getTagName(), unknownBlockTree);
@@ -688,6 +747,13 @@ public class ConfigurationCollectorDoclet implements Doclet {
             @Override
             public String visitSince(SinceTree node, Void p) {
                 return escape(mode, node.getBody().toString());
+            }
+
+            @Override
+            public String visitDeprecated(DeprecatedTree node, Void p) {
+                StringBuilder sb = new StringBuilder();
+                node.getBody().forEach(child -> sb.append(child.accept(this, p)));
+                return sb.toString();
             }
 
             @Override

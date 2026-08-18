@@ -80,7 +80,8 @@ public class CollectConfiguration implements Callable<Integer> {
             "configurationSource",
             "configurationType",
             "configurationTypeJavadocUrl",
-            "supportRepoIdSuffix");
+            "supportRepoIdSuffix",
+            "deprecated");
 
     /**
      * Javadoc block tag marking a constant field as a configuration key.
