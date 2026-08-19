@@ -35,7 +35,7 @@
   <properties>
     <javaVersion>8</javaVersion>
 
-    <okhttpVersion>5.4.0</okhttpVersion>
+    <version.okhttp>5.4.0</version.okhttp>
   </properties>
 
   <dependencyManagement>
@@ -43,7 +43,7 @@
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>okhttp-bom</artifactId>
-        <version>${okhttpVersion}</version>
+        <version>${version.okhttp}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -84,7 +84,6 @@
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>okhttp-jvm</artifactId>
-      <version>${okhttpVersion}</version>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
@@ -126,19 +125,19 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
-      <version>${testcontainersVersion}</version>
+      <version>${version.testcontainers}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-junit-jupiter</artifactId>
-      <version>${testcontainersVersion}</version>
+      <version>${version.testcontainers}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-minio</artifactId>
-      <version>${testcontainersVersion}</version>
+      <version>${version.testcontainers}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
