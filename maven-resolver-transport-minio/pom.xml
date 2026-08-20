@@ -35,7 +35,7 @@
   <properties>
     <javaVersion>8</javaVersion>
 
-    <version.okhttp>5.4.0</version.okhttp>
+    <version.okhttp>5.5.0</version.okhttp>
   </properties>
 
   <dependencyManagement>

@@ -112,13 +112,17 @@
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server), 12.1 introduced support for different compressions (https://github.com/jetty/jetty.project/issues/8769) -->
     <version.jetty>12.1.12</version.jetty>
-    <!-- used by supplier and demo only -->
+
+    <version.jmh>1.37</version.jmh>
+
+    <!-- used by supplier and demo only; not in resolver itself -->
     <maven3Version>3.9.16</maven3Version>
     <maven4Version>4.0.0-rc-6</maven4Version>
     <plexusUtils3Version>3.6.1</plexusUtils3Version>
     <plexusUtils4Version>4.0.3</plexusUtils4Version>
     <plexusXml4Version>4.1.1</plexusXml4Version>
-    <version.jmh>1.37</version.jmh>
+
+    <!-- Build -->
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
     <!-- MRESOLVER-422: keep this in sync with Javadoc plugin configuration (but cannot directly, as this below is range) -->
     <minimalJavaBuildVersion>[21,)</minimalJavaBuildVersion>
