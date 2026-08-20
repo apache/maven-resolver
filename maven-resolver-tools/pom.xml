@@ -271,6 +271,11 @@
               <arguments>
                 <argument>--mode=resolver</argument>
                 <argument>--templates=configuration.md</argument>
+                <!-- Aggregate Javadocs are generated later by the site lifecycle, so CollectConfiguration validates
+                     internal links against the source roots instead. -->
+                <argument>--internal-javadoc-url=apidocs/</argument>
+                <argument>--internal-javadoc-version=${javadocVersion}</argument>
+                <argument>--external-javadoc-url=${javadocJavaApiUrl}</argument>
                 <argument>${basedir}/..</argument>
                 <argument>${basedir}/../target/generated-site/markdown/</argument>
               </arguments>
