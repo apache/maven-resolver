@@ -142,7 +142,9 @@ public class CollectConfiguration implements Callable<Integer> {
             names = "--internal-javadoc-source-tree",
             paramLabel = "directory",
             description =
-                    "Directory trees searched for source roots included in aggregate Javadocs; defaults to the source processing root")
+                    "Recursively searches each directory tree for .java files and uses each distinct nearest ancestor "
+                            + "ending in src/main/java as an aggregate Javadoc source root. May be repeated; defaults to "
+                            + "the source processing root")
     protected List<Path> internalJavadocSourceTrees = new ArrayList<>();
 
     @CommandLine.Parameters(index = "0", description = "The root directory to process sources from")
