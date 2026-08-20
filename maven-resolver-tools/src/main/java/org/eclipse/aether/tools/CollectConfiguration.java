@@ -176,23 +176,26 @@ public class CollectConfiguration implements Callable<Integer> {
         // javadoc must resolve small, avoiding failures caused by unrelated sources referencing dependencies that
         // are not on this module's classpath (e.g. gson, jetty).
         String marker = mode == Mode.maven ? MAVEN_CONFIGURATION_MARKER : CONFIGURATION_MARKER;
-        List<File> sourceFiles;
+        List<Path> javaSourceFiles;
         try (Stream<Path> stream = Files.walk(rootDirectory)) {
-            sourceFiles = stream.map(Path::toAbsolutePath)
+            javaSourceFiles = stream.map(Path::toAbsolutePath)
                     .filter(p -> p.getFileName().toString().endsWith(".java"))
-                    .filter(p -> p.toString().contains("/src/main/java/"))
-                    .filter(p -> !p.toString().endsWith("/module-info.java"))
-                    .filter(p -> !p.toString().contains("/maven-resolver-tools/"))
-                    .filter(p -> fileContains(p, marker))
-                    .map(Path::toFile)
-                    .collect(Collectors.toList());
+                    .filter(p -> findMainJavaSourceRoot(p) != null)
+                    .toList();
         }
+        List<File> sourceFiles = javaSourceFiles.stream()
+                .filter(p -> !p.getFileName().toString().equals("module-info.java"))
+                .filter(p -> !p.toString().replace('\\', '/').contains("/maven-resolver-tools/"))
+                .filter(p -> fileContains(p, marker))
+                .map(Path::toFile)
+                .collect(Collectors.toList());
         if (sourceFiles.isEmpty()) {
             throw new IllegalStateException(
                     "No Java sources declaring configuration keys found under " + rootDirectory);
         }
-        List<Path> internalJavadocSourceRoots = sourceFiles.stream()
-                .map(File::toPath)
+        // The Javadoc report is aggregated across the reactor, so validate internal links against every main source
+        // root rather than only the roots containing configuration declarations.
+        List<Path> internalJavadocSourceRoots = javaSourceFiles.stream()
                 .map(CollectConfiguration::findMainJavaSourceRoot)
                 .filter(Objects::nonNull)
                 .distinct()

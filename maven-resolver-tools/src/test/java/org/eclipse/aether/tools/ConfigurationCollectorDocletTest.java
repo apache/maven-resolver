@@ -60,6 +60,9 @@ class ConfigurationCollectorDocletTest {
 
     private static final String MODULE_INFO_FIXTURE = "/org/eclipse/aether/modulefixture/module-info.java";
 
+    private static final String CROSS_MODULE_FIXTURE =
+            "/org/eclipse/aether/crossmodule/CrossModuleConfigurationKeys.java";
+
     /** Classpath location of the fixture with invalid javadoc (missing/invalid elements). */
     private static final String INVALID_FIXTURE = "/org/eclipse/aether/sample/InvalidSampleConfigurationKeys.java";
 
@@ -179,6 +182,31 @@ class ConfigurationCollectorDocletTest {
                         "[`org.eclipse.aether.sample.SampleConfigurationKeys.SampleEnum`](apidocs/org/eclipse/aether/sample/SampleConfigurationKeys.SampleEnum.html)"));
         assertTrue(markdown.contains("<a href=\"#sample.string\"><code>#STRING_KEY</code></a>"));
         assertTrue(markdown.contains("**Deprecated**. *Use <a href=\"#sample.enum2\">"));
+    }
+
+    @Test
+    void linksTypesFromSiblingAggregateJavadocSourceRoots(@TempDir Path tempDir) throws Exception {
+        Path configurationSourceRoot = tempDir.resolve("configuration-module/src/main/java");
+        getSourceFile(CROSS_MODULE_FIXTURE, configurationSourceRoot);
+
+        Path apiSource = tempDir.resolve("api-module/src/main/java/org/eclipse/aether/ConfigurationProperties.java");
+        Files.createDirectories(apiSource.getParent());
+        Files.writeString(
+                apiSource,
+                "package org.eclipse.aether; public final class ConfigurationProperties {}",
+                StandardCharsets.UTF_8);
+
+        CollectConfiguration collector = new CollectConfiguration();
+        collector.rootDirectory = tempDir;
+        collector.templates = List.of("configuration.md");
+        collector.outputDirectory = tempDir.resolve("generated");
+
+        assertEquals(0, collector.call());
+        String markdown = Files.readString(collector.outputDirectory.resolve("configuration.md"));
+        assertTrue(
+                markdown.contains(
+                        "[`org.eclipse.aether.ConfigurationProperties.HttpVersion`](apidocs/org/eclipse/aether/ConfigurationProperties.HttpVersion.html)"),
+                markdown);
     }
 
     @Test
