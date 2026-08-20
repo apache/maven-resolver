@@ -42,6 +42,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
+import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -185,8 +186,9 @@ class ConfigurationCollectorDocletTest {
     }
 
     @Test
-    void linksTypesFromSiblingAggregateJavadocSourceRoots(@TempDir Path tempDir) throws Exception {
-        Path configurationSourceRoot = tempDir.resolve("configuration-module/src/main/java");
+    void linksTypesFromConfiguredAggregateJavadocSourceTree(@TempDir Path tempDir) throws Exception {
+        Path configurationModule = tempDir.resolve("configuration-module");
+        Path configurationSourceRoot = configurationModule.resolve("src/main/java");
         getSourceFile(CROSS_MODULE_FIXTURE, configurationSourceRoot);
 
         Path apiSource = tempDir.resolve("api-module/src/main/java/org/eclipse/aether/ConfigurationProperties.java");
@@ -196,13 +198,16 @@ class ConfigurationCollectorDocletTest {
                 "package org.eclipse.aether; public final class ConfigurationProperties {}",
                 StandardCharsets.UTF_8);
 
-        CollectConfiguration collector = new CollectConfiguration();
-        collector.rootDirectory = tempDir;
-        collector.templates = List.of("configuration.md");
-        collector.outputDirectory = tempDir.resolve("generated");
+        Path generated = tempDir.resolve("generated");
+        int exitCode = new CommandLine(new CollectConfiguration())
+                .execute(
+                        "--templates=configuration.md",
+                        "--internal-javadoc-source-tree=" + tempDir,
+                        configurationModule.toString(),
+                        generated.toString());
 
-        assertEquals(0, collector.call());
-        String markdown = Files.readString(collector.outputDirectory.resolve("configuration.md"));
+        assertEquals(0, exitCode);
+        String markdown = Files.readString(generated.resolve("configuration.md"));
         assertTrue(
                 markdown.contains(
                         "[`org.eclipse.aether.ConfigurationProperties.HttpVersion`](apidocs/org/eclipse/aether/ConfigurationProperties.HttpVersion.html)"),

@@ -138,6 +138,13 @@ public class CollectConfiguration implements Callable<Integer> {
             description = "External Javadoc base URLs used for validated links")
     protected List<URI> externalJavadocUrls = new ArrayList<>();
 
+    @CommandLine.Option(
+            names = "--internal-javadoc-source-tree",
+            paramLabel = "directory",
+            description =
+                    "Directory trees searched for source roots included in aggregate Javadocs; defaults to the source processing root")
+    protected List<Path> internalJavadocSourceTrees = new ArrayList<>();
+
     @CommandLine.Parameters(index = "0", description = "The root directory to process sources from")
     protected Path rootDirectory;
 
@@ -176,13 +183,7 @@ public class CollectConfiguration implements Callable<Integer> {
         // javadoc must resolve small, avoiding failures caused by unrelated sources referencing dependencies that
         // are not on this module's classpath (e.g. gson, jetty).
         String marker = mode == Mode.maven ? MAVEN_CONFIGURATION_MARKER : CONFIGURATION_MARKER;
-        List<Path> javaSourceFiles;
-        try (Stream<Path> stream = Files.walk(rootDirectory)) {
-            javaSourceFiles = stream.map(Path::toAbsolutePath)
-                    .filter(p -> p.getFileName().toString().endsWith(".java"))
-                    .filter(p -> findMainJavaSourceRoot(p) != null)
-                    .toList();
-        }
+        List<Path> javaSourceFiles = findMainJavaSourceFiles(rootDirectory);
         List<File> sourceFiles = javaSourceFiles.stream()
                 .filter(p -> !p.getFileName().toString().equals("module-info.java"))
                 .filter(p -> !p.toString().replace('\\', '/').contains("/maven-resolver-tools/"))
@@ -193,9 +194,17 @@ public class CollectConfiguration implements Callable<Integer> {
             throw new IllegalStateException(
                     "No Java sources declaring configuration keys found under " + rootDirectory);
         }
-        // The Javadoc report is aggregated across the reactor, so validate internal links against every main source
-        // root rather than only the roots containing configuration declarations.
-        List<Path> internalJavadocSourceRoots = javaSourceFiles.stream()
+        List<Path> internalJavadocSourceFiles;
+        if (internalJavadocSourceTrees.isEmpty()) {
+            internalJavadocSourceFiles = javaSourceFiles;
+        } else {
+            internalJavadocSourceFiles = new ArrayList<>();
+            for (Path sourceTree : internalJavadocSourceTrees) {
+                internalJavadocSourceFiles.addAll(findMainJavaSourceFiles(sourceTree));
+            }
+        }
+        // The Javadoc report may be aggregated from a wider source tree than the configuration declarations.
+        List<Path> internalJavadocSourceRoots = internalJavadocSourceFiles.stream()
                 .map(CollectConfiguration::findMainJavaSourceRoot)
                 .filter(Objects::nonNull)
                 .distinct()
@@ -249,6 +258,15 @@ public class CollectConfiguration implements Callable<Integer> {
             return Files.readString(path, StandardCharsets.UTF_8).contains(marker);
         } catch (IOException e) {
             return false;
+        }
+    }
+
+    private static List<Path> findMainJavaSourceFiles(Path sourceTree) throws IOException {
+        try (Stream<Path> stream = Files.walk(sourceTree)) {
+            return stream.map(Path::toAbsolutePath)
+                    .filter(p -> p.getFileName().toString().endsWith(".java"))
+                    .filter(p -> findMainJavaSourceRoot(p) != null)
+                    .toList();
         }
     }
 
