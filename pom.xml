@@ -120,7 +120,7 @@
     <maven4Version>4.0.0-rc-6</maven4Version>
     <plexusUtils3Version>3.6.1</plexusUtils3Version>
     <plexusUtils4Version>4.0.3</plexusUtils4Version>
-    <plexusXml4Version>4.1.1</plexusXml4Version>
+    <plexusXml4Version>4.2.0</plexusXml4Version>
 
     <!-- Build -->
     <minimalMavenBuildVersion>[3.8.8,)</minimalMavenBuildVersion>
