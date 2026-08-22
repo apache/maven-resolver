@@ -91,7 +91,7 @@
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
     <sisuVersion>1.1.0</sisuVersion>
     <!-- the same version as in Maven 3.9.x -->
-    <guiceVersion>5.1.0</guiceVersion>
+    <guiceVersion>7.0.0</guiceVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
     <!-- used by supplier and demo only -->
     <mavenVersion>3.9.16</mavenVersion>
