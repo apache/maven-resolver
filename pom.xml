@@ -193,8 +193,13 @@
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-utils</artifactId>
-        <!-- the same version as in Maven 3.9,x -->
         <version>4.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-xml</artifactId>
+        <!-- last 3.x, the Java 8 line; 4.x requires Java 17 -->
+        <version>3.1.0</version>
       </dependency>
 
       <dependency>
@@ -523,9 +528,9 @@
                 </bannedDependencies>
                 <bannedDependencies>
                   <excludes>
-                    <exclude>org.codehaus.plexus:plexus-xml</exclude>
+                    <exclude>org.codehaus.plexus:plexus-xml:[4.0.0,)</exclude>
                   </excludes>
-                  <message>plexus-xml should not be used with plexus-util 3.6.0</message>
+                  <message>plexus-xml 4.x is built for Java 17, this branch targets Java 8</message>
                 </bannedDependencies>
               </rules>
             </configuration>
