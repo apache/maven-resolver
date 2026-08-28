@@ -22,11 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryException;
@@ -408,11 +406,6 @@ public final class PathConflictResolver extends ConflictResolver {
         private final Path parent;
         // derived
         private final int depth;
-        // Set of conflict IDs on the path from root to this node (inclusive), enabling O(1) cycle detection.
-        // Each node copies its parent's set and adds its own conflictId. Since dependency tree depth is
-        // bounded in practice (< 30), the per-node copy cost is negligible compared to the O(depth)
-        // parent-chain walk it replaces.
-        private final Set<String> conflictIdsOnPath;
         // Lazy: null for leaf nodes (never populated by addChildren), right-sized for non-leaves.
         // This avoids allocating an ArrayList + backing array for every leaf node in the tree
         // (typically 60-70% of all nodes), saving ~40 bytes per leaf.
@@ -429,12 +422,6 @@ public final class PathConflictResolver extends ConflictResolver {
             this.conflictId = conflictId;
             this.parent = parent;
             this.depth = parent != null ? parent.depth + 1 : 0;
-            if (parent != null) {
-                this.conflictIdsOnPath = new HashSet<>(parent.conflictIdsOnPath);
-            } else {
-                this.conflictIdsOnPath = new HashSet<>();
-            }
-            this.conflictIdsOnPath.add(this.conflictId);
             pull(0);
 
             this.state
@@ -445,12 +432,17 @@ public final class PathConflictResolver extends ConflictResolver {
 
         /**
          * Checks whether the given conflictId appears on the path from this node to the root.
-         * Uses a pre-built {@link HashSet} of conflict IDs accumulated along the path from root,
-         * making this an O(1) operation instead of the previous O(depth) parent-chain walk that
-         * showed up as a JFR hotspot (3.9% CPU) in large multi-module builds.
+         * Walks the parent chain comparing conflict IDs. Since dependency tree depth is bounded
+         * in practice (&lt; 30), each check is fast while avoiding per-node HashSet allocation
+         * that was a major JFR hotspot (~45% CPU) in large multi-module builds.
          */
         private boolean hasConflictIdOnPathToRoot(String targetConflictId) {
-            return conflictIdsOnPath.contains(targetConflictId);
+            for (Path current = this; current != null; current = current.parent) {
+                if (targetConflictId.equals(current.conflictId)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /**
@@ -691,10 +683,9 @@ public final class PathConflictResolver extends ConflictResolver {
          * Method will return really added {@link Path} instances, as this class avoids cycles. Those forming a cycle
          * are not recursed (not returned in list), keeping {@link Path} cycle free.
          * <p>
-         * Cycle detection is performed via {@link #hasConflictIdOnPathToRoot(String)} which uses
-         * a pre-built {@link HashSet} of conflict IDs accumulated along the path from root, making
-         * each check O(1). Since dependency tree depth is bounded in practice (< 30), the per-node
-         * set copy cost is negligible.
+         * Cycle detection is performed via {@link #hasConflictIdOnPathToRoot(String)} which walks
+         * the parent chain comparing conflict IDs. Since dependency tree depth is bounded in
+         * practice (&lt; 30), each check is fast while avoiding per-node HashSet allocation.
          * This implies that this conflict resolver, by its nature "redoes" the
          * {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} calculated by {@link ConflictIdSorter}.
          */
