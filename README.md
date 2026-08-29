@@ -14,71 +14,68 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-Contributing to [Apache Maven Artifact Resolver](https://maven.apache.org/resolver/)
-======================
 
-[![Apache License, Version 2.0, January 2004](https://img.shields.io/github/license/apache/maven.svg?label=License)][license]
-[![Maven Central](https://img.shields.io/maven-central/v/org.apache.maven.resolver/maven-resolver.svg?label=Maven%20Central)](https://search.maven.org/artifact/org.apache.maven.resolver/maven-resolver)
-[![Reproducible Builds](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jvm-repo-rebuild/reproducible-central/master/content/org/apache/maven/resolver/maven-resolver/badge.json)](https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/content/org/apache/maven/resolver/maven-resolver/README.md)
-[![Jenkins Status](https://img.shields.io/jenkins/s/https/ci-maven.apache.org/job/Maven/job/maven-box/job/maven-resolver/job/master.svg)][build]
-[![Jenkins tests](https://img.shields.io/jenkins/t/https/ci-maven.apache.org/job/Maven/job/maven-box/job/maven-resolver/job/master.svg)][test-results]
+# Contributing to Apache Maven Artifact Resolver
 
+[Apache Maven Artifact Resolver](https://maven.apache.org/resolver/) is a library
+for working with artifact repositories and dependency resolution.
 
-You have found a bug, or you have an idea for a cool new feature? Contributing
-code is a great way to give something back to the open source community. Before
-you dig right into the code, there are a few guidelines that we need
-contributors to follow so that we can have a chance of keeping on top of
-things.
+Thank you for your interest in contributing to Apache Maven Artifact Resolver!
+Contributions of bug fixes, improvements, documentation, tests, and new features
+are welcome.
 
-Getting Started
----------------
+Before starting work, please review the following guidelines.
 
-+ Make sure you have a [GitHub account](https://github.com/signup/free).
-+ If you're planning to implement a new feature, it makes sense to discuss your changes
-  on the [dev list][ml-list] first.
-  This way you can make sure you're not wasting your time on something that isn't
-  considered to be in Apache Maven's scope.
-+ Submit a ticket for your issue, assuming one does not already exist.
-  + Clearly describe the issue, including steps to reproduce when it is a bug.
-  + Make sure you fill in the earliest version that you know has the issue.
-+ Fork the repository on GitHub.
+## Getting Started
 
-Making and Submitting Changes
---------------
+### 1. Set up your GitHub account
 
-We accept Pull Requests via GitHub. The [developer mailing list][ml-list] is the
-main channel of communication for contributors.
-There are some guidelines which will make applying PRs easier for us:
-+ Create a topic branch from where you want to base your work (this is usually the master branch).
-  Push your changes to a topic branch in your fork of the repository.
-+ Make commits of logical units.
-+ Respect the original code style: by using the same [codestyle][code-style],
-  patches should only highlight the actual difference, not being disturbed by any formatting issues:
-  + Only use spaces for indentation.
-  + Create minimal diffs - disable on save actions like reformat source code or organize imports.
-    If you feel the source code should be reformatted, create a separate PR for this change.
-  + Check for unnecessary whitespace with `git diff --check` before committing.
-+ Make sure you have added the necessary tests (JUnit/IT) for your changes.
-+ Run all the tests with `mvn -Prun-its verify` to assure nothing else was accidentally broken.
-+ Submit a pull request to the repository in the Apache organization.
+Make sure you have a [GitHub account](https://github.com/signup/free).
 
-If you plan to contribute on a regular basis, please consider filing a [contributor license agreement][cla].
+### 2. Check existing issues and pull requests
 
-Additional Resources
---------------------
+Before starting work, search the existing GitHub issues and pull requests to
+make sure the problem or feature is not already being worked on.
 
-+ [Contributing patches](https://maven.apache.org/guides/development/guide-maven-development.html#Creating_and_submitting_a_patch)
-+ [Contributor License Agreement][cla]
-+ [General GitHub documentation](https://help.github.com/)
-+ [GitHub pull request documentation](https://help.github.com/send-pull-requests/)
-+ [Apache Maven X Account](https://x.com/ASFMavenProject)
-+ [Apache Maven Bluesky Account](https://bsky.app/profile/maven.apache.org)
-+ [Apache Maven Mastodon Account](https://mastodon.social/deck/@ASFMavenProject@fosstodon.org)
+Avoid duplicating existing work whenever possible.
 
-[license]: https://www.apache.org/licenses/LICENSE-2.0
-[ml-list]: https://maven.apache.org/mailing-lists.html
-[code-style]: https://maven.apache.org/developers/conventions/code.html
-[cla]: https://www.apache.org/licenses/#clas
-[maven-wiki]: https://cwiki.apache.org/confluence/display/MAVEN/Index
-[test-results]: https://ci-maven.apache.org/job/Maven/job/maven-box/job/maven-resolver/job/master/lastCompletedBuild/testReport/
-[build]: https://ci-maven.apache.org/job/Maven/job/maven-box/job/maven-resolver/job/master/
+### 3. Discuss new features
+
+If you are planning to implement a new feature, discuss the proposed changes
+on the [developer mailing list][ml-list] first.
+
+This helps determine whether the proposed change is appropriate for Apache
+Maven and can prevent contributors from spending time on changes that may not
+fit the project's scope.
+
+### 4. Create or find an issue
+
+If an issue does not already exist, create a ticket describing the problem or
+proposed improvement.
+
+For bug reports, include:
+
+- A clear description of the problem.
+- Steps to reproduce the issue.
+- The earliest version where the issue is known to occur.
+- Any relevant logs, configuration, or other information.
+
+### 5. Fork the repository
+
+Fork the Maven Artifact Resolver repository on GitHub and clone your fork
+locally.
+
+## Making Changes
+
+### Create a topic branch
+
+Create a topic branch from the branch on which you want to base your work.
+This is usually the `master` branch.
+
+For example:
+
+```bash
+git checkout master
+git fetch upstream
+git merge upstream/master
+git checkout -b my-change
