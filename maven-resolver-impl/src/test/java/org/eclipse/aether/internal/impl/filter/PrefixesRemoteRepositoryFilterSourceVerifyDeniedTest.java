@@ -69,8 +69,11 @@ import static org.mockito.Mockito.when;
  * member repository, breaking every Jenkins-ecosystem Maven 4 build).
  * <p>
  * Expected behavior: a denied path backed by an auto-discovered (i.e. not user-authored) prefixes file is verified
- * once against the remote repository; if the path exists remotely, the auto-discovered file is provably broken and
- * must be dropped for the rest of the session instead of taking the whole repository down.
+ * once against the remote repository; if the path exists remotely, the auto-discovered file is provably stale for
+ * that path: the verified path is allowed, but the filter stays enforcing for everything else, so a single
+ * remotely-observed inconsistency cannot disable the dependency-confusion protection for the whole repository.
+ * The legacy behavior of dropping the whole auto-discovered file for the rest of the session is available opt-in
+ * via {@code aether.remoteRepositoryFilter.prefixes.verifyDeniedDropsTree=true}.
  */
 public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
     /**
@@ -160,26 +163,57 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
     }
 
     @Test
-    void autoDiscoveredPrefixesDenyingExistingPathAreDropped() {
+    void deniedButServedPathIsAccepted() {
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
 
         // the artifact exists on the remote repository, despite what the leaked prefixes file claims;
-        // the provably broken auto-discovered file must not take the repository down
+        // the provably stale auto-discovered file must not take this artifact down
         RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
 
         assertTrue(
                 result.isAccepted(),
-                "provably broken auto-discovered prefixes must be dropped, got: " + result.reasoning());
+                "denied path verified as served by the remote repository must be accepted, got: " + result.reasoning());
     }
 
     @Test
-    void brokenPrefixesAreDroppedForWholeRepository() throws Exception {
+    void deniedButServedPathDoesNotDisableFilterForRepository() throws Exception {
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        // the verified served path is allowed...
+        assertTrue(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        // ...but the filter stays enforcing: OTHER denied paths remain denied (no drop to accept-all);
+        // a single remote 200 must not disable the dependency-confusion filter for the repository
+        assertFalse(filter.acceptArtifact(remoteRepository, new DefaultArtifact("io.jenkins:other:1.0"))
+                .isAccepted());
+        // ...and listed paths keep being accepted, of course
+        assertTrue(filter.acceptArtifact(remoteRepository, new DefaultArtifact("org.eclipse.foo:bar:1.0"))
+                .isAccepted());
+        // verification cost stays bounded: only the first denial is checked
+        verify(transporter, times(1)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void verifiedServedPathStaysAcceptedOnRepeatedRequests() throws Exception {
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
 
         assertTrue(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
-        // once dropped, other denied paths are accepted as well, without further existence checks
+        // the same path requested again is consistently accepted, without a second existence check
+        assertTrue(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        verify(transporter, times(1)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void legacyDropsTreeForWholeRepositoryWhenConfigured() throws Exception {
+        session.setConfigProperty("aether.remoteRepositoryFilter.prefixes.verifyDeniedDropsTree", "true");
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        assertTrue(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        // legacy opt-in behavior: once dropped, other denied paths are accepted as well,
+        // without further existence checks
         assertTrue(filter.acceptArtifact(remoteRepository, new DefaultArtifact("io.jenkins:other:1.0"))
                 .isAccepted());
         verify(transporter, times(1)).peek(any(PeekTask.class));
@@ -233,12 +267,13 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
 
     @Test
     void brokenPrefixesDroppedButNoInputOutcomeFalseStillDenies() throws Exception {
+        session.setConfigProperty("aether.remoteRepositoryFilter.prefixes.verifyDeniedDropsTree", "true");
         session.setConfigProperty("aether.remoteRepositoryFilter.prefixes.noInputOutcome", "false");
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
 
-        // the broken file is detected and dropped (peek happened), but the user explicitly asked for
-        // strict filtering when no trustworthy input is available: the path stays denied
+        // legacy drop mode: the broken file is detected and dropped (peek happened), but the user explicitly
+        // asked for strict filtering when no trustworthy input is available: the path stays denied
         assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
         verify(transporter, times(1)).peek(any(PeekTask.class));
     }
