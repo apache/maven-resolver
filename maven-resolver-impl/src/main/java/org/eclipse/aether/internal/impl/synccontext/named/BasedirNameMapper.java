@@ -61,10 +61,26 @@ public class BasedirNameMapper implements NameMapper {
             final Path basedir = DirectoryUtils.resolveDirectory(session, ".locks", CONFIG_PROP_LOCKS_DIR, false);
 
             return delegate.nameLocks(session, artifacts, metadatas).stream()
-                    .map(name -> basedir.resolve(name).toAbsolutePath().toString())
+                    .map(name -> resolveContained(basedir, name))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /**
+     * Resolves the delegate-provided lock name against the locks base directory, rejecting names that are
+     * not contained under it, as the file lock factory creates (and deletes on close) lock files at the
+     * resolved path.
+     *
+     * @since 1.9.28
+     */
+    private static String resolveContained(Path basedir, String name) {
+        Path resolved = basedir.resolve(name).toAbsolutePath();
+        if (!resolved.normalize().startsWith(basedir.toAbsolutePath().normalize())) {
+            throw new IllegalArgumentException(
+                    "Lock name '" + name + "' is not contained in the locks base directory " + basedir);
+        }
+        return resolved.toString();
     }
 }
