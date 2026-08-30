@@ -24,6 +24,7 @@ import java.util.Map;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
+import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicy;
 
@@ -57,4 +58,30 @@ public interface ProvidedChecksumsSource {
             ArtifactDownload transfer,
             RemoteRepository remoteRepository,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories);
+
+    /**
+     * May return the provided checksums (for given metadata transfer) from source other than remote repository,
+     * or {@code null} if it has no checksums available for given transfer. Semantics are the same as for
+     * {@link #getProvidedArtifactChecksums(RepositorySystemSession, ArtifactDownload, RemoteRepository, List)},
+     * but covering metadata downloads: metadata like {@code maven-metadata.xml} influences resolution decisions
+     * (for example version range selection), so it should be coverable by the strongest configured integrity
+     * source just like artifacts are.
+     * <p>
+     * The default implementation returns {@code null} ("nothing to add here"), preserving the behavior of
+     * implementations written before this method existed.
+     *
+     * @param session                    The current session.
+     * @param transfer                   The metadata transfer that is about to be executed.
+     * @param remoteRepository           The remote repository connector is about to contact.
+     * @param checksumAlgorithmFactories The checksum algorithms that are expected.
+     * @return Map of expected checksums, or {@code null}.
+     * @since 2.0.22
+     */
+    default Map<String, String> getProvidedMetadataChecksums(
+            RepositorySystemSession session,
+            MetadataDownload transfer,
+            RemoteRepository remoteRepository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+        return null;
+    }
 }

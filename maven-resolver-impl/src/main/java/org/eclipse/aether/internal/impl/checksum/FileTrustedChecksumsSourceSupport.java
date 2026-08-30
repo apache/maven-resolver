@@ -27,6 +27,7 @@ import java.util.Map;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
@@ -102,6 +103,29 @@ public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecks
     }
 
     /**
+     * This implementation will call into underlying code only if enabled, and will enforce non-{@code null} return
+     * value. In worst case, empty map should be returned, meaning "no trusted checksums available".
+     *
+     * @since 2.0.22
+     */
+    @Override
+    public Map<String, String> getTrustedMetadataChecksums(
+            RepositorySystemSession session,
+            Metadata metadata,
+            ArtifactRepository artifactRepository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+        requireNonNull(session, "session is null");
+        requireNonNull(metadata, "metadata is null");
+        requireNonNull(artifactRepository, "artifactRepository is null");
+        requireNonNull(checksumAlgorithmFactories, "checksumAlgorithmFactories is null");
+        if (isEnabled(session)) {
+            return requireNonNull(
+                    doGetTrustedMetadataChecksums(session, metadata, artifactRepository, checksumAlgorithmFactories));
+        }
+        return null;
+    }
+
+    /**
      * This implementation will call into underlying code only if enabled. Underlying implementation may still choose
      * to return {@code null}.
      */
@@ -120,6 +144,19 @@ public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecks
     protected abstract Map<String, String> doGetTrustedArtifactChecksums(
             RepositorySystemSession session,
             Artifact artifact,
+            ArtifactRepository artifactRepository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories);
+
+    /**
+     * Implementors MUST NOT return {@code null} at this point, as this source is enabled. Metadata checksums are
+     * looked up using the same file conventions as artifact checksums, with the metadata path composed from the
+     * origin repository key (for example {@code g/a/v/maven-metadata-central.xml}).
+     *
+     * @since 2.0.22
+     */
+    protected abstract Map<String, String> doGetTrustedMetadataChecksums(
+            RepositorySystemSession session,
+            Metadata metadata,
             ArtifactRepository artifactRepository,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories);
 

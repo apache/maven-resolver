@@ -117,4 +117,22 @@ public final class BasicRepositoryConnectorConfigurationKeys {
     public static final String CONFIG_PROP_INCLUDED_CHECKSUMS = CONFIG_PROPS_PREFIX + "includedChecksums";
 
     public static final boolean DEFAULT_INCLUDED_CHECKSUMS = true;
+
+    /**
+     * Flag indicating whether a failed checksum upload should fail the whole PUT transfer. When enabled
+     * (default), a deploy is atomic across the artifact bytes and their integrity metadata: if a checksum
+     * cannot be calculated or its upload fails, the transfer fails, instead of the remote repository silently
+     * ending up with an artifact published without checksums for consumers to verify. When disabled, checksum
+     * upload failures are only logged at WARN level (legacy, fail-open behavior).
+     *
+     * @since 2.0.22
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_FAIL_ON_CHECKSUM_UPLOAD_FAILURE}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_FAIL_ON_CHECKSUM_UPLOAD_FAILURE =
+            CONFIG_PROPS_PREFIX + "failOnChecksumUploadFailure";
+
+    public static final boolean DEFAULT_FAIL_ON_CHECKSUM_UPLOAD_FAILURE = true;
 }

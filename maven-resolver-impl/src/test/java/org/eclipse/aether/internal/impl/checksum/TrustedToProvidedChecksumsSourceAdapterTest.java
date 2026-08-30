@@ -26,9 +26,12 @@ import java.util.Map;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.metadata.DefaultMetadata;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
+import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +45,12 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
     private final Artifact artifactWithChecksum = new DefaultArtifact("g:a:v1");
 
     private final Artifact artifactWithoutChecksum = new DefaultArtifact("g:a:v2");
+
+    private final Metadata metadataWithChecksum =
+            new DefaultMetadata("g", "a", "v1", "maven-metadata.xml", Metadata.Nature.RELEASE);
+
+    private final Metadata metadataWithoutChecksum =
+            new DefaultMetadata("g", "a", "v2", "maven-metadata.xml", Metadata.Nature.RELEASE);
 
     private final RemoteRepository repository =
             new RemoteRepository.Builder("repo", "default", "https://example.com").build();
@@ -62,6 +71,11 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         when(trustedChecksumsSource.getTrustedArtifactChecksums(
                         eq(session), eq(artifactWithChecksum), eq(repository), eq(checksums)))
                 .thenReturn(result);
+        HashMap<String, String> metadataResult = new HashMap<>();
+        metadataResult.put(Sha1ChecksumAlgorithmFactory.NAME, "bar");
+        when(trustedChecksumsSource.getTrustedMetadataChecksums(
+                        eq(session), eq(metadataWithChecksum), eq(repository), eq(checksums)))
+                .thenReturn(metadataResult);
         adapter = new TrustedToProvidedChecksumsSourceAdapter(
                 Collections.singletonMap("trusted", trustedChecksumsSource));
     }
@@ -101,6 +115,44 @@ public class TrustedToProvidedChecksumsSourceAdapterTest {
         transfer.setArtifact(artifactWithoutChecksum);
         transfer.setRepositories(Collections.singletonList(repository));
         Map<String, String> chk = adapter.getProvidedArtifactChecksums(session, transfer, mrm, checksums);
+        assertNull(chk);
+    }
+
+    @Test
+    void testMetadataSimplePositive() {
+        MetadataDownload transfer = new MetadataDownload();
+        transfer.setMetadata(metadataWithChecksum);
+        Map<String, String> chk = adapter.getProvidedMetadataChecksums(session, transfer, repository, checksums);
+        assertNotNull(chk);
+        assertEquals("bar", chk.get(Sha1ChecksumAlgorithmFactory.NAME));
+    }
+
+    @Test
+    void testMetadataSimpleNegative() {
+        MetadataDownload transfer = new MetadataDownload();
+        transfer.setMetadata(metadataWithoutChecksum);
+        Map<String, String> chk = adapter.getProvidedMetadataChecksums(session, transfer, repository, checksums);
+        assertNull(chk);
+    }
+
+    @Test
+    void testMetadataMrmPositive() {
+        RemoteRepository mrm = new RemoteRepository.Builder("mrm", "default", "https://example.com").build();
+        MetadataDownload transfer = new MetadataDownload();
+        transfer.setMetadata(metadataWithChecksum);
+        transfer.setRepositories(Collections.singletonList(repository));
+        Map<String, String> chk = adapter.getProvidedMetadataChecksums(session, transfer, mrm, checksums);
+        assertNotNull(chk);
+        assertEquals("bar", chk.get(Sha1ChecksumAlgorithmFactory.NAME));
+    }
+
+    @Test
+    void testMetadataMrmNegative() {
+        RemoteRepository mrm = new RemoteRepository.Builder("mrm", "default", "https://example.com").build();
+        MetadataDownload transfer = new MetadataDownload();
+        transfer.setMetadata(metadataWithoutChecksum);
+        transfer.setRepositories(Collections.singletonList(repository));
+        Map<String, String> chk = adapter.getProvidedMetadataChecksums(session, transfer, mrm, checksums);
         assertNull(chk);
     }
 }

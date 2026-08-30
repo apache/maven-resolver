@@ -69,11 +69,13 @@ import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_DOWNSTREAM_THREADS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_FAIL_ON_CHECKSUM_UPLOAD_FAILURE;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_INCLUDED_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PARALLEL_PUT;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_PERSISTED_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_THREADS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.CONFIG_PROP_UPSTREAM_THREADS;
+import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_FAIL_ON_CHECKSUM_UPLOAD_FAILURE;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_INCLUDED_CHECKSUMS;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PARALLEL_PUT;
 import static org.eclipse.aether.connector.basic.BasicRepositoryConnectorConfigurationKeys.DEFAULT_PERSISTED_CHECKSUMS;
@@ -110,6 +112,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
     private final boolean parallelPut;
 
     private final boolean persistedChecksums;
+
+    private final boolean failOnChecksumUploadFailure;
 
     private final ConcurrentHashMap<Boolean, SmartExecutor> executors;
 
@@ -170,6 +174,11 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 CONFIG_PROP_PARALLEL_PUT);
         persistedChecksums =
                 ConfigUtils.getBoolean(session, DEFAULT_PERSISTED_CHECKSUMS, CONFIG_PROP_PERSISTED_CHECKSUMS);
+        failOnChecksumUploadFailure = ConfigUtils.getBoolean(
+                session,
+                DEFAULT_FAIL_ON_CHECKSUM_UPLOAD_FAILURE,
+                CONFIG_PROP_FAIL_ON_CHECKSUM_UPLOAD_FAILURE + "." + repository.getId(),
+                CONFIG_PROP_FAIL_ON_CHECKSUM_UPLOAD_FAILURE);
     }
 
     /**
@@ -221,6 +230,17 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         boolean first = true;
 
         for (MetadataDownload transfer : safeMetadataDownloads) {
+            Map<String, String> providedChecksums = Collections.emptyMap();
+            for (ProvidedChecksumsSource providedChecksumsSource : providedChecksumsSources.values()) {
+                Map<String, String> provided = providedChecksumsSource.getProvidedMetadataChecksums(
+                        session, transfer, repository, checksumAlgorithmFactories);
+
+                if (provided != null) {
+                    providedChecksums = provided;
+                    break;
+                }
+            }
+
             URI location = layout.getLocation(transfer.getMetadata(), false);
 
             TransferResource resource = newTransferResource(location, transfer);
@@ -239,7 +259,7 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                     checksumPolicy,
                     checksumAlgorithmFactories,
                     checksumLocations,
-                    null,
+                    providedChecksums,
                     listener);
             if (executor == null || first) {
                 task.run();
@@ -583,43 +603,49 @@ final class BasicRepositoryConnector implements RepositoryConnector {
          * @param path  source
          * @param bytes transformed data from file or {@code null}
          */
-        private void uploadChecksums(Path path, byte[] bytes) {
+        private void uploadChecksums(Path path, byte[] bytes) throws Exception {
             if (checksumLocations.isEmpty()) {
                 return;
             }
+            Map<String, String> sumsByAlgo;
             try {
                 ArrayList<ChecksumAlgorithmFactory> algorithms = new ArrayList<>();
                 for (RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations) {
                     algorithms.add(checksumLocation.getChecksumAlgorithmFactory());
                 }
 
-                Map<String, String> sumsByAlgo;
                 if (bytes != null) {
                     sumsByAlgo = ChecksumAlgorithmHelper.calculate(bytes, algorithms);
                 } else {
                     sumsByAlgo = ChecksumAlgorithmHelper.calculate(path, algorithms);
                 }
-
-                for (RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations) {
-                    uploadChecksum(
-                            checksumLocation.getLocation(),
-                            sumsByAlgo.get(checksumLocation
-                                    .getChecksumAlgorithmFactory()
-                                    .getName()));
-                }
             } catch (IOException e) {
                 LOGGER.warn("Failed to upload checksums for {}", file, e);
                 throw new UncheckedIOException(e);
             }
+
+            for (RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations) {
+                uploadChecksum(
+                        checksumLocation.getLocation(),
+                        sumsByAlgo.get(
+                                checksumLocation.getChecksumAlgorithmFactory().getName()));
+            }
         }
 
-        private void uploadChecksum(URI location, Object checksum) {
+        private void uploadChecksum(URI location, Object checksum) throws Exception {
             try {
                 if (checksum instanceof Exception) {
                     throw (Exception) checksum;
                 }
                 transporter.put(new PutTask(location).setDataString((String) checksum));
             } catch (Exception e) {
+                if (failOnChecksumUploadFailure) {
+                    // Fail-closed (default): a deploy must be atomic across artifact bytes and integrity
+                    // metadata. Swallowing this failure would report a successful deploy that published the
+                    // artifact without checksums for consumers to verify.
+                    LOGGER.error("Failed to upload checksum to {}", location, e);
+                    throw e;
+                }
                 LOGGER.warn("Failed to upload checksum to {}", location, e);
             }
         }

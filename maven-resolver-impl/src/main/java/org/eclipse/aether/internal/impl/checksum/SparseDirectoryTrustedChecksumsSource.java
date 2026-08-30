@@ -34,11 +34,13 @@ import java.util.function.Function;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,9 @@ import static java.util.Objects.requireNonNull;
 /**
  * Sparse file {@link FileTrustedChecksumsSourceSupport} implementation that use specified directory as base
  * directory, where it expects artifacts checksums on standard Maven2 "local" layout. This implementation uses Artifact
- * coordinates solely to form path from basedir, pretty much as Maven local repository does.
+ * coordinates solely to form path from basedir, pretty much as Maven local repository does. Metadata checksums are
+ * covered as well, on the same layout, with the metadata path composed from the origin repository key (for example
+ * {@code g/a/v/maven-metadata-central.xml.sha1}).
  * <p>
  * The source by default is "origin aware", it will factor in origin repository ID as well into base directory name
  * (for example ".checksums/central/...").
@@ -163,6 +167,45 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
     }
 
     @Override
+    protected Map<String, String> doGetTrustedMetadataChecksums(
+            RepositorySystemSession session,
+            Metadata metadata,
+            ArtifactRepository artifactRepository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+        final boolean originAware = isOriginAware(session);
+        final HashMap<String, String> checksums = new HashMap<>();
+        Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
+        if (Files.isDirectory(basedir)) {
+            for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
+                Path checksumPath = basedir.resolve(calculateMetadataPath(
+                        originAware, metadata, repositoryKey(session, artifactRepository), checksumAlgorithmFactory));
+
+                if (!Files.isRegularFile(checksumPath)) {
+                    LOGGER.debug(
+                            "Metadata '{}' trusted checksum '{}' not found on path '{}'",
+                            metadata,
+                            checksumAlgorithmFactory.getName(),
+                            checksumPath);
+                    continue;
+                }
+
+                try {
+                    String checksum = checksumProcessor.readChecksum(checksumPath);
+                    if (checksum != null) {
+                        checksums.put(checksumAlgorithmFactory.getName(), checksum);
+                    }
+                } catch (IOException e) {
+                    // unexpected, log
+                    LOGGER.warn(
+                            "Could not read metadata '{}' trusted checksum on path '{}'", metadata, checksumPath, e);
+                    throw new UncheckedIOException(e);
+                }
+            }
+        }
+        return checksums;
+    }
+
+    @Override
     protected Writer doGetTrustedArtifactChecksumsWriter(RepositorySystemSession session) {
         return new SparseDirectoryWriter(
                 getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
@@ -178,6 +221,21 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
         String path = localPathComposer.getPathForArtifact(artifact, false) + "."
                 + checksumAlgorithmFactory.getFileExtension();
         if (originAware) {
+            path = safeRepositoryId + "/" + path;
+        }
+        return path;
+    }
+
+    private String calculateMetadataPath(
+            boolean originAware,
+            Metadata metadata,
+            String safeRepositoryId,
+            ChecksumAlgorithmFactory checksumAlgorithmFactory) {
+        String path = localPathComposer.getPathForMetadata(metadata, safeRepositoryId) + "."
+                + checksumAlgorithmFactory.getFileExtension();
+        if (originAware) {
+            // defense in depth: same guard as for artifact paths, the repository key is spliced into a directory
+            PathUtils.validatePathComponent(safeRepositoryId, "repository key");
             path = safeRepositoryId + "/" + path;
         }
         return path;
@@ -211,6 +269,24 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
                         idToPathSegmentFunction.apply(artifactRepository),
                         checksumAlgorithmFactory));
                 String checksum = requireNonNull(trustedArtifactChecksums.get(checksumAlgorithmFactory.getName()));
+                checksumProcessor.writeChecksum(checksumPath, checksum);
+            }
+        }
+
+        @Override
+        public void addTrustedMetadataChecksums(
+                Metadata metadata,
+                ArtifactRepository artifactRepository,
+                List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
+                Map<String, String> trustedMetadataChecksums)
+                throws IOException {
+            for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
+                Path checksumPath = basedir.resolve(calculateMetadataPath(
+                        originAware,
+                        metadata,
+                        idToPathSegmentFunction.apply(artifactRepository),
+                        checksumAlgorithmFactory));
+                String checksum = requireNonNull(trustedMetadataChecksums.get(checksumAlgorithmFactory.getName()));
                 checksumProcessor.writeChecksum(checksumPath, checksum);
             }
         }

@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
@@ -56,6 +57,31 @@ public interface TrustedChecksumsSource {
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories);
 
     /**
+     * May return the trusted checksums (for given metadata) from trusted source, or {@code null} if not enabled
+     * or the implementation does not cover metadata. Semantics are the same as for
+     * {@link #getTrustedArtifactChecksums(RepositorySystemSession, Artifact, ArtifactRepository, List)}, but
+     * covering metadata: metadata like {@code maven-metadata.xml} influences resolution decisions (for example
+     * version range selection), so trusted sources able to attest metadata should expose that here.
+     * <p>
+     * The default implementation returns {@code null} ("not enabled for metadata"), preserving the behavior of
+     * implementations written before this method existed.
+     *
+     * @param session                    The repository system session, never {@code null}.
+     * @param metadata                   The metadata we want checksums for, never {@code null}.
+     * @param artifactRepository         The origin repository: local, workspace, remote repository, never {@code null}.
+     * @param checksumAlgorithmFactories The checksum algorithms that are expected, never {@code null}.
+     * @return Map of expected checksums, or {@code null}.
+     * @since 2.0.22
+     */
+    default Map<String, String> getTrustedMetadataChecksums(
+            RepositorySystemSession session,
+            Metadata metadata,
+            ArtifactRepository artifactRepository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+        return null;
+    }
+
+    /**
      * A writer that is able to write/add trusted checksums to this implementation.
      */
     interface Writer {
@@ -70,6 +96,25 @@ public interface TrustedChecksumsSource {
                 List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
                 Map<String, String> trustedArtifactChecksums)
                 throws IOException;
+
+        /**
+         * Performs whatever implementation requires to "set" (write/add/append) given map of trusted checksums,
+         * for given metadata. Semantics are the same as for
+         * {@link #addTrustedArtifactChecksums(Artifact, ArtifactRepository, List, Map)}, but covering metadata.
+         * <p>
+         * The default implementation records nothing, preserving the behavior of implementations written before
+         * this method existed.
+         *
+         * @since 2.0.22
+         */
+        default void addTrustedMetadataChecksums(
+                Metadata metadata,
+                ArtifactRepository artifactRepository,
+                List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
+                Map<String, String> trustedMetadataChecksums)
+                throws IOException {
+            // no-op: implementations written before this method existed record artifact checksums only
+        }
     }
 
     /**
