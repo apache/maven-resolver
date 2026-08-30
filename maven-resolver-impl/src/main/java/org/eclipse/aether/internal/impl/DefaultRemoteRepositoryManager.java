@@ -69,7 +69,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
      * Enabling this restores the legacy behavior of applying matching session authentication to descriptor
      * declared repositories regardless of their provenance.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_AUTH_TO_DESCRIPTOR_REPOSITORIES}

@@ -78,7 +78,7 @@ public interface RemoteRepositoryManager {
      * @param recessiveIsFromDescriptor {@code true} if the recessive repository definitions were declared by a remote
      *            artifact descriptor (POM) rather than by the build itself, {@code false} otherwise.
      * @return The aggregated list of remote repositories, never {@code null}.
-     * @since 2.0.22
+     * @since 2.0.23
      * @see RepositorySystemSession#getMirrorSelector()
      * @see RepositorySystemSession#getProxySelector()
      * @see RepositorySystemSession#getAuthenticationSelector()
