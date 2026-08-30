@@ -329,7 +329,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate implement
         final List<RemoteRepository> childRepos = args.ignoreRepos
                 ? repositories
                 : remoteRepositoryManager.aggregateRepositories(
-                        args.session, repositories, descriptorResult.getRepositories(), true);
+                        args.session, repositories, descriptorResult.getRepositories(), true, true);
 
         Object key =
                 args.pool.toKey(d.getArtifact(), childRepos, childSelector, childManager, childTraverser, childFilter);

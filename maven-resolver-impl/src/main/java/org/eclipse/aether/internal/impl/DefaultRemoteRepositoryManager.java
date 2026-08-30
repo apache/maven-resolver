@@ -41,6 +41,7 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.locator.Service;
 import org.eclipse.aether.spi.locator.ServiceLocator;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +80,26 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRemoteRepositoryManager.class);
 
+    /**
+     * Flag indicating whether session authentication (i.e. credentials configured in {@code settings.xml}) may be
+     * applied, matched by plain repository ID, to repositories declared by remote artifact descriptors (POMs) that
+     * are merged into the effective repository list during dependency collection. When disabled (the default),
+     * session authentication is only applied to such a repository when an operator-defined mirror has been selected
+     * for it; if credentials would have matched a descriptor-declared repository, a warning naming the repository ID
+     * and URL is logged instead. Repositories supplied by the build itself are unaffected and keep receiving
+     * matching credentials. Enabling this restores the legacy behavior of applying matching session authentication
+     * to descriptor declared repositories regardless of their provenance.
+     *
+     * @since 1.9.28
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_AUTH_TO_DESCRIPTOR_REPOSITORIES}
+     */
+    public static final String CONFIG_PROP_AUTH_TO_DESCRIPTOR_REPOSITORIES =
+            "aether.remoteRepositoryManager.authToDescriptorRepositories";
+
+    public static final boolean DEFAULT_AUTH_TO_DESCRIPTOR_REPOSITORIES = false;
+
     private UpdatePolicyAnalyzer updatePolicyAnalyzer;
 
     private ChecksumPolicyProvider checksumPolicyProvider;
@@ -115,6 +136,16 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
             List<RemoteRepository> dominantRepositories,
             List<RemoteRepository> recessiveRepositories,
             boolean recessiveIsRaw) {
+        return aggregateRepositories(session, dominantRepositories, recessiveRepositories, recessiveIsRaw, false);
+    }
+
+    @Override
+    public List<RemoteRepository> aggregateRepositories(
+            RepositorySystemSession session,
+            List<RemoteRepository> dominantRepositories,
+            List<RemoteRepository> recessiveRepositories,
+            boolean recessiveIsRaw,
+            boolean recessiveIsFromDescriptor) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(dominantRepositories, "dominantRepositories cannot be null");
         requireNonNull(recessiveRepositories, "recessiveRepositories cannot be null");
@@ -126,11 +157,15 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();
 
+        boolean authToDescriptorRepositories = ConfigUtils.getBoolean(
+                session, DEFAULT_AUTH_TO_DESCRIPTOR_REPOSITORIES, CONFIG_PROP_AUTH_TO_DESCRIPTOR_REPOSITORIES);
+
         List<RemoteRepository> result = new ArrayList<>(dominantRepositories);
 
         next:
         for (RemoteRepository recessiveRepository : recessiveRepositories) {
             RemoteRepository repository = recessiveRepository;
+            boolean mirrored = false;
 
             if (recessiveIsRaw) {
                 RemoteRepository mirrorRepository = mirrorSelector.getMirror(recessiveRepository);
@@ -138,6 +173,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
                 if (mirrorRepository != null) {
                     logMirror(session, recessiveRepository, mirrorRepository);
                     repository = mirrorRepository;
+                    mirrored = true;
                 }
             }
 
@@ -163,8 +199,18 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
                 RemoteRepository.Builder builder = null;
                 Authentication auth = authSelector.getAuthentication(repository);
                 if (auth != null) {
-                    builder = new RemoteRepository.Builder(repository);
-                    builder.setAuthentication(auth);
+                    if (!recessiveIsFromDescriptor || mirrored || authToDescriptorRepositories) {
+                        builder = new RemoteRepository.Builder(repository);
+                        builder.setAuthentication(auth);
+                    } else if (auth != repository.getAuthentication()) {
+                        LOGGER.warn(
+                                "Not applying session authentication to repository {} ({}) declared by a remote"
+                                        + " artifact descriptor; set {}=true to restore the legacy behavior of"
+                                        + " matching credentials to such repositories by repository ID",
+                                repository.getId(),
+                                repository.getUrl(),
+                                CONFIG_PROP_AUTH_TO_DESCRIPTOR_REPOSITORIES);
+                    }
                 }
                 Proxy proxy = proxySelector.getProxy(repository);
                 if (proxy != null) {

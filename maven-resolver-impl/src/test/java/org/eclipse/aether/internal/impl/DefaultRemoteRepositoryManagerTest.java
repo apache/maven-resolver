@@ -26,6 +26,8 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
@@ -38,6 +40,7 @@ import org.junit.Test;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -271,5 +274,94 @@ public class DefaultRemoteRepositoryManagerTest {
             requireNonNull(session, "session cannot be null");
             return false;
         }
+    }
+
+    @Test
+    public void testDescriptorRepositoryAuthenticationNotAppliedByDefault() {
+        RemoteRepository repo =
+                newRepo("a", "http://example.org/", true, "", "").build();
+        final Authentication auth = new org.eclipse.aether.util.repository.AuthenticationBuilder()
+                .addUsername("test")
+                .build();
+        session.setAuthenticationSelector(new AuthenticationSelector() {
+            public Authentication getAuthentication(RemoteRepository repository) {
+                return "a".equals(repository.getId()) ? auth : null;
+            }
+        });
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(repo), true, true);
+
+        assertEquals(1, result.size());
+        assertNull(result.get(0).getAuthentication());
+    }
+
+    @Test
+    public void testDescriptorRepositoryAuthenticationAppliedWhenEnabled() {
+        RemoteRepository repo =
+                newRepo("a", "http://example.org/", true, "", "").build();
+        final Authentication auth = new org.eclipse.aether.util.repository.AuthenticationBuilder()
+                .addUsername("test")
+                .build();
+        session.setAuthenticationSelector(new AuthenticationSelector() {
+            public Authentication getAuthentication(RemoteRepository repository) {
+                return "a".equals(repository.getId()) ? auth : null;
+            }
+        });
+        session.setConfigProperty(
+                DefaultRemoteRepositoryManager.CONFIG_PROP_AUTH_TO_DESCRIPTOR_REPOSITORIES, Boolean.TRUE);
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(repo), true, true);
+
+        assertEquals(1, result.size());
+        assertSame(auth, result.get(0).getAuthentication());
+    }
+
+    @Test
+    public void testDescriptorRepositoryAuthenticationAppliedToSelectedMirror() {
+        RemoteRepository repo =
+                newRepo("a", "http://example.org/", true, "", "").build();
+        final RemoteRepository mirror =
+                newRepo("m", "http://mirror.example.org/", true, "", "").build();
+        final Authentication auth = new org.eclipse.aether.util.repository.AuthenticationBuilder()
+                .addUsername("test")
+                .build();
+        session.setAuthenticationSelector(new AuthenticationSelector() {
+            public Authentication getAuthentication(RemoteRepository repository) {
+                return "m".equals(repository.getId()) ? auth : null;
+            }
+        });
+        session.setMirrorSelector(new MirrorSelector() {
+            public RemoteRepository getMirror(RemoteRepository repository) {
+                return mirror;
+            }
+        });
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(repo), true, true);
+
+        assertEquals(1, result.size());
+        assertSame(auth, result.get(0).getAuthentication());
+    }
+
+    @Test
+    public void testResolutionRepositoryAuthenticationStillApplied() {
+        RemoteRepository repo =
+                newRepo("a", "http://example.org/", true, "", "").build();
+        final Authentication auth = new org.eclipse.aether.util.repository.AuthenticationBuilder()
+                .addUsername("test")
+                .build();
+        session.setAuthenticationSelector(new AuthenticationSelector() {
+            public Authentication getAuthentication(RemoteRepository repository) {
+                return "a".equals(repository.getId()) ? auth : null;
+            }
+        });
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(repo), true);
+
+        assertEquals(1, result.size());
+        assertSame(auth, result.get(0).getAuthentication());
     }
 }
