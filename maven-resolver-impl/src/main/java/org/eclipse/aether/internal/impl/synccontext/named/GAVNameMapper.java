@@ -111,7 +111,7 @@ public class GAVNameMapper implements NameMapper {
      * friendly names are resolved against the locks base directory by {@link BasedirNameMapper}, so every
      * field must be a valid path segment.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     protected String fieldToSegment(String field) {
         return fileSystemFriendly ? PathUtils.stringToPathSegment(field) : field;

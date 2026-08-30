@@ -105,7 +105,7 @@ public class BasedirNameMapper implements NameMapper {
      * not contained under it, as the file lock factory creates (and deletes on close) lock files at the
      * resolved path.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     private static String resolveContained(Path basedir, String name) {
         Path resolved = basedir.resolve(name).toAbsolutePath();
