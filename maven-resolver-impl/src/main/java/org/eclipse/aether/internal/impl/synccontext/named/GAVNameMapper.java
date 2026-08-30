@@ -91,13 +91,26 @@ public class GAVNameMapper implements NameMapper {
         return keys;
     }
 
+    /**
+     * Returns the given coordinate field in a form that is safe to use as (part of) a file name: when this
+     * mapper is {@link #isFileSystemFriendly()}, characters that act as path separators or are otherwise
+     * illegal in file names are replaced via {@link PathUtils#stringToPathSegment(String)}. File-system
+     * friendly names are resolved against the locks base directory by {@link BasedirNameMapper}, so every
+     * field must be a valid path segment.
+     *
+     * @since 1.9.28
+     */
+    protected String fieldToSegment(String field) {
+        return fileSystemFriendly ? PathUtils.stringToPathSegment(field) : field;
+    }
+
     protected String getArtifactName(Artifact artifact) {
         return artifactPrefix
-                + artifact.getGroupId()
+                + fieldToSegment(artifact.getGroupId())
                 + fieldSeparator
-                + artifact.getArtifactId()
+                + fieldToSegment(artifact.getArtifactId())
                 + fieldSeparator
-                + artifact.getBaseVersion()
+                + fieldToSegment(artifact.getBaseVersion())
                 + artifactSuffix;
     }
 
@@ -106,11 +119,11 @@ public class GAVNameMapper implements NameMapper {
     protected String getMetadataName(Metadata metadata) {
         String name = metadataPrefix;
         if (!metadata.getGroupId().isEmpty()) {
-            name += metadata.getGroupId();
+            name += fieldToSegment(metadata.getGroupId());
             if (!metadata.getArtifactId().isEmpty()) {
-                name += fieldSeparator + metadata.getArtifactId();
+                name += fieldSeparator + fieldToSegment(metadata.getArtifactId());
                 if (!metadata.getVersion().isEmpty()) {
-                    name += fieldSeparator + metadata.getVersion();
+                    name += fieldSeparator + fieldToSegment(metadata.getVersion());
                 }
             }
             if (!MAVEN_METADATA.equals(metadata.getType())) {
