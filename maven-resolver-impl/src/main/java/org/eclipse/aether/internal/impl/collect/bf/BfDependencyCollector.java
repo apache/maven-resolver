@@ -345,7 +345,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
         final List<RemoteRepository> childRepos = args.ignoreRepos
                 ? parentContext.repositories
                 : remoteRepositoryManager.aggregateRepositories(
-                        args.session, parentContext.repositories, descriptorResult.getRepositories(), true);
+                        args.session, parentContext.repositories, descriptorResult.getRepositories(), true, true);
 
         Object key = args.pool.toKey(
                 parentContext.dependency.getArtifact(),
