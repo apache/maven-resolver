@@ -149,6 +149,11 @@ class ConfigurationCollectorDocletTest {
         assertTrue(enumDescription.contains("<code>SampleType#hidden()</code>"));
         assertFalse(enumDescription.contains(
                 "href=\"apidocs/" + "org/eclipse/aether/sample/SampleConfigurationKeys.SampleType.html#hidden()\""));
+        // {@link SampleType custom label text} should render the explicit label, not the reference signature
+        assertTrue(
+                enumDescription.contains(
+                        "<a href=\"apidocs/org/eclipse/aether/sample/SampleConfigurationKeys.SampleType.html\"><code>custom label text</code></a>"),
+                "expected explicit link label to be rendered, but got: " + enumDescription);
         // no @configurationRepoIdSuffix -> defaults to "No"
         assertEquals("No", enumKey.get("supportRepoIdSuffix"));
         assertEquals("Use <a href=\"#sample.enum2\"><code>#ENUM2_KEY</code></a> instead", enumKey.get("deprecated"));
@@ -182,7 +187,7 @@ class ConfigurationCollectorDocletTest {
                 markdown.contains(
                         "[`org.eclipse.aether.sample.SampleConfigurationKeys.SampleEnum`](apidocs/org/eclipse/aether/sample/SampleConfigurationKeys.SampleEnum.html)"));
         assertTrue(markdown.contains("<a href=\"#sample.string\"><code>#STRING_KEY</code></a>"));
-        assertTrue(markdown.contains("**Deprecated**. *Use <a href=\"#sample.enum2\">"));
+        assertTrue(markdown.contains("**Deprecated**. <em>Use <a href=\"#sample.enum2\">"));
     }
 
     @Test

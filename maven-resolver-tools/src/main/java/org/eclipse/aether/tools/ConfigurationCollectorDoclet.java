@@ -724,8 +724,11 @@ public class ConfigurationCollectorDoclet implements Doclet {
             @Override
             public String visitLink(LinkTree node, Void p) {
                 String ref = node.getReference() != null ? node.getReference().getSignature() : "";
-                String label = renderContent(DocTreePath.getPath(docTreePath, node.getReference()), mode, false);
-                String text = label == null || label.isEmpty() ? ref : label;
+                List<? extends DocTree> labelTrees = node.getLabel();
+                String label = (labelTrees != null && !labelTrees.isEmpty())
+                        ? renderContent(docTreePath, mode, false, labelTrees)
+                        : "";
+                String text = label.isEmpty() ? ref : label;
                 String rendered = node.getKind() == DocTree.Kind.LINK_PLAIN ? escape(mode, text) : renderAsCode(text);
                 if (mode == RenderMode.HTML) {
                     VariableElement referenced = resolveReferencedField(docTreePath, node);
