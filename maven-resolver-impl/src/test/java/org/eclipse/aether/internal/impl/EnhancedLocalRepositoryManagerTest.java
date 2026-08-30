@@ -21,6 +21,8 @@ package org.eclipse.aether.internal.impl;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,6 +48,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class EnhancedLocalRepositoryManagerTest {
 
@@ -108,6 +111,7 @@ public class EnhancedLocalRepositoryManagerTest {
         return new EnhancedLocalRepositoryManager(
                 basedir.toPath(),
                 new DefaultLocalPathComposer(),
+                RepositoryIdHelper::simpleRepositoryKey,
                 RepositoryIdHelper::simpleRepositoryKey,
                 "_remote.repositories",
                 trackingFileManager,
@@ -247,6 +251,45 @@ public class EnhancedLocalRepositoryManagerTest {
         assertFalse(result.isAvailable());
     }
 
+    /**
+     * Simulates a case-aliasing filesystem (the macOS and Windows defaults) on any filesystem by creating a
+     * symbolic link whose name differs from the on-disk file only by case, and returns the aliased artifact.
+     */
+    private Artifact createCaseAliasedArtifact() throws Exception {
+        addLocalArtifact(artifact);
+
+        Artifact aliased = new DefaultArtifact("gid", "aid", "", "JAR", "1-test");
+        Path aliasPath = new File(basedir, manager.getPathForLocalArtifact(aliased)).toPath();
+        Path realPath = new File(basedir, manager.getPathForLocalArtifact(artifact)).toPath();
+        try {
+            Files.createSymbolicLink(aliasPath, realPath.getFileName());
+        } catch (IOException | UnsupportedOperationException e) {
+            assumeTrue(false, "filesystem does not support symbolic links");
+        }
+        return aliased;
+    }
+
+    @Test
+    void testFindDoesNotAcceptFileWhoseRealPathSpellingDiffers() throws Exception {
+        Artifact aliased = createCaseAliasedArtifact();
+
+        // the aliased file is present-but-untracked for the requested coordinates: it must not be accepted,
+        // otherwise case-colliding coordinates poison distinct GAVs on case-insensitive filesystems
+        LocalArtifactRequest request = new LocalArtifactRequest(aliased, null, null);
+        LocalArtifactResult result = manager.find(session, request);
+        assertFalse(result.isAvailable());
+    }
+
+    @Test
+    void testFindAcceptsAliasedFileWhenRealPathVerificationDisabled() throws Exception {
+        session.setConfigProperty(EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_VERIFY_REAL_PATH, false);
+        Artifact aliased = createCaseAliasedArtifact();
+
+        LocalArtifactRequest request = new LocalArtifactRequest(aliased, null, null);
+        LocalArtifactResult result = manager.find(session, request);
+        assertTrue(result.isAvailable());
+    }
+
     @Test
     void testFindUntrackedFile() throws Exception {
         copy(artifact, manager.getPathForLocalArtifact(artifact));
@@ -315,5 +358,103 @@ public class EnhancedLocalRepositoryManagerTest {
         LocalArtifactResult result = manager.find(session, request);
         assertNull(result.getFile(), result.toString());
         assertFalse(result.isAvailable(), result.toString());
+    }
+
+    @Test
+    void testStaleUntrackedCacheDoesNotOverrideExternallyRecordedOrigin() throws Exception {
+        // Artifact file exists but is untracked: find() accepts it (simple local repo inter-op) and
+        // caches the "untracked" state of the shared tracking file.
+        copy(artifact, manager.getPathForLocalArtifact(artifact));
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
+        assertTrue(manager.find(session, request).isAvailable());
+
+        // Another process (bypassing this manager and hence its cache) records that the artifact
+        // actually originates from a repository that is NOT among the request repositories.
+        File artifactFile = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        File trackingFile = new File(artifactFile.getParentFile(), "_remote.repositories");
+        trackingFileManager.update(
+                trackingFile.toPath(), Collections.singletonMap(artifactFile.getName() + ">not-a-request-repo", ""));
+
+        // The trust-increasing untracked branch must not rely on the stale cached state: the fresh
+        // on-disk state says "downloaded from a foreign repository", so the artifact is rejected.
+        LocalArtifactResult result = manager.find(session, request);
+        assertFalse(result.isAvailable());
+    }
+
+    @Test
+    void testFreshReadPicksUpExternallyRecordedRequestRepository() throws Exception {
+        copy(artifact, manager.getPathForLocalArtifact(artifact));
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
+        assertTrue(manager.find(session, request).isAvailable());
+
+        // Another process records the artifact as downloaded from the request repository: the fresh
+        // re-read must pick that up and report the origin repository.
+        File artifactFile = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        File trackingFile = new File(artifactFile.getParentFile(), "_remote.repositories");
+        trackingFileManager.update(
+                trackingFile.toPath(),
+                Collections.singletonMap(
+                        artifactFile.getName() + ">" + RepositoryIdHelper.simpleRepositoryKey(repository, testContext),
+                        ""));
+
+        LocalArtifactResult result = manager.find(session, request);
+        assertTrue(result.isAvailable());
+        assertEquals(repository, result.getRepository());
+    }
+
+    /**
+     * Manager wired like production defaults: path composition on the (unchanged) system-wide key function,
+     * tracking entries on the URL-qualified {@code nid_hurl} function.
+     */
+    private EnhancedLocalRepositoryManager newUrlQualifiedTrackingManager() {
+        return new EnhancedLocalRepositoryManager(
+                basedir.toPath(),
+                new DefaultLocalPathComposer(),
+                RepositoryIdHelper::simpleRepositoryKey,
+                RepositoryIdHelper.getRepositoryKeyFunction("nid_hurl"),
+                "_remote.repositories",
+                trackingFileManager,
+                new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory())
+                        .createComposer(session));
+    }
+
+    @Test
+    void testUrlQualifiedTrackingDistinguishesSameIdDifferentUrl() throws Exception {
+        manager = newUrlQualifiedTrackingManager();
+        addRemoteArtifact(artifact);
+
+        // the repository the artifact really came from still satisfies the lookup
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
+        LocalArtifactResult result = manager.find(session, request);
+        assertTrue(result.isAvailable());
+        assertEquals(repository, result.getRepository());
+
+        // an impostor sharing the trusted id but pointing at a different URL is a different origin:
+        // the cached bytes must not be accepted as "came from" it (and vice versa, bytes cached from
+        // the impostor would not satisfy the trusted repository)
+        RemoteRepository impostor =
+                new RemoteRepository.Builder(repository.getId(), "default", "https://impostor.invalid/repo").build();
+        request = new LocalArtifactRequest(artifact, Arrays.asList(impostor), testContext);
+        result = manager.find(session, request);
+        assertFalse(result.isAvailable());
+    }
+
+    @Test
+    void testUrlQualifiedTrackingTreatsLegacyIdOnlyEntriesAsStale() throws Exception {
+        manager = newUrlQualifiedTrackingManager();
+
+        // artifact file present, tracked under a legacy ID-only key as written by an older resolver
+        copy(artifact, manager.getPathForLocalArtifact(artifact));
+        File file = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        trackingFileManager.update(
+                new File(file.getParentFile(), "_remote.repositories").toPath(),
+                Collections.singletonMap(
+                        file.getName() + ">" + RepositoryIdHelper.simpleRepositoryKey(repository, testContext), ""));
+
+        // fail-safe stale-key semantics: the legacy key matches no request repository, and because the
+        // file IS tracked it must not fall through to the untracked inter-op acceptance either — the
+        // artifact is simply unavailable locally and gets re-fetched (with checksum validation)
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
+        assertFalse(manager.find(session, request).isAvailable());
     }
 }

@@ -48,6 +48,32 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_LRM + NAME + ".";
 
     /**
+     * Repository key function used for the provenance tracking entries this local repository manager writes and
+     * consults (see {@link #CONFIG_PROP_TRACKING_FILENAME}), and for nothing else. With an ID-only key, "came from
+     * repository X" means X's possibly colliding label: a repository declared in an untrusted (for example,
+     * transitively resolved) POM under the same ID as a trusted repository would be tracked as the same origin and
+     * could poison a shared local repository. The default is therefore the URL-qualified {@code "nid_hurl"}
+     * function, scoped to tracking entries only: repository identity everywhere else (repository aggregation and
+     * mirror merging, artifact and metadata path composition, split local repository prefixes) keeps following the
+     * system-wide key function, whose default is unchanged - so no aggregation semantics change and no local
+     * repository re-layout occurs. If the system-wide function
+     * {@link ConfigurationProperties#REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION} is explicitly configured, tracking
+     * follows it (all consumers stay on one function, and setting it to {@code "nid"} restores the legacy ID-only
+     * tracking); this property, when set, overrides both. Tracking entries written under a different function than
+     * the active one never match a lookup and never enable the untracked-file fallback: affected artifacts are
+     * simply treated as locally unavailable and re-fetched (with checksum validation) once.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION}
+     * @since 2.0.22
+     */
+    public static final String CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION =
+            CONFIG_PROPS_PREFIX + "trackingRepositoryKeyFunction";
+
+    public static final String DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
+
+    /**
      * Filename of the file in which to track the remote repositories.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -57,6 +83,26 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     public static final String CONFIG_PROP_TRACKING_FILENAME = CONFIG_PROPS_PREFIX + "trackingFilename";
 
     public static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
+
+    /**
+     * Whether to verify that the real (on-disk) path of a locally cached artifact matches the requested path
+     * spelling before the artifact is used. On case-insensitive or case/normalization-preserving filesystems (the
+     * macOS and Windows defaults) a file cached for one set of coordinates also answers lookups for coordinates
+     * that differ only in case or Unicode normalization, while the repository tracking data is compared exactly:
+     * such an aliased file is treated as present-but-untracked and accepted with no download and no checksum
+     * verification, letting case-colliding coordinates poison distinct GAVs. When enabled (the default), an
+     * artifact whose on-disk path spelling differs from the requested one is treated as not present, forcing a
+     * proper download. Disable only if the local repository intentionally contains symbolic links below its base
+     * directory (a symlinked base directory itself is supported either way).
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_VERIFY_REAL_PATH}
+     * @since 2.0.22
+     */
+    public static final String CONFIG_PROP_VERIFY_REAL_PATH = CONFIG_PROPS_PREFIX + "verifyRealPath";
+
+    public static final boolean DEFAULT_VERIFY_REAL_PATH = true;
 
     private float priority = 10.0f;
 
@@ -99,6 +145,14 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                     repository.getBasePath(),
                     localPathComposer,
                     repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session),
+                    repositoryKeyFunctionFactory.repositoryKeyFunction(
+                            EnhancedLocalRepositoryManagerFactory.class,
+                            session,
+                            ConfigUtils.getString(
+                                    session,
+                                    DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION,
+                                    ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION),
+                            CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION),
                     trackingFilename,
                     trackingFileManager,
                     localPathPrefixComposerFactory.createComposer(session));
