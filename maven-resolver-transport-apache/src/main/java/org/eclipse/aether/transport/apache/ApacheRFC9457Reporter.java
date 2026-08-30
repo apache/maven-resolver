@@ -19,14 +19,14 @@
 package org.eclipse.aether.transport.apache;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.util.EntityUtils;
 import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
@@ -67,9 +67,16 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
 
     @Override
     protected String getBody(final CloseableHttpResponse response) throws IOException {
-        if (response.getEntity() == null) {
+        HttpEntity entity = response.getEntity();
+        if (entity == null) {
             return "";
         }
-        return EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+        InputStream is = entity.getContent();
+        if (is == null) {
+            return "";
+        }
+        try (InputStream stream = is) {
+            return readBody(stream);
+        }
     }
 }

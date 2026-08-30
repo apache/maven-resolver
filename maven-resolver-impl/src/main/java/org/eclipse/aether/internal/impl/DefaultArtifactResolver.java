@@ -347,11 +347,14 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                     if (local.getPath() != null) {
                         LOGGER.info(
                                 "Artifact {} is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from {}",
-                                artifact,
-                                remoteRepositories);
+                                LogSanitizer.sanitize(String.valueOf(artifact)),
+                                LogSanitizer.sanitize(String.valueOf(remoteRepositories)));
                     }
 
-                    LOGGER.debug("Resolving artifact {} from {}", artifact, remoteRepositories);
+                    LOGGER.debug(
+                            "Resolving artifact {} from {}",
+                            LogSanitizer.sanitize(String.valueOf(artifact)),
+                            LogSanitizer.sanitize(String.valueOf(remoteRepositories)));
                     AtomicBoolean resolved = new AtomicBoolean(false);
                     Iterator<ResolutionGroup> groupIt = groups.iterator();
                     for (RemoteRepository repo : filteredRemoteRepositories) {

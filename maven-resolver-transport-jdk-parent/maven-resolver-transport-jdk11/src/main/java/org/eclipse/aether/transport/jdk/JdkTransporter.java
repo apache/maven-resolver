@@ -349,9 +349,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     try {
                         pathProcessor.setLastModified(
                                 task.getDataPath(),
-                                ZonedDateTime.parse(lastModifiedHeader, RFC7231)
-                                        .toInstant()
-                                        .toEpochMilli());
+                                HttpTransporterUtils.clampRemoteLastModified(
+                                        ZonedDateTime.parse(lastModifiedHeader, RFC7231)
+                                                .toInstant()
+                                                .toEpochMilli()));
                     } catch (DateTimeParseException e) {
                         // fall through
                     }

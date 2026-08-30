@@ -329,6 +329,25 @@ public final class HttpTransporterUtils {
     }
 
     /**
+     * Clamps a remote-supplied {@code Last-Modified} timestamp to the local clock: returns the given value as-is,
+     * or the current time when the value lies in the future.
+     * <p>
+     * HTTP transports stamp the downloaded file's modification time from the server-provided {@code Last-Modified}
+     * header, and the update check manager subsequently uses that file modification time as the {@code lastUpdated}
+     * instant for update-policy cutoffs. A repository serving a far-future {@code Last-Modified} date would otherwise
+     * permanently suppress interval-based update checks for that path. Update-interval decisions must rest on
+     * locally-observed time, so future-dated values are clamped to {@code System.currentTimeMillis()}.
+     *
+     * @param lastModifiedMillis the last modified timestamp in milliseconds since the epoch, as supplied by the
+     *                           remote server
+     * @return the supplied value, clamped to the local wall clock
+     * @since 2.0.22
+     */
+    public static long clampRemoteLastModified(long lastModifiedMillis) {
+        return Math.min(lastModifiedMillis, System.currentTimeMillis());
+    }
+
+    /**
      * Shared code to create "base {@link URI}" for most common HTTP remote repositories and all HTTP transports.
      * Note: this method just applies common validation and adjustments to URI, but it does not enforce protocol
      * to be HTTP/HTTPS!
