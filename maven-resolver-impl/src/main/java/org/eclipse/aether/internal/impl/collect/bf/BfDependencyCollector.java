@@ -385,7 +385,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
         final List<RemoteRepository> childRepos = args.ignoreRepos
                 ? parentContext.repositories
                 : remoteRepositoryManager.aggregateRepositories(
-                        args.session, parentContext.repositories, descriptorResult.getRepositories(), true);
+                        args.session, parentContext.repositories, descriptorResult.getRepositories(), true, true);
 
         // Optimization: try pool cache with the parent manager as a speculative key BEFORE
         // calling deriveChildManager. When deriveChildManager returns `this` (the common case —
