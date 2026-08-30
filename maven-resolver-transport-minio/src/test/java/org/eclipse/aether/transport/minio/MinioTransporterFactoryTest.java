@@ -58,7 +58,7 @@ class MinioTransporterFactoryTest {
 
         factory = new MinioTransporterFactory(factories, new PathProcessorSupport());
         session = new DefaultRepositorySystemSession(h -> true);
-        repository = new RemoteRepository.Builder("repo", "default", "minio+http://localhost")
+        repository = new RemoteRepository.Builder("repo", "default", "minio+https://localhost")
                 .setAuthentication(new AuthenticationBuilder()
                         .addUsername("username")
                         .addPassword("password")
@@ -86,6 +86,35 @@ class MinioTransporterFactoryTest {
         assertThrows(NoTransporterException.class, () -> factory.newInstance(session, remoteRepository.get()));
         remoteRepository.set(new RemoteRepository.Builder("repo", "default", "https://localhost").build());
         assertThrows(NoTransporterException.class, () -> factory.newInstance(session, remoteRepository.get()));
+    }
+
+    @Test
+    void plaintextHttpRefusedByDefault() {
+        for (String url : new String[] {"minio+http://localhost", "s3+http://localhost"}) {
+            RemoteRepository plaintext = new RemoteRepository.Builder("repo", "default", url)
+                    .setAuthentication(new AuthenticationBuilder()
+                            .addUsername("username")
+                            .addPassword("password")
+                            .build())
+                    .build();
+            assertThrows(NoTransporterException.class, () -> factory.newInstance(session, plaintext));
+        }
+    }
+
+    @Test
+    void plaintextHttpAllowedWithExplicitOptIn() throws Exception {
+        DefaultRepositorySystemSession insecureSession = new DefaultRepositorySystemSession(h -> true);
+        insecureSession.setConfigProperty(
+                MinioTransporterConfigurationKeys.CONFIG_PROP_ALLOW_INSECURE_PROTOCOL, Boolean.TRUE);
+        RemoteRepository plaintext = new RemoteRepository.Builder("repo", "default", "minio+http://localhost")
+                .setAuthentication(new AuthenticationBuilder()
+                        .addUsername("username")
+                        .addPassword("password")
+                        .build())
+                .build();
+        try (Transporter transporter = factory.newInstance(insecureSession, plaintext)) {
+            // nope
+        }
     }
 
     @Test

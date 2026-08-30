@@ -56,4 +56,21 @@ public final class MinioTransporterConfigurationKeys {
     public static final String CONFIG_PROP_FIXED_BUCKET_NAME = CONFIG_PROPS_PREFIX + "fixedBucketName";
 
     public static final String DEFAULT_FIXED_BUCKET_NAME = "maven";
+
+    /**
+     * Whether plaintext HTTP object storage endpoints (repository URLs in {@code minio+http} or {@code s3+http}
+     * form) are allowed. Plaintext endpoints offer no transport integrity (artifacts and their checksum objects
+     * travel over the same tamperable channel) and, because the repository protocol string is not {@code http},
+     * such URLs are not matched by {@code external:http:*} mirror blocking. They are therefore refused unless this
+     * property is explicitly set to {@code true}.
+     *
+     * @since 2.0.22
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_ALLOW_INSECURE_PROTOCOL}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String CONFIG_PROP_ALLOW_INSECURE_PROTOCOL = CONFIG_PROPS_PREFIX + "allowInsecureProtocol";
+
+    public static final boolean DEFAULT_ALLOW_INSECURE_PROTOCOL = false;
 }

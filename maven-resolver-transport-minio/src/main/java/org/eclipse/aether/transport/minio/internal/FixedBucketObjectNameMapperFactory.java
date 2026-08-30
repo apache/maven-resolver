@@ -47,11 +47,13 @@ public class FixedBucketObjectNameMapperFactory implements ObjectNameMapperFacto
             RemoteRepository repository,
             MinioClient unused,
             Map<String, String> headers) {
+        // ConfigUtils.getString(session, defaultValue, keys...): the default value ("maven") comes first,
+        // then the repository-suffixed key, then the global key.
         String bucket = ConfigUtils.getString(
                 session,
-                MinioTransporterConfigurationKeys.CONFIG_PROP_FIXED_BUCKET_NAME,
+                MinioTransporterConfigurationKeys.DEFAULT_FIXED_BUCKET_NAME,
                 MinioTransporterConfigurationKeys.CONFIG_PROP_FIXED_BUCKET_NAME + "." + repository.getId(),
-                MinioTransporterConfigurationKeys.DEFAULT_FIXED_BUCKET_NAME);
+                MinioTransporterConfigurationKeys.CONFIG_PROP_FIXED_BUCKET_NAME);
         return path -> new ObjectName(bucket, repository.getId() + "/" + ObjectName.normalize(path));
     }
 }
