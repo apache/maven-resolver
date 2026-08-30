@@ -18,14 +18,17 @@
  */
 package org.eclipse.aether.named.ipc;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.SocketAddress;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.Channels;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -117,10 +120,28 @@ public class IpcServer {
     private static final boolean DEBUG =
             Boolean.parseBoolean(System.getProperty(SYSTEM_PROP_DEBUG, Boolean.toString(DEFAULT_DEBUG)));
     private final long idleTimeout;
+    private final String bootstrapToken;
     private volatile long lastUsed;
     private volatile boolean closing;
 
+    /**
+     * @deprecated a server created without a bootstrap token refuses {@link IpcMessages#REQUEST_STOP} requests;
+     * use {@link #IpcServer(SocketFamily, String)} instead.
+     */
+    @Deprecated
     public IpcServer(SocketFamily family) throws IOException {
+        this(family, null);
+    }
+
+    /**
+     * Creates a server that honors a remote stop request only when it carries the given bootstrap token, which is
+     * shared exclusively with the client that spawned this server. The rest of the protocol is unauthenticated,
+     * but destructive cross-client operations (closing foreign contexts, stopping the daemon) are refused.
+     *
+     * @since 2.0.22
+     */
+    public IpcServer(SocketFamily family, String bootstrapToken) throws IOException {
+        this.bootstrapToken = bootstrapToken;
         serverSocket = family.openServerSocket();
         long timeout = TimeUnit.SECONDS.toNanos(DEFAULT_IDLE_TIMEOUT);
         String str = System.getProperty(SYSTEM_PROP_IDLE_TIMEOUT);
@@ -161,12 +182,21 @@ public class IpcServer {
         String family = args[0];
         String tmpAddress = args[1];
         String rand = args[2];
+        if ("-".equals(rand)) {
+            // the bootstrap token is passed via stdin instead of argv: process arguments are commonly visible
+            // to other local users (e.g. /proc/<pid>/cmdline), and this token authorizes stopping the daemon
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+            rand = reader.readLine();
+            if (rand == null || rand.isEmpty()) {
+                throw new IOException("Expected the bootstrap token on standard input");
+            }
+        }
 
         runServer(SocketFamily.valueOf(family), tmpAddress, rand);
     }
 
     static IpcServer runServer(SocketFamily family, String tmpAddress, String rand) throws IOException {
-        IpcServer server = new IpcServer(family);
+        IpcServer server = new IpcServer(family, rand);
         run(server::run, false); // this is one-off
         String address = SocketFamily.toString(server.getLocalAddress());
         SocketAddress socketAddress = SocketFamily.fromString(tmpAddress);
@@ -240,7 +270,11 @@ public class IpcServer {
             while (!closing) {
                 int requestId = input.readInt();
                 int sz = input.readInt();
-                List<String> request = new ArrayList<>(sz);
+                if (sz < 0) {
+                    throw new IOException("Received invalid request size: " + sz);
+                }
+                // do not preallocate from an unauthenticated wire-supplied size; grow with actually received data
+                List<String> request = new ArrayList<>(Math.min(sz, 1024));
                 for (int i = 0; i < sz; i++) {
                     request.add(input.readUTF());
                 }
@@ -275,41 +309,26 @@ public class IpcServer {
                                     "Expected at least one argument for " + command + " but got " + request);
                         }
                         contextId = request.remove(0);
-                        context = contexts.get(contextId);
+                        // contexts are scoped per connection: a client may only use contexts it created itself
+                        context = clientContexts.get(contextId);
                         if (context == null) {
                             throw new IOException(
-                                    "Unknown context: " + contextId + ". Known contexts = " + contexts.keySet());
+                                    "Unknown context: " + contextId + ". Known contexts = " + clientContexts.keySet());
                         }
-                        context.lock(request).thenRun(() -> {
-                            try {
-                                synchronized (output) {
-                                    debug("Locking in context %s", context.id);
-                                    output.writeInt(requestId);
-                                    output.writeInt(1);
-                                    output.writeUTF(IpcMessages.RESPONSE_ACQUIRE);
-                                    output.flush();
-                                }
-                            } catch (IOException e) {
-                                try {
-                                    socket.close();
-                                } catch (IOException ioException) {
-                                    e.addSuppressed(ioException);
-                                }
-                                error("Error writing lock response", e);
-                            }
-                        });
+                        context.lock(request).thenRun(() -> sendAcquireResponse(output, socket, requestId, context));
                         break;
                     case IpcMessages.REQUEST_CLOSE:
                         if (request.size() != 1) {
                             throw new IOException("Expected one argument for " + command + " but got " + request);
                         }
                         contextId = request.remove(0);
-                        context = contexts.remove(contextId);
-                        clientContexts.remove(contextId);
+                        // contexts are scoped per connection: a client may only close contexts it created itself
+                        context = clientContexts.remove(contextId);
                         if (context == null) {
                             throw new IOException(
-                                    "Unknown context: " + contextId + ". Known contexts = " + contexts.keySet());
+                                    "Unknown context: " + contextId + ". Known contexts = " + clientContexts.keySet());
                         }
+                        contexts.remove(contextId);
                         context.unlock();
                         synchronized (output) {
                             debug("Closing context %s", context.id);
@@ -320,8 +339,15 @@ public class IpcServer {
                         }
                         break;
                     case IpcMessages.REQUEST_STOP:
-                        if (!request.isEmpty()) {
-                            throw new IOException("Expected zero argument for " + command + " but got " + request);
+                        if (request.size() > 1) {
+                            throw new IOException(
+                                    "Expected at most one argument for " + command + " but got " + request);
+                        }
+                        String stopToken = request.isEmpty() ? null : request.remove(0);
+                        if (bootstrapToken == null || !bootstrapToken.equals(stopToken)) {
+                            // the protocol is otherwise unauthenticated: only the client that spawned this
+                            // server (and thus knows the bootstrap token) may stop it for everybody else
+                            throw new IOException("Stop request rejected: missing or invalid bootstrap token");
                         }
                         synchronized (output) {
                             debug("Stopping server");
@@ -360,6 +386,25 @@ public class IpcServer {
             if (!closing) {
                 info("%d clients remained", c);
             }
+        }
+    }
+
+    private void sendAcquireResponse(DataOutputStream output, SocketChannel socket, int requestId, Context context) {
+        try {
+            synchronized (output) {
+                debug("Locking in context %s", context.id);
+                output.writeInt(requestId);
+                output.writeInt(1);
+                output.writeUTF(IpcMessages.RESPONSE_ACQUIRE);
+                output.flush();
+            }
+        } catch (IOException e) {
+            try {
+                socket.close();
+            } catch (IOException ioException) {
+                e.addSuppressed(ioException);
+            }
+            error("Error writing lock response", e);
         }
     }
 

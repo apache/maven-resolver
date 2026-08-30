@@ -61,10 +61,8 @@ public class IpcNamedLockFactory extends NamedLockFactorySupport {
 
     @Override
     protected NamedLock doGetLock(Collection<NamedLockKey> keys) {
-        StringDigestUtil sha1 = StringDigestUtil.sha1();
-        keys.forEach(k -> sha1.update(k.name()));
         NamedLockKey key = NamedLockKey.of(
-                sha1.digest(),
+                digestKeys(keys),
                 keys.stream()
                         .map(NamedLockKey::resources)
                         .flatMap(Collection::stream)
@@ -73,6 +71,25 @@ public class IpcNamedLockFactory extends NamedLockFactorySupport {
                 key,
                 () -> new IpcNamedLock(
                         key, this, client, keys.stream().map(NamedLockKey::name).collect(Collectors.toList())));
+    }
+
+    /**
+     * Computes the digest identifying given (ordered) collection of lock keys. The encoding is unambiguous —
+     * netstring-like, the key count followed by each name length-prefixed — so distinct key collections always
+     * yield distinct digests. Plainly concatenating the names would give boundary-shifted collections (for
+     * example {@code ["foo", "bar"]} vs {@code ["foob", "ar"]} — and lock names embed wire-supplied artifact
+     * coordinates) the same digest and hence the same lock identity, letting two racing processes mutate the
+     * same local repository paths while holding what they believe are different locks.
+     */
+    static String digestKeys(Collection<NamedLockKey> keys) {
+        StringDigestUtil sha1 = StringDigestUtil.sha1();
+        sha1.update(keys.size() + ":");
+        for (NamedLockKey key : keys) {
+            String name = key.name();
+            sha1.update(name.length() + ":");
+            sha1.update(name);
+        }
+        return sha1.digest();
     }
 
     @Override
