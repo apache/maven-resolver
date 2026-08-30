@@ -102,7 +102,7 @@ public final class PathUtils {
      * (leading, trailing or consecutive dots), as the expansion of such values does not compose a valid
      * relative path.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     public static void validateDotSeparatedPathComponent(String value, String label) {
         validatePathComponent(value, label);
