@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -521,6 +522,18 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 JettyTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS,
                 JettyTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS));
 
+        boolean followInsecureRedirects = ConfigUtils.getBoolean(
+                session,
+                JettyTransporterConfigurationKeys.DEFAULT_FOLLOW_INSECURE_REDIRECTS,
+                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS + "." + repository.getId(),
+                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS);
+
+        boolean originScopedHeaders = ConfigUtils.getBoolean(
+                session,
+                JettyTransporterConfigurationKeys.DEFAULT_ORIGIN_SCOPED_HEADERS,
+                JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS + "." + repository.getId(),
+                JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
+
         httpClient.setUserAgentField(null); // we manage it
 
         if (basicAuthentication != null) {
@@ -557,6 +570,39 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
         try {
             httpClient.start();
+
+            // Register request listeners after start() so that Jetty's content decoder factories are
+            // fully initialized first.
+            if (!followInsecureRedirects && "https".equalsIgnoreCase(repository.getProtocol())) {
+                // this client serves exactly one repository: any non-https request it ever issues can only be the
+                // result of following a protocol-downgrading redirect, so refuse it before anything is sent
+                httpClient.getRequestListeners().addQueuedListener(new InsecureRedirectGuard());
+            }
+            if (originScopedHeaders) {
+                // Jetty's redirector copies the request headers onto every redirect hop it follows; scope configured
+                // headers (and preemptively applied Authorization) to the repository origin so a cross-origin redirect
+                // does not replay them to the redirect target. The copied redirect request passes through the
+                // client-level request listeners again, same mechanism as the InsecureRedirectGuard above.
+                // Challenge-based authentication from the authentication store is URI-scoped by Jetty already.
+                //
+                // Only register the listener when there are actual credentials or configured headers to protect:
+                // without preemptive authentication or user-configured headers, there is nothing on the request
+                // that could leak to a redirect target, so registering the listener would be a no-op.
+                Map<String, String> configuredHeaders = HttpTransporterUtils.getHttpHeaders(session, repository);
+                boolean hasPreemptiveAuth = basicAuthentication != null;
+                boolean hasConfiguredHeaders = configuredHeaders != null && !configuredHeaders.isEmpty();
+                if (hasPreemptiveAuth || hasConfiguredHeaders) {
+                    TreeSet<String> scopedHeaderNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+                    scopedHeaderNames.add(HttpHeader.AUTHORIZATION.asString());
+                    if (hasConfiguredHeaders) {
+                        scopedHeaderNames.addAll(configuredHeaders.keySet());
+                    }
+                    httpClient
+                            .getRequestListeners()
+                            .addHeadersListener(new OriginScopedHeadersListener(baseUri, scopedHeaderNames));
+                }
+            }
+
             return httpClient;
         } catch (Exception e) {
             if (e instanceof RuntimeException) {

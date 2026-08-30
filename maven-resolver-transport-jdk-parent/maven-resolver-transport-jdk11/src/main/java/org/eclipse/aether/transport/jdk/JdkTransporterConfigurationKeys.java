@@ -60,4 +60,41 @@ public final class JdkTransporterConfigurationKeys {
     public static final String CONFIG_PROP_MAX_CONCURRENT_REQUESTS = CONFIG_PROPS_PREFIX + "maxConcurrentRequests";
 
     public static final int DEFAULT_MAX_CONCURRENT_REQUESTS = 100;
+
+    /**
+     * If enabled, restores the legacy behavior where the transporter's {@link java.net.Authenticator} handed out
+     * the repository (or proxy) credentials to any host that issued an authentication challenge - including hosts
+     * reached by following a redirect off the repository. When disabled (the default), credentials are only
+     * returned when the challenging origin (protocol, host and port) matches the repository base URI, or, for
+     * proxy challenges, the configured proxy address.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_UNSCOPED_AUTHENTICATION}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.22
+     */
+    public static final String CONFIG_PROP_UNSCOPED_AUTHENTICATION = CONFIG_PROPS_PREFIX + "unscopedAuthentication";
+
+    public static final boolean DEFAULT_UNSCOPED_AUTHENTICATION = false;
+
+    /**
+     * If enabled (default), operator-configured request headers ({@code aether.transport.http.headers}) and
+     * preemptively applied {@code Authorization} are only sent on requests targeting the repository origin (the
+     * scheme, host and port the repository URL denotes). The JDK {@link java.net.http.HttpClient} re-sends all
+     * user-set headers on every redirect hop it follows - including hops that leave the repository origin - so
+     * with this enabled the transporter configures the client with {@code Redirect.NEVER} and follows redirects
+     * itself, dropping those headers on any hop that leaves the origin. Disable only when a redirect target
+     * legitimately requires the configured headers; disabling restores the JDK client's own redirect handling
+     * ({@code Redirect.NORMAL}) and the legacy header replay.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_ORIGIN_SCOPED_HEADERS}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.22
+     */
+    public static final String CONFIG_PROP_ORIGIN_SCOPED_HEADERS = CONFIG_PROPS_PREFIX + "originScopedHeaders";
+
+    public static final boolean DEFAULT_ORIGIN_SCOPED_HEADERS = true;
 }
