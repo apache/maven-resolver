@@ -25,6 +25,8 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.aether.util.PathUtils.validateArtifactComponents;
+import static org.eclipse.aether.util.PathUtils.validateMetadataComponents;
 
 /**
  * Default implementation of {@link LocalPathComposer}.
@@ -37,6 +39,7 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
     @Override
     public String getPathForArtifact(Artifact artifact, boolean local) {
         requireNonNull(artifact);
+        validateArtifactComponents(artifact);
 
         StringBuilder path = new StringBuilder(128);
 
@@ -61,13 +64,14 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
             path.append('.').append(artifact.getExtension());
         }
 
-        return path.toString();
+        return requireContainedPath(path.toString());
     }
 
     @Override
     public String getPathForMetadata(Metadata metadata, String repositoryKey) {
         requireNonNull(metadata);
         requireNonNull(repositoryKey);
+        validateMetadataComponents(metadata);
 
         StringBuilder path = new StringBuilder(128);
 
@@ -85,7 +89,26 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
 
         path.append(insertRepositoryKey(metadata.getType(), repositoryKey));
 
-        return path.toString();
+        return requireContainedPath(path.toString());
+    }
+
+    /**
+     * Defense in depth: the composed path must be relative and must not contain parent-reference or empty
+     * segments, so that resolving it against the local repository base directory always yields a path within
+     * it. The coordinate validation performed on entry should already guarantee this; this is a last-resort
+     * check on the composed result.
+     */
+    private static String requireContainedPath(String path) {
+        if (path.startsWith("/")
+                || path.contains("//")
+                || path.equals("..")
+                || path.startsWith("../")
+                || path.endsWith("/..")
+                || path.contains("/../")) {
+            throw new IllegalArgumentException(
+                    "Invalid coordinates: composed local repository path is not a valid relative path: " + path);
+        }
+        return path;
     }
 
     private String insertRepositoryKey(String metadataType, String repositoryKey) {

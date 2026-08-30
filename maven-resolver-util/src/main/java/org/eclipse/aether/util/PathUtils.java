@@ -22,6 +22,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -70,6 +73,80 @@ public final class PathUtils {
                 pos = result.indexOf(illegal);
             }
         }
-        return result.toString();
+        // Strings consisting solely of dots contain no illegal character, yet "." and ".." carry path
+        // meaning when used as a path segment. Map them to explicit tokens, mirroring the character
+        // replacements above.
+        String segment = result.toString();
+        if (".".equals(segment)) {
+            return "-DOT-";
+        } else if ("..".equals(segment)) {
+            return "-DOTDOT-";
+        }
+        return segment;
+    }
+
+    /**
+     * Validates that a coordinate component may be used as a single repository path segment: it must not equal
+     * {@code ".."} and must not contain path separator characters or ':'.
+     *
+     * @since 1.9.28
+     */
+    public static void validatePathComponent(String value, String label) {
+        if (value != null && value.length() > 0) {
+            // Important: "equals .." and not "contains ..", as a component containing more dots
+            // is a valid version string (e.g. "1..").
+            // Colon is not a valid character in a coordinate component.
+            if (value.equals("..") || value.contains("/") || value.contains("\\") || value.contains(":")) {
+                throw new IllegalArgumentException(
+                        "Invalid " + label + ": must not contain '..', '/', '\\' or ':': " + value);
+            }
+        }
+    }
+
+    /**
+     * Validates a coordinate component that is expanded into multiple path segments by replacing each dot with a
+     * path separator, like the group ID is. Beside the checks done by {@link #validatePathComponent(String, String)},
+     * it rejects values containing empty dot-separated segments (leading, trailing or consecutive dots), as the
+     * expansion of such values does not compose a valid relative path.
+     *
+     * @since 1.9.28
+     */
+    public static void validateDotSeparatedPathComponent(String value, String label) {
+        validatePathComponent(value, label);
+        if (value != null && value.length() > 0) {
+            for (String segment : value.split("\\.", -1)) {
+                if (segment.isEmpty()) {
+                    throw new IllegalArgumentException("Invalid " + label
+                            + ": must not contain empty segments (leading, trailing or consecutive dots): " + value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates all coordinate components of an {@link Artifact}.
+     *
+     * @see #validatePathComponent(String, String)
+     * @since 1.9.28
+     */
+    public static void validateArtifactComponents(Artifact artifact) {
+        validateDotSeparatedPathComponent(artifact.getGroupId(), "groupId");
+        validatePathComponent(artifact.getArtifactId(), "artifactId");
+        validatePathComponent(artifact.getVersion(), "version");
+        validatePathComponent(artifact.getBaseVersion(), "baseVersion");
+        validatePathComponent(artifact.getClassifier(), "classifier");
+        validatePathComponent(artifact.getExtension(), "extension");
+    }
+
+    /**
+     * Validates all coordinate components of a {@link Metadata}.
+     *
+     * @see #validatePathComponent(String, String)
+     * @since 1.9.28
+     */
+    public static void validateMetadataComponents(Metadata metadata) {
+        validateDotSeparatedPathComponent(metadata.getGroupId(), "groupId");
+        validatePathComponent(metadata.getArtifactId(), "artifactId");
+        validatePathComponent(metadata.getVersion(), "version");
     }
 }

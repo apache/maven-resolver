@@ -20,6 +20,8 @@ package org.eclipse.aether.transport.file;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.AbstractTransporter;
@@ -85,14 +87,27 @@ final class FileTransporter extends AbstractTransporter {
 
     private File getFile(TransportTask task, boolean required) throws Exception {
         String path = task.getLocation().getPath();
-        if (path.contains("../")) {
+        if (path == null) {
+            throw new IllegalArgumentException("illegal resource path: null");
+        }
+        Path relative = Paths.get(path);
+        if (relative.isAbsolute()) {
             throw new IllegalArgumentException("illegal resource path: " + path);
         }
-        File file = new File(basedir, path);
-        if (required && !file.exists()) {
-            throw new ResourceNotFoundException("Could not locate " + file);
+        for (Path segment : relative) {
+            if ("..".equals(segment.toString())) {
+                throw new IllegalArgumentException("illegal resource path: " + path);
+            }
         }
-        return file;
+        Path file = basedir.toPath().resolve(relative).normalize();
+        if (!file.startsWith(basedir.toPath().normalize())) {
+            throw new IllegalArgumentException("illegal resource path: " + path);
+        }
+        File result = file.toFile();
+        if (required && !result.exists()) {
+            throw new ResourceNotFoundException("Could not locate " + result);
+        }
+        return result;
     }
 
     @Override
