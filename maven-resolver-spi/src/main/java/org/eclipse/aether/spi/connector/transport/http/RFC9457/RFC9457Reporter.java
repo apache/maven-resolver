@@ -19,6 +19,10 @@
 package org.eclipse.aether.spi.connector.transport.http.RFC9457;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A reporter for RFC 9457 messages.
@@ -35,6 +39,7 @@ import java.io.IOException;
  * @see <a href=https://www.rfc-editor.org/rfc/rfc9457#section-3-7>RFC 9457</a>
  */
 public abstract class RFC9457Reporter<T, E extends Exception, R> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RFC9457Reporter.class);
     public static final String CONTENT_TYPE_PROBLEM_DETAILS_JSON = "application/problem+json";
     public static final String CONTENT_TYPE_PROBLEM_DETAILS_JSON_AND_ANY = "application/problem+json,*/*";
 
@@ -92,6 +97,15 @@ public abstract class RFC9457Reporter<T, E extends Exception, R> {
                 throw new HttpRFC9457Exception(statusCode, reasonPhrase, rfc9457Payload);
             }
             throw new HttpRFC9457Exception(statusCode, reasonPhrase, RFC9457Payload.INSTANCE);
+        } else {
+            try {
+                LOGGER.debug(
+                        "Received a response (not RFC 9457 compliant) with status code {}: {}",
+                        statusCode,
+                        getBody(response));
+            } catch (IOException e) {
+                throw new UncheckedIOException("Failed to read response body", e);
+            }
         }
         baseException.accept(statusCode, reasonPhrase);
     }
