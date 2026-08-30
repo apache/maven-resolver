@@ -139,6 +139,41 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
+    void testArtifactLocation_RejectsGroupIdWithEmptyDotSegments() {
+        // ".home.ci" would expand to "/home/ci/..." (absolute path), "..evilhost" to "//evilhost/..."
+        // (re-parsed as an authority URI, redirecting the fetch to another host)
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact(".home.ci", "a-i.d", "cls", "ext", "1.0"), false));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("..evilhost", "a-i.d", "cls", "ext", "1.0"), false));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("g..i.d", "a-i.d", "cls", "ext", "1.0"), false));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("g.i.d.", "a-i.d", "cls", "ext", "1.0"), false));
+    }
+
+    @Test
+    void testArtifactLocation_RejectsTraversalAndColon() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0/../x"), false));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0:evil"), false));
+    }
+
+    @Test
+    void testMetadataLocation_RejectsGroupIdWithEmptyDotSegments() {
+        DefaultMetadata metadata =
+                new DefaultMetadata("..evilhost", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
+        assertThrows(IllegalArgumentException.class, () -> layout.getLocation(metadata, false));
+    }
+
+    @Test
     void testMetadataLocation_RootLevel() {
         DefaultMetadata metadata = new DefaultMetadata("archetype-catalog.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         URI uri = layout.getLocation(metadata, false);

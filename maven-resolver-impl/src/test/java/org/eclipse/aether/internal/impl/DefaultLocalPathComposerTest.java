@@ -79,4 +79,59 @@ class DefaultLocalPathComposerTest {
         String path = composer.getPathForMetadata(metadata, "central");
         assertEquals("g/id/a-id/1.0.0-SNAPSHOT/maven-metadata-central.xml", path);
     }
+
+    @Test
+    void testGetPathForArtifactRejectsLeadingDotGroupId() {
+        // groupId ".home.ci" would expand to "/home/ci/..." - an absolute path escaping the local repository
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> composer.getPathForArtifact(new DefaultArtifact(".home.ci", "a-id", "jar", "1.0"), true));
+    }
+
+    @Test
+    void testGetPathForArtifactRejectsDoubleLeadingDotGroupId() {
+        // groupId "..evilhost" would expand to "//evilhost/..." - re-parsed as an authority URI by transports
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> composer.getPathForArtifact(new DefaultArtifact("..evilhost", "a-id", "jar", "1.0"), true));
+    }
+
+    @Test
+    void testGetPathForArtifactRejectsConsecutiveDotsInGroupId() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> composer.getPathForArtifact(new DefaultArtifact("g..id", "a-id", "jar", "1.0"), true));
+    }
+
+    @Test
+    void testGetPathForArtifactRejectsTrailingDotInGroupId() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> composer.getPathForArtifact(new DefaultArtifact("g.id.", "a-id", "jar", "1.0"), true));
+    }
+
+    @Test
+    void testGetPathForArtifactRejectsColon() {
+        // colon enables drive-absolute escapes on Windows (e.g. "C:") and is never valid in coordinates
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> composer.getPathForArtifact(new DefaultArtifact("C:", "a-id", "jar", "1.0"), true));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> composer.getPathForArtifact(new DefaultArtifact("g.id", "a-id", "jar", "1.0:evil"), true));
+    }
+
+    @Test
+    void testGetPathForMetadataRejectsLeadingDotGroupId() {
+        Metadata metadata =
+                new DefaultMetadata(".home.ci", "a-id", "1.0", "maven-metadata.xml", Metadata.Nature.RELEASE);
+        assertThrows(IllegalArgumentException.class, () -> composer.getPathForMetadata(metadata, "central"));
+    }
+
+    @Test
+    void testGetPathForArtifactAcceptsNormalCoordinates() {
+        String path = composer.getPathForArtifact(
+                new DefaultArtifact("org.apache.maven", "commons-io", "jar", "1.0-SNAPSHOT"), true);
+        assertEquals("org/apache/maven/commons-io/1.0-SNAPSHOT/commons-io-1.0-SNAPSHOT.jar", path);
+    }
 }

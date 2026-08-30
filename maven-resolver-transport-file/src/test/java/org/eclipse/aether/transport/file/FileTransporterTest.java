@@ -106,6 +106,20 @@ public class FileTransporterTest {
         transporter = factory.newInstance(session, newRepo(url));
     }
 
+    /**
+     * Builds a task location URI carrying the absolute path of the given resource within the repository base
+     * directory, in a platform and file system neutral way (e.g. {@code /C:/repo/file.txt} on Windows).
+     */
+    private URI absoluteLocation(String resource) throws Exception {
+        Path absolute =
+                ((FileTransporter) transporter).getBasePath().resolve(resource).toAbsolutePath();
+        String rawPath = absolute.toString().replace('\\', '/');
+        if (!rawPath.startsWith("/")) {
+            rawPath = "/" + rawPath;
+        }
+        return new URI(null, null, rawPath, null);
+    }
+
     void setUp(FS fs) {
         try {
             fileSystem = fs.name().startsWith("JIMFS") ? Jimfs.newFileSystem() : null;
@@ -302,6 +316,43 @@ public class FileTransporterTest {
 
     @ParameterizedTest
     @EnumSource(FS.class)
+    void testGet_AbsoluteResourcePathRejected(FS fs) throws Exception {
+        setUp(fs);
+        GetTask task = new GetTask(absoluteLocation("file.txt"));
+        assertThrows(IllegalArgumentException.class, () -> transporter.get(task));
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_ParentDirTraversalRejected(FS fs) {
+        setUp(fs);
+        assertThrows(IllegalArgumentException.class, () -> transporter.get(new GetTask(URI.create("../file.txt"))));
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_BareParentDirRejected(FS fs) {
+        setUp(fs);
+        assertThrows(IllegalArgumentException.class, () -> transporter.get(new GetTask(URI.create(".."))));
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testGet_NestedParentDirEscapeRejected(FS fs) {
+        setUp(fs);
+        assertThrows(
+                IllegalArgumentException.class, () -> transporter.get(new GetTask(URI.create("a/../../file.txt"))));
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPeek_ParentDirTraversalRejected(FS fs) {
+        setUp(fs);
+        assertThrows(IllegalArgumentException.class, () -> transporter.peek(new PeekTask(URI.create("../file.txt"))));
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
     void testGet_Closed(FS fs) throws Exception {
         setUp(fs);
         transporter.close();
@@ -447,6 +498,38 @@ public class FileTransporterTest {
             assertTrue(Files.deleteIfExists(src), i + ", " + src.toAbsolutePath());
             assertTrue(Files.deleteIfExists(dst), i + ", " + dst.toAbsolutePath());
         }
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_AbsoluteResourcePathRejected(FS fs) throws Exception {
+        assumeTrue(fs.writable);
+        setUp(fs);
+        PutTask task = new PutTask(absoluteLocation("absolute-upload.txt")).setDataString("upload");
+        assertThrows(IllegalArgumentException.class, () -> transporter.put(task));
+        assertFalse(Files.exists(repoDir.resolve("absolute-upload.txt")));
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_ParentDirTraversalRejected(FS fs) throws Exception {
+        assumeTrue(fs.writable);
+        setUp(fs);
+        PutTask task = new PutTask(URI.create("../escaped.txt")).setDataString("upload");
+        assertThrows(IllegalArgumentException.class, () -> transporter.put(task));
+        Path base = ((FileTransporter) transporter).getBasePath();
+        assertFalse(Files.exists(base.getParent().resolve("escaped.txt")));
+    }
+
+    @ParameterizedTest
+    @EnumSource(FS.class)
+    void testPut_NestedParentDirEscapeRejected(FS fs) throws Exception {
+        assumeTrue(fs.writable);
+        setUp(fs);
+        PutTask task = new PutTask(URI.create("a/../../escaped.txt")).setDataString("upload");
+        assertThrows(IllegalArgumentException.class, () -> transporter.put(task));
+        Path base = ((FileTransporter) transporter).getBasePath();
+        assertFalse(Files.exists(base.getParent().resolve("escaped.txt")));
     }
 
     @ParameterizedTest

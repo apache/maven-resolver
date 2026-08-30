@@ -44,6 +44,8 @@ import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.util.ConfigUtils;
 
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.aether.util.PathUtils.validateArtifactComponents;
+import static org.eclipse.aether.util.PathUtils.validateMetadataComponents;
 
 /**
  * Provides a Maven-2 repository layout for repositories with content type {@code "default"}.
@@ -217,6 +219,8 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
 
         @Override
         public URI getLocation(Artifact artifact, boolean upload) {
+            validateArtifactComponents(artifact);
+
             StringBuilder path = new StringBuilder(128);
 
             path.append(artifact.getGroupId().replace('.', '/')).append('/');
@@ -240,6 +244,8 @@ public final class Maven2RepositoryLayoutFactory implements RepositoryLayoutFact
 
         @Override
         public URI getLocation(Metadata metadata, boolean upload) {
+            validateMetadataComponents(metadata);
+
             StringBuilder path = new StringBuilder(128);
 
             if (!metadata.getGroupId().isEmpty()) {

@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
@@ -166,6 +168,41 @@ public class BasedirNameMapperTest extends NameMapperTestSupport {
         assertEquals(
                 getPrefix() + "metadata~groupId~artifactId~something.xml.lock",
                 names.iterator().next().name());
+    }
+
+    @Test
+    void traversalCoordinatesStayWithinLocksDir() throws IOException {
+        configProperties.put("aether.syncContext.named.hashing.depth", "0");
+        DefaultArtifact artifact = new DefaultArtifact("group", "artifact", "jar", "1/../../../../home/user/x");
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
+        assertEquals(1, names.size());
+        assertEquals(
+                getPrefix()
+                        + "artifact~group~artifact~1-SLASH-..-SLASH-..-SLASH-..-SLASH-..-SLASH-home-SLASH-user-SLASH-x.lock",
+                names.iterator().next().name());
+    }
+
+    @Test
+    void escapingDelegateNameIsRejected() {
+        // even a (custom) delegate that emits traversal sequences must not select a path outside the locks dir
+        NameMapper escaping = new NameMapper() {
+            @Override
+            public boolean isFileSystemFriendly() {
+                return true;
+            }
+
+            @Override
+            public Collection<NamedLockKey> nameLocks(
+                    RepositorySystemSession session,
+                    Collection<? extends Artifact> artifacts,
+                    Collection<? extends Metadata> metadatas) {
+                return singletonList(NamedLockKey.of("../../../outside.lock"));
+            }
+        };
+        NameMapper basedirMapper = new BasedirNameMapper(escaping);
+        DefaultArtifact artifact = new DefaultArtifact("group:artifact:1.0");
+        assertThrows(
+                IllegalArgumentException.class, () -> basedirMapper.nameLocks(session, singletonList(artifact), null));
     }
 
     @Test

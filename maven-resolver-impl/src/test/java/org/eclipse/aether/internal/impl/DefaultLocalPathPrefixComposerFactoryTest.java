@@ -232,4 +232,31 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
         assertNotNull(prefix);
         assertEquals("cached/my-repo/releases", prefix);
     }
+
+    @Test
+    void dotDotRepositoryIdCannotEscapeSplitPrefix() {
+        DefaultRepositorySystemSession session = TestUtils.newSession();
+        session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT, Boolean.TRUE.toString());
+        session.setConfigProperty(
+                DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_REMOTE_REPOSITORY, Boolean.TRUE.toString());
+
+        LocalPathPrefixComposerFactory factory =
+                new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory());
+        LocalPathPrefixComposer composer = factory.createComposer(session);
+        assertNotNull(composer);
+
+        // a malicious transitive POM may declare a repository with id ".." - the repository key derived from it
+        // must be neutralized into a harmless path segment instead of relocating the split prefix out of the
+        // local repository basedir
+        RemoteRepository dotDotRepository =
+                new RemoteRepository.Builder("..", "default", "https://evil.example.org/").build();
+
+        String prefix = composer.getPathPrefixForRemoteArtifact(releaseArtifact, dotDotRepository);
+        assertNotNull(prefix);
+        assertEquals("cached/-DOTDOT-", prefix);
+
+        prefix = composer.getPathPrefixForRemoteMetadata(releaseMetadata, dotDotRepository);
+        assertNotNull(prefix);
+        assertEquals("cached/-DOTDOT-", prefix);
+    }
 }

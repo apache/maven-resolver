@@ -73,7 +73,17 @@ public final class PathUtils {
                 pos = result.indexOf(illegal);
             }
         }
-        return result.toString();
+        // Strings consisting solely of dots contain no illegal character, yet "." and ".." carry path meaning:
+        // used as a path segment, ".." escapes the intended base directory (for example a repository id of ".."
+        // redirects origin-aware trusted-checksums lookups and split local repository prefixes outside their
+        // basedir). Map them to explicit tokens, mirroring the character replacements above.
+        String segment = result.toString();
+        if (segment.equals(".")) {
+            return "-DOT-";
+        } else if (segment.equals("..")) {
+            return "-DOTDOT-";
+        }
+        return segment;
     }
 
     /**
@@ -87,9 +97,33 @@ public final class PathUtils {
         if (value != null && !value.isEmpty()) {
             // Important: "equals .." and not "contains ..", as if escape attempted, it will contain path separators
             // OTOH: version "1.." is valid version string!
-            if (value.equals("..") || value.contains("/") || value.contains("\\")) {
+            // Colon is never valid in a coordinate component: it enables drive-absolute paths on Windows and
+            // scheme/authority confusion when the component ends up in a URI.
+            if (value.equals("..") || value.contains("/") || value.contains("\\") || value.contains(":")) {
                 throw new IllegalArgumentException(
-                        "Invalid " + label + ": must not contain '..', '/' or '\\': " + value);
+                        "Invalid " + label + ": must not contain '..', '/', '\\' or ':': " + value);
+            }
+        }
+    }
+
+    /**
+     * Validates a coordinate component that is expanded into multiple path segments by replacing each dot with a
+     * path separator, like the group ID is. Beside the checks done by
+     * {@link #validatePathComponent(String, String)}, it rejects values containing empty dot-separated segments
+     * (leading, trailing or consecutive dots): after dot-to-slash expansion those would produce absolute paths
+     * (".home.ci" becomes "/home/ci", escaping the local repository), protocol-relative authority URIs
+     * ("..evilhost" becomes "//evilhost", redirecting remote fetches to another host) or empty path segments.
+     *
+     * @since 2.0.22
+     */
+    public static void validateDotSeparatedPathComponent(String value, String label) {
+        validatePathComponent(value, label);
+        if (value != null && !value.isEmpty()) {
+            for (String segment : value.split("\\.", -1)) {
+                if (segment.isEmpty()) {
+                    throw new IllegalArgumentException("Invalid " + label
+                            + ": must not contain empty segments (leading, trailing or consecutive dots): " + value);
+                }
             }
         }
     }
@@ -98,10 +132,11 @@ public final class PathUtils {
      * Validates all coordinate components of an {@link Artifact}.
      *
      * @see #validatePathComponent(String, String)
+     * @see #validateDotSeparatedPathComponent(String, String)
      * @since 2.0.21
      */
     public static void validateArtifactComponents(Artifact artifact) {
-        validatePathComponent(artifact.getGroupId(), "groupId");
+        validateDotSeparatedPathComponent(artifact.getGroupId(), "groupId");
         validatePathComponent(artifact.getArtifactId(), "artifactId");
         validatePathComponent(artifact.getVersion(), "version");
         validatePathComponent(artifact.getBaseVersion(), "baseVersion");
@@ -113,10 +148,11 @@ public final class PathUtils {
      * Validates all coordinate components of a {@link Metadata}.
      *
      * @see #validatePathComponent(String, String)
+     * @see #validateDotSeparatedPathComponent(String, String)
      * @since 2.0.21
      */
     public static void validateMetadataComponents(Metadata metadata) {
-        validatePathComponent(metadata.getGroupId(), "groupId");
+        validateDotSeparatedPathComponent(metadata.getGroupId(), "groupId");
         validatePathComponent(metadata.getArtifactId(), "artifactId");
         validatePathComponent(metadata.getVersion(), "version");
         // note: type may contain string like ".meta/prefixes.txt"!

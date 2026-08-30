@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GAVNameMapperTest extends NameMapperTestSupport {
@@ -97,6 +98,32 @@ public class GAVNameMapperTest extends NameMapperTestSupport {
         assertEquals(
                 "metadata~groupId~artifactId~something.xml.lock",
                 names.iterator().next().name());
+    }
+
+    @Test
+    void pathTraversalInArtifactCoordinatesIsNeutralized() {
+        // wire-supplied coordinate fields must not be able to select a lock path outside the locks directory
+        DefaultArtifact artifact = new DefaultArtifact("group", "artifact", "jar", "1/../../../../home/user/x");
+        Collection<NamedLockKey> names = mapper.nameLocks(session, singletonList(artifact), null);
+        assertEquals(1, names.size());
+        String name = names.iterator().next().name();
+        assertEquals(
+                "artifact~group~artifact~1-SLASH-..-SLASH-..-SLASH-..-SLASH-..-SLASH-home-SLASH-user-SLASH-x.lock",
+                name);
+        assertFalse(name.contains("/"));
+        assertFalse(name.contains("\\"));
+    }
+
+    @Test
+    void pathTraversalInMetadataCoordinatesIsNeutralized() {
+        DefaultMetadata metadata = new DefaultMetadata(
+                "group", "artifact", "1\\..\\..\\x", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
+        Collection<NamedLockKey> names = mapper.nameLocks(session, null, singletonList(metadata));
+        assertEquals(1, names.size());
+        String name = names.iterator().next().name();
+        assertEquals("metadata~group~artifact~1-BACKSLASH-..-BACKSLASH-..-BACKSLASH-x.lock", name);
+        assertFalse(name.contains("/"));
+        assertFalse(name.contains("\\"));
     }
 
     @Test
