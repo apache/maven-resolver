@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.DefaultLocalPathComposer;
@@ -31,8 +32,11 @@ import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.io.PathProcessorSupport;
+import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -40,6 +44,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsSourceTestSupport {
     @Override
@@ -95,5 +101,45 @@ public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsS
                         "000  org/foo/bar/1.2.3/bar-1.2.3.jar",
                         "222  org/zzzz/art/5.6.7/art-5.6.7.jar"),
                 Files.readAllLines(work.resolve(".checksums/checksums-local.sha1")));
+    }
+
+    @Test
+    void unsafeRepositoryKeyIsRejected(@TempDir final Path work) throws NoLocalRepositoryManagerException {
+        // a RepositoryKeyFunctionFactory implementation is not required to sanitize the key it produces, so the
+        // summary file name composition must validate it itself before splicing it into the file name
+        RepositoryKeyFunctionFactory unsafeKeyFunctionFactory = new RepositoryKeyFunctionFactory() {
+            @Override
+            public RepositoryKeyFunction systemRepositoryKeyFunction(RepositorySystemSession session) {
+                return (repository, context) -> repository.getId();
+            }
+
+            @Override
+            public RepositoryKeyFunction repositoryKeyFunction(
+                    Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
+                return (repository, context) -> repository.getId();
+            }
+        };
+
+        final RepositorySystemLifecycle lifecycle = new DefaultRepositorySystemLifecycle();
+        final FileTrustedChecksumsSourceSupport src = new SummaryFileTrustedChecksumsSource(
+                unsafeKeyFunctionFactory, new DefaultLocalPathComposer(), lifecycle, new PathProcessorSupport());
+        final DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(h -> false);
+        session.setConfigProperty("aether.trustedChecksumsSource.summaryFile", Boolean.TRUE.toString());
+        final LocalRepository repository = new LocalRepository(work.toFile(), "simple");
+        session.setLocalRepositoryManager(new SimpleLocalRepositoryManagerFactory().newInstance(session, repository));
+
+        final TrustedChecksumsSource.Writer writer = src.getTrustedArtifactChecksumsWriter(session);
+        assertNotNull(writer);
+
+        RemoteRepository unsafeRepository =
+                new RemoteRepository.Builder("..", "default", "https://repo.example.org/").build();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> writer.addTrustedArtifactChecksums(
+                        new DefaultArtifact("org.foo", "bar", "jar", "1.2.3"),
+                        unsafeRepository,
+                        singletonList(new Sha1ChecksumAlgorithmFactory()),
+                        singletonMap("SHA-1", "000")));
     }
 }
