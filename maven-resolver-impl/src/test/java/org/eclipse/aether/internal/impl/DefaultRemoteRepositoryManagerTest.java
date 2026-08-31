@@ -26,6 +26,8 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.impl.UpdatePolicyAnalyzer;
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.repository.Authentication;
+import org.eclipse.aether.repository.AuthenticationSelector;
 import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
@@ -200,6 +202,130 @@ public class DefaultRemoteRepositoryManagerTest {
 
         assertEquals(1, result.size());
         assertSame(mirror.getAuthentication(), result.get(0).getAuthentication());
+    }
+
+    @Test
+    void testDescriptorRepositoryAuthentication_NotAppliedByDefault() {
+        final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
+        final Authentication auth =
+                new AuthenticationBuilder().addUsername("test").build();
+        session.setAuthenticationSelector(new AuthenticationSelector() {
+            public Authentication getAuthentication(RemoteRepository repository) {
+                return "a".equals(repository.getId()) ? auth : null;
+            }
+        });
+        session.setMirrorSelector(new MirrorSelector() {
+            public RemoteRepository getMirror(RemoteRepository repository) {
+                return null;
+            }
+        });
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(repo), true, true);
+
+        assertEquals(1, result.size());
+        assertNull(result.get(0).getAuthentication());
+    }
+
+    @Test
+    void testDescriptorRepositoryAuthentication_AppliedWhenEnabled() {
+        final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
+        final Authentication auth =
+                new AuthenticationBuilder().addUsername("test").build();
+        session.setAuthenticationSelector(new AuthenticationSelector() {
+            public Authentication getAuthentication(RemoteRepository repository) {
+                return "a".equals(repository.getId()) ? auth : null;
+            }
+        });
+        session.setMirrorSelector(new MirrorSelector() {
+            public RemoteRepository getMirror(RemoteRepository repository) {
+                return null;
+            }
+        });
+        session.setConfigProperty(DefaultRemoteRepositoryManager.CONFIG_PROP_AUTH_TO_DESCRIPTOR_REPOSITORIES, true);
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(repo), true, true);
+
+        assertEquals(1, result.size());
+        assertSame(auth, result.get(0).getAuthentication());
+    }
+
+    @Test
+    void testDescriptorRepositoryAuthentication_AppliedToSelectedMirror() {
+        final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
+        final RemoteRepository mirror = newRepo("m", "http://", true, "", "").build();
+        final Authentication auth =
+                new AuthenticationBuilder().addUsername("test").build();
+        session.setAuthenticationSelector(new AuthenticationSelector() {
+            public Authentication getAuthentication(RemoteRepository repository) {
+                return "m".equals(repository.getId()) ? auth : null;
+            }
+        });
+        session.setMirrorSelector(new MirrorSelector() {
+            public RemoteRepository getMirror(RemoteRepository repository) {
+                return mirror;
+            }
+        });
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(repo), true, true);
+
+        assertEquals(1, result.size());
+        assertSame(auth, result.get(0).getAuthentication());
+    }
+
+    @Test
+    void testResolutionRepositoryAuthentication_StillApplied() {
+        // the RepositorySystem.newResolutionRepositories path: repositories declared by the build itself
+        // (pom.xml, profiles, settings.xml) aggregate via the provenance-less overload and keep receiving
+        // session credentials matched by ID, per that method's documented contract
+        final RemoteRepository repo = newRepo("a", "http://", true, "", "").build();
+        final Authentication auth =
+                new AuthenticationBuilder().addUsername("test").build();
+        session.setAuthenticationSelector(new AuthenticationSelector() {
+            public Authentication getAuthentication(RemoteRepository repository) {
+                return "a".equals(repository.getId()) ? auth : null;
+            }
+        });
+        session.setMirrorSelector(new MirrorSelector() {
+            public RemoteRepository getMirror(RemoteRepository repository) {
+                return null;
+            }
+        });
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(repo), true);
+
+        assertEquals(1, result.size());
+        assertSame(auth, result.get(0).getAuthentication());
+    }
+
+    @Test
+    void testDescriptorRepositoryAuthentication_DominantRepositoryUnaffected() {
+        final Authentication dominantAuth =
+                new AuthenticationBuilder().addUsername("dominant").build();
+        final RemoteRepository dominant = newRepo("a", "file://", true, "", "")
+                .setAuthentication(dominantAuth)
+                .build();
+        final RemoteRepository recessive = newRepo("b", "http://", true, "", "").build();
+        session.setAuthenticationSelector(new AuthenticationSelector() {
+            public Authentication getAuthentication(RemoteRepository repository) {
+                return null;
+            }
+        });
+        session.setMirrorSelector(new MirrorSelector() {
+            public RemoteRepository getMirror(RemoteRepository repository) {
+                return null;
+            }
+        });
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Arrays.asList(dominant), Arrays.asList(recessive), true, true);
+
+        assertEquals(2, result.size());
+        assertSame(dominantAuth, result.get(0).getAuthentication());
+        assertNull(result.get(1).getAuthentication());
     }
 
     @Test

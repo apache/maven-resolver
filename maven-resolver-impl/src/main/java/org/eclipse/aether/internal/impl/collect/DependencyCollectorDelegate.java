@@ -225,7 +225,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
                 if (!session.isIgnoreArtifactDescriptorRepositories()) {
                     repositories = remoteRepositoryManager.aggregateRepositories(
-                            session, repositories, descriptorResult.getRepositories(), true);
+                            session, repositories, descriptorResult.getRepositories(), true, true);
                 }
                 dependencies = mergeDeps(dependencies, descriptorResult.getDependencies());
                 managedDependencies = mergeDeps(managedDependencies, descriptorResult.getManagedDependencies());
