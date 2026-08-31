@@ -22,8 +22,10 @@ import java.util.function.UnaryOperator;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PathUtilsTest {
     @Test
@@ -46,5 +48,53 @@ public class PathUtilsTest {
         String badFixedId = PathUtils.stringToPathSegment(veryBad);
         assertNotEquals(veryBad, badFixedId);
         assertEquals("-BACKSLASH--SLASH--COLON--QUOTE--LT--GT--PIPE--QMARK--ASTERISK-", badFixedId);
+    }
+
+    @Test
+    void validatePathComponent_rejectsSeparatorsAndColon() {
+        assertThrows(IllegalArgumentException.class, () -> PathUtils.validatePathComponent("..", "version"));
+        assertThrows(IllegalArgumentException.class, () -> PathUtils.validatePathComponent("1.0/../etc", "version"));
+        assertThrows(IllegalArgumentException.class, () -> PathUtils.validatePathComponent("1.0\\..\\etc", "version"));
+        assertThrows(IllegalArgumentException.class, () -> PathUtils.validatePathComponent("C:", "groupId"));
+        assertThrows(IllegalArgumentException.class, () -> PathUtils.validatePathComponent("1.0:1", "version"));
+    }
+
+    @Test
+    void validatePathComponent_acceptsNormalValues() {
+        assertDoesNotThrow(() -> PathUtils.validatePathComponent(null, "version"));
+        assertDoesNotThrow(() -> PathUtils.validatePathComponent("", "version"));
+        assertDoesNotThrow(() -> PathUtils.validatePathComponent("commons-io", "artifactId"));
+        assertDoesNotThrow(() -> PathUtils.validatePathComponent("1.0-SNAPSHOT", "version"));
+        // version "1.." is a valid version string, and is not dot-expanded into path segments
+        assertDoesNotThrow(() -> PathUtils.validatePathComponent("1..", "version"));
+    }
+
+    @Test
+    void validateDotSeparatedPathComponent_rejectsEmptyDotSegments() {
+        // every dot-separated segment must be non-empty
+        assertThrows(
+                IllegalArgumentException.class, () -> PathUtils.validateDotSeparatedPathComponent(".a.b", "groupId"));
+        assertThrows(
+                IllegalArgumentException.class, () -> PathUtils.validateDotSeparatedPathComponent("..a", "groupId"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> PathUtils.validateDotSeparatedPathComponent("com..example", "groupId"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> PathUtils.validateDotSeparatedPathComponent("com.example.", "groupId"));
+        assertThrows(IllegalArgumentException.class, () -> PathUtils.validateDotSeparatedPathComponent(".", "groupId"));
+        // checks of validatePathComponent still apply
+        assertThrows(
+                IllegalArgumentException.class, () -> PathUtils.validateDotSeparatedPathComponent("a:b", "groupId"));
+        assertThrows(
+                IllegalArgumentException.class, () -> PathUtils.validateDotSeparatedPathComponent("a/b", "groupId"));
+    }
+
+    @Test
+    void validateDotSeparatedPathComponent_acceptsNormalValues() {
+        assertDoesNotThrow(() -> PathUtils.validateDotSeparatedPathComponent(null, "groupId"));
+        assertDoesNotThrow(() -> PathUtils.validateDotSeparatedPathComponent("", "groupId"));
+        assertDoesNotThrow(() -> PathUtils.validateDotSeparatedPathComponent("org.apache.maven", "groupId"));
+        assertDoesNotThrow(() -> PathUtils.validateDotSeparatedPathComponent("commons-io", "groupId"));
     }
 }

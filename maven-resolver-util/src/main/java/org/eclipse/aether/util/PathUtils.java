@@ -87,9 +87,31 @@ public final class PathUtils {
         if (value != null && !value.isEmpty()) {
             // Important: "equals .." and not "contains ..", as if escape attempted, it will contain path separators
             // OTOH: version "1.." is valid version string!
-            if (value.equals("..") || value.contains("/") || value.contains("\\")) {
+            // Colon is not a valid character in a coordinate component.
+            if (value.equals("..") || value.contains("/") || value.contains("\\") || value.contains(":")) {
                 throw new IllegalArgumentException(
-                        "Invalid " + label + ": must not contain '..', '/' or '\\': " + value);
+                        "Invalid " + label + ": must not contain '..', '/', '\\' or ':': " + value);
+            }
+        }
+    }
+
+    /**
+     * Validates a coordinate component that is expanded into multiple path segments by replacing each dot with a
+     * path separator, like the group ID is. Beside the checks done by
+     * {@link #validatePathComponent(String, String)}, it rejects values containing empty dot-separated segments
+     * (leading, trailing or consecutive dots), as the expansion of such values does not compose a valid
+     * relative path.
+     *
+     * @since 2.0.23
+     */
+    public static void validateDotSeparatedPathComponent(String value, String label) {
+        validatePathComponent(value, label);
+        if (value != null && !value.isEmpty()) {
+            for (String segment : value.split("\\.", -1)) {
+                if (segment.isEmpty()) {
+                    throw new IllegalArgumentException("Invalid " + label
+                            + ": must not contain empty segments (leading, trailing or consecutive dots): " + value);
+                }
             }
         }
     }
@@ -98,10 +120,11 @@ public final class PathUtils {
      * Validates all coordinate components of an {@link Artifact}.
      *
      * @see #validatePathComponent(String, String)
+     * @see #validateDotSeparatedPathComponent(String, String)
      * @since 2.0.21
      */
     public static void validateArtifactComponents(Artifact artifact) {
-        validatePathComponent(artifact.getGroupId(), "groupId");
+        validateDotSeparatedPathComponent(artifact.getGroupId(), "groupId");
         validatePathComponent(artifact.getArtifactId(), "artifactId");
         validatePathComponent(artifact.getVersion(), "version");
         validatePathComponent(artifact.getBaseVersion(), "baseVersion");
@@ -113,10 +136,11 @@ public final class PathUtils {
      * Validates all coordinate components of a {@link Metadata}.
      *
      * @see #validatePathComponent(String, String)
+     * @see #validateDotSeparatedPathComponent(String, String)
      * @since 2.0.21
      */
     public static void validateMetadataComponents(Metadata metadata) {
-        validatePathComponent(metadata.getGroupId(), "groupId");
+        validateDotSeparatedPathComponent(metadata.getGroupId(), "groupId");
         validatePathComponent(metadata.getArtifactId(), "artifactId");
         validatePathComponent(metadata.getVersion(), "version");
         // note: type may contain string like ".meta/prefixes.txt"!
