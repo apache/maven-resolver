@@ -232,4 +232,30 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
         assertNotNull(prefix);
         assertEquals("cached/my-repo/releases", prefix);
     }
+
+    @Test
+    void dotDotRepositoryIdIsNeutralizedInSplitPrefix() {
+        DefaultRepositorySystemSession session = TestUtils.newSession();
+        session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT, Boolean.TRUE.toString());
+        session.setConfigProperty(
+                DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_REMOTE_REPOSITORY, Boolean.TRUE.toString());
+
+        LocalPathPrefixComposerFactory factory =
+                new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory());
+        LocalPathPrefixComposer composer = factory.createComposer(session);
+        assertNotNull(composer);
+
+        // a repository id of ".." must be neutralized into a harmless path segment rather than spliced
+        // into the prefix as-is
+        RemoteRepository dotDotRepository =
+                new RemoteRepository.Builder("..", "default", "https://repo.example.org/").build();
+
+        String prefix = composer.getPathPrefixForRemoteArtifact(releaseArtifact, dotDotRepository);
+        assertNotNull(prefix);
+        assertEquals("cached/-DOTDOT-", prefix);
+
+        prefix = composer.getPathPrefixForRemoteMetadata(releaseMetadata, dotDotRepository);
+        assertNotNull(prefix);
+        assertEquals("cached/-DOTDOT-", prefix);
+    }
 }

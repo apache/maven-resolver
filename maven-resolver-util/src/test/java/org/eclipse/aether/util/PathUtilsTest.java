@@ -43,6 +43,18 @@ public class PathUtilsTest {
     }
 
     @Test
+    void stringToPathSegment_dotSegments() {
+        // "." and ".." contain no illegal character, but carry path meaning when used as a path segment
+        assertEquals("-DOTDOT-", PathUtils.stringToPathSegment(".."));
+        assertEquals("-DOT-", PathUtils.stringToPathSegment("."));
+        // dotted names and longer dot runs are inert as single path segments and stay untouched
+        assertEquals("...", PathUtils.stringToPathSegment("..."));
+        assertEquals("my.repo", PathUtils.stringToPathSegment("my.repo"));
+        assertEquals("repo..id", PathUtils.stringToPathSegment("repo..id"));
+        assertEquals("..id", PathUtils.stringToPathSegment("..id"));
+    }
+
+    @Test
     void stringToPathSegment_allCharsBad() {
         String veryBad = "\\/:\"<>|?*";
         String badFixedId = PathUtils.stringToPathSegment(veryBad);

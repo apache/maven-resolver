@@ -73,7 +73,16 @@ public final class PathUtils {
                 pos = result.indexOf(illegal);
             }
         }
-        return result.toString();
+        // Strings consisting solely of dots contain no illegal character, yet "." and ".." carry path
+        // meaning when used as a path segment. Map them to explicit tokens, mirroring the character
+        // replacements above.
+        String segment = result.toString();
+        if (segment.equals(".")) {
+            return "-DOT-";
+        } else if (segment.equals("..")) {
+            return "-DOTDOT-";
+        }
+        return segment;
     }
 
     /**

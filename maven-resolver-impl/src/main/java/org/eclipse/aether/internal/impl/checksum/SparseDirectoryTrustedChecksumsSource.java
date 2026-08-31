@@ -39,6 +39,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,6 +179,9 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
         String path = localPathComposer.getPathForArtifact(artifact, false) + "."
                 + checksumAlgorithmFactory.getFileExtension();
         if (originAware) {
+            // defense in depth: the repository key is spliced into a path under the checksums basedir,
+            // so it must be a safe path segment
+            PathUtils.validatePathComponent(safeRepositoryId, "repository key");
             path = safeRepositoryId + "/" + path;
         }
         return path;
