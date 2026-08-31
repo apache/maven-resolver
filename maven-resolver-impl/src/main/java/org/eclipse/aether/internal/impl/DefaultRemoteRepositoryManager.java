@@ -25,6 +25,8 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -173,7 +175,8 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                         builder = new RemoteRepository.Builder(repository);
                         builder.setAuthentication(auth);
                     } else if (auth != repository.getAuthentication()) {
-                        LOGGER.warn(
+                        logWarnOnce(
+                                session,
                                 "Not applying session authentication to repository {} ({}) declared by a remote"
                                         + " artifact descriptor; set {}=true to restore the legacy behavior of"
                                         + " matching credentials to such repositories by repository ID",
@@ -244,12 +247,13 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
     public static final boolean DEFAULT_RAW_CHECKSUM_POLICY_DOWNGRADE = false;
 
     private static RepositoryPolicy clampChecksumPolicy(
-            RepositoryPolicy merged, RepositoryPolicy floor, RemoteRepository rec) {
+            RepositorySystemSession session, RepositoryPolicy merged, RepositoryPolicy floor, RemoteRepository rec) {
         if (merged == null || floor == null) {
             return merged;
         }
         if (checksumPolicyRank(merged.getChecksumPolicy()) < checksumPolicyRank(floor.getChecksumPolicy())) {
-            LOGGER.warn(
+            logWarnOnce(
+                    session,
                     "Ignoring checksum policy '{}' contributed by repository {} ({}) declared by a remote artifact"
                             + " descriptor: it would downgrade the checksum policy '{}' of the mirror serving it;"
                             + " set {}=true to restore the legacy weakest-wins merge",
@@ -318,8 +322,8 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             if (recessiveIsRaw && !rawChecksumPolicyDowngrade) {
                 // "recessive" originates from a remote artifact descriptor (POM): remotely supplied input must
                 // never weaken the checksum policy the operator configured on the mirror itself
-                releases = clampChecksumPolicy(releases, dominant.getPolicy(false), rec);
-                snapshots = clampChecksumPolicy(snapshots, dominant.getPolicy(true), rec);
+                releases = clampChecksumPolicy(session, releases, dominant.getPolicy(false), rec);
+                snapshots = clampChecksumPolicy(session, snapshots, dominant.getPolicy(true), rec);
             }
 
             merged.addMirroredRepository(rec);
@@ -489,5 +493,20 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                 // ChecksumPolicy instance is created for them
                 return -1;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void logWarnOnce(RepositorySystemSession session, String message, Object... args) {
+        Object[] keys = new Object[args.length + 1];
+        keys[0] = message;
+        System.arraycopy(args, 0, keys, 1, args.length);
+        Object key = Keys.of(keys);
+        ((Map<Object, Boolean>) session.getData()
+                        .computeIfAbsent(
+                                Keys.of(DefaultRemoteRepositoryManager.class, "logWarnOnce"), ConcurrentHashMap::new))
+                .computeIfAbsent(key, k -> {
+                    LOGGER.warn(message, args);
+                    return true;
+                });
     }
 }
