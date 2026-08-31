@@ -76,20 +76,44 @@ public final class MinioTransporterFactory implements TransporterFactory {
         // this check is here only to support "minio+http" and "s3+http" protocols by default. But also when
         // raised priorities by user, allow to "overtake" plain HTTP repositories, if needed.
         RemoteRepository adjusted = repository;
+        boolean prefixStripped = false;
         if ("minio+http".equalsIgnoreCase(repository.getProtocol())
                 || "minio+https".equalsIgnoreCase(repository.getProtocol())) {
             adjusted = new RemoteRepository.Builder(repository)
                     .setUrl(repository.getUrl().substring("minio+".length()))
                     .build();
+            prefixStripped = true;
         } else if ("s3+http".equalsIgnoreCase(repository.getProtocol())
                 || "s3+https".equalsIgnoreCase(repository.getProtocol())) {
             adjusted = new RemoteRepository.Builder(repository)
                     .setUrl(repository.getUrl().substring("s3+".length()))
                     .build();
+            prefixStripped = true;
         } else if (priority == DEFAULT_PRIORITY) {
             throw new NoTransporterException(
                     repository,
                     "To use Minio transport with plain HTTP/HTTPS repositories, increase the Minio transport priority");
+        }
+        // Plaintext endpoints from "minio+http"/"s3+http" URLs are not matched by "external:http:*" mirror
+        // blocking (the repository protocol string is not "http") and offer no transport integrity: artifacts
+        // and their checksum objects travel over the same tamperable channel. Refuse them unless the operator
+        // explicitly opted in.
+        if (prefixStripped && "http".equalsIgnoreCase(adjusted.getProtocol())) {
+            boolean allowInsecureProtocol = ConfigUtils.getBoolean(
+                    session,
+                    MinioTransporterConfigurationKeys.DEFAULT_ALLOW_INSECURE_PROTOCOL,
+                    MinioTransporterConfigurationKeys.CONFIG_PROP_ALLOW_INSECURE_PROTOCOL + "." + repository.getId(),
+                    MinioTransporterConfigurationKeys.CONFIG_PROP_ALLOW_INSECURE_PROTOCOL);
+            if (!allowInsecureProtocol) {
+                throw new NoTransporterException(
+                        repository,
+                        "Plaintext HTTP object storage endpoints are insecure (no transport integrity; not subject"
+                                + " to 'external:http:*' mirror blocking) and are refused by default: use the"
+                                + " 'minio+https'/'s3+https' URL form, or explicitly opt in by setting the"
+                                + " configuration property '"
+                                + MinioTransporterConfigurationKeys.CONFIG_PROP_ALLOW_INSECURE_PROTOCOL
+                                + "' (optionally suffixed with '." + repository.getId() + "') to 'true'");
+            }
         }
         String objectNameMapperConf = ConfigUtils.getString(
                 session,

@@ -20,9 +20,11 @@
 /**
  * Support for downloads/uploads via the S3 protocol. The implementation is backed by
  * <a href="https://github.com/minio/minio-java">MinIO Java</a>.
- * The repository URL should be defined with protocol {@code minio+http} or {@code s3+http}. Note: use "https" if
- * you are going for HTTPS remote, factory will merely strip "minio+" or "s3+" prefix assuming resulting URL will
- * point to expected S3 endpoint.
+ * The repository URL should be defined with protocol {@code minio+https} or {@code s3+https}; the factory will
+ * merely strip the "minio+" or "s3+" prefix assuming the resulting URL will point to the expected S3 endpoint.
+ * The plaintext {@code minio+http}/{@code s3+http} forms are refused by default: they offer no transport integrity
+ * and are not matched by {@code external:http:*} mirror blocking. To use a plaintext endpoint anyway, explicitly
+ * set the configuration property {@code aether.transport.minio.allowInsecureProtocol} to {@code true}.
  *
  * @since 2.0.2
  */

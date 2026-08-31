@@ -38,11 +38,25 @@ public class HazelcastClientCPSemaphoreNamedLockFactory extends HazelcastSemapho
     public static final String NAME = "semaphore-hazelcast-client";
 
     /**
-     * The default constructor: creates own instance of Hazelcast using standard Hazelcast configuration discovery.
+     * The default constructor: creates own instance of Hazelcast client using standard Hazelcast configuration
+     * discovery, but refuses to run on Hazelcast built-in defaults: an explicit operator-provided configuration
+     * (the {@code hazelcast.client.config} system property, or a {@code hazelcast-client.xml}/{@code
+     * hazelcast-client.yaml}/{@code hazelcast-client.yml} file on the classpath or in the working directory) is
+     * required, as the built-in defaults connect to an unauthenticated default-named cluster.
      */
     @Inject
     public HazelcastClientCPSemaphoreNamedLockFactory() {
-        this(HazelcastClient.newHazelcastClient(), true);
+        this(createConfiguredHazelcastClient(), true);
+    }
+
+    private static HazelcastInstance createConfiguredHazelcastClient() {
+        requireExplicitHazelcastConfig(
+                "hazelcast.client.config",
+                HazelcastClientCPSemaphoreNamedLockFactory.class.getClassLoader(),
+                "hazelcast-client.xml",
+                "hazelcast-client.yaml",
+                "hazelcast-client.yml");
+        return HazelcastClient.newHazelcastClient();
     }
 
     /**
