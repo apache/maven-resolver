@@ -23,6 +23,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.PathUtils;
 
 /**
  * Support class for {@link LocalPathPrefixComposerFactory} implementations: it predefines and makes re-usable
@@ -175,13 +176,13 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             }
             String result = remotePrefix;
             if (!splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + repository.getId();
+                result += "/" + repositoryIdSegment(repository);
             }
             if (splitRemote) {
                 result += "/" + (artifact.isSnapshot() ? snapshotsPrefix : releasesPrefix);
             }
             if (splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + repository.getId();
+                result += "/" + repositoryIdSegment(repository);
             }
             return result;
         }
@@ -205,19 +206,29 @@ public abstract class LocalPathPrefixComposerFactorySupport implements LocalPath
             }
             String result = remotePrefix;
             if (!splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + repository.getId();
+                result += "/" + repositoryIdSegment(repository);
             }
             if (splitRemote) {
                 result += "/" + (isSnapshot(metadata) ? snapshotsPrefix : releasesPrefix);
             }
             if (splitRemoteRepositoryLast && splitRemoteRepository) {
-                result += "/" + repository.getId();
+                result += "/" + repositoryIdSegment(repository);
             }
             return result;
         }
 
         protected boolean isSnapshot(Metadata metadata) {
             return !metadata.getVersion().isEmpty() && metadata.getVersion().endsWith("-SNAPSHOT");
+        }
+
+        /**
+         * Defense in depth: the repository id is spliced into the local repository path prefix, so it
+         * must be a safe path segment.
+         */
+        private String repositoryIdSegment(RemoteRepository repository) {
+            String id = PathUtils.stringToPathSegment(repository.getId());
+            PathUtils.validatePathComponent(id, "repository id");
+            return id;
         }
     }
 }
