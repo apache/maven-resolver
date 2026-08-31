@@ -25,7 +25,7 @@ package org.eclipse.aether.internal.impl;
  * embedded in, for example, a transitive POM's coordinates could otherwise erase or forge log lines - including
  * the sole integrity WARNING emitted under the default "warn" checksum policy.
  *
- * @since 2.0.22
+ * @since 2.0.23
  */
 final class LogSanitizer {
     private LogSanitizer() {}

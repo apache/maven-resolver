@@ -341,7 +341,7 @@ public final class HttpTransporterUtils {
      * @param lastModifiedMillis the last modified timestamp in milliseconds since the epoch, as supplied by the
      *                           remote server
      * @return the supplied value, clamped to the local wall clock
-     * @since 2.0.22
+     * @since 2.0.23
      */
     public static long clampRemoteLastModified(long lastModifiedMillis) {
         return Math.min(lastModifiedMillis, System.currentTimeMillis());
