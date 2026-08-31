@@ -497,6 +497,9 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
 
     @SuppressWarnings("unchecked")
     private static void logWarnOnce(RepositorySystemSession session, String message, Object... args) {
+        if (!LOGGER.isWarnEnabled()) {
+            return;
+        }
         Object[] keys = new Object[args.length + 1];
         keys[0] = message;
         System.arraycopy(args, 0, keys, 1, args.length);
