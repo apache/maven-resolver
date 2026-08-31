@@ -73,7 +73,7 @@ final class FileTransporter extends AbstractTransporter {
         this.fileSystem = requireNonNull(fileSystem);
         this.closeFileSystem = closeFileSystem;
         this.writableFileSystem = writableFileSystem;
-        this.basePath = requireNonNull(basePath);
+        this.basePath = requireNonNull(basePath).normalize();
         this.writeOp = requireNonNull(writeOp);
 
         // sanity check
@@ -176,7 +176,7 @@ final class FileTransporter extends AbstractTransporter {
             }
         }
         Path file = basePath.resolve(relative).normalize();
-        if (!file.startsWith(basePath.normalize())) {
+        if (!file.startsWith(basePath)) {
             throw new IllegalArgumentException("illegal resource path: " + path);
         }
         if (required && !Files.isRegularFile(file)) {

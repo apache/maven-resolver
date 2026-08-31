@@ -114,7 +114,7 @@ public final class PathUtils {
      * (".home.ci" becomes "/home/ci", escaping the local repository), protocol-relative authority URIs
      * ("..evilhost" becomes "//evilhost", redirecting remote fetches to another host) or empty path segments.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     public static void validateDotSeparatedPathComponent(String value, String label) {
         validatePathComponent(value, label);

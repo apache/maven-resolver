@@ -74,7 +74,7 @@ public class BasedirNameMapper implements NameMapper {
             throw new IllegalArgumentException("delegate must be file-system friendly");
         }
         this.delegate = delegate;
-        this.basePath = path;
+        this.basePath = path != null ? path.toAbsolutePath().normalize() : null;
     }
 
     @Override
@@ -90,7 +90,9 @@ public class BasedirNameMapper implements NameMapper {
         try {
             final Path basedir = basePath != null
                     ? basePath
-                    : DirectoryUtils.resolveDirectory(session, DEFAULT_LOCKS_DIR, CONFIG_PROP_LOCKS_DIR, false);
+                    : DirectoryUtils.resolveDirectory(session, DEFAULT_LOCKS_DIR, CONFIG_PROP_LOCKS_DIR, false)
+                            .toAbsolutePath()
+                            .normalize();
 
             return delegate.nameLocks(session, artifacts, metadatas).stream()
                     .map(k -> NamedLockKey.of(resolveContained(basedir, k.name()), k.resources()))
@@ -106,11 +108,11 @@ public class BasedirNameMapper implements NameMapper {
      * containing path traversal must never select a lock file outside the locks directory, as locks are created
      * (and deleted on close) by the file lock factory at the resolved path.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     private static String resolveContained(Path basedir, String name) {
-        Path resolved = basedir.resolve(name).toAbsolutePath();
-        if (!resolved.normalize().startsWith(basedir.toAbsolutePath().normalize())) {
+        Path resolved = basedir.resolve(name).normalize();
+        if (!resolved.startsWith(basedir)) {
             throw new IllegalArgumentException("Lock name '" + name + "' escapes the locks base directory " + basedir);
         }
         return resolved.toUri().toASCIIString();

@@ -113,7 +113,7 @@ public class GAVNameMapper implements NameMapper {
      * selects a lock path outside the locks directory, letting a malicious repository create or delete files
      * (including other builds' live locks) at attacker-chosen paths.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     protected String fieldToSegment(String field) {
         return fileSystemFriendly ? PathUtils.stringToPathSegment(field) : field;
