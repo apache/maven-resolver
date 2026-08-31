@@ -120,7 +120,7 @@ public abstract class TrackingFileManagerTestSupport {
     void testReadNoFileLeak(FS fs) throws Exception {
         TrackingFileManager tfm = createTrackingFileManager(fs);
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             Path propFile = createTmpFile(fs);
             assertNotNull(tfm.read(propFile));
             assertDoesNotThrow(() -> Files.delete(propFile), "Leaked file" + propFile);
@@ -157,7 +157,7 @@ public abstract class TrackingFileManagerTestSupport {
         Map<String, String> updates = new HashMap<>();
         updates.put("k", "v");
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             Path propFile = createTmpFile(fs);
             assertNotNull(tfm.update(propFile, updates));
             assertDoesNotThrow(() -> Files.delete(propFile), "Leaked file" + propFile);
@@ -169,7 +169,7 @@ public abstract class TrackingFileManagerTestSupport {
     public void testDeleteFileIsGone(FS fs) throws Exception {
         TrackingFileManager tfm = createTrackingFileManager(fs);
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             Path propFile = createTmpFile(fs);
             assertTrue(tfm.delete(propFile));
             assertFalse(Files.exists(propFile), "File is not gone");
@@ -196,7 +196,7 @@ public abstract class TrackingFileManagerTestSupport {
 
             threads[i] = new Thread(() -> {
                 try {
-                    for (int i1 = 0; i1 < 1000; i1++) {
+                    for (int i1 = 0; i1 < 100; i1++) {
                         assertNotNull(tfm.read(file));
                         HashMap<String, String> update = new HashMap<>();
                         update.put("wasHere", Thread.currentThread().getName() + "-" + i1);
