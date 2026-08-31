@@ -64,7 +64,7 @@ public final class MinioTransporterConfigurationKeys {
      * such URLs are not matched by {@code external:http:*} mirror blocking. They are therefore refused unless this
      * property is explicitly set to {@code true}.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link Boolean}
      * @configurationDefaultValue {@link #DEFAULT_ALLOW_INSECURE_PROTOCOL}

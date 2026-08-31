@@ -69,7 +69,7 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
      * {@code rediss://} (TLS) address, or a Redisson configuration file with authentication, for anything
      * cross-host.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      * @configurationSource {@link System#getProperty(String, String)}
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue false
