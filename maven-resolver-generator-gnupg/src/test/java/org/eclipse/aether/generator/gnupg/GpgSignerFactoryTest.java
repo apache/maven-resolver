@@ -155,6 +155,32 @@ public class GpgSignerFactoryTest {
     }
 
     @Test
+    void signRemainingArtifactsWhenSomeSignaturesArePresent() throws Exception {
+        Path keyFile =
+                Paths.get("src/test/resources/gpg-signing/gpg-secret.key").toAbsolutePath();
+        String keyPass = "TheBigSecret";
+        GnupgSignatureArtifactGeneratorFactory factory = createFactory();
+        try (ArtifactGenerator signer =
+                factory.newInstance(createSession(keyFile, keyPass, false), new DeployRequest())) {
+            assertNotNull(signer);
+            Path artifactPath = Paths.get("src/test/resources/gpg-signing/artifact.txt");
+
+            // the jar already carries its signature; the pom does not: the pre-existing signature must skip
+            // only the jar, not disable signing of the whole artifact set (which would silently publish a
+            // partially unsigned release)
+            Collection<? extends Artifact> signatures = signer.generate(Arrays.asList(
+                    new DefaultArtifact("org.apache.maven.resolver:test:jar:1.0").setPath(artifactPath),
+                    new DefaultArtifact("org.apache.maven.resolver:test:jar.asc:1.0").setPath(artifactPath),
+                    new DefaultArtifact("org.apache.maven.resolver:test:pom:1.0").setPath(artifactPath)));
+
+            assertEquals(1, signatures.size());
+            Artifact signature = signatures.iterator().next();
+            assertEquals("pom.asc", signature.getExtension());
+            assertEquals("", signature.getClassifier());
+        }
+    }
+
+    @Test
     void signNonInteractive() throws Exception {
         Path keyFile =
                 Paths.get("src/test/resources/gpg-signing/gpg-secret.key").toAbsolutePath();

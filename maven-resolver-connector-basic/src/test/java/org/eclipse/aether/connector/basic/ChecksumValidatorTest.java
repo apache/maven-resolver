@@ -255,6 +255,54 @@ public class ChecksumValidatorTest {
     }
 
     @Test
+    void testValidate_ProvidedAllComparableAlgorithmsMustMatch() {
+        // the weaker algorithm matches, the stronger one does not: the artifact must be rejected regardless
+        // of map iteration order (previously the first matching algorithm accepted the artifact and skipped
+        // the remaining, stronger checksums)
+        Map<String, String> provided = new LinkedHashMap<>();
+        provided.put(MD5, "bar");
+        provided.put(SHA1, "foo");
+        ChecksumValidator validator = newValidator(provided, SHA1, MD5);
+        try {
+            validator.validate(checksums(SHA1, "not-foo", MD5, "bar"), null);
+            fail("expected exception");
+        } catch (ChecksumFailureException e) {
+            assertEquals("foo", e.getExpected());
+            assertEquals(ChecksumKind.PROVIDED.name(), e.getExpectedKind());
+            assertEquals("not-foo", e.getActual());
+            assertTrue(e.isRetryWorthy());
+        }
+        fetcher.assertFetchedFiles();
+        policy.assertCallbacks("match(MD5, PROVIDED)", "mismatch(SHA-1, PROVIDED)");
+    }
+
+    @Test
+    void testValidate_ProvidedAllMatchingAccepts() throws Exception {
+        Map<String, String> provided = new LinkedHashMap<>();
+        provided.put(SHA1, "foo");
+        provided.put(MD5, "bar");
+        ChecksumValidator validator = newValidator(provided, SHA1, MD5);
+        validator.validate(checksums(SHA1, "foo", MD5, "bar"), null);
+        fetcher.assertFetchedFiles();
+        policy.assertCallbacks("match(SHA-1, PROVIDED)", "match(MD5, PROVIDED)");
+    }
+
+    @Test
+    void testValidate_IncludedWeakMatchDoesNotMaskStrongMismatch() {
+        ChecksumValidator validator = newValidator(SHA1, MD5);
+        try {
+            validator.validate(checksums(SHA1, "not-foo", MD5, "bar"), checksums(MD5, "bar", SHA1, "foo"));
+            fail("expected exception");
+        } catch (ChecksumFailureException e) {
+            assertEquals("foo", e.getExpected());
+            assertEquals(ChecksumKind.REMOTE_INCLUDED.name(), e.getExpectedKind());
+            assertEquals("not-foo", e.getActual());
+        }
+        fetcher.assertFetchedFiles();
+        policy.assertCallbacks("match(MD5, REMOTE_INCLUDED)", "mismatch(SHA-1, REMOTE_INCLUDED)");
+    }
+
+    @Test
     void testValidate_AcceptOnEnd() throws Exception {
         policy.inspectAll = true;
         ChecksumValidator validator = newValidator(SHA1, MD5);

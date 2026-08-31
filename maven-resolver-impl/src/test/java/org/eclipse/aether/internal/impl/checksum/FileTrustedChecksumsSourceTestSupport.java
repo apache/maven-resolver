@@ -28,6 +28,8 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.metadata.DefaultMetadata;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +44,14 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
     private static final Artifact ARTIFACT_WITH_CHECKSUM = new DefaultArtifact("test:test:2.0");
 
     private static final String ARTIFACT_TRUSTED_CHECKSUM = "trustedChecksum";
+
+    private static final Metadata METADATA_WITHOUT_CHECKSUM =
+            new DefaultMetadata("test", "test", "1.0", "maven-metadata.xml", Metadata.Nature.RELEASE);
+
+    private static final Metadata METADATA_WITH_CHECKSUM =
+            new DefaultMetadata("test", "test", "2.0", "maven-metadata.xml", Metadata.Nature.RELEASE);
+
+    private static final String METADATA_TRUSTED_CHECKSUM = "trustedMetadataChecksum";
 
     private DefaultRepositorySystemSession session;
 
@@ -73,6 +83,13 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
                     prepareSession.getLocalRepository(),
                     Collections.singletonList(checksumAlgorithmFactory),
                     checksums);
+            HashMap<String, String> metadataChecksums = new HashMap<>();
+            metadataChecksums.put(checksumAlgorithmFactory.getName(), METADATA_TRUSTED_CHECKSUM);
+            writer.addTrustedMetadataChecksums(
+                    METADATA_WITH_CHECKSUM,
+                    prepareSession.getLocalRepository(),
+                    Collections.singletonList(checksumAlgorithmFactory),
+                    metadataChecksums);
             checksumWritten = true;
         }
     }
@@ -115,5 +132,41 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
         assertFalse(providedChecksums.isEmpty());
         assertEquals(1, providedChecksums.size());
         assertEquals(ARTIFACT_TRUSTED_CHECKSUM, providedChecksums.get(checksumAlgorithmFactory.getName()));
+    }
+
+    @Test
+    void metadataNotEnabled() {
+        assertNull(subject.getTrustedMetadataChecksums(
+                session,
+                METADATA_WITH_CHECKSUM,
+                session.getLocalRepository(),
+                Collections.singletonList(checksumAlgorithmFactory)));
+    }
+
+    @Test
+    void noProvidedMetadataChecksum() {
+        enableSource(session);
+        Map<String, String> providedChecksums = subject.getTrustedMetadataChecksums(
+                session,
+                METADATA_WITHOUT_CHECKSUM,
+                session.getLocalRepository(),
+                Collections.singletonList(checksumAlgorithmFactory));
+        assertNotNull(providedChecksums);
+        assertTrue(providedChecksums.isEmpty());
+    }
+
+    @Test
+    void haveProvidedMetadataChecksum() {
+        assumeTrue(checksumWritten);
+        enableSource(session);
+        Map<String, String> providedChecksums = subject.getTrustedMetadataChecksums(
+                session,
+                METADATA_WITH_CHECKSUM,
+                session.getLocalRepository(),
+                Collections.singletonList(checksumAlgorithmFactory));
+        assertNotNull(providedChecksums);
+        assertFalse(providedChecksums.isEmpty());
+        assertEquals(1, providedChecksums.size());
+        assertEquals(METADATA_TRUSTED_CHECKSUM, providedChecksums.get(checksumAlgorithmFactory.getName()));
     }
 }
