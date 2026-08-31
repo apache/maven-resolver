@@ -66,7 +66,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION}
-     * @since 2.0.22
+     * @since 2.0.23
      */
     public static final String CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION =
             CONFIG_PROPS_PREFIX + "trackingRepositoryKeyFunction";
@@ -98,7 +98,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_VERIFY_REAL_PATH}
-     * @since 2.0.22
+     * @since 2.0.23
      */
     public static final String CONFIG_PROP_VERIFY_REAL_PATH = CONFIG_PROPS_PREFIX + "verifyRealPath";
 
