@@ -182,7 +182,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
      * instead. Enabling this restores the legacy weakest-wins merge, which let any POM in the dependency graph
      * degrade or switch off checksum verification for downloads routed through the mirror.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_RAW_CHECKSUM_POLICY_DOWNGRADE}
@@ -289,7 +289,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
      * operator configured for releases (or vice versa). An explicit checksum policy set on the session (e.g. via
      * {@code --strict-checksums}) takes precedence over either behavior, as before.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_NATURE_MERGE_WEAKEST_CHECKSUM_POLICY}

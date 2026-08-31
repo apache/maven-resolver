@@ -244,7 +244,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
      * favoring availability over filtering. User-provided prefix files are authoritative and are never dropped,
      * regardless of this setting.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
      * @configurationRepoIdSuffix Yes
