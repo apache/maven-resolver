@@ -476,11 +476,48 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         String transferKey = getTransferKey(session, check.getRepository());
 
         setUpdated(session, updateKey);
-        Properties props = write(touchPath, dataKey, transferKey, check.getException());
+        Map<String, String> staleSiblingNotFounds = check.getException() == null
+                ? getStaleSiblingNotFounds(read(touchPath), dataKey, check.getItem(), check.getRepository())
+                : Collections.emptyMap();
+        Properties props = write(touchPath, dataKey, transferKey, check.getException(), staleSiblingNotFounds);
 
         if (Files.exists(artifactPath) && !hasErrors(props)) {
             trackingFileManager.delete(touchPath);
         }
+    }
+
+    /**
+     * Collects, for removal, cached not-found markers left by other repositories for an artifact that has just
+     * been successfully downloaded. A cached not-found silently suppresses any remote contact with the repository
+     * that issued it, so a single spoofed or transient "not found" answer would otherwise durably reroute
+     * resolution of the artifact to whatever lower-prioritized repository serves it. Expiring the marker forces a
+     * confirming re-check of the suppressed repository (subject to the update policy) the next time it is
+     * consulted, and the reroute is surfaced at WARN level instead of happening silently.
+     */
+    private Map<String, String> getStaleSiblingNotFounds(
+            Properties props, String dataKey, Artifact artifact, RemoteRepository repository) {
+        Map<String, String> removals = null;
+        for (Object k : props.keySet()) {
+            String key = k.toString();
+            if (key.endsWith(ERROR_KEY_SUFFIX)) {
+                String otherDataKey = key.substring(0, key.length() - ERROR_KEY_SUFFIX.length());
+                if (!otherDataKey.equals(dataKey) && NOT_FOUND.equals(props.getProperty(key))) {
+                    LOGGER.warn(
+                            "{} was downloaded from {} while a cached not-found from a previous attempt suppresses"
+                                    + " re-checking {}; expiring the cached not-found so that repository is checked"
+                                    + " again on the next resolution",
+                            artifact,
+                            repository.getUrl(),
+                            otherDataKey);
+                    if (removals == null) {
+                        removals = new HashMap<>();
+                    }
+                    removals.put(key, null);
+                    removals.put(otherDataKey + UPDATED_KEY_SUFFIX, null);
+                }
+            }
+        }
+        return removals != null ? removals : Collections.emptyMap();
     }
 
     private boolean hasErrors(Properties props) {
@@ -504,11 +541,12 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         String transferKey = getTransferKey(session, metadataPath, check.getRepository());
 
         setUpdated(session, updateKey);
-        write(touchPath, dataKey, transferKey, check.getException());
+        write(touchPath, dataKey, transferKey, check.getException(), Collections.emptyMap());
     }
 
-    private Properties write(Path touchPath, String dataKey, String transferKey, Exception error) {
-        Map<String, String> updates = new HashMap<>();
+    private Properties write(
+            Path touchPath, String dataKey, String transferKey, Exception error, Map<String, String> extraUpdates) {
+        Map<String, String> updates = new HashMap<>(extraUpdates);
 
         String timestamp = Long.toString(System.currentTimeMillis());
 
