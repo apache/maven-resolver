@@ -61,7 +61,7 @@ public enum SocketFamily {
      * in the system temporary directory, which is commonly shared between users. On filesystems without POSIX
      * permissions (e.g. Windows) this is a no-op.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     private static void restrictToOwner(ServerSocketChannel channel) throws IOException {
         SocketAddress address = channel.getLocalAddress();

@@ -138,7 +138,7 @@ public class IpcServer {
      * shared exclusively with the client that spawned this server. The rest of the protocol is unauthenticated,
      * but destructive cross-client operations (closing foreign contexts, stopping the daemon) are refused.
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     public IpcServer(SocketFamily family, String bootstrapToken) throws IOException {
         this.bootstrapToken = bootstrapToken;
