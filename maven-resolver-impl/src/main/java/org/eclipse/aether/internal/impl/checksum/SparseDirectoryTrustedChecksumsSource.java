@@ -36,6 +36,7 @@ import org.eclipse.aether.internal.impl.LocalPathComposer;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.FileProcessor;
+import org.eclipse.aether.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +129,11 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
         String path = localPathComposer.getPathForArtifact(artifact, false) + "."
                 + checksumAlgorithmFactory.getFileExtension();
         if (originAware) {
-            path = artifactRepository.getId() + "/" + path;
+            String safeRepositoryId = PathUtils.stringToPathSegment(artifactRepository.getId());
+            // defense in depth: the repository id is spliced into a path under the checksums basedir,
+            // so it must be a safe path segment
+            PathUtils.validatePathComponent(safeRepositoryId, "repository id");
+            path = safeRepositoryId + "/" + path;
         }
         return path;
     }
