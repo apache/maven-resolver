@@ -310,7 +310,7 @@
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>
-        <version>${version.bouncycastle}</version>
+        <version>${version.bouncycastle}.2</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
