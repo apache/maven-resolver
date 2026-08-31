@@ -247,6 +247,15 @@ public final class ConfigurationProperties {
      * specify headers for a specific remote repository by appending the suffix {@code .&lt;repoId&gt;} to this key when
      * storing the headers map. The repository-specific headers map is supposed to be complete, i.e. is not merged with
      * the general headers map.
+     * <p>
+     * <strong>Security note:</strong> configured headers are attached to every request the transport sends for the
+     * repository and, depending on the transport implementation, may be re-sent when the repository responds with
+     * a redirect - including redirects that leave the repository origin. Avoid placing credentials (for example
+     * {@code Authorization}, cookies or private token headers) in this map where repository authentication can be
+     * used instead: repository authentication is negotiated per host. All shipped HTTP transports scope configured
+     * headers to the repository origin by default, see the per-transport {@code originScopedHeaders} configuration
+     * keys ({@code aether.transport.apache.originScopedHeaders}, {@code aether.transport.jdk.originScopedHeaders},
+     * {@code aether.transport.jetty.originScopedHeaders}).
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.util.Map}

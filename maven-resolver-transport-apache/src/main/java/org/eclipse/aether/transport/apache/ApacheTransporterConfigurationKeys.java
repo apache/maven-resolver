@@ -110,6 +110,24 @@ public final class ApacheTransporterConfigurationKeys {
     public static final boolean DEFAULT_FOLLOW_REDIRECTS = true;
 
     /**
+     * If enabled (default), operator-configured request headers ({@code aether.transport.http.headers}) are only
+     * sent on requests targeting the repository origin (the scheme, host and port the repository URL denotes).
+     * Apache HttpClient re-sends the original request headers on redirects, so without origin scoping a
+     * cross-origin redirect replays the configured headers - which frequently carry credentials such as
+     * {@code Authorization}, cookies or private token headers - to the redirect target host. Disable only when a
+     * redirect target legitimately requires the configured headers.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_ORIGIN_SCOPED_HEADERS}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.23
+     */
+    public static final String CONFIG_PROP_ORIGIN_SCOPED_HEADERS = CONFIG_PROPS_PREFIX + "originScopedHeaders";
+
+    public static final boolean DEFAULT_ORIGIN_SCOPED_HEADERS = true;
+
+    /**
      * The max redirect count to follow.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -121,4 +139,19 @@ public final class ApacheTransporterConfigurationKeys {
     public static final String CONFIG_PROP_MAX_REDIRECTS = CONFIG_PROPS_PREFIX + "maxRedirects";
 
     public static final int DEFAULT_MAX_REDIRECTS = 5;
+
+    /**
+     * If enabled, Apache HttpClient will follow redirects that downgrade the protocol from https to http. Disabled
+     * by default: such a downgrade strips transport encryption from artifact and checksum bytes and makes repository
+     * credentials eligible for transmission over plaintext, so a downgrading redirect fails the transfer instead.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_FOLLOW_INSECURE_REDIRECTS}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.23
+     */
+    public static final String CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS = CONFIG_PROPS_PREFIX + "followInsecureRedirects";
+
+    public static final boolean DEFAULT_FOLLOW_INSECURE_REDIRECTS = false;
 }
