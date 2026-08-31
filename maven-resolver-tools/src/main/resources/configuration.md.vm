@@ -52,7 +52,7 @@ To modify this file, edit the template and regenerate.
 | Key | Type | Description | Default Value | Since | Supports Repo ID suffix | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 #foreach($key in $keys)
-| `$key.key` | `$key.configurationType` | #if($key.deprecated) **Deprecated**. *$key.deprecated*<br/>#end$key.description | #value( $key.defaultValue ) | $key.since |  $key.supportRepoIdSuffix  | $key.configurationSource |
+| <a id="$key.key"></a>`$key.key` | #if ($key.configurationTypeJavadocUrl) [`$key.configurationType`]($key.configurationTypeJavadocUrl) #else `$key.configurationType` #end | #if($key.deprecated) **Deprecated**. <em>$key.deprecated</em><br/>#end$key.description | #value( $key.defaultValue ) | $key.since |  $key.supportRepoIdSuffix  | $key.configurationSource |
 #end
 
 #[[

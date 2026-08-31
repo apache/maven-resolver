@@ -16,9 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Package level javadoc for the sample package.
- *
- * @since 2.0
- */
-package org.eclipse.aether.sample;
+package org.eclipse.aether.crossmodule;
+
+import org.eclipse.aether.ConfigurationProperties;
+
+/** Configuration key whose type is declared in a sibling reactor module. */
+public final class CrossModuleConfigurationKeys {
+
+    /**
+     * A configuration value backed by a type from another module.
+     *
+     * @configurationSource {@link System#getProperty(String,String)}
+     * @configurationType {@link ConfigurationProperties.HttpVersion}
+     * @configurationDefaultValue DEFAULT
+     */
+    public static final String HTTP_VERSION = "sample.crossModule";
+
+    private CrossModuleConfigurationKeys() {}
+}

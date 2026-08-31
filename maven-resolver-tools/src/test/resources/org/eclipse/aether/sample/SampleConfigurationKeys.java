@@ -44,6 +44,9 @@ public final class SampleConfigurationKeys {
      * {@code This text is code.}
      * {@literal This text is literal.}
      * {@link java.lang.String} is the type.
+     * {@link String#valueOf(int)} is an external method.
+     * {@link java.base} is an external module.
+     * {@link java.util.List} is not available in the configured external Javadoc.
      * See JDK bug
      * <a href="https://bugs.openjdk.org/browse/JDK-8225647">JDK-8225647</a> for details.
      *
@@ -57,7 +60,11 @@ public final class SampleConfigurationKeys {
     public static final String DEFAULT_STRING = "hello";
 
     /**
-     * An enum value. The type is a custom enum with a default value declared as a variable referencing an enum value.
+     * An enum value. See {@link #STRING_KEY}. Also see field {@link SampleType#VALUE}, method
+     * {@link SampleType#convert(String)}, constructor {@link SampleType#SampleType(String)}, type {@link SampleType},
+     * package {@link org.eclipse.aether.sample}, unavailable member {@link SampleType#hidden()},
+     * and a link with explicit label {@link SampleType custom label text}.
+     * The type is a custom enum with a default value declared as a variable referencing an enum value.
      *
      * @configurationSource {@link System#getProperty(String,String)}
      * @configurationType {@link SampleEnum}
@@ -72,6 +79,18 @@ public final class SampleConfigurationKeys {
     public enum SampleEnum {
         VALUE_A,
         VALUE_B
+    }
+
+    public static final class SampleType {
+        public static final String VALUE = "value";
+
+        public SampleType(String value) {}
+
+        public String convert(String value) {
+            return value;
+        }
+
+        private void hidden() {}
     }
 
     /**

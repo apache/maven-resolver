@@ -162,6 +162,48 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-tools-api</artifactId>
+      <version>3.15.2</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-artifact</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-model</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven</groupId>
+          <artifactId>maven-plugin-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven.reporting</groupId>
+          <artifactId>maven-reporting-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.maven.resolver</groupId>
+          <artifactId>maven-resolver-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.plexus</groupId>
+          <artifactId>plexus-xml</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- JavadocLinkGenerator's constructor signature references Settings; declare it directly because maven-core is
+         excluded above. -->
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-settings</artifactId>
+      <version>${maven3Version}</version>
+    </dependency>
 
     <!-- Not needed during compile -->
     <dependency>
@@ -229,6 +271,11 @@
               <arguments>
                 <argument>--mode=resolver</argument>
                 <argument>--templates=configuration.md</argument>
+                <!-- Aggregate Javadocs are generated later by the site lifecycle, so CollectConfiguration validates
+                     internal links against the source roots instead. -->
+                <argument>--internal-javadoc-url=apidocs/</argument>
+                <argument>--internal-javadoc-version=${javadocVersion}</argument>
+                <argument>--external-javadoc-url=${javadocJavaApiUrl}</argument>
                 <argument>${basedir}/..</argument>
                 <argument>${basedir}/../target/generated-site/markdown/</argument>
               </arguments>
