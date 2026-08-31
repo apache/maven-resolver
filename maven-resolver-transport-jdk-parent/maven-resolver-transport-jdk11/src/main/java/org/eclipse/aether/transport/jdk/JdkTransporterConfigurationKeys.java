@@ -72,7 +72,7 @@ public final class JdkTransporterConfigurationKeys {
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_UNSCOPED_AUTHENTICATION}
      * @configurationRepoIdSuffix Yes
-     * @since 2.0.22
+     * @since 2.0.23
      */
     public static final String CONFIG_PROP_UNSCOPED_AUTHENTICATION = CONFIG_PROPS_PREFIX + "unscopedAuthentication";
 
@@ -92,7 +92,7 @@ public final class JdkTransporterConfigurationKeys {
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_ORIGIN_SCOPED_HEADERS}
      * @configurationRepoIdSuffix Yes
-     * @since 2.0.22
+     * @since 2.0.23
      */
     public static final String CONFIG_PROP_ORIGIN_SCOPED_HEADERS = CONFIG_PROPS_PREFIX + "originScopedHeaders";
 

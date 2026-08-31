@@ -32,7 +32,7 @@ import org.eclipse.jetty.client.Request;
  * anything is sent, unless explicitly allowed via
  * {@link JettyTransporterConfigurationKeys#CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS}.
  *
- * @since 2.0.22
+ * @since 2.0.23
  */
 final class InsecureRedirectGuard implements Request.QueuedListener {
     @Override

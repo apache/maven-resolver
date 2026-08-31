@@ -37,7 +37,7 @@ import org.apache.http.protocol.HttpContext;
  * allowed via {@link ApacheTransporterConfigurationKeys#CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS}. All other
  * redirects behave exactly as {@link LaxRedirectStrategy} handled them before.
  *
- * @since 2.0.22
+ * @since 2.0.23
  */
 final class ResolverRedirectStrategy extends LaxRedirectStrategy {
     private final boolean followInsecureRedirects;

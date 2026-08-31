@@ -44,7 +44,7 @@ import org.eclipse.jetty.client.Request;
  * callback fires <em>after</em> Jetty's content decoder factories have populated the {@code Accept-Encoding}
  * header.
  *
- * @since 2.0.22
+ * @since 2.0.23
  */
 final class OriginScopedHeadersListener implements Request.HeadersListener {
     private final URI origin;

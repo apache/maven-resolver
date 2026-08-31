@@ -40,7 +40,7 @@ import org.apache.http.protocol.HttpCoreContext;
  * are attached below the protocol layer and are host-scoped by the credentials provider already; they are not
  * affected by this interceptor.
  *
- * @since 2.0.22
+ * @since 2.0.23
  */
 final class OriginScopedHeadersInterceptor implements HttpRequestInterceptor {
     private final HttpHost origin;
