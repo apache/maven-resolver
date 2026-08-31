@@ -258,15 +258,21 @@ public final class NamedLockFactoryAdapter {
                     }
                 } catch (InterruptedException e) {
                     // if we are here, means we were interrupted: fail
-                    namedLock.close();
-                    close();
+                    try {
+                        namedLock.close();
+                    } finally {
+                        close();
+                    }
                     Thread.currentThread().interrupt();
                     throw new RuntimeException(e);
                 }
             }
             // if we are here, means all attempts were unsuccessful: fail
-            namedLock.close();
-            close();
+            try {
+                namedLock.close();
+            } finally {
+                close();
+            }
             String message = "Could not acquire " + lockKind + " lock for "
                     + lockSubjects(artifacts, metadatas) + " in " + timeStr
                     + "; consider using '" + CONFIG_PROP_TIME
