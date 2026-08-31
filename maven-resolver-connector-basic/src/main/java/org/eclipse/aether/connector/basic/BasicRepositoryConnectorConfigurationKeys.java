@@ -125,7 +125,7 @@ public final class BasicRepositoryConnectorConfigurationKeys {
      * ending up with an artifact published without checksums for consumers to verify. When disabled, checksum
      * upload failures are only logged at WARN level (legacy, fail-open behavior).
      *
-     * @since 2.0.22
+     * @since 2.0.23
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_FAIL_ON_CHECKSUM_UPLOAD_FAILURE}

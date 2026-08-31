@@ -75,7 +75,7 @@ public interface ProvidedChecksumsSource {
      * @param remoteRepository           The remote repository connector is about to contact.
      * @param checksumAlgorithmFactories The checksum algorithms that are expected.
      * @return Map of expected checksums, or {@code null}.
-     * @since 2.0.22
+     * @since 2.0.23
      */
     default Map<String, String> getProvidedMetadataChecksums(
             RepositorySystemSession session,

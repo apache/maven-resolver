@@ -71,7 +71,7 @@ public interface TrustedChecksumsSource {
      * @param artifactRepository         The origin repository: local, workspace, remote repository, never {@code null}.
      * @param checksumAlgorithmFactories The checksum algorithms that are expected, never {@code null}.
      * @return Map of expected checksums, or {@code null}.
-     * @since 2.0.22
+     * @since 2.0.23
      */
     default Map<String, String> getTrustedMetadataChecksums(
             RepositorySystemSession session,
@@ -105,7 +105,7 @@ public interface TrustedChecksumsSource {
          * The default implementation records nothing, preserving the behavior of implementations written before
          * this method existed.
          *
-         * @since 2.0.22
+         * @since 2.0.23
          */
         default void addTrustedMetadataChecksums(
                 Metadata metadata,

@@ -106,7 +106,7 @@ public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecks
      * This implementation will call into underlying code only if enabled, and will enforce non-{@code null} return
      * value. In worst case, empty map should be returned, meaning "no trusted checksums available".
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     @Override
     public Map<String, String> getTrustedMetadataChecksums(
@@ -152,7 +152,7 @@ public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecks
      * looked up using the same file conventions as artifact checksums, with the metadata path composed from the
      * origin repository key (for example {@code g/a/v/maven-metadata-central.xml}).
      *
-     * @since 2.0.22
+     * @since 2.0.23
      */
     protected abstract Map<String, String> doGetTrustedMetadataChecksums(
             RepositorySystemSession session,
