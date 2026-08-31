@@ -235,7 +235,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
                             + repository.getUrl() + " during a previous attempt. This failure"
                             + " was cached in the local repository and"
                             + " resolution is not reattempted until the update interval of " + repository.getId()
-                            + " has elapsed or updates are forced. Original error: " + error,
+                            + " has elapsed or updates are forced. Original error: " + LogSanitizer.sanitize(error),
                     true);
         }
     }
@@ -333,7 +333,7 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
                             + repository.getUrl() + " during a previous attempt."
                             + " This failure was cached in the local repository and"
                             + " resolution will not be reattempted until the update interval of " + repository.getId()
-                            + " has elapsed or updates are forced. Original error: " + error,
+                            + " has elapsed or updates are forced. Original error: " + LogSanitizer.sanitize(error),
                     true);
         }
     }
@@ -563,7 +563,9 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
             if (msg == null || msg.isEmpty()) {
                 msg = error.getClass().getSimpleName();
             }
-            updates.put(dataKey + ERROR_KEY_SUFFIX, msg);
+            // transfer error messages may embed remote-derived bytes: neutralize terminal control characters
+            // before persisting them, as they are re-read and logged on subsequent update checks
+            updates.put(dataKey + ERROR_KEY_SUFFIX, LogSanitizer.sanitize(msg));
             updates.put(dataKey + UPDATED_KEY_SUFFIX, null);
             updates.put(transferKey + UPDATED_KEY_SUFFIX, timestamp);
         }

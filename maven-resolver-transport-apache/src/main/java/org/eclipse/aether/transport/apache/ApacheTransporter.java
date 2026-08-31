@@ -679,7 +679,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 if (lastModifiedHeader != null) {
                     Date lastModified = DateUtils.parseDate(lastModifiedHeader.getValue());
                     if (lastModified != null) {
-                        pathProcessor.setLastModified(task.getDataPath(), lastModified.getTime());
+                        pathProcessor.setLastModified(
+                                task.getDataPath(),
+                                HttpTransporterUtils.clampRemoteLastModified(lastModified.getTime()));
                     }
                 }
             }

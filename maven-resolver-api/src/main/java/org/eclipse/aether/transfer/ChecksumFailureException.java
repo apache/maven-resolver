@@ -68,12 +68,40 @@ public class ChecksumFailureException extends RepositoryException {
     public static ChecksumFailureException mismatchDetail(
             String detail, String expected, String expectedKind, String actual) {
         String message = "Checksum validation failed, expected '"
-                + expected + "'" + (expectedKind == null ? "" : " (" + expectedKind + ")")
-                + " but is actually '" + actual + "'";
+                + sanitize(expected) + "'" + (expectedKind == null ? "" : " (" + sanitize(expectedKind) + ")")
+                + " but is actually '" + sanitize(actual) + "'";
         if (detail != null) {
-            message = message + " (" + detail + ")";
+            message = message + " (" + sanitize(detail) + ")";
         }
         return new ChecksumFailureException(message, null, expected, expectedKind, actual, true);
+    }
+
+    /**
+     * Replaces ISO control characters below U+0020 (except LF and TAB) and DEL (U+007F) with their visible
+     * {@code \}{@code uXXXX} escapes. The expected checksum value is remote-supplied and ends up in log output (the
+     * default "warn" checksum policy logs this exception's message as the sole integrity warning): raw terminal
+     * control characters such as ESC or CR embedded in it could erase or forge that log line. The
+     * {@link #getExpected()}, {@link #getExpectedKind()} and {@link #getActual()} accessors keep returning the
+     * raw values.
+     */
+    private static String sanitize(String value) {
+        if (value == null) {
+            return null;
+        }
+        StringBuilder result = null;
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if ((c < 0x20 && c != '\n' && c != '\t') || c == 0x7f) {
+                if (result == null) {
+                    result = new StringBuilder(value.length() + 16);
+                    result.append(value, 0, i);
+                }
+                result.append(String.format("\\u%04X", (int) c));
+            } else if (result != null) {
+                result.append(c);
+            }
+        }
+        return result == null ? value : result.toString();
     }
 
     /**
@@ -112,8 +140,8 @@ public class ChecksumFailureException extends RepositoryException {
     @Deprecated
     public ChecksumFailureException(String expected, String expectedKind, String actual) {
         super("Checksum validation failed, expected '"
-                + expected + "'" + (expectedKind == null ? "" : " (" + expectedKind + ")")
-                + " but is actually '" + actual + "'");
+                + sanitize(expected) + "'" + (expectedKind == null ? "" : " (" + sanitize(expectedKind) + ")")
+                + " but is actually '" + sanitize(actual) + "'");
         this.expected = expected;
         this.expectedKind = expectedKind;
         this.actual = actual;

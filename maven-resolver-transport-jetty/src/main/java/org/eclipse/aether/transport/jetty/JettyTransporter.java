@@ -312,7 +312,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             long lastModified =
                     response.getHeaders().getDateField(LAST_MODIFIED); // note: Wagon also does first not last
             if (lastModified != -1) {
-                pathProcessor.setLastModified(task.getDataPath(), lastModified);
+                pathProcessor.setLastModified(
+                        task.getDataPath(), HttpTransporterUtils.clampRemoteLastModified(lastModified));
             }
         }
         Map<String, String> checksums = checksumExtractor.extractChecksums(headerGetter(response));

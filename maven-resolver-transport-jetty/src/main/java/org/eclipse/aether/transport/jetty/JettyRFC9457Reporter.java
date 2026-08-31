@@ -20,7 +20,6 @@ package org.eclipse.aether.transport.jetty;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -77,7 +76,7 @@ public class JettyRFC9457Reporter
     @Override
     protected String getBody(final InputStreamResponseListener listener) throws IOException {
         try (InputStream is = listener.getInputStream()) {
-            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            return readBody(is);
         }
     }
 }

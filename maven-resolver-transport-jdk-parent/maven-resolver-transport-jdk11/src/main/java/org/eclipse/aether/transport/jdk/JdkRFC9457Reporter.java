@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
@@ -64,7 +63,7 @@ public class JdkRFC9457Reporter
     @Override
     protected String getBody(final HttpResponse<InputStream> response) throws IOException {
         try (InputStream is = response.body()) {
-            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            return readBody(is);
         }
     }
 }

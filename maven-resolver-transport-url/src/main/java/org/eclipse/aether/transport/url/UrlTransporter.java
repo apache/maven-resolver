@@ -250,7 +250,8 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             if (task.getDataPath() != null) {
                 long lastModified = con.getLastModified();
                 if (lastModified != 0) {
-                    pathProcessor.setLastModified(task.getDataPath(), lastModified);
+                    pathProcessor.setLastModified(
+                            task.getDataPath(), HttpTransporterUtils.clampRemoteLastModified(lastModified));
                 }
             }
         } finally {
