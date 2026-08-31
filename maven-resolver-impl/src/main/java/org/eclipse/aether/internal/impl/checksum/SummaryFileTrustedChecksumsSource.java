@@ -49,6 +49,7 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -241,6 +242,9 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
     private Path summaryFile(Path basedir, boolean originAware, String safeRepositoryId, String checksumExtension) {
         String fileName = CHECKSUMS_FILE_PREFIX;
         if (originAware) {
+            // defense in depth: the repository key is spliced into the summary file name,
+            // so it must be a safe path segment
+            PathUtils.validatePathComponent(safeRepositoryId, "repository key");
             fileName += "-" + safeRepositoryId;
         }
         return basedir.resolve(fileName + "." + checksumExtension);
