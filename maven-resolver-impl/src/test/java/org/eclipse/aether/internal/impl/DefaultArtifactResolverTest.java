@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -206,6 +207,33 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
+    void testResolveRemoteSnapshotRegistersNormalizedCopy() throws ArtifactResolutionException {
+        Artifact timestamped = new DefaultArtifact("gid", "aid", "", "ext", "1.0-20110329.221805-4");
+        connector.setExpectGet(timestamped);
+
+        ArtifactRequest request = new ArtifactRequest(timestamped, null, "");
+        request.addRepository(new RemoteRepository.Builder("id", "default", "file:///").build());
+
+        ArtifactResult result = resolver.resolveArtifact(session, request);
+
+        assertTrue(result.getExceptions().isEmpty());
+
+        // snapshot normalization (enabled by default) materialized a base-version copy of the download
+        Artifact resolved = result.getArtifact();
+        assertNotNull(resolved.getFile());
+        assertTrue(resolved.getFile().getName().contains("1.0-SNAPSHOT"));
+
+        // both the timestamped download and its base-version copy must carry the repository provenance,
+        // otherwise the untracked copy is later accepted as if it were locally installed
+        assertEquals(2, lrm.getArtifactRegistration().size());
+        assertTrue(
+                lrm.getArtifactRegistration().stream().anyMatch(a -> "1.0-20110329.221805-4".equals(a.getVersion())));
+        assertTrue(lrm.getArtifactRegistration().stream().anyMatch(a -> "1.0-SNAPSHOT".equals(a.getVersion())));
+
+        connector.assertSeenExpected();
+    }
+
+    @Test
     void testResolveRemoteArtifactUnsuccessful() {
         RecordingRepositoryConnector connector = new RecordingRepositoryConnector() {
 
@@ -246,6 +274,56 @@ public class DefaultArtifactResolverTest {
             Artifact resolved = result.getArtifact();
             assertNull(resolved);
         }
+    }
+
+    private List<Boolean> resolveCachedFromForeignRepository() throws IOException, ArtifactResolutionException {
+        TestFileUtils.writeString(
+                new File(lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact(artifact)), "cached");
+        lrm.setArtifactAvailability(artifact, false);
+
+        List<Boolean> existenceChecks = new ArrayList<>();
+        RecordingRepositoryConnector connector = new RecordingRepositoryConnector() {
+
+            @Override
+            public void get(
+                    Collection<? extends ArtifactDownload> artifactDownloads,
+                    Collection<? extends MetadataDownload> metadataDownloads) {
+                for (ArtifactDownload download : artifactDownloads) {
+                    existenceChecks.add(download.isExistenceCheck());
+                }
+                super.get(artifactDownloads, metadataDownloads);
+            }
+        };
+        connector.setExpectGet(artifact);
+        repositoryConnectorProvider.setConnector(connector);
+
+        ArtifactRequest request = new ArtifactRequest(artifact, null, "");
+        request.addRepository(new RemoteRepository.Builder("id", "default", "file:///").build());
+
+        ArtifactResult result = resolver.resolveArtifact(session, request);
+
+        assertTrue(result.getExceptions().isEmpty());
+        assertNotNull(result.getArtifact().getFile());
+        assertEquals(1, lrm.getArtifactRegistration().size());
+        connector.assertSeenExpected();
+
+        return existenceChecks;
+    }
+
+    @Test
+    void testResolveCachedFromForeignRepositoryDownloadsByDefault() throws IOException, ArtifactResolutionException {
+        List<Boolean> existenceChecks = resolveCachedFromForeignRepository();
+
+        assertEquals(Collections.singletonList(Boolean.FALSE), existenceChecks);
+    }
+
+    @Test
+    void testResolveCachedFromForeignRepositoryLegacyExistenceCheck() throws IOException, ArtifactResolutionException {
+        session.setConfigProperty(DefaultArtifactResolver.CONFIG_PROP_EXISTENCE_CHECK_RELABEL, true);
+
+        List<Boolean> existenceChecks = resolveCachedFromForeignRepository();
+
+        assertEquals(Collections.singletonList(Boolean.TRUE), existenceChecks);
     }
 
     @Test

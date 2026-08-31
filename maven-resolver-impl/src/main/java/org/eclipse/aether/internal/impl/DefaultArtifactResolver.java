@@ -119,6 +119,23 @@ public class DefaultArtifactResolver implements ArtifactResolver {
 
     public static final boolean DEFAULT_SIMPLE_LRM_INTEROP = false;
 
+    /**
+     * Configuration to restore the legacy "existence check" behavior for artifacts that are present in the local
+     * repository but were cached from a remote repository unavailable in the current build context: when enabled, a
+     * bare remote existence check (no content transfer, hence no checksum validation) suffices to re-label the cached
+     * bytes as originating from the queried repository. When disabled (the default), the artifact is downloaded again
+     * through the regular transfer path, so the content is validated against the repository's checksum policy before
+     * it is registered with the local repository for that repository. Enabling this trades integrity for bandwidth
+     * and is warmly recommended to leave it disabled.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_EXISTENCE_CHECK_RELABEL}
+     */
+    public static final String CONFIG_PROP_EXISTENCE_CHECK_RELABEL = CONFIG_PROPS_PREFIX + "existenceCheckRelabel";
+
+    public static final boolean DEFAULT_EXISTENCE_CHECK_RELABEL = false;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultArtifactResolver.class);
 
     private final PathProcessor pathProcessor;
@@ -325,8 +342,23 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                         }
 
                         try {
-                            artifact = artifact.setPath(getPath(session, artifact, local.getPath()));
+                            Path localArtifactPath = local.getPath();
+                            artifact = artifact.setPath(getPath(session, artifact, localArtifactPath));
                             result.setArtifact(artifact);
+                            if (local.getRepository() != null && !localArtifactPath.equals(artifact.getPath())) {
+                                /*
+                                 * NOTE: Snapshot normalization materialized a base-version copy next to the tracked
+                                 * timestamped file. The copy must carry the same provenance tracking as its source;
+                                 * otherwise the untracked copy is later treated as locally installed (accepted
+                                 * without any repository/offline checks) by the untracked-file interop logic.
+                                 */
+                                lrm.add(
+                                        session,
+                                        new LocalArtifactRegistration(
+                                                artifact.setVersion(artifact.getBaseVersion()),
+                                                local.getRepository(),
+                                                Collections.singleton(request.getRequestContext())));
+                            }
                             artifactResolved(session, trace, artifact, result.getRepository(), null);
                         } catch (ArtifactTransferException e) {
                             result.addException(lrm.getRepository(), e);
@@ -520,6 +552,8 @@ public class DefaultArtifactResolver implements ArtifactResolver {
 
     private List<ArtifactDownload> gatherDownloads(RepositorySystemSession session, ResolutionGroup group) {
         LocalRepositoryManager lrm = session.getLocalRepositoryManager();
+        final boolean existenceCheckRelabel =
+                ConfigUtils.getBoolean(session, DEFAULT_EXISTENCE_CHECK_RELABEL, CONFIG_PROP_EXISTENCE_CHECK_RELABEL);
         List<ArtifactDownload> downloads = new ArrayList<>();
 
         for (ResolutionItem item : group.items) {
@@ -535,10 +569,19 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             download.setRequestContext(item.request.getRequestContext());
             download.setListener(SafeTransferListener.wrap(session));
             download.setTrace(item.trace);
-            if (item.local.getPath() != null) {
+            if (item.local.getPath() != null && existenceCheckRelabel) {
+                /*
+                 * NOTE: Legacy behavior, disabled by default: a bare existence check transfers no content, so the
+                 * cached bytes are re-labeled to this repository without ever passing checksum validation.
+                 */
                 download.setPath(item.local.getPath());
                 download.setExistenceCheck(true);
             } else {
+                /*
+                 * NOTE: Even if the artifact is present in the local repository (cached from a repository unavailable
+                 * in the current build context), download it again so the content passes the repository's checksum
+                 * policy before the artifact is registered with the local repository for this repository.
+                 */
                 download.setPath(lrm.getAbsolutePathForRemoteArtifact(
                         artifact, group.repository, item.request.getRequestContext()));
             }
@@ -592,6 +635,21 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                     lrm.add(
                             session,
                             new LocalArtifactRegistration(artifact, group.repository, download.getSupportedContexts()));
+                    if (!download.getPath().equals(artifact.getPath())) {
+                        /*
+                         * NOTE: Snapshot normalization materialized a base-version copy of the downloaded file. Every
+                         * file the resolver derives from remote content must carry the same provenance tracking as
+                         * the download it stems from: register the copy under the same repository, otherwise the
+                         * untracked copy is later treated as locally installed (accepted without any
+                         * repository/offline checks) by the untracked-file interop logic.
+                         */
+                        lrm.add(
+                                session,
+                                new LocalArtifactRegistration(
+                                        artifact.setVersion(artifact.getBaseVersion()),
+                                        group.repository,
+                                        download.getSupportedContexts()));
+                    }
                 } catch (ArtifactTransferException e) {
                     download.setException(e);
                     item.result.addException(group.repository, e);
