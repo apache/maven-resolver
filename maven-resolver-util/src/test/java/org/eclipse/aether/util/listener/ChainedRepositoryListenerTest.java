@@ -19,8 +19,12 @@
 package org.eclipse.aether.util.listener;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.aether.AbstractRepositoryListener;
+import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,5 +39,42 @@ public class ChainedRepositoryListenerTest {
             assertNotNull(
                     ChainedRepositoryListener.class.getDeclaredMethod(method.getName(), method.getParameterTypes()));
         }
+    }
+
+    @Test
+    void testListenerExceptionDoesNotBlockSubsequentListeners() {
+        AtomicBoolean secondListenerCalled = new AtomicBoolean(false);
+        AtomicBoolean errorHandlerCalled = new AtomicBoolean(false);
+
+        RepositoryListener faultyListener = new AbstractRepositoryListener() {
+            @Override
+            public void artifactResolved(RepositoryEvent event) {
+                throw new RuntimeException("Simulated listener failure");
+            }
+        };
+
+        RepositoryListener normalListener = new AbstractRepositoryListener() {
+            @Override
+            public void artifactResolved(RepositoryEvent event) {
+                secondListenerCalled.set(true);
+            }
+        };
+
+        ChainedRepositoryListener chained = new ChainedRepositoryListener(faultyListener, normalListener) {
+            @Override
+            protected void handleError(RepositoryEvent event, RepositoryListener listener, RuntimeException error) {
+                super.handleError(event, listener, error);
+                errorHandlerCalled.set(true);
+            }
+        };
+
+        RepositoryEvent event = new RepositoryEvent.Builder(
+                        TestUtils.newSession(), RepositoryEvent.EventType.ARTIFACT_RESOLVED)
+                .build();
+
+        assertDoesNotThrow(() -> chained.artifactResolved(event));
+        assertTrue(errorHandlerCalled.get(), "handleError should have been invoked for faulty listener");
+        assertTrue(
+                secondListenerCalled.get(), "Subsequent listener should still receive event despite previous failure");
     }
 }

@@ -1083,4 +1083,39 @@ public class DefaultArtifactResolverTest {
         // message should contain present=true, available=false, filter message
         assertTrue(ex.getMessage().contains("gid:aid:ext:ver (present, but unavailable): REFUSED"));
     }
+
+    @Test
+    void testSyncContextIsClosedExactlyOnce() throws Exception {
+        java.util.concurrent.atomic.AtomicInteger closeCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
+        org.eclipse.aether.SyncContext countingSyncContext = new org.eclipse.aether.SyncContext() {
+            @Override
+            public void acquire(
+                    Collection<? extends Artifact> artifacts,
+                    Collection<? extends org.eclipse.aether.metadata.Metadata> metadatas) {}
+
+            @Override
+            public void close() {
+                closeCount.incrementAndGet();
+            }
+        };
+
+        resolver = new DefaultArtifactResolver(
+                new PathProcessorSupport(),
+                new StubRepositoryEventDispatcher(),
+                new StubVersionResolver(),
+                new StaticUpdateCheckManager(false),
+                repositoryConnectorProvider,
+                new StubRemoteRepositoryManager(),
+                (s, shared) -> countingSyncContext,
+                new DefaultOfflineController(),
+                Collections.emptyMap(),
+                remoteRepositoryFilterManager);
+
+        ArtifactRequest request = new ArtifactRequest(artifact, null, "");
+        assertThrows(ArtifactResolutionException.class, () -> resolver.resolveArtifact(session, request));
+
+        // 2 instances were created (shared and exclusive), each must be closed exactly once
+        assertEquals(2, closeCount.get(), "Each SyncContext instance should be closed exactly once");
+    }
 }

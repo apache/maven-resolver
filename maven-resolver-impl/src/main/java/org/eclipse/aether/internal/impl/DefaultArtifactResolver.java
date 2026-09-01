@@ -203,20 +203,18 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             throws ArtifactResolutionException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-        try (SyncContext shared = syncContextFactory.newInstance(session, true);
-                SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
-            Collection<Artifact> artifacts = new ArrayList<>(requests.size());
-            SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
-            for (ArtifactRequest request : requests) {
-                if (systemDependencyScope != null
-                        && systemDependencyScope.getSystemPath(request.getArtifact()) != null) {
-                    continue;
-                }
-                artifacts.add(request.getArtifact());
+        SyncContext shared = syncContextFactory.newInstance(session, true);
+        SyncContext exclusive = syncContextFactory.newInstance(session, false);
+        Collection<Artifact> artifacts = new ArrayList<>(requests.size());
+        SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
+        for (ArtifactRequest request : requests) {
+            if (systemDependencyScope != null && systemDependencyScope.getSystemPath(request.getArtifact()) != null) {
+                continue;
             }
-
-            return resolve(shared, exclusive, artifacts, session, requests);
+            artifacts.add(request.getArtifact());
         }
+
+        return resolve(shared, exclusive, artifacts, session, requests);
     }
 
     @SuppressWarnings("checkstyle:methodlength")
@@ -470,7 +468,13 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 return results;
             }
         } finally {
-            current.close();
+            try {
+                current.close();
+            } finally {
+                if (current == shared) {
+                    exclusive.close();
+                }
+            }
         }
     }
 
