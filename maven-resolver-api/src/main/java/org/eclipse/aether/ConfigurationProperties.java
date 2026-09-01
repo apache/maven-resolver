@@ -618,7 +618,7 @@ public final class ConfigurationProperties {
      */
     public static final String REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = PREFIX_SYSTEM + "repositoryKeyFunction";
 
-    public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid";
+    public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid_hurl";
 
     /**
      * A flag indicating whether version scheme cache statistics should be printed on JVM shutdown.

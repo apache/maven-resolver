@@ -22,6 +22,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.IOException;
+
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
@@ -141,21 +143,17 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
         }
 
         if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
-            return new EnhancedLocalRepositoryManager(
-                    repository.getBasePath(),
-                    localPathComposer,
-                    repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session),
-                    repositoryKeyFunctionFactory.repositoryKeyFunction(
-                            EnhancedLocalRepositoryManagerFactory.class,
-                            session,
-                            ConfigUtils.getString(
-                                    session,
-                                    DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION,
-                                    ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION),
-                            CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION),
-                    trackingFilename,
-                    trackingFileManager,
-                    localPathPrefixComposerFactory.createComposer(session));
+            try {
+                return new EnhancedLocalRepositoryManager(
+                        repository.getBasePath(),
+                        localPathComposer,
+                        repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session),
+                        trackingFilename,
+                        trackingFileManager,
+                        localPathPrefixComposerFactory.createComposer(session));
+            } catch (IOException e) {
+                throw new NoLocalRepositoryManagerException(repository, e);
+            }
         } else {
             throw new NoLocalRepositoryManagerException(repository);
         }

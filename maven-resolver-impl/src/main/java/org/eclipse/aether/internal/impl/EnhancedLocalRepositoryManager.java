@@ -102,15 +102,10 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     private final LocalPathPrefixComposer localPathPrefixComposer;
 
     /**
-     * Repository key function used solely for the provenance tracking entries (the repository component of the
-     * keys in the tracking file); path composition keeps using the (system-wide) key function held by the
-     * superclass. URL-qualified by default, so two repositories merely sharing an id are not treated as the same
-     * origin - see {@link EnhancedLocalRepositoryManagerFactory#CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION}.
-     * Lookups of entries written under a different key function miss and fail safe: the artifact stays tracked
-     * (so the untracked inter-op fallback in {@link #checkFind} does not accept it) but unavailable, forcing a
-     * checksum-validated re-fetch.
+     * Real (symlink-resolved) path of the local repository base directory, used by
+     * {@link #hasFaithfulRealPath(Path)}. It cannot change during the lifetime of this manager.
      */
-    private final RepositoryKeyFunction trackingRepositoryKeyFunction;
+    private final Path realBasePath;
 
     /**
      * Cache of tracking file contents, keyed by tracking file path. Eliminates redundant disk I/O
@@ -129,25 +124,19 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      */
     private final ConcurrentHashMap<Path, Properties> trackingFileCache = new ConcurrentHashMap<>();
 
-    /**
-     * Lazily computed real (symlink-resolved) path of the local repository base directory, used by
-     * {@link #hasFaithfulRealPath(Path)}. It cannot change during the lifetime of this manager.
-     */
-    private volatile Path realBasePath;
-
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
             RepositoryKeyFunction repositoryKeyFunction,
-            RepositoryKeyFunction trackingRepositoryKeyFunction,
             String trackingFilename,
             TrackingFileManager trackingFileManager,
-            LocalPathPrefixComposer localPathPrefixComposer) {
+            LocalPathPrefixComposer localPathPrefixComposer)
+            throws IOException {
         super(basedir, "enhanced", localPathComposer, repositoryKeyFunction);
-        this.trackingRepositoryKeyFunction = requireNonNull(trackingRepositoryKeyFunction);
         this.trackingFilename = requireNonNull(trackingFilename);
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
+        this.realBasePath = getRepository().getBasePath().toRealPath();
     }
 
     private String concatPaths(String prefix, String artifactPath) {
@@ -233,7 +222,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     private boolean hasFaithfulRealPath(Path path) {
         try {
             String requested = getRepository().getBasePath().relativize(path).toString();
-            String real = getRealBasePath().relativize(path.toRealPath()).toString();
+            String real = realBasePath.relativize(path.toRealPath()).toString();
             if (!requested.equals(real)) {
                 LOGGER.warn(
                         "Rejecting locally cached artifact {}: its on-disk path {} does not match the requested"
@@ -247,15 +236,6 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
             // the real identity of the file cannot be established: fail closed, forcing a re-download
             return false;
         }
-    }
-
-    private Path getRealBasePath() throws IOException {
-        Path real = realBasePath;
-        if (real == null) {
-            real = getRepository().getBasePath().toRealPath();
-            realBasePath = real;
-        }
-        return real;
     }
 
     private void checkFind(Path path, LocalArtifactResult result, boolean verifyRealPath) {
@@ -299,7 +279,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         }
         String context = result.getRequest().getContext();
         for (RemoteRepository repository : result.getRequest().getRepositories()) {
-            if (props.get(getKey(path, getTrackingRepositoryKey(repository, context))) != null) {
+            if (props.get(getKey(path, getRepositoryKey(repository, context))) != null) {
                 // artifact downloaded from remote repository is accepted only downloaded from request
                 // repositories
                 result.setAvailable(true);
@@ -332,7 +312,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
         if (contexts != null) {
             for (String context : contexts) {
-                keys.add(getTrackingRepositoryKey(repository, context));
+                keys.add(getRepositoryKey(repository, context));
             }
         }
 
@@ -393,16 +373,6 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private String getKey(Path path, String repository) {
         return path.getFileName() + ">" + repository;
-    }
-
-    /**
-     * Returns the tracking key of given repository, derived with the tracking-scoped key function (URL-qualified
-     * by default). Deliberately distinct from {@link #getRepositoryKey(RemoteRepository, String)}, which follows
-     * the system-wide key function and is used for path composition: tracking must bind an artifact to the full
-     * identity of its origin, while on-disk layout and repository aggregation identity stay unchanged.
-     */
-    private String getTrackingRepositoryKey(RemoteRepository repository, String context) {
-        return trackingRepositoryKeyFunction.apply(repository, context);
     }
 
     private boolean isTracked(Properties props, Path path) {
