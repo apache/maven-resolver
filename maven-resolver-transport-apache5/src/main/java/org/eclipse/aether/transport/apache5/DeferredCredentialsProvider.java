@@ -24,12 +24,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.NTCredentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.Credentials;
+import org.apache.hc.client5.http.auth.CredentialsProvider;
+import org.apache.hc.client5.http.auth.NTCredentials;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.eclipse.aether.repository.AuthenticationContext;
 
 /**
@@ -37,7 +38,7 @@ import org.eclipse.aether.repository.AuthenticationContext;
  */
 final class DeferredCredentialsProvider implements CredentialsProvider {
 
-    private final CredentialsProvider delegate;
+    private final BasicCredentialsProvider delegate;
 
     private final ConcurrentHashMap<AuthScope, Factory> factories;
 
@@ -50,13 +51,12 @@ final class DeferredCredentialsProvider implements CredentialsProvider {
         factories.put(authScope, factory);
     }
 
-    @Override
     public void setCredentials(AuthScope authScope, Credentials credentials) {
         delegate.setCredentials(authScope, credentials);
     }
 
     @Override
-    public Credentials getCredentials(AuthScope authScope) {
+    public Credentials getCredentials(AuthScope authScope, HttpContext context) {
         synchronized (factories) {
             for (Iterator<Map.Entry<AuthScope, Factory>> it =
                             factories.entrySet().iterator();
@@ -64,14 +64,16 @@ final class DeferredCredentialsProvider implements CredentialsProvider {
                 Map.Entry<AuthScope, Factory> entry = it.next();
                 if (authScope.match(entry.getKey()) >= 0) {
                     it.remove();
-                    delegate.setCredentials(entry.getKey(), entry.getValue().newCredentials());
+                    Credentials creds = entry.getValue().newCredentials();
+                    if (creds != null) {
+                        delegate.setCredentials(entry.getKey(), creds);
+                    }
                 }
             }
-            return delegate.getCredentials(authScope);
+            return delegate.getCredentials(authScope, context);
         }
     }
 
-    @Override
     public void clear() {
         delegate.clear();
     }
@@ -96,7 +98,7 @@ final class DeferredCredentialsProvider implements CredentialsProvider {
                 return null;
             }
             String password = authContext.get(AuthenticationContext.PASSWORD);
-            return new UsernamePasswordCredentials(username, password);
+            return new UsernamePasswordCredentials(username, password != null ? password.toCharArray() : new char[0]);
         }
     }
 
@@ -131,7 +133,8 @@ final class DeferredCredentialsProvider implements CredentialsProvider {
                 workstation = guessWorkstation();
             }
 
-            return new NTCredentials(username, password, workstation, domain);
+            return new NTCredentials(
+                    username, password != null ? password.toCharArray() : new char[0], workstation, domain);
         }
 
         private static String guessDomain() {

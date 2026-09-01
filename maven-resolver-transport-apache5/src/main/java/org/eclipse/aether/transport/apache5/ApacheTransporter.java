@@ -25,71 +25,71 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
-import org.apache.http.Header;
-import org.apache.http.HttpClientConnection;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpException;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.auth.AuthScheme;
-import org.apache.http.auth.AuthSchemeProvider;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpRequestRetryHandler;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.ServiceUnavailableRetryStrategy;
-import org.apache.http.client.config.AuthSchemes;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpOptions;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.utils.DateUtils;
-import org.apache.http.client.utils.URIUtils;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.config.SocketConfig;
-import org.apache.http.conn.ManagedHttpClientConnection;
-import org.apache.http.entity.AbstractHttpEntity;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.NoConnectionReuseStrategy;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.auth.BasicSchemeFactory;
-import org.apache.http.impl.auth.DigestSchemeFactory;
-import org.apache.http.impl.auth.KerberosSchemeFactory;
-import org.apache.http.impl.auth.NTLMSchemeFactory;
-import org.apache.http.impl.auth.SPNegoSchemeFactory;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
-import org.apache.http.protocol.HttpRequestExecutor;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.HttpRequestRetryStrategy;
+import org.apache.hc.client5.http.HttpResponseException;
+import org.apache.hc.client5.http.auth.AuthCache;
+import org.apache.hc.client5.http.auth.AuthSchemeFactory;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.Credentials;
+import org.apache.hc.client5.http.auth.CredentialsProvider;
+import org.apache.hc.client5.http.auth.StandardAuthScheme;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.classic.methods.HttpOptions;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.cookie.StandardCookieSpec;
+import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy;
+import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
+import org.apache.hc.client5.http.impl.auth.BasicScheme;
+import org.apache.hc.client5.http.impl.auth.BasicSchemeFactory;
+import org.apache.hc.client5.http.impl.auth.DigestSchemeFactory;
+import org.apache.hc.client5.http.impl.auth.KerberosSchemeFactory;
+import org.apache.hc.client5.http.impl.auth.NTLMSchemeFactory;
+import org.apache.hc.client5.http.impl.auth.SPNegoSchemeFactory;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.routing.DefaultProxyRoutePlanner;
+import org.apache.hc.client5.http.impl.routing.DefaultRoutePlanner;
+import org.apache.hc.client5.http.impl.routing.SystemDefaultRoutePlanner;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.utils.DateUtils;
+import org.apache.hc.client5.http.utils.URIUtils;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.ProtocolVersion;
+import org.apache.hc.core5.http.config.Lookup;
+import org.apache.hc.core5.http.config.RegistryBuilder;
+import org.apache.hc.core5.http.io.entity.AbstractHttpEntity;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
+import org.apache.hc.core5.util.TimeValue;
+import org.apache.hc.core5.util.Timeout;
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -118,28 +118,24 @@ import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_RANGE_PATTERN;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_NAME;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.CONFIG_PROP_USE_SYSTEM_PROPERTIES;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_FOLLOW_INSECURE_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_FOLLOW_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.DEFAULT_USE_SYSTEM_PROPERTIES;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_DEFAULT;
-import static org.eclipse.aether.transport.apache.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_STANDARD;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_NAME;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.CONFIG_PROP_USE_SYSTEM_PROPERTIES;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.DEFAULT_FOLLOW_INSECURE_REDIRECTS;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.DEFAULT_FOLLOW_REDIRECTS;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.DEFAULT_HTTP_RETRY_HANDLER_REQUEST_SENT_ENABLED;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.DEFAULT_USE_SYSTEM_PROPERTIES;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_DEFAULT;
+import static org.eclipse.aether.transport.apache5.ApacheTransporterConfigurationKeys.HTTP_RETRY_HANDLER_NAME_STANDARD;
 
 /**
- * A transporter for HTTP/HTTPS.
+ * A transporter for HTTP/HTTPS based on Apache HttpClient 5.x.
  */
 final class ApacheTransporter extends AbstractTransporter implements HttpTransporter {
-    /**
-     * Custom context attribute name to store the SSL session in the HTTP context. This is populated by a custom request executor.
-     */
-    private static final String CONTEXT_ATTRIBUTE_NAME_SSL_SESSION = "ssl.session";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApacheTransporter.class);
 
@@ -171,6 +167,10 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final boolean sendRfc9457Accept;
 
+    private final CredentialsProvider credentialsProvider;
+
+    private final RequestConfig requestConfig;
+
     private final AuthCache authCache;
 
     @SuppressWarnings("checkstyle:methodlength")
@@ -184,10 +184,11 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.pathProcessor = pathProcessor;
         try {
             this.baseUri = HttpTransporterUtils.getBaseUri(repository);
-            this.server = URIUtils.extractHost(baseUri);
-            if (server == null) {
+            HttpHost rawServer = URIUtils.extractHost(baseUri);
+            if (rawServer == null) {
                 throw new URISyntaxException(repository.getUrl(), "URL lacks host name");
             }
+            this.server = new HttpHost(rawServer.getSchemeName(), rawServer.getHostName(), effectivePort(rawServer));
         } catch (URISyntaxException e) {
             throw new NoTransporterException(repository, e.getMessage(), e);
         }
@@ -242,59 +243,49 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS);
         String userAgent = HttpTransporterUtils.getUserAgent(session, repository);
 
-        Charset credentialsCharset = HttpTransporterUtils.getHttpCredentialsEncoding(session, repository);
-        Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
-                .register(AuthSchemes.BASIC, new BasicSchemeFactory(credentialsCharset))
-                .register(AuthSchemes.DIGEST, new DigestSchemeFactory(credentialsCharset))
-                .register(AuthSchemes.NTLM, new NTLMSchemeFactory())
-                .register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory())
-                .register(AuthSchemes.KERBEROS, new KerberosSchemeFactory())
-                .build();
-        SocketConfig socketConfig =
-                // the time to establish connection (low level)
-                SocketConfig.custom().setSoTimeout(requestTimeout).build();
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setMaxRedirects(maxRedirects)
-                .setRedirectsEnabled(followRedirects)
-                .setRelativeRedirectsAllowed(followRedirects)
-                // the time waiting for data; max time between two data packets
-                .setSocketTimeout(requestTimeout)
-                // the time to establish the connection (high level)
-                .setConnectTimeout(connectTimeout)
-                // the time to wait for a connection from the connection manager/pool
-                .setConnectionRequestTimeout(connectTimeout)
-                .setLocalAddress(HttpTransporterUtils.getHttpLocalAddress(session, repository)
-                        .orElse(null))
-                .setCookieSpec(CookieSpecs.STANDARD)
+        // NOTE: aether.transport.http.credentialEncoding has no effect with this (Apache HttpClient 5) transport.
+        // BasicSchemeFactory/DigestSchemeFactory in httpclient5 5.4.x never pass their configured charset on to the
+        // BasicScheme/DigestScheme they create (verified against the 5.4.2 bytecode: create() calls the no-arg
+        // constructor), so the scheme always negotiates its own charset (UTF-8 for Basic, absent a server-supplied
+        // "charset" auth-param) regardless of what is configured here. Kept for config-key compatibility only.
+        Lookup<AuthSchemeFactory> authSchemeRegistry = RegistryBuilder.<AuthSchemeFactory>create()
+                .register(StandardAuthScheme.BASIC, BasicSchemeFactory.INSTANCE)
+                .register(StandardAuthScheme.DIGEST, DigestSchemeFactory.INSTANCE)
+                .register(StandardAuthScheme.NTLM, new NTLMSchemeFactory())
+                .register(StandardAuthScheme.SPNEGO, SPNegoSchemeFactory.DEFAULT)
+                .register(StandardAuthScheme.KERBEROS, KerberosSchemeFactory.DEFAULT)
                 .build();
 
-        HttpRequestRetryHandler retryHandler;
-        if (HTTP_RETRY_HANDLER_NAME_STANDARD.equals(retryHandlerName)) {
-            retryHandler = new StandardHttpRequestRetryHandler(retryCount, retryHandlerRequestSentEnabled);
-        } else if (HTTP_RETRY_HANDLER_NAME_DEFAULT.equals(retryHandlerName)) {
-            retryHandler = new DefaultHttpRequestRetryHandler(retryCount, retryHandlerRequestSentEnabled);
-        } else {
-            throw new IllegalArgumentException(
-                    "Unsupported parameter " + CONFIG_PROP_HTTP_RETRY_HANDLER_NAME + " value: " + retryHandlerName);
-        }
-        ServiceUnavailableRetryStrategy serviceUnavailableRetryStrategy = new ResolverServiceUnavailableRetryStrategy(
+        this.requestConfig = RequestConfig.custom()
+                .setMaxRedirects(maxRedirects)
+                .setRedirectsEnabled(followRedirects)
+                .setResponseTimeout(Timeout.ofMilliseconds(requestTimeout))
+                .setConnectTimeout(Timeout.ofMilliseconds(connectTimeout))
+                .setConnectionRequestTimeout(Timeout.ofMilliseconds(connectTimeout))
+                .setExpectContinueEnabled(true)
+                .setCookieSpec(StandardCookieSpec.RELAXED)
+                .build();
+
+        HttpRequestRetryStrategy retryStrategy = new ResolverHttpRequestRetryStrategy(
                 retryCount,
                 retryInterval,
                 retryIntervalMax,
-                HttpTransporterUtils.getHttpServiceUnavailableCodes(session, repository));
+                HttpTransporterUtils.getHttpServiceUnavailableCodes(session, repository),
+                retryHandlerName,
+                retryHandlerRequestSentEnabled);
 
+        this.credentialsProvider = toCredentialsProvider(server, repoAuthContext, proxy, proxyAuthContext);
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
                 .setRedirectStrategy(new ResolverRedirectStrategy(followInsecureRedirects))
-                .setDefaultSocketConfig(socketConfig)
                 .setDefaultRequestConfig(requestConfig)
-                .setServiceUnavailableRetryStrategy(serviceUnavailableRetryStrategy)
-                .setRetryHandler(retryHandler)
+                .setRetryStrategy(retryStrategy)
                 .setDefaultAuthSchemeRegistry(authSchemeRegistry)
                 .setConnectionManager(state.getConnectionManager())
                 .setConnectionManagerShared(true)
-                .setDefaultCredentialsProvider(toCredentialsProvider(server, repoAuthContext, proxy, proxyAuthContext))
+                .setDefaultCredentialsProvider(credentialsProvider)
                 .setProxy(proxy);
+
         if (ConfigUtils.getBoolean(
                 session,
                 ApacheTransporterConfigurationKeys.DEFAULT_ORIGIN_SCOPED_HEADERS,
@@ -303,7 +294,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             // Configured headers are per-repository data and frequently carry credentials; scope them to the
             // repository origin so a cross-origin redirect hop does not replay them to the redirect target.
             // Challenge-based credentials are host-scoped by the credentials provider already.
-            builder.addInterceptorLast(new OriginScopedHeadersInterceptor(server, this.headers.keySet()));
+            builder.addRequestInterceptorLast(new OriginScopedHeadersInterceptor(server, this.headers.keySet()));
         }
         final boolean useSystemProperties = ConfigUtils.getBoolean(
                 session,
@@ -317,23 +308,42 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             builder.useSystemProperties();
         }
 
-        // capture SSL session for logging purposes (https://issues.apache.org/jira/browse/HTTPCLIENT-2164)
-        builder.setRequestExecutor(new HttpRequestExecutor() {
-
-            @Override
-            public HttpResponse execute(HttpRequest request, HttpClientConnection conn, HttpContext context)
-                    throws IOException, HttpException {
-                if (conn instanceof ManagedHttpClientConnection) {
-                    context.setAttribute(
-                            CONTEXT_ATTRIBUTE_NAME_SSL_SESSION, ((ManagedHttpClientConnection) conn).getSSLSession());
-                }
-                return super.execute(request, conn, context);
+        HttpTransporterUtils.getHttpLocalAddress(session, repository).ifPresent(localAddress -> {
+            // HttpClientBuilder.build() short-circuits ALL of its own route-planner selection - including the
+            // useSystemProperties()-driven SystemDefaultRoutePlanner branch that honors -Dhttp.proxyHost etc. - the
+            // moment an explicit planner is installed via setRoutePlanner(). Reproduce whichever planner the
+            // builder would otherwise have chosen and only override determineLocalAddress(...), so configuring a
+            // local bind address does not silently disable system-property/proxy routing.
+            if (useSystemProperties) {
+                builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()) {
+                    @Override
+                    protected InetAddress determineLocalAddress(HttpHost firstHop, HttpContext context)
+                            throws HttpException {
+                        return localAddress;
+                    }
+                });
+            } else if (proxy != null) {
+                builder.setRoutePlanner(new DefaultProxyRoutePlanner(proxy) {
+                    @Override
+                    protected InetAddress determineLocalAddress(HttpHost firstHop, HttpContext context)
+                            throws HttpException {
+                        return localAddress;
+                    }
+                });
+            } else {
+                builder.setRoutePlanner(new DefaultRoutePlanner(null) {
+                    @Override
+                    protected InetAddress determineLocalAddress(HttpHost firstHop, HttpContext context)
+                            throws HttpException {
+                        return localAddress;
+                    }
+                });
             }
         });
 
         HttpTransporterUtils.getHttpExpectContinue(session, repository).ifPresent(state::setExpectContinue);
         if (!HttpTransporterUtils.isHttpReuseConnections(session, repository)) {
-            builder.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE);
+            builder.setConnectionReuseStrategy((request, response, context) -> false);
         }
 
         if (session.getCache() != null) {
@@ -343,9 +353,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                             Keys.of(
                                     getClass(),
                                     repository.getId() + "-" + StringDigestUtil.sha1(repository.toString())),
-                            ConcurrentAuthCache::new);
+                            BasicAuthCache::new);
         } else {
-            this.authCache = new ConcurrentAuthCache();
+            this.authCache = new BasicAuthCache();
         }
         this.client = builder.build();
     }
@@ -353,33 +363,27 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     private static HttpHost toHost(Proxy proxy) {
         HttpHost host = null;
         if (proxy != null) {
-            // in Maven, the proxy.protocol is used for proxy matching against remote repository protocol; no TLS proxy
-            // support
-            // https://github.com/apache/maven/issues/2519
-            // https://github.com/apache/maven-resolver/issues/745
-            host = new HttpHost(proxy.getHost(), proxy.getPort());
+            // Proxy.getType() denotes the repository protocol this proxy was selected for, not the protocol used to
+            // talk to the proxy itself: the connection to a forward proxy is plain HTTP even when the repository
+            // behind it is HTTPS. Using proxy.getType() as the HttpHost scheme would make HttpClient attempt a TLS
+            // handshake with a plain-HTTP proxy whenever <proxy><protocol>https</protocol> is set in settings.xml.
+            // See apache/maven#2519 and maven-resolver#745.
+            HttpHost plainHost = new HttpHost(proxy.getHost(), proxy.getPort());
+            host = new HttpHost(plainHost.getHostName(), effectivePort(plainHost));
         }
         return host;
     }
 
     private static CredentialsProvider toCredentialsProvider(
             HttpHost server, AuthenticationContext serverAuthCtx, HttpHost proxy, AuthenticationContext proxyAuthCtx) {
-        CredentialsProvider provider =
-                toCredentialsProvider(server.getHostName(), effectivePort(server), serverAuthCtx);
+        CredentialsProvider provider = toCredentialsProvider(server, serverAuthCtx);
         if (proxy != null) {
-            CredentialsProvider p = toCredentialsProvider(proxy.getHostName(), proxy.getPort(), proxyAuthCtx);
+            CredentialsProvider p = toCredentialsProvider(proxy, proxyAuthCtx);
             provider = new DemuxCredentialsProvider(provider, p, proxy);
         }
         return provider;
     }
 
-    /**
-     * Determines the effective port of the given host: the explicit port if present, otherwise the default port
-     * implied by the scheme. Used to bind repository credentials to the repository's own origin (host and port)
-     * instead of {@link AuthScope#ANY_PORT}: with any-port scoping, a request landing on the same host but a
-     * different port - for example after an https-to-http downgrade redirect - would still be eligible to
-     * receive the credentials.
-     */
     static int effectivePort(HttpHost host) {
         if (host.getPort() >= 0) {
             return host.getPort();
@@ -387,13 +391,13 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         return "https".equalsIgnoreCase(host.getSchemeName()) ? 443 : 80;
     }
 
-    private static CredentialsProvider toCredentialsProvider(String host, int port, AuthenticationContext ctx) {
+    private static CredentialsProvider toCredentialsProvider(HttpHost host, AuthenticationContext ctx) {
         DeferredCredentialsProvider provider = new DeferredCredentialsProvider();
         if (ctx != null) {
-            AuthScope basicScope = new AuthScope(host, port);
+            AuthScope basicScope = new AuthScope(host, null, null);
             provider.setCredentials(basicScope, new DeferredCredentialsProvider.BasicFactory(ctx));
 
-            AuthScope ntlmScope = new AuthScope(host, port, AuthScope.ANY_REALM, "ntlm");
+            AuthScope ntlmScope = new AuthScope(host, null, "ntlm");
             provider.setCredentials(ntlmScope, new DeferredCredentialsProvider.NtlmFactory(ctx));
         }
         return provider;
@@ -458,7 +462,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         } catch (HttpResponseException e) {
             if (e.getStatusCode() == HttpStatus.SC_EXPECTATION_FAILED && request.containsHeader(HttpHeaders.EXPECT)) {
                 state.setExpectContinue(false);
-                request = commonHeaders(entity(new HttpPut(request.getURI()), entity));
+                HttpPut retryRequest = new HttpPut(request.getUri());
+                request = commonHeaders(entity(retryRequest, entity));
                 execute(request, null, task.getListener());
                 return;
             }
@@ -466,9 +471,18 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
-    private void execute(HttpUriRequest request, EntityGetter getter, TransportListener listener) throws Exception {
+    private void execute(ClassicHttpRequest request, EntityGetter getter, TransportListener listener) throws Exception {
         try {
             SharingHttpContext context = new SharingHttpContext(state);
+            RequestConfig config = requestConfig;
+            Boolean expectContinue = state.isExpectContinue();
+            if (expectContinue != null && expectContinue != config.isExpectContinueEnabled()) {
+                config = RequestConfig.copy(config)
+                        .setExpectContinueEnabled(expectContinue)
+                        .build();
+            }
+            context.setRequestConfig(config);
+            context.setCredentialsProvider(credentialsProvider);
             context.setAuthCache(authCache);
             prepare(request, context);
             try (CloseableHttpResponse response = client.execute(server, request, context)) {
@@ -484,6 +498,10 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                     EntityUtils.consumeQuietly(response.getEntity());
                 }
             }
+            Object userToken = context.getUserToken();
+            if (userToken != null) {
+                state.setUserToken(userToken);
+            }
         } catch (IOException e) {
             if (e.getCause() instanceof TransferCancelledException) {
                 throw (Exception) e.getCause();
@@ -492,14 +510,27 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
-    private void prepare(HttpUriRequest request, SharingHttpContext context) throws Exception {
+    private void prepare(ClassicHttpRequest request, SharingHttpContext context) throws Exception {
         final boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
         if (preemptiveAuth || (preemptivePutAuth && put)) {
-            context.getAuthCache().put(server, new BasicScheme());
+            Credentials credentials = credentialsProvider.getCredentials(new AuthScope(server, null, null), context);
+            if (credentials != null) {
+                BasicScheme basicScheme = new BasicScheme();
+                basicScheme.initPreemptive(credentials);
+                authCache.put(server, basicScheme);
+            }
+            if (proxy != null) {
+                Credentials proxyCreds = credentialsProvider.getCredentials(new AuthScope(proxy, null, null), context);
+                if (proxyCreds != null) {
+                    BasicScheme proxyScheme = new BasicScheme();
+                    proxyScheme.initPreemptive(proxyCreds);
+                    authCache.put(proxy, proxyScheme);
+                }
+            }
         }
         if (supportWebDav) {
             if (state.getWebDav() == null && (put || isPayloadPresent(request))) {
-                HttpOptions req = commonHeaders(new HttpOptions(request.getURI()));
+                HttpOptions req = commonHeaders(new HttpOptions(request.getUri()));
                 try (CloseableHttpResponse response = client.execute(server, req, context)) {
                     state.setWebDav(response.containsHeader(HttpHeaders.DAV));
                     EntityUtils.consumeQuietly(response.getEntity());
@@ -508,7 +539,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 }
             }
             if (put && Boolean.TRUE.equals(state.getWebDav())) {
-                mkdirs(request.getURI(), context);
+                mkdirs(request.getUri(), context);
             }
         }
     }
@@ -520,7 +551,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             try (CloseableHttpResponse response =
                     client.execute(server, commonHeaders(new HttpMkCol(dirs.get(index))), context)) {
                 try {
-                    int status = response.getStatusLine().getStatusCode();
+                    int status = response.getCode();
                     if (status < 300 || status == HttpStatus.SC_METHOD_NOT_ALLOWED) {
                         break;
                     } else if (status == HttpStatus.SC_CONFLICT) {
@@ -550,20 +581,17 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
-    private <T extends HttpEntityEnclosingRequest> T entity(T request, HttpEntity entity) {
+    private <T extends ClassicHttpRequest> T entity(T request, HttpEntity entity) {
         request.setEntity(entity);
         return request;
     }
 
-    private boolean isPayloadPresent(HttpUriRequest request) {
-        if (request instanceof HttpEntityEnclosingRequest) {
-            HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
-            return entity != null && entity.getContentLength() != 0;
-        }
-        return false;
+    private boolean isPayloadPresent(ClassicHttpRequest request) {
+        HttpEntity entity = request.getEntity();
+        return entity != null && entity.getContentLength() != 0;
     }
 
-    private <T extends HttpUriRequest> T commonHeaders(T request) {
+    private <T extends ClassicHttpRequest> T commonHeaders(T request) {
         request.setHeader(HttpHeaders.CACHE_CONTROL, "no-cache, no-store");
         request.setHeader(HttpHeaders.PRAGMA, "no-cache");
 
@@ -588,19 +616,20 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         return request;
     }
 
-    private <T extends HttpUriRequest> void resume(T request, GetTask task) throws IOException {
+    private <T extends ClassicHttpRequest> void resume(T request, GetTask task) throws IOException {
         long resumeOffset = task.getResumeOffset();
         if (resumeOffset > 0L && task.getDataPath() != null) {
             long lastModified = Files.getLastModifiedTime(task.getDataPath()).toMillis();
             request.setHeader(HttpHeaders.RANGE, "bytes=" + resumeOffset + '-');
             request.setHeader(
-                    HttpHeaders.IF_UNMODIFIED_SINCE, DateUtils.formatDate(new Date(lastModified - 60L * 1000L)));
+                    HttpHeaders.IF_UNMODIFIED_SINCE,
+                    DateUtils.formatStandardDate(java.time.Instant.ofEpochMilli(lastModified - 60L * 1000L)));
             request.setHeader(HttpHeaders.ACCEPT_ENCODING, "identity");
         }
     }
 
-    private void handleStatus(CloseableHttpResponse response) throws Exception {
-        int status = response.getStatusLine().getStatusCode();
+    private void handleStatus(ClassicHttpResponse response) throws Exception {
+        int status = response.getCode();
         if (status >= 300) {
             ApacheRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
                 throw new HttpResponseException(statusCode, reasonPhrase + " (" + statusCode + ")");
@@ -628,10 +657,10 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             this.task = task;
         }
 
-        public void handle(CloseableHttpResponse response) throws IOException, TransferCancelledException {
+        public void handle(ClassicHttpResponse response) throws IOException, TransferCancelledException {
             HttpEntity entity = response.getEntity();
             if (entity == null) {
-                entity = new ByteArrayEntity(new byte[0]);
+                entity = new ByteArrayEntity(new byte[0], ContentType.APPLICATION_OCTET_STREAM);
             }
 
             long offset = 0L, length = entity.getContentLength();
@@ -677,18 +706,18 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 Header lastModifiedHeader =
                         response.getFirstHeader(HttpHeaders.LAST_MODIFIED); // note: Wagon also does first not last
                 if (lastModifiedHeader != null) {
-                    Date lastModified = DateUtils.parseDate(lastModifiedHeader.getValue());
+                    java.time.Instant lastModified = DateUtils.parseStandardDate(lastModifiedHeader.getValue());
                     if (lastModified != null) {
                         pathProcessor.setLastModified(
                                 task.getDataPath(),
-                                HttpTransporterUtils.clampRemoteLastModified(lastModified.getTime()));
+                                HttpTransporterUtils.clampRemoteLastModified(lastModified.toEpochMilli()));
                     }
                 }
             }
             extractChecksums(response);
         }
 
-        private void extractChecksums(CloseableHttpResponse response) {
+        private void extractChecksums(ClassicHttpResponse response) {
             Map<String, String> checksums = checksumExtractor.extractChecksums(headerGetter(response));
             if (checksums != null && !checksums.isEmpty()) {
                 checksums.forEach(task::setChecksum);
@@ -697,19 +726,22 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     }
 
     private static Map<TransferEvent.TransportPropertyKey, Object> createTransportProperties(
-            CloseableHttpResponse response, HttpCoreContext context) {
+            ClassicHttpResponse response, HttpCoreContext context) {
         HttpTransportPropertiesBuilder builder =
-                new HttpTransportPropertiesBuilder(toHttpVersion(response.getProtocolVersion()));
-        SSLSession sslSession = context.getAttribute(CONTEXT_ATTRIBUTE_NAME_SSL_SESSION, SSLSession.class);
+                new HttpTransportPropertiesBuilder(toHttpVersion(response.getVersion()));
+        HttpClientContext clientContext = HttpClientContext.cast(context);
+        SSLSession sslSession = clientContext.getSSLSession();
         if (sslSession != null) {
             builder.withSslProtocol(sslSession.getProtocol());
             builder.withSslCipherSuite(sslSession.getCipherSuite());
         }
-        // content encoding is not available (see https://issues.apache.org/jira/browse/HTTPCORE-792)
         return builder.build();
     }
 
     static HttpVersion toHttpVersion(ProtocolVersion version) {
+        if (version == null) {
+            return HttpVersion.HTTP_1_1;
+        }
         switch (version.getMajor()) {
             case 1:
                 if (version.getMinor() == 0) {
@@ -726,7 +758,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
-    private static Function<String, String> headerGetter(CloseableHttpResponse closeableHttpResponse) {
+    private static Function<String, String> headerGetter(ClassicHttpResponse closeableHttpResponse) {
         return s -> {
             Header header = closeableHttpResponse.getFirstHeader(s);
             return header != null ? header.getValue() : null;
@@ -738,6 +770,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         private final PutTask task;
 
         PutTaskEntity(PutTask task) {
+            super((ContentType) null, (String) null, false);
             this.task = task;
         }
 
@@ -763,136 +796,190 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
         @Override
         public void writeTo(OutputStream os) throws IOException {
+            if (isConnectionTerminationDrain()) {
+                // DefaultBHttpClientConnection#terminateRequest(ClassicHttpRequest) (org.apache.hc.core5, verified
+                // against 5.3.3 bytecode) calls HttpEntity#writeTo(...) directly - bypassing sendRequestEntity(...)
+                // entirely - to drain a small (0 < Content-Length <= 1024) body that was never sent because a final
+                // response (e.g. an auth challenge) arrived before the entity was written, so the connection can
+                // still be pooled for reuse; skipping this write, as previously done, leaves a re-pooled connection
+                // with the server still awaiting body bytes. This is HTTP wire-protocol framing housekeeping, not a
+                // real upload attempt though, so write the bytes directly instead of through utilPut(): going
+                // through utilPut() here would fire TransportListener#transportStarted()/transportProgressed() for
+                // requests that never actually attempted to upload anything.
+                try (InputStream is = task.newInputStream()) {
+                    byte[] buffer = new byte[1024];
+                    int n;
+                    while ((n = is.read(buffer)) >= 0) {
+                        os.write(buffer, 0, n);
+                    }
+                }
+                return;
+            }
             try {
                 utilPut(task, os, false);
             } catch (TransferCancelledException e) {
                 throw (IOException) new InterruptedIOException().initCause(e);
             }
         }
+
+        private boolean isConnectionTerminationDrain() {
+            for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+                if ("terminateRequest".equals(ste.getMethodName())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void close() throws IOException {
+            // no-op
+        }
     }
 
-    private static class ResolverServiceUnavailableRetryStrategy implements ServiceUnavailableRetryStrategy {
+    /**
+     * Retry strategy restoring HC4-compatible retry semantics on top of HC5's {@link DefaultHttpRequestRetryStrategy}:
+     * I/O-exception retries fire immediately (HC4 did not sleep between them, unlike HC5's default), a response
+     * carrying a Retry-After that would exceed {@code retryIntervalMax} fails the request instead of being retried
+     * after a truncated sleep, and both the historical "standard" and "default" {@code retryHandler.name} modes are
+     * preserved.
+     */
+    private static class ResolverHttpRequestRetryStrategy extends DefaultHttpRequestRetryStrategy {
+
+        private static final Set<Class<? extends IOException>> NON_RETRIABLE_IO_EXCEPTIONS =
+                new java.util.HashSet<>(java.util.Arrays.asList(
+                        InterruptedIOException.class,
+                        javax.net.ssl.SSLException.class,
+                        java.net.UnknownHostException.class,
+                        java.net.ConnectException.class));
+
         private final int retryCount;
 
         private final long retryInterval;
 
         private final long retryIntervalMax;
 
-        private final Set<Integer> serviceUnavailableHttpCodes;
+        private final boolean requestSentRetryEnabled;
 
-        /**
-         * Ugly, but forced by HttpClient API {@link ServiceUnavailableRetryStrategy}: the calls for
-         * {@link #retryRequest(HttpResponse, int, HttpContext)} and {@link #getRetryInterval()} are done by same
-         * thread and are actually done from spot that are very close to each other (almost subsequent calls).
-         */
-        private static final ThreadLocal<Long> RETRY_INTERVAL_HOLDER = new ThreadLocal<>();
+        private final boolean standard;
 
-        private ResolverServiceUnavailableRetryStrategy(
-                int retryCount, long retryInterval, long retryIntervalMax, Set<Integer> serviceUnavailableHttpCodes) {
-            if (retryCount < 0) {
-                throw new IllegalArgumentException("retryCount must be >= 0");
-            }
-            if (retryInterval < 0L) {
-                throw new IllegalArgumentException("retryInterval must be >= 0");
-            }
+        private ResolverHttpRequestRetryStrategy(
+                int retryCount,
+                long retryInterval,
+                long retryIntervalMax,
+                Set<Integer> serviceUnavailableHttpCodes,
+                String retryHandlerName,
+                boolean requestSentRetryEnabled) {
+            super(
+                    validateNotNegative(retryCount, "retryCount"),
+                    TimeValue.ofMilliseconds(validateNotNegative(retryInterval, "retryInterval")),
+                    NON_RETRIABLE_IO_EXCEPTIONS,
+                    requireNonNull(serviceUnavailableHttpCodes, "serviceUnavailableHttpCodes"));
             if (retryIntervalMax < 0L) {
                 throw new IllegalArgumentException("retryIntervalMax must be >= 0");
             }
             this.retryCount = retryCount;
             this.retryInterval = retryInterval;
             this.retryIntervalMax = retryIntervalMax;
-            this.serviceUnavailableHttpCodes = requireNonNull(serviceUnavailableHttpCodes);
+            this.requestSentRetryEnabled = requestSentRetryEnabled;
+            if (HTTP_RETRY_HANDLER_NAME_STANDARD.equals(retryHandlerName)) {
+                this.standard = true;
+            } else if (HTTP_RETRY_HANDLER_NAME_DEFAULT.equals(retryHandlerName)) {
+                this.standard = false;
+            } else {
+                throw new IllegalArgumentException(
+                        "Unsupported parameter " + CONFIG_PROP_HTTP_RETRY_HANDLER_NAME + " value: " + retryHandlerName);
+            }
+        }
+
+        private static int validateNotNegative(int value, String name) {
+            if (value < 0) {
+                throw new IllegalArgumentException(name + " must be >= 0");
+            }
+            return value;
+        }
+
+        private static long validateNotNegative(long value, String name) {
+            if (value < 0L) {
+                throw new IllegalArgumentException(name + " must be >= 0");
+            }
+            return value;
         }
 
         @Override
-        public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
-            final boolean retry = executionCount <= retryCount
-                    && (serviceUnavailableHttpCodes.contains(
-                            response.getStatusLine().getStatusCode()));
-            if (retry) {
-                Long retryInterval = retryInterval(response, executionCount, context);
-                if (retryInterval != null) {
-                    RETRY_INTERVAL_HOLDER.set(retryInterval);
-                    return true;
+        public boolean retryRequest(HttpRequest request, IOException exception, int execCount, HttpContext context) {
+            if (execCount > retryCount) {
+                return false;
+            }
+            for (Class<? extends IOException> nonRetriable : NON_RETRIABLE_IO_EXCEPTIONS) {
+                if (nonRetriable.isInstance(exception)) {
+                    return false;
                 }
             }
-            RETRY_INTERVAL_HOLDER.remove();
-            return false;
+            if (standard) {
+                String method = request.getMethod();
+                if ("GET".equalsIgnoreCase(method)
+                        || "HEAD".equalsIgnoreCase(method)
+                        || "PUT".equalsIgnoreCase(method)
+                        || "OPTIONS".equalsIgnoreCase(method)) {
+                    return true;
+                }
+                return requestSentRetryEnabled;
+            }
+            // HC4's "default" handler retried any request that had not yet been fully sent, i.e.
+            // (!requestSent || requestSentRetryEnabled). HC5's HttpRequestRetryStrategy exposes no signal for
+            // whether the request line/body was actually written to the wire, so !requestSent cannot be
+            // reproduced here. Widen coverage as far as the HC5 API permits by additionally retrying idempotent
+            // methods (DefaultHttpRequestRetryStrategy#handleAsIdempotent), instead of narrowing to bare
+            // requestSentRetryEnabled as before.
+            return requestSentRetryEnabled || handleAsIdempotent(request);
         }
 
-        /**
-         * Calculates retry interval in milliseconds. If {@link HttpHeaders#RETRY_AFTER} header present, it obeys it.
-         * Otherwise, it returns {@link this#retryInterval} long value multiplied with {@code executionCount} (starts
-         * from 1 and goes 2, 3,...).
-         *
-         * @return Long representing the retry interval as millis, or {@code null} if the request should be failed.
-         */
-        private Long retryInterval(HttpResponse httpResponse, int executionCount, HttpContext httpContext) {
-            Long result = null;
-            Header header = httpResponse.getFirstHeader(HttpHeaders.RETRY_AFTER);
+        @Override
+        public TimeValue getRetryInterval(
+                HttpRequest request, IOException exception, int execCount, HttpContext context) {
+            // HC4 retried I/O errors immediately; reproduce that instead of HC5's default inter-attempt sleep.
+            return TimeValue.ZERO_MILLISECONDS;
+        }
+
+        @Override
+        public boolean retryRequest(HttpResponse response, int execCount, HttpContext context) {
+            if (!super.retryRequest(response, execCount, context)) {
+                return false;
+            }
+            // Fail fast instead of retrying when the computed interval (including a server Retry-After) would
+            // exceed retryIntervalMax, per the documented contract of
+            // aether.connector.http.retryHandler.intervalMax.
+            return getRetryInterval(response, execCount, context).toMilliseconds() <= retryIntervalMax;
+        }
+
+        @Override
+        public TimeValue getRetryInterval(HttpResponse response, int execCount, HttpContext context) {
+            // Deliberately not delegated to DefaultHttpRequestRetryStrategy#getRetryInterval(HttpResponse,...):
+            // that base implementation falls back to a constant defaultRetryInterval when no Retry-After header is
+            // present, whereas this transport's documented/tested contract is a linear back-off
+            // (execCount * retryInterval) for that case. Retry-After parsing below mirrors the base class but uses
+            // the non-deprecated DateUtils.parseStandardDate. The result is intentionally left uncapped here;
+            // retryRequest(HttpResponse,...) above is what compares it against retryIntervalMax and fails fast.
+            Header header = response.getFirstHeader(HttpHeaders.RETRY_AFTER);
             if (header != null && header.getValue() != null) {
                 String headerValue = header.getValue();
-                if (headerValue.contains(":")) { // is date when to retry
-                    Date when = DateUtils.parseDate(headerValue); // presumably future
+                if (headerValue.contains(":")) {
+                    java.time.Instant when = DateUtils.parseStandardDate(headerValue);
                     if (when != null) {
-                        result = Math.max(when.getTime() - System.currentTimeMillis(), 0L);
+                        long diff = Math.max(when.toEpochMilli() - System.currentTimeMillis(), 0L);
+                        return TimeValue.ofMilliseconds(diff);
                     }
                 } else {
                     try {
-                        result = Long.parseLong(headerValue) * 1000L; // is in seconds
+                        long seconds = Long.parseLong(headerValue);
+                        return TimeValue.ofMilliseconds(seconds * 1000L);
                     } catch (NumberFormatException e) {
-                        // fall through
+                        // fall through to the linear back-off below
                     }
                 }
             }
-            if (result == null) {
-                result = executionCount * this.retryInterval;
-            }
-            if (result > retryIntervalMax) {
-                return null;
-            }
-            return result;
-        }
-
-        @Override
-        public long getRetryInterval() {
-            Long ri = RETRY_INTERVAL_HOLDER.get();
-            if (ri == null) {
-                return 0L;
-            }
-            RETRY_INTERVAL_HOLDER.remove();
-            return ri;
-        }
-    }
-
-    static class ConcurrentAuthCache implements AuthCache {
-        private final ConcurrentHashMap<HttpHost, AuthScheme> map = new ConcurrentHashMap<>();
-
-        @Override
-        public void put(HttpHost host, AuthScheme authScheme) {
-            if (host != null && authScheme != null) {
-                map.put(host, authScheme);
-            }
-        }
-
-        @Override
-        public AuthScheme get(HttpHost host) {
-            if (host == null) {
-                return null;
-            }
-            return map.get(host);
-        }
-
-        @Override
-        public void remove(HttpHost host) {
-            if (host != null) {
-                map.remove(host);
-            }
-        }
-
-        @Override
-        public void clear() {
-            map.clear();
+            return TimeValue.ofMilliseconds((long) execCount * retryInterval);
         }
     }
 }

@@ -20,26 +20,24 @@ package org.eclipse.aether.transport.apache5;
 
 import java.net.URI;
 
-import org.apache.http.Header;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolException;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.LaxRedirectStrategy;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.client5.http.impl.DefaultRedirectStrategy;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.ProtocolException;
+import org.apache.hc.core5.http.protocol.HttpContext;
 
 /**
  * A redirect strategy that refuses protocol downgrades: a redirect from an {@code https} URL to an {@code http}
  * URL strips transport encryption from artifact and checksum bytes and makes repository credentials eligible for
  * transmission over plaintext, so it fails the transfer instead of being followed silently, unless explicitly
  * allowed via {@link ApacheTransporterConfigurationKeys#CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS}. All other
- * redirects behave exactly as {@link LaxRedirectStrategy} handled them before.
+ * redirects behave exactly as {@link DefaultRedirectStrategy} handles them.
  *
  * @since 2.0.23
  */
-final class ResolverRedirectStrategy extends LaxRedirectStrategy {
+final class ResolverRedirectStrategy extends DefaultRedirectStrategy {
     private final boolean followInsecureRedirects;
 
     ResolverRedirectStrategy(boolean followInsecureRedirects) {
@@ -51,9 +49,13 @@ final class ResolverRedirectStrategy extends LaxRedirectStrategy {
             throws ProtocolException {
         boolean redirected = super.isRedirected(request, response, context);
         if (redirected && !followInsecureRedirects) {
-            Header locationHeader = response.getFirstHeader("location");
-            if (locationHeader != null) {
-                URI location = createLocationURI(locationHeader.getValue());
+            URI location;
+            try {
+                location = getLocationURI(request, response, context);
+            } catch (HttpException e) {
+                throw new ProtocolException("Invalid redirect location: " + e.getMessage(), e);
+            }
+            if (location != null) {
                 String locationScheme = location.getScheme();
                 String currentScheme = currentScheme(request, context);
                 if (locationScheme != null
@@ -71,15 +73,22 @@ final class ResolverRedirectStrategy extends LaxRedirectStrategy {
     }
 
     private static String currentScheme(HttpRequest request, HttpContext context) {
-        HttpHost target = context != null ? HttpClientContext.adapt(context).getTargetHost() : null;
-        if (target != null) {
-            return target.getSchemeName();
+        if (context != null) {
+            HttpClientContext clientContext = HttpClientContext.cast(context);
+            if (clientContext.getHttpRoute() != null) {
+                return clientContext.getHttpRoute().getTargetHost().getSchemeName();
+            }
         }
-        if (request instanceof HttpUriRequest) {
-            URI uri = ((HttpUriRequest) request).getURI();
+        if (request.getScheme() != null) {
+            return request.getScheme();
+        }
+        try {
+            URI uri = request.getUri();
             if (uri != null && uri.isAbsolute()) {
                 return uri.getScheme();
             }
+        } catch (Exception e) {
+            // ignore
         }
         return null;
     }

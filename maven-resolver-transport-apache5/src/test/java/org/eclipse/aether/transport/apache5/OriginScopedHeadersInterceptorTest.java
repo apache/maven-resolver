@@ -20,11 +20,10 @@ package org.eclipse.aether.transport.apache5;
 
 import java.util.Arrays;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.message.BasicHttpRequest;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * any other target (cross-host, downgraded scheme or different port - e.g. after a redirect) must not receive them.
  */
 public class OriginScopedHeadersInterceptorTest {
-    private static final HttpHost ORIGIN = new HttpHost("repo.example.com", -1, "https");
+    private static final HttpHost ORIGIN = new HttpHost("https", "repo.example.com", -1);
 
     private final OriginScopedHeadersInterceptor interceptor =
             new OriginScopedHeadersInterceptor(ORIGIN, Arrays.asList("Authorization", "Private-Token"));
@@ -50,9 +49,15 @@ public class OriginScopedHeadersInterceptorTest {
     }
 
     private static HttpContext contextTargeting(HttpHost target) {
-        HttpCoreContext context = HttpCoreContext.create();
+        org.apache.hc.client5.http.protocol.HttpClientContext context =
+                org.apache.hc.client5.http.protocol.HttpClientContext.create();
         if (target != null) {
-            context.setAttribute(HttpCoreContext.HTTP_TARGET_HOST, target);
+            int port = target.getPort() >= 0
+                    ? target.getPort()
+                    : ("https".equalsIgnoreCase(target.getSchemeName()) ? 443 : 80);
+            context.setRoute(new org.apache.hc.client5.http.HttpRoute(
+                    new HttpHost(target.getSchemeName(), target.getHostName(), port)));
+            context.setAttribute("http.target_host", target);
         }
         return context;
     }
@@ -73,42 +78,42 @@ public class OriginScopedHeadersInterceptorTest {
     @Test
     void keepsHeadersForOrigin() throws Exception {
         HttpRequest request = newRequestWithConfiguredHeaders();
-        interceptor.process(request, contextTargeting(new HttpHost("repo.example.com", -1, "https")));
+        interceptor.process(request, null, contextTargeting(new HttpHost("https", "repo.example.com", -1)));
         assertConfiguredHeadersPresent(request);
     }
 
     @Test
     void keepsHeadersForOriginWithExplicitDefaultPort() throws Exception {
         HttpRequest request = newRequestWithConfiguredHeaders();
-        interceptor.process(request, contextTargeting(new HttpHost("repo.example.com", 443, "https")));
+        interceptor.process(request, null, contextTargeting(new HttpHost("https", "repo.example.com", 443)));
         assertConfiguredHeadersPresent(request);
     }
 
     @Test
     void keepsHeadersForOriginWithDifferentHostCase() throws Exception {
         HttpRequest request = newRequestWithConfiguredHeaders();
-        interceptor.process(request, contextTargeting(new HttpHost("REPO.Example.COM", -1, "HTTPS")));
+        interceptor.process(request, null, contextTargeting(new HttpHost("HTTPS", "REPO.Example.COM", -1)));
         assertConfiguredHeadersPresent(request);
     }
 
     @Test
     void stripsHeadersForCrossHostTarget() throws Exception {
         HttpRequest request = newRequestWithConfiguredHeaders();
-        interceptor.process(request, contextTargeting(new HttpHost("cdn.example.net", -1, "https")));
+        interceptor.process(request, null, contextTargeting(new HttpHost("https", "cdn.example.net", -1)));
         assertConfiguredHeadersStripped(request);
     }
 
     @Test
     void stripsHeadersForSchemeDowngradeOnSameHost() throws Exception {
         HttpRequest request = newRequestWithConfiguredHeaders();
-        interceptor.process(request, contextTargeting(new HttpHost("repo.example.com", -1, "http")));
+        interceptor.process(request, null, contextTargeting(new HttpHost("http", "repo.example.com", -1)));
         assertConfiguredHeadersStripped(request);
     }
 
     @Test
     void stripsHeadersForDifferentPortOnSameHost() throws Exception {
         HttpRequest request = newRequestWithConfiguredHeaders();
-        interceptor.process(request, contextTargeting(new HttpHost("repo.example.com", 8443, "https")));
+        interceptor.process(request, null, contextTargeting(new HttpHost("https", "repo.example.com", 8443)));
         assertConfiguredHeadersStripped(request);
     }
 
@@ -116,7 +121,7 @@ public class OriginScopedHeadersInterceptorTest {
     void stripsHeadersWhenTargetHostUnknown() throws Exception {
         // fail closed: no determinable target means configured headers are not attached
         HttpRequest request = newRequestWithConfiguredHeaders();
-        interceptor.process(request, contextTargeting(null));
+        interceptor.process(request, null, contextTargeting(null));
         assertConfiguredHeadersStripped(request);
     }
 
@@ -125,14 +130,14 @@ public class OriginScopedHeadersInterceptorTest {
         OriginScopedHeadersInterceptor empty =
                 new OriginScopedHeadersInterceptor(ORIGIN, Arrays.asList(new Object[] {null}));
         HttpRequest request = newRequestWithConfiguredHeaders();
-        empty.process(request, contextTargeting(new HttpHost("cdn.example.net", -1, "https")));
+        empty.process(request, null, contextTargeting(new HttpHost("https", "cdn.example.net", -1)));
         assertConfiguredHeadersPresent(request);
     }
 
     @Test
     void effectivePortFollowsScheme() {
-        assertEquals(443, OriginScopedHeadersInterceptor.schemeDefaultPort(new HttpHost("h", -1, "https")));
-        assertEquals(80, OriginScopedHeadersInterceptor.schemeDefaultPort(new HttpHost("h", -1, "http")));
-        assertEquals(8081, OriginScopedHeadersInterceptor.schemeDefaultPort(new HttpHost("h", 8081, "https")));
+        assertEquals(443, OriginScopedHeadersInterceptor.schemeDefaultPort(new HttpHost("https", "h", -1)));
+        assertEquals(80, OriginScopedHeadersInterceptor.schemeDefaultPort(new HttpHost("http", "h", -1)));
+        assertEquals(8081, OriginScopedHeadersInterceptor.schemeDefaultPort(new HttpHost("https", "h", 8081)));
     }
 }

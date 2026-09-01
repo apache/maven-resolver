@@ -18,15 +18,18 @@
  */
 package org.eclipse.aether.transport.apache5;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.core5.http.protocol.HttpContext;
 
 /**
  * Scopes operator-configured request headers ({@code aether.transport.http.headers}) to the repository origin.
@@ -58,13 +61,20 @@ final class OriginScopedHeadersInterceptor implements HttpRequestInterceptor {
     }
 
     @Override
-    public void process(HttpRequest request, HttpContext context) {
+    public void process(HttpRequest request, EntityDetails entity, HttpContext context)
+            throws HttpException, IOException {
         if (headerNames.isEmpty()) {
             return;
         }
-        Object attribute = context != null ? context.getAttribute(HttpCoreContext.HTTP_TARGET_HOST) : null;
+        HttpHost target = null;
+        if (context != null) {
+            HttpClientContext clientContext = HttpClientContext.cast(context);
+            if (clientContext.getHttpRoute() != null) {
+                target = clientContext.getHttpRoute().getTargetHost();
+            }
+        }
         // fail closed: when the target host cannot be determined, do not attach configured headers
-        if (!(attribute instanceof HttpHost) || !isSameOrigin(origin, (HttpHost) attribute)) {
+        if (target == null || !isSameOrigin(origin, target)) {
             for (String headerName : headerNames) {
                 request.removeHeaders(headerName);
             }

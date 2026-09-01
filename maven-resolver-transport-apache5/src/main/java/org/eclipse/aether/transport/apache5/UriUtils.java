@@ -23,8 +23,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.client.utils.URIUtils;
-
 /**
  * Helps to deal with URIs.
  */
@@ -42,7 +40,7 @@ final class UriUtils {
                 }
             }
         }
-        return URIUtils.resolve(base, ref);
+        return org.apache.hc.client5.http.utils.URIUtils.resolve(base, ref);
     }
 
     public static List<URI> getDirectories(URI base, URI uri) {

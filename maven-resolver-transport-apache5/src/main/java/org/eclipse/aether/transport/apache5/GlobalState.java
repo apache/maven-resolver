@@ -19,6 +19,7 @@
 package org.eclipse.aether.transport.apache5;
 
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
 import java.io.Closeable;
@@ -27,21 +28,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.conn.DefaultHttpClientConnectionOperator;
-import org.apache.http.impl.conn.DefaultSchemePortResolver;
-import org.apache.http.impl.conn.ManagedHttpClientConnectionFactory;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.conn.SystemDefaultDnsResolver;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.SSLInitializationException;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.HttpsSupport;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.core5.ssl.SSLInitializationException;
+import org.apache.hc.core5.util.TimeValue;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositoryCache;
@@ -53,16 +48,6 @@ import org.eclipse.aether.util.ConfigUtils;
  * communication with servers.
  */
 final class GlobalState implements Closeable {
-
-    static {
-        // force initialization of SSLConnectionSocketFactory class:
-        // ensure that the connection socket factory is initialized before we start using it in any multithreaded
-        // environment, otherwise we may run into a deadlock.
-        // References:
-        // https://github.com/quarkusio/quarkus/issues/55317
-        // https://github.com/quarkusio/quarkus/pull/55345
-        SSLConnectionSocketFactory.getDefaultHostnameVerifier();
-    }
 
     static class CompoundKey {
 
@@ -145,7 +130,7 @@ final class GlobalState implements Closeable {
                 it.hasNext(); ) {
             HttpClientConnectionManager connMgr = it.next().getValue();
             it.remove();
-            connMgr.shutdown();
+            connMgr.close(org.apache.hc.core5.io.CloseMode.GRACEFUL);
         }
     }
 
@@ -154,34 +139,32 @@ final class GlobalState implements Closeable {
     }
 
     public static HttpClientConnectionManager newConnectionManager(ConnMgrConfig connMgrConfig) {
-        RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register("http", PlainConnectionSocketFactory.getSocketFactory());
+        PoolingHttpClientConnectionManagerBuilder builder = PoolingHttpClientConnectionManagerBuilder.create();
         int connectionMaxTtlSeconds = ConfigurationProperties.DEFAULT_HTTP_CONNECTION_MAX_TTL;
         int maxConnectionsPerRoute = ConfigurationProperties.DEFAULT_HTTP_MAX_CONNECTIONS_PER_ROUTE;
 
         if (connMgrConfig == null) {
-            registryBuilder.register("https", SSLConnectionSocketFactory.getSystemSocketFactory());
+            builder.setSSLSocketFactory(SSLConnectionSocketFactory.getSocketFactory());
         } else {
-            // config present: use provided, if any, or create (depending on httpsSecurityMode)
             connectionMaxTtlSeconds = connMgrConfig.connectionMaxTtlSeconds;
             maxConnectionsPerRoute = connMgrConfig.maxConnectionsPerRoute;
-            SSLSocketFactory sslSocketFactory =
-                    connMgrConfig.context != null ? connMgrConfig.context.getSocketFactory() : null;
+
+            SSLContext sslContext = connMgrConfig.context;
             HostnameVerifier hostnameVerifier = connMgrConfig.verifier;
+
             if (ConfigurationProperties.HTTPS_SECURITY_MODE_DEFAULT.equals(connMgrConfig.httpsSecurityMode)) {
-                if (sslSocketFactory == null) {
-                    sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-                }
                 if (hostnameVerifier == null) {
-                    hostnameVerifier = SSLConnectionSocketFactory.getDefaultHostnameVerifier();
+                    // HttpsSupport.getDefaultHostnameVerifier(), unlike `new DefaultHostnameVerifier()`, wires up a
+                    // PublicSuffixMatcher so a wildcard certificate spanning a public suffix (e.g. *.github.io,
+                    // *.co.uk) is correctly rejected instead of verified.
+                    hostnameVerifier = HttpsSupport.getDefaultHostnameVerifier();
                 }
             } else if (ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(connMgrConfig.httpsSecurityMode)) {
-                if (sslSocketFactory == null) {
+                if (sslContext == null) {
                     try {
-                        sslSocketFactory = new SSLContextBuilder()
+                        sslContext = new SSLContextBuilder()
                                 .loadTrustMaterial(null, (chain, auth) -> true)
-                                .build()
-                                .getSocketFactory();
+                                .build();
                     } catch (Exception e) {
                         throw new SSLInitializationException(
                                 "Could not configure '" + connMgrConfig.httpsSecurityMode + "' HTTPS security mode", e);
@@ -195,21 +178,24 @@ final class GlobalState implements Closeable {
                         "Unsupported '" + connMgrConfig.httpsSecurityMode + "' HTTPS security mode.");
             }
 
-            registryBuilder.register(
-                    "https",
-                    new SSLConnectionSocketFactory(
-                            sslSocketFactory, connMgrConfig.protocols, connMgrConfig.cipherSuites, hostnameVerifier));
+            SSLConnectionSocketFactory sslSocketFactory;
+            if (sslContext != null) {
+                sslSocketFactory = new SSLConnectionSocketFactory(
+                        sslContext, connMgrConfig.protocols, connMgrConfig.cipherSuites, hostnameVerifier);
+            } else {
+                sslSocketFactory = new SSLConnectionSocketFactory(
+                        (SSLSocketFactory) SSLSocketFactory.getDefault(),
+                        connMgrConfig.protocols,
+                        connMgrConfig.cipherSuites,
+                        hostnameVerifier);
+            }
+            builder.setSSLSocketFactory(sslSocketFactory);
         }
 
-        PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager(
-                new DefaultHttpClientConnectionOperator(
-                        registryBuilder.build(), DefaultSchemePortResolver.INSTANCE, SystemDefaultDnsResolver.INSTANCE),
-                ManagedHttpClientConnectionFactory.INSTANCE,
-                connectionMaxTtlSeconds,
-                TimeUnit.SECONDS);
-        connMgr.setMaxTotal(maxConnectionsPerRoute * 2);
-        connMgr.setDefaultMaxPerRoute(maxConnectionsPerRoute);
-        return connMgr;
+        builder.setMaxConnTotal(maxConnectionsPerRoute * 2);
+        builder.setMaxConnPerRoute(maxConnectionsPerRoute);
+        builder.setConnectionTimeToLive(TimeValue.ofSeconds(connectionMaxTtlSeconds));
+        return builder.build();
     }
 
     public Object getUserToken(CompoundKey key) {

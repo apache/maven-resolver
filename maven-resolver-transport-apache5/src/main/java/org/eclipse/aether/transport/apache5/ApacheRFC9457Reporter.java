@@ -21,16 +21,16 @@ package org.eclipse.aether.transport.apache5;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpRequest;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.hc.client5.http.HttpResponseException;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpRequest;
 import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
-public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse, HttpResponseException, HttpRequest> {
+public class ApacheRFC9457Reporter extends RFC9457Reporter<ClassicHttpResponse, HttpResponseException, HttpRequest> {
     public static final ApacheRFC9457Reporter INSTANCE = new ApacheRFC9457Reporter();
 
     private ApacheRFC9457Reporter() {}
@@ -41,7 +41,7 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
     }
 
     @Override
-    protected boolean isRFC9457Message(final CloseableHttpResponse response) {
+    protected boolean isRFC9457Message(final ClassicHttpResponse response) {
         Header[] headers = response.getHeaders(HttpHeaders.CONTENT_TYPE);
         if (headers.length > 0) {
             String contentType = headers[0].getValue();
@@ -51,13 +51,13 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
     }
 
     @Override
-    protected int getStatusCode(final CloseableHttpResponse response) {
-        return response.getStatusLine().getStatusCode();
+    protected int getStatusCode(final ClassicHttpResponse response) {
+        return response.getCode();
     }
 
     @Override
-    protected String getReasonPhrase(final CloseableHttpResponse response) {
-        String reasonPhrase = response.getStatusLine().getReasonPhrase();
+    protected String getReasonPhrase(final ClassicHttpResponse response) {
+        String reasonPhrase = response.getReasonPhrase();
         if (reasonPhrase == null || reasonPhrase.isEmpty()) {
             return "";
         }
@@ -66,7 +66,7 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
     }
 
     @Override
-    protected String getBody(final CloseableHttpResponse response) throws IOException {
+    protected String getBody(final ClassicHttpResponse response) throws IOException {
         HttpEntity entity = response.getEntity();
         if (entity == null) {
             return "";

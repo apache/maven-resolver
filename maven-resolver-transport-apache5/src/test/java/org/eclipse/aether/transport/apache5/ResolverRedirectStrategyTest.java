@@ -18,16 +18,14 @@
  */
 package org.eclipse.aether.transport.apache5;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.ProtocolException;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
+import org.apache.hc.client5.http.HttpRoute;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.ProtocolException;
+import org.apache.hc.core5.http.message.BasicHttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,14 +38,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class ResolverRedirectStrategyTest {
     private static HttpResponse redirectResponse(String location) {
-        HttpResponse response = new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 302, "Found"));
+        HttpResponse response = new BasicHttpResponse(302, "Found");
         response.setHeader("Location", location);
         return response;
     }
 
     private static HttpContext contextWithTarget(HttpHost target) {
         HttpClientContext context = HttpClientContext.create();
-        context.setAttribute(HttpCoreContext.HTTP_TARGET_HOST, target);
+        if (target != null) {
+            context.setAttribute("http.target_host", target);
+            context.setRoute(new HttpRoute(target));
+        }
         return context;
     }
 
@@ -56,7 +57,7 @@ class ResolverRedirectStrategyTest {
         ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("http://repo.example.com/g/a/1.0/a-1.0.jar");
-        HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
+        HttpContext context = contextWithTarget(new HttpHost("https", "repo.example.com", 443));
 
         ProtocolException e =
                 assertThrows(ProtocolException.class, () -> strategy.isRedirected(request, response, context));
@@ -68,47 +69,47 @@ class ResolverRedirectStrategyTest {
         ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("http://evil.example.org/g/a/1.0/a-1.0.jar");
-        HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
+        HttpContext context = contextWithTarget(new HttpHost("https", "repo.example.com", 443));
 
         assertThrows(ProtocolException.class, () -> strategy.isRedirected(request, response, context));
     }
 
     @Test
-    void httpsToHttpsRedirectFollowed() throws ProtocolException {
+    void httpsToHttpsRedirectFollowed() throws Exception {
         ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("https://mirror.example.com/g/a/1.0/a-1.0.jar");
-        HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
+        HttpContext context = contextWithTarget(new HttpHost("https", "repo.example.com", 443));
 
         assertTrue(strategy.isRedirected(request, response, context));
     }
 
     @Test
-    void relativeRedirectFollowed() throws ProtocolException {
+    void relativeRedirectFollowed() throws Exception {
         ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("/elsewhere/a-1.0.jar");
-        HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
+        HttpContext context = contextWithTarget(new HttpHost("https", "repo.example.com", 443));
 
         assertTrue(strategy.isRedirected(request, response, context));
     }
 
     @Test
-    void httpToHttpRedirectFollowed() throws ProtocolException {
+    void httpToHttpRedirectFollowed() throws Exception {
         ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
         HttpGet request = new HttpGet("http://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("http://mirror.example.com/g/a/1.0/a-1.0.jar");
-        HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 80, "http"));
+        HttpContext context = contextWithTarget(new HttpHost("http", "repo.example.com", 80));
 
         assertTrue(strategy.isRedirected(request, response, context));
     }
 
     @Test
-    void httpsToHttpRedirectFollowedWhenExplicitlyAllowed() throws ProtocolException {
+    void httpsToHttpRedirectFollowedWhenExplicitlyAllowed() throws Exception {
         ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(true);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("http://repo.example.com/g/a/1.0/a-1.0.jar");
-        HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
+        HttpContext context = contextWithTarget(new HttpHost("https", "repo.example.com", 443));
 
         assertTrue(strategy.isRedirected(request, response, context));
     }
@@ -125,9 +126,9 @@ class ResolverRedirectStrategyTest {
 
     @Test
     void repositoryCredentialScopeIsBoundToSchemeImpliedPort() {
-        assertEquals(443, ApacheTransporter.effectivePort(new HttpHost("repo.example.com", -1, "https")));
-        assertEquals(80, ApacheTransporter.effectivePort(new HttpHost("repo.example.com", -1, "http")));
-        assertEquals(8443, ApacheTransporter.effectivePort(new HttpHost("repo.example.com", 8443, "https")));
-        assertEquals(8081, ApacheTransporter.effectivePort(new HttpHost("repo.example.com", 8081, "http")));
+        assertEquals(443, ApacheTransporter.effectivePort(new HttpHost("https", "repo.example.com", -1)));
+        assertEquals(80, ApacheTransporter.effectivePort(new HttpHost("http", "repo.example.com", -1)));
+        assertEquals(8443, ApacheTransporter.effectivePort(new HttpHost("https", "repo.example.com", 8443)));
+        assertEquals(8081, ApacheTransporter.effectivePort(new HttpHost("http", "repo.example.com", 8081)));
     }
 }

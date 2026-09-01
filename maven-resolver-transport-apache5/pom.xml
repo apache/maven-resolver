@@ -29,7 +29,7 @@
   <artifactId>maven-resolver-transport-apache5</artifactId>
 
   <name>Maven Artifact Resolver Transport Apache 5</name>
-  <description>A transport implementation for repositories using http:// and https:// URLs based on Apache HTTP Client 4.5.</description>
+  <description>A transport implementation for repositories using http:// and https:// URLs based on Apache HTTP Client 5.x.</description>
 
   <dependencies>
     <dependency>
@@ -45,26 +45,14 @@
       <artifactId>maven-resolver-util</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.14</version>
-      <exclusions>
-        <exclusion>
-          <!-- using jcl-over-slf4j instead -->
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <!-- httpclient uses old codec -->
-          <groupId>commons-codec</groupId>
-          <artifactId>commons-codec</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
+      <version>5.4.2</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-      <version>4.4.16</version>
+      <groupId>org.apache.httpcomponents.core5</groupId>
+      <artifactId>httpcore5</artifactId>
+      <version>5.3.3</version>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
@@ -75,12 +63,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <version>${version.slf4j}</version>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>

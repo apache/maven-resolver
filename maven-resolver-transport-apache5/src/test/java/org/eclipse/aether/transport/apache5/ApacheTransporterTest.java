@@ -23,8 +23,8 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
-import org.apache.http.pool.ConnPoolControl;
-import org.apache.http.pool.PoolStats;
+import org.apache.hc.core5.pool.ConnPoolControl;
+import org.apache.hc.core5.pool.PoolStats;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.internal.test.util.TestFileUtils;

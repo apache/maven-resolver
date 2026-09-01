@@ -20,7 +20,7 @@ package org.eclipse.aether.transport.apache5;
 
 import java.io.Closeable;
 
-import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -102,7 +102,7 @@ final class LocalState implements Closeable {
     @Override
     public void close() {
         if (global == null) {
-            connMgr.shutdown();
+            connMgr.close(org.apache.hc.core5.io.CloseMode.GRACEFUL);
         }
     }
 }

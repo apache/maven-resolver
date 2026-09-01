@@ -18,10 +18,11 @@
  */
 package org.eclipse.aether.transport.apache5;
 
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
-import org.apache.http.client.CredentialsProvider;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.Credentials;
+import org.apache.hc.client5.http.auth.CredentialsProvider;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.protocol.HttpContext;
 
 /**
  * Credentials provider that helps to isolate server from proxy credentials. Apache HttpClient uses a single provider
@@ -54,18 +55,7 @@ final class DemuxCredentialsProvider implements CredentialsProvider {
     }
 
     @Override
-    public Credentials getCredentials(AuthScope authScope) {
-        return getDelegate(authScope).getCredentials(authScope);
-    }
-
-    @Override
-    public void setCredentials(AuthScope authScope, Credentials credentials) {
-        getDelegate(authScope).setCredentials(authScope, credentials);
-    }
-
-    @Override
-    public void clear() {
-        serverCredentialsProvider.clear();
-        proxyCredentialsProvider.clear();
+    public Credentials getCredentials(AuthScope authScope, HttpContext context) {
+        return getDelegate(authScope).getCredentials(authScope, context);
     }
 }

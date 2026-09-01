@@ -20,19 +20,16 @@ package org.eclipse.aether.transport.apache5;
 
 import java.net.URI;
 
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 
 /**
  * WebDAV MKCOL request to create parent directories.
  */
-final class HttpMkCol extends HttpRequestBase {
+final class HttpMkCol extends HttpUriRequestBase {
+
+    public static final String METHOD_NAME = "MKCOL";
 
     HttpMkCol(URI uri) {
-        setURI(uri);
-    }
-
-    @Override
-    public String getMethod() {
-        return "MKCOL";
+        super(METHOD_NAME, uri);
     }
 }

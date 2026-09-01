@@ -18,45 +18,26 @@
  */
 package org.eclipse.aether.transport.apache5;
 
-import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
 
 /**
  * HTTP context that shares certain attributes among requests to optimize the communication with the server.
+ *
+ * <p>Apache HttpClient 5 stores the per-connection user token (see {@link #getUserToken()}/{@link
+ * #setUserToken(Object)}) in a private typed field, not via the generic {@link #getAttribute(String)}/{@link
+ * #setAttribute(String, Object)} map, so seeding and capturing it must go through the typed accessors: this class
+ * seeds the token persisted in {@link LocalState} into the new context here, and the caller reads it back with
+ * {@link #getUserToken()} after the request completes to persist it again.
  *
  * @see <a href="http://hc.apache.org/httpcomponents-client-ga/tutorial/html/advanced.html#stateful_conn">Stateful HTTP
  *      connections</a>
  */
 final class SharingHttpContext extends HttpClientContext {
 
-    private final LocalState state;
-
     SharingHttpContext(LocalState state) {
-        this.state = state;
-    }
-
-    @Override
-    public Object getAttribute(String id) {
-        if (HttpClientContext.USER_TOKEN.equals(id)) {
-            return state.getUserToken();
+        Object token = state.getUserToken();
+        if (token != null) {
+            setUserToken(token);
         }
-        return super.getAttribute(id);
-    }
-
-    @Override
-    public void setAttribute(String id, Object obj) {
-        if (HttpClientContext.USER_TOKEN.equals(id)) {
-            state.setUserToken(obj);
-        } else {
-            super.setAttribute(id, obj);
-        }
-    }
-
-    @Override
-    public Object removeAttribute(String id) {
-        if (HttpClientContext.USER_TOKEN.equals(id)) {
-            state.setUserToken(null);
-            return null;
-        }
-        return super.removeAttribute(id);
     }
 }
