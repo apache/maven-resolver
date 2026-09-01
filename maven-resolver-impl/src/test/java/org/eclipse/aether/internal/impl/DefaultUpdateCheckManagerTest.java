@@ -18,9 +18,12 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
@@ -98,6 +101,22 @@ public class DefaultUpdateCheckManagerTest {
 
     static void resetSessionData(RepositorySystemSession session) {
         session.getData().set(DefaultUpdateCheckManager.SESSION_CHECKS, null);
+        session.getData().set(DefaultUpdateCheckManager.SESSION_NOT_FOUNDS, null);
+    }
+
+    /**
+     * Runs the action while capturing what the slf4j-simple binding (bound to {@code System.err}) writes.
+     */
+    private static String captureStdErr(Runnable action) throws Exception {
+        PrintStream original = System.err;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        try (PrintStream capture = new PrintStream(buffer, true, "UTF-8")) {
+            System.setErr(capture);
+            action.run();
+        } finally {
+            System.setErr(original);
+        }
+        return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
     }
 
     private UpdateCheck<Metadata, MetadataTransferException> newMetadataCheck() {
@@ -165,6 +184,50 @@ public class DefaultUpdateCheckManagerTest {
             props.load(fis);
         }
         assertEquals("some error", props.getProperty("file:///other-repo/.error"));
+    }
+
+    @Test
+    void testTouchArtifactWarnsAboutSiblingNotFoundFromPreviousSession() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        // a previous session cached a not-found answer from another repository
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
+        notFound.setRepository(other);
+        notFound.setAuthoritativeRepository(other);
+        notFound.setException(new ArtifactNotFoundException(artifact, other));
+        manager.touchArtifact(session, notFound);
+        assertTrue(touchFile.exists());
+
+        // in a new session the other repository is never contacted because of the cached not-found, so a
+        // successful download from a sibling repository is a silent reroute worth a warning
+        resetSessionData(session);
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        String log = captureStdErr(() -> manager.touchArtifact(session, success));
+        assertTrue(log.contains("WARN"), log);
+        assertTrue(log.contains("file:///other-repo/"), log);
+        assertFalse(touchFile.exists());
+    }
+
+    @Test
+    void testTouchArtifactDoesNotWarnAboutSiblingNotFoundFromSameSession() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        // repositories are consulted in order within one session: the first answers not-found ...
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
+        notFound.setRepository(other);
+        notFound.setAuthoritativeRepository(other);
+        notFound.setException(new ArtifactNotFoundException(artifact, other));
+        manager.touchArtifact(session, notFound);
+        assertTrue(touchFile.exists());
+
+        // ... and the next one serves the artifact. That is the ordinary fall-through, not a stale marker
+        // suppressing a repository, so it must not be reported as a warning; the marker is still expired
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        String log = captureStdErr(() -> manager.touchArtifact(session, success));
+        assertFalse(log.contains("WARN"), log);
+        assertFalse(touchFile.exists());
     }
 
     @Test

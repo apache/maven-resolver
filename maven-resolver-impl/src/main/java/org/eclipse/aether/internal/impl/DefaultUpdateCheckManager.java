@@ -77,6 +77,14 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         }
     });
 
+    // instance bound private key
+    static final Object SESSION_NOT_FOUNDS = Keys.of(new Object() {
+        @Override
+        public String toString() {
+            return "updateCheckManager.notFounds";
+        }
+    });
+
     /**
      * Manages the session state, i.e. influences if the same download requests to artifacts/metadata will happen
      * multiple times within the same RepositorySystemSession. If "enabled" will enable the session state. If "bypass"
@@ -459,6 +467,27 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         return updatePolicyAnalyzer.isUpdatedRequired(session, lastModified, policy);
     }
 
+    private String getNotFoundKey(Path touchPath, String dataKey) {
+        return touchPath.toAbsolutePath() + "|" + dataKey;
+    }
+
+    /**
+     * Records that a not-found marker has been written during this session, so that a later success from a sibling
+     * repository can tell the ordinary fall-through between repositories apart from a stale marker left by a
+     * previous session. Unlike {@link #setUpdated(RepositorySystemSession, String)} this is not subject to
+     * {@link #CONFIG_PROP_SESSION_STATE}, as it only influences logging.
+     */
+    @SuppressWarnings("unchecked")
+    private void setNotFound(RepositorySystemSession session, String notFoundKey) {
+        Object notFounds = session.getData().computeIfAbsent(SESSION_NOT_FOUNDS, () -> new ConcurrentHashMap<>(64));
+        ((Map<String, Boolean>) notFounds).put(notFoundKey, Boolean.TRUE);
+    }
+
+    private boolean isNotFoundInSession(RepositorySystemSession session, String notFoundKey) {
+        Object notFounds = session.getData().get(SESSION_NOT_FOUNDS);
+        return notFounds instanceof Map && ((Map<?, ?>) notFounds).containsKey(notFoundKey);
+    }
+
     private Properties read(Path touchPath) {
         Properties props = trackingFileManager.read(touchPath);
         return (props != null) ? props : new Properties();
@@ -476,9 +505,13 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
         String transferKey = getTransferKey(session, check.getRepository());
 
         setUpdated(session, updateKey);
-        Map<String, String> staleSiblingNotFounds = check.getException() == null
-                ? getStaleSiblingNotFounds(read(touchPath), dataKey, check.getItem(), check.getRepository())
-                : Collections.emptyMap();
+        Map<String, String> staleSiblingNotFounds = Collections.emptyMap();
+        if (check.getException() == null) {
+            staleSiblingNotFounds = getStaleSiblingNotFounds(
+                    session, read(touchPath), touchPath, dataKey, check.getItem(), check.getRepository());
+        } else if (check.getException() instanceof ArtifactNotFoundException) {
+            setNotFound(session, getNotFoundKey(touchPath, dataKey));
+        }
         Properties props = write(touchPath, dataKey, transferKey, check.getException(), staleSiblingNotFounds);
 
         if (Files.exists(artifactPath) && !hasErrors(props)) {
@@ -493,22 +526,40 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
      * resolution of the artifact to whatever lower-prioritized repository serves it. Expiring the marker forces a
      * confirming re-check of the suppressed repository (subject to the update policy) the next time it is
      * consulted, and the reroute is surfaced at WARN level instead of happening silently.
+     * <p>
+     * A marker written earlier in the same session is a different situation: repositories are consulted in
+     * order, so the first repository answering not-found and a later one serving the artifact is the ordinary
+     * fall-through, not a suppressed repository. Such markers are expired all the same, but only logged at DEBUG.
      */
     private Map<String, String> getStaleSiblingNotFounds(
-            Properties props, String dataKey, Artifact artifact, RemoteRepository repository) {
+            RepositorySystemSession session,
+            Properties props,
+            Path touchPath,
+            String dataKey,
+            Artifact artifact,
+            RemoteRepository repository) {
         Map<String, String> removals = null;
         for (Object k : props.keySet()) {
             String key = k.toString();
             if (key.endsWith(ERROR_KEY_SUFFIX)) {
                 String otherDataKey = key.substring(0, key.length() - ERROR_KEY_SUFFIX.length());
                 if (!otherDataKey.equals(dataKey) && NOT_FOUND.equals(props.getProperty(key))) {
-                    LOGGER.warn(
-                            "{} was downloaded from {} while a cached not-found from a previous attempt suppresses"
-                                    + " re-checking {}; expiring the cached not-found so that repository is checked"
-                                    + " again on the next resolution",
-                            artifact,
-                            repository.getUrl(),
-                            otherDataKey);
+                    if (isNotFoundInSession(session, getNotFoundKey(touchPath, otherDataKey))) {
+                        LOGGER.debug(
+                                "{} was downloaded from {} after {} answered not-found earlier in this session;"
+                                        + " not caching that not-found",
+                                artifact,
+                                repository.getUrl(),
+                                otherDataKey);
+                    } else {
+                        LOGGER.warn(
+                                "{} was downloaded from {} while a not-found cached by a previous session suppresses"
+                                        + " re-checking {}; expiring the cached not-found so that repository is"
+                                        + " checked again on the next resolution",
+                                artifact,
+                                repository.getUrl(),
+                                otherDataKey);
+                    }
                     if (removals == null) {
                         removals = new HashMap<>();
                     }
