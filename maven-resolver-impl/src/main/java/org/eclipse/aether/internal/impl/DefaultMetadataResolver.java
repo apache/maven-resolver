@@ -139,13 +139,19 @@ public class DefaultMetadataResolver implements MetadataResolver {
             RepositorySystemSession session, Collection<? extends MetadataRequest> requests) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-        SyncContext shared = syncContextFactory.newInstance(session, true);
-        SyncContext exclusive = syncContextFactory.newInstance(session, false);
         Collection<Metadata> metadata = new ArrayList<>(requests.size());
         for (MetadataRequest request : requests) {
             metadata.add(request.getMetadata());
         }
 
+        SyncContext shared = syncContextFactory.newInstance(session, true);
+        SyncContext exclusive;
+        try {
+            exclusive = syncContextFactory.newInstance(session, false);
+        } catch (RuntimeException e) {
+            shared.close();
+            throw e;
+        }
         return resolve(shared, exclusive, metadata, session, requests);
     }
 
@@ -299,8 +305,9 @@ public class DefaultMetadataResolver implements MetadataResolver {
                 }
 
                 if (!tasks.isEmpty() && current == shared) {
-                    current.close();
+                    SyncContext sharedContext = current;
                     current = exclusive;
+                    sharedContext.close();
                     continue;
                 }
 
