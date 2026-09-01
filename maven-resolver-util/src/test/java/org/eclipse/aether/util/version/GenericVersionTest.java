@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -357,10 +358,13 @@ public class GenericVersionTest extends AbstractVersionTest {
      */
     @Test
     public void testCompareUuidRandom() {
+        Random random = new Random(0x5EEDCAFEL);
         for (int j = 0; j < 32; j++) {
             ArrayList<Version> versions = new ArrayList<>();
             for (int i = 0; i < 64; i++) {
-                versions.add(newVersion(UUID.randomUUID().toString()));
+                byte[] bytes = new byte[16];
+                random.nextBytes(bytes);
+                versions.add(newVersion(UUID.nameUUIDFromBytes(bytes).toString()));
             }
             try {
                 Collections.sort(versions);

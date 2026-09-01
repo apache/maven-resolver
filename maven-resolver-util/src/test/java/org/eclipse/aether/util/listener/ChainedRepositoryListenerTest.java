@@ -19,11 +19,16 @@
 package org.eclipse.aether.util.listener;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.aether.AbstractRepositoryListener;
+import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  */
@@ -35,5 +40,34 @@ public class ChainedRepositoryListenerTest {
             assertNotNull(
                     ChainedRepositoryListener.class.getDeclaredMethod(method.getName(), method.getParameterTypes()));
         }
+    }
+
+    @Test
+    public void testListenerExceptionDoesNotBlockSubsequentListeners() {
+        final AtomicBoolean secondListenerCalled = new AtomicBoolean(false);
+
+        RepositoryListener faultyListener = new AbstractRepositoryListener() {
+            @Override
+            public void artifactResolved(RepositoryEvent event) {
+                throw new RuntimeException("Simulated listener failure");
+            }
+        };
+
+        RepositoryListener normalListener = new AbstractRepositoryListener() {
+            @Override
+            public void artifactResolved(RepositoryEvent event) {
+                secondListenerCalled.set(true);
+            }
+        };
+
+        ChainedRepositoryListener chained = new ChainedRepositoryListener(faultyListener, normalListener);
+
+        RepositoryEvent event = new RepositoryEvent.Builder(
+                        TestUtils.newSession(), RepositoryEvent.EventType.ARTIFACT_RESOLVED)
+                .build();
+
+        chained.artifactResolved(event);
+        assertTrue(
+                "Subsequent listener should still receive event despite previous failure", secondListenerCalled.get());
     }
 }

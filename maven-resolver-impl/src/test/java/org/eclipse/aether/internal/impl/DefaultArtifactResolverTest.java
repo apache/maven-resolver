@@ -999,4 +999,44 @@ public class DefaultArtifactResolverTest {
             assertTrue(ex.getMessage().contains("gid:aid:ext:ver (present, but unavailable): REFUSED"));
         }
     }
+
+    @Test
+    public void testSyncContextIsClosedExactlyOnce() throws Exception {
+        final java.util.concurrent.atomic.AtomicInteger closeCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
+        org.eclipse.aether.SyncContext countingSyncContext = new org.eclipse.aether.SyncContext() {
+            @Override
+            public void acquire(
+                    Collection<? extends Artifact> artifacts,
+                    Collection<? extends org.eclipse.aether.metadata.Metadata> metadatas) {}
+
+            @Override
+            public void close() {
+                closeCount.incrementAndGet();
+            }
+        };
+
+        resolver = new DefaultArtifactResolver();
+        resolver.setFileProcessor(new TestFileProcessor());
+        resolver.setRepositoryEventDispatcher(new StubRepositoryEventDispatcher());
+        resolver.setVersionResolver(new StubVersionResolver());
+        resolver.setUpdateCheckManager(new StaticUpdateCheckManager(false));
+        resolver.setRepositoryConnectorProvider(repositoryConnectorProvider);
+        resolver.setRemoteRepositoryManager(new StubRemoteRepositoryManager());
+        resolver.setSyncContextFactory((session, shared) -> countingSyncContext);
+        resolver.setOfflineController(new DefaultOfflineController());
+        resolver.setArtifactResolverPostProcessors(Collections.emptyMap());
+        resolver.setRemoteRepositoryFilterManager(remoteRepositoryFilterManager);
+
+        ArtifactRequest request = new ArtifactRequest(artifact, null, "");
+        try {
+            resolver.resolveArtifact(session, request);
+            fail("Should throw ArtifactResolutionException");
+        } catch (ArtifactResolutionException ex) {
+            // expected
+        }
+
+        // 2 instances were created (shared and exclusive), each must be closed exactly once
+        assertEquals("Each SyncContext instance should be closed exactly once", 2, closeCount.get());
+    }
 }

@@ -110,9 +110,14 @@ public final class ChainedRepositoryListener extends AbstractRepositoryListener 
         }
     }
 
-    @SuppressWarnings("EmptyMethod")
+    private static final java.util.logging.Logger LOGGER =
+            java.util.logging.Logger.getLogger(ChainedRepositoryListener.class.getName());
+
+    /**
+     * Invoked when any listener throws, by default logs a warning, extend if required.
+     */
     protected void handleError(RepositoryEvent event, RepositoryListener listener, RuntimeException error) {
-        // default just swallows errors
+        LOGGER.log(java.util.logging.Level.WARNING, "Exception in repository listener " + listener, error);
     }
 
     @Override
