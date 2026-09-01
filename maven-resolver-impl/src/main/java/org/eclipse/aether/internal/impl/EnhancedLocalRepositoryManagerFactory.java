@@ -50,6 +50,32 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_LRM + NAME + ".";
 
     /**
+     * Repository key function used for the provenance tracking entries this local repository manager writes and
+     * consults (see {@link #CONFIG_PROP_TRACKING_FILENAME}), and for nothing else. With an ID-only key, "came from
+     * repository X" means X's possibly colliding label: a repository declared in an untrusted (for example,
+     * transitively resolved) POM under the same ID as a trusted repository would be tracked as the same origin and
+     * could poison a shared local repository. The default is therefore the URL-qualified {@code "nid_hurl"}
+     * function, scoped to tracking entries only: repository identity everywhere else (repository aggregation and
+     * mirror merging, artifact and metadata path composition, split local repository prefixes) keeps following the
+     * system-wide key function, whose default is unchanged - so no aggregation semantics change and no local
+     * repository re-layout occurs. If the system-wide function
+     * {@link ConfigurationProperties#REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION} is explicitly configured, tracking
+     * follows it (all consumers stay on one function, and setting it to {@code "nid"} restores the legacy ID-only
+     * tracking); this property, when set, overrides both. Tracking entries written under a different function than
+     * the active one never match a lookup and never enable the untracked-file fallback: affected artifacts are
+     * simply treated as locally unavailable and re-fetched (with checksum validation) once.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION}
+     * @since 2.0.23
+     */
+    public static final String CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION =
+            CONFIG_PROPS_PREFIX + "trackingRepositoryKeyFunction";
+
+    public static final String DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
+
+    /**
      * Filename of the file in which to track the remote repositories.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -121,11 +147,15 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                 return new EnhancedLocalRepositoryManager(
                         repository.getBasePath(),
                         localPathComposer,
+                        repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session),
                         repositoryKeyFunctionFactory.repositoryKeyFunction(
                                 EnhancedLocalRepositoryManagerFactory.class,
                                 session,
-                                ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_TRACKING_KEY_FUNCTION,
-                                ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_TRACKING_KEY_FUNCTION),
+                                ConfigUtils.getString(
+                                        session,
+                                        DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION,
+                                        ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION),
+                                CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION),
                         trackingFilename,
                         trackingFileManager,
                         localPathPrefixComposerFactory.createComposer(session));

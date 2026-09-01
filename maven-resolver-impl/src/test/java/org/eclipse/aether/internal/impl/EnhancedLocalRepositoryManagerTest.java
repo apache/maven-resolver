@@ -112,6 +112,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 basedir.toPath(),
                 new DefaultLocalPathComposer(),
                 RepositoryIdHelper::simpleRepositoryKey,
+                RepositoryIdHelper::simpleRepositoryKey,
                 "_remote.repositories",
                 trackingFileManager,
                 new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory())
@@ -409,6 +410,7 @@ public class EnhancedLocalRepositoryManagerTest {
         return new EnhancedLocalRepositoryManager(
                 basedir.toPath(),
                 new DefaultLocalPathComposer(),
+                RepositoryIdHelper::simpleRepositoryKey,
                 RepositoryIdHelper.getRepositoryKeyFunction("nid_hurl"),
                 "_remote.repositories",
                 trackingFileManager,
