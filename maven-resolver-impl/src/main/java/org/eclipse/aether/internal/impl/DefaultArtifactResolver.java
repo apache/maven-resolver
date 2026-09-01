@@ -248,8 +248,6 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
             throws ArtifactResolutionException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-        SyncContext shared = syncContextFactory.newInstance(session, true);
-        SyncContext exclusive = syncContextFactory.newInstance(session, false);
         Collection<Artifact> artifacts = new ArrayList<>(requests.size());
         for (ArtifactRequest request : requests) {
             if (request.getArtifact().getProperty(ArtifactProperties.LOCAL_PATH, null) != null) {
@@ -258,6 +256,14 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
             artifacts.add(request.getArtifact());
         }
 
+        SyncContext shared = syncContextFactory.newInstance(session, true);
+        SyncContext exclusive;
+        try {
+            exclusive = syncContextFactory.newInstance(session, false);
+        } catch (RuntimeException e) {
+            shared.close();
+            throw e;
+        }
         return resolve(shared, exclusive, artifacts, session, requests);
     }
 
@@ -440,8 +446,9 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
                 }
 
                 if (!groups.isEmpty() && current == shared) {
-                    current.close();
+                    SyncContext sharedContext = current;
                     current = exclusive;
+                    sharedContext.close();
                     continue;
                 }
 
