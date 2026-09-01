@@ -134,10 +134,7 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
     }
 
     @Test
-    void trackingSpecificConfigurationOverridesSystemWideFunction() throws Exception {
-        session.setConfigProperty(ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION, "nid");
-        session.setConfigProperty(
-                EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION, "nid_hurl");
+    void defaultTrackingConfigurationGetsImpostors() throws Exception {
         LocalRepositoryManager manager = newManager();
         Artifact artifact = addTrackedRemoteArtifact(manager);
 

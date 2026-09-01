@@ -618,7 +618,25 @@ public final class ConfigurationProperties {
      */
     public static final String REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = PREFIX_SYSTEM + "repositoryKeyFunction";
 
-    public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid_hurl";
+    public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid";
+
+    /**
+     * <b>Experimental:</b> Configuration for system-wide "repository key" function.
+     * Accepted and recommended values: "nid" (default), "nid_hurl" and "ngurk", while "simple" is Maven 3 legacy,
+     * technically equivalent to "nid". For complete description see enum
+     * {@code org.eclipse.aether.util.repository.RepositoryIdHelper.RepositoryKeyType} in utils. <em>Warning:</em>
+     * repository key function affects Resolver fundamentally and may have unexpected results! Only change this
+     * if you know what you are doing!
+     *
+     * @since 2.0.23
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_TRACKING_KEY_FUNCTION}
+     */
+    public static final String REPOSITORY_SYSTEM_REPOSITORY_TRACKING_KEY_FUNCTION =
+            PREFIX_SYSTEM + "repositoryTrackingKeyFunction";
+
+    public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_TRACKING_KEY_FUNCTION = "nid_hurl";
 
     /**
      * A flag indicating whether version scheme cache statistics should be printed on JVM shutdown.
