@@ -30,7 +30,7 @@ public final class ApacheTransporterConfigurationKeys {
     private ApacheTransporterConfigurationKeys() {}
 
     static final String CONFIG_PROPS_PREFIX =
-            ConfigurationProperties.PREFIX_TRANSPORT + ApacheTransporterFactory.NAME + ".";
+            ConfigurationProperties.PREFIX_TRANSPORT + Apache5TransporterFactory.NAME + ".";
 
     /**
      * If enabled, underlying Apache HttpClient will use system properties as well to configure itself (typically

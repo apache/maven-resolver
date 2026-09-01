@@ -35,8 +35,8 @@ import static java.util.Objects.requireNonNull;
  * A transporter factory for repositories using the {@code http:} or {@code https:} protocol. The provided transporters
  * support uploads to WebDAV servers and resumable downloads.
  */
-@Named(ApacheTransporterFactory.NAME)
-public final class ApacheTransporterFactory implements HttpTransporterFactory {
+@Named(Apache5TransporterFactory.NAME)
+public final class Apache5TransporterFactory implements HttpTransporterFactory {
     public static final String NAME = "apache5";
 
     private float priority = 5.0f;
@@ -46,7 +46,7 @@ public final class ApacheTransporterFactory implements HttpTransporterFactory {
     private final PathProcessor pathProcessor;
 
     @Inject
-    public ApacheTransporterFactory(ChecksumExtractor checksumExtractor, PathProcessor pathProcessor) {
+    public Apache5TransporterFactory(ChecksumExtractor checksumExtractor, PathProcessor pathProcessor) {
         this.checksumExtractor = requireNonNull(checksumExtractor, "checksumExtractor");
         this.pathProcessor = requireNonNull(pathProcessor, "pathProcessor");
     }
@@ -62,7 +62,7 @@ public final class ApacheTransporterFactory implements HttpTransporterFactory {
      * @param priority The priority.
      * @return This component for chaining, never {@code null}.
      */
-    public ApacheTransporterFactory setPriority(float priority) {
+    public Apache5TransporterFactory setPriority(float priority) {
         this.priority = priority;
         return this;
     }

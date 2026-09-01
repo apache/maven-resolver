@@ -314,16 +314,18 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             // moment an explicit planner is installed via setRoutePlanner(). Reproduce whichever planner the
             // builder would otherwise have chosen and only override determineLocalAddress(...), so configuring a
             // local bind address does not silently disable system-property/proxy routing.
-            if (useSystemProperties) {
-                builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()) {
+            // Same precedence as HttpClientBuilder.build(): an explicitly configured proxy wins over system
+            // properties, so a repository proxy from the settings is not dropped when both are present.
+            if (proxy != null) {
+                builder.setRoutePlanner(new DefaultProxyRoutePlanner(proxy) {
                     @Override
                     protected InetAddress determineLocalAddress(HttpHost firstHop, HttpContext context)
                             throws HttpException {
                         return localAddress;
                     }
                 });
-            } else if (proxy != null) {
-                builder.setRoutePlanner(new DefaultProxyRoutePlanner(proxy) {
+            } else if (useSystemProperties) {
+                builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()) {
                     @Override
                     protected InetAddress determineLocalAddress(HttpHost firstHop, HttpContext context)
                             throws HttpException {

@@ -21,10 +21,13 @@ package org.eclipse.aether.util.connector.transport.http;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,6 +50,30 @@ public class HttpTransporterUtilsTest {
         assertTrue(clamped >= testStart, "clamped value must not predate the call");
         assertTrue(clamped <= System.currentTimeMillis(), "clamped value must not exceed the local clock");
         assertTrue(clamped < future, "future-dated value must be clamped");
+    }
+
+    @Test
+    void expectContinueAcceptsBooleanAndStringValues() {
+        RemoteRepository repository = new RemoteRepository.Builder("test", "default", "https://host.com/").build();
+
+        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(h -> false);
+        assertFalse(
+                HttpTransporterUtils.getHttpExpectContinue(session, repository).isPresent());
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_EXPECT_CONTINUE, Boolean.FALSE);
+        assertEquals(
+                Boolean.FALSE,
+                HttpTransporterUtils.getHttpExpectContinue(session, repository).orElse(null));
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_EXPECT_CONTINUE, "true");
+        assertEquals(
+                Boolean.TRUE,
+                HttpTransporterUtils.getHttpExpectContinue(session, repository).orElse(null));
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_EXPECT_CONTINUE + ".test", Boolean.FALSE);
+        assertEquals(
+                Boolean.FALSE,
+                HttpTransporterUtils.getHttpExpectContinue(session, repository).orElse(null));
     }
 
     @Test
