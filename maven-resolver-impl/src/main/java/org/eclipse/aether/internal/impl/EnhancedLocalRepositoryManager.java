@@ -130,7 +130,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     private final ConcurrentHashMap<Path, Properties> trackingFileCache = new ConcurrentHashMap<>();
 
     /**
-     * Lazily computed real (symlink-resolved) path of the local repository base directory, used by
+     * Real (symlink-resolved) path of the local repository base directory, used by
      * {@link #hasFaithfulRealPath(Path)}. It cannot change during the lifetime of this manager.
      */
     private final Path realBasePath;
