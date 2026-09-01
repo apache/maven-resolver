@@ -18,8 +18,11 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -34,6 +37,7 @@ import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.util.StringDigestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -144,5 +148,31 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
         LocalArtifactRequest fromImpostor =
                 new LocalArtifactRequest(artifact, Collections.singletonList(impostor), context);
         assertFalse(manager.find(session, fromImpostor).isAvailable());
+    }
+
+    @Test
+    void newInstanceForNotYetExistingBasedir() throws Exception {
+        // a fresh local repository (first build on a machine, or a new -Dmaven.repo.local) does not exist yet
+        Path missing = basedir.resolve("not-yet-created");
+        assertFalse(Files.exists(missing));
+
+        LocalRepositoryManager manager = factory.newInstance(session, new LocalRepository(missing));
+
+        assertInstanceOf(EnhancedLocalRepositoryManager.class, manager);
+    }
+
+    @Test
+    void providerSelectsEnhancedManagerForNotYetExistingBasedir() throws Exception {
+        // the provider treats NoLocalRepositoryManagerException as "try the next factory", so a failing
+        // enhanced factory would silently degrade the whole session to the untracked simple manager
+        Path missing = basedir.resolve("not-yet-created");
+        Map<String, LocalRepositoryManagerFactory> factories = new HashMap<>();
+        factories.put(EnhancedLocalRepositoryManagerFactory.NAME, factory);
+        factories.put(SimpleLocalRepositoryManagerFactory.NAME, new SimpleLocalRepositoryManagerFactory());
+        DefaultLocalRepositoryProvider provider = new DefaultLocalRepositoryProvider(factories);
+
+        LocalRepositoryManager manager = provider.newLocalRepositoryManager(session, new LocalRepository(missing));
+
+        assertInstanceOf(EnhancedLocalRepositoryManager.class, manager);
     }
 }
