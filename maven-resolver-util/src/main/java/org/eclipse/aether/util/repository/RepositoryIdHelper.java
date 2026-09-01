@@ -19,8 +19,12 @@
 package org.eclipse.aether.util.repository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -68,6 +72,10 @@ public final class RepositoryIdHelper {
          */
         NID_HURL,
         /**
+         * For Maven Central creates id as before, "central", for rest is same as {@link #NID_HURL}.
+         */
+        CNID_HURL,
+        /**
          * Crafts normalized unique repository key using {@link RemoteRepository#getId()} and all the remaining properties of
          * {@link RemoteRepository} ignoring actual list of mirrors, if any (but mirrors are split).
          */
@@ -94,6 +102,8 @@ public final class RepositoryIdHelper {
                 return RepositoryIdHelper::hurlRepositoryKey;
             case NID_HURL:
                 return RepositoryIdHelper::nidAndHurlRepositoryKey;
+            case CNID_HURL:
+                return RepositoryIdHelper::cnidAndHurlRepositoryKey;
             case NGURK:
                 return RepositoryIdHelper::normalizedGloballyUniqueRepositoryKey;
             case GURK:
@@ -172,6 +182,37 @@ public final class RepositoryIdHelper {
             seed += context;
         }
         return idToPathSegment(repository) + "-" + StringDigestUtil.sha1(seed);
+    }
+
+    // TODO: Ideally, all the distinguished repositories should be hinted by integrator (ie Maven)
+    private static final String MAVEN_CENTRAL_ID = "central";
+    private static final Set<String> MAVEN_CENTRAL_URLS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            "https://repo.maven.apache.org/maven2",
+            "https://repo1.maven.org/maven2",
+            "https://maven-central.storage-download.googleapis.com/maven2")));
+
+    /**
+     * Maven Central normalized {@code repositoryKey} function.
+     * Handles specially Maven Central, otherwise is same as {@link #nidAndHurlRepositoryKey(RemoteRepository, String)}.
+     * Maven Central is detected as:
+     * <ul>
+     *     <li>id equals "central"</li>
+     *     <li>URL is known Maven Central URL</li>
+     *     <li>intent is not deployment</li>
+     *     <li>instance is not MRM and is not mirror</li>
+     * </ul>
+     *
+     * @since 2.0.23
+     **/
+    private static String cnidAndHurlRepositoryKey(RemoteRepository repository, String context) {
+        if (MAVEN_CENTRAL_ID.equals(repository.getId())
+                && MAVEN_CENTRAL_URLS.contains(repository.getUrl())
+                && repository.getIntent() != RemoteRepository.Intent.DEPLOYMENT
+                && !repository.isRepositoryManager()
+                && repository.getMirroredRepositories().isEmpty()) {
+            return MAVEN_CENTRAL_ID;
+        }
+        return nidAndHurlRepositoryKey(repository, context);
     }
 
     /**

@@ -71,7 +71,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     public static final String CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION =
             CONFIG_PROPS_PREFIX + "trackingRepositoryKeyFunction";
 
-    public static final String DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
+    public static final String DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION = "cnid_hurl";
 
     /**
      * Filename of the file in which to track the remote repositories.
