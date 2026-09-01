@@ -57,6 +57,7 @@
     <module>maven-resolver-test-http</module>
     <module>maven-resolver-connector-basic</module>
     <module>maven-resolver-transport-apache</module>
+    <module>maven-resolver-transport-apache5</module>
     <module>maven-resolver-transport-classpath</module>
     <module>maven-resolver-transport-file</module>
     <module>maven-resolver-transport-jdk-parent</module>
@@ -197,6 +198,11 @@
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-transport-apache</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-transport-apache5</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
