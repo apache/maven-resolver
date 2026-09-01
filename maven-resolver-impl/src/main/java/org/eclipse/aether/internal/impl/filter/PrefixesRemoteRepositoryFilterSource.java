@@ -212,9 +212,11 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
      * Configuration to verify the first denied path per remote repository when the effective prefixes were
      * auto-discovered: the denied path existence is checked directly against the remote repository, and if the
      * path exists, the auto-discovered prefixes file is provably wrong for that path (it denies content the
-     * repository actually serves); a warning is emitted and, by default, only that verified path is allowed while
-     * the prefixes file stays enforcing for all other paths (see {@link #CONFIG_PROP_VERIFY_DENIED_DROPS_TREE}
-     * for the legacy behavior of dropping the whole file). If the path does not exist, the prefixes file is
+     * repository actually serves); a warning is emitted and, by default, only the directory of that verified path
+     * (the artifact directory: its POM, main and classified artifacts, checksums and signatures; for a verified
+     * {@code maven-metadata.xml}, the versions below it) is allowed while the prefixes file stays enforcing for all
+     * other paths (see {@link #CONFIG_PROP_VERIFY_DENIED_DROPS_TREE} for the legacy behavior of dropping the whole
+     * file). If the path does not exist, the prefixes file is
      * consistent with reality for this witness and stays trusted; no further verification happens for given remote
      * repository, keeping the extra cost bounded to at most one existence check per remote repository per session.
      * <p>
@@ -236,8 +238,10 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     /**
      * Configuration to control what happens when {@link #CONFIG_PROP_VERIFY_DENIED} verification proves an
      * auto-discovered prefixes file wrong (it denies a path the remote repository actually serves). When set to
-     * {@code false} (default), only the verified path is allowed and the auto-discovered prefixes file stays
-     * enforcing for all other paths: a single remotely-observed inconsistency does not disable the
+     * {@code false} (default), only the directory of the verified path is allowed (the whole artifact, since
+     * resolution asks for the POM first and the other files of the same artifact afterwards) and the
+     * auto-discovered prefixes file stays enforcing for all other paths: a single remotely-observed inconsistency
+     * does not disable the
      * dependency-confusion protection this filter provides for the whole repository. When set to {@code true},
      * the legacy behavior is restored: the whole auto-discovered prefixes file is dropped for the rest of the
      * session and the filter behaves as if no input was available (see {@link #CONFIG_PROP_NO_INPUT_OUTCOME}),
@@ -381,7 +385,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         private volatile PrefixTree prefixTree;
         private final boolean autoDiscovered;
         private final AtomicBoolean verifyClaimed = new AtomicBoolean(false);
-        private volatile String verifiedServedPath;
+        private volatile String verifiedServedPrefix;
 
         private CachedPrefixes(PrefixTree prefixTree, boolean autoDiscovered) {
             this.prefixTree = prefixTree;
@@ -404,13 +408,20 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             this.prefixTree = BROKEN;
         }
 
+        /**
+         * Allows the directory of the verified served path (and everything below it): a remote repository that
+         * serves one file of an artifact serves the artifact, so its other files (POM, main artifact, classified
+         * artifacts, checksums, signatures) and, for a served {@code maven-metadata.xml}, the versions below it are
+         * allowed without further checks. A path with no directory (repository root) is allowed on its own only.
+         */
         private void allowVerifiedServedPath(String path) {
-            this.verifiedServedPath = path;
+            int lastSlash = path.lastIndexOf('/');
+            this.verifiedServedPrefix = lastSlash < 0 ? path : path.substring(0, lastSlash + 1);
         }
 
         private boolean isVerifiedServedPath(String path) {
-            String verified = this.verifiedServedPath;
-            return verified != null && verified.equals(path);
+            String verified = this.verifiedServedPrefix;
+            return verified != null && path.startsWith(verified);
         }
     }
 
@@ -572,10 +583,10 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                         } else {
                             logger.warn(
                                     "Remote repository {} serves path {} that its auto-discovered prefixes file "
-                                            + "denies; the prefixes file appears stale. Allowing only this verified "
-                                            + "path; the prefixes filter stays enforcing for all other paths (set {} "
-                                            + "to true to instead drop the whole auto-discovered prefixes file; "
-                                            + "report this to the repository administrator)",
+                                            + "denies; the prefixes file appears stale. Allowing only the directory "
+                                            + "of this verified path; the prefixes filter stays enforcing for all "
+                                            + "other paths (set {} to true to instead drop the whole auto-discovered "
+                                            + "prefixes file; report this to the repository administrator)",
                                     repository.getId(),
                                     path,
                                     CONFIG_PROP_VERIFY_DENIED_DROPS_TREE);
@@ -591,7 +602,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                             true,
                             NAME,
                             "Path " + path + " allowed from " + repository.getId()
-                                    + " (verified served despite stale auto-discovered prefixes)");
+                                    + " (directory verified served despite stale auto-discovered prefixes)");
                 }
             }
             return result(
@@ -633,9 +644,9 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
         /**
          * Checks whether the remote repository actually serves given path, using a lightweight existence check
          * (the transporter sits below the filtering connector, so no recursion can happen). Any failure (path
-         * not present, transport problem) yields {@code false}: the prefixes verdict is overridden (or, with
-         * {@link #CONFIG_PROP_VERIFY_DENIED_DROPS_TREE}, the whole file dropped) only when the remote repository
-         * provably serves the denied path.
+         * not present, transport problem) yields {@code false}: the prefixes verdict is overridden for the denied
+         * path directory (or, with {@link #CONFIG_PROP_VERIFY_DENIED_DROPS_TREE}, the whole file dropped) only
+         * when the remote repository provably serves the denied path.
          */
         private boolean remoteRepositoryServesPath(RemoteRepository repository, String path) {
             try (Transporter transporter = transporterProvider.newTransporter(session, repository)) {
