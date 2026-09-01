@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.io.IOException;
+
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -29,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalRepositoryManagerTest {
 
     @Override
-    protected EnhancedLocalRepositoryManager getManager() {
+    protected EnhancedLocalRepositoryManager getManager() throws IOException {
         session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT, Boolean.TRUE.toString());
         return new EnhancedLocalRepositoryManager(
                 basedir.toPath(),

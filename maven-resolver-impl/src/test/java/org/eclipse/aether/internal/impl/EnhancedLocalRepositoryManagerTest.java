@@ -107,7 +107,7 @@ public class EnhancedLocalRepositoryManagerTest {
         artifactFile = new File(basedir, manager.getPathForLocalArtifact(artifact));
     }
 
-    protected EnhancedLocalRepositoryManager getManager() {
+    protected EnhancedLocalRepositoryManager getManager() throws IOException {
         return new EnhancedLocalRepositoryManager(
                 basedir.toPath(),
                 new DefaultLocalPathComposer(),
@@ -406,7 +406,7 @@ public class EnhancedLocalRepositoryManagerTest {
      * Manager wired like production defaults: path composition on the (unchanged) system-wide key function,
      * tracking entries on the URL-qualified {@code nid_hurl} function.
      */
-    private EnhancedLocalRepositoryManager newUrlQualifiedTrackingManager() {
+    private EnhancedLocalRepositoryManager newUrlQualifiedTrackingManager() throws IOException {
         return new EnhancedLocalRepositoryManager(
                 basedir.toPath(),
                 new DefaultLocalPathComposer(),

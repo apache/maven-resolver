@@ -130,10 +130,10 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     private final ConcurrentHashMap<Path, Properties> trackingFileCache = new ConcurrentHashMap<>();
 
     /**
-     * Lazily computed real (symlink-resolved) path of the local repository base directory, used by
+     * Real (symlink-resolved) path of the local repository base directory, used by
      * {@link #hasFaithfulRealPath(Path)}. It cannot change during the lifetime of this manager.
      */
-    private volatile Path realBasePath;
+    private final Path realBasePath;
 
     EnhancedLocalRepositoryManager(
             Path basedir,
@@ -142,12 +142,14 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
             RepositoryKeyFunction trackingRepositoryKeyFunction,
             String trackingFilename,
             TrackingFileManager trackingFileManager,
-            LocalPathPrefixComposer localPathPrefixComposer) {
+            LocalPathPrefixComposer localPathPrefixComposer)
+            throws IOException {
         super(basedir, "enhanced", localPathComposer, repositoryKeyFunction);
         this.trackingRepositoryKeyFunction = requireNonNull(trackingRepositoryKeyFunction);
         this.trackingFilename = requireNonNull(trackingFilename);
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
+        this.realBasePath = getRepository().getBasePath().toRealPath();
     }
 
     private String concatPaths(String prefix, String artifactPath) {
@@ -233,7 +235,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     private boolean hasFaithfulRealPath(Path path) {
         try {
             String requested = getRepository().getBasePath().relativize(path).toString();
-            String real = getRealBasePath().relativize(path.toRealPath()).toString();
+            String real = realBasePath.relativize(path.toRealPath()).toString();
             if (!requested.equals(real)) {
                 LOGGER.warn(
                         "Rejecting locally cached artifact {}: its on-disk path {} does not match the requested"
@@ -247,15 +249,6 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
             // the real identity of the file cannot be established: fail closed, forcing a re-download
             return false;
         }
-    }
-
-    private Path getRealBasePath() throws IOException {
-        Path real = realBasePath;
-        if (real == null) {
-            real = getRepository().getBasePath().toRealPath();
-            realBasePath = real;
-        }
-        return real;
     }
 
     private void checkFind(Path path, LocalArtifactResult result, boolean verifyRealPath) {
