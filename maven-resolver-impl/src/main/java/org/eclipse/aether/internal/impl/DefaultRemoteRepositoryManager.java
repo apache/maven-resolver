@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
@@ -203,7 +205,8 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
                         builder = new RemoteRepository.Builder(repository);
                         builder.setAuthentication(auth);
                     } else if (auth != repository.getAuthentication()) {
-                        LOGGER.warn(
+                        logWarnOnce(
+                                session,
                                 "Not applying session authentication to repository {} ({}) declared by a remote"
                                         + " artifact descriptor; set {}=true to restore the legacy behavior of"
                                         + " matching credentials to such repositories by repository ID",
@@ -363,5 +366,25 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager, 
             }
         }
         return policy;
+    }
+
+    /**
+     * Logs the given warning once per session for the given message and arguments, to avoid repeating the same
+     * warning for every aggregation call that encounters the same repository.
+     */
+    @SuppressWarnings("unchecked")
+    private static void logWarnOnce(RepositorySystemSession session, String message, Object... args) {
+        if (!LOGGER.isWarnEnabled()) {
+            return;
+        }
+        List<Object> key = new ArrayList<>(args.length + 1);
+        key.add(message);
+        key.addAll(Arrays.asList(args));
+        Map<Object, Boolean> logged = (Map<Object, Boolean>) session.getData()
+                .computeIfAbsent(
+                        DefaultRemoteRepositoryManager.class.getName() + ".logWarnOnce", ConcurrentHashMap::new);
+        if (logged.putIfAbsent(key, Boolean.TRUE) == null) {
+            LOGGER.warn(message, args);
+        }
     }
 }
