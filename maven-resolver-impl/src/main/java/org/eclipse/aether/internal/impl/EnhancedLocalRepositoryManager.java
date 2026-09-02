@@ -149,6 +149,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         this.trackingFilename = requireNonNull(trackingFilename);
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
+        Files.createDirectories(getRepository().getBasePath());
         this.realBasePath = getRepository().getBasePath().toRealPath();
     }
 
