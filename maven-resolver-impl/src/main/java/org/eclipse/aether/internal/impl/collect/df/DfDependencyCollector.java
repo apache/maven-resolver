@@ -257,7 +257,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                             d,
                             descriptorResult.getRelocations(),
                             disableVersionManagementSubsequently);
-                    return;
+                    continue;
                 } else {
                     d = args.pool.intern(d.setArtifact(args.pool.intern(d.getArtifact())));
 

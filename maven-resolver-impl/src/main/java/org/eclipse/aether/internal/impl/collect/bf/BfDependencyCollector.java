@@ -314,7 +314,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                                 descriptorResult.getRelocations(),
                                 disableVersionManagementSubsequently);
                     }
-                    return;
+                    continue;
                 } else {
                     d = args.pool.intern(d.setArtifact(args.pool.intern(d.getArtifact())));
 
