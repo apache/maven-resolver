@@ -247,13 +247,15 @@ public final class HttpTransporterUtils {
      */
     public static Optional<Boolean> getHttpExpectContinue(
             RepositorySystemSession session, RemoteRepository repository) {
-        String expectContinue = ConfigUtils.getString(
-                session,
+        Object val = ConfigUtils.getObject(
+                session.getConfigProperties(),
                 null,
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE + "." + repository.getId(),
                 ConfigurationProperties.HTTP_EXPECT_CONTINUE);
-        if (expectContinue != null) {
-            return Optional.of(Boolean.parseBoolean(expectContinue));
+        if (val instanceof Boolean) {
+            return Optional.of((Boolean) val);
+        } else if (val instanceof String) {
+            return Optional.of(Boolean.parseBoolean((String) val));
         }
         return Optional.empty();
     }
