@@ -36,6 +36,8 @@ import org.eclipse.aether.internal.impl.DefaultRepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.metadata.DefaultMetadata;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.MetadataRequest;
@@ -53,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -70,8 +73,9 @@ import static org.mockito.Mockito.when;
  * <p>
  * Expected behavior: a denied path backed by an auto-discovered (i.e. not user-authored) prefixes file is verified
  * once against the remote repository; if the path exists remotely, the auto-discovered file is provably stale for
- * that path: the verified path is allowed, but the filter stays enforcing for everything else, so a single
- * remotely-observed inconsistency cannot disable the dependency-confusion protection for the whole repository.
+ * that path: the directory of the verified path (the whole artifact: POM, JAR, classified artifacts, checksums,
+ * signatures) is allowed, but the filter stays enforcing for everything else, so a single remotely-observed
+ * inconsistency cannot disable the dependency-confusion protection for the whole repository.
  * The legacy behavior of dropping the whole auto-discovered file for the rest of the session is available opt-in
  * via {@code aether.remoteRepositoryFilter.prefixes.verifyDeniedDropsTree=true}.
  */
@@ -202,6 +206,56 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         assertTrue(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
         // the same path requested again is consistently accepted, without a second existence check
         assertTrue(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        verify(transporter, times(1)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void verifiedServedPathAllowsWholeArtifactDirectory() throws Exception {
+        // real-life order: collection asks for the POM first, resolution asks for the JAR afterwards;
+        // the remote repository serves only the POM to the existence check (strict stub), so acceptance of the
+        // JAR must come from the verified directory, not from a second probe
+        Artifact pom = new DefaultArtifact("org.jenkins-ci:version-number:pom:1.14");
+        String pomPath = "org/jenkins-ci/version-number/1.14/version-number-1.14.pom";
+        doAnswer(invocation -> {
+                    PeekTask task = invocation.getArgument(0);
+                    if (pomPath.equals(task.getLocation().getPath())) {
+                        return null;
+                    }
+                    throw new Exception("404 " + task.getLocation());
+                })
+                .when(transporter)
+                .peek(any(PeekTask.class));
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        assertTrue(filter.acceptArtifact(remoteRepository, pom).isAccepted());
+        // the other files of the same artifact (same GAV directory) are accepted as well...
+        RemoteRepositoryFilter.Result jar = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertTrue(jar.isAccepted(), "JAR of the verified artifact must be accepted, got: " + jar.reasoning());
+        assertTrue(filter.acceptArtifact(
+                        remoteRepository, new DefaultArtifact("org.jenkins-ci:version-number:jar:sources:1.14"))
+                .isAccepted());
+        // ...while other versions of the same artifact and other artifacts stay denied
+        assertFalse(filter.acceptArtifact(remoteRepository, new DefaultArtifact("org.jenkins-ci:version-number:1.15"))
+                .isAccepted());
+        assertFalse(filter.acceptArtifact(remoteRepository, new DefaultArtifact("io.jenkins:other:1.0"))
+                .isAccepted());
+        // and verification cost stays bounded: only the first denial is checked
+        verify(transporter, times(1)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void verifiedServedMetadataAllowsArtifactBelowIt() throws Exception {
+        // version ranges and snapshots ask for maven-metadata.xml first; the artifact files live below its directory
+        Metadata metadata =
+                new DefaultMetadata("org.jenkins-ci", "version-number", "maven-metadata.xml", Metadata.Nature.RELEASE);
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        assertTrue(filter.acceptMetadata(remoteRepository, metadata).isAccepted());
+        assertTrue(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        assertFalse(filter.acceptArtifact(remoteRepository, new DefaultArtifact("org.jenkins-ci:other:1.0"))
+                .isAccepted());
         verify(transporter, times(1)).peek(any(PeekTask.class));
     }
 
