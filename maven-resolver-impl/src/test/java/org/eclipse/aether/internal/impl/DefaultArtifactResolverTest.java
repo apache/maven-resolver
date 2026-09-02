@@ -26,11 +26,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -1000,9 +1002,8 @@ public class DefaultArtifactResolverTest {
         }
     }
 
-    private static org.eclipse.aether.SyncContext countingSyncContext(
-            java.util.concurrent.atomic.AtomicInteger closeCount) {
-        return new org.eclipse.aether.SyncContext() {
+    private static SyncContext countingSyncContext(AtomicInteger closeCount) {
+        return new SyncContext() {
             @Override
             public void acquire(
                     Collection<? extends Artifact> artifacts,
@@ -1016,12 +1017,20 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
+<<<<<<< HEAD
     public void testSyncContextIsClosedExactlyOnce() throws Exception {
         final java.util.concurrent.atomic.AtomicInteger sharedCloses = new java.util.concurrent.atomic.AtomicInteger(0);
         final java.util.concurrent.atomic.AtomicInteger exclusiveCloses =
                 new java.util.concurrent.atomic.AtomicInteger(0);
         final org.eclipse.aether.SyncContext sharedContext = countingSyncContext(sharedCloses);
         final org.eclipse.aether.SyncContext exclusiveContext = countingSyncContext(exclusiveCloses);
+=======
+    void testSyncContextIsClosedExactlyOnce() throws Exception {
+        final AtomicInteger sharedCloses = new AtomicInteger(0);
+        final AtomicInteger exclusiveCloses = new AtomicInteger(0);
+        final SyncContext sharedContext = countingSyncContext(sharedCloses);
+        final SyncContext exclusiveContext = countingSyncContext(exclusiveCloses);
+>>>>>>> 0d76d597 (Clean up imports in listener classes and add SyncContext tests for DefaultMetadataResolver)
 
         resolver = new DefaultArtifactResolver();
         resolver.setFileProcessor(new TestFileProcessor());
@@ -1051,8 +1060,8 @@ public class DefaultArtifactResolverTest {
 
     @Test
     public void testSharedSyncContextIsClosedWhenExclusiveCannotBeCreated() throws Exception {
-        final java.util.concurrent.atomic.AtomicInteger sharedCloses = new java.util.concurrent.atomic.AtomicInteger(0);
-        final org.eclipse.aether.SyncContext sharedContext = countingSyncContext(sharedCloses);
+        final AtomicInteger sharedCloses = new AtomicInteger(0);
+        final SyncContext sharedContext = countingSyncContext(sharedCloses);
 
         resolver = new DefaultArtifactResolver();
         resolver.setFileProcessor(new TestFileProcessor());
