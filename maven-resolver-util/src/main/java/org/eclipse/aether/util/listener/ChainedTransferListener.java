@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferCancelledException;
@@ -111,14 +113,13 @@ public class ChainedTransferListener extends AbstractTransferListener {
         }
     }
 
-    private static final java.util.logging.Logger LOGGER =
-            java.util.logging.Logger.getLogger(ChainedTransferListener.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ChainedTransferListener.class.getName());
 
     /**
      * Invoked when any listener throws, by default logs a warning, extend if required.
      */
     protected void handleError(TransferEvent event, TransferListener listener, RuntimeException error) {
-        LOGGER.log(java.util.logging.Level.WARNING, "Exception in transfer listener " + listener, error);
+        LOGGER.log(Level.WARNING, "Exception in transfer listener " + listener, error);
     }
 
     @Override
