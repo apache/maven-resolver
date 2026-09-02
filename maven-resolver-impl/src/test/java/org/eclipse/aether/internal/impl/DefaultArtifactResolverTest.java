@@ -1017,20 +1017,11 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
-<<<<<<< HEAD
     public void testSyncContextIsClosedExactlyOnce() throws Exception {
-        final java.util.concurrent.atomic.AtomicInteger sharedCloses = new java.util.concurrent.atomic.AtomicInteger(0);
-        final java.util.concurrent.atomic.AtomicInteger exclusiveCloses =
-                new java.util.concurrent.atomic.AtomicInteger(0);
-        final org.eclipse.aether.SyncContext sharedContext = countingSyncContext(sharedCloses);
-        final org.eclipse.aether.SyncContext exclusiveContext = countingSyncContext(exclusiveCloses);
-=======
-    void testSyncContextIsClosedExactlyOnce() throws Exception {
         final AtomicInteger sharedCloses = new AtomicInteger(0);
         final AtomicInteger exclusiveCloses = new AtomicInteger(0);
         final SyncContext sharedContext = countingSyncContext(sharedCloses);
         final SyncContext exclusiveContext = countingSyncContext(exclusiveCloses);
->>>>>>> 0d76d597 (Clean up imports in listener classes and add SyncContext tests for DefaultMetadataResolver)
 
         resolver = new DefaultArtifactResolver();
         resolver.setFileProcessor(new TestFileProcessor());
