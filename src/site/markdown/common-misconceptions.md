@@ -1,4 +1,5 @@
-# Common Misconceptions`r`n<!--
+# Common Misconceptions
+<!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
@@ -60,6 +61,7 @@ Your project uses Google Guice. You have declared Guice as a dependency:
 
 The src/main code does not directly use Guava. However, Guava is a direct dependency of Guice.
 Your unit tests do need Guava so you add Guava as a test-scoped dependency. The POM now looks like this:
+
 
 ```
       <dependency>
@@ -125,3 +127,15 @@ When a downstream project declares a dependency on your project, it gets this gr
 What happens here? The section "How Resolver Works" above explains this. For the "runtime graph" of the dependency, Resolver does not consider the "test" and "provided" scopes of the dependency artifact. Resolver omits them completely. It does not skip them. They do not exist in the graph.
 
 Therefore, no conflict happens. Resolver omits the "test" Guava during the "collect" step. Everything goes as expected.
+
+### Important Consequences
+
+One consequence is not so obvious. It involves the `maven-assembly-plugin`. You want to assemble the "runtime" dependencies of the module.
+
+If you assemble from within the project, for example in the package phase, the packaging will be incomplete. Guava will be missing. If you assemble from outside the project, the assembly will contain Guava. This includes assembly from a subsequent module of the build or from a downstream dependency.
+
+This is a [Maven Assembly plugin bug](https://issues.apache.org/jira/browse/MASSEMBLY-1008). [MRESOLVER-391](https://issues.apache.org/jira/browse/MRESOLVER-391) explains it in part. The Maven Assembly plugin considers the "test graph" of the project. Then it "cherry-picks" the runtime scoped nodes from the graph. This is wrong in this case.
+
+You must build different graphs for the "runtime" and "test" classpath. The Assembly plugin is a Mojo. It requests the "test graph". Then it reads the configuration (the assembly descriptor). It learns the required scopes at this point. Then it "filters" the resolved "test graph" for the runtime scopes.
+
+This is wrong, because Guava is in the test scope. The plugin must read the configuration first. Then it must ask Resolver for the "runtime graph". Then it must filter the graph. This problem does not exist with `maven-war-plugin`. The "war" Mojo asks for the "compile+runtime" scope. The WAR case is much simpler than the Assembly use case. The WAR plugin always packages the same scope.
