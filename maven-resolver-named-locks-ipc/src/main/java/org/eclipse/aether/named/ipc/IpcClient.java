@@ -118,6 +118,8 @@ public class IpcClient {
                     ByteChannel wrapper = new ByteChannelWrapper(socket);
                     input = new DataInputStream(Channels.newInputStream(wrapper));
                     output = new DataOutputStream(Channels.newOutputStream(wrapper));
+                    output.writeUTF(bootstrapToken != null ? bootstrapToken : "");
+                    output.flush();
                     receiver = new Thread(this::receive);
                     receiver.setDaemon(true);
                     receiver.start();
@@ -125,6 +127,26 @@ public class IpcClient {
                 }
             }
         }
+    }
+
+    private SocketChannel connectToExistingServer(RandomAccessFile raf) throws IOException {
+        String line = raf.readLine();
+        if (line != null) {
+            try {
+                SocketAddress address;
+                if (line.contains("\t")) {
+                    String[] parts = line.split("\t", 2);
+                    address = SocketFamily.fromString(parts[0]);
+                    this.bootstrapToken = parts[1].trim();
+                } else {
+                    address = SocketFamily.fromString(line.trim());
+                }
+                return SocketChannel.open(address);
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+        return null;
     }
 
     SocketChannel createClient() throws IOException {
@@ -142,14 +164,9 @@ public class IpcClient {
 
         try (RandomAccessFile raf = new RandomAccessFile(lockFile.toFile(), "rw")) {
             try (FileLock lock = raf.getChannel().lock()) {
-                String line = raf.readLine();
-                if (line != null) {
-                    try {
-                        SocketAddress address = SocketFamily.fromString(line);
-                        return SocketChannel.open(address);
-                    } catch (IOException e) {
-                        // ignore
-                    }
+                SocketChannel existing = connectToExistingServer(raf);
+                if (existing != null) {
+                    return existing;
                 }
 
                 ServerSocketChannel ss = family.openServerSocket();
@@ -270,7 +287,7 @@ public class IpcClient {
                 SocketChannel socket = SocketChannel.open(addr);
 
                 raf.seek(0);
-                raf.writeBytes(res[1] + "\n");
+                raf.writeBytes(res[1] + "\t" + rand + "\n");
                 return socket;
             } catch (Exception e) {
                 throw new RuntimeException("Unable to create and connect to lock server", e);

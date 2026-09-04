@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -267,6 +268,12 @@ public class IpcServer {
             ByteChannel wrapper = new ByteChannelWrapper(socket);
             DataInputStream input = new DataInputStream(Channels.newInputStream(wrapper));
             DataOutputStream output = new DataOutputStream(Channels.newOutputStream(wrapper));
+            String token = input.readUTF();
+            if (!Objects.equals(this.bootstrapToken, token)) {
+                error("Refusing connection with invalid bootstrap token: " + token, null);
+                socket.close();
+                return;
+            }
             while (!closing) {
                 int requestId = input.readInt();
                 int sz = input.readInt();
