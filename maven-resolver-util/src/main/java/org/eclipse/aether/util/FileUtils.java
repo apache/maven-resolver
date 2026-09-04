@@ -20,9 +20,8 @@ package org.eclipse.aether.util;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
+import java.io.InterruptedIOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -37,9 +36,22 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public final class FileUtils {
-    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we "atomic move" or not
+    // Logic borrowed from Commons-Lang3: we really need only this, to decide do we retry the final move or not
     private static final boolean IS_WINDOWS =
             System.getProperty("os.name", "unknown").startsWith("Windows");
+
+    /**
+     * The number of attempts for the final move on Windows, where the move target may be transiently locked by a
+     * virus scanner, an indexer or a concurrent reader.
+     */
+    private static final int WINDOWS_MOVE_ATTEMPTS =
+            Math.max(1, Integer.getInteger(FileUtils.class.getName() + ".windowsMoveAttempts", 5));
+
+    /**
+     * The delay in milliseconds applied between the move attempts on Windows.
+     */
+    private static final long WINDOWS_MOVE_RETRY_DELAY =
+            Long.getLong(FileUtils.class.getName() + ".windowsMoveRetryDelay", 50L);
 
     private FileUtils() {
         // hide constructor
@@ -130,7 +142,7 @@ public final class FileUtils {
             public void close() throws IOException {
                 if (wantsMove.get()) {
                     if (IS_WINDOWS) {
-                        copy(tempFile, file);
+                        retryingMove(tempFile, file);
                     } else {
                         Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
                     }
@@ -141,21 +153,39 @@ public final class FileUtils {
     }
 
     /**
-     * On Windows we use pre-NIO2 way to copy files, as for some reason it works. Beat me why.
+     * Moves the source file over the target path without ever opening the target for writing: the content visible
+     * at the target path is either the old file or the complete new file, never a partially written one.
+     * <p>
+     * Previously, on Windows the final move was implemented by opening the target path with a truncating stream and
+     * copying the source into it. That left a window during which a concurrent reader (for example a forked JVM
+     * resolving the same artifact) or an untimely process kill would observe, or durably leave behind, a truncated
+     * file at the final path. Instead, the rename is attempted a bounded number of times, as file locking by virus
+     * scanners, indexers or concurrent readers is transient on Windows, and the last failure is rethrown.
      */
-    private static void copy(Path source, Path target) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(1024 * 32);
-        byte[] array = buffer.array();
-        try (InputStream is = Files.newInputStream(source);
-                OutputStream os = Files.newOutputStream(target)) {
-            while (true) {
-                int bytes = is.read(array);
-                if (bytes < 0) {
-                    break;
+    static void retryingMove(Path source, Path target) throws IOException {
+        FileSystemException lastException = null;
+        for (int attempt = 0; attempt < WINDOWS_MOVE_ATTEMPTS; attempt++) {
+            try {
+                Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                return;
+            } catch (FileSystemException e) {
+                // covers AccessDeniedException and sharing violations: transient on Windows
+                lastException = e;
+                if (attempt + 1 < WINDOWS_MOVE_ATTEMPTS) {
+                    try {
+                        Thread.sleep(WINDOWS_MOVE_RETRY_DELAY);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        InterruptedIOException interrupted =
+                                new InterruptedIOException("Interrupted while moving " + source + " to " + target);
+                        interrupted.initCause(ie);
+                        interrupted.addSuppressed(e);
+                        throw interrupted;
+                    }
                 }
-                os.write(array, 0, bytes);
             }
         }
+        throw lastException;
     }
 
     /**
