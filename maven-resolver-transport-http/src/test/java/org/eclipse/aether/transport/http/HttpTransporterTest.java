@@ -1267,6 +1267,28 @@ public class HttpTransporterTest {
     }
 
     @Test
+    public void testGetRFC9457ResponseMalformed() throws Exception {
+        try {
+            transporter.get(new GetTask(URI.create("rfc9457/malformed.txt")));
+            fail("Expected error");
+        } catch (HttpResponseException e) {
+            assertEquals(HttpResponseException.class, e.getClass());
+            assertEquals(403, e.getStatusCode());
+        }
+    }
+
+    @Test
+    public void testGetRFC9457ResponseOversized() throws Exception {
+        try {
+            transporter.get(new GetTask(URI.create("rfc9457/oversized.txt")));
+            fail("Expected error");
+        } catch (HttpResponseException e) {
+            assertEquals(HttpResponseException.class, e.getClass());
+            assertEquals(403, e.getStatusCode());
+        }
+    }
+
+    @Test
     public void testGetRFC9457ResponseWithMissingFields() throws Exception {
         try {
             transporter.get(new GetTask(URI.create("rfc9457/missing_fields.txt")));

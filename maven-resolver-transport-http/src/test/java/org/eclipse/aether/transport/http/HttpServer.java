@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -40,6 +41,7 @@ import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import org.eclipse.aether.transport.http.RFC9457.RFC9457Payload;
+import org.eclipse.aether.transport.http.RFC9457.RFC9457Reporter;
 import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
@@ -502,6 +504,26 @@ public class HttpServer {
             if (HttpMethod.GET.is(req.getMethod())) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setHeader(HttpHeader.CONTENT_TYPE.asString(), "application/problem+json");
+                if (path.endsWith("malformed.txt")) {
+                    try (OutputStream outputStream = response.getOutputStream()) {
+                        outputStream.write("{ this is not json".getBytes(StandardCharsets.UTF_8));
+                    }
+                    return;
+                }
+                if (path.endsWith("oversized.txt")) {
+                    char[] detail = new char[RFC9457Reporter.MAX_BODY_BYTES + 4096];
+                    Arrays.fill(detail, 'a');
+                    RFC9457Payload oversized = new RFC9457Payload(
+                            URI.create("https://example.com/probs/oversized"),
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "Oversized",
+                            new String(detail),
+                            null);
+                    try (OutputStream outputStream = response.getOutputStream()) {
+                        outputStream.write(buildRFC9457Message(oversized).getBytes(StandardCharsets.UTF_8));
+                    }
+                    return;
+                }
                 RFC9457Payload rfc9457Payload;
                 if (path.endsWith("missing_fields.txt")) {
                     rfc9457Payload = new RFC9457Payload(null, null, null, null, null);
