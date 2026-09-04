@@ -193,6 +193,36 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
+    public void testFindLocalArtifactVerifiesRealPath() throws Exception {
+        addLocalArtifact(artifact);
+
+        // the happy path must stay available with verification enabled (the default)
+        LocalArtifactResult result = manager.find(session, new LocalArtifactRequest(artifact, null, null));
+        assertTrue(result.isAvailable());
+    }
+
+    @Test
+    public void testFindCaseAliasedArtifactIsNotAvailable() throws Exception {
+        addLocalArtifact(artifact);
+
+        // Same coordinates but a different spelling. On a case-insensitive filesystem the cached file answers
+        // this lookup through an alias and must be rejected; on a case-sensitive one no such file exists.
+        Artifact aliased = new DefaultArtifact("GID", "aid", "", "jar", "1-test");
+        LocalArtifactResult result = manager.find(session, new LocalArtifactRequest(aliased, null, null));
+        assertFalse(result.isAvailable());
+    }
+
+    @Test
+    public void testVerifyRealPathCanBeDisabled() throws Exception {
+        addLocalArtifact(artifact);
+        session.setConfigProperty("aether.enhancedLocalRepository.verifyRealPath", Boolean.FALSE.toString());
+
+        // opting out must not disturb an ordinary lookup
+        LocalArtifactResult result = manager.find(session, new LocalArtifactRequest(artifact, null, null));
+        assertTrue(result.isAvailable());
+    }
+
+    @Test
     public void testFindLocalArtifact() throws Exception {
         addLocalArtifact(artifact);
 
