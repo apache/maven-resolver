@@ -57,11 +57,17 @@ class IpcServerAccessControlTest {
         final DataOutputStream output;
         int requestId;
 
-        RawClient(String address) throws IOException {
+        RawClient(String address, String token) throws IOException {
             socket = SocketChannel.open(SocketFamily.fromString(address));
             ByteChannel wrapper = new ByteChannelWrapper(socket);
             input = new DataInputStream(Channels.newInputStream(wrapper));
             output = new DataOutputStream(Channels.newOutputStream(wrapper));
+            output.writeUTF(token != null ? token : "");
+            output.flush();
+        }
+
+        RawClient(String address) throws IOException {
+            this(address, TOKEN);
         }
 
         List<String> request(String... words) throws IOException {
@@ -152,6 +158,13 @@ class IpcServerAccessControlTest {
             // ...and the holder of the bootstrap token may stop it
             List<String> stopped = legit.request(IpcMessages.REQUEST_STOP, TOKEN);
             assertEquals(IpcMessages.RESPONSE_STOP, stopped.get(0));
+        }
+    }
+
+    @Test
+    void connectionWithInvalidBootstrapTokenIsDisconnected() throws Exception {
+        try (RawClient invalid = new RawClient(serverAddress, "invalid-token")) {
+            assertThrows(IOException.class, () -> invalid.request(IpcMessages.REQUEST_CONTEXT, "false"));
         }
     }
 }
