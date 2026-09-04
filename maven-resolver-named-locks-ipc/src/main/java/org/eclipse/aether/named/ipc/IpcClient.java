@@ -319,9 +319,17 @@ public class IpcClient {
             while (true) {
                 DataInputStream in = input;
                 if (in == null) {
-                    throw new IOException("Connection closed");
+                    break;
                 }
-                int id = in.readInt();
+                int id;
+                try {
+                    id = in.readInt();
+                } catch (IOException e) {
+                    if (input == null) {
+                        break;
+                    }
+                    throw e;
+                }
                 int sz = in.readInt();
                 List<String> s = new ArrayList<>(Math.max(0, Math.min(sz, 1024)));
                 for (int i = 0; i < sz; i++) {
@@ -338,30 +346,37 @@ public class IpcClient {
                 f.complete(s);
             }
         } catch (EOFException e) {
-            close(new IOException("Server disconnected", e));
+            if (input != null) {
+                close(new IOException("Server disconnected", e));
+            }
         } catch (Exception e) {
-            close(e);
+            if (input != null) {
+                close(e);
+            }
         }
     }
 
     List<String> send(List<String> request, long time, TimeUnit unit) throws TimeoutException, IOException {
         ensureInitialized();
-        DataOutputStream out = output;
-        if (out == null) {
-            throw new IOException("Connection closed");
+        DataOutputStream out;
+        synchronized (this) {
+            out = output;
+            if (out == null) {
+                throw new IOException("Connection closed");
+            }
         }
         int id = requestId.incrementAndGet();
         CompletableFuture<List<String>> response = new CompletableFuture<>();
         responses.put(id, response);
-        synchronized (out) {
-            out.writeInt(id);
-            out.writeInt(request.size());
-            for (String s : request) {
-                out.writeUTF(s);
-            }
-            out.flush();
-        }
         try {
+            synchronized (out) {
+                out.writeInt(id);
+                out.writeInt(request.size());
+                for (String s : request) {
+                    out.writeUTF(s);
+                }
+                out.flush();
+            }
             return response.get(time, unit);
         } catch (InterruptedException e) {
             responses.remove(id);
@@ -369,6 +384,9 @@ public class IpcClient {
         } catch (ExecutionException e) {
             throw new IOException("Execution error", e);
         } catch (TimeoutException e) {
+            responses.remove(id);
+            throw e;
+        } catch (Exception e) {
             responses.remove(id);
             throw e;
         }
@@ -393,13 +411,16 @@ public class IpcClient {
             input = null;
             output = null;
         }
-        if (receiver != null && Thread.currentThread() != receiver) {
-            receiver.interrupt();
-            try {
-                receiver.join(1000);
-            } catch (InterruptedException t) {
-                e.addSuppressed(t);
+        if (receiver != null) {
+            if (Thread.currentThread() != receiver) {
+                receiver.interrupt();
+                try {
+                    receiver.join(1000);
+                } catch (InterruptedException t) {
+                    e.addSuppressed(t);
+                }
             }
+            receiver = null;
         }
         responses.values().forEach(f -> f.completeExceptionally(e));
         responses.clear();
