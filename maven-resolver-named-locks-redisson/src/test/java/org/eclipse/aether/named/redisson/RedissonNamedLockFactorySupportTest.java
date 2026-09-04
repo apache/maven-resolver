@@ -18,7 +18,13 @@
  */
 package org.eclipse.aether.named.redisson;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -53,6 +59,26 @@ class RedissonNamedLockFactorySupportTest {
             assertThrows(IllegalStateException.class, RedissonSemaphoreNamedLockFactory::new);
         } finally {
             System.clearProperty(RedissonNamedLockFactorySupport.SYSTEM_PROP_REDIS_ADDRESS);
+        }
+    }
+
+    @Test
+    void yamlConfigWithPlaintextRemoteAddressRefused(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve("redisson.yaml");
+        Files.write(
+                configFile,
+                ("singleServerConfig:\n" + "  address: \"redis://192.168.1.100:6379\"\n" + "lazyInitialization: true\n")
+                        .getBytes(StandardCharsets.UTF_8));
+        System.setProperty(RedissonNamedLockFactorySupport.SYSTEM_PROP_CONFIG_FILE, configFile.toString());
+        try {
+            assertThrows(IllegalStateException.class, RedissonSemaphoreNamedLockFactory::new);
+
+            System.setProperty(RedissonNamedLockFactorySupport.SYSTEM_PROP_ALLOW_INSECURE_ADDRESS, "true");
+            RedissonSemaphoreNamedLockFactory factory = new RedissonSemaphoreNamedLockFactory();
+            factory.shutdown();
+        } finally {
+            System.clearProperty(RedissonNamedLockFactorySupport.SYSTEM_PROP_CONFIG_FILE);
+            System.clearProperty(RedissonNamedLockFactorySupport.SYSTEM_PROP_ALLOW_INSECURE_ADDRESS);
         }
     }
 }

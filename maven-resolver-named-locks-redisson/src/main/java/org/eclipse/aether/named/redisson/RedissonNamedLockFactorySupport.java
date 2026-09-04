@@ -20,16 +20,24 @@ package org.eclipse.aether.named.redisson;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import org.eclipse.aether.named.support.NamedLockFactorySupport;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.config.ClusterServersConfig;
 import org.redisson.config.Config;
+import org.redisson.config.MasterSlaveServersConfig;
+import org.redisson.config.ReplicatedServersConfig;
+import org.redisson.config.SentinelServersConfig;
+import org.redisson.config.SingleServerConfig;
 
 /**
  * Support class for factories using {@link RedissonClient}.
@@ -120,6 +128,7 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to read Redisson config file: " + configFilePath, e);
             }
+            validateConfigAddresses(config, configFilePath);
         } else {
             config = new Config();
             String defaultRedisAddress = System.getProperty(SYSTEM_PROP_REDIS_ADDRESS, DEFAULT_REDIS_ADDRESS);
@@ -146,6 +155,71 @@ public abstract class RedissonNamedLockFactorySupport extends NamedLockFactorySu
         logger.trace("Created Redisson client with id '{}'", redissonClient.getId());
 
         return redissonClient;
+    }
+
+    private void validateConfigAddresses(Config config, Path configFilePath) {
+        List<String> addresses = new ArrayList<>();
+        SingleServerConfig singleServerConfig =
+                config.isSingleConfig() ? config.useSingleServer() : getServersConfig(config, "getSingleServerConfig");
+        if (singleServerConfig != null && singleServerConfig.getAddress() != null) {
+            addresses.add(singleServerConfig.getAddress());
+        }
+        ClusterServersConfig clusterServersConfig = config.isClusterConfig()
+                ? config.useClusterServers()
+                : getServersConfig(config, "getClusterServersConfig");
+        if (clusterServersConfig != null && clusterServersConfig.getNodeAddresses() != null) {
+            addresses.addAll(clusterServersConfig.getNodeAddresses());
+        }
+        SentinelServersConfig sentinelServersConfig = config.isSentinelConfig()
+                ? config.useSentinelServers()
+                : getServersConfig(config, "getSentinelServersConfig");
+        if (sentinelServersConfig != null && sentinelServersConfig.getSentinelAddresses() != null) {
+            addresses.addAll(sentinelServersConfig.getSentinelAddresses());
+        }
+        MasterSlaveServersConfig masterSlaveServersConfig = getServersConfig(config, "getMasterSlaveServersConfig");
+        if (masterSlaveServersConfig != null) {
+            if (masterSlaveServersConfig.getMasterAddress() != null) {
+                addresses.add(masterSlaveServersConfig.getMasterAddress());
+            }
+            if (masterSlaveServersConfig.getSlaveAddresses() != null) {
+                addresses.addAll(masterSlaveServersConfig.getSlaveAddresses());
+            }
+        }
+        ReplicatedServersConfig replicatedServersConfig = getServersConfig(config, "getReplicatedServersConfig");
+        if (replicatedServersConfig != null && replicatedServersConfig.getNodeAddresses() != null) {
+            addresses.addAll(replicatedServersConfig.getNodeAddresses());
+        }
+
+        for (String address : addresses) {
+            if (address != null && isInsecureRemoteAddress(address)) {
+                if (Boolean.getBoolean(SYSTEM_PROP_ALLOW_INSECURE_ADDRESS)) {
+                    logger.warn(
+                            "Using plaintext Redis address '{}' from Redisson config file '{}' for lock state"
+                                    + " guarding local repository writes; the connection is unencrypted and"
+                                    + " unauthenticated at the transport, so the endpoint and the network"
+                                    + " path to it must be trusted and isolated",
+                            address,
+                            configFilePath);
+                } else {
+                    throw new IllegalStateException("Refusing plaintext non-loopback Redis address '" + address
+                            + "' in Redisson configuration file '" + configFilePath
+                            + "': lock answers from a tampered or spoofed Redis can void"
+                            + " mutual exclusion and corrupt the shared local repository. Use 'rediss://' (TLS)"
+                            + " or opt in with -D" + SYSTEM_PROP_ALLOW_INSECURE_ADDRESS + "=true");
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T getServersConfig(Config config, String methodName) {
+        try {
+            Method method = Config.class.getDeclaredMethod(methodName);
+            method.setAccessible(true);
+            return (T) method.invoke(config);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
