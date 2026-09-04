@@ -461,6 +461,15 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
             }
 
         } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
+            String reason = pool.getDescriptorFailure(key);
+            results.addException(
+                    context.dependency,
+                    new ArtifactDescriptorException(
+                            new ArtifactDescriptorResult(descriptorRequest),
+                            "Artifact descriptor resolution of " + descriptorRequest.getArtifact()
+                                    + " already failed in this session"
+                                    + (reason != null && !reason.isEmpty() ? ": " + reason : "")),
+                    context.parents);
             return null;
         }
 

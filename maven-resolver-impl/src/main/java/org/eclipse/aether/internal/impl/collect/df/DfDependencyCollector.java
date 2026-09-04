@@ -388,6 +388,15 @@ public class DfDependencyCollector extends DependencyCollectorDelegate implement
             }
 
         } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
+            String reason = pool.getDescriptorFailure(key);
+            results.addException(
+                    d,
+                    new ArtifactDescriptorException(
+                            new ArtifactDescriptorResult(descriptorRequest),
+                            "Artifact descriptor resolution of " + descriptorRequest.getArtifact()
+                                    + " already failed in this session"
+                                    + (reason != null && !reason.isEmpty() ? ": " + reason : "")),
+                    args.nodes.nodes);
             return null;
         }
 
