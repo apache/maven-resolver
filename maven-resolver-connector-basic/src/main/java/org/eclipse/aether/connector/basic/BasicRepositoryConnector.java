@@ -82,6 +82,16 @@ final class BasicRepositoryConnector implements RepositoryConnector {
 
     private static final String CONFIG_PROP_PARALLEL_PUT = "aether.connector.basic.parallelPut";
 
+    /**
+     * Whether a failed checksum upload fails the whole PUT transfer. When enabled (default), a deploy is atomic
+     * across the artifact bytes and their checksums: if a checksum cannot be calculated or its upload fails, the
+     * transfer fails, instead of the remote repository ending up with an artifact published without checksums.
+     * When disabled, checksum upload failures are only logged at WARN level, as in earlier releases. Supports a
+     * repository id suffix.
+     */
+    private static final String CONFIG_PROP_FAIL_ON_CHECKSUM_UPLOAD_FAILURE =
+            "aether.connector.basic.failOnChecksumUploadFailure";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicRepositoryConnector.class);
 
     private final Map<String, ProvidedChecksumsSource> providedChecksumsSources;
@@ -105,6 +115,8 @@ final class BasicRepositoryConnector implements RepositoryConnector {
     private final boolean parallelPut;
 
     private final boolean persistedChecksums;
+
+    private final boolean failOnChecksumUploadFailure;
 
     private Executor executor;
 
@@ -145,6 +157,11 @@ final class BasicRepositoryConnector implements RepositoryConnector {
                 session,
                 ConfigurationProperties.DEFAULT_PERSISTED_CHECKSUMS,
                 ConfigurationProperties.PERSISTED_CHECKSUMS);
+        failOnChecksumUploadFailure = ConfigUtils.getBoolean(
+                session,
+                true,
+                CONFIG_PROP_FAIL_ON_CHECKSUM_UPLOAD_FAILURE + "." + repository.getId(),
+                CONFIG_PROP_FAIL_ON_CHECKSUM_UPLOAD_FAILURE);
     }
 
     private Executor getExecutor(int tasks) {
@@ -572,43 +589,47 @@ final class BasicRepositoryConnector implements RepositoryConnector {
          * @param file  source
          * @param bytes transformed data from file or {@code null}
          */
-        private void uploadChecksums(File file, byte[] bytes) {
+        private void uploadChecksums(File file, byte[] bytes) throws Exception {
             if (checksumLocations.isEmpty()) {
                 return;
             }
+            Map<String, String> sumsByAlgo;
             try {
                 ArrayList<ChecksumAlgorithmFactory> algorithms = new ArrayList<>();
                 for (RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations) {
                     algorithms.add(checksumLocation.getChecksumAlgorithmFactory());
                 }
 
-                Map<String, String> sumsByAlgo;
                 if (bytes != null) {
                     sumsByAlgo = ChecksumAlgorithmHelper.calculate(bytes, algorithms);
                 } else {
                     sumsByAlgo = ChecksumAlgorithmHelper.calculate(file, algorithms);
                 }
-
-                for (RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations) {
-                    uploadChecksum(
-                            checksumLocation.getLocation(),
-                            sumsByAlgo.get(checksumLocation
-                                    .getChecksumAlgorithmFactory()
-                                    .getName()));
-                }
             } catch (IOException e) {
                 LOGGER.warn("Failed to upload checksums for {}", file, e);
                 throw new UncheckedIOException(e);
             }
+
+            for (RepositoryLayout.ChecksumLocation checksumLocation : checksumLocations) {
+                uploadChecksum(
+                        checksumLocation.getLocation(),
+                        sumsByAlgo.get(
+                                checksumLocation.getChecksumAlgorithmFactory().getName()));
+            }
         }
 
-        private void uploadChecksum(URI location, Object checksum) {
+        private void uploadChecksum(URI location, Object checksum) throws Exception {
             try {
                 if (checksum instanceof Exception) {
                     throw (Exception) checksum;
                 }
                 transporter.put(new PutTask(location).setDataString((String) checksum));
             } catch (Exception e) {
+                if (failOnChecksumUploadFailure) {
+                    // the deploy is only complete once the checksums are in place next to the artifact
+                    LOGGER.error("Failed to upload checksum to {}", location, e);
+                    throw e;
+                }
                 LOGGER.warn("Failed to upload checksum to {}", location, e);
             }
         }
