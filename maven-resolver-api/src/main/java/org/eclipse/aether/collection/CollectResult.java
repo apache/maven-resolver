@@ -18,9 +18,8 @@
  */
 package org.eclipse.aether.collection;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.graph.DependencyCycle;
@@ -37,9 +36,9 @@ public final class CollectResult {
 
     private final CollectRequest request;
 
-    private List<Exception> exceptions;
+    private List<Exception> exceptions = new CopyOnWriteArrayList<>();
 
-    private List<DependencyCycle> cycles;
+    private List<DependencyCycle> cycles = new CopyOnWriteArrayList<>();
 
     private DependencyNode root;
 
@@ -50,8 +49,6 @@ public final class CollectResult {
      */
     public CollectResult(CollectRequest request) {
         this.request = requireNonNull(request, "dependency collection request cannot be null");
-        exceptions = Collections.emptyList();
-        cycles = Collections.emptyList();
     }
 
     /**
@@ -73,6 +70,21 @@ public final class CollectResult {
     }
 
     /**
+     * Sets the exceptions that occurred while building the dependency graph.
+     *
+     * @param exceptions The exceptions that occurred, may be {@code null}.
+     * @return This result for chaining, never {@code null}.
+     */
+    public CollectResult setExceptions(List<Exception> exceptions) {
+        if (exceptions == null) {
+            this.exceptions = new CopyOnWriteArrayList<>();
+        } else {
+            this.exceptions = new CopyOnWriteArrayList<>(exceptions);
+        }
+        return this;
+    }
+
+    /**
      * Records the specified exception while building the dependency graph.
      *
      * @param exception The exception to record, may be {@code null}.
@@ -80,9 +92,6 @@ public final class CollectResult {
      */
     public CollectResult addException(Exception exception) {
         if (exception != null) {
-            if (exceptions.isEmpty()) {
-                exceptions = new ArrayList<>();
-            }
             exceptions.add(exception);
         }
         return this;
@@ -98,6 +107,21 @@ public final class CollectResult {
     }
 
     /**
+     * Sets the dependency cycles that were encountered while building the dependency graph.
+     *
+     * @param cycles The dependency cycles to record, may be {@code null}.
+     * @return This result for chaining, never {@code null}.
+     */
+    public CollectResult setCycles(List<DependencyCycle> cycles) {
+        if (cycles == null) {
+            this.cycles = new CopyOnWriteArrayList<>();
+        } else {
+            this.cycles = new CopyOnWriteArrayList<>(cycles);
+        }
+        return this;
+    }
+
+    /**
      * Records the specified dependency cycle.
      *
      * @param cycle The dependency cycle to record, may be {@code null}.
@@ -105,9 +129,6 @@ public final class CollectResult {
      */
     public CollectResult addCycle(DependencyCycle cycle) {
         if (cycle != null) {
-            if (cycles.isEmpty()) {
-                cycles = new ArrayList<>();
-            }
             cycles.add(cycle);
         }
         return this;
