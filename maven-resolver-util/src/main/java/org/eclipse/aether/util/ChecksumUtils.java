@@ -37,6 +37,13 @@ import java.util.Map;
  */
 public final class ChecksumUtils {
 
+    /**
+     * Upper bound (in characters) for data read from a checksum file, see {@link #read(File)}. Every sane
+     * checksum file format fits well within this limit; longer input is rejected as malformed instead of being
+     * buffered into memory.
+     */
+    private static final int MAX_CHECKSUM_FILE_CHARS = 8192;
+
     private ChecksumUtils() {
         // hide constructor
     }
@@ -51,23 +58,13 @@ public final class ChecksumUtils {
      */
     @Deprecated
     public static String read(File checksumFile) throws IOException {
-        String checksum = "";
+        String checksum;
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(new FileInputStream(checksumFile), StandardCharsets.UTF_8), 512)) {
-            while (true) {
-                String line = br.readLine();
-                if (line == null) {
-                    break;
-                }
-                line = line.trim();
-                if (line.length() > 0) {
-                    checksum = line;
-                    break;
-                }
-            }
+            checksum = readFirstNonEmptyLine(br, checksumFile.toString());
         }
 
-        if (checksum.matches(".+= [0-9A-Fa-f]+")) {
+        if (isAlgorithmHeaderFormat(checksum)) {
             int lastSpacePos = checksum.lastIndexOf(' ');
             checksum = checksum.substring(lastSpacePos + 1);
         } else {
@@ -79,6 +76,52 @@ public final class ChecksumUtils {
         }
 
         return checksum;
+    }
+
+    /**
+     * Reads the first non-empty line, enforcing {@link #MAX_CHECKSUM_FILE_CHARS} on the total amount of data
+     * consumed. Returns the trimmed line, or an empty string if the stream holds no non-empty line.
+     */
+    private static String readFirstNonEmptyLine(BufferedReader reader, String source) throws IOException {
+        StringBuilder buffer = new StringBuilder(64);
+        int read = 0;
+        int c;
+        while ((c = reader.read()) != -1) {
+            if (++read > MAX_CHECKSUM_FILE_CHARS) {
+                throw new IOException("Checksum file " + source + " is malformed: longer than "
+                        + MAX_CHECKSUM_FILE_CHARS + " characters");
+            }
+            if (c == '\n' || c == '\r') {
+                String line = buffer.toString().trim();
+                if (!line.isEmpty()) {
+                    return line;
+                }
+                buffer.setLength(0);
+            } else {
+                buffer.append((char) c);
+            }
+        }
+        return buffer.toString().trim();
+    }
+
+    /**
+     * Non-backtracking equivalent of {@code line.matches(".+= [0-9A-Fa-f]+")}: at least one character, followed
+     * by "= ", followed by one or more hex digits reaching the end of the line ("&lt;algorithm&gt; (&lt;file&gt;)
+     * = &lt;hex&gt;" style checksum lines).
+     */
+    private static boolean isAlgorithmHeaderFormat(String line) {
+        int lastSpacePos = line.lastIndexOf(' ');
+        if (lastSpacePos < 2 || lastSpacePos == line.length() - 1 || line.charAt(lastSpacePos - 1) != '=') {
+            return false;
+        }
+        for (int i = lastSpacePos + 1; i < line.length(); i++) {
+            char ch = line.charAt(i);
+            boolean hex = (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F');
+            if (!hex) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

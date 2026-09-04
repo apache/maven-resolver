@@ -18,10 +18,15 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.PrintStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -44,6 +49,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -100,6 +106,23 @@ public class DefaultUpdateCheckManagerTest {
 
     static void resetSessionData(RepositorySystemSession session) {
         session.getData().set(DefaultUpdateCheckManager.SESSION_CHECKS, null);
+        session.getData().set(DefaultUpdateCheckManager.SESSION_NOT_FOUNDS, null);
+    }
+
+    /**
+     * Runs the action while capturing what the slf4j-simple binding (bound to {@code System.err}) writes.
+     */
+    private static String captureStdErr(Runnable action) {
+        PrintStream original = System.err;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream capture = new PrintStream(buffer, true);
+        try {
+            System.setErr(capture);
+            action.run();
+        } finally {
+            System.setErr(original);
+        }
+        return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
     }
 
     private UpdateCheck<Metadata, MetadataTransferException> newMetadataCheck() {
@@ -119,6 +142,97 @@ public class DefaultUpdateCheckManagerTest {
         check.setRepository(repository);
         check.setPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
         return check;
+    }
+
+    @Test
+    public void testTouchArtifactExpiresSiblingCachedNotFoundOnSuccessfulDownload() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        // a previous attempt cached a not-found answer from another repository
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
+        notFound.setRepository(other);
+        notFound.setAuthoritativeRepository(other);
+        notFound.setException(new ArtifactNotFoundException(artifact, other));
+        manager.touchArtifact(session, notFound);
+        assertTrue(touchFile.exists());
+
+        // the artifact is then successfully downloaded from a sibling repository: the stale not-found marker
+        // must not survive and silently keep suppressing the other repository (here no errors remain at all,
+        // so the whole touch file is deleted)
+        resetSessionData(session);
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        manager.touchArtifact(session, success);
+        assertFalse(touchFile.exists());
+    }
+
+    @Test
+    public void testTouchArtifactKeepsSiblingTransferErrorOnSuccessfulDownload() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        // a previous attempt cached a transfer error (not a not-found) from another repository
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> failed = newArtifactCheck();
+        failed.setRepository(other);
+        failed.setAuthoritativeRepository(other);
+        failed.setException(new ArtifactTransferException(artifact, other, "some error"));
+        manager.touchArtifact(session, failed);
+        assertTrue(touchFile.exists());
+
+        // only cached not-found markers are expired by a sibling success; transfer errors stay cached
+        resetSessionData(session);
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        manager.touchArtifact(session, success);
+        assertTrue(touchFile.exists());
+        Properties props = new Properties();
+        try (FileInputStream fis = new FileInputStream(touchFile)) {
+            props.load(fis);
+        }
+        assertEquals("some error", props.getProperty("file:///other-repo/.error"));
+    }
+
+    @Test
+    public void testTouchArtifactWarnsAboutSiblingNotFoundFromPreviousSession() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        // a previous session cached a not-found answer from another repository
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
+        notFound.setRepository(other);
+        notFound.setAuthoritativeRepository(other);
+        notFound.setException(new ArtifactNotFoundException(artifact, other));
+        manager.touchArtifact(session, notFound);
+        assertTrue(touchFile.exists());
+
+        // in a new session the other repository is never contacted because of the cached not-found, so a
+        // successful download from a sibling repository is a silent reroute worth a warning
+        resetSessionData(session);
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        String log = captureStdErr(() -> manager.touchArtifact(session, success));
+        assertTrue(log, log.contains("WARN"));
+        assertTrue(log, log.contains("file:///other-repo/"));
+        assertFalse(touchFile.exists());
+    }
+
+    @Test
+    public void testTouchArtifactDoesNotWarnAboutSiblingNotFoundFromSameSession() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        // repositories are consulted in order within one session: the first answers not-found ...
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
+        notFound.setRepository(other);
+        notFound.setAuthoritativeRepository(other);
+        notFound.setException(new ArtifactNotFoundException(artifact, other));
+        manager.touchArtifact(session, notFound);
+        assertTrue(touchFile.exists());
+
+        // ... and the next one serves the artifact. That is the ordinary fall-through, not a stale marker
+        // suppressing a repository, so it must not be reported as a warning; the marker is still expired
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        String log = captureStdErr(() -> manager.touchArtifact(session, success));
+        assertFalse(log, log.contains("WARN"));
+        assertFalse(touchFile.exists());
     }
 
     @Test(expected = Exception.class)
