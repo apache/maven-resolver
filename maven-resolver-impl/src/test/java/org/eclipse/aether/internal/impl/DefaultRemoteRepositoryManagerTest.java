@@ -102,8 +102,81 @@ public class DefaultRemoteRepositoryManagerTest {
 
         RepositoryPolicy effectivePolicy = manager.getPolicy(session, repo, true, true);
         assertTrue(effectivePolicy.isEnabled());
-        assertEquals(RepositoryPolicy.CHECKSUM_POLICY_IGNORE, effectivePolicy.getChecksumPolicy());
+        assertEquals(RepositoryPolicy.CHECKSUM_POLICY_FAIL, effectivePolicy.getChecksumPolicy());
         assertEquals(RepositoryPolicy.UPDATE_POLICY_ALWAYS, effectivePolicy.getUpdatePolicy());
+    }
+
+    @Test
+    public void testGetPolicyNatureMergePicksStrongerChecksumPolicy() {
+        RepositoryPolicy snapshotPolicy = new RepositoryPolicy(
+                true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+        RepositoryPolicy releasePolicy =
+                new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_WARN);
+
+        RemoteRepository repo = new RemoteRepository.Builder("id", "type", "http://localhost")
+                .setSnapshotPolicy(snapshotPolicy)
+                .setReleasePolicy(releasePolicy)
+                .build();
+
+        RepositoryPolicy effectivePolicy = manager.getPolicy(session, repo, true, true);
+        assertEquals(RepositoryPolicy.CHECKSUM_POLICY_FAIL, effectivePolicy.getChecksumPolicy());
+    }
+
+    @Test
+    public void testGetPolicyLegacyWeakestChecksumPolicyNatureMerge() {
+        RepositoryPolicy snapshotPolicy = new RepositoryPolicy(
+                true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
+        RepositoryPolicy releasePolicy =
+                new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+
+        RemoteRepository repo = new RemoteRepository.Builder("id", "type", "http://localhost")
+                .setSnapshotPolicy(snapshotPolicy)
+                .setReleasePolicy(releasePolicy)
+                .build();
+
+        session.setConfigProperty(
+                DefaultRemoteRepositoryManager.CONFIG_PROP_NATURE_MERGE_WEAKEST_CHECKSUM_POLICY, true);
+
+        RepositoryPolicy effectivePolicy = manager.getPolicy(session, repo, true, true);
+        assertEquals(RepositoryPolicy.CHECKSUM_POLICY_IGNORE, effectivePolicy.getChecksumPolicy());
+    }
+
+    @Test
+    public void testGetPolicySessionChecksumPolicyOverridesNatureMerge() {
+        RepositoryPolicy snapshotPolicy = new RepositoryPolicy(
+                true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
+        RepositoryPolicy releasePolicy =
+                new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+
+        RemoteRepository repo = new RemoteRepository.Builder("id", "type", "http://localhost")
+                .setSnapshotPolicy(snapshotPolicy)
+                .setReleasePolicy(releasePolicy)
+                .build();
+
+        session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_WARN);
+
+        RepositoryPolicy effectivePolicy = manager.getPolicy(session, repo, true, true);
+        assertEquals(RepositoryPolicy.CHECKSUM_POLICY_WARN, effectivePolicy.getChecksumPolicy());
+    }
+
+    @Test
+    public void testGetPolicySingleNatureKeepsItsChecksumPolicy() {
+        RepositoryPolicy snapshotPolicy = new RepositoryPolicy(
+                true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
+        RepositoryPolicy releasePolicy =
+                new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+
+        RemoteRepository repo = new RemoteRepository.Builder("id", "type", "http://localhost")
+                .setSnapshotPolicy(snapshotPolicy)
+                .setReleasePolicy(releasePolicy)
+                .build();
+
+        assertEquals(
+                RepositoryPolicy.CHECKSUM_POLICY_FAIL,
+                manager.getPolicy(session, repo, true, false).getChecksumPolicy());
+        assertEquals(
+                RepositoryPolicy.CHECKSUM_POLICY_IGNORE,
+                manager.getPolicy(session, repo, false, true).getChecksumPolicy());
     }
 
     @Test
@@ -363,5 +436,154 @@ public class DefaultRemoteRepositoryManagerTest {
 
         assertEquals(1, result.size());
         assertSame(auth, result.get(0).getAuthentication());
+    }
+
+    @Test
+    public void testAggregateMirrorReposRawRecessiveCannotWeakenMirrorChecksumPolicy() {
+        RemoteRepository dominant1 = newRepo(
+                        "a",
+                        "https://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_FAIL)
+                .build();
+        RemoteRepository dominantMirror1 = newRepo(
+                        "x",
+                        "file://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_FAIL)
+                .addMirroredRepository(dominant1)
+                .build();
+
+        RemoteRepository recessive1 = newRepo(
+                        "evil",
+                        "http://evil",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_IGNORE)
+                .build();
+        final RemoteRepository recessiveMirror1 = newRepo(
+                        "x",
+                        "file://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_IGNORE)
+                .addMirroredRepository(recessive1)
+                .build();
+        session.setMirrorSelector(new MirrorSelector() {
+            public RemoteRepository getMirror(RemoteRepository repository) {
+                return recessiveMirror1;
+            }
+        });
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Arrays.asList(dominantMirror1), Arrays.asList(recessive1), true);
+
+        assertEquals(1, result.size());
+        assertEquals(2, result.get(0).getMirroredRepositories().size());
+        assertEquals(
+                RepositoryPolicy.CHECKSUM_POLICY_FAIL,
+                result.get(0).getPolicy(false).getChecksumPolicy());
+        assertEquals(
+                RepositoryPolicy.CHECKSUM_POLICY_FAIL,
+                result.get(0).getPolicy(true).getChecksumPolicy());
+    }
+
+    @Test
+    public void testAggregateMirrorReposRawRecessiveMayWeakenMirrorChecksumPolicyWhenAllowed() {
+        RemoteRepository dominant1 = newRepo(
+                        "a",
+                        "https://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_FAIL)
+                .build();
+        RemoteRepository dominantMirror1 = newRepo(
+                        "x",
+                        "file://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_FAIL)
+                .addMirroredRepository(dominant1)
+                .build();
+
+        RemoteRepository recessive1 = newRepo(
+                        "evil",
+                        "http://evil",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_IGNORE)
+                .build();
+        final RemoteRepository recessiveMirror1 = newRepo(
+                        "x",
+                        "file://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_IGNORE)
+                .addMirroredRepository(recessive1)
+                .build();
+        session.setMirrorSelector(new MirrorSelector() {
+            public RemoteRepository getMirror(RemoteRepository repository) {
+                return recessiveMirror1;
+            }
+        });
+        session.setConfigProperty(DefaultRemoteRepositoryManager.CONFIG_PROP_RAW_CHECKSUM_POLICY_DOWNGRADE, true);
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Arrays.asList(dominantMirror1), Arrays.asList(recessive1), true);
+
+        assertEquals(1, result.size());
+        assertEquals(2, result.get(0).getMirroredRepositories().size());
+        assertEquals(
+                RepositoryPolicy.CHECKSUM_POLICY_IGNORE,
+                result.get(0).getPolicy(false).getChecksumPolicy());
+        assertEquals(
+                RepositoryPolicy.CHECKSUM_POLICY_IGNORE,
+                result.get(0).getPolicy(true).getChecksumPolicy());
+    }
+
+    @Test
+    public void testAggregateMirrorReposNonRawMergeKeepsLegacyChecksumPolicyMerge() {
+        RemoteRepository dominant1 = newRepo(
+                        "a",
+                        "https://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_FAIL)
+                .build();
+        RemoteRepository dominantMirror1 = newRepo(
+                        "x",
+                        "file://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_FAIL)
+                .addMirroredRepository(dominant1)
+                .build();
+
+        RemoteRepository recessive1 = newRepo(
+                        "b",
+                        "https://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_WARN)
+                .build();
+        RemoteRepository recessiveMirror1 = newRepo(
+                        "x",
+                        "file://",
+                        true,
+                        RepositoryPolicy.UPDATE_POLICY_DAILY,
+                        RepositoryPolicy.CHECKSUM_POLICY_WARN)
+                .addMirroredRepository(recessive1)
+                .build();
+
+        List<RemoteRepository> result = manager.aggregateRepositories(
+                session, Arrays.asList(dominantMirror1), Arrays.asList(recessiveMirror1), false);
+
+        assertEquals(1, result.size());
+        assertEquals(2, result.get(0).getMirroredRepositories().size());
+        assertEquals(
+                RepositoryPolicy.CHECKSUM_POLICY_WARN,
+                result.get(0).getPolicy(false).getChecksumPolicy());
     }
 }
