@@ -81,7 +81,6 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -119,6 +118,14 @@ final class HttpTransporter extends AbstractTransporter {
     static final String PREEMPTIVE_PUT_AUTH = "aether.connector.http.preemptivePutAuth";
 
     static final String USE_SYSTEM_PROPERTIES = "aether.connector.http.useSystemProperties";
+
+    static final String FOLLOW_INSECURE_REDIRECTS = "aether.connector.http.followInsecureRedirects";
+
+    static final boolean DEFAULT_FOLLOW_INSECURE_REDIRECTS = false;
+
+    static final String ORIGIN_SCOPED_HEADERS = "aether.connector.http.originScopedHeaders";
+
+    static final boolean DEFAULT_ORIGIN_SCOPED_HEADERS = true;
 
     static final String HTTP_RETRY_HANDLER_NAME = "aether.connector.http.retryHandler.name";
 
@@ -283,6 +290,13 @@ final class HttpTransporter extends AbstractTransporter {
                 ConfigurationProperties.DEFAULT_FOLLOW_REDIRECTS,
                 ConfigurationProperties.HTTP_FOLLOW_REDIRECTS + "." + repository.getId(),
                 ConfigurationProperties.HTTP_FOLLOW_REDIRECTS);
+        boolean followInsecureRedirects = ConfigUtils.getBoolean(
+                session,
+                DEFAULT_FOLLOW_INSECURE_REDIRECTS,
+                FOLLOW_INSECURE_REDIRECTS + "." + repository.getId(),
+                FOLLOW_INSECURE_REDIRECTS,
+                "aether.transport.http.followInsecureRedirects." + repository.getId(),
+                "aether.transport.http.followInsecureRedirects");
 
         Charset credentialsCharset = Charset.forName(credentialEncoding);
         Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
@@ -328,7 +342,7 @@ final class HttpTransporter extends AbstractTransporter {
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
-                .setRedirectStrategy(LaxRedirectStrategy.INSTANCE)
+                .setRedirectStrategy(new ResolverRedirectStrategy(followInsecureRedirects))
                 .setDefaultSocketConfig(socketConfig)
                 .setDefaultRequestConfig(requestConfig)
                 .setServiceUnavailableRetryStrategy(serviceUnavailableRetryStrategy)
@@ -338,6 +352,16 @@ final class HttpTransporter extends AbstractTransporter {
                 .setConnectionManagerShared(true)
                 .setDefaultCredentialsProvider(toCredentialsProvider(server, repoAuthContext, proxy, proxyAuthContext))
                 .setProxy(proxy);
+        boolean originScopedHeaders = ConfigUtils.getBoolean(
+                session,
+                DEFAULT_ORIGIN_SCOPED_HEADERS,
+                ORIGIN_SCOPED_HEADERS + "." + repository.getId(),
+                ORIGIN_SCOPED_HEADERS,
+                "aether.transport.http.originScopedHeaders." + repository.getId(),
+                "aether.transport.http.originScopedHeaders");
+        if (originScopedHeaders && !this.headers.isEmpty()) {
+            builder.addInterceptorLast(new OriginScopedHeadersInterceptor(server, this.headers.keySet()));
+        }
         final boolean useSystemProperties = ConfigUtils.getBoolean(
                 session, false, USE_SYSTEM_PROPERTIES + "." + repository.getId(), USE_SYSTEM_PROPERTIES);
         if (useSystemProperties) {
@@ -416,12 +440,27 @@ final class HttpTransporter extends AbstractTransporter {
 
     private static CredentialsProvider toCredentialsProvider(
             HttpHost server, AuthenticationContext serverAuthCtx, HttpHost proxy, AuthenticationContext proxyAuthCtx) {
-        CredentialsProvider provider = toCredentialsProvider(server.getHostName(), AuthScope.ANY_PORT, serverAuthCtx);
+        CredentialsProvider provider =
+                toCredentialsProvider(server.getHostName(), effectivePort(server), serverAuthCtx);
         if (proxy != null) {
             CredentialsProvider p = toCredentialsProvider(proxy.getHostName(), proxy.getPort(), proxyAuthCtx);
             provider = new DemuxCredentialsProvider(provider, p, proxy);
         }
         return provider;
+    }
+
+    /**
+     * Determines the effective port of the given host: the explicit port if present, otherwise the default port
+     * implied by the scheme. Used to bind repository credentials to the repository's own origin (host and port)
+     * instead of {@link AuthScope#ANY_PORT}: with any-port scoping, a request landing on the same host but a
+     * different port - for example after an https-to-http downgrade redirect - would still be eligible to
+     * receive the credentials.
+     */
+    static int effectivePort(HttpHost host) {
+        if (host.getPort() >= 0) {
+            return host.getPort();
+        }
+        return "https".equalsIgnoreCase(host.getSchemeName()) ? 443 : 80;
     }
 
     private static CredentialsProvider toCredentialsProvider(String host, int port, AuthenticationContext ctx) {
