@@ -22,6 +22,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.Locale;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
@@ -47,6 +49,20 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     private static final String CONFIG_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
 
     private static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
+
+    /**
+     * The function producing the repository component of the tracking entries this manager writes and consults, and
+     * of nothing else: artifact and metadata paths and split local repository prefixes keep following the repository
+     * id. Accepted values: {@code "nid_hurl"} (default) qualifies the id with a hash of the repository URL, so two
+     * repositories merely sharing an id are tracked as different origins; {@code "nid"} is the id alone, the
+     * behavior of earlier releases. Entries written under a different function than the active one never match a
+     * lookup and never enable the untracked-file fallback: affected artifacts are treated as locally unavailable and
+     * fetched again once.
+     */
+    private static final String CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION =
+            "aether.enhancedLocalRepository.trackingRepositoryKeyFunction";
+
+    private static final String DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
 
     private float priority = 10.0f;
 
@@ -98,9 +114,24 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                     localPathComposer,
                     trackingFilename,
                     trackingFileManager,
-                    localPathPrefixComposerFactory.createComposer(session));
+                    localPathPrefixComposerFactory.createComposer(session),
+                    trackingRepositoryKeyFunction(ConfigUtils.getString(
+                            session,
+                            DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION,
+                            CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION)));
         } else {
             throw new NoLocalRepositoryManagerException(repository);
+        }
+    }
+
+    static EnhancedLocalRepositoryManager.TrackingKeyFunction trackingRepositoryKeyFunction(String name) {
+        try {
+            return EnhancedLocalRepositoryManager.TrackingKeyFunction.valueOf(name.toUpperCase(Locale.ENGLISH));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "Unknown " + CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION + " value '" + name
+                            + "': expected nid_hurl or nid",
+                    e);
         }
     }
 
