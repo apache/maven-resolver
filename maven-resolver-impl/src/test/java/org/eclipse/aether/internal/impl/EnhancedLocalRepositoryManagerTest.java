@@ -24,6 +24,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Properties;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -45,6 +46,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -225,6 +227,65 @@ public class EnhancedLocalRepositoryManagerTest {
         result = manager.find(session, request);
         assertTrue(result.isAvailable());
         assertEquals(repository, result.getRepository());
+    }
+
+    @Test
+    public void testDoNotFindSameIdDifferentUrl() throws Exception {
+        addRemoteArtifact(artifact);
+
+        RemoteRepository sameIdElsewhere = new RemoteRepository.Builder(repository)
+                .setUrl("file:///elsewhere/")
+                .build();
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(sameIdElsewhere), testContext);
+        LocalArtifactResult result = manager.find(session, request);
+        assertNotNull(result.getFile());
+        assertFalse(result.isAvailable());
+    }
+
+    @Test
+    public void testTrackingKeyIsUrlQualified() throws Exception {
+        addRemoteArtifact(artifact);
+
+        File trackingFile = new File(
+                new File(basedir, manager.getPathForRemoteArtifact(artifact, repository, testContext)).getParentFile(),
+                "_remote.repositories");
+        Properties props = trackingFileManager.read(trackingFile);
+        assertNotNull(props);
+        String fileName = new File(manager.getPathForRemoteArtifact(artifact, repository, testContext)).getName();
+        assertEquals(
+                1,
+                props.keySet().stream()
+                        .filter(k -> k.toString().startsWith(fileName + ">"))
+                        .count());
+        String key = props.keySet().stream()
+                .map(Object::toString)
+                .filter(k -> k.startsWith(fileName + ">"))
+                .findFirst()
+                .orElseThrow(AssertionError::new);
+        assertEquals(
+                fileName + ">" + EnhancedLocalRepositoryManager.urlQualifiedRepositoryKey(repository, testContext),
+                key);
+        assertTrue(key, key.startsWith(fileName + ">" + repository.getId() + "-"));
+        assertNotEquals(fileName + ">" + repository.getId(), key);
+    }
+
+    @Test
+    public void testLegacyTrackingKeyFindsSameIdDifferentUrl() throws Exception {
+        manager = new EnhancedLocalRepositoryManager(
+                basedir,
+                new DefaultLocalPathComposer(),
+                "_remote.repositories",
+                trackingFileManager,
+                new DefaultLocalPathPrefixComposerFactory().createComposer(session),
+                EnhancedLocalRepositoryManager.TrackingKeyFunction.NID);
+        addRemoteArtifact(artifact);
+
+        RemoteRepository sameIdElsewhere = new RemoteRepository.Builder(repository)
+                .setUrl("file:///elsewhere/")
+                .build();
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(sameIdElsewhere), testContext);
+        LocalArtifactResult result = manager.find(session, request);
+        assertTrue(result.isAvailable());
     }
 
     @Test

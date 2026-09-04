@@ -34,6 +34,8 @@ import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.PathUtils;
+import org.eclipse.aether.util.StringDigestUtil;
 
 import static java.util.Objects.requireNonNull;
 
@@ -54,6 +56,10 @@ import static java.util.Objects.requireNonNull;
  * artifact-1.0.pom>my_repo_id=
  * </pre>
  *
+ * The repository component of a tracking key is produced by the tracking repository key function, which is
+ * URL-qualified by default: two repositories that merely share an id but point at different URLs are tracked as
+ * different origins (see {@link EnhancedLocalRepositoryManagerFactory}).
+ *
  * @see EnhancedLocalRepositoryManagerFactory
  */
 class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
@@ -66,16 +72,81 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private final LocalPathPrefixComposer localPathPrefixComposer;
 
+    /**
+     * The functions producing the repository component of a tracking entry.
+     */
+    enum TrackingKeyFunction {
+        /**
+         * The repository id alone, as written by earlier releases.
+         */
+        NID,
+        /**
+         * The repository id qualified with a hash of the repository URL, see
+         * {@link #urlQualifiedRepositoryKey(RemoteRepository, String)}.
+         */
+        NID_HURL
+    }
+
+    /**
+     * Key function used solely for the tracking entries (the repository component of the keys in the tracking
+     * file); path composition keeps using {@link #getRepositoryKey(RemoteRepository, String)}. Entries written
+     * under a different key function never match a lookup: the artifact stays tracked, so the untracked inter-op
+     * branch in {@link #checkFind} does not accept it, but unavailable, and is fetched again.
+     */
+    private final TrackingKeyFunction trackingKeyFunction;
+
     EnhancedLocalRepositoryManager(
             File basedir,
             LocalPathComposer localPathComposer,
             String trackingFilename,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposer localPathPrefixComposer) {
+        this(
+                basedir,
+                localPathComposer,
+                trackingFilename,
+                trackingFileManager,
+                localPathPrefixComposer,
+                TrackingKeyFunction.NID_HURL);
+    }
+
+    EnhancedLocalRepositoryManager(
+            File basedir,
+            LocalPathComposer localPathComposer,
+            String trackingFilename,
+            TrackingFileManager trackingFileManager,
+            LocalPathPrefixComposer localPathPrefixComposer,
+            TrackingKeyFunction trackingKeyFunction) {
         super(basedir, "enhanced", localPathComposer);
         this.trackingFilename = requireNonNull(trackingFilename);
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
+        this.trackingKeyFunction = requireNonNull(trackingKeyFunction);
+    }
+
+    /**
+     * The URL-qualified tracking key: the repository id as a path segment, a dash, and the SHA-1 of the repository
+     * URL (with the context appended for repository managers). Same shape as the {@code nid_hurl} repository key
+     * function of the 2.x line, so tracking files are shared between the lines.
+     */
+    static String urlQualifiedRepositoryKey(RemoteRepository repository, String context) {
+        String seed = repository.getUrl();
+        if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
+            seed += context;
+        }
+        return PathUtils.stringToPathSegment(repository.getId()) + "-" + StringDigestUtil.sha1(seed);
+    }
+
+    /**
+     * Returns the tracking key of given repository. Deliberately distinct from
+     * {@link #getRepositoryKey(RemoteRepository, String)}, which is used for path composition: tracking binds an
+     * artifact to the full identity of its origin, while the on-disk layout stays unchanged.
+     */
+    private String getTrackingRepositoryKey(RemoteRepository repository, String context) {
+        if (trackingKeyFunction == TrackingKeyFunction.NID_HURL) {
+            return urlQualifiedRepositoryKey(repository, context);
+        }
+        return getRepositoryKey(repository, context);
     }
 
     private String concatPaths(String prefix, String artifactPath) {
@@ -156,7 +227,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
             } else {
                 String context = result.getRequest().getContext();
                 for (RemoteRepository repository : result.getRequest().getRepositories()) {
-                    if (props.get(getKey(file, getRepositoryKey(repository, context))) != null) {
+                    if (props.get(getKey(file, getTrackingRepositoryKey(repository, context))) != null) {
                         // artifact downloaded from remote repository is accepted only downloaded from request
                         // repositories
                         result.setAvailable(true);
@@ -197,7 +268,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
         if (contexts != null) {
             for (String context : contexts) {
-                keys.add(getRepositoryKey(repository, context));
+                keys.add(getTrackingRepositoryKey(repository, context));
             }
         }
 
