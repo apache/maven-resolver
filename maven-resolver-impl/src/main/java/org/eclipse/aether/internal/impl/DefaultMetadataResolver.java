@@ -144,15 +144,10 @@ public class DefaultMetadataResolver implements MetadataResolver {
             metadata.add(request.getMetadata());
         }
 
-        SyncContext shared = syncContextFactory.newInstance(session, true);
-        SyncContext exclusive;
-        try {
-            exclusive = syncContextFactory.newInstance(session, false);
-        } catch (RuntimeException e) {
-            shared.close();
-            throw e;
+        try (SyncContext shared = new CloseOnceSyncContext(syncContextFactory.newInstance(session, true));
+                SyncContext exclusive = new CloseOnceSyncContext(syncContextFactory.newInstance(session, false))) {
+            return resolve(shared, exclusive, metadata, session, requests);
         }
-        return resolve(shared, exclusive, metadata, session, requests);
     }
 
     @SuppressWarnings("checkstyle:methodlength")
