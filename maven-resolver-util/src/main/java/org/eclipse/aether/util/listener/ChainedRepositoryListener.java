@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;
@@ -110,12 +112,13 @@ public class ChainedRepositoryListener extends AbstractRepositoryListener {
         }
     }
 
+    private static final Logger LOGGER = Logger.getLogger(ChainedRepositoryListener.class.getName());
+
     /**
-     * Invoked when any listener throws, by default is no op, extend if required.
+     * Invoked when any listener throws, by default logs a warning, extend if required.
      */
-    @SuppressWarnings("EmptyMethod")
     protected void handleError(RepositoryEvent event, RepositoryListener listener, RuntimeException error) {
-        // default just swallows errors
+        LOGGER.log(Level.WARNING, "Exception in repository listener " + listener, error);
     }
 
     @Override

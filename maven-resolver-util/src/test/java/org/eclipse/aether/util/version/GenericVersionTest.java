@@ -538,10 +538,13 @@ public class GenericVersionTest extends AbstractVersionTest {
      */
     @Test
     void testCompareUuidRandom() {
+        Random random = new Random(0x5EEDCAFEL);
         for (int j = 0; j < 32; j++) {
             ArrayList<Version> versions = new ArrayList<>();
             for (int i = 0; i < 64; i++) {
-                versions.add(newVersion(UUID.randomUUID().toString()));
+                byte[] bytes = new byte[16];
+                random.nextBytes(bytes);
+                versions.add(newVersion(UUID.nameUUIDFromBytes(bytes).toString()));
             }
             try {
                 Collections.sort(versions);

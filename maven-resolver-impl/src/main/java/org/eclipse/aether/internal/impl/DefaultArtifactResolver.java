@@ -203,18 +203,17 @@ public class DefaultArtifactResolver implements ArtifactResolver {
             throws ArtifactResolutionException {
         requireNonNull(session, "session cannot be null");
         requireNonNull(requests, "requests cannot be null");
-        try (SyncContext shared = syncContextFactory.newInstance(session, true);
-                SyncContext exclusive = syncContextFactory.newInstance(session, false)) {
-            Collection<Artifact> artifacts = new ArrayList<>(requests.size());
-            SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
-            for (ArtifactRequest request : requests) {
-                if (systemDependencyScope != null
-                        && systemDependencyScope.getSystemPath(request.getArtifact()) != null) {
-                    continue;
-                }
-                artifacts.add(request.getArtifact());
+        Collection<Artifact> artifacts = new ArrayList<>(requests.size());
+        SystemDependencyScope systemDependencyScope = session.getSystemDependencyScope();
+        for (ArtifactRequest request : requests) {
+            if (systemDependencyScope != null && systemDependencyScope.getSystemPath(request.getArtifact()) != null) {
+                continue;
             }
+            artifacts.add(request.getArtifact());
+        }
 
+        try (SyncContext shared = new CloseOnceSyncContext(syncContextFactory.newInstance(session, true));
+                SyncContext exclusive = new CloseOnceSyncContext(syncContextFactory.newInstance(session, false))) {
             return resolve(shared, exclusive, artifacts, session, requests);
         }
     }
@@ -426,8 +425,9 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 }
 
                 if (!groups.isEmpty() && current == shared) {
-                    current.close();
+                    SyncContext sharedContext = current;
                     current = exclusive;
+                    sharedContext.close();
                     continue;
                 }
 
@@ -470,7 +470,13 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                 return results;
             }
         } finally {
-            current.close();
+            try {
+                current.close();
+            } finally {
+                if (current == shared) {
+                    exclusive.close();
+                }
+            }
         }
     }
 
