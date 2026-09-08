@@ -440,7 +440,7 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     @Test
-    void testUrlQualifiedTrackingTreatsLegacyIdOnlyEntriesAsStale() throws Exception {
+    void testUrlQualifiedTrackingAcceptsLegacyIdOnlyEntriesViaFallback() throws Exception {
         manager = newUrlQualifiedTrackingManager();
 
         // artifact file present, tracked under a legacy ID-only key as written by an older resolver
@@ -451,9 +451,28 @@ public class EnhancedLocalRepositoryManagerTest {
                 Collections.singletonMap(
                         file.getName() + ">" + RepositoryIdHelper.simpleRepositoryKey(repository, testContext), ""));
 
-        // fail-safe stale-key semantics: the legacy key matches no request repository, and because the
-        // file IS tracked it must not fall through to the untracked inter-op acceptance either — the
-        // artifact is simply unavailable locally and gets re-fetched (with checksum validation)
+        // backward-compatible fallback: the legacy ID-only key matches the system-wide key function
+        // for the request repository, so the artifact is accepted (avoiding a full re-download) and
+        // the origin repository is correctly reported
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
+        LocalArtifactResult result = manager.find(session, request);
+        assertTrue(result.isAvailable());
+        assertEquals(repository, result.getRepository());
+    }
+
+    @Test
+    void testUrlQualifiedTrackingRejectsLegacyIdOnlyEntriesFromDifferentRepo() throws Exception {
+        manager = newUrlQualifiedTrackingManager();
+
+        // artifact file present, tracked under a legacy ID-only key for a DIFFERENT repository
+        copy(artifact, manager.getPathForLocalArtifact(artifact));
+        File file = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        trackingFileManager.update(
+                new File(file.getParentFile(), "_remote.repositories").toPath(),
+                Collections.singletonMap(file.getName() + ">some-other-repo", ""));
+
+        // even with legacy fallback, an entry for a different repository id must not be accepted:
+        // the artifact is tracked (not untracked) and none of the keys match — unavailable
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
         assertFalse(manager.find(session, request).isAvailable());
     }

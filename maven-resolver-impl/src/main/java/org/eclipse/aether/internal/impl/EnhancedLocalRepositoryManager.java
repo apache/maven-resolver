@@ -302,6 +302,27 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                 return true;
             }
         }
+        // Backward compatibility fallback: if the tracking key function is URL-qualified (e.g. nid_hurl)
+        // but the tracking file was written by an older resolver using the system-wide key function
+        // (e.g. nid, producing ID-only entries like "artifact>central="), the URL-qualified lookup above
+        // misses. Try the system-wide key function as a fallback: if it matches, the artifact was genuinely
+        // downloaded from this repository under the old key scheme. Accept it and log a migration notice.
+        for (RemoteRepository repository : result.getRequest().getRepositories()) {
+            String legacyKey = getRepositoryKey(repository, context);
+            String trackingKey = getTrackingRepositoryKey(repository, context);
+            if (!legacyKey.equals(trackingKey) && props.get(getKey(path, legacyKey)) != null) {
+                LOGGER.debug(
+                        "Accepting locally cached artifact {} via legacy tracking key '{}'"
+                                + " (current key function would produce '{}'); the entry will be"
+                                + " upgraded on next download",
+                        path.getFileName(),
+                        legacyKey,
+                        trackingKey);
+                result.setAvailable(true);
+                result.setRepository(repository);
+                return true;
+            }
+        }
         return false;
     }
 
