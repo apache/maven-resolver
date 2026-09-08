@@ -19,6 +19,7 @@
 package org.eclipse.aether.internal.impl;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.Artifact;
@@ -35,15 +36,16 @@ import static java.util.Objects.requireNonNull;
 final class CloseOnceSyncContext implements SyncContext {
 
     private final SyncContext delegate;
-    private boolean closed;
+    private final AtomicBoolean closed;
 
     CloseOnceSyncContext(SyncContext delegate) {
         this.delegate = requireNonNull(delegate);
+        this.closed = new AtomicBoolean(false);
     }
 
     @Override
     public void acquire(Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas) {
-        if (closed) {
+        if (closed.get()) {
             throw new IllegalStateException("sync context is already closed");
         }
         delegate.acquire(artifacts, metadatas);
@@ -51,8 +53,7 @@ final class CloseOnceSyncContext implements SyncContext {
 
     @Override
     public void close() {
-        if (!closed) {
-            closed = true;
+        if (closed.compareAndSet(false, true)) {
             delegate.close();
         }
     }

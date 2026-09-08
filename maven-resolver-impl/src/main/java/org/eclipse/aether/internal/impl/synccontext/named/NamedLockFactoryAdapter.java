@@ -22,6 +22,7 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -171,6 +172,8 @@ public final class NamedLockFactoryAdapter {
 
         private final Deque<NamedLock> locks;
 
+        private final AtomicBoolean closed;
+
         private AdaptedLockSyncContext(
                 final RepositorySystemSession session,
                 final boolean shared,
@@ -187,6 +190,7 @@ public final class NamedLockFactoryAdapter {
             this.retry = getRetry(session);
             this.retryWait = getRetryWait(session);
             this.locks = new ArrayDeque<>();
+            this.closed = new AtomicBoolean(false);
 
             if (retry < 0L) {
                 throw new IllegalArgumentException(CONFIG_PROP_RETRY + " value cannot be negative");
@@ -317,12 +321,16 @@ public final class NamedLockFactoryAdapter {
 
         @Override
         public void close() {
-            while (!locks.isEmpty()) {
-                try (NamedLock namedLock = locks.pop()) {
-                    namedLock.unlock();
-                    if (LOGGER.isTraceEnabled()) {
-                        LOGGER.trace(
-                                "Unlocked and closed {} lock of {}", shared ? "shared" : "exclusive", namedLock.key());
+            if (closed.compareAndSet(false, true)) {
+                while (!locks.isEmpty()) {
+                    try (NamedLock namedLock = locks.pop()) {
+                        namedLock.unlock();
+                        if (LOGGER.isTraceEnabled()) {
+                            LOGGER.trace(
+                                    "Unlocked and closed {} lock of {}",
+                                    shared ? "shared" : "exclusive",
+                                    namedLock.key());
+                        }
                     }
                 }
             }
