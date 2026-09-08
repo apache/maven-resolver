@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -119,8 +120,8 @@ public class ConflictResolver implements DependencyGraphTransformer {
     /**
      * The name of the conflict resolver implementation to use: "auto" (default), "path", or "classic" (same as Maven 3).
      * <p>
-     * When set to "auto", the resolver will currently just use "classic". The idea here, is that this value will
-     * always select the best (most robust, most performant) one, which currently is "classic".
+     * When set to "auto", the resolver automatically selects the most appropriate implementation based on the
+     * dependency graph size and available memory.
      *
      * @since 2.0.11
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -254,8 +255,12 @@ public class ConflictResolver implements DependencyGraphTransformer {
             throws RepositoryException {
         String cf = ConfigUtils.getString(
                 context.getSession(), DEFAULT_CONFLICT_RESOLVER_IMPL, CONFIG_PROP_CONFLICT_RESOLVER_IMPL);
+
         ConflictResolver delegate;
-        if (AUTO_CONFLICT_RESOLVER.equals(cf) || CLASSIC_CONFLICT_RESOLVER.equals(cf)) {
+
+        if (AUTO_CONFLICT_RESOLVER.equals(cf)) {
+            delegate = selectConflictResolver(node, context);
+        } else if (CLASSIC_CONFLICT_RESOLVER.equals(cf)) {
             delegate = new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
         } else if (PATH_CONFLICT_RESOLVER.equals(cf)) {
             delegate = new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
@@ -263,7 +268,61 @@ public class ConflictResolver implements DependencyGraphTransformer {
             throw new IllegalArgumentException("Unknown conflict resolver: " + cf + "; known are "
                     + Arrays.asList(AUTO_CONFLICT_RESOLVER, PATH_CONFLICT_RESOLVER, CLASSIC_CONFLICT_RESOLVER));
         }
+
         return delegate.transformGraph(node, context);
+    }
+
+    /**
+     * Automatically selects the conflict resolver based on the estimated memory requirements.
+     * PathConflictResolver is used for dependency trees that fit within the memory threshold,
+     * while ClassicConflictResolver is used for larger trees.
+     */
+    private ConflictResolver selectConflictResolver(DependencyNode node, DependencyGraphTransformationContext context)
+            throws RepositoryException {
+
+        if (context.get(TransformationContextKeys.CONFLICT_IDS) == null) {
+            new ConflictIdSorter().transformGraph(node, context);
+        }
+
+        Runtime rt = Runtime.getRuntime();
+        long available = rt.maxMemory() - (rt.totalMemory() - rt.freeMemory());
+
+        // Estimate the maximum number of Path tree nodes that would fit in 25% of available heap.
+        // Each Path object costs ~200 bytes (object header + fields + children list entry).
+        int maxPathNodes = (int) Math.min(available / (4L * 200), Integer.MAX_VALUE);
+
+        // Walk the dependency tree to count total nodes (including diamond-expanded duplicates).
+        // The Path tree mirrors this structure, so the count directly reflects Path tree size.
+        // Use early-exit: stop counting once we exceed the threshold.
+        if (treeExceedsThreshold(node, maxPathNodes)) {
+            return new ClassicConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+        } else {
+            return new PathConflictResolver(versionSelector, scopeSelector, optionalitySelector, scopeDeriver);
+        }
+    }
+
+    /**
+     * Checks whether the total number of nodes in the dependency tree exceeds the given threshold.
+     * Uses an iterative walk with early exit to avoid measuring the full tree when it is clearly too large.
+     */
+    private boolean treeExceedsThreshold(DependencyNode root, int threshold) {
+        int count = 0;
+        ArrayDeque<DependencyNode> stack = new ArrayDeque<>();
+        stack.push(root);
+
+        while (!stack.isEmpty()) {
+            DependencyNode n = stack.pop();
+
+            if (++count > threshold) {
+                return true;
+            }
+
+            for (DependencyNode child : n.getChildren()) {
+                stack.push(child);
+            }
+        }
+
+        return false;
     }
 
     /**
