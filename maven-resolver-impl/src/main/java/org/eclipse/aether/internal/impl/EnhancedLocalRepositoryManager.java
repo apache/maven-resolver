@@ -137,6 +137,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      */
     private final Path realBasePath;
 
+    @SuppressWarnings("checkstyle:parameternumber")
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
