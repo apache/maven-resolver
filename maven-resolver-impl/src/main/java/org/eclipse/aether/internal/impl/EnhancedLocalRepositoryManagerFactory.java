@@ -108,7 +108,12 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     /**
      * Whether to enable "legacy tracking fallback" in LRM. If starting "greenfield" with Resolver 2 enabled Maven,
-     * this should be {@code false}, but for smoother transition of existing Maven users is {@code true}.
+     * this should be {@code false}, but for smoother transition of users using Maven 3.9 or older versions, the default
+     * is {@code true}. When the local repository is shared across "older" and "newer" Maven versions (where "older"
+     * Maven versions are Resolver 1.x and "never" Maven versions are Resolver 2.x based), the preferred way is to
+     * enable this feature. On the other hand, if local repository is exclusively used by "newer" Maven versions,
+     * like 3.10 or above, for improved Repository cache poisoning protection, this configuration is recommended
+     * to be set to {@code false}.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
