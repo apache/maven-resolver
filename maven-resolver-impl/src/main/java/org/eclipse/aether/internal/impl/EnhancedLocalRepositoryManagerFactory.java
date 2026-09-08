@@ -106,6 +106,19 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     public static final boolean DEFAULT_VERIFY_REAL_PATH = true;
 
+    /**
+     * Whether to enable "legacy tracking fallback" in LRM. If starting "greenfield" with Resolver 2 enabled Maven,
+     * this should be {@code false}, but for smoother transition of existing Maven users is {@code true}.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_LEGACY_TRACKING_FALLBACK}
+     * @since 2.0.23
+     */
+    public static final String CONFIG_PROP_LEGACY_TRACKING_FALLBACK = CONFIG_PROPS_PREFIX + "legacyTrackingFallback";
+
+    public static final boolean DEFAULT_LEGACY_TRACKING_FALLBACK = true;
+
     private float priority = 10.0f;
 
     private final LocalPathComposer localPathComposer;
@@ -141,6 +154,8 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                 || trackingFilename.contains("..")) {
             trackingFilename = DEFAULT_TRACKING_FILENAME;
         }
+        boolean legacyTrackingFallback =
+                ConfigUtils.getBoolean(session, DEFAULT_LEGACY_TRACKING_FALLBACK, CONFIG_PROP_LEGACY_TRACKING_FALLBACK);
 
         if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
             try {
@@ -157,6 +172,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                                         ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION),
                                 CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION),
                         trackingFilename,
+                        legacyTrackingFallback,
                         trackingFileManager,
                         localPathPrefixComposerFactory.createComposer(session));
             } catch (IOException e) {

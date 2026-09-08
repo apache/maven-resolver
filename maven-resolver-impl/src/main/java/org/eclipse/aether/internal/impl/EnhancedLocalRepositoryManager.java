@@ -97,6 +97,8 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private final String trackingFilename;
 
+    private final boolean legacyTrackingFallback;
+
     private final TrackingFileManager trackingFileManager;
 
     private final LocalPathPrefixComposer localPathPrefixComposer;
@@ -141,12 +143,14 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
             RepositoryKeyFunction repositoryKeyFunction,
             RepositoryKeyFunction trackingRepositoryKeyFunction,
             String trackingFilename,
+            boolean legacyTrackingFallback,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposer localPathPrefixComposer)
             throws IOException {
         super(basedir, "enhanced", localPathComposer, repositoryKeyFunction);
         this.trackingRepositoryKeyFunction = requireNonNull(trackingRepositoryKeyFunction);
         this.trackingFilename = requireNonNull(trackingFilename);
+        this.legacyTrackingFallback = legacyTrackingFallback;
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
         // a fresh local repository does not exist yet; toRealPath() requires it to
@@ -294,33 +298,33 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         }
         String context = result.getRequest().getContext();
         for (RemoteRepository repository : result.getRequest().getRepositories()) {
-            if (props.get(getKey(path, getTrackingRepositoryKey(repository, context))) != null) {
+            String trackingKey = getTrackingRepositoryKey(repository, context);
+            if (props.get(getKey(path, trackingKey)) != null) {
                 // artifact downloaded from remote repository is accepted only downloaded from request
                 // repositories
                 result.setAvailable(true);
                 result.setRepository(repository);
                 return true;
             }
-        }
-        // Backward compatibility fallback: if the tracking key function is URL-qualified (e.g. nid_hurl)
-        // but the tracking file was written by an older resolver using the system-wide key function
-        // (e.g. nid, producing ID-only entries like "artifact>central="), the URL-qualified lookup above
-        // misses. Try the system-wide key function as a fallback: if it matches, the artifact was genuinely
-        // downloaded from this repository under the old key scheme. Accept it and log a migration notice.
-        for (RemoteRepository repository : result.getRequest().getRepositories()) {
-            String legacyKey = getRepositoryKey(repository, context);
-            String trackingKey = getTrackingRepositoryKey(repository, context);
-            if (!legacyKey.equals(trackingKey) && props.get(getKey(path, legacyKey)) != null) {
-                LOGGER.debug(
-                        "Accepting locally cached artifact {} via legacy tracking key '{}'"
-                                + " (current key function would produce '{}'); the entry will be"
-                                + " upgraded on next download",
-                        path.getFileName(),
-                        legacyKey,
-                        trackingKey);
-                result.setAvailable(true);
-                result.setRepository(repository);
-                return true;
+            if (legacyTrackingFallback) {
+                // Backward compatibility fallback: if the tracking key function is URL-qualified (e.g. nid_hurl)
+                // but the tracking file was written by an older resolver using the system-wide key function
+                // (e.g. nid, producing ID-only entries like "artifact>central="), the URL-qualified lookup above
+                // misses. Try the system-wide key function as a fallback: if it matches, the artifact was genuinely
+                // downloaded from this repository under the old key scheme. Accept it and log a migration notice.
+                String legacyKey = getRepositoryKey(repository, context);
+                if (!legacyKey.equals(trackingKey) && props.get(getKey(path, legacyKey)) != null) {
+                    LOGGER.debug(
+                            "Accepting locally cached artifact {} via legacy tracking key '{}'"
+                                    + " (current key function would produce '{}'); the entry will be"
+                                    + " upgraded on next download",
+                            path.getFileName(),
+                            legacyKey,
+                            trackingKey);
+                    result.setAvailable(true);
+                    result.setRepository(repository);
+                    return true;
+                }
             }
         }
         return false;
