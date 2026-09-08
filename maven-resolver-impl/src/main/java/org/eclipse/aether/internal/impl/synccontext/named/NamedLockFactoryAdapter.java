@@ -210,6 +210,9 @@ public final class NamedLockFactoryAdapter {
 
         @Override
         public void acquire(Collection<? extends Artifact> artifacts, Collection<? extends Metadata> metadatas) {
+            if (closed.get()) {
+                throw new IllegalStateException("sync context is already closed");
+            }
             Collection<NamedLockKey> keys = lockNaming.nameLocks(session, artifacts, metadatas);
             if (keys.isEmpty()) {
                 return;
