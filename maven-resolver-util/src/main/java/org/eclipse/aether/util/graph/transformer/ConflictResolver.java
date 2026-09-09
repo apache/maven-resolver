@@ -280,7 +280,7 @@ public class ConflictResolver implements DependencyGraphTransformer {
     private ConflictResolver selectConflictResolver(DependencyNode node, DependencyGraphTransformationContext context)
             throws RepositoryException {
 
-        if (context.get(TransformationContextKeys.CONFLICT_IDS) == null) {
+        if (context.get(TransformationContextKeys.SORTED_CONFLICT_IDS) == null) {
             new ConflictIdSorter().transformGraph(node, context);
         }
 
