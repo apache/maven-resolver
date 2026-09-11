@@ -50,8 +50,6 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.PathUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -128,8 +126,6 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
     public static final String CONFIG_PROP_ORIGIN_AWARE = CONFIG_PROPS_PREFIX + "originAware";
 
     public static final String CHECKSUMS_FILE_PREFIX = "checksums";
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SummaryFileTrustedChecksumsSource.class);
 
     private final LocalPathComposer localPathComposer;
 
@@ -264,13 +260,13 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                             String oldChecksum = result.put(artifactPath, newChecksum);
                             if (oldChecksum != null) {
                                 if (Objects.equals(oldChecksum, newChecksum)) {
-                                    LOGGER.warn(
+                                    logger.warn(
                                             "Checksums file '{}' contains duplicate checksums for artifact {}: {}",
                                             summaryFile,
                                             artifactPath,
                                             oldChecksum);
                                 } else {
-                                    LOGGER.warn(
+                                    logger.warn(
                                             "Checksums file '{}' contains different checksums for artifact {}: "
                                                     + "old '{}' replaced by new '{}'",
                                             summaryFile,
@@ -280,14 +276,14 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                                 }
                             }
                         } else {
-                            LOGGER.warn("Checksums file '{}' ignored malformed line '{}'", summaryFile, line);
+                            logger.warn("Checksums file '{}' ignored malformed line '{}'", summaryFile, line);
                         }
                     }
                 }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
-            LOGGER.info("Loaded {} trusted checksums from {}", result.size(), summaryFile);
+            logger.info("Loaded {} trusted checksums from {}", result.size(), summaryFile);
         }
         return result;
     }
@@ -361,7 +357,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                     changedChecksums.put(summaryFile, Boolean.TRUE); // new
                 } else if (!Objects.equals(oldChecksum, checksum)) {
                     changedChecksums.put(summaryFile, Boolean.TRUE); // replaced
-                    LOGGER.info("Trusted checksum for {} replaced: old {}, new {}", subject, oldChecksum, checksum);
+                    logger.info("Trusted checksum for {} replaced: old {}, new {}", subject, oldChecksum, checksum);
                 }
             }
         }
@@ -388,7 +384,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                     result.putAll(loadProvidedChecksums(summaryFile));
                     result.putAll(recordedLines);
 
-                    LOGGER.info("Saving {} checksums to '{}'", result.size(), summaryFile);
+                    logger.info("Saving {} checksums to '{}'", result.size(), summaryFile);
                     pathProcessor.writeWithBackup(
                             summaryFile,
                             result.entrySet().stream()

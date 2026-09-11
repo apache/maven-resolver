@@ -35,6 +35,8 @@ import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.DirectoryUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -60,6 +62,8 @@ import static java.util.Objects.requireNonNull;
 public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecksumsSource {
     protected static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_AETHER + "trustedChecksumsSource.";
+
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
 

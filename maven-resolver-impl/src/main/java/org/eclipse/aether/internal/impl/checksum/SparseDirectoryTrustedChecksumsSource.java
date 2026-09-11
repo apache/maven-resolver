@@ -41,8 +41,6 @@ import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.PathUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -102,8 +100,6 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
      */
     public static final String CONFIG_PROP_ORIGIN_AWARE = CONFIG_PROPS_PREFIX + "originAware";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SparseDirectoryTrustedChecksumsSource.class);
-
     private final ChecksumProcessor checksumProcessor;
 
     private final LocalPathComposer localPathComposer;
@@ -157,7 +153,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
                         }
                     } catch (IOException e) {
                         // unexpected, log
-                        LOGGER.warn(
+                        logger.warn(
                                 "Could not read artifact '{}' trusted checksum on path '{}'",
                                 artifact,
                                 checksumFilePath,
@@ -200,7 +196,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
                         }
                     } catch (IOException e) {
                         // unexpected, log
-                        LOGGER.warn(
+                        logger.warn(
                                 "Could not read metadata '{}' trusted checksum on path '{}'",
                                 metadata,
                                 checksumFilePath,
