@@ -44,6 +44,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -69,7 +70,8 @@ class MinioTransporterIT {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
 
         pathProcessor = new PathProcessorSupport();
-        minioContainer = new MinIOContainer("minio/minio:latest");
+        minioContainer = new MinIOContainer(DockerImageName.parse("pgsty/silo:RELEASE.2026-09-03T13-18-01Z-distroless")
+                .asCompatibleSubstituteFor("minio/minio"));
         minioContainer.start();
         try (MinioClient minioClient = MinioClient.builder()
                 .endpoint(minioContainer.getS3URL())
