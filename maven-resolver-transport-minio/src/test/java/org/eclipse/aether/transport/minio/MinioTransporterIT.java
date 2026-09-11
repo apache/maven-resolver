@@ -70,8 +70,8 @@ class MinioTransporterIT {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
 
         pathProcessor = new PathProcessorSupport();
-        minioContainer =
-                new MinIOContainer(DockerImageName.parse("pgsty/silo:latest").asCompatibleSubstituteFor("minio/minio"));
+        minioContainer = new MinIOContainer(DockerImageName.parse("pgsty/silo:RELEASE.2026-09-03T13-18-01Z-distroless")
+                .asCompatibleSubstituteFor("minio/minio"));
         minioContainer.start();
         try (MinioClient minioClient = MinioClient.builder()
                 .endpoint(minioContainer.getS3URL())
