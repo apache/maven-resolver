@@ -27,7 +27,6 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
-import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -50,9 +49,7 @@ public class SimpleLocalRepositoryManagerFactory implements LocalRepositoryManag
     }
 
     @Inject
-    public SimpleLocalRepositoryManagerFactory(
-            final LocalPathComposer localPathComposer,
-            final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory) {
+    public SimpleLocalRepositoryManagerFactory(final LocalPathComposer localPathComposer) {
         this.localPathComposer = requireNonNull(localPathComposer);
     }
 

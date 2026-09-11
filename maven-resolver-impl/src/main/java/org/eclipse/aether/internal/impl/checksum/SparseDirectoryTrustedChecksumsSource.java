@@ -149,7 +149,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
                     try {
                         String checksum = checksumProcessor.readChecksum(checksumFilePath);
                         if (checksum != null) {
-                            checksums.put(checksumAlgorithmFactory.getName(), checksum);
+                            checksums.putIfAbsent(checksumAlgorithmFactory.getName(), checksum);
                         }
                     } catch (IOException e) {
                         // unexpected, log
@@ -192,7 +192,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
                     try {
                         String checksum = checksumProcessor.readChecksum(checksumFilePath);
                         if (checksum != null) {
-                            checksums.put(checksumAlgorithmFactory.getName(), checksum);
+                            checksums.putIfAbsent(checksumAlgorithmFactory.getName(), checksum);
                         }
                     } catch (IOException e) {
                         // unexpected, log

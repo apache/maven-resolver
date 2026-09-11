@@ -76,7 +76,7 @@ resolved (the `_remote.repositories` files). For these tracking entries only, it
 transitively resolved, untrusted POM under the same id as a trusted repository — are not treated as the same
 origin in a shared local repository. This is scoped to the tracking entries: repository aggregation and (split)
 path composition keep following the system-wide function above, whose default is unchanged. If the system-wide
-function is explicitly configured, tracking follows it; the `aether.lrm.enhanced.trackingRepositoryKeyFunction`
+function is explicitly configured, tracking follows it; the `aether.system.trackingRepositoryKeyFunction`
 configuration property, when set, overrides both. Tracking entries written under a different function than the
 active one are fail-safe: affected artifacts simply appear locally unavailable and are re-fetched (with checksum
 validation) once.

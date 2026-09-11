@@ -81,7 +81,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     public static final boolean DEFAULT_VERIFY_REAL_PATH = true;
 
     /**
-     * Marks is local repository meant to be shared (or was shared) with legacy Maven 3.9 or older versions.
+     * Marks local repository is meant to be shared (or was shared) with legacy Maven 3.9 or older versions.
      * Maven 3.9 and older versions suffer from "impostor" problem, where artifact and metadata origin was tracked
      * only by the remote repository ID, where two remote repositories may share same ID but different URLs, in fact
      * they may be completely unrelated to each other (ID clash by mistake), or, it may be due some sort of "impostor"

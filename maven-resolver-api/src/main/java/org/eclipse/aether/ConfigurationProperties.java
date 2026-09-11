@@ -622,7 +622,7 @@ public final class ConfigurationProperties {
 
     /**
      * Repository key function used for the provenance tracking entries this local repository manager writes and
-     * consults, and for nothing else. With an ID-only key, "came from
+     * consults. With an ID-only key, "came from
      * repository X" means X's possibly colliding label: a repository declared in an untrusted (for example,
      * transitively resolved) POM under the same ID as a trusted repository would be tracked as the same origin and
      * could poison a shared local repository. The default is therefore the URL-qualified {@code "nid_hurl"}
