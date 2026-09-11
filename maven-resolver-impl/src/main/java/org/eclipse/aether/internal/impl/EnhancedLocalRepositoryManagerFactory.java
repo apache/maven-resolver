@@ -98,22 +98,6 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     public static final boolean DEFAULT_LEGACY_TRACKING_FALLBACK = true;
 
-    /**
-     * Whether to enable "legacy tracking write" in LRM. This defies completely the purpose of
-     * {@link #CONFIG_PROP_LEGACY_TRACKING_FALLBACK} (as if both enabled, read-write happens, and you are where
-     * Resolver 1.x was). Still, configuration may come handy in certain testing situations.
-     * Not recommended for production.
-     *
-     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.Boolean}
-     * @configurationDefaultValue {@link #DEFAULT_LEGACY_TRACKING_FALLBACK_WRITE}
-     * @since 2.0.23
-     */
-    public static final String CONFIG_PROP_LEGACY_TRACKING_FALLBACK_WRITE =
-            CONFIG_PROPS_PREFIX + "legacyTrackingFallbackWrite";
-
-    public static final boolean DEFAULT_LEGACY_TRACKING_FALLBACK_WRITE = false;
-
     private float priority = 10.0f;
 
     private final LocalPathComposer localPathComposer;
@@ -151,8 +135,6 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
         }
         boolean legacyTrackingFallbackRead =
                 ConfigUtils.getBoolean(session, DEFAULT_LEGACY_TRACKING_FALLBACK, CONFIG_PROP_LEGACY_TRACKING_FALLBACK);
-        boolean legacyTrackingFallbackWrite = ConfigUtils.getBoolean(
-                session, DEFAULT_LEGACY_TRACKING_FALLBACK_WRITE, CONFIG_PROP_LEGACY_TRACKING_FALLBACK_WRITE);
 
         if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
             try {
@@ -162,7 +144,6 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                         repositoryKeyFunctionFactory.trackingRepositoryKeyFunction(session),
                         trackingFilename,
                         legacyTrackingFallbackRead,
-                        legacyTrackingFallbackWrite,
                         trackingFileManager,
                         localPathPrefixComposerFactory.createComposer(session));
             } catch (IOException e) {

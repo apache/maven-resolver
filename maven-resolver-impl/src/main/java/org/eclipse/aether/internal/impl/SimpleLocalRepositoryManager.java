@@ -44,7 +44,7 @@ import static java.util.Objects.requireNonNull;
  */
 class SimpleLocalRepositoryManager implements LocalRepositoryManager {
 
-    private final LocalRepository repository;
+    protected final LocalRepository repository;
 
     protected final LocalPathComposer localPathComposer;
 

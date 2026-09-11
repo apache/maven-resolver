@@ -39,7 +39,6 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
                 RepositoryIdHelper::simpleRepositoryKey,
                 "_remote.repositories",
                 true,
-                false,
                 trackingFileManager,
                 new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory())
                         .createComposer(session));
