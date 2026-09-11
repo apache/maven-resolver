@@ -97,7 +97,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private final String trackingFilename;
 
-    private final boolean legacyTrackingFallbackRead;
+    private final boolean legacyLocalRepository;
 
     private final TrackingFileManager trackingFileManager;
 
@@ -137,20 +137,19 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      */
     private final Path realBasePath;
 
-    @SuppressWarnings("checkstyle:parameternumber")
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
             RepositoryKeyFunction trackingRepositoryKeyFunction,
             String trackingFilename,
-            boolean legacyTrackingFallbackRead,
+            boolean legacyLocalRepository,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposer localPathPrefixComposer)
             throws IOException {
         super(basedir, "enhanced", localPathComposer);
         this.trackingRepositoryKeyFunction = requireNonNull(trackingRepositoryKeyFunction);
         this.trackingFilename = requireNonNull(trackingFilename);
-        this.legacyTrackingFallbackRead = legacyTrackingFallbackRead;
+        this.legacyLocalRepository = legacyLocalRepository;
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
         // a fresh local repository does not exist yet; toRealPath() requires it to
@@ -190,11 +189,15 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
         requireNonNull(metadata, "metadata cannot be null");
         requireNonNull(repository, "repository cannot be null");
-        // Note: we use here path from simple repository, which is transitional state 3.x/4.x compatibility, and
-        // is not big issue, as worst can happen
-        return concatPaths(
-                localPathPrefixComposer.getPathPrefixForRemoteMetadata(metadata, repository),
-                super.getPathForRemoteMetadata(metadata, repository, context));
+        if (legacyLocalRepository) {
+            return concatPaths(
+                    localPathPrefixComposer.getPathPrefixForRemoteMetadata(metadata, repository),
+                    super.getPathForRemoteMetadata(metadata, repository, context));
+        } else {
+            return concatPaths(
+                    localPathPrefixComposer.getPathPrefixForRemoteMetadata(metadata, repository),
+                    localPathComposer.getPathForMetadata(metadata, getTrackingRepositoryKey(repository, context)));
+        }
     }
 
     @Override
@@ -310,7 +313,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                 result.setRepository(repository);
                 return true;
             }
-            if (legacyTrackingFallbackRead) {
+            if (legacyLocalRepository) {
                 // Backward compatibility fallback: if the tracking key function is URL-qualified (e.g. nid_hurl)
                 // but the tracking file was written by an older resolver using the system-wide key function
                 // (e.g. nid, producing ID-only entries like "artifact>central="), the URL-qualified lookup above
