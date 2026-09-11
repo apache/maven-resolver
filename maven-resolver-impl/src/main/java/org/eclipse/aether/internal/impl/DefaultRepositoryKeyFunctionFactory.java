@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -47,20 +48,20 @@ public class DefaultRepositoryKeyFunctionFactory implements RepositoryKeyFunctio
      */
     @SuppressWarnings("unchecked")
     @Override
-    public RepositoryKeyFunction repositoryKeyFunction(
+    public RepositoryKeyFunction repositoryKeyFunctionMk(
             Class<?> owner, RepositorySystemSession session, String defaultValue, String... configurationKeys) {
         requireNonNull(session);
         requireNonNull(defaultValue);
-        final RepositoryKeyFunction repositoryKeyFunction = RepositoryIdHelper.getRepositoryKeyFunction(
-                configurationKeys != null
-                        ? ConfigUtils.getString(session, defaultValue, configurationKeys)
-                        : defaultValue);
+        RepositoryIdHelper.RepositoryKeyType type =
+                RepositoryIdHelper.RepositoryKeyType.valueOf((configurationKeys != null
+                                ? ConfigUtils.getString(session, defaultValue, configurationKeys)
+                                : defaultValue)
+                        .toUpperCase(Locale.ENGLISH));
+        final RepositoryKeyFunction repositoryKeyFunction = RepositoryIdHelper.getRepositoryKeyFunction(type.name());
         if (session.getCache() != null) {
             // both are expensive methods; cache it in session (repo -> context -> ID)
             return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
-                            session.getCache()
-                                    .computeIfAbsent(
-                                            session, Keys.of(owner, "repositoryKeyFunction"), ConcurrentHashMap::new))
+                            session.getCache().computeIfAbsent(session, Keys.of(owner, type), ConcurrentHashMap::new))
                     .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
                     .computeIfAbsent(
                             context == null ? "" : context, k2 -> repositoryKeyFunction.apply(repository, context));

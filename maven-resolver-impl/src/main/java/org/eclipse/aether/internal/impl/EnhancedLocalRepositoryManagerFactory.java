@@ -88,7 +88,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      * attempt, where a malicious repository may pretend like some other repository.
      * Right now, we intentionally default to {@code true} to ease users transitioning, and Resolver 2 will retain
      * this "old" behavior (will observe legacy tracking entries and will store remote metadata as before). But,
-     * at some point in the future, the default value will be flipped to {@code true} (and same change is warmly
+     * at some point in the future, the default value will be flipped to {@code false} (and same change is warmly
      * recommended for modern Maven users, who do not intend to share local repository with older Maven versions.
      * When this configuration set to {@code false}, the "repository key" is not ID only anymore, but is changed
      * to {@code $id-sha1($url)} form, and this key is used in "origin tracking" entries and in caching remote

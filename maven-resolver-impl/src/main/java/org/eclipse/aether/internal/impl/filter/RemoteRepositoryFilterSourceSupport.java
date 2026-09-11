@@ -103,7 +103,7 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
 
     /**
      * Returns repository keys to be used on file system layout for user provided files. They are ordered as
-     * "most specific" (using {@link {@link RepositoryKeyFunctionFactory#trackingRepositoryKeyFunction(RepositorySystemSession)}}
+     * "most specific" (using {@link RepositoryKeyFunctionFactory#trackingRepositoryKeyFunction(RepositorySystemSession)})
      * to simple "id based" one. This allows user to keep using plain ID, but also to provide very narrowly targeted
      * input files, when needed.
      *
