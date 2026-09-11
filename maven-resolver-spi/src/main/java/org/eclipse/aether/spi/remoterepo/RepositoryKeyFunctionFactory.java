@@ -33,11 +33,11 @@ public interface RepositoryKeyFunctionFactory {
      *
      * @param session The repository session, must not be {@code null}.
      * @return The repository key function.
-     * @see #repositoryKeyFunctionMk(Class, RepositorySystemSession, String, String[])
+     * @see #repositoryKeyFunction(Class, RepositorySystemSession, String, String)
      * @see org.eclipse.aether.ConfigurationProperties#REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION
      */
     default RepositoryKeyFunction systemRepositoryKeyFunction(RepositorySystemSession session) {
-        return repositoryKeyFunctionMk(
+        return repositoryKeyFunction(
                 RepositoryKeyFunctionFactory.class,
                 session,
                 ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION,
@@ -49,17 +49,16 @@ public interface RepositoryKeyFunctionFactory {
      *
      * @param session The repository session, must not be {@code null}.
      * @return The repository key function.
-     * @see #repositoryKeyFunctionMk(Class, RepositorySystemSession, String, String[])
+     * @see #repositoryKeyFunction(Class, RepositorySystemSession, String, String)
      * @see org.eclipse.aether.ConfigurationProperties#REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION
      * @since 2.0.23
      */
     default RepositoryKeyFunction trackingRepositoryKeyFunction(RepositorySystemSession session) {
-        return repositoryKeyFunctionMk(
+        return repositoryKeyFunction(
                 RepositoryKeyFunctionFactory.class,
                 session,
                 ConfigurationProperties.DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION,
-                ConfigurationProperties.REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION,
-                ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION);
+                ConfigurationProperties.REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION);
     }
 
     /**
@@ -75,30 +74,7 @@ public interface RepositoryKeyFunctionFactory {
      *                         no configuration lookup happens but the {@code defaultValue} is used to create the
      *                         repository key function.
      * @return The repository key function.
-     * @deprecated Use {@link #repositoryKeyFunctionMk(Class, RepositorySystemSession, String, String...)} instead.
      */
-    @Deprecated
-    default RepositoryKeyFunction repositoryKeyFunction(
-            Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
-        return repositoryKeyFunctionMk(owner, session, defaultValue, configurationKey);
-    }
-
-    /**
-     * Method that based on configuration using multiple keys in ordered fashion (hence "mk" as multikey) returns the
-     * "repository key function". The returned function will be session cached if session is equipped with cache,
-     * otherwise it will be non cached. Method never returns {@code null}. Only the {@code configurationKeys} parameter
-     * may be {@code null} in which case no configuration lookup happens and the {@code defaultValue} is directly
-     * used instead.
-     *
-     * @param owner The "owner" of key function (used to create cache-key), must not be {@code null}.
-     * @param session The repository session, must not be {@code null}.
-     * @param defaultValue The default value of repository key configuration, must not be {@code null}.
-     * @param configurationKeys The configuration keys to lookup configuration from, may be {@code null}, in which case
-     *                         no configuration lookup happens but the {@code defaultValue} is used to create the
-     *                         repository key function.
-     * @return The repository key function.
-     * @since 2.0.23
-     */
-    RepositoryKeyFunction repositoryKeyFunctionMk(
-            Class<?> owner, RepositorySystemSession session, String defaultValue, String... configurationKeys);
+    RepositoryKeyFunction repositoryKeyFunction(
+            Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey);
 }

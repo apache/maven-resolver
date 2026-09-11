@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -38,17 +39,31 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultRepositoryKeyFunctionFactory implements RepositoryKeyFunctionFactory {
+
+    @Override
+    public RepositoryKeyFunction trackingRepositoryKeyFunction(RepositorySystemSession session) {
+        return doRepositoryKeyFunction(
+                RepositoryKeyFunctionFactory.class,
+                session,
+                ConfigurationProperties.DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION,
+                ConfigurationProperties.REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION,
+                ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION);
+    }
+
+    @Override
+    public RepositoryKeyFunction repositoryKeyFunction(
+            Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
+        return doRepositoryKeyFunction(owner, session, defaultValue, configurationKey);
+    }
+
     /**
      * Method that based on configuration returns the "repository key function". The returned function will be session
      * cached if session is equipped with cache, otherwise it will be non cached. Method never returns {@code null}.
      * Only the {@code configurationKey} parameter may be {@code null} in which case no configuration lookup happens
      * but the {@code defaultValue} is directly used instead.
-     *
-     * @since 2.0.14
      */
     @SuppressWarnings("unchecked")
-    @Override
-    public RepositoryKeyFunction repositoryKeyFunctionMk(
+    private RepositoryKeyFunction doRepositoryKeyFunction(
             Class<?> owner, RepositorySystemSession session, String defaultValue, String... configurationKeys) {
         requireNonNull(session);
         requireNonNull(defaultValue);

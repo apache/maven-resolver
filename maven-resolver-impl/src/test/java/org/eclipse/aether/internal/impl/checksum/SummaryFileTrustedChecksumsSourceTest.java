@@ -109,8 +109,8 @@ public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsS
         // summary file name composition must validate it itself before splicing it into the file name
         RepositoryKeyFunctionFactory unsafeKeyFunctionFactory = new RepositoryKeyFunctionFactory() {
             @Override
-            public RepositoryKeyFunction repositoryKeyFunctionMk(
-                    Class<?> owner, RepositorySystemSession session, String defaultValue, String... configurationKey) {
+            public RepositoryKeyFunction repositoryKeyFunction(
+                    Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
                 return (repository, context) -> repository.getId();
             }
         };
