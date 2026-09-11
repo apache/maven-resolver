@@ -171,8 +171,8 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         return doGetTrustedPathChecksums(
                 session,
-                localPathComposer.getPathForArtifact(artifact, false),
-                artifactRepository,
+                repositoryKey(session, artifactRepository).subList(0, 1),
+                rk -> localPathComposer.getPathForArtifact(artifact, false),
                 checksumAlgorithmFactories);
     }
 
@@ -184,9 +184,8 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         return doGetTrustedPathChecksums(
                 session,
-                localPathComposer.getPathForMetadata(
-                        metadata, repositoryKey(session, artifactRepository).get(0)),
-                artifactRepository,
+                repositoryKey(session, artifactRepository),
+                rk -> localPathComposer.getPathForMetadata(metadata, rk),
                 checksumAlgorithmFactories);
     }
 
@@ -196,22 +195,22 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
      */
     private Map<String, String> doGetTrustedPathChecksums(
             RepositorySystemSession session,
-            String path,
-            ArtifactRepository artifactRepository,
+            List<String> repoKeys,
+            Function<String, String> pathComposer,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         final HashMap<String, String> result = new HashMap<>();
         final Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
             final boolean originAware = isOriginAware(session);
-            for (String repoKey : repositoryKey(session, artifactRepository)) {
+            for (String repoKey : repoKeys) {
                 for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
                     Path summaryFile =
                             summaryFile(basedir, originAware, repoKey, checksumAlgorithmFactory.getFileExtension());
                     ConcurrentHashMap<String, String> algorithmChecksums =
                             checksums.computeIfAbsent(summaryFile, f -> loadProvidedChecksums(summaryFile));
-                    String checksum = algorithmChecksums.get(path);
+                    String checksum = algorithmChecksums.get(pathComposer.apply(repoKey));
                     if (checksum != null) {
-                        result.put(checksumAlgorithmFactory.getName(), checksum);
+                        result.putIfAbsent(checksumAlgorithmFactory.getName(), checksum);
                     }
                 }
             }
