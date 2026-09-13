@@ -642,6 +642,7 @@ public final class ConfigurationProperties {
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}
      */
+    public static final String REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION =
             PREFIX_SYSTEM + "trackingRepositoryKeyFunction";
 
     public static final String DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
