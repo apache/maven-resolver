@@ -621,26 +621,27 @@ public final class ConfigurationProperties {
     public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid";
 
     /**
-     * Repository key function used for the provenance tracking entries this local repository manager writes and
-     * consults. With an ID-only key, "came from
-     * repository X" means X's possibly colliding label: a repository declared in an untrusted (for example,
-     * transitively resolved) POM under the same ID as a trusted repository would be tracked as the same origin and
-     * could poison a shared local repository. The default is therefore the URL-qualified {@code "nid_hurl"}
-     * function, scoped to tracking entries only: repository identity elsewhere (repository aggregation and mirror merging)
-     * keeps following the system-wide key function, while artifact and metadata path composition and split local repository
-     * prefixes use the tracking key function and may therefore change the on-disk layout. If the system-wide function
-     * {@link #REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION} is explicitly configured, tracking
-     * follows it (all consumers stay on one function, and setting it to {@code "nid"} restores the legacy ID-only
-     * tracking); this property, when set, overrides both. Tracking entries written under a different function than
-     * the active one never match a lookup and never enable the untracked-file fallback: affected artifacts are
-     * simply treated as locally unavailable and re-fetched (with checksum validation) once.
+     * Repository key function used for the provenance tracking entries that this local repository manager
+     * writes and reads. With an ID-only key, a repository declared in an untrusted (for example, transitively
+     * resolved) POM under the same ID as a trusted repository would be tracked as the same origin, potentially
+     * poisoning a shared local repository. The default is therefore the URL-qualified {@code "nid_hurl"}
+     * function.
+     * <p>
+     * This function is scoped to tracking entries, path composition, and split local repository prefixes.
+     * Repository identity used for aggregation and mirror merging continues to follow the system-wide key
+     * function ({@link #REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION}), whose default is unchanged.
+     * If the system-wide function is explicitly configured, tracking follows it (setting it to {@code "nid"}
+     * restores the legacy ID-only behaviour); this property, when set, overrides both.
+     * <p>
+     * Tracking entries written under a different function than the active one never match a lookup and never
+     * enable the untracked-file fallback: affected artifacts are treated as locally unavailable and
+     * re-fetched (with checksum validation) once.
      *
      * @since 2.0.23
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
      * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}
      */
-    public static final String REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION =
             PREFIX_SYSTEM + "trackingRepositoryKeyFunction";
 
     public static final String DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
