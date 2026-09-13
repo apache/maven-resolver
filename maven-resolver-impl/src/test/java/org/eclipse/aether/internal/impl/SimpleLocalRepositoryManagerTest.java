@@ -29,7 +29,6 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -49,8 +48,7 @@ public class SimpleLocalRepositoryManagerTest {
 
     @BeforeEach
     void setup() throws IOException {
-        manager = new SimpleLocalRepositoryManager(
-                basedir.toPath(), "simple", new DefaultLocalPathComposer(), RepositoryIdHelper::simpleRepositoryKey);
+        manager = new SimpleLocalRepositoryManager(basedir.toPath(), "simple", new DefaultLocalPathComposer());
         session = TestUtils.newSession();
     }
 

@@ -50,8 +50,6 @@ import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.PathUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -129,8 +127,6 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
 
     public static final String CHECKSUMS_FILE_PREFIX = "checksums";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SummaryFileTrustedChecksumsSource.class);
-
     private final LocalPathComposer localPathComposer;
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
@@ -175,8 +171,8 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         return doGetTrustedPathChecksums(
                 session,
-                localPathComposer.getPathForArtifact(artifact, false),
-                artifactRepository,
+                repositoryKey(session, artifactRepository).subList(0, 1),
+                rk -> localPathComposer.getPathForArtifact(artifact, false),
                 checksumAlgorithmFactories);
     }
 
@@ -188,8 +184,8 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         return doGetTrustedPathChecksums(
                 session,
-                localPathComposer.getPathForMetadata(metadata, repositoryKey(session, artifactRepository)),
-                artifactRepository,
+                repositoryKey(session, artifactRepository),
+                rk -> localPathComposer.getPathForMetadata(metadata, rk),
                 checksumAlgorithmFactories);
     }
 
@@ -199,24 +195,23 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
      */
     private Map<String, String> doGetTrustedPathChecksums(
             RepositorySystemSession session,
-            String path,
-            ArtifactRepository artifactRepository,
+            List<String> repoKeys,
+            Function<String, String> pathComposer,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         final HashMap<String, String> result = new HashMap<>();
         final Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
             final boolean originAware = isOriginAware(session);
-            for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
-                Path summaryFile = summaryFile(
-                        basedir,
-                        originAware,
-                        repositoryKey(session, artifactRepository),
-                        checksumAlgorithmFactory.getFileExtension());
-                ConcurrentHashMap<String, String> algorithmChecksums =
-                        checksums.computeIfAbsent(summaryFile, f -> loadProvidedChecksums(summaryFile));
-                String checksum = algorithmChecksums.get(path);
-                if (checksum != null) {
-                    result.put(checksumAlgorithmFactory.getName(), checksum);
+            for (String repoKey : repoKeys) {
+                for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
+                    Path summaryFile =
+                            summaryFile(basedir, originAware, repoKey, checksumAlgorithmFactory.getFileExtension());
+                    ConcurrentHashMap<String, String> algorithmChecksums =
+                            checksums.computeIfAbsent(summaryFile, f -> loadProvidedChecksums(summaryFile));
+                    String checksum = algorithmChecksums.get(pathComposer.apply(repoKey));
+                    if (checksum != null) {
+                        result.putIfAbsent(checksumAlgorithmFactory.getName(), checksum);
+                    }
                 }
             }
         }
@@ -232,7 +227,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                 checksums,
                 getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
                 isOriginAware(session),
-                r -> repositoryKey(session, r));
+                r -> repositoryKey(session, r).get(0));
     }
 
     /**
@@ -264,13 +259,13 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                             String oldChecksum = result.put(artifactPath, newChecksum);
                             if (oldChecksum != null) {
                                 if (Objects.equals(oldChecksum, newChecksum)) {
-                                    LOGGER.warn(
+                                    logger.warn(
                                             "Checksums file '{}' contains duplicate checksums for artifact {}: {}",
                                             summaryFile,
                                             artifactPath,
                                             oldChecksum);
                                 } else {
-                                    LOGGER.warn(
+                                    logger.warn(
                                             "Checksums file '{}' contains different checksums for artifact {}: "
                                                     + "old '{}' replaced by new '{}'",
                                             summaryFile,
@@ -280,14 +275,14 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                                 }
                             }
                         } else {
-                            LOGGER.warn("Checksums file '{}' ignored malformed line '{}'", summaryFile, line);
+                            logger.warn("Checksums file '{}' ignored malformed line '{}'", summaryFile, line);
                         }
                     }
                 }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
-            LOGGER.info("Loaded {} trusted checksums from {}", result.size(), summaryFile);
+            logger.info("Loaded {} trusted checksums from {}", result.size(), summaryFile);
         }
         return result;
     }
@@ -361,7 +356,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                     changedChecksums.put(summaryFile, Boolean.TRUE); // new
                 } else if (!Objects.equals(oldChecksum, checksum)) {
                     changedChecksums.put(summaryFile, Boolean.TRUE); // replaced
-                    LOGGER.info("Trusted checksum for {} replaced: old {}, new {}", subject, oldChecksum, checksum);
+                    logger.info("Trusted checksum for {} replaced: old {}, new {}", subject, oldChecksum, checksum);
                 }
             }
         }
@@ -388,7 +383,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                     result.putAll(loadProvidedChecksums(summaryFile));
                     result.putAll(recordedLines);
 
-                    LOGGER.info("Saving {} checksums to '{}'", result.size(), summaryFile);
+                    logger.info("Saving {} checksums to '{}'", result.size(), summaryFile);
                     pathProcessor.writeWithBackup(
                             summaryFile,
                             result.entrySet().stream()

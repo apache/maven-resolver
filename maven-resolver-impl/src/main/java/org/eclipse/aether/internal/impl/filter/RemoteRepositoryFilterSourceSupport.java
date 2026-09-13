@@ -21,6 +21,8 @@ package org.eclipse.aether.internal.impl.filter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
@@ -29,6 +31,8 @@ import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.DirectoryUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -53,20 +57,7 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
     protected static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryFilter.";
 
-    /**
-     * <b>Experimental:</b> Configuration for "repository key" function.
-     * Note: repository key functions other than "nid" produce repository keys will be <em>way different
-     * that those produced with previous versions or without this option enabled</em>. Filter uses this key function to
-     * lay down and look up files to use in filtering.
-     *
-     * @since 2.0.14
-     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_KEY_FUNCTION}
-     */
-    public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
-
-    public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "nid";
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
 
@@ -111,18 +102,22 @@ public abstract class RemoteRepositoryFilterSourceSupport implements RemoteRepos
     }
 
     /**
-     * Returns repository key to be used on file system layout.
+     * Returns repository keys to be used on file system layout for user provided files. They are ordered as
+     * "most specific" (using {@link RepositoryKeyFunctionFactory#trackingRepositoryKeyFunction(RepositorySystemSession)})
+     * to simple "id based" one. This allows user to keep using plain ID, but also to provide very narrowly targeted
+     * input files, when needed.
      *
      * @since 2.0.14
      */
-    protected String repositoryKey(RepositorySystemSession session, RemoteRepository repository) {
-        return repositoryKeyFunctionFactory
-                .repositoryKeyFunction(
-                        RemoteRepositoryFilterSourceSupport.class,
-                        session,
-                        DEFAULT_REPOSITORY_KEY_FUNCTION,
-                        CONFIG_PROP_REPOSITORY_KEY_FUNCTION)
-                .apply(repository, null);
+    protected List<String> repositoryKeys(RepositorySystemSession session, RemoteRepository repository) {
+        ArrayList<String> keys = new ArrayList<>();
+        keys.add(repositoryKeyFunctionFactory
+                .trackingRepositoryKeyFunction(session)
+                .apply(repository, null));
+        keys.add(repositoryKeyFunctionFactory
+                .systemRepositoryKeyFunction(session)
+                .apply(repository, null));
+        return keys;
     }
 
     /**

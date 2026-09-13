@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -37,6 +38,7 @@ import org.eclipse.aether.internal.impl.DefaultRepositoryKeyFunctionFactory;
 import org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider;
 import org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
@@ -44,6 +46,7 @@ import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.transfer.NoTransporterException;
+import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.eclipse.aether.internal.impl.checksum.Checksums.checksumsSelector;
@@ -58,6 +61,12 @@ import static org.mockito.Mockito.when;
  * UT for {@link PrefixesRemoteRepositoryFilterSource}.
  */
 public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFilterSourceTestSupport {
+    /**
+     * Function follows default of {@link org.eclipse.aether.ConfigurationProperties#DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}.
+     */
+    private final RepositoryKeyFunction repositoryKeyFunction = RepositoryIdHelper.getRepositoryKeyFunction(
+            ConfigurationProperties.DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION);
+
     @Override
     protected RemoteRepositoryFilterSource getRemoteRepositoryFilterSource(
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository) {
@@ -127,7 +136,7 @@ public class PrefixesRemoteRepositoryFilterSourceTest extends RemoteRepositoryFi
                     .getBasePath()
                     .resolve(PrefixesRemoteRepositoryFilterSource.LOCAL_REPO_PREFIX_DIR);
             Path prefixes = baseDir.resolve(PrefixesRemoteRepositoryFilterSource.PREFIXES_FILE_PREFIX
-                    + remoteRepository.getId()
+                    + repositoryKeyFunction.apply(remoteRepository, null)
                     + PrefixesRemoteRepositoryFilterSource.PREFIXES_FILE_SUFFIX);
             Files.createDirectories(prefixes.getParent());
             Files.write(

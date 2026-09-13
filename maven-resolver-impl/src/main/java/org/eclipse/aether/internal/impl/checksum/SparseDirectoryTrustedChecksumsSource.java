@@ -41,8 +41,6 @@ import org.eclipse.aether.spi.io.ChecksumProcessor;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.PathUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -102,8 +100,6 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
      */
     public static final String CONFIG_PROP_ORIGIN_AWARE = CONFIG_PROPS_PREFIX + "originAware";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SparseDirectoryTrustedChecksumsSource.class);
-
     private final ChecksumProcessor checksumProcessor;
 
     private final LocalPathComposer localPathComposer;
@@ -138,28 +134,32 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
         Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
-                Path checksumPath = basedir.resolve(calculateArtifactPath(
-                        originAware, artifact, repositoryKey(session, artifactRepository), checksumAlgorithmFactory));
+                Path checksumFilePath = null;
+                for (String repoKey : repositoryKey(session, artifactRepository)) {
+                    Path checksumPath = basedir.resolve(
+                            calculateArtifactPath(originAware, artifact, repoKey, checksumAlgorithmFactory));
 
-                if (!Files.isRegularFile(checksumPath)) {
-                    LOGGER.debug(
-                            "Artifact '{}' trusted checksum '{}' not found on path '{}'",
-                            artifact,
-                            checksumAlgorithmFactory.getName(),
-                            checksumPath);
-                    continue;
+                    if (Files.isRegularFile(checksumPath)) {
+                        checksumFilePath = checksumPath;
+                        break;
+                    }
                 }
 
-                try {
-                    String checksum = checksumProcessor.readChecksum(checksumPath);
-                    if (checksum != null) {
-                        checksums.put(checksumAlgorithmFactory.getName(), checksum);
+                if (checksumFilePath != null) {
+                    try {
+                        String checksum = checksumProcessor.readChecksum(checksumFilePath);
+                        if (checksum != null) {
+                            checksums.putIfAbsent(checksumAlgorithmFactory.getName(), checksum);
+                        }
+                    } catch (IOException e) {
+                        // unexpected, log
+                        logger.warn(
+                                "Could not read artifact '{}' trusted checksum on path '{}'",
+                                artifact,
+                                checksumFilePath,
+                                e);
+                        throw new UncheckedIOException(e);
                     }
-                } catch (IOException e) {
-                    // unexpected, log
-                    LOGGER.warn(
-                            "Could not read artifact '{}' trusted checksum on path '{}'", artifact, checksumPath, e);
-                    throw new UncheckedIOException(e);
                 }
             }
         }
@@ -177,28 +177,32 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
         Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
-                Path checksumPath = basedir.resolve(calculateMetadataPath(
-                        originAware, metadata, repositoryKey(session, artifactRepository), checksumAlgorithmFactory));
+                Path checksumFilePath = null;
+                for (String repoKey : repositoryKey(session, artifactRepository)) {
+                    Path checksumPath = basedir.resolve(
+                            calculateMetadataPath(originAware, metadata, repoKey, checksumAlgorithmFactory));
 
-                if (!Files.isRegularFile(checksumPath)) {
-                    LOGGER.debug(
-                            "Metadata '{}' trusted checksum '{}' not found on path '{}'",
-                            metadata,
-                            checksumAlgorithmFactory.getName(),
-                            checksumPath);
-                    continue;
+                    if (Files.isRegularFile(checksumPath)) {
+                        checksumFilePath = checksumPath;
+                        break;
+                    }
                 }
 
-                try {
-                    String checksum = checksumProcessor.readChecksum(checksumPath);
-                    if (checksum != null) {
-                        checksums.put(checksumAlgorithmFactory.getName(), checksum);
+                if (checksumFilePath != null) {
+                    try {
+                        String checksum = checksumProcessor.readChecksum(checksumFilePath);
+                        if (checksum != null) {
+                            checksums.putIfAbsent(checksumAlgorithmFactory.getName(), checksum);
+                        }
+                    } catch (IOException e) {
+                        // unexpected, log
+                        logger.warn(
+                                "Could not read metadata '{}' trusted checksum on path '{}'",
+                                metadata,
+                                checksumFilePath,
+                                e);
+                        throw new UncheckedIOException(e);
                     }
-                } catch (IOException e) {
-                    // unexpected, log
-                    LOGGER.warn(
-                            "Could not read metadata '{}' trusted checksum on path '{}'", metadata, checksumPath, e);
-                    throw new UncheckedIOException(e);
                 }
             }
         }
@@ -210,7 +214,7 @@ public final class SparseDirectoryTrustedChecksumsSource extends FileTrustedChec
         return new SparseDirectoryWriter(
                 getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
                 isOriginAware(session),
-                r -> repositoryKey(session, r));
+                r -> repositoryKey(session, r).get(0));
     }
 
     private String calculateArtifactPath(

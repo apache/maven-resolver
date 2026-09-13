@@ -56,8 +56,6 @@ import org.eclipse.aether.spi.connector.transport.TransporterProvider;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.util.ConfigUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -271,8 +269,6 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     static final String PREFIXES_FILE_SUFFIX = ".txt";
 
-    private final Logger logger = LoggerFactory.getLogger(PrefixesRemoteRepositoryFilterSource.class);
-
     private final Supplier<MetadataResolver> metadataResolver;
 
     private final Supplier<RemoteRepositoryManager> remoteRepositoryManager;
@@ -462,13 +458,13 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
     private Path resolvePrefixesFromLocalConfiguration(
             RepositorySystemSession session, Path baseDir, RemoteRepository remoteRepository) {
-        Path filePath =
-                baseDir.resolve(PREFIXES_FILE_PREFIX + repositoryKey(session, remoteRepository) + PREFIXES_FILE_SUFFIX);
-        if (Files.isReadable(filePath)) {
-            return filePath;
-        } else {
-            return null;
+        for (String key : repositoryKeys(session, remoteRepository)) {
+            Path filePath = baseDir.resolve(PREFIXES_FILE_PREFIX + key + PREFIXES_FILE_SUFFIX);
+            if (Files.isReadable(filePath)) {
+                return filePath;
+            }
         }
+        return null;
     }
 
     private boolean supportedResolvePrefixesForRemoteRepository(

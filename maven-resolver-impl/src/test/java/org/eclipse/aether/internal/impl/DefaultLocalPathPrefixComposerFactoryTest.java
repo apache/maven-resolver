@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -25,6 +26,8 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryKeyFunction;
+import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,6 +36,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * UT for {@link DefaultLocalPathPrefixComposerFactory}.
  */
 public class DefaultLocalPathPrefixComposerFactoryTest {
+    /**
+     * Function follows default of {@link org.eclipse.aether.ConfigurationProperties#DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}.
+     */
+    private final RepositoryKeyFunction repositoryKeyFunction = RepositoryIdHelper.getRepositoryKeyFunction(
+            ConfigurationProperties.DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION);
+
     private final Artifact releaseArtifact = new DefaultArtifact("org.group:artifact:1.0");
 
     private final Artifact snapshotArtifact = new DefaultArtifact("org.group:artifact:1.0-20220228.180000-1");
@@ -144,27 +153,27 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
 
         prefix = composer.getPathPrefixForRemoteArtifact(releaseArtifact, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null), prefix);
 
         prefix = composer.getPathPrefixForRemoteArtifact(snapshotArtifact, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null), prefix);
 
         prefix = composer.getPathPrefixForRemoteMetadata(releaseMetadata, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null), prefix);
 
         prefix = composer.getPathPrefixForRemoteMetadata(snapshotMetadata, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null), prefix);
 
         prefix = composer.getPathPrefixForRemoteMetadata(gaMetadata, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null), prefix);
 
         prefix = composer.getPathPrefixForRemoteMetadata(gMetadata, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null), prefix);
     }
 
     @Test
@@ -210,27 +219,27 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
 
         prefix = composer.getPathPrefixForRemoteArtifact(releaseArtifact, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo/releases", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null) + "/releases", prefix);
 
         prefix = composer.getPathPrefixForRemoteArtifact(snapshotArtifact, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo/snapshots", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null) + "/snapshots", prefix);
 
         prefix = composer.getPathPrefixForRemoteMetadata(releaseMetadata, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo/releases", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null) + "/releases", prefix);
 
         prefix = composer.getPathPrefixForRemoteMetadata(snapshotMetadata, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo/snapshots", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null) + "/snapshots", prefix);
 
         prefix = composer.getPathPrefixForRemoteMetadata(gaMetadata, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo/releases", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null) + "/releases", prefix);
 
         prefix = composer.getPathPrefixForRemoteMetadata(gMetadata, repository);
         assertNotNull(prefix);
-        assertEquals("cached/my-repo/releases", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(repository, null) + "/releases", prefix);
     }
 
     @Test
@@ -252,10 +261,10 @@ public class DefaultLocalPathPrefixComposerFactoryTest {
 
         String prefix = composer.getPathPrefixForRemoteArtifact(releaseArtifact, dotDotRepository);
         assertNotNull(prefix);
-        assertEquals("cached/-DOTDOT-", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(dotDotRepository, null), prefix);
 
         prefix = composer.getPathPrefixForRemoteMetadata(releaseMetadata, dotDotRepository);
         assertNotNull(prefix);
-        assertEquals("cached/-DOTDOT-", prefix);
+        assertEquals("cached/" + repositoryKeyFunction.apply(dotDotRepository, null), prefix);
     }
 }

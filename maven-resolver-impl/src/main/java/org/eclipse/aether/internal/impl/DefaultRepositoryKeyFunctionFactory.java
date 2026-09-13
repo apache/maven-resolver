@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -38,19 +39,21 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultRepositoryKeyFunctionFactory implements RepositoryKeyFunctionFactory {
-    /**
-     * Returns system-wide repository key function.
-     *
-     * @since 2.0.14
-     * @see #repositoryKeyFunction(Class, RepositorySystemSession, String, String)
-     */
+
     @Override
-    public RepositoryKeyFunction systemRepositoryKeyFunction(RepositorySystemSession session) {
-        return repositoryKeyFunction(
-                DefaultRepositoryKeyFunctionFactory.class,
+    public RepositoryKeyFunction trackingRepositoryKeyFunction(RepositorySystemSession session) {
+        return doRepositoryKeyFunction(
+                RepositoryKeyFunctionFactory.class,
                 session,
-                ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION,
+                ConfigurationProperties.DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION,
+                ConfigurationProperties.REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION,
                 ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION);
+    }
+
+    @Override
+    public RepositoryKeyFunction repositoryKeyFunction(
+            Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
+        return doRepositoryKeyFunction(owner, session, defaultValue, configurationKey);
     }
 
     /**
@@ -58,25 +61,22 @@ public class DefaultRepositoryKeyFunctionFactory implements RepositoryKeyFunctio
      * cached if session is equipped with cache, otherwise it will be non cached. Method never returns {@code null}.
      * Only the {@code configurationKey} parameter may be {@code null} in which case no configuration lookup happens
      * but the {@code defaultValue} is directly used instead.
-     *
-     * @since 2.0.14
      */
     @SuppressWarnings("unchecked")
-    @Override
-    public RepositoryKeyFunction repositoryKeyFunction(
-            Class<?> owner, RepositorySystemSession session, String defaultValue, String configurationKey) {
+    private RepositoryKeyFunction doRepositoryKeyFunction(
+            Class<?> owner, RepositorySystemSession session, String defaultValue, String... configurationKeys) {
         requireNonNull(session);
         requireNonNull(defaultValue);
-        final RepositoryKeyFunction repositoryKeyFunction = RepositoryIdHelper.getRepositoryKeyFunction(
-                configurationKey != null
-                        ? ConfigUtils.getString(session, defaultValue, configurationKey)
-                        : defaultValue);
+        RepositoryIdHelper.RepositoryKeyType type =
+                RepositoryIdHelper.RepositoryKeyType.valueOf((configurationKeys != null
+                                ? ConfigUtils.getString(session, defaultValue, configurationKeys)
+                                : defaultValue)
+                        .toUpperCase(Locale.ENGLISH));
+        final RepositoryKeyFunction repositoryKeyFunction = RepositoryIdHelper.getRepositoryKeyFunction(type.name());
         if (session.getCache() != null) {
             // both are expensive methods; cache it in session (repo -> context -> ID)
             return (repository, context) -> ((ConcurrentMap<RemoteRepository, ConcurrentMap<String, String>>)
-                            session.getCache()
-                                    .computeIfAbsent(
-                                            session, Keys.of(owner, "repositoryKeyFunction"), ConcurrentHashMap::new))
+                            session.getCache().computeIfAbsent(session, Keys.of(owner, type), ConcurrentHashMap::new))
                     .computeIfAbsent(repository, k1 -> new ConcurrentHashMap<>())
                     .computeIfAbsent(
                             context == null ? "" : context, k2 -> repositoryKeyFunction.apply(repository, context));

@@ -621,6 +621,33 @@ public final class ConfigurationProperties {
     public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid";
 
     /**
+     * Repository key function used for the provenance tracking entries that this local repository manager
+     * writes and reads. With an ID-only key, a repository declared in an untrusted (for example, transitively
+     * resolved) POM under the same ID as a trusted repository would be tracked as the same origin, potentially
+     * poisoning a shared local repository. The default is therefore the URL-qualified {@code "nid_hurl"}
+     * function.
+     * <p>
+     * This function is scoped to tracking entries, path composition, and split local repository prefixes.
+     * Repository identity used for aggregation and mirror merging continues to follow the system-wide key
+     * function ({@link #REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION}), whose default is unchanged.
+     * If the system-wide function is explicitly configured, tracking follows it (setting it to {@code "nid"}
+     * restores the legacy ID-only behaviour); this property, when set, overrides both.
+     * <p>
+     * Tracking entries written under a different function than the active one never match a lookup and never
+     * enable the untracked-file fallback: affected artifacts are treated as locally unavailable and
+     * re-fetched (with checksum validation) once.
+     *
+     * @since 2.0.23
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}
+     */
+    public static final String REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION =
+            PREFIX_SYSTEM + "trackingRepositoryKeyFunction";
+
+    public static final String DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
+
+    /**
      * A flag indicating whether version scheme cache statistics should be printed on JVM shutdown.
      * This is useful for analyzing cache performance and effectiveness in development and testing scenarios.
      *

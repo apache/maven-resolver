@@ -64,7 +64,10 @@ import static java.util.Objects.requireNonNull;
  * The repository id component of a tracking key is produced by the tracking-scoped repository key function, which
  * is URL-qualified by default: two repositories that merely share an id but point at different URLs are tracked as
  * different origins (see
- * {@link EnhancedLocalRepositoryManagerFactory#CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION}).
+ * {@link org.eclipse.aether.ConfigurationProperties#REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}). This does not hold
+ * unconditionally when {@link EnhancedLocalRepositoryManagerFactory#CONFIG_PROP_LEGACY_LOCAL_REPOSITORY} is enabled
+ * (the default): for backward compatibility with Maven 3.9 and older, a same-id fallback then also accepts an
+ * artifact tracked under a different URL as long as the repository id matches (see {@link #applyTracking}).
  *
  * @see EnhancedLocalRepositoryManagerFactory
  */
@@ -97,7 +100,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private final String trackingFilename;
 
-    private final boolean legacyTrackingFallback;
+    private final boolean legacyLocalRepository;
 
     private final TrackingFileManager trackingFileManager;
 
@@ -107,7 +110,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      * Repository key function used solely for the provenance tracking entries (the repository component of the
      * keys in the tracking file); path composition keeps using the (system-wide) key function held by the
      * superclass. URL-qualified by default, so two repositories merely sharing an id are not treated as the same
-     * origin - see {@link EnhancedLocalRepositoryManagerFactory#CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION}.
+     * origin - see {@link org.eclipse.aether.ConfigurationProperties#REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}.
      * Lookups of entries written under a different key function miss and fail safe: the artifact stays tracked
      * (so the untracked inter-op fallback in {@link #checkFind} does not accept it) but unavailable, forcing a
      * checksum-validated re-fetch.
@@ -137,21 +140,19 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      */
     private final Path realBasePath;
 
-    @SuppressWarnings("checkstyle:parameternumber")
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
-            RepositoryKeyFunction repositoryKeyFunction,
             RepositoryKeyFunction trackingRepositoryKeyFunction,
             String trackingFilename,
-            boolean legacyTrackingFallback,
+            boolean legacyLocalRepository,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposer localPathPrefixComposer)
             throws IOException {
-        super(basedir, "enhanced", localPathComposer, repositoryKeyFunction);
+        super(basedir, "enhanced", localPathComposer);
         this.trackingRepositoryKeyFunction = requireNonNull(trackingRepositoryKeyFunction);
         this.trackingFilename = requireNonNull(trackingFilename);
-        this.legacyTrackingFallback = legacyTrackingFallback;
+        this.legacyLocalRepository = legacyLocalRepository;
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
         // a fresh local repository does not exist yet; toRealPath() requires it to
@@ -189,9 +190,17 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     @Override
     public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
-        return concatPaths(
-                localPathPrefixComposer.getPathPrefixForRemoteMetadata(metadata, repository),
-                super.getPathForRemoteMetadata(metadata, repository, context));
+        requireNonNull(metadata, "metadata cannot be null");
+        requireNonNull(repository, "repository cannot be null");
+        if (legacyLocalRepository) {
+            return concatPaths(
+                    localPathPrefixComposer.getPathPrefixForRemoteMetadata(metadata, repository),
+                    super.getPathForRemoteMetadata(metadata, repository, context));
+        } else {
+            return concatPaths(
+                    localPathPrefixComposer.getPathPrefixForRemoteMetadata(metadata, repository),
+                    localPathComposer.getPathForMetadata(metadata, getTrackingRepositoryKey(repository, context)));
+        }
     }
 
     @Override
@@ -307,13 +316,13 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                 result.setRepository(repository);
                 return true;
             }
-            if (legacyTrackingFallback) {
+            if (legacyLocalRepository) {
                 // Backward compatibility fallback: if the tracking key function is URL-qualified (e.g. nid_hurl)
                 // but the tracking file was written by an older resolver using the system-wide key function
                 // (e.g. nid, producing ID-only entries like "artifact>central="), the URL-qualified lookup above
                 // misses. Try the system-wide key function as a fallback: if it matches, the artifact was genuinely
                 // downloaded from this repository under the old key scheme. Accept it and log a migration notice.
-                String legacyKey = getRepositoryKey(repository, context);
+                String legacyKey = simpleRepositoryKeyFunction.apply(repository, context);
                 if (!legacyKey.equals(trackingKey) && props.get(getKey(path, legacyKey)) != null) {
                     LOGGER.debug(
                             "Accepting locally cached artifact {} via legacy tracking key '{}'"
@@ -325,6 +334,27 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                     result.setAvailable(true);
                     result.setRepository(repository);
                     return true;
+                }
+                // Same-ID-different-URL fallback: if the tracking file contains a URL-qualified entry for the
+                // same repository ID but with a different URL hash (e.g. real Central tracked as
+                // "central-<sha1(realUrl)>=" but the current build overrides central to "file:target/null"),
+                // the exact lookup misses because sha1(realUrl) != sha1(file:target/null). Match by repo-ID
+                // prefix: any entry starting with "filename>repoId-" is accepted as originating from the same
+                // logical repository.
+                String repoIdPrefix = getKey(path, legacyKey + "-");
+                for (Object key : props.keySet()) {
+                    String k = key.toString();
+                    if (k.startsWith(repoIdPrefix) && !k.equals(getKey(path, trackingKey))) {
+                        LOGGER.debug(
+                                "Accepting locally cached artifact {} via same-id tracking entry '{}'"
+                                        + " (current URL-qualified key would be '{}')",
+                                path.getFileName(),
+                                k,
+                                getKey(path, trackingKey));
+                        result.setAvailable(true);
+                        result.setRepository(repository);
+                        return true;
+                    }
                 }
             }
         }
@@ -418,8 +448,8 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     /**
      * Returns the tracking key of given repository, derived with the tracking-scoped key function (URL-qualified
-     * by default). Deliberately distinct from {@link #getRepositoryKey(RemoteRepository, String)}, which follows
-     * the system-wide key function and is used for path composition: tracking must bind an artifact to the full
+     * by default). Deliberately distinct from {@link #simpleRepositoryKeyFunction}, which follows
+     * the Maven 3.9 (Resolver 1.x) key function and is used for path composition: tracking must bind an artifact to the full
      * identity of its origin, while on-disk layout and repository aggregation identity stay unchanged.
      */
     private String getTrackingRepositoryKey(RemoteRepository repository, String context) {

@@ -539,8 +539,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         RepositoryKeyFunctionFactory repositoryKeyFunctionFactory = getRepositoryKeyFunctionFactory();
         HashMap<String, LocalRepositoryManagerFactory> localRepositoryProviders = new HashMap<>(2);
         localRepositoryProviders.put(
-                SimpleLocalRepositoryManagerFactory.NAME,
-                new SimpleLocalRepositoryManagerFactory(localPathComposer, repositoryKeyFunctionFactory));
+                SimpleLocalRepositoryManagerFactory.NAME, new SimpleLocalRepositoryManagerFactory(localPathComposer));
         localRepositoryProviders.put(
                 EnhancedLocalRepositoryManagerFactory.NAME,
                 new EnhancedLocalRepositoryManagerFactory(

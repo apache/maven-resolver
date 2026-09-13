@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.checksum;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,8 @@ import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.DirectoryUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -60,20 +63,7 @@ public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecks
     protected static final String CONFIG_PROPS_PREFIX =
             ConfigurationProperties.PREFIX_AETHER + "trustedChecksumsSource.";
 
-    /**
-     * <b>Experimental:</b> Configuration for "repository key" function.
-     * Note: repository key functions other than "nid" produce repository keys will be <em>way different
-     * that those produced with previous versions or without this option enabled</em>. Checksum source uses this key
-     * function to lay down and look up files to use in sources.
-     *
-     * @since 2.0.14
-     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_KEY_FUNCTION}
-     */
-    public static final String CONFIG_PROP_REPOSITORY_KEY_FUNCTION = CONFIG_PROPS_PREFIX + "repositoryKeyFunction";
-
-    public static final String DEFAULT_REPOSITORY_KEY_FUNCTION = "nid";
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final RepositoryKeyFunctionFactory repositoryKeyFunctionFactory;
 
@@ -193,21 +183,24 @@ public abstract class FileTrustedChecksumsSourceSupport implements TrustedChecks
     }
 
     /**
-     * Returns repository key to be used on file system layout.
+     * Returns repository keys to be used on file system layout. Always returns a list with at least one element.
+     * Elements are sorted from "most specific" to "least specific" keys.
      *
      * @since 2.0.14
      */
-    protected String repositoryKey(RepositorySystemSession session, ArtifactRepository artifactRepository) {
+    protected List<String> repositoryKey(RepositorySystemSession session, ArtifactRepository artifactRepository) {
+        ArrayList<String> keys = new ArrayList<>();
         if (artifactRepository instanceof RemoteRepository) {
-            return repositoryKeyFunctionFactory
-                    .repositoryKeyFunction(
-                            FileTrustedChecksumsSourceSupport.class,
-                            session,
-                            DEFAULT_REPOSITORY_KEY_FUNCTION,
-                            CONFIG_PROP_REPOSITORY_KEY_FUNCTION)
-                    .apply((RemoteRepository) artifactRepository, null);
+            RemoteRepository rr = (RemoteRepository) artifactRepository;
+            keys.add(repositoryKeyFunctionFactory
+                    .trackingRepositoryKeyFunction(session)
+                    .apply(rr, null));
+            keys.add(repositoryKeyFunctionFactory
+                    .systemRepositoryKeyFunction(session)
+                    .apply(rr, null));
         } else {
-            return artifactRepository.getId();
+            keys.add(artifactRepository.getId());
         }
+        return keys;
     }
 }

@@ -50,32 +50,6 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     static final String CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_LRM + NAME + ".";
 
     /**
-     * Repository key function used for the provenance tracking entries this local repository manager writes and
-     * consults (see {@link #CONFIG_PROP_TRACKING_FILENAME}), and for nothing else. With an ID-only key, "came from
-     * repository X" means X's possibly colliding label: a repository declared in an untrusted (for example,
-     * transitively resolved) POM under the same ID as a trusted repository would be tracked as the same origin and
-     * could poison a shared local repository. The default is therefore the URL-qualified {@code "nid_hurl"}
-     * function, scoped to tracking entries only: repository identity everywhere else (repository aggregation and
-     * mirror merging, artifact and metadata path composition, split local repository prefixes) keeps following the
-     * system-wide key function, whose default is unchanged - so no aggregation semantics change and no local
-     * repository re-layout occurs. If the system-wide function
-     * {@link ConfigurationProperties#REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION} is explicitly configured, tracking
-     * follows it (all consumers stay on one function, and setting it to {@code "nid"} restores the legacy ID-only
-     * tracking); this property, when set, overrides both. Tracking entries written under a different function than
-     * the active one never match a lookup and never enable the untracked-file fallback: affected artifacts are
-     * simply treated as locally unavailable and re-fetched (with checksum validation) once.
-     *
-     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.lang.String}
-     * @configurationDefaultValue {@link #DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION}
-     * @since 2.0.23
-     */
-    public static final String CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION =
-            CONFIG_PROPS_PREFIX + "trackingRepositoryKeyFunction";
-
-    public static final String DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
-
-    /**
      * Filename of the file in which to track the remote repositories.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -107,22 +81,29 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     public static final boolean DEFAULT_VERIFY_REAL_PATH = true;
 
     /**
-     * Whether to enable "legacy tracking fallback" in LRM. If starting "greenfield" with Resolver 2 enabled Maven,
-     * this should be {@code false}, but for smoother transition of users using Maven 3.9 or older versions, the default
-     * is {@code true}. When the local repository is shared across "older" and "newer" Maven versions (where "older"
-     * Maven versions are Resolver 1.x and "never" Maven versions are Resolver 2.x based), the preferred way is to
-     * enable this feature. On the other hand, if local repository is exclusively used by "newer" Maven versions,
-     * like 3.10 or above, for improved Repository cache poisoning protection, this configuration is recommended
-     * to be set to {@code false}.
+     * Marks whether the local repository is meant to be shared (or was shared) with legacy Maven 3.9 or older
+     * versions. Maven 3.9 and older versions suffer from "impostor" problem, where artifact and metadata origin was
+     * tracked only by the remote repository ID, where two remote repositories may share same ID but different URLs,
+     * in fact they may be completely unrelated to each other (ID clash by mistake), or, it may be due some sort of
+     * "impostor" attempt, where a malicious repository may pretend like some other repository.
+     * Right now, we intentionally default to {@code true} to ease users transitioning, and Resolver 2 will retain
+     * this "old" behavior (will observe legacy tracking entries and will store remote metadata as before). But,
+     * at some point in the future, the default value will be changed to {@code false} (and same change is warmly
+     * recommended for modern Maven users, who do not intend to share local repository with older Maven versions).
+     * When this configuration set to {@code false}, the "repository key" is not ID only anymore, but is changed
+     * to {@code $id-sha1($url)} form, and this key is used in "origin tracking" entries and in caching remote
+     * Maven Repository Metadata XML files as well, guaranteeing they are not mixed in case of same IDs.
      *
+     * @see ConfigurationProperties#REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION
+     * @see ConfigurationProperties#REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
-     * @configurationDefaultValue {@link #DEFAULT_LEGACY_TRACKING_FALLBACK}
+     * @configurationDefaultValue {@link #DEFAULT_LEGACY_LOCAL_REPOSITORY}
      * @since 2.0.23
      */
-    public static final String CONFIG_PROP_LEGACY_TRACKING_FALLBACK = CONFIG_PROPS_PREFIX + "legacyTrackingFallback";
+    public static final String CONFIG_PROP_LEGACY_LOCAL_REPOSITORY = CONFIG_PROPS_PREFIX + "legacyLocalRepository";
 
-    public static final boolean DEFAULT_LEGACY_TRACKING_FALLBACK = true;
+    public static final boolean DEFAULT_LEGACY_LOCAL_REPOSITORY = true;
 
     private float priority = 10.0f;
 
@@ -159,25 +140,17 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                 || trackingFilename.contains("..")) {
             trackingFilename = DEFAULT_TRACKING_FILENAME;
         }
-        boolean legacyTrackingFallback =
-                ConfigUtils.getBoolean(session, DEFAULT_LEGACY_TRACKING_FALLBACK, CONFIG_PROP_LEGACY_TRACKING_FALLBACK);
+        boolean legacyLocalRepository =
+                ConfigUtils.getBoolean(session, DEFAULT_LEGACY_LOCAL_REPOSITORY, CONFIG_PROP_LEGACY_LOCAL_REPOSITORY);
 
         if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
             try {
                 return new EnhancedLocalRepositoryManager(
                         repository.getBasePath(),
                         localPathComposer,
-                        repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session),
-                        repositoryKeyFunctionFactory.repositoryKeyFunction(
-                                EnhancedLocalRepositoryManagerFactory.class,
-                                session,
-                                ConfigUtils.getString(
-                                        session,
-                                        DEFAULT_TRACKING_REPOSITORY_KEY_FUNCTION,
-                                        ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION),
-                                CONFIG_PROP_TRACKING_REPOSITORY_KEY_FUNCTION),
+                        repositoryKeyFunctionFactory.trackingRepositoryKeyFunction(session),
                         trackingFilename,
-                        legacyTrackingFallback,
+                        legacyLocalRepository,
                         trackingFileManager,
                         localPathPrefixComposerFactory.createComposer(session));
             } catch (IOException e) {
