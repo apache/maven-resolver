@@ -274,16 +274,18 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
      * Returns the {@link Path} of the user provided rule file. If {@code forLoad} is {@code true}, returns non-{@code null}
      * Path ONLY if file found and is readable, otherwise it returns {@code null}. If {@code forLoad} is {@code false},
      * then it returns "most specific" user provided file (for saving purposes).
+     * <p>
+     * Only the {@code forLoad == false} (save) result is cached in {@link #ruleFiles(RepositorySystemSession)}, as
+     * {@link #saveRecordedLines(RepositorySystemSession)} relies on that map still holding the path at shutdown time.
+     * The {@code forLoad == true} (load) result must NOT share that cache: its outcome depends on which files
+     * currently exist, so caching it under the same key as the save lookup would let whichever mode ran first
+     * (load or save) poison the other with a stale or wrong path.
      */
     private Path ruleFile(RepositorySystemSession session, RemoteRepository remoteRepository, boolean forLoad) {
-        return ruleFiles(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> {
+        if (forLoad) {
             for (String key : repositoryKeys(session, remoteRepository)) {
                 Path ruleFile = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
                         .resolve(GROUP_ID_FILE_PREFIX + key + GROUP_ID_FILE_SUFFIX);
-                if (!forLoad) {
-                    // return most specific
-                    return ruleFile;
-                }
                 if (Files.isReadable(ruleFile)) {
                     // return if exists/readable
                     return ruleFile;
@@ -291,6 +293,12 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
             }
             // none exists
             return null;
+        }
+        return ruleFiles(session).computeIfAbsent(normalizeRemoteRepository(session, remoteRepository), r -> {
+            // return most specific
+            String key = repositoryKeys(session, remoteRepository).get(0);
+            return getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false)
+                    .resolve(GROUP_ID_FILE_PREFIX + key + GROUP_ID_FILE_SUFFIX);
         });
     }
 

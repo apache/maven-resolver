@@ -81,15 +81,15 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     public static final boolean DEFAULT_VERIFY_REAL_PATH = true;
 
     /**
-     * Marks local repository is meant to be shared (or was shared) with legacy Maven 3.9 or older versions.
-     * Maven 3.9 and older versions suffer from "impostor" problem, where artifact and metadata origin was tracked
-     * only by the remote repository ID, where two remote repositories may share same ID but different URLs, in fact
-     * they may be completely unrelated to each other (ID clash by mistake), or, it may be due some sort of "impostor"
-     * attempt, where a malicious repository may pretend like some other repository.
+     * Marks whether the local repository is meant to be shared (or was shared) with legacy Maven 3.9 or older
+     * versions. Maven 3.9 and older versions suffer from "impostor" problem, where artifact and metadata origin was
+     * tracked only by the remote repository ID, where two remote repositories may share same ID but different URLs,
+     * in fact they may be completely unrelated to each other (ID clash by mistake), or, it may be due some sort of
+     * "impostor" attempt, where a malicious repository may pretend like some other repository.
      * Right now, we intentionally default to {@code true} to ease users transitioning, and Resolver 2 will retain
      * this "old" behavior (will observe legacy tracking entries and will store remote metadata as before). But,
-     * at some point in the future, the default value will be flipped to {@code false} (and same change is warmly
-     * recommended for modern Maven users, who do not intend to share local repository with older Maven versions.
+     * at some point in the future, the default value will be changed to {@code false} (and same change is warmly
+     * recommended for modern Maven users, who do not intend to share local repository with older Maven versions).
      * When this configuration set to {@code false}, the "repository key" is not ID only anymore, but is changed
      * to {@code $id-sha1($url)} form, and this key is used in "origin tracking" entries and in caching remote
      * Maven Repository Metadata XML files as well, guaranteeing they are not mixed in case of same IDs.

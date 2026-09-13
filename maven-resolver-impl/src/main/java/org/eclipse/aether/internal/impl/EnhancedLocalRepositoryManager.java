@@ -64,7 +64,10 @@ import static java.util.Objects.requireNonNull;
  * The repository id component of a tracking key is produced by the tracking-scoped repository key function, which
  * is URL-qualified by default: two repositories that merely share an id but point at different URLs are tracked as
  * different origins (see
- * {@link org.eclipse.aether.ConfigurationProperties#REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}).
+ * {@link org.eclipse.aether.ConfigurationProperties#REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}). This does not hold
+ * unconditionally when {@link EnhancedLocalRepositoryManagerFactory#CONFIG_PROP_LEGACY_LOCAL_REPOSITORY} is enabled
+ * (the default): for backward compatibility with Maven 3.9 and older, a same-id fallback then also accepts an
+ * artifact tracked under a different URL as long as the repository id matches (see {@link #applyTracking}).
  *
  * @see EnhancedLocalRepositoryManagerFactory
  */
