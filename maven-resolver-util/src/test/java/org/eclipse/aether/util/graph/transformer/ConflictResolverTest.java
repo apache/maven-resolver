@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -857,6 +858,33 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertEquals(2, fooNode.getChildren().size());
         assertTrue(barNode.getChildren().isEmpty());
         assertSame(baz1Node, fooNode.getChildren().get(1));
+    }
+
+    /**
+     * Verifies that tree threshold checking stops as soon as the number of visited nodes
+     * exceeds the configured threshold.
+     */
+    @org.junit.jupiter.api.Test
+    void treeThresholdStopsEarly() throws Exception {
+        ConflictResolver delegating = new ConflictResolver(
+                new NearestVersionSelector(),
+                new JavaScopeSelector(),
+                new SimpleOptionalitySelector(),
+                new JavaScopeDeriver());
+
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode child = makeDependencyNode("some-group", "child", "1.0");
+        DependencyNode grandChild = makeDependencyNode("some-group", "grand-child", "1.0");
+
+        root.setChildren(mutableList(child));
+        child.setChildren(mutableList(grandChild));
+
+        Method method =
+                ConflictResolver.class.getDeclaredMethod("treeExceedsThreshold", DependencyNode.class, int.class);
+        method.setAccessible(true);
+
+        assertFalse((Boolean) method.invoke(delegating, root, 3));
+        assertTrue((Boolean) method.invoke(delegating, root, 2));
     }
 
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
