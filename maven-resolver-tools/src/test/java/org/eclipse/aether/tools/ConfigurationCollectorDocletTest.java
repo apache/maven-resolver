@@ -130,7 +130,7 @@ class ConfigurationCollectorDocletTest {
                 enumKey.get("configurationTypeJavadocUrl"));
         assertEquals("VALUE_A", enumKey.get("defaultValue"));
         String enumDescription = enumKey.get("description");
-        assertTrue(enumDescription.contains("<a href=\"#sample.string\"><code>#STRING_KEY</code></a>"));
+        assertTrue(enumDescription.contains("<a href=\"#sample.string\"><code>sample.string</code></a>"));
         assertTrue(
                 enumDescription.contains(
                         "<a href=\"apidocs/org/eclipse/aether/sample/SampleConfigurationKeys.SampleType.html#VALUE\"><code>SampleType#VALUE</code></a>"));
@@ -156,7 +156,7 @@ class ConfigurationCollectorDocletTest {
                 "expected explicit link label to be rendered, but got: " + enumDescription);
         // no @configurationRepoIdSuffix -> defaults to "No"
         assertEquals("No", enumKey.get("supportRepoIdSuffix"));
-        assertEquals("Use <a href=\"#sample.enum2\"><code>#ENUM2_KEY</code></a> instead", enumKey.get("deprecated"));
+        assertEquals("Use <a href=\"#sample.enum2\"><code>sample.enum2</code></a> instead", enumKey.get("deprecated"));
 
         Map<String, String> enum2Key = keys.get("sample.enum2");
         assertNotNull(enum2Key, "enum key missing");
@@ -186,7 +186,7 @@ class ConfigurationCollectorDocletTest {
         assertTrue(
                 markdown.contains(
                         "[`org.eclipse.aether.sample.SampleConfigurationKeys.SampleEnum`](apidocs/org/eclipse/aether/sample/SampleConfigurationKeys.SampleEnum.html)"));
-        assertTrue(markdown.contains("<a href=\"#sample.string\"><code>#STRING_KEY</code></a>"));
+        assertTrue(markdown.contains("<a href=\"#sample.string\"><code>sample.string</code></a>"));
         assertTrue(markdown.contains("**Deprecated**. <em>Use <a href=\"#sample.enum2\">"));
     }
 
