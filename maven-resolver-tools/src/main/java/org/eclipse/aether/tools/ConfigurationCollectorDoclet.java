@@ -734,6 +734,9 @@ public class ConfigurationCollectorDoclet implements Doclet {
                     VariableElement referenced = resolveReferencedField(docTreePath, node);
                     String configurationKey = getConfigurationKey(referenced);
                     if (configurationKey != null) {
+                        rendered = node.getKind() == DocTree.Kind.LINK_PLAIN
+                                ? escape(mode, configurationKey)
+                                : renderAsCode(configurationKey);
                         return "<a href=\"#" + escape(mode, configurationKey) + "\">" + rendered + "</a>";
                     }
                     Optional<String> javadocUrl = getJavadocUrl(docTreePath, node.getReference());
