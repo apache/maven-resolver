@@ -336,7 +336,7 @@ public class HttpServer {
      * @return a port number that is (at probe time) free for both TCP and UDP
      */
     int findFreeTcpAndUdpPort() {
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 100; i++) {
             int port;
             try (ServerSocket serverSocket = new ServerSocket(0)) {
                 port = serverSocket.getLocalPort();
