@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.eclipse.aether.internal.test.util.http;
 
 import java.io.File;
@@ -274,9 +275,11 @@ public class HttpServer {
             } else {
                 httpsConnector = new ServerConnector(server, tls, alpn, http2);
             }
+
             if (port != -1) {
                 httpsConnector.setPort(port);
             }
+
             server.addConnector(httpsConnector);
             try {
                 httpsConnector.start();
@@ -336,6 +339,7 @@ public class HttpServer {
      * @return a port number that is (at probe time) free for both TCP and UDP
      */
     int findFreeTcpAndUdpPort() {
+        // 100 retries: 20 was insufficient on busy CI hosts (MRESOLVER-2142)
         for (int i = 0; i < 100; i++) {
             int port;
             try (ServerSocket serverSocket = new ServerSocket(0)) {
@@ -654,7 +658,7 @@ public class HttpServer {
         }
     }
 
-    private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
+    private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+");
 
     private class RepoHandler extends Handler.Abstract {
         @Override
@@ -678,12 +682,14 @@ public class HttpServer {
                     writeResponseBodyMessage(req, response, "Not found");
                     return true;
                 }
+
                 long ifUnmodifiedSince = req.getHeaders().getDateField(HttpHeader.IF_UNMODIFIED_SINCE);
                 if (ifUnmodifiedSince != -1L && file.lastModified() > ifUnmodifiedSince) {
                     response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
                     writeResponseBodyMessage(req, response, "Precondition failed");
                     return true;
                 }
+
                 long offset = 0L;
                 String range = req.getHeaders().get(HttpHeader.RANGE);
                 if (range != null && rangeSupport) {
@@ -702,6 +708,7 @@ public class HttpServer {
                         return true;
                     }
                 }
+
                 response.setStatus((offset > 0L) ? HttpServletResponse.SC_PARTIAL_CONTENT : HttpServletResponse.SC_OK);
                 response.getHeaders().add(HttpHeader.LAST_MODIFIED, DateGenerator.formatDate(file.lastModified()));
                 response.getHeaders().add(HttpHeader.CONTENT_LENGTH, Long.toString(file.length() - offset));
