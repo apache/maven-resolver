@@ -658,7 +658,7 @@ public class HttpServer {
         }
     }
 
-    private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+");
+    private static final Pattern SIMPLE_RANGE = Pattern.compile("bytes=([0-9])+-");
 
     private class RepoHandler extends Handler.Abstract {
         @Override
