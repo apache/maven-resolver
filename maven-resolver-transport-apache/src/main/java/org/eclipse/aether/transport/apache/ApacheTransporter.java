@@ -315,6 +315,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                     "Transport used Apache HttpClient is instructed to use system properties: this may yield in unwanted side-effects!");
             LOGGER.warn("Please use documented means to configure resolver transport.");
             builder.useSystemProperties();
+            SystemProxyAuthenticationStrategy systemProxyAuth = new SystemProxyAuthenticationStrategy();
+            builder.setProxyAuthenticationStrategy(systemProxyAuth);
+            builder.addInterceptorFirst(systemProxyAuth);
         }
 
         // capture SSL session for logging purposes (https://issues.apache.org/jira/browse/HTTPCLIENT-2164)
