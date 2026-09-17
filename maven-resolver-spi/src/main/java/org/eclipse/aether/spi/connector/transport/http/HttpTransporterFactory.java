@@ -30,6 +30,11 @@ import org.eclipse.aether.transfer.NoTransporterException;
  */
 public interface HttpTransporterFactory extends TransporterFactory {
 
+    @Override
+    default boolean canHandle(String repositoryProtocol) {
+        return "http".equalsIgnoreCase(repositoryProtocol) || "https".equalsIgnoreCase(repositoryProtocol);
+    }
+
     /**
      * Tries to create HTTP transporter for the specified remote repository.
      *
