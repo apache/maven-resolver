@@ -21,6 +21,10 @@ package org.eclipse.aether.transport.apache;
 import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.apache.http.pool.ConnPoolControl;
@@ -30,19 +34,37 @@ import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.internal.test.util.http.RecordingTransportListener;
+import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.spi.connector.transport.GetTask;
+import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessorSupport;
+import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.ConnectHandler;
+import org.eclipse.jetty.util.Callback;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Apache Transporter UT.
  * It does support WebDAV.
  */
+@ResourceLock(Resources.SYSTEM_PROPERTIES)
 class ApacheTransporterTest extends HttpTransporterTest {
 
     public ApacheTransporterTest() {
@@ -79,6 +101,259 @@ class ApacheTransporterTest extends HttpTransporterTest {
             globalState.close();
         }
         super.tearDown();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http", "https"})
+    void testTransfers_SystemProxyAuthenticated(String protocol) throws Exception {
+        httpServer.setProxyAuthentication("testuser", "testpass");
+        try (SystemProperties properties = systemProxyProperties(protocol, httpServer.getHttpPort())) {
+            newTransporter("http://bad.localhost:1/");
+            assertTransfers();
+        }
+    }
+
+    @Test
+    void testSystemProxyAuthenticationDisabled() throws Exception {
+        httpServer.setProxyAuthentication("testuser", "testpass");
+        try (SystemProperties properties = systemProxyProperties("http", httpServer.getHttpPort())) {
+            session.setConfigProperty(ApacheTransporterConfigurationKeys.CONFIG_PROP_USE_SYSTEM_PROPERTIES, false);
+            proxy = new Proxy(Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort());
+            newTransporter("http://bad.localhost:1/");
+            assertGetStatus(407);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"testpass", "wrong"})
+    void testExplicitProxyCredentialsTakePrecedence(String password) throws Exception {
+        httpServer.setProxyAuthentication("testuser", "testpass");
+        try (SystemProperties properties = systemProxyProperties("http", httpServer.getHttpPort())) {
+            proxy = new Proxy(
+                    Proxy.TYPE_HTTP,
+                    httpServer.getHost(),
+                    httpServer.getHttpPort(),
+                    new AuthenticationBuilder()
+                            .addUsername("testuser")
+                            .addPassword(password)
+                            .build());
+            newTransporter("http://bad.localhost:1/");
+            if ("testpass".equals(password)) {
+                properties.set("http.proxyPassword", "wrong");
+                assertTransfers();
+            } else {
+                assertGetStatus(407);
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"Host,other.invalid", "Port,1", "Port,invalid", "Port,", "User,", "Password,wrong"})
+    void testSystemProxyCredentialsMustMatch(String property, String value) throws Exception {
+        httpServer.setProxyAuthentication("testuser", "testpass");
+        try (SystemProperties properties = systemProxyProperties("http", httpServer.getHttpPort())) {
+            proxy = new Proxy(Proxy.TYPE_HTTP, httpServer.getHost(), httpServer.getHttpPort());
+            properties.set("http.proxy" + property, value);
+            newTransporter("http://bad.localhost:1/");
+            assertGetStatus(407);
+        }
+    }
+
+    @Test
+    void testSystemProxyPasswordDefaultsToEmpty() throws Exception {
+        httpServer.setProxyAuthentication("testuser", "");
+        try (SystemProperties properties = systemProxyProperties("http", httpServer.getHttpPort())) {
+            properties.set("http.proxyPassword", null);
+            newTransporter("http://bad.localhost:1/");
+            assertTransfers();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {401, 407})
+    void testSystemProxyCredentialsNotUsedOnDirectRoute(int status) throws Exception {
+        if (status == 401) {
+            httpServer.setAuthentication("testuser", "testpass");
+        } else {
+            httpServer.setProxyAuthentication("testuser", "testpass");
+        }
+        try (SystemProperties properties = systemProxyProperties("http", httpServer.getHttpPort())) {
+            properties.set("http.nonProxyHosts", "*");
+            newTransporter(httpServer.getHttpUrl());
+            assertGetStatus(status);
+            assertTrue(httpServer.getLogEntries().stream()
+                    .allMatch(entry -> entry.getRequestHeaders().get("Authorization") == null
+                            && entry.getRequestHeaders().get("Proxy-Authorization") == null));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void testSystemProxyCredentialsNotUsedForServer(boolean serverCredentials) throws Exception {
+        httpServer.setProxyAuthentication("testuser", "testpass");
+        httpServer.setAuthentication("testuser", "testpass");
+        try (SystemProperties properties = systemProxyProperties("http", httpServer.getHttpPort())) {
+            if (serverCredentials) {
+                auth = new AuthenticationBuilder()
+                        .addUsername("testuser")
+                        .addPassword("testpass")
+                        .build();
+            }
+            newTransporter("http://bad.localhost:1/");
+            if (serverCredentials) {
+                assertTransfers();
+            } else {
+                assertGetStatus(401);
+                assertTrue(httpServer.getLogEntries().stream()
+                        .allMatch(entry -> entry.getRequestHeaders().get("Authorization") == null));
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void testSystemProxyAuthenticationThroughHttpsConnect(boolean authenticateServer) throws Exception {
+        httpServer.addHttp2ConnectorWithMutualTLS();
+        if (authenticateServer) {
+            httpServer.setAuthentication("testuser", "testpass");
+        }
+        Server proxyServer = new Server();
+        ServerConnector connector = new ServerConnector(proxyServer);
+        connector.setHost(httpServer.getHost());
+        proxyServer.addConnector(connector);
+        AtomicInteger authenticatedConnects = new AtomicInteger();
+        proxyServer.setHandler(new ConnectHandler() {
+            @Override
+            protected boolean handleAuthentication(Request request, Response response, String address) {
+                String expected = "Basic "
+                        + Base64.getEncoder().encodeToString("testuser:testpass".getBytes(StandardCharsets.UTF_8));
+                if (expected.equals(request.getHeaders().get("Proxy-Authorization"))) {
+                    authenticatedConnects.incrementAndGet();
+                    return true;
+                }
+                response.getHeaders().put("Proxy-Authenticate", "Basic realm=\"proxy\"");
+                return false;
+            }
+        });
+        proxyServer.start();
+        try (SystemProperties properties = systemProxyProperties("https", connector.getLocalPort())) {
+            newTransporter(httpServer.getHttpsUrl());
+            if (authenticateServer) {
+                assertGetStatus(401);
+            } else {
+                assertTransfers();
+            }
+            assertTrue(authenticatedConnects.get() > 0);
+            assertTrue(httpServer.getLogEntries().stream()
+                    .allMatch(entry -> entry.getRequestHeaders().get("Authorization") == null
+                            && entry.getRequestHeaders().get("Proxy-Authorization") == null));
+        } finally {
+            if (transporter != null) {
+                transporter.close();
+                transporter = null;
+            }
+            proxyServer.stop();
+        }
+    }
+
+    @Test
+    void testSystemProxyCredentialsNotForwardedAfterRedirectToDirectRoute() throws Exception {
+        Server proxyServer = new Server();
+        ServerConnector connector = new ServerConnector(proxyServer);
+        connector.setHost(httpServer.getHost());
+        proxyServer.addConnector(connector);
+        AtomicInteger authenticatedRequests = new AtomicInteger();
+        proxyServer.setHandler(new Handler.Abstract() {
+            @Override
+            public boolean handle(Request request, Response response, Callback callback) throws Exception {
+                String expected = "Basic "
+                        + Base64.getEncoder().encodeToString("testuser:testpass".getBytes(StandardCharsets.UTF_8));
+                if (expected.equals(request.getHeaders().get("Proxy-Authorization"))) {
+                    authenticatedRequests.incrementAndGet();
+                    response.setStatus(302);
+                    response.getHeaders().put("Location", httpServer.getHttpUrl() + "/repo/file.txt");
+                } else {
+                    response.setStatus(407);
+                    response.getHeaders().put("Proxy-Authenticate", "Basic realm=\"proxy\"");
+                }
+                callback.succeeded();
+                return true;
+            }
+        });
+        proxyServer.start();
+        try (SystemProperties properties = systemProxyProperties("http", connector.getLocalPort())) {
+            properties.set("http.nonProxyHosts", httpServer.getHost());
+            newTransporter("http://bad.localhost:1/");
+            GetTask task = new GetTask(URI.create("repo/file.txt"));
+            transporter.get(task);
+            assertEquals("test", task.getDataString());
+            assertTrue(authenticatedRequests.get() > 0);
+            assertTrue(httpServer.getLogEntries().stream()
+                    .allMatch(entry -> entry.getRequestHeaders().get("Authorization") == null
+                            && entry.getRequestHeaders().get("Proxy-Authorization") == null));
+        } finally {
+            if (transporter != null) {
+                transporter.close();
+                transporter = null;
+            }
+            proxyServer.stop();
+        }
+    }
+
+    private void assertGetStatus(int status) {
+        HttpTransporterException failure = assertThrows(
+                HttpTransporterException.class, () -> transporter.get(new GetTask(URI.create("repo/file.txt"))));
+        assertEquals(status, failure.getStatusCode());
+    }
+
+    private void assertTransfers() throws Exception {
+        GetTask task = new GetTask(URI.create("repo/file.txt"));
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+        transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+        transporter.put(new PutTask(URI.create("repo/upload.txt")).setDataString("upload"));
+        assertEquals("upload", TestFileUtils.readString(new File(repoDir, "upload.txt")));
+    }
+
+    private SystemProperties systemProxyProperties(String protocol, int port) {
+        session.setConfigProperty(ApacheTransporterConfigurationKeys.CONFIG_PROP_USE_SYSTEM_PROPERTIES, true);
+        SystemProperties properties = new SystemProperties();
+        for (String scheme : new String[] {"http", "https"}) {
+            properties.set(scheme + ".proxyHost", httpServer.getHost());
+            properties.set(scheme + ".proxyPort", Integer.toString(port));
+            properties.set(scheme + ".proxyUser", null);
+            properties.set(scheme + ".proxyPassword", null);
+        }
+        properties.set(protocol + ".proxyUser", "testuser");
+        properties.set(protocol + ".proxyPassword", "testpass");
+        properties.set("http.nonProxyHosts", "");
+        return properties;
+    }
+
+    private static final class SystemProperties implements AutoCloseable {
+        private final Map<String, String> previous = new HashMap<>();
+
+        void set(String key, String value) {
+            if (!previous.containsKey(key)) {
+                previous.put(key, System.getProperty(key));
+            }
+            if (value == null) {
+                System.clearProperty(key);
+            } else {
+                System.setProperty(key, value);
+            }
+        }
+
+        @Override
+        public void close() {
+            previous.forEach((key, value) -> {
+                if (value == null) {
+                    System.clearProperty(key);
+                } else {
+                    System.setProperty(key, value);
+                }
+            });
+        }
     }
 
     @Test
