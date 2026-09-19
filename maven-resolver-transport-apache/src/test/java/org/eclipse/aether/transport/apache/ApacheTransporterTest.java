@@ -22,11 +22,28 @@ import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import org.apache.http.Header;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpVersion;
+import org.apache.http.auth.AuthOption;
+import org.apache.http.auth.AuthSchemeProvider;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.impl.auth.BasicSchemeFactory;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.pool.ConnPoolControl;
 import org.apache.http.pool.PoolStats;
 import org.eclipse.aether.ConfigurationProperties;
@@ -166,6 +183,35 @@ class ApacheTransporterTest extends HttpTransporterTest {
             properties.set("http.proxyPassword", null);
             newTransporter("http://bad.localhost:1/");
             assertTransfers();
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"http,80", "https,443"})
+    void testSystemProxyPortDefaults(String protocol, int port) throws Exception {
+        try (SystemProperties properties = new SystemProperties()) {
+            properties.set(protocol + ".proxyHost", "proxy.example");
+            properties.set(protocol + ".proxyPort", null);
+            properties.set(protocol + ".proxyUser", protocol + "-user");
+            assertEquals(protocol + "-user", selectSystemProxyUsername(protocol, port));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"http,http-user", "https,https-user"})
+    void testSystemProxyCredentialsPreferTargetProtocol(String protocol, String expectedUsername) throws Exception {
+        try (SystemProperties properties = distinctSystemProxyCredentials(8080)) {
+            assertEquals(expectedUsername, selectSystemProxyUsername(protocol, 8080));
+        }
+    }
+
+    @Test
+    void testSystemProxyCredentialsFallBackToOppositeProtocol() throws Exception {
+        try (SystemProperties properties = new SystemProperties()) {
+            properties.set("https.proxyHost", "proxy.example");
+            properties.set("https.proxyPort", "8080");
+            properties.set("https.proxyUser", "https-user");
+            assertEquals("https-user", selectSystemProxyUsername("http", 8080));
         }
     }
 
@@ -328,6 +374,40 @@ class ApacheTransporterTest extends HttpTransporterTest {
         properties.set(protocol + ".proxyPassword", "testpass");
         properties.set("http.nonProxyHosts", "");
         return properties;
+    }
+
+    private SystemProperties distinctSystemProxyCredentials(int port) {
+        SystemProperties properties = new SystemProperties();
+        for (String protocol : new String[] {"http", "https"}) {
+            properties.set(protocol + ".proxyHost", "proxy.example");
+            properties.set(protocol + ".proxyPort", Integer.toString(port));
+            properties.set(protocol + ".proxyUser", protocol + "-user");
+        }
+        return properties;
+    }
+
+    private String selectSystemProxyUsername(String targetProtocol, int proxyPort) throws Exception {
+        HttpHost proxyHost = new HttpHost("proxy.example", proxyPort);
+        HttpClientContext context = HttpClientContext.create();
+        context.setAttribute(
+                HttpClientContext.HTTP_ROUTE,
+                new HttpRoute(new HttpHost("repository.example", -1, targetProtocol), proxyHost));
+        context.setCredentialsProvider(new BasicCredentialsProvider());
+        context.setRequestConfig(RequestConfig.DEFAULT);
+        context.setAuthSchemeRegistry(RegistryBuilder.<AuthSchemeProvider>create()
+                .register(AuthSchemes.BASIC, new BasicSchemeFactory())
+                .build());
+        Map<String, Header> challenges = Collections.singletonMap(
+                AuthSchemes.BASIC.toLowerCase(), new BasicHeader("Proxy-Authenticate", "Basic realm=\"proxy\""));
+        Queue<AuthOption> options = new SystemProxyAuthenticationStrategy()
+                .select(
+                        challenges,
+                        proxyHost,
+                        new BasicHttpResponse(HttpVersion.HTTP_1_1, 407, "Proxy Authentication Required"),
+                        context);
+        UsernamePasswordCredentials credentials =
+                (UsernamePasswordCredentials) options.remove().getCredentials();
+        return credentials.getUserName();
     }
 
     private static final class SystemProperties implements AutoCloseable {

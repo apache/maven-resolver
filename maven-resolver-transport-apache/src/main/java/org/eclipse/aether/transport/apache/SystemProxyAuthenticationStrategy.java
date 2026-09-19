@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.transport.apache;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 
@@ -44,7 +45,7 @@ import org.apache.http.protocol.HttpContext;
 /**
  * Adds system proxy credentials only while selecting authentication for the current route's proxy.
  *
- * @since 2.0.23
+ * @since 2.0.24
  */
 final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrategy implements HttpRequestInterceptor {
     private static final String SYSTEM_PROXY = SystemProxyAuthenticationStrategy.class.getName() + ".proxy";
@@ -76,9 +77,11 @@ final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrateg
         if (route == null || !authhost.equals(route.getProxyHost())) {
             return options;
         }
-        CredentialsProvider credentials = credentials(authhost, "http");
+        String routeProtocol = route.getTargetHost().getSchemeName().toLowerCase(Locale.ENGLISH);
+        CredentialsProvider credentials = credentials(authhost, routeProtocol);
+        String fallbackProtocol = "https".equalsIgnoreCase(routeProtocol) ? "http" : "https";
         if (credentials == null) {
-            credentials = credentials(authhost, "https");
+            credentials = credentials(authhost, fallbackProtocol);
         }
         if (credentials == null) {
             return options;
@@ -99,7 +102,9 @@ final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrateg
             return null;
         }
         try {
-            if (proxy.getPort() != Integer.parseInt(System.getProperty(prefix + "Port"))) {
+            String configuredPort = System.getProperty(prefix + "Port");
+            int port = configuredPort == null ? defaultPort(protocol) : Integer.parseInt(configuredPort);
+            if (proxy.getPort() != port) {
                 return null;
             }
         } catch (NumberFormatException e) {
@@ -117,5 +122,9 @@ final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrateg
                 new AuthScope(proxy, AuthScope.ANY_REALM, AuthSchemes.NTLM),
                 new NTCredentials(username, password, null, System.getProperty("http.auth.ntlm.domain")));
         return credentials;
+    }
+
+    private static int defaultPort(String protocol) {
+        return "https".equalsIgnoreCase(protocol) ? 443 : 80;
     }
 }
