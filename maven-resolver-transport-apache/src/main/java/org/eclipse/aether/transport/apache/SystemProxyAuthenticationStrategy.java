@@ -43,6 +43,8 @@ import org.apache.http.protocol.HttpContext;
 
 /**
  * Adds system proxy credentials only while selecting authentication for the current route's proxy.
+ *
+ * @since 2.0.23
  */
 final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrategy implements HttpRequestInterceptor {
     private static final String SYSTEM_PROXY = SystemProxyAuthenticationStrategy.class.getName() + ".proxy";
@@ -110,6 +112,7 @@ final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrateg
         String password = System.getProperty(prefix + "Password", "");
         BasicCredentialsProvider credentials = new BasicCredentialsProvider();
         credentials.setCredentials(new AuthScope(proxy), new UsernamePasswordCredentials(username, password));
+        // HttpClient defines only the protocol-independent http.auth.ntlm.domain system property.
         credentials.setCredentials(
                 new AuthScope(proxy, AuthScope.ANY_REALM, AuthSchemes.NTLM),
                 new NTCredentials(username, password, null, System.getProperty("http.auth.ntlm.domain")));
