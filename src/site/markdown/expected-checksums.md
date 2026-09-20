@@ -116,7 +116,7 @@ Each summary file contains checksums computed by one algorithm. The file extensi
 
 If you use Maven 3.9.x, the following procedure saves the summary checksum file alongside your project code:
 
-1. Add the following command line flags to your `.mvn/config` file:
+1. Add the following command line flags to your `.mvn/maven.config` file:
 
    ```
    --strict-checksums
