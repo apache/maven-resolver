@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.transport.http;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 
@@ -49,10 +50,16 @@ final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrateg
 
     @Override
     public void process(HttpRequest request, HttpContext context) {
-        HttpHost authenticatedProxy = (HttpHost) context.getAttribute(SYSTEM_PROXY);
+        RouteInfo authenticatedRoute = (RouteInfo) context.getAttribute(SYSTEM_PROXY);
         RouteInfo route = HttpClientContext.adapt(context).getHttpRoute();
-        if (authenticatedProxy != null && route != null && !authenticatedProxy.equals(route.getProxyHost())) {
-            // HttpClient retains Basic proxy authentication across redirects, even when the proxy changes.
+        if (authenticatedRoute != null
+                && route != null
+                && (!authenticatedRoute.getProxyHost().equals(route.getProxyHost())
+                        || !authenticatedRoute
+                                .getTargetHost()
+                                .getSchemeName()
+                                .equalsIgnoreCase(route.getTargetHost().getSchemeName()))) {
+            // HttpClient retains Basic proxy authentication across redirects, even when the route changes.
             AuthState state = HttpClientContext.adapt(context).getProxyAuthState();
             if (state != null) {
                 state.reset();
@@ -74,9 +81,11 @@ final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrateg
         if (route == null || !authhost.equals(route.getProxyHost())) {
             return options;
         }
-        CredentialsProvider credentials = credentials(authhost, "http");
+        String routeProtocol = route.getTargetHost().getSchemeName().toLowerCase(Locale.ENGLISH);
+        CredentialsProvider credentials = credentials(authhost, routeProtocol);
+        String fallbackProtocol = "https".equalsIgnoreCase(routeProtocol) ? "http" : "https";
         if (credentials == null) {
-            credentials = credentials(authhost, "https");
+            credentials = credentials(authhost, fallbackProtocol);
         }
         if (credentials == null) {
             return options;
@@ -86,7 +95,7 @@ final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrateg
         proxyContext.setCredentialsProvider(credentials);
         options = super.select(challenges, authhost, response, proxyContext);
         if (!options.isEmpty()) {
-            context.setAttribute(SYSTEM_PROXY, authhost);
+            context.setAttribute(SYSTEM_PROXY, route);
         }
         return options;
     }
@@ -97,7 +106,9 @@ final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrateg
             return null;
         }
         try {
-            if (proxy.getPort() != Integer.parseInt(System.getProperty(prefix + "Port"))) {
+            String configuredPort = System.getProperty(prefix + "Port");
+            int port = configuredPort == null ? defaultPort(protocol) : Integer.parseInt(configuredPort);
+            if (proxy.getPort() != port) {
                 return null;
             }
         } catch (NumberFormatException e) {
@@ -114,5 +125,9 @@ final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrateg
                 new AuthScope(proxy, AuthScope.ANY_REALM, AuthSchemes.NTLM),
                 new NTCredentials(username, password, null, System.getProperty("http.auth.ntlm.domain")));
         return credentials;
+    }
+
+    private static int defaultPort(String protocol) {
+        return "https".equalsIgnoreCase(protocol) ? 443 : 80;
     }
 }
