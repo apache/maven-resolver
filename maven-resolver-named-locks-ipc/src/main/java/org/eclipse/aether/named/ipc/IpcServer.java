@@ -39,7 +39,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -49,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * @since 2.0.1
  */
 public class IpcServer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(IpcServer.class);
+    private static volatile boolean forkedProcess;
 
     /**
      * Should the IPC server not fork? (i.e. for testing purposes)
@@ -167,6 +166,7 @@ public class IpcServer {
     }
 
     public static void main(String[] args) throws Exception {
+        forkedProcess = true;
         // When spawning a new process, the child process is create within
         // the same process group.  This means that a few signals are sent
         // to the whole group.  This is the case for SIGINT (Ctrl-C) and
@@ -218,16 +218,29 @@ public class IpcServer {
 
     private static void debug(String msg, Object... args) {
         if (DEBUG) {
-            LOGGER.debug(msg, args);
+            if (forkedProcess) {
+                System.out.printf("[ipc] [debug] " + msg + "\n", args);
+            } else {
+                LoggerFactory.getLogger(IpcServer.class).debug(msg, args);
+            }
         }
     }
 
     private static void info(String msg, Object... args) {
-        LOGGER.info(msg, args);
+        if (forkedProcess) {
+            System.out.printf("[ipc] [info] " + msg + "\n", args);
+        } else {
+            LoggerFactory.getLogger(IpcServer.class).info(msg, args);
+        }
     }
 
     private static void error(String msg, Throwable t) {
-        LOGGER.error(msg, t);
+        if (forkedProcess) {
+            System.out.println("[ipc] [error] " + msg);
+            t.printStackTrace(System.out);
+        } else {
+            LoggerFactory.getLogger(IpcServer.class).error(msg, t);
+        }
     }
 
     private static void run(Runnable runnable, boolean daemon) {
