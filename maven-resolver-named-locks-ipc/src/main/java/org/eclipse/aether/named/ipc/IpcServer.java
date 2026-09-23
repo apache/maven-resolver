@@ -39,6 +39,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Implementation of the server side.
  * The server instance is bound to a given maven repository.
@@ -46,6 +49,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2.0.1
  */
 public class IpcServer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(IpcServer.class);
+
     /**
      * Should the IPC server not fork? (i.e. for testing purposes)
      *
@@ -213,17 +218,16 @@ public class IpcServer {
 
     private static void debug(String msg, Object... args) {
         if (DEBUG) {
-            System.out.printf("[ipc] [debug] " + msg + "\n", args);
+            LOGGER.debug(msg, args);
         }
     }
 
     private static void info(String msg, Object... args) {
-        System.out.printf("[ipc] [info] " + msg + "\n", args);
+        LOGGER.info(msg, args);
     }
 
     private static void error(String msg, Throwable t) {
-        System.out.println("[ipc] [error] " + msg);
-        t.printStackTrace(System.out);
+        LOGGER.error(msg, t);
     }
 
     private static void run(Runnable runnable, boolean daemon) {
