@@ -60,10 +60,13 @@ class IpcClientForkedTest {
                     logOutput.contains("IpcServer started at"),
                     "expected forked server startup diagnostics in log, but was: " + logOutput);
         } finally {
-            if (client.initialized) {
-                client.stopServer();
+            try {
+                if (client.initialized) {
+                    client.stopServer();
+                }
+            } finally {
+                client.close();
             }
-            client.close();
         }
     }
 }
