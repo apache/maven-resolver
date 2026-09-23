@@ -219,7 +219,7 @@ public class IpcServer {
     private static void debug(String msg, Object... args) {
         if (DEBUG) {
             if (forkedProcess) {
-                System.out.printf("[ipc] [debug] " + msg + "\n", args);
+                System.out.println("[ipc] [debug] " + format(msg, args));
             } else {
                 LoggerFactory.getLogger(IpcServer.class).debug(msg, args);
             }
@@ -228,7 +228,7 @@ public class IpcServer {
 
     private static void info(String msg, Object... args) {
         if (forkedProcess) {
-            System.out.printf("[ipc] [info] " + msg + "\n", args);
+            System.out.println("[ipc] [info] " + format(msg, args));
         } else {
             LoggerFactory.getLogger(IpcServer.class).info(msg, args);
         }
@@ -241,6 +241,10 @@ public class IpcServer {
         } else {
             LoggerFactory.getLogger(IpcServer.class).error(msg, t);
         }
+    }
+
+    private static String format(String msg, Object... args) {
+        return String.format(msg.replace("{}", "%s"), args);
     }
 
     private static void run(Runnable runnable, boolean daemon) {
@@ -257,7 +261,7 @@ public class IpcServer {
 
     public void run() {
         try {
-            info("IpcServer started at %s", getLocalAddress().toString());
+            info("IpcServer started at {}", getLocalAddress().toString());
             use();
             run(this::expirationCheck, true);
             while (!closing) {
@@ -277,7 +281,7 @@ public class IpcServer {
             clients.put(socket, Thread.currentThread());
             c = clients.size();
         }
-        info("New client connected (%d connected)", c);
+        info("New client connected ({} connected)", c);
         use();
         Map<String, Context> clientContexts = new ConcurrentHashMap<>();
         try {
@@ -312,7 +316,7 @@ public class IpcServer {
                         contexts.put(context.id, context);
                         clientContexts.put(context.id, context);
                         synchronized (output) {
-                            debug("Created context %s", context.id);
+                            debug("Created context {}", context.id);
                             output.writeInt(requestId);
                             output.writeInt(2);
                             output.writeUTF(IpcMessages.RESPONSE_CONTEXT);
@@ -348,7 +352,7 @@ public class IpcServer {
                         contexts.remove(contextId);
                         context.unlock();
                         synchronized (output) {
-                            debug("Closing context %s", context.id);
+                            debug("Closing context {}", context.id);
                             output.writeInt(requestId);
                             output.writeInt(1);
                             output.writeUTF(IpcMessages.RESPONSE_CLOSE);
@@ -401,7 +405,7 @@ public class IpcServer {
                 c = clients.size();
             }
             if (!closing) {
-                info("%d clients remained", c);
+                info("{} clients remained", c);
             }
         }
     }
@@ -409,7 +413,7 @@ public class IpcServer {
     private void sendAcquireResponse(DataOutputStream output, SocketChannel socket, int requestId, Context context) {
         try {
             synchronized (output) {
-                debug("Locking in context %s", context.id);
+                debug("Locking in context {}", context.id);
                 output.writeInt(requestId);
                 output.writeInt(1);
                 output.writeUTF(IpcMessages.RESPONSE_ACQUIRE);
