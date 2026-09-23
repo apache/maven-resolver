@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class IpcClientForkedTest {
 
     @Test
+    @Timeout(10)
     void forkedServerDiagnosticsAreWrittenToLog(@TempDir Path tempDir) throws Exception {
         Path logPath = tempDir.resolve("log");
         IpcClient client = new IpcClient(tempDir.resolve("repository"), logPath, null);
