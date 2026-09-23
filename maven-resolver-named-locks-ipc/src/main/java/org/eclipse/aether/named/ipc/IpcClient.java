@@ -375,10 +375,13 @@ public class IpcClient {
     }
 
     void close() {
-        if (noFork) {
-            stopServer();
+        try {
+            if (noFork) {
+                stopServer();
+            }
+        } finally {
+            close(new IOException("Closing"));
         }
-        close(new IOException("Closing"));
     }
 
     synchronized void close(Throwable e) {

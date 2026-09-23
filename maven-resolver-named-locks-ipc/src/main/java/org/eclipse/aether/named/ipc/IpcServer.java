@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * @since 2.0.1
  */
 public class IpcServer {
-    private static volatile boolean forkedProcess;
+    static volatile boolean forkedProcess;
 
     /**
      * Should the IPC server not fork? (i.e. for testing purposes)
@@ -272,6 +272,8 @@ public class IpcServer {
             if (!closing) {
                 error("Error running sync server loop", t);
             }
+        } finally {
+            forkedProcess = false;
         }
     }
 

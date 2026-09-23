@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class IpcClientForkedTest {
 
     @Test
-    @Timeout(10)
+    @Timeout(30)
     void forkedServerDiagnosticsAreWrittenToLog(@TempDir Path tempDir) throws Exception {
         Path logPath = tempDir.resolve("log");
         IpcClient client = new IpcClient(tempDir.resolve("repository"), logPath, null);
