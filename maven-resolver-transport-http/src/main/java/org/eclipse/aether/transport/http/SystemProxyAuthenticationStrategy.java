@@ -44,6 +44,8 @@ import org.apache.http.protocol.HttpContext;
 
 /**
  * Adds system proxy credentials only while selecting authentication for the current route's proxy.
+ *
+ * @since 1.9.28
  */
 final class SystemProxyAuthenticationStrategy extends ProxyAuthenticationStrategy implements HttpRequestInterceptor {
     private static final String SYSTEM_PROXY = SystemProxyAuthenticationStrategy.class.getName() + ".proxy";
