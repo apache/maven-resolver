@@ -134,7 +134,7 @@ One consequence is not so obvious. It involves the `maven-assembly-plugin`. You 
 
 If you assemble from within the project, for example in the package phase, the packaging will be incomplete. Guava will be missing. If you assemble from outside the project, the assembly will contain Guava. This includes assembly from a subsequent module of the build or from a downstream dependency.
 
-This is a [Maven Assembly plugin bug](https://issues.apache.org/jira/browse/MASSEMBLY-1008). [MRESOLVER-391](https://issues.apache.org/jira/browse/MRESOLVER-391) explains it in part. The Maven Assembly plugin considers the "test graph" of the project. Then it "cherry-picks" the runtime scoped nodes from the graph. This is wrong in this case.
+This behavior was tracked as a [Maven Assembly plugin bug](https://issues.apache.org/jira/browse/MASSEMBLY-1008), which was fixed in Assembly 3.7.0. The related [MRESOLVER-391](https://issues.apache.org/jira/browse/MRESOLVER-391) issue remains useful background, but it does not describe an unresolved bug in current Assembly releases. The Maven Assembly plugin previously considered the "test graph" of the project and then "cherry-picked" the runtime-scoped nodes from that graph.
 
 You must build different graphs for the "runtime" and "test" classpath. The Assembly plugin is a Mojo. It requests the "test graph". Then it reads the configuration (the assembly descriptor). It learns the required scopes at this point. Then it "filters" the resolved "test graph" for the runtime scopes.
 
