@@ -94,8 +94,8 @@ All the expected checksums above are used only in transport. They relate to URLs
 
 Trusted checksums map almost one-to-one into the Provided strategy. `TrustedChecksumsSource` in the Resolver implementation *provides* Trusted checksums to the Resolver.
 
-Transport independence is the biggest advantage of Trusted Checksums. They work in places such as ArtifactResolver post-processing where there is no transport. This functionality verifies all the resolved artifacts against the Trusted Checksums. The user provides a known checksum that can be cryptographically strong.
-This helps when the user cannot trust the local repository because an unknown or untrusted party can write to the local repository.
+Transport independence is the biggest advantage of Trusted Checksums. They work in places such as ArtifactResolver post-processing where there is no transport. Unlike checksums obtained from the artifact repository, Trusted Checksums are supplied independently of artifact transport.
+This functionality verifies all the resolved artifacts against the Trusted Checksums. The user provides a known checksum that can be cryptographically strong. When that checksum is created in a known safe environment and distributed through a trusted channel, it can detect changes made by an unknown or untrusted party with access to the local repository.
 
 You can record the checksums with the Trusted Checksum post-processor. For example, run it in a known and safe environment to record the current checksums. Distribute the produced checksum within your organization. Then the build fails if at some point in the future the artifact changes.
 
