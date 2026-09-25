@@ -127,6 +127,14 @@ public class IpcClient {
         }
     }
 
+    private synchronized DataInputStream getInput() {
+        return input;
+    }
+
+    private synchronized DataOutputStream getOutput() {
+        return output;
+    }
+
     SocketChannel createClient() throws IOException {
         SocketFamily family =
                 SocketFamily.valueOf(System.getProperty(IpcServer.SYSTEM_PROP_FAMILY, IpcServer.DEFAULT_FAMILY));
@@ -317,7 +325,7 @@ public class IpcClient {
     void receive() {
         try {
             while (true) {
-                DataInputStream in = input;
+                DataInputStream in = getInput();
                 if (in == null) {
                     throw new IOException("Connection closed");
                 }
@@ -346,7 +354,7 @@ public class IpcClient {
 
     List<String> send(List<String> request, long time, TimeUnit unit) throws TimeoutException, IOException {
         ensureInitialized();
-        DataOutputStream out = output;
+        DataOutputStream out = getOutput();
         if (out == null) {
             throw new IOException("Connection closed");
         }
