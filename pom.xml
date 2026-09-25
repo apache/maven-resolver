@@ -244,6 +244,20 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <configuration>
+            <inputExcludes combine.children="append">
+
+              <exclude>src/test/resources/**/*.ini</exclude>
+              <exclude>src/test/resources/**/*.txt</exclude>
+              <exclude>src/test/resources/ssl/*-store</exclude>
+              <exclude>.gitattributes</exclude>
+
+            </inputExcludes>
+          </configuration>
+        </plugin>
+        <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
           <version>0.26.2</version>
@@ -446,18 +460,7 @@
             </execution>
           </executions>
         </plugin>
-        <plugin>
-          <groupId>org.apache.rat</groupId>
-          <artifactId>apache-rat-plugin</artifactId>
-          <configuration>
-            <excludes combine.children="append">
-              <exclude>src/test/resources/**/*.ini</exclude>
-              <exclude>src/test/resources/**/*.txt</exclude>
-              <exclude>src/test/resources/ssl/*-store</exclude>
-              <exclude>.gitattributes</exclude>
-            </excludes>
-          </configuration>
-        </plugin>
+
         <plugin>
           <groupId>biz.aQute.bnd</groupId>
           <artifactId>bnd-maven-plugin</artifactId>
@@ -569,6 +572,7 @@
   </build>
 
   <profiles>
+
     <profile>
       <id>reporting</id>
       <reporting>
