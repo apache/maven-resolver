@@ -68,7 +68,7 @@ public final class CollectResult {
      *
      * @return The exceptions that occurred, never {@code null}.
      */
-    public List<Exception> getExceptions() {
+    public synchronized List<Exception> getExceptions() {
         return exceptions;
     }
 
@@ -78,7 +78,7 @@ public final class CollectResult {
      * @param exception The exception to record, may be {@code null}.
      * @return This result for chaining, never {@code null}.
      */
-    public CollectResult addException(Exception exception) {
+    public synchronized CollectResult addException(Exception exception) {
         if (exception != null) {
             if (exceptions.isEmpty()) {
                 exceptions = new ArrayList<>();
@@ -93,7 +93,7 @@ public final class CollectResult {
      *
      * @return The dependency cycles in the (raw) graph, never {@code null}.
      */
-    public List<DependencyCycle> getCycles() {
+    public synchronized List<DependencyCycle> getCycles() {
         return cycles;
     }
 
@@ -103,7 +103,7 @@ public final class CollectResult {
      * @param cycle The dependency cycle to record, may be {@code null}.
      * @return This result for chaining, never {@code null}.
      */
-    public CollectResult addCycle(DependencyCycle cycle) {
+    public synchronized CollectResult addCycle(DependencyCycle cycle) {
         if (cycle != null) {
             if (cycles.isEmpty()) {
                 cycles = new ArrayList<>();
