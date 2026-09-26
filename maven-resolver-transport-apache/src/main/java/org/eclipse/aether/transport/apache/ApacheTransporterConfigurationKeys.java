@@ -35,7 +35,10 @@ public final class ApacheTransporterConfigurationKeys {
     /**
      * If enabled, underlying Apache HttpClient will use system properties as well to configure itself (typically
      * used to set up HTTP Proxy via Java system properties). See HttpClientBuilder for used properties. This mode
-     * is not recommended, better use documented ways of configuration instead.
+     * is not recommended, better use documented ways of configuration instead. Proxy authentication may use
+     * {@code http.proxyUser}/{@code http.proxyPassword} or {@code https.proxyUser}/{@code https.proxyPassword}
+     * when the corresponding proxy host and port match. Explicit Resolver credentials take precedence;
+     * system proxy credentials are never used for repository authentication.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
