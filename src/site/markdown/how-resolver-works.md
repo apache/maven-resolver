@@ -32,8 +32,8 @@ models and implementations of missing components.
 
 **Artifacts** and **repositories** are at the core of Resolver.
 An *artifact* is a binary resource with Maven coordinates.
-Usually it is a JAR file, but it can be anything as long as Maven coordinates can
-address it.
+Most commonly, it is a JAR file or a pom.xml file, 
+but it can be anything as long as Maven coordinates can address it.
 The Maven coordinates are
 `<groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>`.
 The default value of `extension` is `jar`.
