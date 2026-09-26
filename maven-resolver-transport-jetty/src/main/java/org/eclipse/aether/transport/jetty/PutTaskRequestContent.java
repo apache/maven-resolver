@@ -243,8 +243,8 @@ public class PutTaskRequestContent extends ByteBufferRequestContent implements R
                     return last;
                 }
                 lockedSetTerminal(Content.Chunk.EOF);
-            } catch (Throwable t) {
-                lockedSetTerminal(Content.Chunk.from(t, true));
+            } catch (Exception e) {
+                lockedSetTerminal(Content.Chunk.from(e, true));
             }
         }
         return terminal;
@@ -295,8 +295,8 @@ public class PutTaskRequestContent extends ByteBufferRequestContent implements R
                 offsetRemaining = 0;
                 totalRead = 0;
                 return true;
-            } catch (Throwable t) {
-                lockedSetTerminal(Content.Chunk.from(t, true));
+            } catch (Exception e) {
+                lockedSetTerminal(Content.Chunk.from(e, true));
             }
 
             return true;
