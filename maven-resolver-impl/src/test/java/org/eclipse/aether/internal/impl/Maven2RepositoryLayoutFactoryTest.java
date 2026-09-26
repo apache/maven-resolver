@@ -139,6 +139,39 @@ public class Maven2RepositoryLayoutFactoryTest {
     }
 
     @Test
+    void testArtifactLocation_RejectsGroupIdWithEmptyDotSegments() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact(".leading", "a-i.d", "cls", "ext", "1.0"), false));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("..leading", "a-i.d", "cls", "ext", "1.0"), false));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("g..i.d", "a-i.d", "cls", "ext", "1.0"), false));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("g.i.d.", "a-i.d", "cls", "ext", "1.0"), false));
+    }
+
+    @Test
+    void testArtifactLocation_RejectsSeparatorsAndColon() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0/../x"), false));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> layout.getLocation(new DefaultArtifact("g.i.d", "a-i.d", "cls", "ext", "1.0:1"), false));
+    }
+
+    @Test
+    void testMetadataLocation_RejectsGroupIdWithEmptyDotSegments() {
+        DefaultMetadata metadata =
+                new DefaultMetadata("..leading", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
+        assertThrows(IllegalArgumentException.class, () -> layout.getLocation(metadata, false));
+    }
+
+    @Test
     void testMetadataLocation_RootLevel() {
         DefaultMetadata metadata = new DefaultMetadata("archetype-catalog.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT);
         URI uri = layout.getLocation(metadata, false);

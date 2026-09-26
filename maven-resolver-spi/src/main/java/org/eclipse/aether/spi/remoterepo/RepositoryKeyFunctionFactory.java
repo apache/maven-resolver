@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.spi.remoterepo;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RepositoryKeyFunction;
 
@@ -35,7 +36,30 @@ public interface RepositoryKeyFunctionFactory {
      * @see #repositoryKeyFunction(Class, RepositorySystemSession, String, String)
      * @see org.eclipse.aether.ConfigurationProperties#REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION
      */
-    RepositoryKeyFunction systemRepositoryKeyFunction(RepositorySystemSession session);
+    default RepositoryKeyFunction systemRepositoryKeyFunction(RepositorySystemSession session) {
+        return repositoryKeyFunction(
+                RepositoryKeyFunctionFactory.class,
+                session,
+                ConfigurationProperties.DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION,
+                ConfigurationProperties.REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION);
+    }
+
+    /**
+     * Returns system-wide tracking repository key function.
+     *
+     * @param session The repository session, must not be {@code null}.
+     * @return The repository key function.
+     * @see #repositoryKeyFunction(Class, RepositorySystemSession, String, String)
+     * @see org.eclipse.aether.ConfigurationProperties#REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION
+     * @since 2.0.23
+     */
+    default RepositoryKeyFunction trackingRepositoryKeyFunction(RepositorySystemSession session) {
+        return repositoryKeyFunction(
+                RepositoryKeyFunctionFactory.class,
+                session,
+                ConfigurationProperties.DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION,
+                ConfigurationProperties.REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION);
+    }
 
     /**
      * Method that based on configuration returns the "repository key function". The returned function will be session

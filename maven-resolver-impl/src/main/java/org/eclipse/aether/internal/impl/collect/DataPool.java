@@ -225,7 +225,7 @@ public final class DataPool {
     }
 
     public DescriptorKey toKey(ArtifactDescriptorRequest request) {
-        return new DescriptorKey(request.getArtifact());
+        return new DescriptorKey(request.getArtifact(), request.getRepositories());
     }
 
     public ArtifactDescriptorResult getDescriptor(DescriptorKey key, ArtifactDescriptorRequest request) {
@@ -247,7 +247,20 @@ public final class DataPool {
     }
 
     public void putDescriptor(DescriptorKey key, ArtifactDescriptorException e) {
-        descriptors.intern(key, BadDescriptor.INSTANCE);
+        descriptors.intern(key, new BadDescriptor(e));
+    }
+
+    /**
+     * Returns the failure reason of a previously cached bad descriptor, or {@code null} if the given key does not
+     * map to a cached failure. Only the exception message is retained (not the exception itself), to avoid pinning
+     * the originating request in the session-wide pool.
+     */
+    public String getDescriptorFailure(DescriptorKey key) {
+        Descriptor descriptor = descriptors.get(key);
+        if (descriptor instanceof BadDescriptor) {
+            return ((BadDescriptor) descriptor).reason;
+        }
+        return null;
     }
 
     private List<Dependency> intern(List<Dependency> dependencies) {
@@ -290,10 +303,12 @@ public final class DataPool {
 
     public static final class DescriptorKey {
         private final Artifact artifact;
+        private final List<RemoteRepository> repositories;
         private final int hashCode;
 
-        private DescriptorKey(Artifact artifact) {
+        private DescriptorKey(Artifact artifact, List<RemoteRepository> repositories) {
             this.artifact = artifact;
+            this.repositories = repositories;
             this.hashCode = Objects.hashCode(artifact);
         }
 
@@ -306,7 +321,7 @@ public final class DataPool {
                 return false;
             }
             DescriptorKey that = (DescriptorKey) o;
-            return Objects.equals(artifact, that.artifact);
+            return Objects.equals(artifact, that.artifact) && repositoriesEquals(repositories, that.repositories);
         }
 
         @Override
@@ -316,7 +331,8 @@ public final class DataPool {
 
         @Override
         public String toString() {
-            return getClass().getSimpleName() + "{" + "artifact='" + artifact + '\'' + '}';
+            return getClass().getSimpleName() + "{" + "artifact='" + artifact + '\'' + ", repositories='" + repositories
+                    + '\'' + '}';
         }
     }
 
@@ -361,7 +377,11 @@ public final class DataPool {
 
     static final class BadDescriptor extends Descriptor {
 
-        static final BadDescriptor INSTANCE = new BadDescriptor();
+        final String reason;
+
+        BadDescriptor(ArtifactDescriptorException exception) {
+            this.reason = exception != null ? exception.getMessage() : null;
+        }
 
         public ArtifactDescriptorResult toResult(ArtifactDescriptorRequest request) {
             return NO_DESCRIPTOR;
@@ -426,41 +446,41 @@ public final class DataPool {
                 return false;
             }
             ConstraintKey that = (ConstraintKey) obj;
-            return artifact.equals(that.artifact) && equals(repositories, that.repositories);
-        }
-
-        private static boolean equals(List<RemoteRepository> repos1, List<RemoteRepository> repos2) {
-            if (repos1.size() != repos2.size()) {
-                return false;
-            }
-            for (Iterator<RemoteRepository> it1 = repos1.iterator(), it2 = repos2.iterator();
-                    it1.hasNext() && it2.hasNext(); ) {
-                RemoteRepository repo1 = it1.next();
-                RemoteRepository repo2 = it2.next();
-                if (repo1.isRepositoryManager() != repo2.isRepositoryManager()) {
-                    return false;
-                }
-                if (repo1.isRepositoryManager()) {
-                    if (!equals(repo1.getMirroredRepositories(), repo2.getMirroredRepositories())) {
-                        return false;
-                    }
-                } else if (!repo1.getUrl().equals(repo2.getUrl())) {
-                    return false;
-                } else if (repo1.getPolicy(true).isEnabled()
-                        != repo2.getPolicy(true).isEnabled()) {
-                    return false;
-                } else if (repo1.getPolicy(false).isEnabled()
-                        != repo2.getPolicy(false).isEnabled()) {
-                    return false;
-                }
-            }
-            return true;
+            return artifact.equals(that.artifact) && repositoriesEquals(repositories, that.repositories);
         }
 
         @Override
         public int hashCode() {
             return hashCode;
         }
+    }
+
+    private static boolean repositoriesEquals(List<RemoteRepository> repos1, List<RemoteRepository> repos2) {
+        if (repos1.size() != repos2.size()) {
+            return false;
+        }
+        for (Iterator<RemoteRepository> it1 = repos1.iterator(), it2 = repos2.iterator();
+                it1.hasNext() && it2.hasNext(); ) {
+            RemoteRepository repo1 = it1.next();
+            RemoteRepository repo2 = it2.next();
+            if (repo1.isRepositoryManager() != repo2.isRepositoryManager()) {
+                return false;
+            }
+            if (repo1.isRepositoryManager()) {
+                if (!repositoriesEquals(repo1.getMirroredRepositories(), repo2.getMirroredRepositories())) {
+                    return false;
+                }
+            } else if (!repo1.getUrl().equals(repo2.getUrl())) {
+                return false;
+            } else if (repo1.getPolicy(true).isEnabled()
+                    != repo2.getPolicy(true).isEnabled()) {
+                return false;
+            } else if (repo1.getPolicy(false).isEnabled()
+                    != repo2.getPolicy(false).isEnabled()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     static final class GraphKey {

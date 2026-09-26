@@ -43,13 +43,13 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.RepositorySystemLifecycle;
 import org.eclipse.aether.internal.impl.LocalPathComposer;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.eclipse.aether.util.PathUtils;
 
 import static java.util.Objects.requireNonNull;
 
@@ -57,7 +57,8 @@ import static java.util.Objects.requireNonNull;
  * Compact file {@link FileTrustedChecksumsSourceSupport} implementation that use specified directory as base
  * directory, where it expects a "summary" file named as "checksums.${checksumExt}" for each checksum algorithm.
  * File format is GNU Coreutils compatible: each line holds checksum followed by two spaces and artifact relative path
- * (from local repository root, without leading "./"). This means that trusted checksums summary file can be used to
+ * (from local repository root, without leading "./"). Metadata checksums are covered as well, keyed by the metadata
+ * path composed from the origin repository key (for example {@code g/a/v/maven-metadata-central.xml}). This means that trusted checksums summary file can be used to
  * validate artifacts or generate it using standard GNU tools like GNU {@code sha1sum} is (for BSD derivatives same
  * file can be used with {@code -r} switch).
  * <p>
@@ -126,8 +127,6 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
 
     public static final String CHECKSUMS_FILE_PREFIX = "checksums";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SummaryFileTrustedChecksumsSource.class);
-
     private final LocalPathComposer localPathComposer;
 
     private final RepositorySystemLifecycle repositorySystemLifecycle;
@@ -170,22 +169,49 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
             Artifact artifact,
             ArtifactRepository artifactRepository,
             List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+        return doGetTrustedPathChecksums(
+                session,
+                repositoryKey(session, artifactRepository).subList(0, 1),
+                rk -> localPathComposer.getPathForArtifact(artifact, false),
+                checksumAlgorithmFactories);
+    }
+
+    @Override
+    protected Map<String, String> doGetTrustedMetadataChecksums(
+            RepositorySystemSession session,
+            Metadata metadata,
+            ArtifactRepository artifactRepository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+        return doGetTrustedPathChecksums(
+                session,
+                repositoryKey(session, artifactRepository),
+                rk -> localPathComposer.getPathForMetadata(metadata, rk),
+                checksumAlgorithmFactories);
+    }
+
+    /**
+     * Looks up the trusted checksums for given local-repository style path (the summary file 2nd column), be it
+     * an artifact or a metadata path.
+     */
+    private Map<String, String> doGetTrustedPathChecksums(
+            RepositorySystemSession session,
+            List<String> repoKeys,
+            Function<String, String> pathComposer,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
         final HashMap<String, String> result = new HashMap<>();
         final Path basedir = getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, false);
         if (Files.isDirectory(basedir)) {
-            final String artifactPath = localPathComposer.getPathForArtifact(artifact, false);
             final boolean originAware = isOriginAware(session);
-            for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
-                Path summaryFile = summaryFile(
-                        basedir,
-                        originAware,
-                        repositoryKey(session, artifactRepository),
-                        checksumAlgorithmFactory.getFileExtension());
-                ConcurrentHashMap<String, String> algorithmChecksums =
-                        checksums.computeIfAbsent(summaryFile, f -> loadProvidedChecksums(summaryFile));
-                String checksum = algorithmChecksums.get(artifactPath);
-                if (checksum != null) {
-                    result.put(checksumAlgorithmFactory.getName(), checksum);
+            for (String repoKey : repoKeys) {
+                for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
+                    Path summaryFile =
+                            summaryFile(basedir, originAware, repoKey, checksumAlgorithmFactory.getFileExtension());
+                    ConcurrentHashMap<String, String> algorithmChecksums =
+                            checksums.computeIfAbsent(summaryFile, f -> loadProvidedChecksums(summaryFile));
+                    String checksum = algorithmChecksums.get(pathComposer.apply(repoKey));
+                    if (checksum != null) {
+                        result.putIfAbsent(checksumAlgorithmFactory.getName(), checksum);
+                    }
                 }
             }
         }
@@ -201,7 +227,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                 checksums,
                 getBasedir(session, LOCAL_REPO_PREFIX_DIR, CONFIG_PROP_BASEDIR, true),
                 isOriginAware(session),
-                r -> repositoryKey(session, r));
+                r -> repositoryKey(session, r).get(0));
     }
 
     /**
@@ -211,6 +237,9 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
     private Path summaryFile(Path basedir, boolean originAware, String safeRepositoryId, String checksumExtension) {
         String fileName = CHECKSUMS_FILE_PREFIX;
         if (originAware) {
+            // defense in depth: the repository key is spliced into the summary file name,
+            // so it must be a safe path segment
+            PathUtils.validatePathComponent(safeRepositoryId, "repository key");
             fileName += "-" + safeRepositoryId;
         }
         return basedir.resolve(fileName + "." + checksumExtension);
@@ -230,13 +259,13 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                             String oldChecksum = result.put(artifactPath, newChecksum);
                             if (oldChecksum != null) {
                                 if (Objects.equals(oldChecksum, newChecksum)) {
-                                    LOGGER.warn(
+                                    logger.warn(
                                             "Checksums file '{}' contains duplicate checksums for artifact {}: {}",
                                             summaryFile,
                                             artifactPath,
                                             oldChecksum);
                                 } else {
-                                    LOGGER.warn(
+                                    logger.warn(
                                             "Checksums file '{}' contains different checksums for artifact {}: "
                                                     + "old '{}' replaced by new '{}'",
                                             summaryFile,
@@ -246,14 +275,14 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                                 }
                             }
                         } else {
-                            LOGGER.warn("Checksums file '{}' ignored malformed line '{}'", summaryFile, line);
+                            logger.warn("Checksums file '{}' ignored malformed line '{}'", summaryFile, line);
                         }
                     }
                 }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
-            LOGGER.info("Loaded {} trusted checksums from {}", result.size(), summaryFile);
+            logger.info("Loaded {} trusted checksums from {}", result.size(), summaryFile);
         }
         return result;
     }
@@ -284,27 +313,50 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                 ArtifactRepository artifactRepository,
                 List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
                 Map<String, String> trustedArtifactChecksums) {
-            String artifactPath = localPathComposer.getPathForArtifact(artifact, false);
+            addTrustedPathChecksums(
+                    artifact,
+                    localPathComposer.getPathForArtifact(artifact, false),
+                    artifactRepository,
+                    checksumAlgorithmFactories,
+                    trustedArtifactChecksums);
+        }
+
+        @Override
+        public void addTrustedMetadataChecksums(
+                Metadata metadata,
+                ArtifactRepository artifactRepository,
+                List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
+                Map<String, String> trustedMetadataChecksums) {
+            addTrustedPathChecksums(
+                    metadata,
+                    localPathComposer.getPathForMetadata(metadata, repositoryKeyFunction.apply(artifactRepository)),
+                    artifactRepository,
+                    checksumAlgorithmFactories,
+                    trustedMetadataChecksums);
+        }
+
+        private void addTrustedPathChecksums(
+                Object subject,
+                String path,
+                ArtifactRepository artifactRepository,
+                List<ChecksumAlgorithmFactory> checksumAlgorithmFactories,
+                Map<String, String> trustedChecksums) {
             for (ChecksumAlgorithmFactory checksumAlgorithmFactory : checksumAlgorithmFactories) {
                 Path summaryFile = summaryFile(
                         basedir,
                         originAware,
                         repositoryKeyFunction.apply(artifactRepository),
                         checksumAlgorithmFactory.getFileExtension());
-                String checksum = requireNonNull(trustedArtifactChecksums.get(checksumAlgorithmFactory.getName()));
+                String checksum = requireNonNull(trustedChecksums.get(checksumAlgorithmFactory.getName()));
 
                 String oldChecksum = cache.computeIfAbsent(summaryFile, k -> loadProvidedChecksums(summaryFile))
-                        .put(artifactPath, checksum);
+                        .put(path, checksum);
 
                 if (oldChecksum == null) {
                     changedChecksums.put(summaryFile, Boolean.TRUE); // new
                 } else if (!Objects.equals(oldChecksum, checksum)) {
                     changedChecksums.put(summaryFile, Boolean.TRUE); // replaced
-                    LOGGER.info(
-                            "Trusted checksum for artifact {} replaced: old {}, new {}",
-                            artifact,
-                            oldChecksum,
-                            checksum);
+                    logger.info("Trusted checksum for {} replaced: old {}, new {}", subject, oldChecksum, checksum);
                 }
             }
         }
@@ -331,7 +383,7 @@ public final class SummaryFileTrustedChecksumsSource extends FileTrustedChecksum
                     result.putAll(loadProvidedChecksums(summaryFile));
                     result.putAll(recordedLines);
 
-                    LOGGER.info("Saving {} checksums to '{}'", result.size(), summaryFile);
+                    logger.info("Saving {} checksums to '{}'", result.size(), summaryFile);
                     pathProcessor.writeWithBackup(
                             summaryFile,
                             result.entrySet().stream()

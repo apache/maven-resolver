@@ -225,7 +225,7 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
 
                 if (!session.isIgnoreArtifactDescriptorRepositories()) {
                     repositories = remoteRepositoryManager.aggregateRepositories(
-                            session, repositories, descriptorResult.getRepositories(), true);
+                            session, repositories, descriptorResult.getRepositories(), true, true);
                 }
                 dependencies = mergeDeps(dependencies, descriptorResult.getDependencies());
                 managedDependencies = mergeDeps(managedDependencies, descriptorResult.getManagedDependencies());
@@ -534,6 +534,17 @@ public abstract class DependencyCollectorDelegate implements DependencyCollector
                 return null;
             }
         } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
+            // A previously failed descriptor resolution (same artifact AND same repositories) was replayed from
+            // the cache: record the failure like the non-cached path does, instead of silently pruning the subtree.
+            String reason = pool.getDescriptorFailure(key);
+            results.addException(
+                    d,
+                    new ArtifactDescriptorException(
+                            new ArtifactDescriptorResult(descriptorRequest),
+                            "Artifact descriptor resolution of " + descriptorRequest.getArtifact()
+                                    + " already failed in this session"
+                                    + (reason != null && !reason.isEmpty() ? ": " + reason : "")),
+                    nodes);
             return null;
         }
         return descriptorResult;

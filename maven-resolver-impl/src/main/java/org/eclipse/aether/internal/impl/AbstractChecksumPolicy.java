@@ -55,7 +55,11 @@ abstract class AbstractChecksumPolicy implements ChecksumPolicy {
             throws ChecksumFailureException {
         requireNonNull(algorithm, "algorithm cannot be null");
         requireNonNull(exception, "exception cannot be null");
-        logger.debug("Could not validate {} checksum for {}", algorithm, resource.getResourceName(), exception);
+        logger.debug(
+                "Could not validate {} checksum for {}",
+                algorithm,
+                LogSanitizer.sanitize(resource.getResourceName()),
+                exception);
     }
 
     @Override

@@ -21,17 +21,20 @@ package org.eclipse.aether.internal.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -206,6 +209,33 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
+    void testResolveRemoteSnapshotRegistersNormalizedCopy() throws ArtifactResolutionException {
+        Artifact timestamped = new DefaultArtifact("gid", "aid", "", "ext", "1.0-20110329.221805-4");
+        connector.setExpectGet(timestamped);
+
+        ArtifactRequest request = new ArtifactRequest(timestamped, null, "");
+        request.addRepository(new RemoteRepository.Builder("id", "default", "file:///").build());
+
+        ArtifactResult result = resolver.resolveArtifact(session, request);
+
+        assertTrue(result.getExceptions().isEmpty());
+
+        // snapshot normalization (enabled by default) materialized a base-version copy of the download
+        Artifact resolved = result.getArtifact();
+        assertNotNull(resolved.getFile());
+        assertTrue(resolved.getFile().getName().contains("1.0-SNAPSHOT"));
+
+        // both the timestamped download and its base-version copy must carry the repository provenance,
+        // otherwise the untracked copy is later accepted as if it were locally installed
+        assertEquals(2, lrm.getArtifactRegistration().size());
+        assertTrue(
+                lrm.getArtifactRegistration().stream().anyMatch(a -> "1.0-20110329.221805-4".equals(a.getVersion())));
+        assertTrue(lrm.getArtifactRegistration().stream().anyMatch(a -> "1.0-SNAPSHOT".equals(a.getVersion())));
+
+        connector.assertSeenExpected();
+    }
+
+    @Test
     void testResolveRemoteArtifactUnsuccessful() {
         RecordingRepositoryConnector connector = new RecordingRepositoryConnector() {
 
@@ -246,6 +276,56 @@ public class DefaultArtifactResolverTest {
             Artifact resolved = result.getArtifact();
             assertNull(resolved);
         }
+    }
+
+    private List<Boolean> resolveCachedFromForeignRepository() throws IOException, ArtifactResolutionException {
+        TestFileUtils.writeString(
+                new File(lrm.getRepository().getBasedir(), lrm.getPathForLocalArtifact(artifact)), "cached");
+        lrm.setArtifactAvailability(artifact, false);
+
+        List<Boolean> existenceChecks = new ArrayList<>();
+        RecordingRepositoryConnector connector = new RecordingRepositoryConnector() {
+
+            @Override
+            public void get(
+                    Collection<? extends ArtifactDownload> artifactDownloads,
+                    Collection<? extends MetadataDownload> metadataDownloads) {
+                for (ArtifactDownload download : artifactDownloads) {
+                    existenceChecks.add(download.isExistenceCheck());
+                }
+                super.get(artifactDownloads, metadataDownloads);
+            }
+        };
+        connector.setExpectGet(artifact);
+        repositoryConnectorProvider.setConnector(connector);
+
+        ArtifactRequest request = new ArtifactRequest(artifact, null, "");
+        request.addRepository(new RemoteRepository.Builder("id", "default", "file:///").build());
+
+        ArtifactResult result = resolver.resolveArtifact(session, request);
+
+        assertTrue(result.getExceptions().isEmpty());
+        assertNotNull(result.getArtifact().getFile());
+        assertEquals(1, lrm.getArtifactRegistration().size());
+        connector.assertSeenExpected();
+
+        return existenceChecks;
+    }
+
+    @Test
+    void testResolveCachedFromForeignRepositoryDownloadsByDefault() throws IOException, ArtifactResolutionException {
+        List<Boolean> existenceChecks = resolveCachedFromForeignRepository();
+
+        assertEquals(Collections.singletonList(Boolean.FALSE), existenceChecks);
+    }
+
+    @Test
+    void testResolveCachedFromForeignRepositoryLegacyExistenceCheck() throws IOException, ArtifactResolutionException {
+        session.setConfigProperty(DefaultArtifactResolver.CONFIG_PROP_EXISTENCE_CHECK_RELABEL, true);
+
+        List<Boolean> existenceChecks = resolveCachedFromForeignRepository();
+
+        assertEquals(Collections.singletonList(Boolean.TRUE), existenceChecks);
     }
 
     @Test
@@ -1004,5 +1084,82 @@ public class DefaultArtifactResolverTest {
                 assertThrows(ArtifactResolutionException.class, () -> resolver.resolveArtifact(session, request));
         // message should contain present=true, available=false, filter message
         assertTrue(ex.getMessage().contains("gid:aid:ext:ver (present, but unavailable): REFUSED"));
+    }
+
+    private static SyncContext countingSyncContext(AtomicInteger closeCount) {
+        return new SyncContext() {
+            @Override
+            public void acquire(
+                    Collection<? extends Artifact> artifacts,
+                    Collection<? extends org.eclipse.aether.metadata.Metadata> metadatas) {}
+
+            @Override
+            public void close() {
+                closeCount.incrementAndGet();
+            }
+        };
+    }
+
+    @Test
+    void testSyncContextIsClosedExactlyOnce() throws Exception {
+        final AtomicInteger sharedCloses = new AtomicInteger(0);
+        final AtomicInteger exclusiveCloses = new AtomicInteger(0);
+        final SyncContext sharedContext = countingSyncContext(sharedCloses);
+        final SyncContext exclusiveContext = countingSyncContext(exclusiveCloses);
+
+        resolver = new DefaultArtifactResolver(
+                new PathProcessorSupport(),
+                new StubRepositoryEventDispatcher(),
+                new StubVersionResolver(),
+                new StaticUpdateCheckManager(false),
+                repositoryConnectorProvider,
+                new StubRemoteRepositoryManager(),
+                (s, shared) -> shared ? sharedContext : exclusiveContext,
+                new DefaultOfflineController(),
+                Collections.emptyMap(),
+                remoteRepositoryFilterManager);
+
+        ArtifactRequest request = new ArtifactRequest(artifact, null, "");
+
+        assertThrows(ArtifactResolutionException.class, () -> resolver.resolveArtifact(session, request));
+
+        // distinct instances for the shared and the exclusive context: each must be closed exactly once
+        assertEquals(1, sharedCloses.get(), "Shared SyncContext should be closed exactly once");
+        assertEquals(1, exclusiveCloses.get(), "Exclusive SyncContext should be closed exactly once");
+    }
+
+    @Test
+    void testSharedSyncContextIsClosedWhenExclusiveCannotBeCreated() throws Exception {
+        final AtomicInteger sharedCloses = new AtomicInteger(0);
+        final SyncContext sharedContext = countingSyncContext(sharedCloses);
+
+        resolver = new DefaultArtifactResolver(
+                new PathProcessorSupport(),
+                new StubRepositoryEventDispatcher(),
+                new StubVersionResolver(),
+                new StaticUpdateCheckManager(false),
+                repositoryConnectorProvider,
+                new StubRemoteRepositoryManager(),
+                (s, shared) -> {
+                    if (shared) {
+                        return sharedContext;
+                    }
+                    throw new IllegalStateException("no exclusive context");
+                },
+                new DefaultOfflineController(),
+                Collections.emptyMap(),
+                remoteRepositoryFilterManager);
+
+        ArtifactRequest request = new ArtifactRequest(artifact, null, "");
+
+        try {
+            resolver.resolveArtifact(session, request);
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
+
+        assertEquals(
+                1, sharedCloses.get(), "Shared SyncContext should be closed when the exclusive one cannot be created");
     }
 }

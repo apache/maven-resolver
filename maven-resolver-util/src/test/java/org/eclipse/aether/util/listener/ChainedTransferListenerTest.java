@@ -19,8 +19,13 @@
 package org.eclipse.aether.util.listener;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.transfer.AbstractTransferListener;
+import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
+import org.eclipse.aether.transfer.TransferResource;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,5 +40,45 @@ public class ChainedTransferListenerTest {
             assertNotNull(
                     ChainedTransferListener.class.getDeclaredMethod(method.getName(), method.getParameterTypes()));
         }
+    }
+
+    @Test
+    void testListenerExceptionDoesNotBlockSubsequentListeners() {
+        AtomicBoolean secondListenerCalled = new AtomicBoolean(false);
+        AtomicBoolean errorHandlerCalled = new AtomicBoolean(false);
+
+        TransferListener faultyListener = new AbstractTransferListener() {
+            @Override
+            public void transferSucceeded(TransferEvent event) {
+                throw new RuntimeException("Simulated transfer listener failure");
+            }
+        };
+
+        TransferListener normalListener = new AbstractTransferListener() {
+            @Override
+            public void transferSucceeded(TransferEvent event) {
+                secondListenerCalled.set(true);
+            }
+        };
+
+        ChainedTransferListener chained = new ChainedTransferListener(faultyListener, normalListener) {
+            @Override
+            protected void handleError(TransferEvent event, TransferListener listener, RuntimeException error) {
+                super.handleError(event, listener, error);
+                errorHandlerCalled.set(true);
+            }
+        };
+
+        TransferResource resource = new TransferResource(
+                "https://repo.example.com", "path/to/artifact.jar", "path/to/artifact.jar", (java.io.File) null, null);
+        TransferEvent event = new TransferEvent.Builder(TestUtils.newSession(), resource)
+                .setType(TransferEvent.EventType.SUCCEEDED)
+                .setRequestType(TransferEvent.RequestType.GET)
+                .build();
+
+        assertDoesNotThrow(() -> chained.transferSucceeded(event));
+        assertTrue(errorHandlerCalled.get(), "handleError should have been invoked for faulty listener");
+        assertTrue(
+                secondListenerCalled.get(), "Subsequent listener should still receive event despite previous failure");
     }
 }

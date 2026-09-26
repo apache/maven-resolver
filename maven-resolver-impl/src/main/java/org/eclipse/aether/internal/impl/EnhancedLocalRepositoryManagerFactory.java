@@ -22,6 +22,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.IOException;
+
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
@@ -58,6 +60,51 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     public static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
 
+    /**
+     * Whether to verify that the real (on-disk) path of a locally cached artifact matches the requested path
+     * spelling before the artifact is used. On case-insensitive or case/normalization-preserving filesystems (the
+     * macOS and Windows defaults) a file cached for one set of coordinates also answers lookups for coordinates
+     * that differ only in case or Unicode normalization, while the repository tracking data is compared exactly:
+     * such an aliased file is treated as present-but-untracked and accepted with no download and no checksum
+     * verification, letting case-colliding coordinates poison distinct GAVs. When enabled (the default), an
+     * artifact whose on-disk path spelling differs from the requested one is treated as not present, forcing a
+     * proper download. Disable only if the local repository intentionally contains symbolic links below its base
+     * directory (a symlinked base directory itself is supported either way).
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_VERIFY_REAL_PATH}
+     * @since 2.0.23
+     */
+    public static final String CONFIG_PROP_VERIFY_REAL_PATH = CONFIG_PROPS_PREFIX + "verifyRealPath";
+
+    public static final boolean DEFAULT_VERIFY_REAL_PATH = true;
+
+    /**
+     * Marks whether the local repository is meant to be shared (or was shared) with legacy Maven 3.9 or older
+     * versions. Maven 3.9 and older versions suffer from "impostor" problem, where artifact and metadata origin was
+     * tracked only by the remote repository ID, where two remote repositories may share same ID but different URLs,
+     * in fact they may be completely unrelated to each other (ID clash by mistake), or, it may be due some sort of
+     * "impostor" attempt, where a malicious repository may pretend like some other repository.
+     * Right now, we intentionally default to {@code true} to ease users transitioning, and Resolver 2 will retain
+     * this "old" behavior (will observe legacy tracking entries and will store remote metadata as before). But,
+     * at some point in the future, the default value will be changed to {@code false} (and same change is warmly
+     * recommended for modern Maven users, who do not intend to share local repository with older Maven versions).
+     * When this configuration set to {@code false}, the "repository key" is not ID only anymore, but is changed
+     * to {@code $id-sha1($url)} form, and this key is used in "origin tracking" entries and in caching remote
+     * Maven Repository Metadata XML files as well, guaranteeing they are not mixed in case of same IDs.
+     *
+     * @see ConfigurationProperties#REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION
+     * @see ConfigurationProperties#REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_LEGACY_LOCAL_REPOSITORY}
+     * @since 2.0.23
+     */
+    public static final String CONFIG_PROP_LEGACY_LOCAL_REPOSITORY = CONFIG_PROPS_PREFIX + "legacyLocalRepository";
+
+    public static final boolean DEFAULT_LEGACY_LOCAL_REPOSITORY = true;
+
     private float priority = 10.0f;
 
     private final LocalPathComposer localPathComposer;
@@ -93,15 +140,22 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                 || trackingFilename.contains("..")) {
             trackingFilename = DEFAULT_TRACKING_FILENAME;
         }
+        boolean legacyLocalRepository =
+                ConfigUtils.getBoolean(session, DEFAULT_LEGACY_LOCAL_REPOSITORY, CONFIG_PROP_LEGACY_LOCAL_REPOSITORY);
 
         if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
-            return new EnhancedLocalRepositoryManager(
-                    repository.getBasePath(),
-                    localPathComposer,
-                    repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session),
-                    trackingFilename,
-                    trackingFileManager,
-                    localPathPrefixComposerFactory.createComposer(session));
+            try {
+                return new EnhancedLocalRepositoryManager(
+                        repository.getBasePath(),
+                        localPathComposer,
+                        repositoryKeyFunctionFactory.trackingRepositoryKeyFunction(session),
+                        trackingFilename,
+                        legacyLocalRepository,
+                        trackingFileManager,
+                        localPathPrefixComposerFactory.createComposer(session));
+            } catch (IOException e) {
+                throw new NoLocalRepositoryManagerException(repository, e);
+            }
         } else {
             throw new NoLocalRepositoryManagerException(repository);
         }

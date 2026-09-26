@@ -22,10 +22,12 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,7 +47,7 @@ import static java.util.Objects.requireNonNull;
 public class PathProcessorSupport implements PathProcessor {
     /**
      * Logic borrowed from Commons-Lang3: we really need only this, to decide do we NIO2 file ops or not.
-     * For some reason non-NIO2 works better on Windows.
+     * On Windows the final move needs retry/staging logic, see {@link #retryingMove(Path, Path, StandardCopyOption[])}.
      */
     protected static final boolean IS_WINDOWS =
             System.getProperty("os.name", "unknown").startsWith("Windows");
@@ -55,6 +57,19 @@ public class PathProcessorSupport implements PathProcessor {
      */
     protected static final boolean ATOMIC_MOVE =
             Boolean.parseBoolean(System.getProperty(PathProcessor.class.getName() + "ATOMIC_MOVE", "true"));
+
+    /**
+     * The number of attempts for the final move on Windows, where the move target may be transiently locked by a
+     * virus scanner, an indexer or a concurrent reader.
+     */
+    protected static final int WINDOWS_MOVE_ATTEMPTS =
+            Math.max(1, Integer.getInteger(PathProcessor.class.getName() + "WINDOWS_MOVE_ATTEMPTS", 5));
+
+    /**
+     * The delay in milliseconds applied between the move attempts on Windows.
+     */
+    protected static final long WINDOWS_MOVE_RETRY_DELAY =
+            Long.getLong(PathProcessor.class.getName() + "WINDOWS_MOVE_RETRY_DELAY", 50L);
 
     @Override
     public boolean setLastModified(Path path, long value) throws IOException {
@@ -172,7 +187,7 @@ public class PathProcessorSupport implements PathProcessor {
                 }
                 : new StandardCopyOption[] {StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES};
         if (IS_WINDOWS) {
-            classicCopy(source, target);
+            retryingMove(source, target, copyOption);
         } else {
             Files.move(source, target, copyOption);
         }
@@ -223,7 +238,7 @@ public class PathProcessorSupport implements PathProcessor {
             public void close() throws IOException {
                 if (wantsMove.get()) {
                     if (IS_WINDOWS) {
-                        classicCopy(tempFile, file);
+                        retryingMove(tempFile, file, copyOption);
                     } else {
                         Files.move(tempFile, file, copyOption);
                     }
@@ -234,7 +249,67 @@ public class PathProcessorSupport implements PathProcessor {
     }
 
     /**
-     * On Windows we use pre-NIO2 way to copy files, as for some reason it works. Beat me why.
+     * Moves the source file to the target path without ever truncating the target in place: the content visible at
+     * the target path is either the old file or the complete new file, never a partially written one.
+     * <p>
+     * Historically, on Windows the final move was implemented by opening the target path with a truncating stream
+     * and copying the source into it ({@link #classicCopy(Path, Path)}). That left a window during which a
+     * concurrent reader (for example a forked JVM resolving the same artifact) or an untimely process kill would
+     * observe, or durably leave behind, a truncated file at the final path - after checksum validation has already
+     * happened, so the torn content would from then on be trusted as verified. Instead, this method attempts the
+     * rename a bounded number of times ({@link #WINDOWS_MOVE_ATTEMPTS}, file locking by virus scanners, indexers or
+     * concurrent readers is transient on Windows), and if the file system refuses an atomic move (for example when
+     * source and target are on different stores), the source is first staged into a collocated temporary file next
+     * to the target and then renamed into place - the target path itself is never opened for writing.
+     */
+    protected void retryingMove(Path source, Path target, StandardCopyOption[] copyOptions) throws IOException {
+        FileSystemException lastException = null;
+        for (int attempt = 0; attempt < WINDOWS_MOVE_ATTEMPTS; attempt++) {
+            try {
+                fileSystemMove(source, target, copyOptions);
+                return;
+            } catch (AtomicMoveNotSupportedException e) {
+                lastException = e;
+                break; // retrying will not help; stage a collocated copy instead, see below
+            } catch (FileSystemException e) {
+                // covers AccessDeniedException and sharing violations: transient on Windows
+                lastException = e;
+                try {
+                    Thread.sleep(WINDOWS_MOVE_RETRY_DELAY);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    InterruptedIOException interrupted =
+                            new InterruptedIOException("Interrupted while moving " + source + " to " + target);
+                    interrupted.initCause(ie);
+                    interrupted.addSuppressed(e);
+                    throw interrupted;
+                }
+            }
+        }
+        if (lastException instanceof AtomicMoveNotSupportedException) {
+            Path staged = target.resolveSibling(target.getFileName() + "."
+                    + Long.toUnsignedString(ThreadLocalRandom.current().nextLong()) + ".tmp");
+            try {
+                classicCopy(source, staged);
+                fileSystemMove(staged, target, copyOptions);
+                return;
+            } finally {
+                Files.deleteIfExists(staged);
+            }
+        }
+        throw lastException;
+    }
+
+    /**
+     * Testable seam for {@link Files#move(Path, Path, java.nio.file.CopyOption...)}.
+     */
+    protected void fileSystemMove(Path source, Path target, StandardCopyOption... copyOptions) throws IOException {
+        Files.move(source, target, copyOptions);
+    }
+
+    /**
+     * Pre-NIO2 way to copy files. Important: this method must never be pointed at a "final" (published) path, as it
+     * opens the target with truncation; callers stage into a temporary file and rename into place instead.
      */
     protected void classicCopy(Path source, Path target) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(1024 * 32);

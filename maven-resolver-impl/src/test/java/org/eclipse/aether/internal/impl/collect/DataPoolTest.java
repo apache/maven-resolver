@@ -24,6 +24,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
@@ -60,6 +61,68 @@ public class DataPoolTest {
         assertEquals(result.getManagedDependencies(), cached.getManagedDependencies());
         assertEquals(result.getRepositories(), cached.getRepositories());
         assertEquals(result.getAliases(), cached.getAliases());
+    }
+
+    @Test
+    void testDescriptorCachingIsRepositoryScoped() {
+        RemoteRepository repoA =
+                new RemoteRepository.Builder("repo-a", "default", "https://repo-a.example.com/").build();
+        RemoteRepository repoB =
+                new RemoteRepository.Builder("repo-b", "default", "https://repo-b.example.com/").build();
+
+        ArtifactDescriptorRequest requestA = new ArtifactDescriptorRequest();
+        requestA.setArtifact(new DefaultArtifact("gid:aid:1"));
+        requestA.setRepositories(Collections.singletonList(repoA));
+        ArtifactDescriptorResult result = new ArtifactDescriptorResult(requestA);
+        result.setArtifact(requestA.getArtifact());
+
+        DataPool pool = newDataPool();
+        pool.putDescriptor(pool.toKey(requestA), result);
+
+        // same artifact, same repositories (equal id + url): must hit
+        ArtifactDescriptorRequest sameAsA = new ArtifactDescriptorRequest();
+        sameAsA.setArtifact(new DefaultArtifact("gid:aid:1"));
+        sameAsA.setRepositories(Collections.singletonList(
+                new RemoteRepository.Builder("repo-a", "default", "https://repo-a.example.com/").build()));
+        assertNotNull(pool.getDescriptor(pool.toKey(sameAsA), sameAsA));
+
+        // same artifact, different repositories: must NOT replay the cached descriptor
+        ArtifactDescriptorRequest requestB = new ArtifactDescriptorRequest();
+        requestB.setArtifact(new DefaultArtifact("gid:aid:1"));
+        requestB.setRepositories(Collections.singletonList(repoB));
+        assertNull(pool.getDescriptor(pool.toKey(requestB), requestB));
+    }
+
+    @Test
+    void testBadDescriptorCachingIsRepositoryScoped() {
+        RemoteRepository repoA =
+                new RemoteRepository.Builder("repo-a", "default", "https://repo-a.example.com/").build();
+        RemoteRepository repoB =
+                new RemoteRepository.Builder("repo-b", "default", "https://repo-b.example.com/").build();
+
+        ArtifactDescriptorRequest requestA = new ArtifactDescriptorRequest();
+        requestA.setArtifact(new DefaultArtifact("gid:aid:1"));
+        requestA.setRepositories(Collections.singletonList(repoA));
+
+        DataPool pool = newDataPool();
+        DataPool.DescriptorKey keyA = pool.toKey(requestA);
+        pool.putDescriptor(
+                keyA, new ArtifactDescriptorException(new ArtifactDescriptorResult(requestA), "descriptor is bad"));
+
+        // same artifact, same repositories: cached failure replays (as the sentinel) and carries its reason
+        ArtifactDescriptorRequest sameAsA = new ArtifactDescriptorRequest();
+        sameAsA.setArtifact(new DefaultArtifact("gid:aid:1"));
+        sameAsA.setRepositories(Collections.singletonList(
+                new RemoteRepository.Builder("repo-a", "default", "https://repo-a.example.com/").build()));
+        assertSame(DataPool.NO_DESCRIPTOR, pool.getDescriptor(pool.toKey(sameAsA), sameAsA));
+        assertEquals("descriptor is bad", pool.getDescriptorFailure(pool.toKey(sameAsA)));
+
+        // same artifact, different repositories: the failure must NOT be replayed cross-context
+        ArtifactDescriptorRequest requestB = new ArtifactDescriptorRequest();
+        requestB.setArtifact(new DefaultArtifact("gid:aid:1"));
+        requestB.setRepositories(Collections.singletonList(repoB));
+        assertNull(pool.getDescriptor(pool.toKey(requestB), requestB));
+        assertNull(pool.getDescriptorFailure(pool.toKey(requestB)));
     }
 
     @Test

@@ -64,7 +64,7 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
             path.append('.').append(artifact.getExtension());
         }
 
-        return path.toString();
+        return requireContainedPath(path.toString());
     }
 
     @Override
@@ -89,7 +89,26 @@ public final class DefaultLocalPathComposer implements LocalPathComposer {
 
         path.append(insertRepositoryKey(metadata.getType(), repositoryKey));
 
-        return path.toString();
+        return requireContainedPath(path.toString());
+    }
+
+    /**
+     * Defense in depth: the composed path must be relative and must not contain parent-reference or empty
+     * segments, so that resolving it against the local repository base directory always yields a path within
+     * it. The coordinate validation performed on entry should already guarantee this; this is a last-resort
+     * check on the composed result.
+     */
+    private static String requireContainedPath(String path) {
+        if (path.startsWith("/")
+                || path.contains("//")
+                || path.equals("..")
+                || path.startsWith("../")
+                || path.endsWith("/..")
+                || path.contains("/../")) {
+            throw new IllegalArgumentException(
+                    "Invalid coordinates: composed local repository path is not a valid relative path: " + path);
+        }
+        return path;
     }
 
     private String insertRepositoryKey(String metadataType, String repositoryKey) {

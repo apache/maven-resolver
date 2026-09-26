@@ -27,10 +27,12 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.checksums.ProvidedChecksumsSource;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
+import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 
 import static java.util.Objects.requireNonNull;
@@ -78,6 +80,35 @@ public final class TrustedToProvidedChecksumsSourceAdapter implements ProvidedCh
                     if (trustedChecksums != null && !trustedChecksums.isEmpty()) {
                         return trustedChecksums;
                     }
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getProvidedMetadataChecksums(
+            RepositorySystemSession session,
+            MetadataDownload transfer,
+            RemoteRepository repository,
+            List<ChecksumAlgorithmFactory> checksumAlgorithmFactories) {
+        Metadata metadata = transfer.getMetadata();
+        Map<String, String> trustedChecksums;
+        // check for connector repository
+        for (TrustedChecksumsSource trustedChecksumsSource : trustedChecksumsSources.values()) {
+            trustedChecksums = trustedChecksumsSource.getTrustedMetadataChecksums(
+                    session, metadata, repository, checksumAlgorithmFactories);
+            if (trustedChecksums != null && !trustedChecksums.isEmpty()) {
+                return trustedChecksums;
+            }
+        }
+        // if repo above is "mirrorOf", this one kicks in
+        for (RemoteRepository remoteRepository : transfer.getRepositories()) {
+            for (TrustedChecksumsSource trustedChecksumsSource : trustedChecksumsSources.values()) {
+                trustedChecksums = trustedChecksumsSource.getTrustedMetadataChecksums(
+                        session, metadata, remoteRepository, checksumAlgorithmFactories);
+                if (trustedChecksums != null && !trustedChecksums.isEmpty()) {
+                    return trustedChecksums;
                 }
             }
         }

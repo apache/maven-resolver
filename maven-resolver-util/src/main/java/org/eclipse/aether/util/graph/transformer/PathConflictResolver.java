@@ -22,11 +22,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryException;
@@ -42,9 +41,9 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A high-performance dependency graph transformer that resolves version and scope conflicts among dependencies.
- * This is the recommended conflict resolver implementation that provides O(N) performance characteristics,
- * significantly improving upon the O(N²) worst-case performance of {@link ClassicConflictResolver}.
+ * A dependency graph transformer that resolves version and scope conflicts among dependencies.
+ * This resolver builds a cycle-free parallel path tree from the dependency graph, then processes
+ * conflict groups in topologically sorted order to select winners.
  * <p>
  * For a given set of conflicting nodes, one node will be chosen as the winner. How losing nodes are handled
  * depends on the configured verbosity level: they may be removed entirely, have their children removed, or
@@ -52,17 +51,15 @@ import static java.util.Objects.requireNonNull;
  * are determined are controlled by user-supplied implementations of {@link ConflictResolver.VersionSelector}, {@link ConflictResolver.ScopeSelector},
  * {@link ConflictResolver.OptionalitySelector} and {@link ConflictResolver.ScopeDeriver}.
  * <p>
- * <strong>Performance Characteristics:</strong>
- * <ul>
- * <li><strong>Time Complexity:</strong> O(N) where N is the number of dependency nodes</li>
- * <li><strong>Memory Usage:</strong> Creates a parallel tree structure for conflict-free processing</li>
- * <li><strong>Scalability:</strong> Excellent performance on large multi-module projects</li>
- * </ul>
- * <p>
  * <strong>Algorithm Overview:</strong>
  * <ol>
  * <li><strong>Path Tree Construction:</strong> Builds a cycle-free parallel tree structure from the input
- *     dependency graph, where each {@code Path} represents a unique route to a dependency node</li>
+ *     dependency graph, where each {@code Path} represents a unique route to a dependency node.
+ *     To avoid exponential memory use in highly connected graphs, subtree expansion of each
+ *     {@link DependencyNode} instance is bounded: when the same node is reached again via a
+ *     different parent path, a {@code Path} entry is still created for it (so all occurrences
+ *     appear in the conflict partition), but its subtree is only re-traversed if reached at a
+ *     strictly shallower depth than before.</li>
  * <li><strong>Conflict Partitioning:</strong> Groups paths by conflict ID (based on groupId:artifactId:classifier:extension coordinates)</li>
  * <li><strong>Topological Processing:</strong> Processes conflict groups in topologically sorted order</li>
  * <li><strong>Winner Selection:</strong> Uses provided selectors to choose winners within each conflict group</li>
@@ -71,18 +68,9 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * <strong>Key Differences from {@link ClassicConflictResolver}:</strong>
  * <ul>
- * <li><strong>Performance:</strong> O(N) vs O(N²) time complexity</li>
  * <li><strong>Memory Strategy:</strong> Uses parallel tree structure vs in-place graph modification</li>
  * <li><strong>Cycle Handling:</strong> Explicitly breaks cycles during tree construction</li>
  * <li><strong>Processing Order:</strong> Level-by-level from root vs depth-first traversal</li>
- * </ul>
- * <p>
- * <strong>When to Use:</strong>
- * <ul>
- * <li>Default choice for all new projects and Maven 4+ installations</li>
- * <li>Large multi-module projects with many dependencies</li>
- * <li>Performance-critical build environments</li>
- * <li>Any scenario where {@link ClassicConflictResolver} shows performance bottlenecks</li>
  * </ul>
  * <p>
  * <strong>Implementation Note:</strong> This conflict resolver builds a cycle-free "parallel" structure based on the
@@ -311,6 +299,26 @@ public final class PathConflictResolver extends ConflictResolver {
          */
         private final ScopeContext scopeContext;
 
+        /**
+         * Tracks the minimum depth at which each {@link DependencyNode} instance has been expanded
+         * (i.e. its children visited) during {@link #gatherCRNodes(Path)}. Used to bound subtree
+         * re-traversal in highly connected graphs.
+         * <p>
+         * When the same {@link DependencyNode} is reached again via a different parent path, a
+         * {@link Path} entry is always created for it (so all occurrences appear in the conflict
+         * partition for winner selection). The subtree is only re-expanded if the new occurrence
+         * is at a strictly shallower depth than the recorded minimum — ensuring that the shallowest
+         * reachable occurrence drives expansion, while deeper duplicates are skipped.
+         * <p>
+         * Without this guard, a highly connected graph where node X is reachable via N different
+         * parents causes X's subtree to be expanded N times, leading to exponential {@link Path}
+         * creation and {@link OutOfMemoryError} on large multi-module reactors.
+         * <p>
+         * Uses {@link IdentityHashMap} because {@link DependencyNode} instances are shared objects
+         * in the dependency graph — identity equality is both correct and faster than equals/hashCode.
+         */
+        private final Map<DependencyNode, Integer> expandedNodes;
+
         @SuppressWarnings("checkstyle:ParameterNumber")
         private State(
                 ConflictResolver.Verbosity verbosity,
@@ -334,6 +342,7 @@ public final class PathConflictResolver extends ConflictResolver {
             this.partitions = new HashMap<>(conflictIdCount * 4 / 3 + 1);
             this.resolvedIds = new HashMap<>(conflictIdCount * 4 / 3 + 1);
             this.scopeContext = new ScopeContext(null, null);
+            this.expandedNodes = new IdentityHashMap<>();
             this.root = build(node);
         }
 
@@ -353,6 +362,13 @@ public final class PathConflictResolver extends ConflictResolver {
          * Iteratively builds {@link Path} graph by observing each node associated {@link DependencyNode}.
          * Uses an explicit stack instead of recursion to avoid {@link StackOverflowError} on very deep
          * dependency graphs (reported in large multi-module projects with 13+ levels of recursion).
+         * <p>
+         * Subtree expansion of each {@link DependencyNode} instance is bounded: when the same node is
+         * reached again via a different parent path, a {@link Path} entry is still created for it (so
+         * all occurrences appear in the conflict partition for winner selection), but its subtree is only
+         * re-traversed if reached at a strictly shallower depth than before. This prevents exponential
+         * {@link Path} creation in highly connected graphs (e.g. a 813-module reactor where each module
+         * depends on ~9 others).
          */
         private void gatherCRNodes(Path root) throws RepositoryException {
             ArrayList<Path> stack = new ArrayList<>();
@@ -363,9 +379,19 @@ public final class PathConflictResolver extends ConflictResolver {
                 if (!children.isEmpty()) {
                     // add children; we will get back those really added (not causing cycles)
                     List<Path> added = node.addChildren(children);
-                    // push in reverse order so first child is processed first (DFS order)
+                    // push in reverse order so first child is processed first (DFS order),
+                    // but only if this DependencyNode instance hasn't been expanded at a shallower depth
                     for (int i = added.size() - 1; i >= 0; i--) {
-                        stack.add(added.get(i));
+                        Path child = added.get(i);
+                        Integer prevDepth = expandedNodes.get(child.dn);
+                        if (prevDepth == null || child.depth < prevDepth) {
+                            expandedNodes.put(child.dn, child.depth);
+                            stack.add(child);
+                        }
+                        // else: child.dn was already expanded at an equal or shallower depth;
+                        // the Path is already in the partition (created by addChildren), but we
+                        // skip re-expanding its subtree since the existing expansion already covered
+                        // all reachable descendants.
                     }
                 }
             }
@@ -408,11 +434,6 @@ public final class PathConflictResolver extends ConflictResolver {
         private final Path parent;
         // derived
         private final int depth;
-        // Set of conflict IDs on the path from root to this node (inclusive), enabling O(1) cycle detection.
-        // Each node copies its parent's set and adds its own conflictId. Since dependency tree depth is
-        // bounded in practice (< 30), the per-node copy cost is negligible compared to the O(depth)
-        // parent-chain walk it replaces.
-        private final Set<String> conflictIdsOnPath;
         // Lazy: null for leaf nodes (never populated by addChildren), right-sized for non-leaves.
         // This avoids allocating an ArrayList + backing array for every leaf node in the tree
         // (typically 60-70% of all nodes), saving ~40 bytes per leaf.
@@ -429,12 +450,6 @@ public final class PathConflictResolver extends ConflictResolver {
             this.conflictId = conflictId;
             this.parent = parent;
             this.depth = parent != null ? parent.depth + 1 : 0;
-            if (parent != null) {
-                this.conflictIdsOnPath = new HashSet<>(parent.conflictIdsOnPath);
-            } else {
-                this.conflictIdsOnPath = new HashSet<>();
-            }
-            this.conflictIdsOnPath.add(this.conflictId);
             pull(0);
 
             this.state
@@ -445,12 +460,17 @@ public final class PathConflictResolver extends ConflictResolver {
 
         /**
          * Checks whether the given conflictId appears on the path from this node to the root.
-         * Uses a pre-built {@link HashSet} of conflict IDs accumulated along the path from root,
-         * making this an O(1) operation instead of the previous O(depth) parent-chain walk that
-         * showed up as a JFR hotspot (3.9% CPU) in large multi-module builds.
+         * Walks the parent chain comparing conflict IDs. Since dependency tree depth is bounded
+         * in practice (&lt; 30), each check is fast while avoiding per-node {@link java.util.HashSet}
+         * allocation that was a major JFR hotspot (~45% CPU) in large multi-module builds.
          */
         private boolean hasConflictIdOnPathToRoot(String targetConflictId) {
-            return conflictIdsOnPath.contains(targetConflictId);
+            for (Path current = this; current != null; current = current.parent) {
+                if (targetConflictId.equals(current.conflictId)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /**
@@ -691,10 +711,9 @@ public final class PathConflictResolver extends ConflictResolver {
          * Method will return really added {@link Path} instances, as this class avoids cycles. Those forming a cycle
          * are not recursed (not returned in list), keeping {@link Path} cycle free.
          * <p>
-         * Cycle detection is performed via {@link #hasConflictIdOnPathToRoot(String)} which uses
-         * a pre-built {@link HashSet} of conflict IDs accumulated along the path from root, making
-         * each check O(1). Since dependency tree depth is bounded in practice (< 30), the per-node
-         * set copy cost is negligible.
+         * Cycle detection is performed via {@link #hasConflictIdOnPathToRoot(String)} which walks
+         * the parent chain comparing conflict IDs. Since dependency tree depth is bounded in
+         * practice (&lt; 30), each check is fast while avoiding per-node HashSet allocation.
          * This implies that this conflict resolver, by its nature "redoes" the
          * {@link TransformationContextKeys#CYCLIC_CONFLICT_IDS} calculated by {@link ConflictIdSorter}.
          */

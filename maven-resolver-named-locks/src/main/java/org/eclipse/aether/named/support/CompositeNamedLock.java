@@ -66,29 +66,34 @@ public final class CompositeNamedLock extends NamedLockSupport {
         final String lockKind = shared ? "shared" : "exclusive";
         LOGGER.trace(
                 "{}: Need {} {} lock(s) of {} in {}", key().name(), locks.size(), lockKind, key().resources(), timeStr);
-        for (NamedLock namedLock : locks.values()) {
-            LOGGER.trace("{}: Acquiring {} lock for '{}'", key().name(), lockKind, namedLock.key());
+        try {
+            for (NamedLock namedLock : locks.values()) {
+                LOGGER.trace("{}: Acquiring {} lock for '{}'", key().name(), lockKind, namedLock.key());
 
-            boolean locked;
-            if (shared) {
-                locked = namedLock.lockShared(time, timeUnit);
-            } else {
-                locked = namedLock.lockExclusively(time, timeUnit);
+                boolean locked;
+                if (shared) {
+                    locked = namedLock.lockShared(time, timeUnit);
+                } else {
+                    locked = namedLock.lockExclusively(time, timeUnit);
+                }
+
+                if (!locked) {
+                    LOGGER.trace(
+                            "{}: Failed to acquire {} lock for '{}' in {}",
+                            key().name(),
+                            lockKind,
+                            namedLock.key(),
+                            timeStr);
+
+                    unlockAll(step);
+                    return false;
+                } else {
+                    step.push(namedLock);
+                }
             }
-
-            if (!locked) {
-                LOGGER.trace(
-                        "{}: Failed to acquire {} lock for '{}' in {}",
-                        key().name(),
-                        lockKind,
-                        namedLock.key(),
-                        timeStr);
-
-                unlockAll(step);
-                return false;
-            } else {
-                step.push(namedLock);
-            }
+        } catch (Throwable t) {
+            unlockAll(step);
+            throw t;
         }
         steps.push(step);
         return true;

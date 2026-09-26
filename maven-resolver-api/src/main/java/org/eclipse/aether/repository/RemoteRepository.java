@@ -47,8 +47,8 @@ public final class RemoteRepository implements ArtifactRepository {
      * repository instances usable as keys. Also, in "key usage case" two instances of remote repository are
      * considered equal if following stands: {@code Objects.equals(r1.toBareRemoteRepository(), r2.toBareRemoteRepository())}.
      *
-     * @see org.eclipse.aether.RepositorySystem#newResolutionRepositories(RepositorySystemSession, List)
-     * @see org.eclipse.aether.RepositorySystem#newDeploymentRepository(RepositorySystemSession, RemoteRepository)
+     * @see org.eclipse.aether.RepositorySystem#newResolutionRepositories(org.eclipse.aether.RepositorySystemSession, List)
+     * @see org.eclipse.aether.RepositorySystem#newDeploymentRepository(org.eclipse.aether.RepositorySystemSession, RemoteRepository)
      * @since 2.0.14
      */
     public enum Intent {

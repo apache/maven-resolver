@@ -247,6 +247,15 @@ public final class ConfigurationProperties {
      * specify headers for a specific remote repository by appending the suffix {@code .&lt;repoId&gt;} to this key when
      * storing the headers map. The repository-specific headers map is supposed to be complete, i.e. is not merged with
      * the general headers map.
+     * <p>
+     * <strong>Security note:</strong> configured headers are attached to every request the transport sends for the
+     * repository and, depending on the transport implementation, may be re-sent when the repository responds with
+     * a redirect - including redirects that leave the repository origin. Avoid placing credentials (for example
+     * {@code Authorization}, cookies or private token headers) in this map where repository authentication can be
+     * used instead: repository authentication is negotiated per host. All shipped HTTP transports scope configured
+     * headers to the repository origin by default, see the per-transport {@code originScopedHeaders} configuration
+     * keys ({@code aether.transport.apache.originScopedHeaders}, {@code aether.transport.jdk.originScopedHeaders},
+     * {@code aether.transport.jetty.originScopedHeaders}).
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.util.Map}
@@ -610,6 +619,33 @@ public final class ConfigurationProperties {
     public static final String REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = PREFIX_SYSTEM + "repositoryKeyFunction";
 
     public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid";
+
+    /**
+     * Repository key function used for the provenance tracking entries that this local repository manager
+     * writes and reads. With an ID-only key, a repository declared in an untrusted (for example, transitively
+     * resolved) POM under the same ID as a trusted repository would be tracked as the same origin, potentially
+     * poisoning a shared local repository. The default is therefore the URL-qualified {@code "nid_hurl"}
+     * function.
+     * <p>
+     * This function is scoped to tracking entries, path composition, and split local repository prefixes.
+     * Repository identity used for aggregation and mirror merging continues to follow the system-wide key
+     * function ({@link #REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION}), whose default is unchanged.
+     * If the system-wide function is explicitly configured, tracking follows it (setting it to {@code "nid"}
+     * restores the legacy ID-only behaviour); this property, when set, overrides both.
+     * <p>
+     * Tracking entries written under a different function than the active one never match a lookup and never
+     * enable the untracked-file fallback: affected artifacts are treated as locally unavailable and
+     * re-fetched (with checksum validation) once.
+     *
+     * @since 2.0.23
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}
+     */
+    public static final String REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION =
+            PREFIX_SYSTEM + "trackingRepositoryKeyFunction";
+
+    public static final String DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
 
     /**
      * A flag indicating whether version scheme cache statistics should be printed on JVM shutdown.

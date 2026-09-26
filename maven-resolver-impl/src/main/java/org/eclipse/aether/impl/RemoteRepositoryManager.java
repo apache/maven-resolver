@@ -55,6 +55,44 @@ public interface RemoteRepositoryManager {
             boolean recessiveIsRaw);
 
     /**
+     * Aggregates repository definitions by merging duplicate repositories and optionally applies mirror, proxy and
+     * authentication settings from the supplied session, additionally distinguishing the provenance of the recessive
+     * repository definitions. Repository definitions that originate from a remote artifact descriptor (i.e. a POM
+     * downloaded during dependency collection) are remotely supplied input: implementations may withhold session
+     * authentication from them unless an operator-defined mirror has been selected for them, so that session
+     * authentication is applied only to repositories the operator configured. Repository definitions supplied
+     * by the build itself (e.g. via
+     * {@code RepositorySystem#newResolutionRepositories}) must keep receiving mirror, proxy and authentication
+     * settings as documented for
+     * {@link #aggregateRepositories(RepositorySystemSession, List, List, boolean)}.
+     * <p>
+     * The default implementation ignores the provenance hint and delegates to
+     * {@link #aggregateRepositories(RepositorySystemSession, List, List, boolean)}.
+     *
+     * @param session The repository session during which the repositories will be accessed, must not be {@code null}.
+     * @param dominantRepositories The current list of remote repositories to merge the new definitions into, must not
+     *            be {@code null}.
+     * @param recessiveRepositories The remote repositories to merge into the existing list, must not be {@code null}.
+     * @param recessiveIsRaw {@code true} if the recessive repository definitions have not yet been subjected to mirror,
+     *            proxy and authentication settings, {@code false} otherwise.
+     * @param recessiveIsFromDescriptor {@code true} if the recessive repository definitions were declared by a remote
+     *            artifact descriptor (POM) rather than by the build itself, {@code false} otherwise.
+     * @return The aggregated list of remote repositories, never {@code null}.
+     * @since 2.0.23
+     * @see RepositorySystemSession#getMirrorSelector()
+     * @see RepositorySystemSession#getProxySelector()
+     * @see RepositorySystemSession#getAuthenticationSelector()
+     */
+    default List<RemoteRepository> aggregateRepositories(
+            RepositorySystemSession session,
+            List<RemoteRepository> dominantRepositories,
+            List<RemoteRepository> recessiveRepositories,
+            boolean recessiveIsRaw,
+            boolean recessiveIsFromDescriptor) {
+        return aggregateRepositories(session, dominantRepositories, recessiveRepositories, recessiveIsRaw);
+    }
+
+    /**
      * Gets the effective repository policy for the specified remote repository by merging the applicable
      * snapshot/release policy of the repository with global settings from the supplied session.
      *

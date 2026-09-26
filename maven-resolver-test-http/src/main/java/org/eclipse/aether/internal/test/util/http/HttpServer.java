@@ -199,6 +199,8 @@ public class HttpServer {
 
     private String responseBodyForPut;
 
+    private Map<String, String> serverErrorHeaders = Collections.emptyMap();
+
     public String getHost() {
         return "localhost";
     }
@@ -272,9 +274,11 @@ public class HttpServer {
             } else {
                 httpsConnector = new ServerConnector(server, tls, alpn, http2);
             }
+
             if (port != -1) {
                 httpsConnector.setPort(port);
             }
+
             server.addConnector(httpsConnector);
             try {
                 httpsConnector.start();
@@ -334,7 +338,8 @@ public class HttpServer {
      * @return a port number that is (at probe time) free for both TCP and UDP
      */
     int findFreeTcpAndUdpPort() {
-        for (int i = 0; i < 20; i++) {
+        // 100 retries: 20 was insufficient on busy CI hosts (MRESOLVER-2142)
+        for (int i = 0; i < 100; i++) {
             int port;
             try (ServerSocket serverSocket = new ServerSocket(0)) {
                 port = serverSocket.getLocalPort();
@@ -413,8 +418,14 @@ public class HttpServer {
     }
 
     public HttpServer setServerErrorsBeforeWorks(int serverErrorsBeforeWorks, int errorStatusCode) {
+        return setServerErrorsBeforeWorks(serverErrorsBeforeWorks, errorStatusCode, Collections.emptyMap());
+    }
+
+    public HttpServer setServerErrorsBeforeWorks(
+            int serverErrorsBeforeWorks, int errorStatusCode, Map<String, String> headers) {
         this.serverErrorsBeforeWorks.set(serverErrorsBeforeWorks);
         this.serverErrorStatusCode = errorStatusCode;
+        this.serverErrorHeaders = headers;
         return this;
     }
 
@@ -592,6 +603,9 @@ public class HttpServer {
         public boolean handle(Request request, Response response, Callback callback) throws IOException {
             if (serverErrorsBeforeWorks.getAndDecrement() > 0) {
                 response.setStatus(serverErrorStatusCode);
+                for (Map.Entry<String, String> header : serverErrorHeaders.entrySet()) {
+                    response.getHeaders().add(header.getKey(), header.getValue());
+                }
                 writeResponseBodyMessage(request, response, "Oops, come back later!");
                 return true;
             }
@@ -667,12 +681,14 @@ public class HttpServer {
                     writeResponseBodyMessage(req, response, "Not found");
                     return true;
                 }
+
                 long ifUnmodifiedSince = req.getHeaders().getDateField(HttpHeader.IF_UNMODIFIED_SINCE);
                 if (ifUnmodifiedSince != -1L && file.lastModified() > ifUnmodifiedSince) {
                     response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
                     writeResponseBodyMessage(req, response, "Precondition failed");
                     return true;
                 }
+
                 long offset = 0L;
                 String range = req.getHeaders().get(HttpHeader.RANGE);
                 if (range != null && rangeSupport) {
@@ -691,6 +707,7 @@ public class HttpServer {
                         return true;
                     }
                 }
+
                 response.setStatus((offset > 0L) ? HttpServletResponse.SC_PARTIAL_CONTENT : HttpServletResponse.SC_OK);
                 response.getHeaders().add(HttpHeader.LAST_MODIFIED, DateGenerator.formatDate(file.lastModified()));
                 response.getHeaders().add(HttpHeader.CONTENT_LENGTH, Long.toString(file.length() - offset));

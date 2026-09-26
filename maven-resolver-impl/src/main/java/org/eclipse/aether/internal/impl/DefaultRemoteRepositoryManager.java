@@ -25,8 +25,11 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositorySystemSession;
@@ -42,6 +45,7 @@ import org.eclipse.aether.repository.RepositoryKeyFunction;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.spi.connector.checksum.ChecksumPolicyProvider;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +56,30 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
+
+    private static final String CONFIG_PROPS_PREFIX =
+            ConfigurationProperties.PREFIX_AETHER + "remoteRepositoryManager.";
+
+    /**
+     * Flag indicating whether session authentication (i.e. credentials configured in {@code settings.xml}) may be
+     * applied, matched by plain repository ID, to repositories declared by remote artifact descriptors (POMs) that
+     * are merged into the effective repository list during dependency collection. When disabled (the default),
+     * session authentication is only applied to such a repository when an operator-defined mirror has been selected
+     * for it; if credentials would have matched a descriptor-declared repository, a warning naming the repository ID
+     * and URL is logged instead. Repositories supplied by the build itself (e.g. aggregated via
+     * {@code RepositorySystem#newResolutionRepositories}) are unaffected and keep receiving matching credentials.
+     * Enabling this restores the legacy behavior of applying matching session authentication to descriptor
+     * declared repositories regardless of their provenance.
+     *
+     * @since 2.0.23
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_AUTH_TO_DESCRIPTOR_REPOSITORIES}
+     */
+    public static final String CONFIG_PROP_AUTH_TO_DESCRIPTOR_REPOSITORIES =
+            CONFIG_PROPS_PREFIX + "authToDescriptorRepositories";
+
+    public static final boolean DEFAULT_AUTH_TO_DESCRIPTOR_REPOSITORIES = false;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRemoteRepositoryManager.class);
 
@@ -78,6 +106,16 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             List<RemoteRepository> dominantRepositories,
             List<RemoteRepository> recessiveRepositories,
             boolean recessiveIsRaw) {
+        return aggregateRepositories(session, dominantRepositories, recessiveRepositories, recessiveIsRaw, false);
+    }
+
+    @Override
+    public List<RemoteRepository> aggregateRepositories(
+            RepositorySystemSession session,
+            List<RemoteRepository> dominantRepositories,
+            List<RemoteRepository> recessiveRepositories,
+            boolean recessiveIsRaw,
+            boolean recessiveIsFromDescriptor) {
         requireNonNull(session, "session cannot be null");
         requireNonNull(dominantRepositories, "dominantRepositories cannot be null");
         requireNonNull(recessiveRepositories, "recessiveRepositories cannot be null");
@@ -90,11 +128,15 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
         AuthenticationSelector authSelector = session.getAuthenticationSelector();
         ProxySelector proxySelector = session.getProxySelector();
 
+        boolean authToDescriptorRepositories = ConfigUtils.getBoolean(
+                session, DEFAULT_AUTH_TO_DESCRIPTOR_REPOSITORIES, CONFIG_PROP_AUTH_TO_DESCRIPTOR_REPOSITORIES);
+
         List<RemoteRepository> result = new ArrayList<>(dominantRepositories);
 
         next:
         for (RemoteRepository recessiveRepository : recessiveRepositories) {
             RemoteRepository repository = recessiveRepository;
+            boolean mirrored = false;
 
             if (recessiveIsRaw) {
                 RemoteRepository mirrorRepository = mirrorSelector.getMirror(recessiveRepository);
@@ -102,6 +144,7 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                 if (mirrorRepository != null) {
                     logMirror(session, recessiveRepository, mirrorRepository);
                     repository = mirrorRepository;
+                    mirrored = true;
                 }
             }
 
@@ -113,8 +156,8 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                 if (key.equals(repositoryKeyFunction.apply(dominantRepository, null))) {
                     if (!dominantRepository.getMirroredRepositories().isEmpty()
                             && !repository.getMirroredRepositories().isEmpty()) {
-                        RemoteRepository mergedRepository =
-                                mergeMirrors(session, repositoryKeyFunction, dominantRepository, repository);
+                        RemoteRepository mergedRepository = mergeMirrors(
+                                session, repositoryKeyFunction, dominantRepository, repository, recessiveIsRaw);
                         if (mergedRepository != dominantRepository) {
                             it.set(mergedRepository);
                         }
@@ -128,8 +171,19 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                 RemoteRepository.Builder builder = null;
                 Authentication auth = authSelector.getAuthentication(repository);
                 if (auth != null) {
-                    builder = new RemoteRepository.Builder(repository);
-                    builder.setAuthentication(auth);
+                    if (!recessiveIsFromDescriptor || mirrored || authToDescriptorRepositories) {
+                        builder = new RemoteRepository.Builder(repository);
+                        builder.setAuthentication(auth);
+                    } else if (auth != repository.getAuthentication()) {
+                        logWarnOnce(
+                                session,
+                                "Not applying session authentication to repository {} ({}) declared by a remote"
+                                        + " artifact descriptor; set {}=true to restore the legacy behavior of"
+                                        + " matching credentials to such repositories by repository ID",
+                                repository.getId(),
+                                repository.getUrl(),
+                                CONFIG_PROP_AUTH_TO_DESCRIPTOR_REPOSITORIES);
+                    }
                 }
                 Proxy proxy = proxySelector.getProxy(repository);
                 if (proxy != null) {
@@ -173,11 +227,76 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                 original.getUrl());
     }
 
+    /**
+     * Flag indicating whether a repository declared by a remote artifact descriptor (POM) may weaken the checksum
+     * policy of the operator-defined mirror it is merged into. When disabled (the default), the effective checksum
+     * policy of a mirror never becomes weaker than what the mirror itself declares for the same nature: a recessive
+     * raw repository may still enable a nature or influence update policies, but a weaker checksum policy (e.g.
+     * {@code <checksumPolicy>ignore</checksumPolicy>} in a transitive POM) is not honored and a warning is logged
+     * instead. Enabling this restores the legacy weakest-wins merge, which let any POM in the dependency graph
+     * degrade or switch off checksum verification for downloads routed through the mirror.
+     *
+     * @since 2.0.23
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_RAW_CHECKSUM_POLICY_DOWNGRADE}
+     */
+    public static final String CONFIG_PROP_RAW_CHECKSUM_POLICY_DOWNGRADE =
+            "aether.remoteRepositoryManager.rawRepositoryChecksumPolicyDowngrade";
+
+    public static final boolean DEFAULT_RAW_CHECKSUM_POLICY_DOWNGRADE = false;
+
+    private static RepositoryPolicy clampChecksumPolicy(
+            RepositorySystemSession session, RepositoryPolicy merged, RepositoryPolicy floor, RemoteRepository rec) {
+        if (merged == null || floor == null) {
+            return merged;
+        }
+        if (checksumPolicyRank(merged.getChecksumPolicy()) < checksumPolicyRank(floor.getChecksumPolicy())) {
+            logWarnOnce(
+                    session,
+                    "Ignoring checksum policy '{}' contributed by repository {} ({}) declared by a remote artifact"
+                            + " descriptor: it would downgrade the checksum policy '{}' of the mirror serving it;"
+                            + " set {}=true to restore the legacy weakest-wins merge",
+                    merged.getChecksumPolicy(),
+                    rec.getId(),
+                    rec.getUrl(),
+                    floor.getChecksumPolicy(),
+                    CONFIG_PROP_RAW_CHECKSUM_POLICY_DOWNGRADE);
+            return new RepositoryPolicy(
+                    merged.isEnabled(),
+                    merged.getArtifactUpdatePolicy(),
+                    merged.getMetadataUpdatePolicy(),
+                    floor.getChecksumPolicy());
+        }
+        return merged;
+    }
+
+    private static int checksumPolicyRank(String policy) {
+        if (policy == null) {
+            return -1;
+        }
+        switch (policy) {
+            case RepositoryPolicy.CHECKSUM_POLICY_FAIL:
+                return 2;
+            case RepositoryPolicy.CHECKSUM_POLICY_WARN:
+                return 1;
+            case RepositoryPolicy.CHECKSUM_POLICY_IGNORE:
+                return 0;
+            default:
+                // unknown (potentially attacker-supplied) values rank below any known policy, so they can never
+                // displace an operator-configured one
+                return -1;
+        }
+    }
+
     private RemoteRepository mergeMirrors(
             RepositorySystemSession session,
             RepositoryKeyFunction repositoryKeyFunction,
             RemoteRepository dominant,
-            RemoteRepository recessive) {
+            RemoteRepository recessive,
+            boolean recessiveIsRaw) {
+        boolean rawChecksumPolicyDowngrade = org.eclipse.aether.util.ConfigUtils.getBoolean(
+                session, DEFAULT_RAW_CHECKSUM_POLICY_DOWNGRADE, CONFIG_PROP_RAW_CHECKSUM_POLICY_DOWNGRADE);
         RemoteRepository.Builder merged = null;
         RepositoryPolicy releases = null, snapshots = null;
 
@@ -200,6 +319,13 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             releases = merge(session, releases, rec.getPolicy(false), false);
             snapshots = merge(session, snapshots, rec.getPolicy(true), false);
 
+            if (recessiveIsRaw && !rawChecksumPolicyDowngrade) {
+                // "recessive" originates from a remote artifact descriptor (POM): remotely supplied input must
+                // never weaken the checksum policy the operator configured on the mirror itself
+                releases = clampChecksumPolicy(session, releases, dominant.getPolicy(false), rec);
+                snapshots = clampChecksumPolicy(session, snapshots, dominant.getPolicy(true), rec);
+            }
+
             merged.addMirroredRepository(rec);
         }
 
@@ -208,6 +334,25 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
         }
         return merged.setReleasePolicy(releases).setSnapshotPolicy(snapshots).build();
     }
+
+    /**
+     * Flag indicating whether the merge of a repository's release and snapshot policies (used when a single
+     * effective policy has to serve both natures, most notably for metadata of nature RELEASE_OR_SNAPSHOT such as
+     * {@code maven-metadata.xml} version lists) may pick the <em>weaker</em> of the two checksum policies, which was
+     * the legacy behavior. When disabled (the default), the stronger of the two checksum policies wins, so enabling
+     * snapshots with a lenient checksum policy no longer silently downgrades checksum enforcement below what the
+     * operator configured for releases (or vice versa). An explicit checksum policy set on the session (e.g. via
+     * {@code --strict-checksums}) takes precedence over either behavior, as before.
+     *
+     * @since 2.0.23
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_NATURE_MERGE_WEAKEST_CHECKSUM_POLICY}
+     */
+    public static final String CONFIG_PROP_NATURE_MERGE_WEAKEST_CHECKSUM_POLICY =
+            "aether.remoteRepositoryManager.natureMergeWeakestChecksumPolicy";
+
+    public static final boolean DEFAULT_NATURE_MERGE_WEAKEST_CHECKSUM_POLICY = false;
 
     @Override
     public RepositoryPolicy getPolicy(
@@ -268,6 +413,15 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             //noinspection StatementWithEmptyBody
             if (globalPolicy && checksums != null && !checksums.isEmpty()) {
                 // use global override
+            } else if (globalPolicy
+                    && !org.eclipse.aether.util.ConfigUtils.getBoolean(
+                            session,
+                            DEFAULT_NATURE_MERGE_WEAKEST_CHECKSUM_POLICY,
+                            CONFIG_PROP_NATURE_MERGE_WEAKEST_CHECKSUM_POLICY)) {
+                // merging the release and snapshot policies of a single repository into one effective policy
+                // (e.g. for metadata of nature RELEASE_OR_SNAPSHOT): the result must not be weaker than what the
+                // operator configured for either nature, so the stronger checksum policy wins
+                checksums = strongerChecksumPolicy(policy1.getChecksumPolicy(), policy2.getChecksumPolicy());
             } else {
                 checksums = checksumPolicyProvider.getEffectiveChecksumPolicy(
                         session, policy1.getChecksumPolicy(), policy2.getChecksumPolicy());
@@ -314,5 +468,48 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             }
         }
         return policy;
+    }
+
+    private static String strongerChecksumPolicy(String policy1, String policy2) {
+        if (checksumPolicyStrength(policy2) > checksumPolicyStrength(policy1)) {
+            return policy2;
+        }
+        return policy1;
+    }
+
+    private static int checksumPolicyStrength(String policy) {
+        if (policy == null) {
+            return -1;
+        }
+        switch (policy) {
+            case RepositoryPolicy.CHECKSUM_POLICY_FAIL:
+                return 2;
+            case RepositoryPolicy.CHECKSUM_POLICY_WARN:
+                return 1;
+            case RepositoryPolicy.CHECKSUM_POLICY_IGNORE:
+                return 0;
+            default:
+                // unknown values never win a strength comparison; they are rejected downstream when a
+                // ChecksumPolicy instance is created for them
+                return -1;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void logWarnOnce(RepositorySystemSession session, String message, Object... args) {
+        if (!LOGGER.isWarnEnabled()) {
+            return;
+        }
+        Object[] keys = new Object[args.length + 1];
+        keys[0] = message;
+        System.arraycopy(args, 0, keys, 1, args.length);
+        Object key = Keys.of(keys);
+        ((Map<Object, Boolean>) session.getData()
+                        .computeIfAbsent(
+                                Keys.of(DefaultRemoteRepositoryManager.class, "logWarnOnce"), ConcurrentHashMap::new))
+                .computeIfAbsent(key, k -> {
+                    LOGGER.warn(message, args);
+                    return true;
+                });
     }
 }

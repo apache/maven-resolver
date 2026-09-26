@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.SocketAddress;
@@ -35,9 +36,11 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileLock;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,7 +48,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -76,6 +78,8 @@ public class IpcClient {
     static final boolean IS_WINDOWS =
             System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("win");
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     protected volatile boolean initialized;
     protected final Path lockPath;
     protected final Path logPath;
@@ -89,6 +93,13 @@ public class IpcClient {
 
     protected final AtomicInteger requestId = new AtomicInteger();
     protected final Map<Integer, CompletableFuture<List<String>>> responses = new ConcurrentHashMap<>();
+
+    /**
+     * The bootstrap token shared with the server this client spawned (if it spawned one): the only credential
+     * accepted by the server for a stop request. Remains {@code null} when this client attached to an already
+     * running server, which consequently cannot be stopped from here.
+     */
+    protected volatile String bootstrapToken;
 
     IpcClient(Path lockPath, Path logPath, Path syncPath) {
         this.lockPath = lockPath;
@@ -114,6 +125,14 @@ public class IpcClient {
                 }
             }
         }
+    }
+
+    private synchronized DataInputStream getInput() {
+        return input;
+    }
+
+    private synchronized DataOutputStream getOutput() {
+        return output;
     }
 
     SocketChannel createClient() throws IOException {
@@ -143,7 +162,8 @@ public class IpcClient {
 
                 ServerSocketChannel ss = family.openServerSocket();
                 String tmpaddr = SocketFamily.toString(ss.getLocalAddress());
-                String rand = Long.toHexString(new Random().nextLong());
+                // the token authorizes stopping the daemon: it must not be guessable by other local users
+                String rand = Long.toHexString(SECURE_RANDOM.nextLong()) + Long.toHexString(SECURE_RANDOM.nextLong());
                 String nativeName =
                         System.getProperty(IpcServer.SYSTEM_PROP_NATIVE_NAME, IpcServer.DEFAULT_NATIVE_NAME);
                 String syncCmd = IS_WINDOWS ? nativeName + ".exe" : nativeName;
@@ -184,7 +204,9 @@ public class IpcClient {
                         args.add(IpcServer.class.getName());
                         args.add(family.name());
                         args.add(tmpaddr);
-                        args.add(rand);
+                        // the bootstrap token is passed via stdin ("-" placeholder in argv): process arguments
+                        // are commonly visible to other local users (e.g. /proc/<pid>/cmdline)
+                        args.add("-");
                         ProcessBuilder processBuilder = new ProcessBuilder();
                         ProcessBuilder.Redirect discard = ProcessBuilder.Redirect.to(logFile.toFile());
                         Files.createDirectories(logPath);
@@ -194,6 +216,7 @@ public class IpcClient {
                                 .redirectOutput(discard)
                                 .redirectError(discard)
                                 .start();
+                        writeBootstrapToken(process, rand);
                         close = process::destroyForcibly;
                     }
                 } else {
@@ -205,7 +228,8 @@ public class IpcClient {
                     args.add("-D" + IpcServer.SYSTEM_PROP_DEBUG + "=" + debug);
                     args.add(family.name());
                     args.add(tmpaddr);
-                    args.add(rand);
+                    // see above: the bootstrap token goes via stdin, not argv
+                    args.add("-");
                     ProcessBuilder processBuilder = new ProcessBuilder();
                     ProcessBuilder.Redirect discard = ProcessBuilder.Redirect.to(logFile.toFile());
                     Files.createDirectories(logPath);
@@ -215,6 +239,7 @@ public class IpcClient {
                             .redirectOutput(discard)
                             .redirectError(discard)
                             .start();
+                    writeBootstrapToken(process, rand);
                     close = process::destroyForcibly;
                 }
 
@@ -247,6 +272,7 @@ public class IpcClient {
                     close.close();
                     throw new IllegalStateException("IpcServer did not respond with the correct random");
                 }
+                this.bootstrapToken = rand;
 
                 SocketAddress addr = SocketFamily.fromString(res[1]);
                 SocketChannel socket = SocketChannel.open(addr);
@@ -257,6 +283,12 @@ public class IpcClient {
             } catch (Exception e) {
                 throw new RuntimeException("Unable to create and connect to lock server", e);
             }
+        }
+    }
+
+    private static void writeBootstrapToken(Process process, String token) throws IOException {
+        try (OutputStream os = process.getOutputStream()) {
+            os.write((token + "\n").getBytes(StandardCharsets.UTF_8));
         }
     }
 
@@ -293,13 +325,13 @@ public class IpcClient {
     void receive() {
         try {
             while (true) {
-                DataInputStream in = input;
+                DataInputStream in = getInput();
                 if (in == null) {
                     throw new IOException("Connection closed");
                 }
                 int id = in.readInt();
                 int sz = in.readInt();
-                List<String> s = new ArrayList<>(sz);
+                List<String> s = new ArrayList<>(Math.max(0, Math.min(sz, 1024)));
                 for (int i = 0; i < sz; i++) {
                     s.add(in.readUTF());
                 }
@@ -322,7 +354,7 @@ public class IpcClient {
 
     List<String> send(List<String> request, long time, TimeUnit unit) throws TimeoutException, IOException {
         ensureInitialized();
-        DataOutputStream out = output;
+        DataOutputStream out = getOutput();
         if (out == null) {
             throw new IOException("Connection closed");
         }
@@ -351,10 +383,13 @@ public class IpcClient {
     }
 
     void close() {
-        if (noFork) {
-            stopServer();
+        try {
+            if (noFork) {
+                stopServer();
+            }
+        } finally {
+            close(new IOException("Closing"));
         }
-        close(new IOException("Closing"));
     }
 
     synchronized void close(Throwable e) {
@@ -434,8 +469,9 @@ public class IpcClient {
      * To be used in tests to stop server immediately. Should not be used outside of tests.
      */
     void stopServer() {
+        String token = bootstrapToken;
         try {
-            List<String> response = send(List.of(REQUEST_STOP), 30, TimeUnit.SECONDS);
+            List<String> response = send(List.of(REQUEST_STOP, token == null ? "" : token), 30, TimeUnit.SECONDS);
             if (response.size() != 1 || !RESPONSE_STOP.equals(response.get(0))) {
                 throw new IOException("Unexpected response: " + response);
             }

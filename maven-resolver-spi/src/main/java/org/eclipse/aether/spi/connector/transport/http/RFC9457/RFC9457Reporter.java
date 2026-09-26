@@ -18,7 +18,10 @@
  */
 package org.eclipse.aether.spi.connector.transport.http.RFC9457;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A reporter for RFC 9457 messages.
@@ -38,6 +41,14 @@ public abstract class RFC9457Reporter<T, E extends Exception, R> {
     public static final String CONTENT_TYPE_PROBLEM_DETAILS_JSON = "application/problem+json";
     public static final String CONTENT_TYPE_PROBLEM_DETAILS_JSON_AND_ANY = "application/problem+json,*/*";
 
+    /**
+     * Maximum number of bytes read from an error response body. Legitimate RFC 9457 payloads are
+     * tiny, while the body of an error response is attacker influenced data (the content type header
+     * alone triggers consumption) and may be transparently decompressed by the transport, so it must
+     * never be buffered unbounded. Bodies larger than this limit are truncated, not rejected.
+     */
+    public static final int MAX_BODY_BYTES = 64 * 1024;
+
     protected abstract boolean isRFC9457Message(T response);
 
     protected abstract int getStatusCode(T response);
@@ -53,6 +64,30 @@ public abstract class RFC9457Reporter<T, E extends Exception, R> {
      * @see <a href=https://www.rfc-editor.org/rfc/rfc9457#section-3-2>RFC 9457 section 3.2</a>
      */
     public abstract void prepareRequest(R request);
+
+    /**
+     * Reads the given stream into a UTF-8 string, consuming at most {@link #MAX_BODY_BYTES} bytes.
+     * Any remaining bytes are left unread, so an oversized (or decompression amplified) body is
+     * truncated instead of exhausting memory. The caller remains responsible for closing the stream.
+     *
+     * @param is The stream to read the body from, must not be {@code null}.
+     * @return The body as UTF-8 string, truncated to {@link #MAX_BODY_BYTES} bytes, never {@code null}.
+     * @throws IOException If reading the stream fails.
+     */
+    protected static String readBody(InputStream is) throws IOException {
+        ByteArrayOutputStream body = new ByteArrayOutputStream();
+        byte[] chunk = new byte[8 * 1024];
+        int remaining = MAX_BODY_BYTES;
+        while (remaining > 0) {
+            int read = is.read(chunk, 0, Math.min(chunk.length, remaining));
+            if (read < 0) {
+                break;
+            }
+            body.write(chunk, 0, read);
+            remaining -= read;
+        }
+        return body.toString(StandardCharsets.UTF_8.name());
+    }
 
     protected boolean hasRFC9457ContentType(String contentType) {
         if (contentType == null) {
@@ -88,8 +123,19 @@ public abstract class RFC9457Reporter<T, E extends Exception, R> {
             }
 
             if (body != null && !body.isEmpty()) {
-                RFC9457Payload rfc9457Payload = RFC9457Parser.parse(body);
-                throw new HttpRFC9457Exception(statusCode, reasonPhrase, rfc9457Payload);
+                RFC9457Payload rfc9457Payload;
+                try {
+                    rfc9457Payload = RFC9457Parser.parse(body);
+                } catch (RuntimeException ignore) {
+                    // Malformed (possibly truncated, see MAX_BODY_BYTES) problem details
+                    // must not change the error classification.
+                    rfc9457Payload = null;
+                }
+                if (rfc9457Payload != null) {
+                    throw new HttpRFC9457Exception(statusCode, reasonPhrase, rfc9457Payload);
+                }
+                baseException.accept(statusCode, reasonPhrase);
+                return;
             }
             throw new HttpRFC9457Exception(statusCode, reasonPhrase, RFC9457Payload.INSTANCE);
         }

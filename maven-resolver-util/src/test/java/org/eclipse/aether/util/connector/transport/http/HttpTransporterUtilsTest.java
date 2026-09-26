@@ -27,8 +27,28 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpTransporterUtilsTest {
+    @Test
+    void clampRemoteLastModifiedPassesPastAndPresentValues() {
+        long testStart = System.currentTimeMillis();
+        long past = testStart - 10_000L;
+        assertEquals(past, HttpTransporterUtils.clampRemoteLastModified(past));
+        assertEquals(0L, HttpTransporterUtils.clampRemoteLastModified(0L));
+        assertEquals(-1L, HttpTransporterUtils.clampRemoteLastModified(-1L));
+    }
+
+    @Test
+    void clampRemoteLastModifiedClampsFutureValuesToLocalClock() {
+        long testStart = System.currentTimeMillis();
+        long future = testStart + 365L * 24L * 60L * 60L * 1000L; // one year ahead
+        long clamped = HttpTransporterUtils.clampRemoteLastModified(future);
+        assertTrue(clamped >= testStart, "clamped value must not predate the call");
+        assertTrue(clamped <= System.currentTimeMillis(), "clamped value must not exceed the local clock");
+        assertTrue(clamped < future, "future-dated value must be clamped");
+    }
+
     @Test
     void goodUris() throws URISyntaxException {
         URI uri;

@@ -8,7 +8,7 @@ to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    https://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
@@ -23,8 +23,9 @@ Checksums exist in repositories next to the target file.
 The file extension identifies the checksum algorithm that produced the checksum.
 Most Maven repositories contain SHA-1 and MD5 checksums by default.
 Maven Resolver also produces these checksums by default.
-Checksums only provide integrity verification. They do not provide security or trust.
-They do not protect against man-in-the-middle or supply chain attacks.
+Checksums retrieved alongside an artifact or over the same transport only provide integrity verification.
+They do not by themselves establish that the checksum is trustworthy or protect against man-in-the-middle or supply chain attacks.
+Trusted checksums are a separate mechanism described in the [Expected Checksums](expected-checksums.html) page.
 
 In the past, Maven Resolver used `java.security.MessageDigest` to calculate checksums.
 The Java Cryptography Architecture provides secure one-way hashes.

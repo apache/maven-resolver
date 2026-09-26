@@ -19,9 +19,11 @@
 package org.eclipse.aether.internal.impl;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.net.URI;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -116,6 +118,53 @@ public class DefaultUpdateCheckManagerTest {
         check.setRepository(repository);
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
         return check;
+    }
+
+    @Test
+    void testTouchArtifactExpiresSiblingCachedNotFoundOnSuccessfulDownload() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        // a previous attempt cached a not-found answer from another repository
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
+        notFound.setRepository(other);
+        notFound.setAuthoritativeRepository(other);
+        notFound.setException(new ArtifactNotFoundException(artifact, other));
+        manager.touchArtifact(session, notFound);
+        assertTrue(touchFile.exists());
+
+        // the artifact is then successfully downloaded from a sibling repository: the stale not-found marker
+        // must not survive and silently keep suppressing the other repository (here no errors remain at all,
+        // so the whole touch file is deleted)
+        resetSessionData(session);
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        manager.touchArtifact(session, success);
+        assertFalse(touchFile.exists());
+    }
+
+    @Test
+    void testTouchArtifactKeepsSiblingTransferErrorOnSuccessfulDownload() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        // a previous attempt cached a transfer error (not a not-found) from another repository
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> failed = newArtifactCheck();
+        failed.setRepository(other);
+        failed.setAuthoritativeRepository(other);
+        failed.setException(new ArtifactTransferException(artifact, other, "some error"));
+        manager.touchArtifact(session, failed);
+        assertTrue(touchFile.exists());
+
+        // only cached not-found markers are expired by a sibling success; transfer errors stay cached
+        resetSessionData(session);
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        manager.touchArtifact(session, success);
+        assertTrue(touchFile.exists());
+        Properties props = new Properties();
+        try (FileInputStream fis = new FileInputStream(touchFile)) {
+            props.load(fis);
+        }
+        assertEquals("some error", props.getProperty("file:///other-repo/.error"));
     }
 
     @Test

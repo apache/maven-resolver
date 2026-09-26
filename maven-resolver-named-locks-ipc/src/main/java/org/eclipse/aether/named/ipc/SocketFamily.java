@@ -27,6 +27,10 @@ import java.net.StandardProtocolFamily;
 import java.net.UnixDomainSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
 
 /**
  * Socket factory.
@@ -40,9 +44,40 @@ public enum SocketFamily {
     public ServerSocketChannel openServerSocket() throws IOException {
         return switch (this) {
             case inet -> ServerSocketChannel.open().bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
-            case unix -> ServerSocketChannel.open(StandardProtocolFamily.UNIX).bind(null, 0);
+            case unix -> {
+                ServerSocketChannel channel =
+                        ServerSocketChannel.open(StandardProtocolFamily.UNIX).bind(null, 0);
+                restrictToOwner(channel);
+                yield channel;
+            }
             default -> throw new IllegalStateException();
         };
+    }
+
+    /**
+     * Restricts access to the socket file backing the given unix-domain server socket to the owning user: the IPC
+     * lock protocol carries no authentication, so the socket file permissions are what prevents other local users
+     * from connecting to the lock daemon and disrupting or stopping it. Automatically bound sockets are created
+     * in the system temporary directory, which is commonly shared between users. On filesystems without POSIX
+     * permissions (e.g. Windows) this is a no-op.
+     *
+     * @since 2.0.23
+     */
+    private static void restrictToOwner(ServerSocketChannel channel) throws IOException {
+        SocketAddress address = channel.getLocalAddress();
+        if (address instanceof UnixDomainSocketAddress) {
+            Path path = ((UnixDomainSocketAddress) address).getPath();
+            try {
+                Files.setPosixFilePermissions(
+                        path,
+                        EnumSet.of(
+                                PosixFilePermission.OWNER_READ,
+                                PosixFilePermission.OWNER_WRITE,
+                                PosixFilePermission.OWNER_EXECUTE));
+            } catch (UnsupportedOperationException e) {
+                // no POSIX permissions on this filesystem: nothing to tighten here
+            }
+        }
     }
 
     public static SocketAddress fromString(String str) {

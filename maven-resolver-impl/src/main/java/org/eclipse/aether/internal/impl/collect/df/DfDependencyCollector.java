@@ -257,7 +257,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                             d,
                             descriptorResult.getRelocations(),
                             disableVersionManagementSubsequently);
-                    return;
+                    continue;
                 } else {
                     d = args.pool.intern(d.setArtifact(args.pool.intern(d.getArtifact())));
 
@@ -335,7 +335,7 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
         final List<RemoteRepository> childRepos = args.ignoreRepos
                 ? repositories
                 : remoteRepositoryManager.aggregateRepositories(
-                        args.session, repositories, descriptorResult.getRepositories(), true);
+                        args.session, repositories, descriptorResult.getRepositories(), true, true);
 
         Object key =
                 args.pool.toKey(d.getArtifact(), childRepos, childSelector, childManager, childTraverser, childFilter);

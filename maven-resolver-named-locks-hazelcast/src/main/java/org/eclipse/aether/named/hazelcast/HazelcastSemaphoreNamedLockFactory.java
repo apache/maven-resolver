@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.named.hazelcast;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +59,40 @@ public class HazelcastSemaphoreNamedLockFactory extends NamedLockFactorySupport 
         this.manageHazelcast = manageHazelcast;
         this.hazelcastSemaphoreProvider = requireNonNull(hazelcastSemaphoreProvider);
         this.semaphores = new ConcurrentHashMap<>();
+    }
+
+    /**
+     * Guard used by the default constructors of subclasses before they create a Hazelcast member or client via
+     * standard Hazelcast configuration discovery: refuses to proceed when no explicit operator-provided
+     * configuration is discoverable. Without one, Hazelcast falls back to its built-in defaults (default cluster
+     * name, auto-discovery join, no authentication or TLS in open-source Hazelcast), which lets any peer able to
+     * reach the network segment join the cluster and release the semaphore permits that guard local repository
+     * writes.
+     *
+     * @param configSystemProperty the Hazelcast system property naming an explicit configuration file
+     * @param classLoader the class loader to probe for configuration resources
+     * @param configResourceNames configuration file names probed on the classpath and in the working directory
+     * @throws IllegalStateException if no explicit configuration is discoverable
+     */
+    static void requireExplicitHazelcastConfig(
+            final String configSystemProperty, final ClassLoader classLoader, final String... configResourceNames) {
+        if (System.getProperty(configSystemProperty) != null) {
+            return;
+        }
+        for (String configResourceName : configResourceNames) {
+            if (classLoader.getResource(configResourceName) != null
+                    || Files.isRegularFile(Paths.get(configResourceName))) {
+                return;
+            }
+        }
+        throw new IllegalStateException(
+                "Refusing to create a Hazelcast instance from built-in defaults (default cluster name,"
+                        + " auto-discovery join, no authentication): distributed lock state guarding local"
+                        + " repository writes would be modifiable by unauthenticated network peers. Provide an"
+                        + " explicit Hazelcast configuration that secures or isolates the cluster, via the '"
+                        + configSystemProperty + "' system property or one of "
+                        + String.join(", ", configResourceNames)
+                        + " on the classpath or in the working directory.");
     }
 
     @Override

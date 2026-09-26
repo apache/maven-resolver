@@ -112,6 +112,7 @@ class IpcNamedLock extends NamedLockSupport {
             // Best-effort cleanup: if unlock fails during timeout handling,
             // we must not propagate the exception — doing so would crash the
             // calling thread and skip latch countdowns in tests, causing hangs.
+            logger.warn("Unable to unlock (contextId = {}) after timeout", contextId, e);
         }
     }
 

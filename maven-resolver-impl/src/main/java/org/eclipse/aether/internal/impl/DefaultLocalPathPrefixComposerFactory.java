@@ -56,7 +56,7 @@ public final class DefaultLocalPathPrefixComposerFactory extends LocalPathPrefix
                 isSplitRemoteRepositoryLast(session),
                 getReleasesPrefix(session),
                 getSnapshotsPrefix(session),
-                repositoryKeyFunctionFactory.systemRepositoryKeyFunction(session));
+                repositoryKeyFunctionFactory.trackingRepositoryKeyFunction(session));
     }
 
     /**

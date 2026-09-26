@@ -163,10 +163,22 @@ final class FileTransporter extends AbstractTransporter {
 
     private Path getPath(TransportTask task, boolean required) throws Exception {
         String path = task.getLocation().getPath();
-        if (path.contains("../")) {
+        if (path == null) {
+            throw new IllegalArgumentException("illegal resource path: null");
+        }
+        Path relative = fileSystem.getPath(path);
+        if (relative.isAbsolute()) {
             throw new IllegalArgumentException("illegal resource path: " + path);
         }
-        Path file = basePath.resolve(path);
+        for (Path segment : relative) {
+            if ("..".equals(segment.toString())) {
+                throw new IllegalArgumentException("illegal resource path: " + path);
+            }
+        }
+        Path file = basePath.resolve(relative).normalize();
+        if (!file.startsWith(basePath.normalize())) {
+            throw new IllegalArgumentException("illegal resource path: " + path);
+        }
         if (required && !Files.isRegularFile(file)) {
             throw new ResourceNotFoundException("Could not locate " + file);
         }

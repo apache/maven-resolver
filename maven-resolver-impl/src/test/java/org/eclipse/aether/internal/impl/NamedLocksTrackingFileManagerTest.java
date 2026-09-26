@@ -21,10 +21,22 @@ package org.eclipse.aether.internal.impl;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
+import org.junit.jupiter.api.AfterEach;
 
 public class NamedLocksTrackingFileManagerTest extends TrackingFileManagerTestSupport {
+    private FileLockNamedLockFactory lockFactory;
+
     @Override
     protected TrackingFileManager createTrackingFileManager(FS fs) {
-        return new NamedLocksTrackingFileManager(new FileLockNamedLockFactory(), 5L, TimeUnit.SECONDS);
+        lockFactory = new FileLockNamedLockFactory();
+        return new NamedLocksTrackingFileManager(lockFactory, 30L, TimeUnit.SECONDS);
+    }
+
+    @AfterEach
+    void shutdownFactory() {
+        if (lockFactory != null) {
+            lockFactory.shutdown();
+            lockFactory = null;
+        }
     }
 }

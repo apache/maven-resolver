@@ -145,24 +145,13 @@ public class DefaultFileProcessor implements FileProcessor {
 
     @Override
     public String readChecksum(final File checksumFile) throws IOException {
-        // for now do exactly same as happened before, but FileProcessor is a component and can be replaced
-        String checksum = "";
+        String checksum;
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(Files.newInputStream(checksumFile.toPath()), StandardCharsets.UTF_8), 512)) {
-            while (true) {
-                String line = br.readLine();
-                if (line == null) {
-                    break;
-                }
-                line = line.trim();
-                if (!line.isEmpty()) {
-                    checksum = line;
-                    break;
-                }
-            }
+            checksum = DefaultChecksumProcessor.readFirstNonEmptyLine(br, checksumFile.toString());
         }
 
-        if (checksum.matches(".+= [0-9A-Fa-f]+")) {
+        if (DefaultChecksumProcessor.isAlgorithmHeaderFormat(checksum)) {
             int lastSpacePos = checksum.lastIndexOf(' ');
             checksum = checksum.substring(lastSpacePos + 1);
         } else {
