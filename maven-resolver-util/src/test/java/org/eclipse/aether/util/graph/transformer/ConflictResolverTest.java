@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -877,6 +878,96 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         node.setVersion(new TestVersion(version));
         node.setVersionConstraint(new TestVersionConstraint(node.getVersion()));
         return node;
+    }
+
+    /**
+     * Regression test for exponential Path creation (OOM) in dense dependency graphs.
+     * <p>
+     * Constructs a 3-level graph where hub nodes (which have their own shared children)
+     * are each reachable via M distinct parent paths:
+     * <pre>
+     *   root → p0, p1, … p(M-1)              (M parent modules)
+     *   each pi → hub0, hub1, … hub(N-1)      (N shared hub nodes, with children)
+     *   each hub → sub0, sub1, … sub(K-1)     (K shared sub-hub leaf nodes)
+     * </pre>
+     * Without the {@code expandedNodes} guard in {@link PathConflictResolver#gatherCRNodes},
+     * each hub node would be pushed onto the expansion stack M times (once per parent),
+     * causing its K sub-hubs to be expanded M times each. Every expansion adds new
+     * {@code Path} objects to the conflict partitions, so without the guard:
+     * M×N paths are created for hubs and M×N×K paths for sub-hubs in the partitions.
+     * With M=N=K=100 that is 100×100 + 100×100×100 = 1,010,000 {@code Path} objects,
+     * consuming ~80 MB of heap and triggering {@link OutOfMemoryError} on CI.
+     * <p>
+     * With the fix, only N+K = 200 unique nodes are expanded, regardless of M.
+     * The {@link #assertTimeout} bound of 5 seconds provides an additional safety net:
+     * even if heap is generous enough to avoid OOM, the quadratic work would take seconds.
+     */
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void denseGraphDoesNotOom(ConflictResolver conflictResolver) throws RepositoryException {
+        // M=N=K=100: without the fix, creates M*N + M*N*K = 1,010,000 Path objects (~80 MB)
+        // → OutOfMemoryError on CI. With the fix: O(N+K) = 200 expansions, trivial memory.
+        int M = 100; // parent modules
+        int N = 100; // hub modules (shared, each with children)
+        int K = 100; // sub-hub leaf modules (shared across hubs)
+
+        DependencyNode root = makeDependencyNode("test", "root", "1.0");
+
+        // K shared leaf sub-hub nodes (shared instances across all hubs)
+        List<DependencyNode> subHubs = new ArrayList<>(K);
+        for (int s = 0; s < K; s++) {
+            subHubs.add(makeDependencyNode("test", "sub-hub-" + s, "1.0"));
+        }
+
+        // N shared hub nodes, each depending on all K sub-hubs (shared instances)
+        List<DependencyNode> hubs = new ArrayList<>(N);
+        for (int h = 0; h < N; h++) {
+            DependencyNode hub = makeDependencyNode("test", "hub-" + h, "1.0");
+            hub.setChildren(new ArrayList<>(subHubs));
+            hubs.add(hub);
+        }
+
+        // M parent nodes, each depending on all N hubs (shared instances)
+        List<DependencyNode> parents = new ArrayList<>(M);
+        for (int p = 0; p < M; p++) {
+            DependencyNode parent = makeDependencyNode("test", "parent-" + p, "1.0");
+            parent.setChildren(new ArrayList<>(hubs));
+            parents.add(parent);
+        }
+        root.setChildren(parents);
+
+        // Must complete without OOM, StackOverflowError, and within a time bound that
+        // would expire on the pathological (un-fixed) expansion pattern.
+        DependencyNode result = assertTimeout(Duration.ofSeconds(5), () -> transform(conflictResolver, root));
+        assertNotNull(result);
+
+        // All parents must survive (no conflicts among them)
+        assertEquals(M, result.getChildren().size());
+
+        // All hub and sub-hub nodes must be reachable somewhere in the resolved graph
+        AtomicInteger hubCount = new AtomicInteger();
+        AtomicInteger subHubCount = new AtomicInteger();
+        result.accept(new TreeDependencyVisitor(new DependencyVisitor() {
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                if (node.getArtifact() != null) {
+                    String id = node.getArtifact().getArtifactId();
+                    if (id.startsWith("hub-") && !id.startsWith("hub-sub")) {
+                        hubCount.incrementAndGet();
+                    } else if (id.startsWith("sub-hub-")) {
+                        subHubCount.incrementAndGet();
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                return true;
+            }
+        }));
+        assertEquals(N, hubCount.get(), "All hub nodes must survive in the resolved graph");
+        assertEquals(K, subHubCount.get(), "All sub-hub nodes must survive in the resolved graph");
     }
 
     private static List<DependencyNode> mutableList(DependencyNode... nodes) {
