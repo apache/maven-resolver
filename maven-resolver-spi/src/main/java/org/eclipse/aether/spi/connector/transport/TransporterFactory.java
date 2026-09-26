@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.spi.connector.transport;
 
+import java.util.Map;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transfer.NoTransporterException;
@@ -32,8 +34,38 @@ import org.eclipse.aether.transfer.NoTransporterException;
 public interface TransporterFactory {
 
     /**
+     * A key for transporter properties.
+     * @see #getProperties()
+     */
+    public interface TransporterPropertyKey {}
+
+    /**
+     * Indicates whether this factory can handle the specified repository protocol.
+     * Even if {@code true} is returned the factory may still refuse to create a transporter for the given protocol.
+     *
+     * @param repositoryProtocol The repository protocol to check, may be {@code null}.
+     * @return {@code true} if this factory can potentially handle the specified repository protocol, {@code false} otherwise.
+     * @see #newInstance(RepositorySystemSession, RemoteRepository)
+     */
+    default boolean canHandle(String repositoryProtocol) {
+        return true;
+    }
+
+    /**
+     * Gets the properties exposing information about this transporter factory.
+     * Some are mandatory and some are transporter-specific.
+     *
+     * @return A map of transporter property keys with values, never {@code null}.
+     * @throws UnsupportedOperationException if the transporter factory does not implement this method.
+     */
+    default Map<TransporterPropertyKey, Object> getProperties() {
+        throw new UnsupportedOperationException("getProperties not implemented");
+    }
+
+    /**
      * Tries to create a transporter for the specified remote repository. Typically, a factory will inspect
      * {@link RemoteRepository#getProtocol()} to determine whether it can handle a repository.
+     * This should be preceded by a call to {@link #canHandle(String)}.
      *
      * @param session The repository system session from which to configure the transporter, must not be {@code null}.
      *            In particular, a transporter should obey the timeouts configured for the session.
