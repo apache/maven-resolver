@@ -90,6 +90,7 @@ public class IpcClient {
     protected volatile DataOutputStream output;
     protected volatile DataInputStream input;
     protected volatile Thread receiver;
+    protected volatile Process process;
 
     protected final AtomicInteger requestId = new AtomicInteger();
     protected final Map<Integer, CompletableFuture<List<String>>> responses = new ConcurrentHashMap<>();
@@ -210,14 +211,14 @@ public class IpcClient {
                         ProcessBuilder processBuilder = new ProcessBuilder();
                         ProcessBuilder.Redirect discard = ProcessBuilder.Redirect.to(logFile.toFile());
                         Files.createDirectories(logPath);
-                        Process process = processBuilder
+                        this.process = processBuilder
                                 .directory(lockFile.getParent().toFile())
                                 .command(args)
                                 .redirectOutput(discard)
                                 .redirectError(discard)
                                 .start();
-                        writeBootstrapToken(process, rand);
-                        close = process::destroyForcibly;
+                        writeBootstrapToken(this.process, rand);
+                        close = this.process::destroyForcibly;
                     }
                 } else {
                     args.add(syncPath.resolve(syncCmd).toString());
@@ -233,14 +234,14 @@ public class IpcClient {
                     ProcessBuilder processBuilder = new ProcessBuilder();
                     ProcessBuilder.Redirect discard = ProcessBuilder.Redirect.to(logFile.toFile());
                     Files.createDirectories(logPath);
-                    Process process = processBuilder
+                    this.process = processBuilder
                             .directory(lockFile.getParent().toFile())
                             .command(args)
                             .redirectOutput(discard)
                             .redirectError(discard)
                             .start();
-                    writeBootstrapToken(process, rand);
-                    close = process::destroyForcibly;
+                    writeBootstrapToken(this.process, rand);
+                    close = this.process::destroyForcibly;
                 }
 
                 ExecutorService es = Executors.newSingleThreadExecutor();
@@ -474,6 +475,17 @@ public class IpcClient {
             List<String> response = send(List.of(REQUEST_STOP, token == null ? "" : token), 30, TimeUnit.SECONDS);
             if (response.size() != 1 || !RESPONSE_STOP.equals(response.get(0))) {
                 throw new IOException("Unexpected response: " + response);
+            }
+
+            Process forkedProcess = process;
+            if (forkedProcess != null) {
+                if (!forkedProcess.waitFor(30, TimeUnit.SECONDS)) {
+                    forkedProcess.destroyForcibly();
+                    if (!forkedProcess.waitFor(5, TimeUnit.SECONDS)) {
+                        throw new IOException("Unable to stop forked server process");
+                    }
+                }
+                process = null;
             }
         } catch (Exception e) {
             close(e);
