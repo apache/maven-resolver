@@ -101,12 +101,15 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
         assertTrue(manager.find(session, fromReal).isAvailable());
 
         // requested from a repository sharing the trusted ID but pointing at another URL:
-        // accepted via the same-id prefix fallback (avoiding forced re-downloads when the URL
-        // of a well-known repository changes, e.g. ITs overriding central to file:target/null)
-        // Note: this may happen ONLY if local repository is shared with 3.9/Resolver 1.9
+        // rejected by default because legacyLocalRepository is false and tracking keys are URL-qualified
         LocalArtifactRequest fromSameId =
                 new LocalArtifactRequest(artifact, Collections.singletonList(impostor), context);
-        assertTrue(manager.find(session, fromSameId).isAvailable());
+        assertFalse(manager.find(session, fromSameId).isAvailable());
+
+        // when legacyLocalRepository is explicitly enabled, same-id fallback accepts it
+        session.setConfigProperty(EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_LEGACY_LOCAL_REPOSITORY, true);
+        LocalRepositoryManager legacyManager = newManager();
+        assertTrue(legacyManager.find(session, fromSameId).isAvailable());
     }
 
     @Test
@@ -114,12 +117,23 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
         LocalRepositoryManager manager = newManager();
         Artifact artifact = new DefaultArtifact("gid:aid:1.0");
 
-        // the URL-qualified default is scoped to tracking entries: artifact and metadata paths keep
-        // following the system-wide key function (default unchanged), so no local repository re-layout
+        // the URL-qualified tracking key does not affect artifact path composition (no local repository re-layout).
+        // For remote metadata, paths are URL-qualified by default (legacyLocalRepository=false) to prevent
+        // metadata collisions across repositories with the same ID.
         String urlHash = StringDigestUtil.sha1(repository.getUrl());
         assertFalse(
                 manager.getPathForRemoteArtifact(artifact, repository, context).contains(urlHash));
-        assertFalse(manager.getPathForRemoteMetadata(
+        assertTrue(manager.getPathForRemoteMetadata(
+                        new DefaultMetadata("gid", "aid", "1.0", "maven-metadata.xml", Metadata.Nature.RELEASE),
+                        repository,
+                        context)
+                .contains(urlHash));
+
+        // when legacyLocalRepository is explicitly enabled, metadata paths follow the legacy ID-only key
+        session.setConfigProperty(EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_LEGACY_LOCAL_REPOSITORY, true);
+        LocalRepositoryManager legacyManager = newManager();
+        assertFalse(legacyManager
+                .getPathForRemoteMetadata(
                         new DefaultMetadata("gid", "aid", "1.0", "maven-metadata.xml", Metadata.Nature.RELEASE),
                         repository,
                         context)
@@ -147,12 +161,17 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
         Artifact artifact = addTrackedRemoteArtifact(manager);
 
         // With nid_hurl tracking and nid as system-wide function, the exact nid_hurl key matches
-        // the entry written by addTrackedRemoteArtifact; but even with a different URL (impostor),
-        // the prefix-based fallback still accepts the artifact because repo IDs match
-        // Note: this may happen ONLY if local repository is shared with 3.9/Resolver 1.9
+        // the entry written by addTrackedRemoteArtifact. By default (legacyLocalRepository=false),
+        // an impostor with a different URL is rejected.
         LocalArtifactRequest fromImpostor =
                 new LocalArtifactRequest(artifact, Collections.singletonList(impostor), context);
-        assertTrue(manager.find(session, fromImpostor).isAvailable());
+        assertFalse(manager.find(session, fromImpostor).isAvailable());
+
+        // When legacyLocalRepository is explicitly enabled (e.g. shared with Maven 3.9/Resolver 1.9),
+        // the prefix-based fallback accepts the artifact because repo IDs match.
+        session.setConfigProperty(EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_LEGACY_LOCAL_REPOSITORY, true);
+        LocalRepositoryManager legacyManager = newManager();
+        assertTrue(legacyManager.find(session, fromImpostor).isAvailable());
     }
 
     @Test
