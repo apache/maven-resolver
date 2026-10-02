@@ -116,7 +116,7 @@
     <version.jmh>1.37</version.jmh>
 
     <!-- used by supplier and demo only; not in resolver itself -->
-    <maven3Version>3.9.16</maven3Version>
+    <maven3Version>3.10.0</maven3Version>
     <maven4Version>4.0.0-rc-6</maven4Version>
     <plexusUtils3Version>3.6.2</plexusUtils3Version>
     <plexusUtils4Version>4.0.3</plexusUtils4Version>
