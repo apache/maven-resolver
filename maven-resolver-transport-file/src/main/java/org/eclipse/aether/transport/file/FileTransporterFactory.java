@@ -65,6 +65,12 @@ public final class FileTransporterFactory implements TransporterFactory {
         return this;
     }
 
+    
+    @Override
+    public boolean canHandle(String repositoryProtocol) {
+        return "bundle".equalsIgnoreCase(repositoryProtocol) || "file".equalsIgnoreCase(repositoryProtocol);
+    }
+
     /**
      * Creates new instance of {@link FileTransporter}.
      *
