@@ -134,6 +134,18 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     "EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
             .withZone(ZoneId.of("GMT"));
 
+    private static final Runtime.Version JAVA_17_0_17 = Runtime.Version.parse("17.0.17");
+
+    static boolean isExpectContinueSupported(Runtime.Version version) {
+        if (version.feature() >= 20) {
+            return true;
+        }
+        if (version.feature() == 17) {
+            return version.compareTo(JAVA_17_0_17) >= 0;
+        }
+        return false;
+    }
+
     private static final long MODIFICATION_THRESHOLD = 60L * 1000L;
 
     /**
@@ -191,7 +203,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     JdkTransporter(
             RepositorySystemSession session,
             RemoteRepository repository,
-            int javaVersion,
+            Runtime.Version javaVersion,
             ChecksumExtractor checksumExtractor,
             PathProcessor pathProcessor)
             throws NoTransporterException {
@@ -217,13 +229,13 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         this.connectTimeout = HttpTransporterUtils.getHttpConnectTimeout(session, repository);
         this.requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
         Optional<Boolean> expectContinue = HttpTransporterUtils.getHttpExpectContinue(session, repository);
-        if (javaVersion > 19) {
+        if (isExpectContinueSupported(javaVersion)) {
             this.expectContinue = expectContinue.orElse(null);
         } else {
             this.expectContinue = null;
             if (expectContinue.isPresent()) {
                 LOGGER.warn(
-                        "Configuration for Expect-Continue set but is ignored on Java versions below 20 (current java version is {}) due https://bugs.openjdk.org/browse/JDK-8286171",
+                        "Configuration for Expect-Continue set but is ignored on Java version {} due https://bugs.openjdk.org/browse/JDK-8286171",
                         javaVersion);
             }
         }
