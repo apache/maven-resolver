@@ -22,8 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.IOException;
-
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
@@ -145,18 +143,14 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                 ConfigUtils.getBoolean(session, DEFAULT_LEGACY_LOCAL_REPOSITORY, CONFIG_PROP_LEGACY_LOCAL_REPOSITORY);
 
         if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
-            try {
-                return new EnhancedLocalRepositoryManager(
-                        repository.getBasePath(),
-                        localPathComposer,
-                        repositoryKeyFunctionFactory.trackingRepositoryKeyFunction(session),
-                        trackingFilename,
-                        legacyLocalRepository,
-                        trackingFileManager,
-                        localPathPrefixComposerFactory.createComposer(session));
-            } catch (IOException e) {
-                throw new NoLocalRepositoryManagerException(repository, e);
-            }
+            return new EnhancedLocalRepositoryManager(
+                    repository.getBasePath(),
+                    localPathComposer,
+                    repositoryKeyFunctionFactory.trackingRepositoryKeyFunction(session),
+                    trackingFilename,
+                    legacyLocalRepository,
+                    trackingFileManager,
+                    localPathPrefixComposerFactory.createComposer(session));
         } else {
             throw new NoLocalRepositoryManagerException(repository);
         }

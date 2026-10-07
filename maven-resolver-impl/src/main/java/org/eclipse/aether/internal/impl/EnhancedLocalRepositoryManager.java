@@ -134,12 +134,6 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      */
     private final ConcurrentHashMap<Path, Properties> trackingFileCache = new ConcurrentHashMap<>();
 
-    /**
-     * Real (symlink-resolved) path of the local repository base directory, used by
-     * {@link #hasFaithfulRealPath(Path)}. It cannot change during the lifetime of this manager.
-     */
-    private final Path realBasePath;
-
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
@@ -147,17 +141,13 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
             String trackingFilename,
             boolean legacyLocalRepository,
             TrackingFileManager trackingFileManager,
-            LocalPathPrefixComposer localPathPrefixComposer)
-            throws IOException {
+            LocalPathPrefixComposer localPathPrefixComposer) {
         super(basedir, "enhanced", localPathComposer);
         this.trackingRepositoryKeyFunction = requireNonNull(trackingRepositoryKeyFunction);
         this.trackingFilename = requireNonNull(trackingFilename);
         this.legacyLocalRepository = legacyLocalRepository;
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
-        // a fresh local repository does not exist yet; toRealPath() requires it to
-        Files.createDirectories(getRepository().getBasePath());
-        this.realBasePath = getRepository().getBasePath().toRealPath();
     }
 
     private String concatPaths(String prefix, String artifactPath) {
