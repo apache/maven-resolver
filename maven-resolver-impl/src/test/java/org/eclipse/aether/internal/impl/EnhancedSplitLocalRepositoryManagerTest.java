@@ -19,14 +19,21 @@
 package org.eclipse.aether.internal.impl;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.LocalArtifactRequest;
+import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalRepositoryManagerTest {
 
@@ -74,5 +81,48 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
         assertEquals(
                 "cached/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-20110329.221805-4.jar",
                 manager.getPathForRemoteArtifact(artifact, remoteRepo, ""));
+    }
+
+    /**
+     * Replaces the given prefix directory of the local repository with a symbolic link to a directory elsewhere,
+     * like a local repository sharing its download cache with other local repositories.
+     */
+    private void symlinkPrefixDirectory(String prefix, Path target) {
+        try {
+            Files.createSymbolicLink(basedir.toPath().resolve(prefix), target);
+        } catch (IOException | UnsupportedOperationException e) {
+            assumeTrue(false, "filesystem does not support symbolic links");
+        }
+    }
+
+    @Test
+    void testFindLocalArtifactBelowSymlinkedPrefixDirectory(@TempDir Path target) throws Exception {
+        symlinkPrefixDirectory("installed", target);
+        addLocalArtifact(artifact);
+
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, null, null);
+        LocalArtifactResult result = manager.find(session, request);
+        assertTrue(result.isAvailable());
+    }
+
+    @Test
+    void testFindRemoteArtifactBelowSymlinkedPrefixDirectory(@TempDir Path target) throws Exception {
+        symlinkPrefixDirectory("cached", target);
+        addRemoteArtifact(artifact);
+
+        LocalArtifactRequest request =
+                new LocalArtifactRequest(artifact, Collections.singletonList(repository), testContext);
+        LocalArtifactResult result = manager.find(session, request);
+        assertTrue(result.isAvailable());
+    }
+
+    @Test
+    void testFindDoesNotAcceptCaseAliasBelowSymlinkedPrefixDirectory(@TempDir Path target) throws Exception {
+        symlinkPrefixDirectory("installed", target);
+        Artifact aliased = createCaseAliasedArtifact();
+
+        LocalArtifactRequest request = new LocalArtifactRequest(aliased, null, null);
+        LocalArtifactResult result = manager.find(session, request);
+        assertFalse(result.isAvailable());
     }
 }
