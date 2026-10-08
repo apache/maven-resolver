@@ -40,6 +40,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.auth.BasicSchemeFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.message.BasicHeader;
@@ -74,6 +75,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -344,6 +347,24 @@ class ApacheTransporterTest extends HttpTransporterTest {
             }
             proxyServer.stop();
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"http,80", "https,443"})
+    void testConcurrentAuthCacheMatchesImplicitDefaultPort(String scheme, int defaultPort) {
+        HttpHost implicitPort = new HttpHost("repo.example.com", -1, scheme);
+        HttpHost explicitPort = new HttpHost("repo.example.com", defaultPort, scheme);
+        BasicScheme authScheme = new BasicScheme();
+        ApacheTransporter.ConcurrentAuthCache authCache = new ApacheTransporter.ConcurrentAuthCache();
+
+        authCache.put(implicitPort, authScheme);
+
+        assertSame(authScheme, authCache.get(explicitPort));
+        assertNull(authCache.get(new HttpHost("repo.example.com", defaultPort + 1, scheme)));
+
+        authCache.remove(explicitPort);
+
+        assertNull(authCache.get(implicitPort));
     }
 
     private void assertGetStatus(int status) {

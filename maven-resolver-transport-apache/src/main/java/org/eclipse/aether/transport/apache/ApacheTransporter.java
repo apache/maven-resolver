@@ -871,10 +871,17 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     static class ConcurrentAuthCache implements AuthCache {
         private final ConcurrentHashMap<HttpHost, AuthScheme> map = new ConcurrentHashMap<>();
 
+        private static HttpHost normalize(HttpHost host) {
+            if (host.getPort() >= 0) {
+                return host;
+            }
+            return new HttpHost(host.getHostName(), effectivePort(host), host.getSchemeName());
+        }
+
         @Override
         public void put(HttpHost host, AuthScheme authScheme) {
             if (host != null && authScheme != null) {
-                map.put(host, authScheme);
+                map.put(normalize(host), authScheme);
             }
         }
 
@@ -883,13 +890,13 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             if (host == null) {
                 return null;
             }
-            return map.get(host);
+            return map.get(normalize(host));
         }
 
         @Override
         public void remove(HttpHost host) {
             if (host != null) {
-                map.remove(host);
+                map.remove(normalize(host));
             }
         }
 
