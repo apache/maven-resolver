@@ -78,7 +78,6 @@ public final class ArtifactDownload extends ArtifactTransfer {
      * @param context The context in which this download is performed, may be {@code null}.
      * @param path The local file to download the artifact to, may be {@code null}.
      * @param checksumPolicy The checksum policy, may be {@code null}.
-     * @deprecated Use {@link ArtifactDownload(Artifact, String, Path, String)} instead.
      * @since 2.0.0
      */
     public ArtifactDownload(Artifact artifact, String context, Path path, String checksumPolicy) {
