@@ -443,6 +443,15 @@ public class DefaultArtifactResolverTest {
                         false, RepositoryPolicy.UPDATE_POLICY_DAILY, RepositoryPolicy.CHECKSUM_POLICY_WARN))
                 .build();
 
+        List<LocalArtifactRequest> localRequests = new ArrayList<>();
+        session.setLocalRepositoryManager(new TestLocalRepositoryManager() {
+            @Override
+            public LocalArtifactResult find(RepositorySystemSession session, LocalArtifactRequest request) {
+                localRequests.add(request);
+                return super.find(session, request);
+            }
+        });
+
         ArtifactRequest request = new ArtifactRequest(artifact, null, "project");
         request.addRepository(repository);
 
@@ -452,6 +461,8 @@ public class DefaultArtifactResolverTest {
         } catch (ArtifactResolutionException e) {
             assertTrue(e.getResults().get(0).getExceptions().stream()
                     .noneMatch(ArtifactFilteredOutException.class::isInstance));
+            assertEquals(1, localRequests.size());
+            assertTrue(localRequests.get(0).getRepositories().isEmpty());
         }
     }
 
