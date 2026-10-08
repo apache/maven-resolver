@@ -134,12 +134,6 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      */
     private final ConcurrentHashMap<Path, Properties> trackingFileCache = new ConcurrentHashMap<>();
 
-    /**
-     * Real (symlink-resolved) path of the local repository base directory, used by
-     * {@link #hasFaithfulRealPath(Path)}. It cannot change during the lifetime of this manager.
-     */
-    private final Path realBasePath;
-
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
@@ -147,17 +141,13 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
             String trackingFilename,
             boolean legacyLocalRepository,
             TrackingFileManager trackingFileManager,
-            LocalPathPrefixComposer localPathPrefixComposer)
-            throws IOException {
+            LocalPathPrefixComposer localPathPrefixComposer) {
         super(basedir, "enhanced", localPathComposer);
         this.trackingRepositoryKeyFunction = requireNonNull(trackingRepositoryKeyFunction);
         this.trackingFilename = requireNonNull(trackingFilename);
         this.legacyLocalRepository = legacyLocalRepository;
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
-        // a fresh local repository does not exist yet; toRealPath() requires it to
-        Files.createDirectories(getRepository().getBasePath());
-        this.realBasePath = getRepository().getBasePath().toRealPath();
     }
 
     private String concatPaths(String prefix, String artifactPath) {
@@ -218,14 +208,23 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         // Local repository CANNOT have timestamped installed, they are created only during deploy
         if (Objects.equals(artifact.getVersion(), artifact.getBaseVersion())) {
             filePath = getAbsolutePathForLocalArtifact(artifact);
-            checkFind(filePath, result, verifyRealPath);
+            checkFind(
+                    getPrefixDirectory(localPathPrefixComposer.getPathPrefixForLocalArtifact(artifact)),
+                    filePath,
+                    result,
+                    verifyRealPath);
         }
 
         if (!result.isAvailable()) {
             for (RemoteRepository repository : request.getRepositories()) {
                 filePath = getAbsolutePathForRemoteArtifact(artifact, repository, request.getContext());
 
-                checkFind(filePath, result, verifyRealPath);
+                checkFind(
+                        getPrefixDirectory(
+                                localPathPrefixComposer.getPathPrefixForRemoteArtifact(artifact, repository)),
+                        filePath,
+                        result,
+                        verifyRealPath);
 
                 if (result.isAvailable()) {
                     break;
@@ -236,23 +235,29 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         return result;
     }
 
+    private Path getPrefixDirectory(String prefix) {
+        Path basePath = getRepository().getBasePath();
+        return prefix == null || prefix.isEmpty() ? basePath : basePath.resolve(prefix);
+    }
+
     /**
      * Verifies that the real (on-disk) spelling of the given artifact path matches the requested spelling,
-     * relative to the local repository base directory. On case-insensitive or normalization-preserving
+     * relative to the directory of its local path prefix. On case-insensitive or normalization-preserving
      * filesystems (the macOS and Windows defaults) a cached file whose stored name differs from the requested one
      * - for example one cached for case-colliding coordinates - still passes the file-existence check, while the
      * tracking data in the tracking file is compared exactly: the aliased file would then be treated as
      * present-but-untracked and accepted with no download and no checksum verification. Such aliases are treated
-     * as "not present" instead (fail closed), forcing a proper download for the requested coordinates. The
-     * comparison is relative to the (symlink-resolved) base directory, so a symlinked base directory is
-     * supported; symbolic links below the base directory are not - see
+     * as "not present" instead (fail closed), forcing a proper download for the requested coordinates. Only the
+     * coordinate-derived part of the path is compared, as a suffix of the real path: the base directory and the
+     * prefix directories are configuration, not coordinates, so they may be symbolic links - see
      * {@link EnhancedLocalRepositoryManagerFactory#CONFIG_PROP_VERIFY_REAL_PATH} to opt out.
      */
-    private boolean hasFaithfulRealPath(Path path) {
+    private boolean hasFaithfulRealPath(Path prefixDirectory, Path path) {
         try {
-            String requested = getRepository().getBasePath().relativize(path).toString();
-            String real = realBasePath.relativize(path.toRealPath()).toString();
-            if (!requested.equals(real)) {
+            String requested = prefixDirectory.relativize(path).toString();
+            String real = path.toRealPath().toString();
+            // compare strings: Path comparison ignores case on Windows
+            if (!real.endsWith(path.getFileSystem().getSeparator() + requested)) {
                 LOGGER.warn(
                         "Rejecting locally cached artifact {}: its on-disk path {} does not match the requested"
                                 + " coordinates (filesystem case/normalization alias); treating it as not present",
@@ -267,8 +272,8 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         }
     }
 
-    private void checkFind(Path path, LocalArtifactResult result, boolean verifyRealPath) {
-        if (Files.isRegularFile(path) && (!verifyRealPath || hasFaithfulRealPath(path))) {
+    private void checkFind(Path prefixDirectory, Path path, LocalArtifactResult result, boolean verifyRealPath) {
+        if (Files.isRegularFile(path) && (!verifyRealPath || hasFaithfulRealPath(prefixDirectory, path))) {
             result.setPath(path);
 
             Properties props = readRepos(path);
