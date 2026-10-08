@@ -64,6 +64,9 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class RepositoryExceptionTest {
 
     private void assertSerializable(RepositoryException e) {
@@ -109,6 +112,39 @@ public class RepositoryExceptionTest {
         request.setArtifact(newArtifact()).addRepository(newRepo()).setTrace(newTrace());
         ArtifactResult result = new ArtifactResult(request);
         assertSerializable(new ArtifactResolutionException(Arrays.asList(result)));
+    }
+
+    @Test
+    void testArtifactResolutionExceptionMessageIncludesFailuresFromAllRepositories() {
+        RemoteRepository central =
+                new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2").build();
+        RemoteRepository corporate = new RemoteRepository.Builder(
+                        "corporate", "default", "https://repo.internal.example/repository/maven")
+                .build();
+        Artifact artifact = newArtifact();
+        ArtifactRequest request = new ArtifactRequest()
+                .setArtifact(artifact)
+                .addRepository(central)
+                .addRepository(corporate);
+        ArtifactResult result = new ArtifactResult(request);
+        result.addException(central, new ArtifactNotFoundException(artifact, central, "not found in central"));
+        result.addException(corporate, new ArtifactTransferException(artifact, corporate, "DNS lookup failed"));
+
+        String message = new ArtifactResolutionException(Collections.singletonList(result)).getMessage();
+
+        assertTrue(message.contains("not found in central"), message);
+        assertTrue(message.contains("DNS lookup failed"), message);
+
+        ArtifactResult reversed = new ArtifactResult(request);
+        reversed.addException(corporate, new ArtifactTransferException(artifact, corporate, "DNS lookup failed"));
+        reversed.addException(central, new ArtifactNotFoundException(artifact, central, "not found in central"));
+        assertEquals(message, new ArtifactResolutionException(Collections.singletonList(reversed)).getMessage());
+
+        ArtifactResult singleFailure = new ArtifactResult(request);
+        singleFailure.addException(corporate, new ArtifactTransferException(artifact, corporate, "DNS lookup failed"));
+        assertEquals(
+                "The following artifacts could not be resolved: gid:aid:ext:1: DNS lookup failed",
+                new ArtifactResolutionException(Collections.singletonList(singleFailure)).getMessage());
     }
 
     @Test

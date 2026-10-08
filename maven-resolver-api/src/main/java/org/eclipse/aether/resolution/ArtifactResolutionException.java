@@ -133,7 +133,35 @@ public class ArtifactResolutionException extends RepositoryException {
             buffer.append(": ").append(cause.getMessage());
         }
 
+        String additionalFailures = getAdditionalFailures(results, cause);
+        if (!additionalFailures.isEmpty()) {
+            buffer.append(" (additional failures: ").append(additionalFailures).append(")");
+        }
+
         return buffer.toString();
+    }
+
+    private static String getAdditionalFailures(List<? extends ArtifactResult> results, Throwable primaryCause) {
+        ArrayList<String> failures = new ArrayList<>();
+        for (ArtifactResult result : results) {
+            if (!result.isResolved()) {
+                for (Map.Entry<ArtifactRepository, List<Exception>> entry :
+                        result.getMappedExceptions().entrySet()) {
+                    for (Exception exception : entry.getValue()) {
+                        if (exception != primaryCause) {
+                            String message = exception.getMessage();
+                            if (message == null) {
+                                message = exception.getClass().getSimpleName();
+                            }
+                            failures.add(result.getRequest().getArtifact() + " from "
+                                    + entry.getKey().getId() + ": " + message);
+                        }
+                    }
+                }
+            }
+        }
+        Collections.sort(failures);
+        return String.join("; ", failures);
     }
 
     /**
