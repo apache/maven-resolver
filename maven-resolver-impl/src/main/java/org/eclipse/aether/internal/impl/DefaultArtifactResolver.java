@@ -275,6 +275,10 @@ public class DefaultArtifactResolver implements ArtifactResolver {
                     List<RemoteRepository> filteredRemoteRepositories = new ArrayList<>(remoteRepositories);
                     if (filter != null) {
                         for (RemoteRepository repository : remoteRepositories) {
+                            if (!repository.getPolicy(artifact.isSnapshot()).isEnabled()) {
+                                filteredRemoteRepositories.remove(repository);
+                                continue;
+                            }
                             RemoteRepositoryFilter.Result filterResult = filter.acceptArtifact(repository, artifact);
                             if (!filterResult.isAccepted()) {
                                 result.addException(

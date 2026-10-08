@@ -196,6 +196,13 @@ public class DefaultMetadataResolver implements MetadataResolver {
                         continue;
                     }
 
+                    List<RemoteRepository> repositories =
+                            getEnabledSourceRepositories(repository, metadata.getNature());
+
+                    if (repositories.isEmpty()) {
+                        continue;
+                    }
+
                     if (remoteRepositoryFilter != null) {
                         RemoteRepositoryFilter.Result filterResult =
                                 remoteRepositoryFilter.acceptMetadata(repository, metadata);
@@ -204,13 +211,6 @@ public class DefaultMetadataResolver implements MetadataResolver {
                                     new MetadataNotFoundException(metadata, repository, filterResult.reasoning()));
                             continue;
                         }
-                    }
-
-                    List<RemoteRepository> repositories =
-                            getEnabledSourceRepositories(repository, metadata.getNature());
-
-                    if (repositories.isEmpty()) {
-                        continue;
                     }
 
                     metadataResolving(session, trace, metadata, repository);
