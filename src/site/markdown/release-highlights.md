@@ -45,7 +45,6 @@ For the full change lists, see the
 ## Dependency collection and conflict resolution
 
 * Default is new BF (breadth-first) collector.
-* Default is new BF (breadth-first) collector.
 * Improved and faster `TransitiveDependencyManager`.
 * Configurable graph visiting strategy; `levelOrder` is the default graph visitor (classpath ordering follows the same level order).
 * Less memory in `PathConflictResolver`, a new conflict resolver that is O(N).
