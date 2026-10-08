@@ -256,6 +256,21 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
     }
 
     @Test
+    void deniedAutoDiscoveredPathExplainsRepositorySpecificWorkaround() {
+        session.setConfigProperty("aether.remoteRepositoryFilter.prefixes.verifyDenied", "false");
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+
+        assertFalse(result.isAccepted());
+        assertTrue(result.reasoning()
+                .contains("aether.remoteRepositoryFilter.prefixes.verifyDeniedDropsTree.jenkins-public=true"));
+        assertTrue(result.reasoning().contains("contact the repository administrator"));
+        assertTrue(result.reasoning().contains("https://maven.apache.org/resolver/remote-repository-filtering.html"));
+    }
+
+    @Test
     void offlineSessionSkipsVerification() throws Exception {
         session.setOffline(true);
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
@@ -289,7 +304,9 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         assertNotNull(filter);
 
         // deliberately user-authored prefixes are never second-guessed
-        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertFalse(result.isAccepted());
+        assertFalse(result.reasoning().contains("verifyDeniedDropsTree"));
         verify(transporter, never()).peek(any(PeekTask.class));
     }
 }

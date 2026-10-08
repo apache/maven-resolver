@@ -590,12 +590,16 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                                     + " (verified served despite stale auto-discovered prefixes)");
                 }
             }
-            return result(
-                    accepted,
-                    NAME,
-                    accepted
-                            ? "Path " + path + " allowed from " + repository.getId()
-                            : "Path " + path + " NOT allowed from " + repository.getId());
+            String reasoning = accepted
+                    ? "Path " + path + " allowed from " + repository.getId()
+                    : "Path " + path + " NOT allowed from " + repository.getId();
+            if (!accepted && cachedPrefixes.autoDiscovered()) {
+                reasoning += ". The auto-discovered prefixes file may be incomplete. If this repository is a virtual "
+                        + "aggregate, set -D" + CONFIG_PROP_VERIFY_DENIED_DROPS_TREE + "." + repository.getId()
+                        + "=true to drop its prefixes file for this session, or contact the repository administrator. "
+                        + "See https://maven.apache.org/resolver/remote-repository-filtering.html";
+            }
+            return result(accepted, NAME, reasoning);
         }
 
         private Result noInputResult(RemoteRepository repository, String reasoning) {
