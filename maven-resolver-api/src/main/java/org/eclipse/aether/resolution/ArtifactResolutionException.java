@@ -142,7 +142,7 @@ public class ArtifactResolutionException extends RepositoryException {
     }
 
     private static String getAdditionalFailures(List<? extends ArtifactResult> results, Throwable primaryCause) {
-        ArrayList<String> failures = new ArrayList<>();
+        List<String> failures = new ArrayList<>();
         for (ArtifactResult result : results) {
             if (!result.isResolved()) {
                 for (Map.Entry<ArtifactRepository, List<Exception>> entry :

@@ -65,7 +65,6 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RepositoryExceptionTest {
 
@@ -130,10 +129,13 @@ public class RepositoryExceptionTest {
         result.addException(central, new ArtifactNotFoundException(artifact, central, "not found in central"));
         result.addException(corporate, new ArtifactTransferException(artifact, corporate, "DNS lookup failed"));
 
-        String message = new ArtifactResolutionException(Collections.singletonList(result)).getMessage();
+        ArtifactResolutionException exception = new ArtifactResolutionException(Collections.singletonList(result));
+        String message = exception.getMessage();
 
-        assertTrue(message.contains("not found in central"), message);
-        assertTrue(message.contains("DNS lookup failed"), message);
+        assertEquals(
+                "The following artifacts could not be resolved: gid:aid:ext:1: DNS lookup failed "
+                        + "(additional failures: gid:aid:ext:1 from central: not found in central)",
+                message);
 
         ArtifactResult reversed = new ArtifactResult(request);
         reversed.addException(corporate, new ArtifactTransferException(artifact, corporate, "DNS lookup failed"));
