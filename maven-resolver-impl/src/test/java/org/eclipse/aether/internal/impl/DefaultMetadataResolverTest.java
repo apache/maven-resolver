@@ -42,6 +42,7 @@ import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalMetadataRegistration;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
@@ -409,6 +410,25 @@ public class DefaultMetadataResolverTest {
                 result.getException().getMessage());
         assertNull(result.getMetadata());
 
+        connector.assertSeenExpected();
+    }
+
+    @Test
+    void testResolveSkipsFilterWhenRepositoryPoliciesAreDisabled() {
+        remoteRepositoryFilterSources.put("filter1", Filters.neverAccept());
+        RemoteRepository disabledRepository = new RemoteRepository.Builder(
+                        repository.getId(), "default", repository.getUrl())
+                .setReleasePolicy(new RepositoryPolicy(
+                        false, RepositoryPolicy.UPDATE_POLICY_DAILY, RepositoryPolicy.CHECKSUM_POLICY_WARN))
+                .setSnapshotPolicy(new RepositoryPolicy(
+                        false, RepositoryPolicy.UPDATE_POLICY_DAILY, RepositoryPolicy.CHECKSUM_POLICY_WARN))
+                .build();
+
+        MetadataRequest request = new MetadataRequest(metadata, disabledRepository, "");
+        List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
+
+        assertEquals(1, results.size());
+        assertNull(results.get(0).getException());
         connector.assertSeenExpected();
     }
 

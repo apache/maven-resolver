@@ -70,6 +70,7 @@ import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.spi.io.PathProcessorSupport;
+import org.eclipse.aether.transfer.ArtifactFilteredOutException;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
@@ -431,6 +432,26 @@ public class DefaultArtifactResolverTest {
 
             Artifact resolved = result.getArtifact();
             assertNull(resolved);
+        }
+    }
+
+    @Test
+    void testResolveRemoteArtifactSkipsFilterForDisabledRepositoryPolicy() {
+        remoteRepositoryFilterSources.put("filter1", Filters.neverAccept());
+        RemoteRepository repository = new RemoteRepository.Builder("id", "default", "file:///")
+                .setReleasePolicy(new RepositoryPolicy(
+                        false, RepositoryPolicy.UPDATE_POLICY_DAILY, RepositoryPolicy.CHECKSUM_POLICY_WARN))
+                .build();
+
+        ArtifactRequest request = new ArtifactRequest(artifact, null, "project");
+        request.addRepository(repository);
+
+        try {
+            resolver.resolveArtifact(session, request);
+            fail("expected exception");
+        } catch (ArtifactResolutionException e) {
+            assertTrue(e.getResults().get(0).getExceptions().stream()
+                    .noneMatch(ArtifactFilteredOutException.class::isInstance));
         }
     }
 
