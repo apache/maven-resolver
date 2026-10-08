@@ -82,7 +82,7 @@ For the full change lists, see the
 
 * The build needs Java 21, the target is still Java 8.
 * `api`, `spi` and `util` carries Java 9 module metadata.
-* Improved and more accurate OSGi metadata.
+* `api`, `spi` and `util` carry Java 9 module metadata.
 * Lower memory use and many performance fixes.
 * Security hardening (2.0.23): credentials are bound to their origin, TLS downgrade redirects are rejected,
   response reads are bounded, remote signals cannot weaken local policy,
