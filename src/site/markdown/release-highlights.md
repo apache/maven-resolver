@@ -27,7 +27,7 @@ For the full change lists, see the
 
 * New HTTP/2 capable `jdk` (Java HTTP client) and `jetty` transports.
   Both support HTTP/3 (since 2.0.21).
-* New S3 transport (MinIO Java client based).
+* Native S3 transport
 * File transport can read ZIP files, "mount" them, and use as (read only) remote repository.
 * Separated upload and download thread counts.
 * Connector pipelining.
