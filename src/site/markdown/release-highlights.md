@@ -49,7 +49,7 @@ For the full change lists, see the
 * Less memory in `PathConflictResolver` a new conflict resolver that is O(N).
 * Improved and faster `TransitiveDependencyManager`.
 * Relocated candidates from version ranges are kept.
-* Introduced scope manager.
+* Less memory in `PathConflictResolver`, a new conflict resolver that is O(N).
 * Artifact and dependency validation SPI.
 * Pluggable winner selection, default is "nearest" (Maven classic default), with "highest" available as well.
 
