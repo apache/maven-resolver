@@ -37,6 +37,7 @@ under the License.
     <menu name="Guides">
       <item name="API Compatibility" href="api-compatibility.html"/>
       <item name="Upgrading Resolver" href="upgrading-resolver.html"/>
+      <item name="Resolver 2.0.x Features" href="release-highlights.html"/>
       <item name="Using Resolver in Maven Plugins" href="using-resolver-in-maven-plugins.html"/>
       <item name="Transitive Dependency Resolution" href="transitive-dependency-resolution.html"/>
       <item name="Dependency Graph" href="dependency-graph.html"/>
