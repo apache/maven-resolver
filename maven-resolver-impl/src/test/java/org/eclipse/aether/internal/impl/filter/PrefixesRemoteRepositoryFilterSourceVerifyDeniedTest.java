@@ -152,6 +152,7 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
                         checksumsSelector(), new DefaultArtifactPredicateFactory(checksumsSelector()))));
         // existence checks against the remote repository: peek succeeds unless a test says otherwise
         transporter = mock(Transporter.class);
+        when(transporter.classify(any(Throwable.class))).thenReturn(Transporter.ERROR_NOT_FOUND);
         TransporterProvider transporterProvider = mock(TransporterProvider.class);
         when(transporterProvider.newTransporter(any(), any())).thenReturn(transporter);
         subject = new PrefixesRemoteRepositoryFilterSource(
@@ -178,6 +179,10 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
 
     @Test
     void deniedButServedPathDoesNotDisableFilterForRepository() throws Exception {
+        doThrow(new Exception("404"))
+                .when(transporter)
+                .peek(org.mockito.ArgumentMatchers.argThat(
+                        task -> task.getLocation().getPath().contains("io/jenkins/other")));
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
 
@@ -190,8 +195,70 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         // ...and listed paths keep being accepted, of course
         assertTrue(filter.acceptArtifact(remoteRepository, new DefaultArtifact("org.eclipse.foo:bar:1.0"))
                 .isAccepted());
-        // verification cost stays bounded: only the first denial is checked
-        verify(transporter, times(1)).peek(any(PeekTask.class));
+        // both denied paths were probed independently: jenkinsArtifact (served) and io.jenkins:other (404)
+        verify(transporter, times(2)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void pomThenJarOfDeniedArtifactAreBothAccepted() throws Exception {
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        Artifact pomArtifact = new DefaultArtifact("org.jenkins-ci:version-number:pom:1.14");
+        Artifact jarArtifact = new DefaultArtifact("org.jenkins-ci:version-number:jar:1.14");
+
+        // POM verified and accepted
+        assertTrue(filter.acceptArtifact(remoteRepository, pomArtifact).isAccepted());
+        // JAR of the same artifact at a different path must also be verified and accepted
+        assertTrue(filter.acceptArtifact(remoteRepository, jarArtifact).isAccepted());
+
+        // both distinct paths were probed against remote
+        verify(transporter, times(2)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void multipleDeniedArtifactsAreIndependentlyVerifiedAndAccepted() throws Exception {
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        Artifact libA = new DefaultArtifact("com.corp:lib-a:1.0");
+        Artifact libB = new DefaultArtifact("com.corp:lib-b:1.0");
+
+        assertTrue(filter.acceptArtifact(remoteRepository, libA).isAccepted());
+        assertTrue(filter.acceptArtifact(remoteRepository, libB).isAccepted());
+
+        // each denied path is independently probed and accepted
+        verify(transporter, times(2)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void unservedDeniedPathRemainsBlockedAndDoesNotDisableFilter() throws Exception {
+        Artifact servedArtifact = jenkinsArtifact;
+        Artifact unservedArtifact = new DefaultArtifact("com.corp:unserved-lib:1.0");
+        Artifact prefixListedArtifact = new DefaultArtifact("org.eclipse.foo:bar:1.0");
+
+        doThrow(new Exception("404"))
+                .when(transporter)
+                .peek(org.mockito.ArgumentMatchers.argThat(
+                        task -> task.getLocation().getPath().contains("com/corp/unserved-lib")));
+
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        // served artifact is accepted after probe
+        assertTrue(filter.acceptArtifact(remoteRepository, servedArtifact).isAccepted());
+
+        // unserved artifact is rejected
+        assertFalse(filter.acceptArtifact(remoteRepository, unservedArtifact).isAccepted());
+
+        // repeated request for unserved artifact remains rejected and does not probe again (negative cache)
+        assertFalse(filter.acceptArtifact(remoteRepository, unservedArtifact).isAccepted());
+
+        // prefix-listed artifact remains accepted without remote probe
+        assertTrue(filter.acceptArtifact(remoteRepository, prefixListedArtifact).isAccepted());
+
+        // total probes: 1 for servedArtifact + 1 for unservedArtifact (second unserved request was cached)
+        verify(transporter, times(2)).peek(any(PeekTask.class));
     }
 
     @Test
@@ -243,6 +310,23 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         // and verification cost is bounded: only the first denial is checked
         assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
         verify(transporter, times(1)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void transportFailureDoesNotNegativeCachePath() throws Exception {
+        Exception transportError = new Exception("Connection timed out");
+        doThrow(transportError).when(transporter).peek(any(PeekTask.class));
+        when(transporter.classify(transportError)).thenReturn(Transporter.ERROR_OTHER);
+
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        // first attempt fails due to transport error: artifact is not accepted
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+
+        // second attempt must retry (not permanently negative-cached)
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        verify(transporter, times(2)).peek(any(PeekTask.class));
     }
 
     @Test

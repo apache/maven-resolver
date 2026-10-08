@@ -28,9 +28,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -207,14 +207,13 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     public static final boolean DEFAULT_USE_REPOSITORY_MANAGERS = false;
 
     /**
-     * Configuration to verify the first denied path per remote repository when the effective prefixes were
-     * auto-discovered: the denied path existence is checked directly against the remote repository, and if the
-     * path exists, the auto-discovered prefixes file is provably wrong for that path (it denies content the
-     * repository actually serves); a warning is emitted and, by default, only that verified path is allowed while
-     * the prefixes file stays enforcing for all other paths (see {@link #CONFIG_PROP_VERIFY_DENIED_DROPS_TREE}
-     * for the legacy behavior of dropping the whole file). If the path does not exist, the prefixes file is
-     * consistent with reality for this witness and stays trusted; no further verification happens for given remote
-     * repository, keeping the extra cost bounded to at most one existence check per remote repository per session.
+     * Configuration to verify denied paths per remote repository when the effective prefixes were auto-discovered:
+     * the denied path existence is checked directly against the remote repository, and if the path exists, the
+     * auto-discovered prefixes file is provably wrong for that path (it denies content the repository actually
+     * serves); a warning is emitted and, by default, verified paths are allowed while the prefixes file stays
+     * enforcing for all other paths (see {@link #CONFIG_PROP_VERIFY_DENIED_DROPS_TREE} for the legacy behavior of
+     * dropping the whole file). If a denied path does not exist remotely, it remains denied and the negative
+     * verification result is cached for the session to prevent redundant checks.
      * <p>
      * This protects builds from broken repository managers that "leak" a member repository prefixes file through
      * a group/virtual repository, silently disabling the whole repository. User-provided prefix files are
@@ -364,6 +363,12 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     private static final PrefixTree ENABLED_NO_INPUT = new PrefixTree("enabled-no-input");
     private static final PrefixTree BROKEN = new PrefixTree("broken");
 
+    private enum VerificationOutcome {
+        SERVED,
+        ABSENT,
+        UNKNOWN
+    }
+
     /**
      * The cached per remote repository prefixes state: the effective {@link PrefixTree}, whether it was
      * auto-discovered (as only auto-discovered prefixes are subject to denied path verification, see
@@ -376,8 +381,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
         private volatile PrefixTree prefixTree;
         private final boolean autoDiscovered;
-        private final AtomicBoolean verifyClaimed = new AtomicBoolean(false);
-        private volatile String verifiedServedPath;
+        private final Set<String> verifiedServedPaths = ConcurrentHashMap.newKeySet();
+        private final Set<String> verifiedAbsentPaths = ConcurrentHashMap.newKeySet();
 
         private CachedPrefixes(PrefixTree prefixTree, boolean autoDiscovered) {
             this.prefixTree = prefixTree;
@@ -392,21 +397,24 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             return autoDiscovered;
         }
 
-        private boolean claimVerification() {
-            return verifyClaimed.compareAndSet(false, true);
-        }
-
         private void drop() {
             this.prefixTree = BROKEN;
         }
 
         private void allowVerifiedServedPath(String path) {
-            this.verifiedServedPath = path;
+            this.verifiedServedPaths.add(path);
         }
 
         private boolean isVerifiedServedPath(String path) {
-            String verified = this.verifiedServedPath;
-            return verified != null && verified.equals(path);
+            return this.verifiedServedPaths.contains(path);
+        }
+
+        private void recordVerifiedAbsentPath(String path) {
+            this.verifiedAbsentPaths.add(path);
+        }
+
+        private boolean isVerifiedAbsentPath(String path) {
+            return this.verifiedAbsentPaths.contains(path);
         }
     }
 
@@ -554,28 +562,45 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
             }
             boolean accepted = prefixTree.acceptedPath(path);
             if (!accepted && cachedPrefixes.autoDiscovered() && isVerifyDeniedEnabled(repository)) {
-                // synchronized: only the first denial is verified; concurrent denials wait for the verdict
+                if (cachedPrefixes.isVerifiedServedPath(path)) {
+                    return result(
+                            true,
+                            NAME,
+                            "Path " + path + " allowed from " + repository.getId()
+                                    + " (verified served despite stale auto-discovered prefixes)");
+                }
+                if (cachedPrefixes.isVerifiedAbsentPath(path)) {
+                    return result(false, NAME, "Path " + path + " NOT allowed from " + repository.getId());
+                }
                 synchronized (cachedPrefixes) {
-                    if (cachedPrefixes.claimVerification() && remoteRepositoryServesPath(repository, path)) {
-                        if (isVerifyDeniedDropsTreeEnabled(repository)) {
-                            logger.warn(
-                                    "Remote repository {} serves a broken prefixes file: it denies path {} that the "
-                                            + "repository actually serves; ignoring auto-discovered prefixes for this "
-                                            + "repository (report this to the repository administrator)",
-                                    repository.getId(),
-                                    path);
-                            cachedPrefixes.drop();
-                        } else {
-                            logger.warn(
-                                    "Remote repository {} serves path {} that its auto-discovered prefixes file "
-                                            + "denies; the prefixes file appears stale. Allowing only this verified "
-                                            + "path; the prefixes filter stays enforcing for all other paths (set {} "
-                                            + "to true to instead drop the whole auto-discovered prefixes file; "
-                                            + "report this to the repository administrator)",
-                                    repository.getId(),
-                                    path,
-                                    CONFIG_PROP_VERIFY_DENIED_DROPS_TREE);
-                            cachedPrefixes.allowVerifiedServedPath(path);
+                    if (cachedPrefixes.prefixTree() == BROKEN) {
+                        return noInputResult(repository, "Broken auto-discovered prefixes dropped");
+                    }
+                    if (!cachedPrefixes.isVerifiedServedPath(path) && !cachedPrefixes.isVerifiedAbsentPath(path)) {
+                        VerificationOutcome outcome = remoteRepositoryServesPath(repository, path);
+                        if (outcome == VerificationOutcome.SERVED) {
+                            if (isVerifyDeniedDropsTreeEnabled(repository)) {
+                                logger.warn(
+                                        "Remote repository {} serves a broken prefixes file: it denies path {} that the "
+                                                + "repository actually serves; ignoring auto-discovered prefixes for this "
+                                                + "repository (report this to the repository administrator)",
+                                        repository.getId(),
+                                        path);
+                                cachedPrefixes.drop();
+                            } else {
+                                logger.warn(
+                                        "Remote repository {} serves path {} that its auto-discovered prefixes file "
+                                                + "denies; the prefixes file appears stale. Allowing only this verified "
+                                                + "path; the prefixes filter stays enforcing for all other paths (set {} "
+                                                + "to true to instead drop the whole auto-discovered prefixes file; "
+                                                + "report this to the repository administrator)",
+                                        repository.getId(),
+                                        path,
+                                        CONFIG_PROP_VERIFY_DENIED_DROPS_TREE);
+                                cachedPrefixes.allowVerifiedServedPath(path);
+                            }
+                        } else if (outcome == VerificationOutcome.ABSENT) {
+                            cachedPrefixes.recordVerifiedAbsentPath(path);
                         }
                     }
                 }
@@ -628,21 +653,29 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
         /**
          * Checks whether the remote repository actually serves given path, using a lightweight existence check
-         * (the transporter sits below the filtering connector, so no recursion can happen). Any failure (path
-         * not present, transport problem) yields {@code false}: the prefixes verdict is overridden (or, with
-         * {@link #CONFIG_PROP_VERIFY_DENIED_DROPS_TREE}, the whole file dropped) only when the remote repository
-         * provably serves the denied path.
+         * (the transporter sits below the filtering connector, so no recursion can happen). Only definitive
+         * {@link Transporter#ERROR_NOT_FOUND} is recorded as absent so transient transport or network failures
+         * do not permanently poison the negative cache.
          */
-        private boolean remoteRepositoryServesPath(RemoteRepository repository, String path) {
-            try (Transporter transporter = transporterProvider.newTransporter(session, repository)) {
+        private VerificationOutcome remoteRepositoryServesPath(RemoteRepository repository, String path) {
+            Transporter transporter = null;
+            try {
+                transporter = transporterProvider.newTransporter(session, repository);
                 transporter.peek(new PeekTask(new URI(null, null, path, null)));
-                return true;
+                return VerificationOutcome.SERVED;
             } catch (URISyntaxException e) {
                 logger.debug("Cannot construct URI for denied path {} of {}", path, repository, e);
-                return false;
+                return VerificationOutcome.ABSENT;
             } catch (Exception e) {
                 logger.debug("Verification of denied path {} against {} failed", path, repository, e);
-                return false;
+                if (transporter != null && transporter.classify(e) == Transporter.ERROR_NOT_FOUND) {
+                    return VerificationOutcome.ABSENT;
+                }
+                return VerificationOutcome.UNKNOWN;
+            } finally {
+                if (transporter != null) {
+                    transporter.close();
+                }
             }
         }
     }
