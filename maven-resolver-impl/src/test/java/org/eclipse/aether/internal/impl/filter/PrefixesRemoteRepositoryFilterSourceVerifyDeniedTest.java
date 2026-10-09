@@ -49,6 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.eclipse.aether.internal.impl.checksum.Checksums.checksumsSelector;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -306,10 +307,34 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
 
         // the artifact is neither covered by the prefixes file nor present on the remote repository:
         // the file is consistent with reality, the filter must keep denying
-        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        RemoteRepositoryFilter.Result result1 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertFalse(result1.isAccepted());
+        assertTrue(result1.reasoning()
+                .contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied.jenkins-public=true"));
+        assertTrue(result1.reasoning().contains("https://maven.apache.org/resolver/remote-repository-filtering.html"));
+
         // and verification cost is bounded: only the first denial is checked
-        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        RemoteRepositoryFilter.Result result2 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertFalse(result2.isAccepted());
+        assertTrue(result2.reasoning()
+                .contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied.jenkins-public=true"));
         verify(transporter, times(1)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void deniedAutoDiscoveredPathExplainsRepositorySpecificWorkaround() {
+        session.setConfigProperty("aether.remoteRepositoryFilter.prefixes.verifyDenied", "false");
+        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+
+        assertFalse(result.isAccepted());
+        assertTrue(result.reasoning()
+                .contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied.jenkins-public=true"));
+        assertTrue(result.reasoning().contains("auto-discovered prefix file appears incomplete"));
+        assertTrue(result.reasoning().contains("report this to the repository administrator"));
+        assertTrue(result.reasoning().contains("https://maven.apache.org/resolver/remote-repository-filtering.html"));
     }
 
     @Test
@@ -373,7 +398,14 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         assertNotNull(filter);
 
         // deliberately user-authored prefixes are never second-guessed
-        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertFalse(result.isAccepted());
+        assertEquals(
+                "prefixes: Path org/jenkins-ci/version-number/1.14/version-number-1.14.jar NOT allowed from jenkins-public",
+                result.reasoning());
+        assertFalse(result.reasoning().contains("verifyDenied"));
+        assertFalse(result.reasoning().contains("auto-discovered"));
+        assertFalse(result.reasoning().contains("https://maven.apache.org/resolver/remote-repository-filtering.html"));
         verify(transporter, never()).peek(any(PeekTask.class));
     }
 }

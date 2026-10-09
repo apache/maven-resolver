@@ -372,8 +372,8 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
     /**
      * The cached per remote repository prefixes state: the effective {@link PrefixTree}, whether it was
      * auto-discovered (as only auto-discovered prefixes are subject to denied path verification, see
-     * {@link #CONFIG_PROP_VERIFY_DENIED}), whether verification happened already, and the denied path (if any)
-     * that verification proved the remote repository actually serves.
+     * {@link #CONFIG_PROP_VERIFY_DENIED}), per-path caching of paths verified as served, and per-path caching
+     * of definitively absent paths, with verification outcomes maintained independently for each path.
      */
     private static final class CachedPrefixes {
         private static final CachedPrefixes DISABLED_PREFIXES = new CachedPrefixes(DISABLED, false);
@@ -381,12 +381,14 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
 
         private volatile PrefixTree prefixTree;
         private final boolean autoDiscovered;
-        private final Set<String> verifiedServedPaths = ConcurrentHashMap.newKeySet();
-        private final Set<String> verifiedAbsentPaths = ConcurrentHashMap.newKeySet();
+        private final Set<String> verifiedServedPaths;
+        private final Set<String> verifiedAbsentPaths;
 
         private CachedPrefixes(PrefixTree prefixTree, boolean autoDiscovered) {
             this.prefixTree = prefixTree;
             this.autoDiscovered = autoDiscovered;
+            this.verifiedServedPaths = autoDiscovered ? ConcurrentHashMap.newKeySet() : Collections.emptySet();
+            this.verifiedAbsentPaths = autoDiscovered ? ConcurrentHashMap.newKeySet() : Collections.emptySet();
         }
 
         private PrefixTree prefixTree() {
@@ -570,8 +572,11 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                                     + " (verified served despite stale auto-discovered prefixes)");
                 }
                 if (cachedPrefixes.isVerifiedAbsentPath(path)) {
-                    return result(false, NAME, "Path " + path + " NOT allowed from " + repository.getId());
+                    return notAllowedResult(repository, path, cachedPrefixes);
                 }
+                // Fast-path checks occur before locking. The lock belongs to this repository's cached-prefix
+                // state and prevents duplicate verification of the same path during concurrent requests,
+                // intentionally preserving correctness without globally disabling filtering.
                 synchronized (cachedPrefixes) {
                     if (cachedPrefixes.prefixTree() == BROKEN) {
                         return noInputResult(repository, "Broken auto-discovered prefixes dropped");
@@ -615,12 +620,21 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                                     + " (verified served despite stale auto-discovered prefixes)");
                 }
             }
-            return result(
-                    accepted,
-                    NAME,
-                    accepted
-                            ? "Path " + path + " allowed from " + repository.getId()
-                            : "Path " + path + " NOT allowed from " + repository.getId());
+            return accepted
+                    ? result(true, NAME, "Path " + path + " allowed from " + repository.getId())
+                    : notAllowedResult(repository, path, cachedPrefixes);
+        }
+
+        private Result notAllowedResult(RemoteRepository repository, String path, CachedPrefixes cachedPrefixes) {
+            String reasoning = "Path " + path + " NOT allowed from " + repository.getId();
+            if (cachedPrefixes.autoDiscovered()) {
+                reasoning += " (auto-discovered prefix file appears incomplete). If this repository serves a "
+                        + "virtual aggregate with an incomplete prefix file, set -D"
+                        + CONFIG_PROP_VERIFY_DENIED + "." + repository.getId()
+                        + "=true or report this to the repository administrator. "
+                        + "See https://maven.apache.org/resolver/remote-repository-filtering.html";
+            }
+            return result(false, NAME, reasoning);
         }
 
         private Result noInputResult(RemoteRepository repository, String reasoning) {
