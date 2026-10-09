@@ -40,11 +40,13 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
-
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * JDK Transporter UT.
@@ -179,23 +181,20 @@ class JdkTransporterTest extends HttpTransporterTest {
         }
     }
 
-    /*
-        @ParameterizedTest
-        @CsvSource({
-            "11.0.20, false",
-            "17.0.16, false",
-            "17.0.17, true",
-            "17.0.18, true",
-            "18.0.2, false",
-            "19.0.2, false",
-            "20, true",
-            "21.0.2, true"
-        })
-        void testIsExpectContinueSupported(String versionStr, boolean expected) {
-            assertEquals(expected, JdkTransporter.isExpectContinueSupported(Runtime.Version.parse(versionStr)));
-        }
-    */
-
+    @ParameterizedTest
+    @CsvSource({
+        "11.0.20, false",
+        "17.0.16, false",
+        "17.0.17, true",
+        "17.0.18, true",
+        "18.0.2, false",
+        "19.0.2, false",
+        "20, true",
+        "21.0.2, true"
+    })
+    void testIsExpectContinueSupported(String versionStr, boolean expected) {
+        assertEquals(expected, JdkTransporter.isExpectContinueSupported(Runtime.Version.parse(versionStr)));
+    }
     @Test
     void testPut_ExpectContinueExplicitlyEnabledOnJava17() throws Exception {
         Runtime.Version version = Runtime.version();
