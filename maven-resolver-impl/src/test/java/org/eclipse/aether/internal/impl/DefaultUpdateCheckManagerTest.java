@@ -18,9 +18,12 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
@@ -98,6 +101,22 @@ public class DefaultUpdateCheckManagerTest {
 
     static void resetSessionData(RepositorySystemSession session) {
         session.getData().set(DefaultUpdateCheckManager.SESSION_CHECKS, null);
+        session.getData().set(DefaultUpdateCheckManager.SESSION_NOT_FOUNDS, null);
+    }
+
+    /**
+     * Runs the action while capturing the slf4j-simple output written to {@code System.err}.
+     */
+    private static String captureStdErr(Runnable action) throws Exception {
+        PrintStream original = System.err;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        try (PrintStream capture = new PrintStream(buffer, true, StandardCharsets.UTF_8.name())) {
+            System.setErr(capture);
+            action.run();
+        } finally {
+            System.setErr(original);
+        }
+        return buffer.toString(StandardCharsets.UTF_8.name());
     }
 
     private UpdateCheck<Metadata, MetadataTransferException> newMetadataCheck() {
@@ -165,6 +184,44 @@ public class DefaultUpdateCheckManagerTest {
             props.load(fis);
         }
         assertEquals("some error", props.getProperty("file:///other-repo/.error"));
+    }
+
+    @Test
+    void testTouchArtifactDoesNotWarnAboutSiblingNotFoundFromSameSession() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
+        notFound.setRepository(other);
+        notFound.setAuthoritativeRepository(other);
+        notFound.setException(new ArtifactNotFoundException(artifact, other));
+        manager.touchArtifact(session, notFound);
+        assertTrue(touchFile.exists());
+
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        String log = captureStdErr(() -> manager.touchArtifact(session, success));
+        assertFalse(log.contains("WARN"), log);
+        assertFalse(touchFile.exists());
+    }
+
+    @Test
+    void testTouchArtifactWarnsAboutSiblingNotFoundFromPreviousSession() throws Exception {
+        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
+        UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
+        notFound.setRepository(other);
+        notFound.setAuthoritativeRepository(other);
+        notFound.setException(new ArtifactNotFoundException(artifact, other));
+        manager.touchArtifact(session, notFound);
+        assertTrue(touchFile.exists());
+
+        resetSessionData(session);
+        UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
+        String log = captureStdErr(() -> manager.touchArtifact(session, success));
+        assertTrue(log.contains("WARN"), log);
+        assertTrue(log.contains("file:///other-repo/"), log);
+        assertFalse(touchFile.exists());
     }
 
     @Test
