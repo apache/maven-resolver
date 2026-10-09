@@ -75,15 +75,11 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
         return new JdkTransporter(session, repository, javaVersion(), checksumExtractor, pathProcessor);
     }
 
-    private static int javaVersion() {
+    private static Runtime.Version javaVersion() {
         try {
-            final String version = System.getProperty("java.version", "11" /* default must pass */);
-            final int dot = version.indexOf('.');
-            final int hyphen = version.indexOf('-');
-            final int sep = (dot > 0 && dot < hyphen || hyphen < 0) ? dot : hyphen;
-            return Integer.parseInt(sep > 0 ? version.substring(0, sep) : version);
-        } catch (final NumberFormatException nfe) {
-            return 11; // cannot be a pre-java 11 version so let it pass
+            return Runtime.Version.parse(System.getProperty("java.version", "11"));
+        } catch (final IllegalArgumentException e) {
+            return Runtime.Version.parse("11");
         }
     }
 }

@@ -24,21 +24,29 @@ import java.net.http.HttpClient;
 import java.net.http.HttpClient.Version;
 import java.util.stream.Stream;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.internal.impl.DefaultPathProcessor;
 import org.eclipse.aether.internal.test.util.TestUtils;
+import org.eclipse.aether.internal.test.util.http.HttpServer;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
+import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
-
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * JDK Transporter UT.
@@ -171,5 +179,39 @@ class JdkTransporterTest extends HttpTransporterTest {
             // default should be returned which is HTTP_2 for all JRE versions
             assertEquals(Version.HTTP_2, jdkTransporter.getHttpVersion(session, remoteRepository));
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "11.0.20, false",
+        "17.0.16, false",
+        "17.0.17, true",
+        "17.0.18, true",
+        "18.0.2, false",
+        "19.0.2, false",
+        "20, true",
+        "21.0.2, true"
+    })
+    void testIsExpectContinueSupported(String versionStr, boolean expected) {
+        assertEquals(expected, JdkTransporter.isExpectContinueSupported(Runtime.Version.parse(versionStr)));
+    }
+    @Test
+    void testPut_ExpectContinueExplicitlyEnabledOnJava17() throws Exception {
+        Runtime.Version version = Runtime.version();
+        Assumptions.assumeTrue(version.feature() == 17 && version.compareTo(Runtime.Version.parse("17.0.17")) >= 0);
+
+        httpServer.setExpectSupport(HttpServer.ExpectContinue.FAIL);
+        session.setConfigProperty(ConfigurationProperties.HTTP_EXPECT_CONTINUE, "true");
+        newTransporter(httpServer.getHttpUrl());
+
+        PutTask task = new PutTask(URI.create("repo/file.txt")).setDataString("upload");
+        HttpTransporterException e = assertThrows(HttpTransporterException.class, () -> transporter.put(task));
+        assertEquals(417, e.getStatusCode());
+
+        String expectHeader =
+                httpServer.getLogEntries().get(0).getRequestHeaders().get("Expect");
+        assertTrue(
+                "100-continue".equalsIgnoreCase(expectHeader),
+                "Expect header should be sent when explicitly enabled on Java 17.0.17+");
     }
 }
