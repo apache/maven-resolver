@@ -151,6 +151,11 @@ public class DefaultInstaller implements Installer {
                 result.addMetadata(metadata);
             }
 
+            boolean hardLink = ConfigUtils.getBoolean(
+                    session,
+                    ConfigurationProperties.DEFAULT_INSTALLER_HARD_LINK,
+                    ConfigurationProperties.INSTALLER_HARD_LINK);
+
             for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
                 Artifact artifact = iterator.next();
 
@@ -160,7 +165,7 @@ public class DefaultInstaller implements Installer {
 
                 iterator.set(artifact);
 
-                install(session, trace, artifact);
+                install(session, trace, artifact, hardLink);
                 if (artifact.getProperty(ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID, null) == null) {
                     result.addArtifact(artifact);
                 }
@@ -195,7 +200,7 @@ public class DefaultInstaller implements Installer {
         }
     }
 
-    private void install(RepositorySystemSession session, RequestTrace trace, Artifact artifact)
+    private void install(RepositorySystemSession session, RequestTrace trace, Artifact artifact, boolean hardLink)
             throws InstallationException {
         final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         final Path srcPath = artifact.getPath();
@@ -209,21 +214,17 @@ public class DefaultInstaller implements Installer {
                 throw new IllegalStateException("cannot install " + dstPath + " to same path");
             }
 
-            boolean hardLink = ConfigUtils.getBoolean(
-                    session,
-                    ConfigurationProperties.DEFAULT_INSTALLER_HARD_LINK,
-                    ConfigurationProperties.INSTALLER_HARD_LINK);
             if (hardLink) {
+                Files.createDirectories(dstPath.getParent());
+                if (Files.isDirectory(dstPath)) {
+                    throw new IOException("destination is a directory: " + dstPath);
+                }
                 try {
-                    Files.createDirectories(dstPath.getParent());
-                    if (Files.isDirectory(dstPath)) {
-                        throw new IOException("destination is a directory: " + dstPath);
-                    }
                     Files.deleteIfExists(dstPath);
                     Files.createLink(dstPath, srcPath);
                 } catch (UnsupportedOperationException | IllegalArgumentException | IOException e) {
                     // cross-device link (EXDEV), provider mismatch (e.g. Jimfs), or unsupported FS — fall back to copy
-                    logger.debug("Hard link not supported for {}, falling back to copy: {}", dstPath, e.getMessage());
+                    logger.warn("Hard link not supported for {}, falling back to copy: {}", dstPath, e.getMessage());
                     pathProcessor.copyWithTimestamp(srcPath, dstPath);
                 }
             } else {

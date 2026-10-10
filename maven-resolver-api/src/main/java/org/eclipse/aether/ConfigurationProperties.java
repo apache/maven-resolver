@@ -91,7 +91,7 @@ public final class ConfigurationProperties {
     /**
      * Prefix for installer related configurations. <em>For internal use only.</em>
      *
-     * @since 2.0.9
+     * @since 2.0.25
      */
     public static final String PREFIX_INSTALLER = PREFIX_AETHER + "installer.";
 
@@ -712,7 +712,7 @@ public final class ConfigurationProperties {
      * Standard Maven build tooling always replaces output via rename, so this is generally safe. Set this
      * property to {@code false} if your environment performs in-place writes to build output files.
      *
-     * @since 2.0.9
+     * @since 2.0.25
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_INSTALLER_HARD_LINK}
@@ -723,7 +723,7 @@ public final class ConfigurationProperties {
     /**
      * The default value for {@link #INSTALLER_HARD_LINK}: {@code true}.
      *
-     * @since 2.0.9
+     * @since 2.0.25
      */
     public static final boolean DEFAULT_INSTALLER_HARD_LINK = true;
 
