@@ -20,10 +20,12 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
@@ -376,5 +378,48 @@ public class DefaultInstallerTest {
                 artifact.getFile().lastModified(),
                 localArtifactFile.lastModified(),
                 "artifact timestamp was not set to src file");
+    }
+
+    @Test
+    void testHardLinkInstallCreatesHardLink() throws InstallationException, IOException {
+        // default: hardLink=true — installer attempts a hard link, falls back to copy on cross-device
+        request.addArtifact(artifact);
+        installer.install(session, request);
+
+        assertTrue(localArtifactFile.exists());
+        assertEquals("artifact", TestFileUtils.readString(localArtifactFile));
+
+        // On same-device filesystems, verify a hard link was created (same inode).
+        // On cross-device (common in CI containers where /tmp and project dir are on different mounts),
+        // Files.createLink throws IOException and the installer falls back to copy — both are correct.
+        Path srcPath = artifact.getFile().toPath();
+        Path dstPath = localArtifactFile.toPath();
+        try {
+            boolean sameDevice =
+                    Files.getAttribute(srcPath, "unix:dev").equals(Files.getAttribute(dstPath, "unix:dev"));
+            if (sameDevice) {
+                // hard link must have been created — same inode expected
+                assertEquals(
+                        Files.getAttribute(srcPath, "unix:ino"),
+                        Files.getAttribute(dstPath, "unix:ino"),
+                        "installed artifact should be a hard link to the source on same-device FS");
+            }
+            // cross-device: fallback to copy is correct — content already asserted above
+        } catch (UnsupportedOperationException | IllegalArgumentException ignored) {
+            // non-POSIX filesystem — inode/device check not available; content assertion is sufficient
+        }
+    }
+
+    @Test
+    void testHardLinkDisabledFallsThroughToCopy() throws InstallationException, IOException {
+        // set hardLink=false — installer must copy, not hard-link
+        session.setConfigProperty(ConfigurationProperties.INSTALLER_HARD_LINK, false);
+        request.addArtifact(artifact);
+        installer.install(session, request);
+
+        assertTrue(localArtifactFile.exists());
+        assertEquals("artifact", TestFileUtils.readString(localArtifactFile));
+        // With copy the content is correct; we cannot assert different inodes portably
+        // but we verify the install succeeds and produces the correct content
     }
 }
