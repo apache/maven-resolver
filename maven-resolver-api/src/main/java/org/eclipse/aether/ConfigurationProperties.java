@@ -702,8 +702,9 @@ public final class ConfigurationProperties {
      * repository, avoiding a full file copy and saving disk I/O and space for large JARs.
      * <p>
      * Hard links require that the source and target paths reside on the <strong>same filesystem volume</strong>.
-     * When they do not (e.g. {@code ~/.m2} is on a separate mount), the JVM throws
-     * {@link java.nio.file.UnsupportedOperationException} or {@link java.nio.file.AtomicMoveNotSupportedException}
+     * When they do not (e.g. {@code ~/.m2} is on a separate mount, or a custom in-memory filesystem such as
+     * Jimfs is used for testing), the JVM throws {@link java.nio.file.UnsupportedOperationException},
+     * {@link IllegalArgumentException} (provider mismatch), or {@link java.io.IOException} (cross-device),
      * and the installer automatically falls back to a regular file copy, so the build is never broken.
      * <p>
      * <strong>Note:</strong> hard links share an inode. Any tool that overwrites the build output file

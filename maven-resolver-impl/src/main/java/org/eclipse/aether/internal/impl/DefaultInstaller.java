@@ -221,8 +221,8 @@ public class DefaultInstaller implements Installer {
                     }
                     Files.deleteIfExists(dstPath);
                     Files.createLink(dstPath, srcPath);
-                } catch (UnsupportedOperationException | IOException e) {
-                    // cross-device link (EXDEV) or unsupported FS — fall back to copy
+                } catch (UnsupportedOperationException | IllegalArgumentException | IOException e) {
+                    // cross-device link (EXDEV), provider mismatch (e.g. Jimfs), or unsupported FS — fall back to copy
                     logger.debug("Hard link not supported for {}, falling back to copy: {}", dstPath, e.getMessage());
                     pathProcessor.copyWithTimestamp(srcPath, dstPath);
                 }
