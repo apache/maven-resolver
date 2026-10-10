@@ -89,6 +89,13 @@ public final class ConfigurationProperties {
     public static final String PREFIX_UTIL = PREFIX_AETHER + "util.";
 
     /**
+     * Prefix for installer related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.9
+     */
+    public static final String PREFIX_INSTALLER = PREFIX_AETHER + "installer.";
+
+    /**
      * Prefix for transport related configurations. <em>For internal use only.</em>
      *
      * @since 2.0.0
@@ -688,6 +695,37 @@ public final class ConfigurationProperties {
      * @since 2.0.19
      */
     public static final boolean DEFAULT_HTTP_SEND_RFC9457_ACCEPT = true;
+
+    /**
+     * A flag indicating whether artifact installation should use hard links instead of copying files. When enabled,
+     * the installer creates a hard link from the source artifact (build output) to its destination in the local
+     * repository, avoiding a full file copy and saving disk I/O and space for large JARs.
+     * <p>
+     * Hard links require that the source and target paths reside on the <strong>same filesystem volume</strong>.
+     * When they do not (e.g. {@code ~/.m2} is on a separate mount, or a custom in-memory filesystem such as
+     * Jimfs is used for testing), the JVM throws {@link java.nio.file.UnsupportedOperationException},
+     * {@link IllegalArgumentException} (provider mismatch), or {@link java.io.IOException} (cross-device),
+     * and the installer automatically falls back to a regular file copy, so the build is never broken.
+     * <p>
+     * <strong>Note:</strong> hard links share an inode. Any tool that overwrites the build output file
+     * <em>in-place</em> (rather than via an atomic rename) would silently corrupt the cached artifact.
+     * Standard Maven build tooling always replaces output via rename, so this is generally safe. Set this
+     * property to {@code false} if your environment performs in-place writes to build output files.
+     *
+     * @since 2.0.9
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_INSTALLER_HARD_LINK}
+     * @configurationRepoIdSuffix No
+     */
+    public static final String INSTALLER_HARD_LINK = PREFIX_INSTALLER + "hardLink";
+
+    /**
+     * The default value for {@link #INSTALLER_HARD_LINK}: {@code true}.
+     *
+     * @since 2.0.9
+     */
+    public static final boolean DEFAULT_INSTALLER_HARD_LINK = true;
 
     private ConfigurationProperties() {
         // hide constructor

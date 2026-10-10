@@ -22,6 +22,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,6 +34,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -55,6 +58,7 @@ import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.artifact.transformer.ArtifactTransformer;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,7 +209,26 @@ public class DefaultInstaller implements Installer {
                 throw new IllegalStateException("cannot install " + dstPath + " to same path");
             }
 
-            pathProcessor.copyWithTimestamp(srcPath, dstPath);
+            boolean hardLink = ConfigUtils.getBoolean(
+                    session,
+                    ConfigurationProperties.DEFAULT_INSTALLER_HARD_LINK,
+                    ConfigurationProperties.INSTALLER_HARD_LINK);
+            if (hardLink) {
+                try {
+                    Files.createDirectories(dstPath.getParent());
+                    if (Files.isDirectory(dstPath)) {
+                        throw new IOException("destination is a directory: " + dstPath);
+                    }
+                    Files.deleteIfExists(dstPath);
+                    Files.createLink(dstPath, srcPath);
+                } catch (UnsupportedOperationException | IllegalArgumentException | IOException e) {
+                    // cross-device link (EXDEV), provider mismatch (e.g. Jimfs), or unsupported FS — fall back to copy
+                    logger.debug("Hard link not supported for {}, falling back to copy: {}", dstPath, e.getMessage());
+                    pathProcessor.copyWithTimestamp(srcPath, dstPath);
+                }
+            } else {
+                pathProcessor.copyWithTimestamp(srcPath, dstPath);
+            }
             lrm.add(session, new LocalArtifactRegistration(artifact));
         } catch (Exception e) {
             exception = e;
