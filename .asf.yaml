@@ -23,13 +23,13 @@ notifications:
   commits: commits@maven.apache.org
   issues: issues@maven.apache.org
   pullrequests: issues@maven.apache.org
+# https://releases.apache.org/projects/maven-resolver
 project:
   metadata:
     key: maven-resolver
     committee: maven
     name: Apache Maven Resolver
     description: Apache Maven Resolver is a library for working with artifact repositories and dependency resolution.
-    short_description: Apache Maven Resolver is a library for working with artifact repositories and dependency resolution.
     homepage: https://maven.apache.org/resolver/
     download_page: https://maven.apache.org/resolver/download.cgi
     bug_database: https://maven.apache.org/resolver/issue-management.html
@@ -41,7 +41,17 @@ project:
     programming_languages:
       - Java
   policy:
+    announce_release_template_url: https://maven.apache.org/atr/templates/announce_release_template.txt
+    start_vote_template_url: https://maven.apache.org/atr/templates/start_vote_template.txt
+    finish_vote_template_url: https://maven.apache.org/atr/templates/finish_vote_template.txt
     github_repository_name: maven-resolver
     download_path_suffix: resolver
+    vote_recipients:
+      to: dev@maven.apache.org
+    announce_recipients:
+      to: announce@maven.apache.org
+      cc:
+        - dev@maven.apache.org
+        - users@maven.apache.org
   features:
     atr_sync: true
