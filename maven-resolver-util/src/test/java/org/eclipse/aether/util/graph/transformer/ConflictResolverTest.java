@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -731,7 +732,6 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
      */
     @org.junit.jupiter.api.Test
     void autoSelectionResolvesConflictsCorrectly() throws RepositoryException {
-        // explicit "auto" config
         session.setConfigProperty(ConflictResolver.CONFIG_PROP_CONFLICT_RESOLVER_IMPL, "auto");
         ConflictResolver delegating = new ConflictResolver(
                 new NearestVersionSelector(),
@@ -739,8 +739,6 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
                 new SimpleOptionalitySelector(),
                 new JavaScopeDeriver());
 
-        // Foo -> Bar -> Baz 2.0
-        //  |---> Baz 1.0
         DependencyNode fooNode = makeDependencyNode("some-group", "foo", "1.0");
         DependencyNode barNode = makeDependencyNode("some-group", "bar", "1.0");
         DependencyNode baz1Node = makeDependencyNode("some-group", "baz", "1.0");
@@ -838,7 +836,6 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
      */
     @org.junit.jupiter.api.Test
     void defaultConfigUsesAutoSelection() throws RepositoryException {
-        // No explicit config property set — should use AUTO_CONFLICT_RESOLVER default
         ConflictResolver delegating = new ConflictResolver(
                 new NearestVersionSelector(),
                 new JavaScopeSelector(),
@@ -858,6 +855,33 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertEquals(2, fooNode.getChildren().size());
         assertTrue(barNode.getChildren().isEmpty());
         assertSame(baz1Node, fooNode.getChildren().get(1));
+    }
+
+    /**
+     * Verifies that tree threshold checking stops as soon as the number of visited nodes
+     * exceeds the configured threshold.
+     */
+    @org.junit.jupiter.api.Test
+    void treeThresholdStopsEarly() throws Exception {
+        ConflictResolver delegating = new ConflictResolver(
+                new NearestVersionSelector(),
+                new JavaScopeSelector(),
+                new SimpleOptionalitySelector(),
+                new JavaScopeDeriver());
+
+        DependencyNode root = makeDependencyNode("some-group", "root", "1.0");
+        DependencyNode child = makeDependencyNode("some-group", "child", "1.0");
+        DependencyNode grandChild = makeDependencyNode("some-group", "grand-child", "1.0");
+
+        root.setChildren(mutableList(child));
+        child.setChildren(mutableList(grandChild));
+
+        Method method =
+                ConflictResolver.class.getDeclaredMethod("treeExceedsThreshold", DependencyNode.class, int.class);
+        method.setAccessible(true);
+
+        assertFalse((Boolean) method.invoke(delegating, root, 3));
+        assertTrue((Boolean) method.invoke(delegating, root, 2));
     }
 
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
@@ -905,21 +929,17 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
     @ParameterizedTest
     @MethodSource("conflictResolverSource")
     void denseGraphDoesNotOom(ConflictResolver conflictResolver) throws RepositoryException {
-        // M=N=K=100: without the fix, creates M*N + M*N*K = 1,010,000 Path objects (~80 MB)
-        // → OutOfMemoryError on CI. With the fix: O(N+K) = 200 expansions, trivial memory.
-        int M = 100; // parent modules
-        int N = 100; // hub modules (shared, each with children)
-        int K = 100; // sub-hub leaf modules (shared across hubs)
+        int M = 100;
+        int N = 100;
+        int K = 100;
 
         DependencyNode root = makeDependencyNode("test", "root", "1.0");
 
-        // K shared leaf sub-hub nodes (shared instances across all hubs)
         List<DependencyNode> subHubs = new ArrayList<>(K);
         for (int s = 0; s < K; s++) {
             subHubs.add(makeDependencyNode("test", "sub-hub-" + s, "1.0"));
         }
 
-        // N shared hub nodes, each depending on all K sub-hubs (shared instances)
         List<DependencyNode> hubs = new ArrayList<>(N);
         for (int h = 0; h < N; h++) {
             DependencyNode hub = makeDependencyNode("test", "hub-" + h, "1.0");
@@ -927,7 +947,6 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
             hubs.add(hub);
         }
 
-        // M parent nodes, each depending on all N hubs (shared instances)
         List<DependencyNode> parents = new ArrayList<>(M);
         for (int p = 0; p < M; p++) {
             DependencyNode parent = makeDependencyNode("test", "parent-" + p, "1.0");
@@ -936,15 +955,11 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         }
         root.setChildren(parents);
 
-        // Must complete without OOM, StackOverflowError, and within a time bound that
-        // would expire on the pathological (un-fixed) expansion pattern.
         DependencyNode result = assertTimeout(Duration.ofSeconds(5), () -> transform(conflictResolver, root));
         assertNotNull(result);
 
-        // All parents must survive (no conflicts among them)
         assertEquals(M, result.getChildren().size());
 
-        // All hub and sub-hub nodes must be reachable somewhere in the resolved graph
         AtomicInteger hubCount = new AtomicInteger();
         AtomicInteger subHubCount = new AtomicInteger();
         result.accept(new TreeDependencyVisitor(new DependencyVisitor() {
