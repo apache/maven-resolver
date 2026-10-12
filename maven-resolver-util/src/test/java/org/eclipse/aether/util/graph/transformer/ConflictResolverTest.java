@@ -860,6 +860,111 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertSame(baz1Node, fooNode.getChildren().get(1));
     }
 
+    /**
+     * Regression test: shared {@link DependencyNode} instance reachable at depth 1 and depth 2.
+     * With DFS traversal the depth-2 path was expanded first, causing {@code expandedNodes} to
+     * record depth 2 for the shared node. When the depth-1 path was later processed, the guard
+     * allowed re-expansion — but a subsequent loser {@code push()} on the depth-2 parent removed
+     * the shared node's children from the actual {@link DependencyNode} graph, corrupting the
+     * winner path's subtree.
+     * <p>
+     * Graph:
+     * <pre>
+     *   root → A → shared (depth 2, same DependencyNode)
+     *   root → shared   (depth 1, same DependencyNode)
+     *   shared → Z
+     * </pre>
+     * Expected result: shared and Z both reachable; shared nearest at depth 1 wins.
+     */
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void sharedNodeAtDifferentDepthsPreservesSubtree(ConflictResolver conflictResolver) throws RepositoryException {
+        DependencyNode root = makeDependencyNode("test", "root", "1.0");
+        DependencyNode a = makeDependencyNode("test", "a", "1.0");
+        DependencyNode shared = makeDependencyNode("test", "shared", "1.0");
+        DependencyNode z = makeDependencyNode("test", "z", "1.0");
+
+        // shared appears as root→A→shared (depth 2) AND root→shared (depth 1)
+        // Z is a child of shared — must survive in the resolved graph via the depth-1 path
+        shared.setChildren(mutableList(z));
+        a.setChildren(mutableList(shared)); // root → A → shared
+        root.setChildren(mutableList(a, shared)); // root → shared (depth 1, same instance)
+
+        DependencyNode result = transform(conflictResolver, root);
+
+        assertSame(root, result);
+        // root has 2 children: a and shared
+        assertEquals(2, result.getChildren().size());
+        assertSame(a, result.getChildren().get(0));
+        assertSame(shared, result.getChildren().get(1));
+        // shared at depth 1 wins; A's reference to shared is removed (loser)
+        assertEquals(0, a.getChildren().size(), "a's reference to shared (depth 2, loser) must be removed");
+        // shared's child Z must still be reachable — the loser removal must not corrupt winner's subtree
+        assertEquals(1, shared.getChildren().size(), "shared must retain its child Z");
+        assertSame(z, shared.getChildren().get(0));
+    }
+
+    /**
+     * Regression test: shared {@link DependencyNode} with children reachable via multiple parents at the same depth.
+     * With DFS, if the same node was reached via parent-B at depth 2 first (pushed before parent-A's child),
+     * and then via parent-A at depth 2, the guard would skip parent-A's expansion — but then a loser
+     * {@code push()} from parent-B's path would incorrectly remove the node's children from the shared
+     * {@link DependencyNode}, corrupting the resolved graph seen via parent-A.
+     * <p>
+     * Graph:
+     * <pre>
+     *   root → A → shared (depth 2, same DependencyNode)
+     *   root → B → shared (depth 2, same DependencyNode)
+     *   shared → Z
+     * </pre>
+     * Expected: shared reachable via exactly one parent; Z still present as shared's child.
+     */
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void sharedNodeMultipleParentsSameDepthPreservesSubtree(ConflictResolver conflictResolver)
+            throws RepositoryException {
+        DependencyNode root = makeDependencyNode("test", "root", "1.0");
+        DependencyNode a = makeDependencyNode("test", "a", "1.0");
+        DependencyNode b = makeDependencyNode("test", "b", "1.0");
+        DependencyNode shared = makeDependencyNode("test", "shared", "1.0");
+        DependencyNode z = makeDependencyNode("test", "z", "1.0");
+
+        shared.setChildren(mutableList(z));
+        a.setChildren(mutableList(shared)); // root → A → shared (depth 2)
+        b.setChildren(mutableList(shared)); // root → B → shared (depth 2, same instance)
+        root.setChildren(mutableList(a, b));
+
+        DependencyNode result = transform(conflictResolver, root);
+
+        assertSame(root, result);
+        assertEquals(2, result.getChildren().size());
+
+        // shared wins on one path and is a loser on the other; check Z survives
+        AtomicInteger sharedCount = new AtomicInteger();
+        AtomicInteger zCount = new AtomicInteger();
+        result.accept(new TreeDependencyVisitor(new DependencyVisitor() {
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                if (node.getArtifact() != null) {
+                    String id = node.getArtifact().getArtifactId();
+                    if ("shared".equals(id)) {
+                        sharedCount.incrementAndGet();
+                    } else if ("z".equals(id)) {
+                        zCount.incrementAndGet();
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                return true;
+            }
+        }));
+        assertEquals(1, sharedCount.get(), "shared must appear exactly once in resolved graph");
+        assertEquals(1, zCount.get(), "z must appear exactly once as shared's child");
+    }
+
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {
         return makeDependencyNode(groupId, artifactId, version, "compile");
     }

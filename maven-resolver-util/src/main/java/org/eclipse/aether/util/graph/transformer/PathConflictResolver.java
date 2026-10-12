@@ -18,9 +18,11 @@
  */
 package org.eclipse.aether.util.graph.transformer;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -304,11 +306,12 @@ public final class PathConflictResolver extends ConflictResolver {
          * (i.e. its children visited) during {@link #gatherCRNodes(Path)}. Used to bound subtree
          * re-traversal in highly connected graphs.
          * <p>
-         * When the same {@link DependencyNode} is reached again via a different parent path, a
-         * {@link Path} entry is always created for it (so all occurrences appear in the conflict
-         * partition for winner selection). The subtree is only re-expanded if the new occurrence
-         * is at a strictly shallower depth than the recorded minimum — ensuring that the shallowest
-         * reachable occurrence drives expansion, while deeper duplicates are skipped.
+         * Because {@link #gatherCRNodes(Path)} uses BFS, nodes are always dequeued in non-decreasing
+         * depth order. The first time a {@link DependencyNode} is dequeued, it is at its minimum
+         * reachable depth — that occurrence's subtree is expanded and recorded here. All subsequent
+         * encounters of the same {@link DependencyNode} instance (at equal or greater depth) are
+         * skipped: a {@link Path} entry is still created for them (so all occurrences appear in the
+         * conflict partition for winner selection), but their subtrees are not re-traversed.
          * <p>
          * Without this guard, a highly connected graph where node X is reachable via N different
          * parents causes X's subtree to be expanded N times, leading to exponential {@link Path}
@@ -360,38 +363,48 @@ public final class PathConflictResolver extends ConflictResolver {
 
         /**
          * Iteratively builds {@link Path} graph by observing each node associated {@link DependencyNode}.
-         * Uses an explicit stack instead of recursion to avoid {@link StackOverflowError} on very deep
+         * Uses an explicit queue (BFS) instead of recursion to avoid {@link StackOverflowError} on very deep
          * dependency graphs (reported in large multi-module projects with 13+ levels of recursion).
+         * <p>
+         * BFS is essential for correctness of the subtree-deduplication guard: because BFS processes nodes
+         * level by level, the first time a {@link DependencyNode} instance is dequeued it is always at its
+         * minimum reachable depth. The {@code expandedNodes} guard can therefore safely skip re-expansion of
+         * the same {@link DependencyNode} at equal or deeper depth, knowing that the first expansion already
+         * captured the shallowest (and thus winning) path's subtree.
+         * <p>
+         * With DFS the same guarantee does not hold: a node can be pushed onto the stack at depth D from
+         * one parent, then pushed again at depth D'&lt;D from a second parent before the first push is
+         * popped — causing the deeper occurrence to be expanded first, recording depth D in
+         * {@code expandedNodes}, and then incorrectly suppressing re-expansion at the shallower depth D'.
          * <p>
          * Subtree expansion of each {@link DependencyNode} instance is bounded: when the same node is
          * reached again via a different parent path, a {@link Path} entry is still created for it (so
          * all occurrences appear in the conflict partition for winner selection), but its subtree is only
-         * re-traversed if reached at a strictly shallower depth than before. This prevents exponential
+         * traversed once — from the shallowest (earliest-seen by BFS) occurrence. This prevents exponential
          * {@link Path} creation in highly connected graphs (e.g. a 813-module reactor where each module
          * depends on ~9 others).
          */
         private void gatherCRNodes(Path root) throws RepositoryException {
-            ArrayList<Path> stack = new ArrayList<>();
-            stack.add(root);
-            while (!stack.isEmpty()) {
-                Path node = stack.remove(stack.size() - 1);
+            Deque<Path> queue = new ArrayDeque<>();
+            queue.add(root);
+            while (!queue.isEmpty()) {
+                Path node = queue.remove();
                 List<DependencyNode> children = node.dn.getChildren();
                 if (!children.isEmpty()) {
                     // add children; we will get back those really added (not causing cycles)
                     List<Path> added = node.addChildren(children);
-                    // push in reverse order so first child is processed first (DFS order),
-                    // but only if this DependencyNode instance hasn't been expanded at a shallower depth
-                    for (int i = added.size() - 1; i >= 0; i--) {
-                        Path child = added.get(i);
+                    // enqueue in natural order (BFS); skip subtree expansion if this DependencyNode
+                    // instance was already expanded at an equal or shallower depth
+                    for (Path child : added) {
                         Integer prevDepth = expandedNodes.get(child.dn);
                         if (prevDepth == null || child.depth < prevDepth) {
                             expandedNodes.put(child.dn, child.depth);
-                            stack.add(child);
+                            queue.add(child);
                         }
                         // else: child.dn was already expanded at an equal or shallower depth;
                         // the Path is already in the partition (created by addChildren), but we
                         // skip re-expanding its subtree since the existing expansion already covered
-                        // all reachable descendants.
+                        // all reachable descendants at the correct (nearest) depth.
                     }
                 }
             }
