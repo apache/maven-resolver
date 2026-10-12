@@ -419,13 +419,21 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             // Fire the missing events now that we know the request completed successfully.
             if (task.getDataLength() > 0 && !progressed.get()) {
                 if (started.compareAndSet(false, true)) {
-                    task.getListener().transportStarted(0, task.getDataLength());
+                    try {
+                        task.getListener().transportStarted(0, task.getDataLength());
+                    } catch (TransferCancelledException e) {
+                        return; // upload already succeeded — retroactive notification cannot be cancelled
+                    }
                 }
                 try (InputStream is = task.newInputStream()) {
                     byte[] buf = new byte[1024 * 32];
                     int n;
                     while ((n = is.read(buf)) != -1) {
-                        task.getListener().transportProgressed(ByteBuffer.wrap(buf, 0, n));
+                        try {
+                            task.getListener().transportProgressed(ByteBuffer.wrap(buf, 0, n));
+                        } catch (TransferCancelledException e) {
+                            break; // upload already succeeded — retroactive notification cannot be cancelled
+                        }
                     }
                 }
             }
