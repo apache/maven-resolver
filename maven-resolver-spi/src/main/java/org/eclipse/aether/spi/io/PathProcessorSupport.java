@@ -36,6 +36,9 @@ import java.nio.file.attribute.FileTime;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -45,6 +48,8 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.13
  */
 public class PathProcessorSupport implements PathProcessor {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PathProcessorSupport.class);
+
     /**
      * Logic borrowed from Commons-Lang3: we really need only this, to decide do we NIO2 file ops or not.
      * On Windows the final move needs retry/staging logic, see {@link #retryingMove(Path, Path, StandardCopyOption[])}.
@@ -56,20 +61,32 @@ public class PathProcessorSupport implements PathProcessor {
      * Escape hatch if atomic move is not desired on system we run on.
      */
     protected static final boolean ATOMIC_MOVE =
-            Boolean.parseBoolean(System.getProperty(PathProcessor.class.getName() + "ATOMIC_MOVE", "true"));
+            Boolean.parseBoolean(System.getProperty(PathProcessor.class.getName() + ".ATOMIC_MOVE", "true"));
 
     /**
      * The number of attempts for the final move on Windows, where the move target may be transiently locked by a
      * virus scanner, an indexer or a concurrent reader.
      */
     protected static final int WINDOWS_MOVE_ATTEMPTS =
-            Math.max(1, Integer.getInteger(PathProcessor.class.getName() + "WINDOWS_MOVE_ATTEMPTS", 5));
+            Math.max(1, Integer.getInteger(PathProcessor.class.getName() + ".WINDOWS_MOVE_ATTEMPTS", 5));
 
     /**
      * The delay in milliseconds applied between the move attempts on Windows.
      */
     protected static final long WINDOWS_MOVE_RETRY_DELAY =
-            Long.getLong(PathProcessor.class.getName() + "WINDOWS_MOVE_RETRY_DELAY", 50L);
+            Long.getLong(PathProcessor.class.getName() + ".WINDOWS_MOVE_RETRY_DELAY", 50L);
+
+    /**
+     * Whether to fall back to a direct (non-atomic) stream copy when all rename attempts on Windows are exhausted
+     * with {@link AccessDeniedException} due to a persistent file lock (for example an IDE holding the target
+     * {@code .jar} open). When {@code true} (the default), the installer degrades gracefully to the pre-2.0.24
+     * behavior — the target is overwritten in-place via a stream, which on Windows succeeds even if another
+     * process holds a shared read handle. The atomicity guarantee is lost for this last-resort path, but the
+     * build succeeds. Set to {@code false} to keep the strict never-truncate contract and let the build fail
+     * with the original {@link AccessDeniedException} instead.
+     */
+    protected static final boolean WINDOWS_CLASSIC_COPY_FALLBACK = Boolean.parseBoolean(
+            System.getProperty(PathProcessor.class.getName() + ".WINDOWS_CLASSIC_COPY_FALLBACK", "true"));
 
     @Override
     public boolean setLastModified(Path path, long value) throws IOException {
@@ -249,18 +266,22 @@ public class PathProcessorSupport implements PathProcessor {
     }
 
     /**
-     * Moves the source file to the target path without ever truncating the target in place: the content visible at
-     * the target path is either the old file or the complete new file, never a partially written one.
+     * Moves the source file to the target path, preferring atomic rename over truncating the target in place.
      * <p>
-     * Historically, on Windows the final move was implemented by opening the target path with a truncating stream
-     * and copying the source into it ({@link #classicCopy(Path, Path)}). That left a window during which a
-     * concurrent reader (for example a forked JVM resolving the same artifact) or an untimely process kill would
-     * observe, or durably leave behind, a truncated file at the final path - after checksum validation has already
-     * happened, so the torn content would from then on be trusted as verified. Instead, this method attempts the
-     * rename a bounded number of times ({@link #WINDOWS_MOVE_ATTEMPTS}, file locking by virus scanners, indexers or
-     * concurrent readers is transient on Windows), and if the file system refuses an atomic move (for example when
-     * source and target are on different stores), the source is first staged into a collocated temporary file next
-     * to the target and then renamed into place - the target path itself is never opened for writing.
+     * Normally the content visible at the target path is either the old file or the complete new file, never a
+     * partially written one. This method attempts the rename a bounded number of times ({@link #WINDOWS_MOVE_ATTEMPTS};
+     * file locking by virus scanners, indexers or concurrent readers is transient on Windows), and if the file system
+     * refuses an atomic move (for example when source and target are on different stores), the source is first staged
+     * into a collocated temporary file next to the target and then renamed into place.
+     * <p>
+     * <strong>Last-resort fallback (Windows / IDE lock):</strong> When all rename attempts are exhausted with
+     * {@link AccessDeniedException} — typically because an IDE such as IntelliJ keeps the target {@code .jar} open
+     * continuously — and {@link #WINDOWS_CLASSIC_COPY_FALLBACK} is {@code true} (the default), the method falls back
+     * to a direct stream copy over the target path ({@link #classicCopy(Path, Path)}). On Windows, opening a file for
+     * writing via a stream succeeds even if another process holds a shared read handle, so the build completes. The
+     * atomicity guarantee is lost for this edge case: a concurrent reader may observe a partially written file. Set
+     * the system property {@code org.eclipse.aether.spi.io.PathProcessor.WINDOWS_CLASSIC_COPY_FALLBACK=false} to
+     * disable this fallback and propagate the {@link AccessDeniedException} instead.
      */
     protected void retryingMove(Path source, Path target, StandardCopyOption[] copyOptions) throws IOException {
         FileSystemException lastException = null;
@@ -297,6 +318,23 @@ public class PathProcessorSupport implements PathProcessor {
                 Files.deleteIfExists(staged);
             }
         }
+        // All rename attempts failed with AccessDeniedException (persistent lock, e.g. IDE holding the jar open).
+        // As a last resort, fall back to a direct stream copy over the target. On Windows this succeeds even when
+        // another process holds a shared read handle because the stream open uses FILE_SHARE_READ semantics,
+        // unlike MoveFileEx/ReplaceFile which require exclusive access. The atomicity guarantee is lost here.
+        if (isClassicCopyFallbackEnabled() && (lastException instanceof AccessDeniedException)) {
+            LOGGER.warn(
+                    "Atomic rename of {} to {} failed after {} attempt(s) ({}); falling back to direct copy."
+                            + " Another process may be holding the target file open."
+                            + " Set -D{}.WINDOWS_CLASSIC_COPY_FALLBACK=false to disable this fallback.",
+                    source,
+                    target,
+                    WINDOWS_MOVE_ATTEMPTS,
+                    lastException.getMessage(),
+                    PathProcessor.class.getName());
+            classicCopy(source, target);
+            return;
+        }
         throw lastException;
     }
 
@@ -308,8 +346,17 @@ public class PathProcessorSupport implements PathProcessor {
     }
 
     /**
-     * Pre-NIO2 way to copy files. Important: this method must never be pointed at a "final" (published) path, as it
-     * opens the target with truncation; callers stage into a temporary file and rename into place instead.
+     * Returns whether the classic-copy fallback is enabled. Exposed as a protected method to allow subclasses
+     * (and tests) to override the behavior controlled by {@link #WINDOWS_CLASSIC_COPY_FALLBACK}.
+     */
+    protected boolean isClassicCopyFallbackEnabled() {
+        return WINDOWS_CLASSIC_COPY_FALLBACK;
+    }
+
+    /**
+     * Pre-NIO2 way to copy files. Opens the target with truncation; normally callers stage into a temporary file and
+     * rename into place to avoid exposing partially written content. Used as a last resort on Windows when all atomic
+     * rename attempts are exhausted due to a persistent file lock (see {@link #retryingMove}).
      */
     protected void classicCopy(Path source, Path target) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(1024 * 32);
