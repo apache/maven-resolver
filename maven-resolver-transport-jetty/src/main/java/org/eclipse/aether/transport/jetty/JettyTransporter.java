@@ -422,8 +422,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     task.getListener().transportStarted(0, task.getDataLength());
                 }
                 try (InputStream is = task.newInputStream()) {
-                    byte[] data = is.readAllBytes();
-                    task.getListener().transportProgressed(ByteBuffer.wrap(data));
+                    byte[] buf = new byte[1024 * 32];
+                    int n;
+                    while ((n = is.read(buf)) != -1) {
+                        task.getListener().transportProgressed(ByteBuffer.wrap(buf, 0, n));
+                    }
                 }
             }
         } catch (ExecutionException e) {
