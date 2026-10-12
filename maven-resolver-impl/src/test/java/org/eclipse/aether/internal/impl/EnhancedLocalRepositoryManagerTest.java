@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class EnhancedLocalRepositoryManagerTest {
 
-    private Artifact artifact;
+    protected Artifact artifact;
 
     private Artifact snapshot;
 
@@ -63,9 +63,9 @@ public class EnhancedLocalRepositoryManagerTest {
 
     private File artifactFile;
 
-    private RemoteRepository repository;
+    protected RemoteRepository repository;
 
-    private final String testContext = "project/compile";
+    protected final String testContext = "project/compile";
 
     protected TrackingFileManager trackingFileManager;
 
@@ -130,14 +130,14 @@ public class EnhancedLocalRepositoryManagerTest {
         artifact = null;
     }
 
-    private long addLocalArtifact(Artifact artifact) throws IOException {
+    protected long addLocalArtifact(Artifact artifact) throws IOException {
         manager.add(session, new LocalArtifactRegistration(artifact));
         String path = manager.getPathForLocalArtifact(artifact);
 
         return copy(artifact, path);
     }
 
-    private long addRemoteArtifact(Artifact artifact) throws IOException {
+    protected long addRemoteArtifact(Artifact artifact) throws IOException {
         Collection<String> contexts = Arrays.asList(testContext);
         manager.add(session, new LocalArtifactRegistration(artifact, repository, contexts));
         String path = manager.getPathForRemoteArtifact(artifact, repository, testContext);
@@ -255,7 +255,7 @@ public class EnhancedLocalRepositoryManagerTest {
      * Simulates a case-aliasing filesystem (the macOS and Windows defaults) on any filesystem by creating a
      * symbolic link whose name differs from the on-disk file only by case, and returns the aliased artifact.
      */
-    private Artifact createCaseAliasedArtifact() throws Exception {
+    protected Artifact createCaseAliasedArtifact() throws Exception {
         addLocalArtifact(artifact);
 
         Artifact aliased = new DefaultArtifact("gid", "aid", "", "JAR", "1-test");

@@ -22,8 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.io.IOException;
-
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
@@ -68,8 +66,9 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      * such an aliased file is treated as present-but-untracked and accepted with no download and no checksum
      * verification, letting case-colliding coordinates poison distinct GAVs. When enabled (the default), an
      * artifact whose on-disk path spelling differs from the requested one is treated as not present, forcing a
-     * proper download. Disable only if the local repository intentionally contains symbolic links below its base
-     * directory (a symlinked base directory itself is supported either way).
+     * proper download. Only the coordinate-derived part of the path is verified, so the base directory and the
+     * local path prefix directories (see {@link DefaultLocalPathPrefixComposerFactory}) may be symbolic links.
+     * Disable only if the local repository intentionally contains symbolic links below those directories.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
@@ -144,18 +143,14 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                 ConfigUtils.getBoolean(session, DEFAULT_LEGACY_LOCAL_REPOSITORY, CONFIG_PROP_LEGACY_LOCAL_REPOSITORY);
 
         if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
-            try {
-                return new EnhancedLocalRepositoryManager(
-                        repository.getBasePath(),
-                        localPathComposer,
-                        repositoryKeyFunctionFactory.trackingRepositoryKeyFunction(session),
-                        trackingFilename,
-                        legacyLocalRepository,
-                        trackingFileManager,
-                        localPathPrefixComposerFactory.createComposer(session));
-            } catch (IOException e) {
-                throw new NoLocalRepositoryManagerException(repository, e);
-            }
+            return new EnhancedLocalRepositoryManager(
+                    repository.getBasePath(),
+                    localPathComposer,
+                    repositoryKeyFunctionFactory.trackingRepositoryKeyFunction(session),
+                    trackingFilename,
+                    legacyLocalRepository,
+                    trackingFileManager,
+                    localPathPrefixComposerFactory.createComposer(session));
         } else {
             throw new NoLocalRepositoryManagerException(repository);
         }
