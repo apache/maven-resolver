@@ -49,11 +49,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.ResourceAccessMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
+@ResourceLock(value = Resources.SYSTEM_ERR, mode = ResourceAccessMode.READ_WRITE)
 public class DefaultUpdateCheckManagerTest {
 
     private static final long HOUR = 60L * 60L * 1000L;
@@ -200,7 +204,7 @@ public class DefaultUpdateCheckManagerTest {
 
         UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
         String log = captureStdErr(() -> manager.touchArtifact(session, success));
-        assertFalse(log.contains("WARN"), log);
+        assertFalse(log.contains("while a not-found cached by a previous session suppresses re-checking"), log);
         assertFalse(touchFile.exists());
     }
 
@@ -219,7 +223,7 @@ public class DefaultUpdateCheckManagerTest {
         resetSessionData(session);
         UpdateCheck<Artifact, ArtifactTransferException> success = newArtifactCheck();
         String log = captureStdErr(() -> manager.touchArtifact(session, success));
-        assertTrue(log.contains("WARN"), log);
+        assertTrue(log.contains("while a not-found cached by a previous session suppresses re-checking"), log);
         assertTrue(log.contains("file:///other-repo/"), log);
         assertFalse(touchFile.exists());
     }

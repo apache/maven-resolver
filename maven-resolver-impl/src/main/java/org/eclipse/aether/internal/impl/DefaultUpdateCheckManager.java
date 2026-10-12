@@ -473,13 +473,13 @@ public class DefaultUpdateCheckManager implements UpdateCheckManager {
      */
     @SuppressWarnings("unchecked")
     private void setNotFound(RepositorySystemSession session, String notFoundKey) {
-        Object notFounds = session.getData().computeIfAbsent(SESSION_NOT_FOUNDS, () -> new ConcurrentHashMap<>(64));
-        ((Map<String, Boolean>) notFounds).put(notFoundKey, Boolean.TRUE);
+        Object notFounds = session.getData().computeIfAbsent(SESSION_NOT_FOUNDS, ConcurrentHashMap::newKeySet);
+        ((Set<String>) notFounds).add(notFoundKey);
     }
 
     private boolean isNotFoundInSession(RepositorySystemSession session, String notFoundKey) {
         Object notFounds = session.getData().get(SESSION_NOT_FOUNDS);
-        return notFounds instanceof Map && ((Map<?, ?>) notFounds).containsKey(notFoundKey);
+        return notFounds instanceof Set && ((Set<?>) notFounds).contains(notFoundKey);
     }
 
     private boolean isUpdatedRequired(RepositorySystemSession session, long lastModified, String policy) {
