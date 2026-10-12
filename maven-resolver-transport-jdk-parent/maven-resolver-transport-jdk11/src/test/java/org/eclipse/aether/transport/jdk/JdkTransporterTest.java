@@ -42,11 +42,11 @@ import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-
 
 /**
  * JDK Transporter UT.
@@ -195,6 +195,7 @@ class JdkTransporterTest extends HttpTransporterTest {
     void testIsExpectContinueSupported(String versionStr, boolean expected) {
         assertEquals(expected, JdkTransporter.isExpectContinueSupported(Runtime.Version.parse(versionStr)));
     }
+
     @Test
     void testPut_ExpectContinueExplicitlyEnabledOnJava17() throws Exception {
         Runtime.Version version = Runtime.version();
