@@ -48,7 +48,7 @@ import static java.util.Objects.requireNonNull;
  * @since 2.0.13
  */
 public class PathProcessorSupport implements PathProcessor {
-    protected static final Logger LOGGER = LoggerFactory.getLogger(PathProcessorSupport.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PathProcessorSupport.class);
 
     /**
      * Logic borrowed from Commons-Lang3: we really need only this, to decide do we NIO2 file ops or not.
@@ -61,20 +61,20 @@ public class PathProcessorSupport implements PathProcessor {
      * Escape hatch if atomic move is not desired on system we run on.
      */
     protected static final boolean ATOMIC_MOVE =
-            Boolean.parseBoolean(System.getProperty(PathProcessor.class.getName() + "ATOMIC_MOVE", "true"));
+            Boolean.parseBoolean(System.getProperty(PathProcessor.class.getName() + ".ATOMIC_MOVE", "true"));
 
     /**
      * The number of attempts for the final move on Windows, where the move target may be transiently locked by a
      * virus scanner, an indexer or a concurrent reader.
      */
     protected static final int WINDOWS_MOVE_ATTEMPTS =
-            Math.max(1, Integer.getInteger(PathProcessor.class.getName() + "WINDOWS_MOVE_ATTEMPTS", 5));
+            Math.max(1, Integer.getInteger(PathProcessor.class.getName() + ".WINDOWS_MOVE_ATTEMPTS", 5));
 
     /**
      * The delay in milliseconds applied between the move attempts on Windows.
      */
     protected static final long WINDOWS_MOVE_RETRY_DELAY =
-            Long.getLong(PathProcessor.class.getName() + "WINDOWS_MOVE_RETRY_DELAY", 50L);
+            Long.getLong(PathProcessor.class.getName() + ".WINDOWS_MOVE_RETRY_DELAY", 50L);
 
     /**
      * Whether to fall back to a direct (non-atomic) stream copy when all rename attempts on Windows are exhausted
@@ -86,7 +86,7 @@ public class PathProcessorSupport implements PathProcessor {
      * with the original {@link AccessDeniedException} instead.
      */
     protected static final boolean WINDOWS_CLASSIC_COPY_FALLBACK = Boolean.parseBoolean(
-            System.getProperty(PathProcessor.class.getName() + "WINDOWS_CLASSIC_COPY_FALLBACK", "true"));
+            System.getProperty(PathProcessor.class.getName() + ".WINDOWS_CLASSIC_COPY_FALLBACK", "true"));
 
     @Override
     public boolean setLastModified(Path path, long value) throws IOException {
@@ -326,7 +326,7 @@ public class PathProcessorSupport implements PathProcessor {
             LOGGER.warn(
                     "Atomic rename of {} to {} failed after {} attempt(s) ({}); falling back to direct copy."
                             + " Another process may be holding the target file open."
-                            + " Set -D{}WINDOWS_CLASSIC_COPY_FALLBACK=false to disable this fallback.",
+                            + " Set -D{}.WINDOWS_CLASSIC_COPY_FALLBACK=false to disable this fallback.",
                     source,
                     target,
                     WINDOWS_MOVE_ATTEMPTS,
