@@ -297,9 +297,8 @@ public class PutTaskRequestContent extends ByteBufferRequestContent implements R
                 return true;
             } catch (IOException e) {
                 lockedSetTerminal(Content.Chunk.from(e, true));
+                return false;
             }
-
-            return true;
         }
     }
 }
