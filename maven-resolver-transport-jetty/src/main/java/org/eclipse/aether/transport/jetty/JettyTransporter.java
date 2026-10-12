@@ -407,7 +407,6 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     })
                     .send(listener);
             response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
-            task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
             if (response.getStatus() >= MULTIPLE_CHOICES) {
                 JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
                     throw new HttpTransporterException(statusCode);
@@ -437,6 +436,11 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     }
                 }
             }
+            // transportPropertiesAvailable is called after transportStarted/transportProgressed
+            // to honour the TransportListener contract: "for remote put tasks this is called
+            // after transportStarted(long, long)". Moving it here ensures correct ordering in
+            // both the normal path and the retroactive-progress path.
+            task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof IOException ioex) {
