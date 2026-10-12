@@ -407,21 +407,17 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     })
                     .send(listener);
             response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
-            if (response.getStatus() >= MULTIPLE_CHOICES) {
-                JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
-                    throw new HttpTransporterException(statusCode);
-                });
-            }
             // On some platforms (macOS) with certain configurations (proxy auth, TLS/HTTP2),
             // Jetty may complete a small PUT without firing onRequestContent callbacks, leaving
-            // the progress listener uninformed even though the upload succeeded.
-            // Fire the missing events now that we know the request completed successfully.
+            // the progress listener uninformed even though the upload was sent.
+            // Fire the missing events regardless of response status so the listener contract
+            // is honoured on both success and error paths.
             if (task.getDataLength() > 0 && !progressed.get()) {
                 if (started.compareAndSet(false, true)) {
                     try {
                         task.getListener().transportStarted(0, task.getDataLength());
                     } catch (TransferCancelledException e) {
-                        return; // upload already succeeded — retroactive notification cannot be cancelled
+                        return; // upload already sent — retroactive notification cannot be cancelled
                     }
                 }
                 try (InputStream is = task.newInputStream()) {
@@ -431,16 +427,21 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                         try {
                             task.getListener().transportProgressed(ByteBuffer.wrap(buf, 0, n));
                         } catch (TransferCancelledException e) {
-                            break; // upload already succeeded — retroactive notification cannot be cancelled
+                            break; // upload already sent — retroactive notification cannot be cancelled
                         }
                     }
                 }
             }
             // transportPropertiesAvailable is called after transportStarted/transportProgressed
             // to honour the TransportListener contract: "for remote put tasks this is called
-            // after transportStarted(long, long)". Moving it here ensures correct ordering in
-            // both the normal path and the retroactive-progress path.
+            // after transportStarted(long, long)". Placed before the status check so it is
+            // reachable on both success (2xx) and error (3xx/4xx/5xx) responses.
             task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
+            if (response.getStatus() >= MULTIPLE_CHOICES) {
+                JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
+                    throw new HttpTransporterException(statusCode);
+                });
+            }
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof IOException ioex) {
