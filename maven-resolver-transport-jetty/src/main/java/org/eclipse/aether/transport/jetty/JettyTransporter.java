@@ -417,7 +417,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     try {
                         task.getListener().transportStarted(0, task.getDataLength());
                     } catch (TransferCancelledException e) {
-                        return; // upload already sent — retroactive notification cannot be cancelled
+                        // upload already sent — retroactive notification cannot be cancelled;
+                        // fall through to transportPropertiesAvailable and status check
                     }
                 }
                 try (InputStream is = task.newInputStream()) {
