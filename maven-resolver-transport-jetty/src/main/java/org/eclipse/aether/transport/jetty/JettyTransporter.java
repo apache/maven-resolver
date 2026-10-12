@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -374,6 +375,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             return true; // continue processing
         });
         AtomicBoolean started = new AtomicBoolean(false);
+        AtomicBoolean progressed = new AtomicBoolean(false);
         Response response;
         try (InputStreamResponseListener listener = new InputStreamResponseListener()) {
             request.onRequestCommit(r -> {
@@ -396,6 +398,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                                 return;
                             }
                         }
+                        progressed.set(true);
                         try {
                             task.getListener().transportProgressed(b);
                         } catch (TransferCancelledException e) {
@@ -409,6 +412,19 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
                     throw new HttpTransporterException(statusCode);
                 });
+            }
+            // On some platforms (macOS) with certain configurations (proxy auth, TLS/HTTP2),
+            // Jetty may complete a small PUT without firing onRequestContent callbacks, leaving
+            // the progress listener uninformed even though the upload succeeded.
+            // Fire the missing events now that we know the request completed successfully.
+            if (task.getDataLength() > 0 && !progressed.get()) {
+                if (started.compareAndSet(false, true)) {
+                    task.getListener().transportStarted(0, task.getDataLength());
+                }
+                try (InputStream is = task.newInputStream()) {
+                    byte[] data = is.readAllBytes();
+                    task.getListener().transportProgressed(ByteBuffer.wrap(data));
+                }
             }
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
