@@ -428,7 +428,13 @@ public class DefaultInstallerTest {
                         "copyWithTimestamp must be called as fallback on cross-device FS");
             }
         } catch (UnsupportedOperationException | IllegalArgumentException ignored) {
-            // non-POSIX filesystem — inode/device check not available; content assertion is sufficient
+            // non-POSIX filesystem — inode/device check not available
+            // but we can still assert that copyWithTimestamp was called at most once:
+            // either the hard link succeeded (count=0) or the fallback fired exactly once (count=1)
+            assertTrue(
+                    countingProcessor.copyWithTimestampCount <= 1,
+                    "copyWithTimestamp must be called at most once on non-POSIX FS (got "
+                            + countingProcessor.copyWithTimestampCount + ")");
         }
     }
 
