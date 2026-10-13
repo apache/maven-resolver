@@ -383,13 +383,26 @@ public class DefaultInstallerTest {
     @Test
     void testHardLinkInstallCreatesHardLink() throws InstallationException, IOException {
         // default: hardLink=true — installer attempts a hard link, falls back to copy on cross-device
+        //
+        // Use a counting PathProcessor to detect whether the fallback copy path was taken.
+        // On same-device filesystems: hard link is created (copyWithTimestamp NOT called).
+        // On cross-device (common in CI containers): Files.createLink throws, copy IS taken.
+        CountingPathProcessor countingProcessor = new CountingPathProcessor();
+        installer = new DefaultInstaller(
+                countingProcessor,
+                new StubRepositoryEventDispatcher(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                new StubSyncContextFactory());
+
         request.addArtifact(artifact);
         installer.install(session, request);
 
         assertTrue(localArtifactFile.exists());
         assertEquals("artifact", TestFileUtils.readString(localArtifactFile));
 
-        // On same-device filesystems, verify a hard link was created (same inode).
+        // On same-device filesystems, verify a hard link was created (same inode, no copy).
         // On cross-device (common in CI containers where /tmp and project dir are on different mounts),
         // Files.createLink throws IOException and the installer falls back to copy — both are correct.
         Path srcPath = artifact.getFile().toPath();
@@ -398,13 +411,22 @@ public class DefaultInstallerTest {
             boolean sameDevice =
                     Files.getAttribute(srcPath, "unix:dev").equals(Files.getAttribute(dstPath, "unix:dev"));
             if (sameDevice) {
-                // hard link must have been created — same inode expected
+                // hard link must have been created — same inode expected, copy NOT taken
                 assertEquals(
                         Files.getAttribute(srcPath, "unix:ino"),
                         Files.getAttribute(dstPath, "unix:ino"),
                         "installed artifact should be a hard link to the source on same-device FS");
+                assertEquals(
+                        0,
+                        countingProcessor.copyWithTimestampCount,
+                        "copyWithTimestamp must NOT be called on same-device FS");
+            } else {
+                // cross-device: fallback to copy must have been taken
+                assertEquals(
+                        1,
+                        countingProcessor.copyWithTimestampCount,
+                        "copyWithTimestamp must be called as fallback on cross-device FS");
             }
-            // cross-device: fallback to copy is correct — content already asserted above
         } catch (UnsupportedOperationException | IllegalArgumentException ignored) {
             // non-POSIX filesystem — inode/device check not available; content assertion is sufficient
         }
@@ -413,13 +435,34 @@ public class DefaultInstallerTest {
     @Test
     void testHardLinkDisabledFallsThroughToCopy() throws InstallationException, IOException {
         // set hardLink=false — installer must copy, not hard-link
+        CountingPathProcessor countingProcessor = new CountingPathProcessor();
+        installer = new DefaultInstaller(
+                countingProcessor,
+                new StubRepositoryEventDispatcher(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                new StubSyncContextFactory());
+
         session.setConfigProperty(ConfigurationProperties.INSTALLER_HARD_LINK, false);
         request.addArtifact(artifact);
         installer.install(session, request);
 
         assertTrue(localArtifactFile.exists());
         assertEquals("artifact", TestFileUtils.readString(localArtifactFile));
-        // With copy the content is correct; we cannot assert different inodes portably
-        // but we verify the install succeeds and produces the correct content
+        // Verify copyWithTimestamp was called (hardLink=false must NOT attempt Files.createLink)
+        assertEquals(
+                1, countingProcessor.copyWithTimestampCount, "copyWithTimestamp must be called when hardLink=false");
+    }
+
+    /** PathProcessor wrapper that counts copyWithTimestamp invocations. */
+    private static class CountingPathProcessor extends PathProcessorSupport {
+        int copyWithTimestampCount = 0;
+
+        @Override
+        public void copyWithTimestamp(Path src, Path dst) throws IOException {
+            copyWithTimestampCount++;
+            super.copyWithTimestamp(src, dst);
+        }
     }
 }

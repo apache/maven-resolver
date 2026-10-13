@@ -156,6 +156,7 @@ public class DefaultInstaller implements Installer {
                     ConfigurationProperties.DEFAULT_INSTALLER_HARD_LINK,
                     ConfigurationProperties.INSTALLER_HARD_LINK);
 
+            Exception linkFailure = null;
             for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
                 Artifact artifact = iterator.next();
 
@@ -165,10 +166,21 @@ public class DefaultInstaller implements Installer {
 
                 iterator.set(artifact);
 
-                install(session, trace, artifact, hardLink);
+                Exception failure = install(session, trace, artifact, hardLink);
+                if (failure != null && linkFailure == null) {
+                    linkFailure = failure;
+                } else if (failure != null) {
+                    linkFailure.addSuppressed(failure);
+                }
                 if (artifact.getProperty(ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID, null) == null) {
                     result.addArtifact(artifact);
                 }
+            }
+            if (linkFailure != null) {
+                logger.warn(
+                        "Hard link not supported, falling back to copy for all artifacts: {}",
+                        linkFailure.getMessage(),
+                        linkFailure);
             }
 
             metadatas = Utils.finishMetadata(metadataGenerators, artifacts);
@@ -200,7 +212,12 @@ public class DefaultInstaller implements Installer {
         }
     }
 
-    private void install(RepositorySystemSession session, RequestTrace trace, Artifact artifact, boolean hardLink)
+    /**
+     * Installs a single artifact. Returns the link failure exception if hard-linking was attempted but failed
+     * (caller logs it once after the loop), or {@code null} if the artifact was installed successfully via hard link
+     * or if {@code hardLink} is {@code false}.
+     */
+    private Exception install(RepositorySystemSession session, RequestTrace trace, Artifact artifact, boolean hardLink)
             throws InstallationException {
         final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         final Path srcPath = artifact.getPath();
@@ -208,6 +225,7 @@ public class DefaultInstaller implements Installer {
 
         artifactInstalling(session, trace, artifact, dstPath);
 
+        Exception linkFailure = null;
         Exception exception = null;
         try {
             if (dstPath.equals(srcPath)) {
@@ -224,7 +242,7 @@ public class DefaultInstaller implements Installer {
                     Files.createLink(dstPath, srcPath);
                 } catch (UnsupportedOperationException | IllegalArgumentException | IOException e) {
                     // cross-device link (EXDEV), provider mismatch (e.g. Jimfs), or unsupported FS — fall back to copy
-                    logger.warn("Hard link not supported for {}, falling back to copy: {}", dstPath, e.getMessage());
+                    linkFailure = e;
                     pathProcessor.copyWithTimestamp(srcPath, dstPath);
                 }
             } else {
@@ -237,6 +255,7 @@ public class DefaultInstaller implements Installer {
         } finally {
             artifactInstalled(session, trace, artifact, dstPath, exception);
         }
+        return linkFailure;
     }
 
     private void install(RepositorySystemSession session, RequestTrace trace, Metadata metadata)
