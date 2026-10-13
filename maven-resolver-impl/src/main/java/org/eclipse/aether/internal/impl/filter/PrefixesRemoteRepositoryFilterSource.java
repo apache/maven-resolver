@@ -572,7 +572,7 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                                     + " (verified served despite stale auto-discovered prefixes)");
                 }
                 if (cachedPrefixes.isVerifiedAbsentPath(path)) {
-                    return notAllowedResult(repository, path, cachedPrefixes);
+                    return verifiedAbsentResult(repository, path);
                 }
                 // Fast-path checks occur before locking. The lock belongs to this repository's cached-prefix
                 // state and prevents duplicate verification of the same path during concurrent requests,
@@ -619,20 +619,44 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
                             "Path " + path + " allowed from " + repository.getId()
                                     + " (verified served despite stale auto-discovered prefixes)");
                 }
+                if (cachedPrefixes.isVerifiedAbsentPath(path)) {
+                    return verifiedAbsentResult(repository, path);
+                }
+                return inconclusiveVerificationResult(repository, path);
             }
             return accepted
                     ? result(true, NAME, "Path " + path + " allowed from " + repository.getId())
                     : notAllowedResult(repository, path, cachedPrefixes);
         }
 
+        private Result verifiedAbsentResult(RemoteRepository repository, String path) {
+            return result(
+                    false,
+                    NAME,
+                    "Path " + path + " NOT allowed from " + repository.getId()
+                            + " (not listed in auto-discovered prefix file and verified absent from remote repository)");
+        }
+
+        private Result inconclusiveVerificationResult(RemoteRepository repository, String path) {
+            return result(
+                    false,
+                    NAME,
+                    "Path " + path + " NOT allowed from " + repository.getId()
+                            + " (not listed in auto-discovered prefix file; remote verification could not confirm existence)");
+        }
+
         private Result notAllowedResult(RemoteRepository repository, String path, CachedPrefixes cachedPrefixes) {
             String reasoning = "Path " + path + " NOT allowed from " + repository.getId();
             if (cachedPrefixes.autoDiscovered()) {
-                reasoning += " (auto-discovered prefix file appears incomplete). If this repository serves a "
-                        + "virtual aggregate with an incomplete prefix file, set -D"
-                        + CONFIG_PROP_VERIFY_DENIED + "." + repository.getId()
-                        + "=true or report this to the repository administrator. "
-                        + "See https://maven.apache.org/resolver/remote-repository-filtering.html";
+                if (session.isOffline()) {
+                    reasoning += " (not listed in auto-discovered prefix file; verification skipped while offline)";
+                } else {
+                    reasoning += " (auto-discovered prefix file appears incomplete). If this repository serves a "
+                            + "virtual aggregate with an incomplete prefix file, set -D"
+                            + CONFIG_PROP_VERIFY_DENIED + "." + repository.getId()
+                            + "=true or report this to the repository administrator. "
+                            + "See https://maven.apache.org/resolver/remote-repository-filtering.html";
+                }
             }
             return result(false, NAME, reasoning);
         }
@@ -669,17 +693,22 @@ public final class PrefixesRemoteRepositoryFilterSource extends RemoteRepository
          * Checks whether the remote repository actually serves given path, using a lightweight existence check
          * (the transporter sits below the filtering connector, so no recursion can happen). Only definitive
          * {@link Transporter#ERROR_NOT_FOUND} is recorded as absent so transient transport or network failures
-         * do not permanently poison the negative cache.
+         * do not permanently poison the negative cache. Similarly, URI construction failure does not establish
+         * remote absence and yields {@link VerificationOutcome#UNKNOWN}.
          */
         private VerificationOutcome remoteRepositoryServesPath(RemoteRepository repository, String path) {
             Transporter transporter = null;
             try {
+                String probePath = path;
+                while (probePath.startsWith("/")) {
+                    probePath = probePath.substring(1);
+                }
                 transporter = transporterProvider.newTransporter(session, repository);
-                transporter.peek(new PeekTask(new URI(null, null, path, null)));
+                transporter.peek(new PeekTask(new URI(null, null, probePath, null)));
                 return VerificationOutcome.SERVED;
             } catch (URISyntaxException e) {
                 logger.debug("Cannot construct URI for denied path {} of {}", path, repository, e);
-                return VerificationOutcome.ABSENT;
+                return VerificationOutcome.UNKNOWN;
             } catch (Exception e) {
                 logger.debug("Verification of denied path {} against {} failed", path, repository, e);
                 if (transporter != null && transporter.classify(e) == Transporter.ERROR_NOT_FOUND) {

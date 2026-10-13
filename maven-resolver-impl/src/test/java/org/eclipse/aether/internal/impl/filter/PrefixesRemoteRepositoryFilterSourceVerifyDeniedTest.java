@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.internal.impl.filter;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,6 +42,8 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
+import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
+import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
@@ -54,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -309,15 +313,16 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         // the file is consistent with reality, the filter must keep denying
         RemoteRepositoryFilter.Result result1 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
         assertFalse(result1.isAccepted());
-        assertTrue(result1.reasoning()
-                .contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied.jenkins-public=true"));
-        assertTrue(result1.reasoning().contains("https://maven.apache.org/resolver/remote-repository-filtering.html"));
+        assertTrue(result1.reasoning().contains("verified absent from remote repository"));
+        assertFalse(result1.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
+        assertFalse(result1.reasoning().contains("appears incomplete"));
 
         // and verification cost is bounded: only the first denial is checked
         RemoteRepositoryFilter.Result result2 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
         assertFalse(result2.isAccepted());
-        assertTrue(result2.reasoning()
-                .contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied.jenkins-public=true"));
+        assertTrue(result2.reasoning().contains("verified absent from remote repository"));
+        assertFalse(result2.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
+        assertFalse(result2.reasoning().contains("appears incomplete"));
         verify(transporter, times(1)).peek(any(PeekTask.class));
     }
 
@@ -347,11 +352,104 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         assertNotNull(filter);
 
         // first attempt fails due to transport error: artifact is not accepted
-        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        RemoteRepositoryFilter.Result result1 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertFalse(result1.isAccepted());
+        assertTrue(result1.reasoning().contains("remote verification could not confirm existence"));
+        assertFalse(result1.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
+        assertFalse(result1.reasoning().contains("verified absent"));
 
         // second attempt must retry (not permanently negative-cached)
-        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        RemoteRepositoryFilter.Result result2 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertFalse(result2.isAccepted());
+        assertTrue(result2.reasoning().contains("remote verification could not confirm existence"));
         verify(transporter, times(2)).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void uriConstructionFailureDoesNotNegativeCachePath() throws Exception {
+        RepositoryLayout customLayout = mock(RepositoryLayout.class);
+        when(customLayout.getLocation(any(Artifact.class), anyBoolean()))
+                .thenReturn(new URI("http", "example.com", "/:invalid", null));
+
+        RepositoryLayoutProvider customLayoutProvider = mock(RepositoryLayoutProvider.class);
+        when(customLayoutProvider.newRepositoryLayout(any(), any())).thenReturn(customLayout);
+
+        MetadataResolver metadataResolver = mock(MetadataResolver.class);
+        Path leakedPrefixesFile = tempDir.resolve("prefixes-jenkins-public.txt");
+        when(metadataResolver.resolveMetadata(any(RepositorySystemSession.class), any(Collection.class)))
+                .thenAnswer(invocation -> {
+                    Collection<MetadataRequest> requests = invocation.getArgument(1);
+                    MetadataRequest request = requests.iterator().next();
+                    MetadataResult result = new MetadataResult(request);
+                    result.setMetadata(request.getMetadata().setPath(leakedPrefixesFile));
+                    return Collections.singletonList(result);
+                });
+        RemoteRepositoryManager remoteRepositoryManager = mock(RemoteRepositoryManager.class);
+        TransporterProvider transporterProvider = mock(TransporterProvider.class);
+        when(transporterProvider.newTransporter(any(), any())).thenReturn(transporter);
+
+        PrefixesRemoteRepositoryFilterSource customSubject = new PrefixesRemoteRepositoryFilterSource(
+                new DefaultRepositoryKeyFunctionFactory(),
+                () -> metadataResolver,
+                () -> remoteRepositoryManager,
+                customLayoutProvider,
+                transporterProvider);
+
+        RemoteRepositoryFilter filter = customSubject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        // first attempt fails URI construction (relative URI cannot have colon in first segment)
+        RemoteRepositoryFilter.Result result1 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertFalse(result1.isAccepted());
+        assertTrue(result1.reasoning().contains("remote verification could not confirm existence"));
+        assertFalse(result1.reasoning().contains("verified absent"));
+        assertFalse(result1.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
+
+        // second attempt must still not be cached as absent (outcome was UNKNOWN)
+        RemoteRepositoryFilter.Result result2 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertFalse(result2.isAccepted());
+        assertTrue(result2.reasoning().contains("remote verification could not confirm existence"));
+        assertFalse(result2.reasoning().contains("verified absent"));
+        verify(transporter, never()).peek(any(PeekTask.class));
+    }
+
+    @Test
+    void deniedPathWithLeadingSlashIsVerifiedAndAccepted() throws Exception {
+        RepositoryLayout customLayout = mock(RepositoryLayout.class);
+        when(customLayout.getLocation(any(Artifact.class), anyBoolean()))
+                .thenReturn(new URI(
+                        "http", "example.com", "/org/jenkins-ci/version-number/1.14/version-number-1.14.jar", null));
+
+        RepositoryLayoutProvider customLayoutProvider = mock(RepositoryLayoutProvider.class);
+        when(customLayoutProvider.newRepositoryLayout(any(), any())).thenReturn(customLayout);
+
+        MetadataResolver metadataResolver = mock(MetadataResolver.class);
+        Path leakedPrefixesFile = tempDir.resolve("prefixes-jenkins-public.txt");
+        when(metadataResolver.resolveMetadata(any(RepositorySystemSession.class), any(Collection.class)))
+                .thenAnswer(invocation -> {
+                    Collection<MetadataRequest> requests = invocation.getArgument(1);
+                    MetadataRequest request = requests.iterator().next();
+                    MetadataResult result = new MetadataResult(request);
+                    result.setMetadata(request.getMetadata().setPath(leakedPrefixesFile));
+                    return Collections.singletonList(result);
+                });
+        RemoteRepositoryManager remoteRepositoryManager = mock(RemoteRepositoryManager.class);
+        TransporterProvider transporterProvider = mock(TransporterProvider.class);
+        when(transporterProvider.newTransporter(any(), any())).thenReturn(transporter);
+
+        PrefixesRemoteRepositoryFilterSource customSubject = new PrefixesRemoteRepositoryFilterSource(
+                new DefaultRepositoryKeyFunctionFactory(),
+                () -> metadataResolver,
+                () -> remoteRepositoryManager,
+                customLayoutProvider,
+                transporterProvider);
+
+        RemoteRepositoryFilter filter = customSubject.getRemoteRepositoryFilter(session);
+        assertNotNull(filter);
+
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertTrue(result.isAccepted());
+        verify(transporter, times(1)).peek(any(PeekTask.class));
     }
 
     @Test
@@ -370,7 +468,10 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
 
-        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
+        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
+        assertFalse(result.isAccepted());
+        assertTrue(result.reasoning().contains("verification skipped while offline"));
+        assertFalse(result.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
         verify(transporter, never()).peek(any(PeekTask.class));
     }
 
