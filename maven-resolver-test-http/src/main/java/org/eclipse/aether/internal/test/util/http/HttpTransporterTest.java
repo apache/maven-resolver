@@ -350,6 +350,14 @@ public abstract class HttpTransporterTest {
         return true;
     }
 
+    protected boolean supportsHttpOriginScopedHeaders() {
+        return true;
+    }
+
+    protected boolean supportsHttpFollowInsecureRedirect() {
+        return true;
+    }
+
     @Test
     protected void testClassify() {
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new FileNotFoundException()));
@@ -1003,6 +1011,65 @@ public abstract class HttpTransporterTest {
         assertEquals(1, listener.getStartedCount());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    protected void testGet_Redirect_OriginScopedHeadersByDefault() throws Exception {
+        assumeTrue(supportsHttpOriginScopedHeaders(), "Transporter does not support origin-scoped headers");
+        Map<String, String> headers = Map.of("X-Secret", "secret");
+        session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS + ".test", headers);
+        newTransporter(httpServer.getHttpUrl());
+
+        transporter.get(new GetTask(URI.create("redirect/file.txt?host=127.0.0.1")));
+
+        assertEquals(2, httpServer.getLogEntries().size());
+        assertEquals(
+                "secret", httpServer.getLogEntries().get(0).getRequestHeaders().get("X-Secret"));
+        assertNull(httpServer.getLogEntries().get(1).getRequestHeaders().get("X-Secret"));
+    }
+
+    @Test
+    protected void testGet_Redirect_OriginScopedHeadersDisabled() throws Exception {
+        assumeTrue(supportsHttpOriginScopedHeaders(), "Transporter does not support origin-scoped headers");
+        Map<String, String> headers = Map.of("X-Secret", "secret");
+        session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS + ".test", headers);
+        session.setConfigProperty(ConfigurationProperties.HTTP_ORIGIN_SCOPED_HEADERS, false);
+        newTransporter(httpServer.getHttpUrl());
+
+        transporter.get(new GetTask(URI.create("redirect/file.txt?host=127.0.0.1")));
+
+        assertEquals(2, httpServer.getLogEntries().size());
+        assertEquals(
+                "secret", httpServer.getLogEntries().get(0).getRequestHeaders().get("X-Secret"));
+        assertEquals(
+                "secret", httpServer.getLogEntries().get(1).getRequestHeaders().get("X-Secret"));
+    }
+
+    @Test
+    protected void testGet_Redirect_InsecureRedirectRefusedByDefault() throws Exception {
+        assumeTrue(supportsHttpFollowInsecureRedirect(), "Transporter does not support insecure-redirect control");
+        httpServer.addHttp2ConnectorWithMutualTLS();
+        session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_1_1);
+        newTransporter(httpServer.getHttpsUrl());
+
+        assertThrows(Exception.class, () -> transporter.get(new GetTask(URI.create("redirect/file.txt?scheme=http"))));
+
+        assertEquals(1, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    protected void testGet_Redirect_InsecureRedirectAllowedWhenConfigured() throws Exception {
+        assumeTrue(supportsHttpFollowInsecureRedirect(), "Transporter does not support insecure-redirect control");
+        httpServer.addHttp2ConnectorWithMutualTLS();
+        session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_1_1);
+        session.setConfigProperty(ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT, true);
+        newTransporter(httpServer.getHttpsUrl());
+
+        GetTask task = new GetTask(URI.create("redirect/file.txt?scheme=http"));
+        transporter.get(task);
+
+        assertEquals("test", task.getDataString());
+        assertEquals(2, httpServer.getLogEntries().size());
     }
 
     @Test

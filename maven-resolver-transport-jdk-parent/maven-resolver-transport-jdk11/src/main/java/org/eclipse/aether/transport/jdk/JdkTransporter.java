@@ -186,6 +186,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final boolean originScopedHeaders;
 
+    private final boolean followInsecureRedirect;
+
     private final Set<String> crossOriginExcludedHeaders;
 
     private final int connectTimeout;
@@ -263,6 +265,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
         this.originScopedHeaders = HttpTransporterUtils.isHttpOriginScopedHeaders(
                 session, repository, JdkTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
+        this.followInsecureRedirect = HttpTransporterUtils.isHttpFollowInsecureRedirect(session, repository);
         TreeSet<String> crossOriginExcludedHeaders = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         // preemptively applied Authorization (see #prepare) must never leave the repository origin either
         crossOriginExcludedHeaders.add("Authorization");
@@ -529,7 +532,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             throws Exception {
         maxConcurrentRequests.acquire();
         try {
-            if (!originScopedHeaders) {
+            if (!originScopedHeaders && !followInsecureRedirect) {
                 return client.send(request, responseBodyHandler);
             }
             // the client is configured with Redirect.NEVER: follow redirects here instead, so that configured
@@ -538,12 +541,14 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             HttpRequest current = request;
             int redirects = 0;
             while (true) {
-                HttpResponse<T> response =
-                        client.send(current, discardingOnFollowedRedirect(responseBodyHandler, current.uri()));
+                HttpResponse<T> response = client.send(
+                        current,
+                        discardingOnFollowedRedirect(responseBodyHandler, current.uri(), followInsecureRedirect));
                 URI target = followableRedirect(
                         response.statusCode(),
                         current.uri(),
-                        response.headers().firstValue(LOCATION).orElse(null));
+                        response.headers().firstValue(LOCATION).orElse(null),
+                        followInsecureRedirect);
                 if (target == null) {
                     return response;
                 }
@@ -552,7 +557,12 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                     throw new IOException("Too many redirects for " + request.uri() + " (max " + MAX_REDIRECTS
                             + "), last redirect target: " + target);
                 }
-                current = redirectRequest(current, response.statusCode(), target, baseUri, crossOriginExcludedHeaders);
+                current = redirectRequest(
+                        current,
+                        response.statusCode(),
+                        target,
+                        baseUri,
+                        originScopedHeaders ? crossOriginExcludedHeaders : Set.of());
             }
         } finally {
             maxConcurrentRequests.release();
@@ -565,10 +575,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
      * handler.
      */
     private static <T> HttpResponse.BodyHandler<T> discardingOnFollowedRedirect(
-            HttpResponse.BodyHandler<T> delegate, URI requestUri) {
+            HttpResponse.BodyHandler<T> delegate, URI requestUri, boolean followInsecureRedirect) {
         return responseInfo -> {
             String location = responseInfo.headers().firstValue(LOCATION).orElse(null);
-            if (followableRedirect(responseInfo.statusCode(), requestUri, location) != null) {
+            if (followableRedirect(responseInfo.statusCode(), requestUri, location, followInsecureRedirect) != null) {
                 return HttpResponse.BodySubscribers.mapping(HttpResponse.BodySubscribers.discarding(), v -> null);
             }
             return delegate.apply(responseInfo);
@@ -578,9 +588,15 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     /**
      * Returns the resolved redirect target if the response is a redirect this transporter follows, otherwise
      * {@code null}. Follow rules mirror {@link HttpClient.Redirect#NORMAL}: redirect status with a resolvable
-     * {@code Location}, {@code http}/{@code https} targets only, and never a downgrade from https to http.
+     * {@code Location}, {@code http}/{@code https} targets only, and never a downgrade from https to http unless
+     * configured.
      */
     static URI followableRedirect(int statusCode, URI requestUri, String locationHeader) {
+        return followableRedirect(statusCode, requestUri, locationHeader, false);
+    }
+
+    static URI followableRedirect(
+            int statusCode, URI requestUri, String locationHeader, boolean followInsecureRedirect) {
         if (!isRedirect(statusCode) || locationHeader == null) {
             return null;
         }
@@ -594,7 +610,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
             return null;
         }
-        if ("https".equalsIgnoreCase(requestUri.getScheme()) && !"https".equalsIgnoreCase(scheme)) {
+        if (!followInsecureRedirect
+                && "https".equalsIgnoreCase(requestUri.getScheme())
+                && !"https".equalsIgnoreCase(scheme)) {
             return null;
         }
         return target;
@@ -783,7 +801,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 // with origin-scoped headers (default) the transporter follows redirects itself (see #send) so
                 // that configured headers can be dropped on hops leaving the repository origin; the JDK client
                 // has no per-hop hook and re-sends all user-set headers on every hop it follows
-                .followRedirects(originScopedHeaders ? HttpClient.Redirect.NEVER : HttpClient.Redirect.NORMAL)
+                .followRedirects(
+                        originScopedHeaders || followInsecureRedirect
+                                ? HttpClient.Redirect.NEVER
+                                : HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofMillis(connectTimeout))
                 // this only considers the time until the response header is received, see
                 // https://bugs.openjdk.org/browse/JDK-8208693
