@@ -435,7 +435,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
     }
 
-    @SuppressWarnings("checkstyle:methodlength")
+    @SuppressWarnings({"checkstyle:methodlength", "deprecation"})
     private HttpClient createClient() throws RuntimeException {
         BasicAuthentication.BasicResult serverAuth = null;
         BasicAuthentication.BasicResult proxyAuth = null;
@@ -523,17 +523,10 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 JettyTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS,
                 JettyTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS));
 
-        boolean followInsecureRedirects = ConfigUtils.getBoolean(
-                session,
-                JettyTransporterConfigurationKeys.DEFAULT_FOLLOW_INSECURE_REDIRECTS,
-                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS + "." + repository.getId(),
-                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS);
-
-        boolean originScopedHeaders = ConfigUtils.getBoolean(
-                session,
-                JettyTransporterConfigurationKeys.DEFAULT_ORIGIN_SCOPED_HEADERS,
-                JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS + "." + repository.getId(),
-                JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
+        boolean followInsecureRedirects = HttpTransporterUtils.isHttpFollowInsecureRedirect(
+                session, repository, JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS);
+        boolean originScopedHeaders = HttpTransporterUtils.isHttpOriginScopedHeaders(
+                session, repository, JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
 
         httpClient.setUserAgentField(null); // we manage it
 

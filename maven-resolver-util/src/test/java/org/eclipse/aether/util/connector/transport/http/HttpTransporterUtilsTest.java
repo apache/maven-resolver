@@ -21,15 +21,61 @@ package org.eclipse.aether.util.connector.transport.http;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpTransporterUtilsTest {
+    @Test
+    void getHttpOriginScopedHeaders() {
+        DefaultRepositorySystemSession session = TestUtils.newSession();
+        RemoteRepository repository = new RemoteRepository.Builder("repo", "", "https://host.com").build();
+
+        assertTrue(HttpTransporterUtils.isHttpOriginScopedHeaders(session, repository));
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_ORIGIN_SCOPED_HEADERS, false);
+        assertFalse(HttpTransporterUtils.isHttpOriginScopedHeaders(session, repository));
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_ORIGIN_SCOPED_HEADERS + ".repo", true);
+        assertTrue(HttpTransporterUtils.isHttpOriginScopedHeaders(session, repository));
+
+        session = TestUtils.newSession();
+        session.setConfigProperty("aether.transport.apache.originScopedHeaders.repo", false);
+        assertFalse(HttpTransporterUtils.isHttpOriginScopedHeaders(
+                session, repository, "aether.transport.apache.originScopedHeaders"));
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_ORIGIN_SCOPED_HEADERS, true);
+        assertTrue(HttpTransporterUtils.isHttpOriginScopedHeaders(
+                session, repository, "aether.transport.apache.originScopedHeaders"));
+    }
+
+    @Test
+    void getHttpFollowInsecureRedirect() {
+        DefaultRepositorySystemSession session = TestUtils.newSession();
+        RemoteRepository repository = new RemoteRepository.Builder("repo", "", "https://host.com").build();
+
+        assertFalse(HttpTransporterUtils.isHttpFollowInsecureRedirect(session, repository));
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT, true);
+        assertTrue(HttpTransporterUtils.isHttpFollowInsecureRedirect(session, repository));
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT + ".repo", false);
+        assertFalse(HttpTransporterUtils.isHttpFollowInsecureRedirect(session, repository));
+
+        session = TestUtils.newSession();
+        session.setConfigProperty("aether.transport.apache.followInsecureRedirects.repo", true);
+        assertTrue(HttpTransporterUtils.isHttpFollowInsecureRedirect(
+                session, repository, "aether.transport.apache.followInsecureRedirects"));
+    }
+
     @Test
     void clampRemoteLastModifiedPassesPastAndPresentValues() {
         long testStart = System.currentTimeMillis();

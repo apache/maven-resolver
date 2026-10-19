@@ -28,6 +28,7 @@ import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
+import org.eclipse.aether.ConfigurationProperties;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,7 +61,7 @@ class ResolverRedirectStrategyTest {
 
         ProtocolException e =
                 assertThrows(ProtocolException.class, () -> strategy.isRedirected(request, response, context));
-        assertTrue(e.getMessage().contains(ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS));
+        assertTrue(e.getMessage().contains(ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT));
     }
 
     @Test

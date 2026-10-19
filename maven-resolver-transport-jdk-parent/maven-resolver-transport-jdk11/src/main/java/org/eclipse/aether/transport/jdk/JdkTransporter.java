@@ -206,6 +206,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private PasswordAuthentication proxyAuthentication;
 
+    @SuppressWarnings("deprecation")
     JdkTransporter(
             RepositorySystemSession session,
             RemoteRepository repository,
@@ -260,11 +261,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
         this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
 
-        this.originScopedHeaders = ConfigUtils.getBoolean(
-                session,
-                JdkTransporterConfigurationKeys.DEFAULT_ORIGIN_SCOPED_HEADERS,
-                JdkTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS + "." + repository.getId(),
-                JdkTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
+        this.originScopedHeaders = HttpTransporterUtils.isHttpOriginScopedHeaders(
+                session, repository, JdkTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
         TreeSet<String> crossOriginExcludedHeaders = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         // preemptively applied Authorization (see #prepare) must never leave the repository origin either
         crossOriginExcludedHeaders.add("Authorization");

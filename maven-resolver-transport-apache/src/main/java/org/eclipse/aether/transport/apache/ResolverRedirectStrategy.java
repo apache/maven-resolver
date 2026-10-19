@@ -29,12 +29,13 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.protocol.HttpContext;
+import org.eclipse.aether.ConfigurationProperties;
 
 /**
  * A redirect strategy that refuses protocol downgrades: a redirect from an {@code https} URL to an {@code http}
  * URL strips transport encryption from artifact and checksum bytes and makes repository credentials eligible for
  * transmission over plaintext, so it fails the transfer instead of being followed silently, unless explicitly
- * allowed via {@link ApacheTransporterConfigurationKeys#CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS}. All other
+ * allowed via {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT}. All other
  * redirects behave exactly as {@link LaxRedirectStrategy} handled them before.
  *
  * @since 2.0.23
@@ -62,7 +63,7 @@ final class ResolverRedirectStrategy extends LaxRedirectStrategy {
                     throw new ProtocolException("Insecure redirect to '" + location
                             + "' not followed: protocol downgrade from https to " + locationScheme
                             + " would expose credentials and artifact content; set the configuration property "
-                            + ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS
+                            + ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT
                             + "=true to allow it");
                 }
             }

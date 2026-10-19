@@ -253,15 +253,51 @@ public final class ConfigurationProperties {
      * a redirect - including redirects that leave the repository origin. Avoid placing credentials (for example
      * {@code Authorization}, cookies or private token headers) in this map where repository authentication can be
      * used instead: repository authentication is negotiated per host. All shipped HTTP transports scope configured
-     * headers to the repository origin by default, see the per-transport {@code originScopedHeaders} configuration
-     * keys ({@code aether.transport.apache.originScopedHeaders}, {@code aether.transport.jdk.originScopedHeaders},
-     * {@code aether.transport.jetty.originScopedHeaders}).
+     * headers to the repository origin by default, controlled by {@link #HTTP_ORIGIN_SCOPED_HEADERS}.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.util.Map}
      * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_HEADERS = PREFIX_TRANSPORT_HTTP + "headers";
+
+    /**
+     * If enabled (default), HTTP transports only send configured request headers and preemptively applied
+     * {@code Authorization} on requests targeting the repository origin.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_ORIGIN_SCOPED_HEADERS}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.25
+     */
+    public static final String HTTP_ORIGIN_SCOPED_HEADERS = PREFIX_TRANSPORT_HTTP + "originScopedHeaders";
+
+    /**
+     * The default value for {@link #HTTP_ORIGIN_SCOPED_HEADERS}: {@code true}.
+     *
+     * @since 2.0.25
+     */
+    public static final boolean DEFAULT_HTTP_ORIGIN_SCOPED_HEADERS = true;
+
+    /**
+     * If enabled, HTTP transports follow redirects that downgrade the protocol from HTTPS to HTTP. Disabled by
+     * default because such a downgrade removes transport encryption from artifact and checksum bytes.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_FOLLOW_INSECURE_REDIRECT}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.25
+     */
+    public static final String HTTP_FOLLOW_INSECURE_REDIRECT = PREFIX_TRANSPORT_HTTP + "followInsecureRedirect";
+
+    /**
+     * The default value for {@link #HTTP_FOLLOW_INSECURE_REDIRECT}: {@code false}.
+     *
+     * @since 2.0.25
+     */
+    public static final boolean DEFAULT_HTTP_FOLLOW_INSECURE_REDIRECT = false;
 
     /**
      * The encoding/charset to use when exchanging credentials with HTTP servers. Besides this general key, clients may

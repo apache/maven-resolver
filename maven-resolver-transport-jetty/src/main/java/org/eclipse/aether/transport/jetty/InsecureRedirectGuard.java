@@ -20,6 +20,7 @@ package org.eclipse.aether.transport.jetty;
 
 import java.io.IOException;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.jetty.client.Request;
 
 /**
@@ -30,7 +31,7 @@ import org.eclipse.jetty.client.Request;
  * transmission over plaintext. Since each Jetty transporter instance is bound to exactly one repository, any
  * non-https request issued by its client can only be the result of such a redirect, and is aborted before
  * anything is sent, unless explicitly allowed via
- * {@link JettyTransporterConfigurationKeys#CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS}.
+ * {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT}.
  *
  * @since 2.0.23
  */
@@ -41,7 +42,7 @@ final class InsecureRedirectGuard implements Request.QueuedListener {
             request.abort(new IOException("Insecure redirect to '" + request.getURI()
                     + "' not followed: protocol downgrade from https to " + request.getScheme()
                     + " would expose credentials and artifact content; set the configuration property "
-                    + JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS
+                    + ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT
                     + "=true to allow it"));
         }
     }

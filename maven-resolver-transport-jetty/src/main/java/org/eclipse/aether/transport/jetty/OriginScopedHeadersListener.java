@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.jetty.client.Request;
 
 /**
@@ -38,7 +39,7 @@ import org.eclipse.jetty.client.Request;
  * not the repository origin (same scheme, case-insensitive host and effective port) confines them to the
  * repository itself. Challenge-based authentication from the authentication store is URI-scoped by Jetty already
  * and is unaffected. Can be disabled via
- * {@link JettyTransporterConfigurationKeys#CONFIG_PROP_ORIGIN_SCOPED_HEADERS}.
+ * {@link ConfigurationProperties#HTTP_ORIGIN_SCOPED_HEADERS}.
  * <p>
  * Registered as a {@link Request.HeadersListener} rather than a {@link Request.QueuedListener} so that the
  * callback fires <em>after</em> Jetty's content decoder factories have populated the {@code Accept-Encoding}
