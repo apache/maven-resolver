@@ -79,10 +79,14 @@ public interface SyncContext extends Closeable {
      * @since 1.9.25
      */
     final class FailedToAcquireLockException extends IllegalStateException {
+        /** Whether the lock that could not be acquired was shared. */
         private final boolean shared;
 
         /**
          * Constructor.
+         *
+         * @param shared {@code true} if the lock that could not be acquired was shared, {@code false} if exclusive.
+         * @param message The detail message, may be {@code null}.
          */
         public FailedToAcquireLockException(boolean shared, String message) {
             super(message);
@@ -91,6 +95,8 @@ public interface SyncContext extends Closeable {
 
         /**
          * Returns {@code true} for shared and {@code false} for exclusive sync contexts.
+         *
+         * @return {@code true} if the lock that could not be acquired was shared, {@code false} if exclusive.
          */
         public boolean isShared() {
             return shared;

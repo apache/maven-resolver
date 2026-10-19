@@ -28,6 +28,9 @@ import java.util.UUID;
  * the contained artifacts is handled by a {@link WorkspaceReader}.
  */
 public final class WorkspaceRepository implements ArtifactRepository {
+    /**
+     * The identifier of this workspace repository type, returned by {@link #getId()}.
+     */
     public static final String ID = "workspace";
 
     private final String type;

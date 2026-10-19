@@ -40,6 +40,10 @@ public interface DependencyCollectionChecker {
 
     /**
      * Prepares for dependency collection.
+     *
+     * @param session The repository system session, must not be {@code null}.
+     * @param request The collect request about to be processed, must not be {@code null}.
+     * @return The session to use for the collection, possibly adapted by this checker.
      */
     default RepositorySystemSession prepare(RepositorySystemSession session, CollectRequest request) {
         return session;
@@ -50,6 +54,13 @@ public interface DependencyCollectionChecker {
      * "satisfactory". If should return {@code false} <em>only, if collection was not satisfactory, and checker
      * was able to modify resolution parameters (to not repeat same work)</em>. In other cases (not satisfactory
      * but no param change would help) it should throw {@link DependencyCollectionException}.
+     *
+     * @param session The repository system session, must not be {@code null}.
+     * @param request The collect request that was processed, must not be {@code null}.
+     * @param result The result of the dependency collection, must not be {@code null}.
+     * @return {@code true} if the collection result is satisfactory, {@code false} if the checker adjusted
+     *         resolution parameters and collection should be repeated.
+     * @throws DependencyCollectionException If the collection is not satisfactory and cannot be remedied.
      */
     default boolean isSatisfactory(RepositorySystemSession session, CollectRequest request, CollectResult result)
             throws DependencyCollectionException {

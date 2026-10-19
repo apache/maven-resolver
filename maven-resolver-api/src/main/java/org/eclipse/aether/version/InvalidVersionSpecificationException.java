@@ -25,6 +25,7 @@ import org.eclipse.aether.RepositoryException;
  */
 public class InvalidVersionSpecificationException extends RepositoryException {
 
+    /** The invalid version or version range string. */
     private final String version;
 
     /**

@@ -45,96 +45,134 @@ public final class RepositoryEvent {
     public enum EventType {
 
         /**
+         * The artifact descriptor is syntactically or semantically invalid.
+         *
          * @see RepositoryListener#artifactDescriptorInvalid(RepositoryEvent)
          */
         ARTIFACT_DESCRIPTOR_INVALID,
 
         /**
+         * The artifact descriptor is missing.
+         *
          * @see RepositoryListener#artifactDescriptorMissing(RepositoryEvent)
          */
         ARTIFACT_DESCRIPTOR_MISSING,
 
         /**
+         * The metadata is syntactically or semantically invalid.
+         *
          * @see RepositoryListener#metadataInvalid(RepositoryEvent)
          */
         METADATA_INVALID,
 
         /**
+         * An artifact is about to be resolved.
+         *
          * @see RepositoryListener#artifactResolving(RepositoryEvent)
          */
         ARTIFACT_RESOLVING,
 
         /**
+         * An artifact has been resolved, either successfully or not.
+         *
          * @see RepositoryListener#artifactResolved(RepositoryEvent)
          */
         ARTIFACT_RESOLVED,
 
         /**
+         * Some metadata is about to be resolved.
+         *
          * @see RepositoryListener#metadataResolving(RepositoryEvent)
          */
         METADATA_RESOLVING,
 
         /**
+         * Some metadata has been resolved, either successfully or not.
+         *
          * @see RepositoryListener#metadataResolved(RepositoryEvent)
          */
         METADATA_RESOLVED,
 
         /**
+         * An artifact is about to be downloaded from a remote repository.
+         *
          * @see RepositoryListener#artifactDownloading(RepositoryEvent)
          */
         ARTIFACT_DOWNLOADING,
 
         /**
+         * An artifact has been downloaded from a remote repository, either successfully or not.
+         *
          * @see RepositoryListener#artifactDownloaded(RepositoryEvent)
          */
         ARTIFACT_DOWNLOADED,
 
         /**
+         * Some metadata is about to be downloaded from a remote repository.
+         *
          * @see RepositoryListener#metadataDownloading(RepositoryEvent)
          */
         METADATA_DOWNLOADING,
 
         /**
+         * Some metadata has been downloaded from a remote repository, either successfully or not.
+         *
          * @see RepositoryListener#metadataDownloaded(RepositoryEvent)
          */
         METADATA_DOWNLOADED,
 
         /**
+         * An artifact is about to be installed to the local repository.
+         *
          * @see RepositoryListener#artifactInstalling(RepositoryEvent)
          */
         ARTIFACT_INSTALLING,
 
         /**
+         * An artifact has been installed to the local repository, either successfully or not.
+         *
          * @see RepositoryListener#artifactInstalled(RepositoryEvent)
          */
         ARTIFACT_INSTALLED,
 
         /**
+         * Some metadata is about to be installed to the local repository.
+         *
          * @see RepositoryListener#metadataInstalling(RepositoryEvent)
          */
         METADATA_INSTALLING,
 
         /**
+         * Some metadata has been installed to the local repository, either successfully or not.
+         *
          * @see RepositoryListener#metadataInstalled(RepositoryEvent)
          */
         METADATA_INSTALLED,
 
         /**
+         * An artifact is about to be uploaded to a remote repository.
+         *
          * @see RepositoryListener#artifactDeploying(RepositoryEvent)
          */
         ARTIFACT_DEPLOYING,
 
         /**
+         * An artifact has been uploaded to a remote repository, either successfully or not.
+         *
          * @see RepositoryListener#artifactDeployed(RepositoryEvent)
          */
         ARTIFACT_DEPLOYED,
 
         /**
+         * Some metadata is about to be uploaded to a remote repository.
+         *
          * @see RepositoryListener#metadataDeploying(RepositoryEvent)
          */
         METADATA_DEPLOYING,
 
         /**
+         * Some metadata has been uploaded to a remote repository, either successfully or not.
+         *
          * @see RepositoryListener#metadataDeployed(RepositoryEvent)
          */
         METADATA_DEPLOYED

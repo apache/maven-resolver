@@ -61,6 +61,7 @@ public interface RepositoryCache {
     /**
      * Retrieve or compute the data associated with the specified key.
      *
+     * @param session The repository session during which the cache is accessed, must not be {@code null}.
      * @param key The key for which to retrieve the session data, must not be {@code null}.
      * @param supplier The supplier will compute the new value, must not be {@code null}.
      * @return The cache data associated with the key.

@@ -30,6 +30,11 @@ import java.util.Objects;
  */
 public abstract class AbstractMetadata implements Metadata {
 
+    /**
+     * Constructor for subclasses.
+     */
+    public AbstractMetadata() {}
+
     private Metadata newInstance(Map<String, String> properties, Path path) {
         return new DefaultMetadata(
                 getGroupId(), getArtifactId(), getVersion(), getType(), getNature(), path, properties);

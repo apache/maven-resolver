@@ -31,6 +31,7 @@ public class MetadataTransferException extends RepositoryException {
 
     private final transient RemoteRepository repository;
 
+    /** Whether this exception was played back from the error cache. */
     private final boolean fromCache;
 
     static String getString(String prefix, RemoteRepository repository) {
