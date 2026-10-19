@@ -190,6 +190,59 @@ public class DefaultArtifactResolverTest {
     }
 
     @Test
+    void testResolveArtifactWithBlankVersionFailsWithClearMessage() {
+        // the version resolver is a no-op stub here, so it reports the artifact's own (blank) version as
+        // resolved; the resolver must reject that before it reaches the local repository path composer,
+        // which would otherwise throw an unrelated IllegalArgumentException about an invalid path (MRESOLVER-597)
+        Artifact noVersion = new DefaultArtifact("gid", "aid", "", "ext", "");
+
+        ArtifactRequest request = new ArtifactRequest(noVersion, null, "");
+
+        try {
+            resolver.resolveArtifact(session, request);
+            fail("expected exception");
+        } catch (ArtifactResolutionException e) {
+            assertNotNull(e.getResults());
+            assertEquals(1, e.getResults().size());
+
+            ArtifactResult result = e.getResults().get(0);
+
+            assertFalse(result.getExceptions().isEmpty());
+            assertInstanceOf(
+                    ArtifactNotFoundException.class, result.getExceptions().get(0));
+            assertTrue(result.getExceptions().get(0).getMessage().contains("missing or blank"));
+
+            assertNull(result.getArtifact());
+        }
+    }
+
+    @Test
+    void testResolveArtifactWithWhitespaceOnlyVersionFailsWithClearMessage() {
+        // a version made up of whitespace only is not null and not empty, but it is just as unusable as a
+        // blank one and must be rejected the same way, not just literal ""
+        Artifact whitespaceVersion = new DefaultArtifact("gid", "aid", "", "ext", " ");
+
+        ArtifactRequest request = new ArtifactRequest(whitespaceVersion, null, "");
+
+        try {
+            resolver.resolveArtifact(session, request);
+            fail("expected exception");
+        } catch (ArtifactResolutionException e) {
+            assertNotNull(e.getResults());
+            assertEquals(1, e.getResults().size());
+
+            ArtifactResult result = e.getResults().get(0);
+
+            assertFalse(result.getExceptions().isEmpty());
+            assertInstanceOf(
+                    ArtifactNotFoundException.class, result.getExceptions().get(0));
+            assertTrue(result.getExceptions().get(0).getMessage().contains("missing or blank"));
+
+            assertNull(result.getArtifact());
+        }
+    }
+
+    @Test
     void testResolveRemoteArtifact() throws ArtifactResolutionException {
         connector.setExpectGet(artifact);
 
