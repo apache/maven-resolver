@@ -1046,6 +1046,25 @@ public abstract class HttpTransporterTest {
     }
 
     @Test
+    protected void testGet_Redirect_OriginScopedAuthenticationNotReplayed() throws Exception {
+        assumeTrue(supportsHttpOriginScopedHeaders(), "Transporter does not support origin-scoped headers");
+        httpServer.setAuthentication("testuser", "testpass");
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+        newTransporter(httpServer.getHttpUrl());
+
+        assertThrows(
+                Exception.class, () -> transporter.get(new GetTask(URI.create("redirect/file.txt?host=127.0.0.1"))));
+
+        HttpServer.LogEntry redirectTarget =
+                httpServer.getLogEntries().get(httpServer.getLogEntries().size() - 1);
+        assertTrue(redirectTarget.getPath().startsWith("/repo/file.txt"));
+        assertNull(redirectTarget.getRequestHeaders().get("Authorization"));
+    }
+
+    @Test
     protected void testGet_Redirect_InsecureRedirectRefusedByDefault() throws Exception {
         assumeTrue(supportsHttpFollowInsecureRedirect(), "Transporter does not support insecure-redirect control");
         httpServer.addHttp2ConnectorWithMutualTLS();

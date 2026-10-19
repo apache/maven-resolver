@@ -41,7 +41,9 @@ public final class UrlTransporterConfigurationKeys {
      * @configurationType {@link String}
      * @configurationDefaultValue {@link #DEFAULT_REDIRECT_MODE}
      * @configurationRepoIdSuffix Yes
+     * @deprecated Use {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT} and {@link ConfigurationProperties#HTTP_ORIGIN_SCOPED_HEADERS} instead.
      */
+    @Deprecated
     public static final String CONFIG_PROP_REDIRECT_MODE = CONFIG_PROPS_PREFIX + "redirectMode";
 
     public static final String DEFAULT_REDIRECT_MODE = "ANY";
@@ -65,7 +67,9 @@ public final class UrlTransporterConfigurationKeys {
      * @configurationType {@link java.lang.Boolean}
      * @configurationDefaultValue {@link #DEFAULT_REDIRECT_ALLOW_DOWNGRADE}
      * @configurationRepoIdSuffix Yes
+     * @deprecated Use {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT} instead.
      */
+    @Deprecated
     public static final String CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE = CONFIG_PROPS_PREFIX + "redirectAllowDowngrade";
 
     public static final boolean DEFAULT_REDIRECT_ALLOW_DOWNGRADE = false;

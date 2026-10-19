@@ -61,16 +61,6 @@ class UrlTransporterTest extends HttpTransporterTest {
     }
 
     @Override
-    protected boolean supportsHttpOriginScopedHeaders() {
-        return false;
-    }
-
-    @Override
-    protected boolean supportsHttpFollowInsecureRedirect() {
-        return false;
-    }
-
-    @Override
     @Disabled("HTTP2 unsupported")
     @Test
     protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() {}
