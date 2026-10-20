@@ -28,7 +28,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
-import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
+import org.eclipse.aether.util.connector.transport.TransporterUtils;
 
 /**
  * Scopes operator-configured request headers ({@code aether.transport.http.headers}) to the repository origin.
@@ -67,7 +67,7 @@ final class OriginScopedHeadersInterceptor implements HttpRequestInterceptor {
         Object attribute = context != null ? context.getAttribute(HttpCoreContext.HTTP_TARGET_HOST) : null;
         // fail closed: when the target host cannot be determined, do not attach configured headers
         if (!(attribute instanceof HttpHost)
-                || !HttpTransporterUtils.isSameOrigin(
+                || !TransporterUtils.isSameOrigin(
                         URI.create(origin.toURI()), URI.create(((HttpHost) attribute).toURI()))) {
             for (String headerName : headerNames) {
                 request.removeHeaders(headerName);

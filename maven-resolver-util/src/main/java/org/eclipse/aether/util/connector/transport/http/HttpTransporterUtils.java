@@ -116,36 +116,6 @@ public final class HttpTransporterUtils {
     }
 
     /**
-     * Checks whether two URIs have the same HTTP origin (scheme, host and effective port).
-     *
-     * @param origin the repository origin
-     * @param target the URI to compare with the origin
-     * @return {@code true} when both URIs have the same HTTP origin
-     * @since 2.0.25
-     */
-    public static boolean isSameOrigin(URI origin, URI target) {
-        if (origin.getScheme() == null
-                || origin.getHost() == null
-                || target.getScheme() == null
-                || target.getHost() == null) {
-            return false;
-        }
-        return origin.getScheme().equalsIgnoreCase(target.getScheme())
-                && origin.getHost().equalsIgnoreCase(target.getHost())
-                && effectivePort(origin) == effectivePort(target);
-    }
-
-    private static int effectivePort(URI uri) {
-        if (uri.getPort() >= 0) {
-            return uri.getPort();
-        }
-        if ("https".equalsIgnoreCase(uri.getScheme())) {
-            return 443;
-        }
-        return "http".equalsIgnoreCase(uri.getScheme()) ? 80 : -1;
-    }
-
-    /**
      * Getter for {@link ConfigurationProperties#HTTP_ORIGIN_SCOPED_HEADERS}.
      *
      * @since 2.0.25

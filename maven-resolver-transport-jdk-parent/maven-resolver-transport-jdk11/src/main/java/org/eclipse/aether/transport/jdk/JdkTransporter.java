@@ -93,6 +93,7 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.connector.transport.TransporterUtils;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -633,7 +634,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         HttpRequest.Builder builder = HttpRequest.newBuilder().uri(target).expectContinue(previous.expectContinue());
         previous.version().ifPresent(builder::version);
         previous.timeout().ifPresent(builder::timeout);
-        boolean sameOrigin = HttpTransporterUtils.isSameOrigin(baseUri, target);
+        boolean sameOrigin = TransporterUtils.isSameOrigin(baseUri, target);
         previous.headers().map().forEach((name, values) -> {
             if (sameOrigin || !crossOriginExcludedHeaders.contains(name)) {
                 for (String value : values) {
@@ -912,7 +913,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             }
             try {
                 URI requestingUri = new URI(protocol, null, host, port, null, null, null);
-                return HttpTransporterUtils.isSameOrigin(baseUri, requestingUri);
+                return TransporterUtils.isSameOrigin(baseUri, requestingUri);
             } catch (URISyntaxException e) {
                 return false;
             }

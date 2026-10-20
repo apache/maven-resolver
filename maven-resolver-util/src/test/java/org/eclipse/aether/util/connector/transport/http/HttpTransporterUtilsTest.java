@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpTransporterUtilsTest {
     @Test
-    void getHttpOriginScopedHeaders() {
+    void isHttpOriginScopedHeaders() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
         RemoteRepository repository = new RemoteRepository.Builder("repo", "", "https://host.com").build();
 
@@ -58,7 +58,7 @@ public class HttpTransporterUtilsTest {
     }
 
     @Test
-    void getHttpFollowInsecureRedirect() {
+    void isHttpFollowInsecureRedirect() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
         RemoteRepository repository = new RemoteRepository.Builder("repo", "", "https://host.com").build();
 
@@ -74,23 +74,6 @@ public class HttpTransporterUtilsTest {
         session.setConfigProperty("aether.transport.apache.followInsecureRedirects.repo", true);
         assertTrue(HttpTransporterUtils.isHttpFollowInsecureRedirect(
                 session, repository, "aether.transport.apache.followInsecureRedirects"));
-    }
-
-    @Test
-    void sameOriginUsesSchemeHostAndEffectivePort() {
-        assertTrue(HttpTransporterUtils.isSameOrigin(
-                URI.create("https://repo.example.com/maven2/"), URI.create("HTTPS://REPO.EXAMPLE.COM:443/other")));
-        assertTrue(HttpTransporterUtils.isSameOrigin(
-                URI.create("http://repo.example.com/"), URI.create("http://repo.example.com:80/other")));
-        assertFalse(HttpTransporterUtils.isSameOrigin(
-                URI.create("https://repo.example.com/"), URI.create("http://repo.example.com/")));
-        assertFalse(HttpTransporterUtils.isSameOrigin(
-                URI.create("https://repo.example.com/"), URI.create("https://repo.example.com:8443/")));
-        assertFalse(HttpTransporterUtils.isSameOrigin(
-                URI.create("https://repo.example.com/"), URI.create("https://cdn.example.com/")));
-        assertFalse(HttpTransporterUtils.isSameOrigin(
-                URI.create("ftp://repo.example.com/"), URI.create("ftp://repo.example.com:80/")));
-        assertFalse(HttpTransporterUtils.isSameOrigin(URI.create("https://repo.example.com/"), URI.create("relative")));
     }
 
     @Test

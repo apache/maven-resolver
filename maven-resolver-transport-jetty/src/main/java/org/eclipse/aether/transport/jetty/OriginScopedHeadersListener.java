@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.aether.ConfigurationProperties;
-import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
+import org.eclipse.aether.util.connector.transport.TransporterUtils;
 import org.eclipse.jetty.client.Request;
 
 /**
@@ -66,7 +66,7 @@ final class OriginScopedHeadersListener implements Request.HeadersListener {
         }
         URI target = request.getURI();
         // fail closed: when the target cannot be determined, do not send the scoped headers
-        if (target == null || !HttpTransporterUtils.isSameOrigin(origin, target)) {
+        if (target == null || !TransporterUtils.isSameOrigin(origin, target)) {
             request.headers(headers -> {
                 for (String scopedHeaderName : scopedHeaderNames) {
                     headers.remove(scopedHeaderName);

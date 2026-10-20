@@ -51,6 +51,7 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.connector.transport.TransporterUtils;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 
 /**
@@ -113,6 +114,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         T get() throws IOException;
     }
 
+    @SuppressWarnings("deprecation")
     public UrlTransporter(
             RemoteRepository repository,
             RepositorySystemSession session,
@@ -161,7 +163,6 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
         }
         this.proxyAuth = proxyAuthString;
-
         this.redirectMode = RedirectMode.valueOf(ConfigUtils.getString(
                 session,
                 UrlTransporterConfigurationKeys.DEFAULT_REDIRECT_MODE,
@@ -296,7 +297,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         con.setRequestProperty(HttpConstants.CACHE_CONTROL, "no-cache, no-store");
         con.setRequestProperty("Pragma", "no-cache");
         con.setRequestProperty(HttpConstants.USER_AGENT, userAgent);
-        boolean sameOrigin = HttpTransporterUtils.isSameOrigin(baseUri, target.get(0));
+        boolean sameOrigin = TransporterUtils.isSameOrigin(baseUri, target.get(0));
         if (!originScopedHeaders || sameOrigin) {
             headers.forEach(con::setRequestProperty);
         }
@@ -354,7 +355,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
                     throw new IOException("Refusing to follow redirect to different authority: " + redirectAuthority);
                 }
             }
-            if (originScopedHeaders && !HttpTransporterUtils.isSameOrigin(baseUri, redirectUri)) {
+            if (originScopedHeaders && !TransporterUtils.isSameOrigin(baseUri, redirectUri)) {
                 currAuth = null;
             } else if (currentAuthority == null || !currentAuthority.equalsIgnoreCase(redirectAuthority)) {
                 // reset auth if authority differs after redirect
@@ -373,7 +374,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED
                 && currAuth == null
                 && this.auth != null
-                && (!originScopedHeaders || HttpTransporterUtils.isSameOrigin(baseUri, target.get(0)))) {
+                && (!originScopedHeaders || TransporterUtils.isSameOrigin(baseUri, target.get(0)))) {
             con.disconnect();
             return perform(method, target, this.auth, currProxyAuth, task);
         } else if (responseCode == HttpURLConnection.HTTP_PROXY_AUTH
