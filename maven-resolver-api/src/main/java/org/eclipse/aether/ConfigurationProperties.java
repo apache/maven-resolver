@@ -703,7 +703,7 @@ public final class ConfigurationProperties {
      * <p>
      * Hard links require that the source and target paths reside on the <strong>same filesystem volume</strong>.
      * When they do not (e.g. {@code ~/.m2} is on a separate mount, or a custom in-memory filesystem such as
-     * Jimfs is used for testing), the JVM throws {@link java.nio.file.UnsupportedOperationException},
+     * Jimfs is used for testing), the JVM throws {@link java.lang.UnsupportedOperationException},
      * {@link IllegalArgumentException} (provider mismatch), or {@link java.io.IOException} (cross-device),
      * and the installer automatically falls back to a regular file copy, so the build is never broken.
      * <p>
