@@ -50,10 +50,6 @@ public class PrefixTree {
 
     private final String name;
     private final HashMap<String, PrefixTree> children;
-
-    /**
-     * In prefix tree, a node is leaf if node was added as last element of a loaded path.
-     */
     private final boolean leaf;
 
     public PrefixTree(String name) {
