@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -374,6 +375,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             return true; // continue processing
         });
         AtomicBoolean started = new AtomicBoolean(false);
+        AtomicBoolean progressed = new AtomicBoolean(false);
         Response response;
         try (InputStreamResponseListener listener = new InputStreamResponseListener()) {
             request.onRequestCommit(r -> {
@@ -396,6 +398,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                                 return;
                             }
                         }
+                        progressed.set(true);
                         try {
                             task.getListener().transportProgressed(b);
                         } catch (TransferCancelledException e) {
@@ -404,6 +407,36 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     })
                     .send(listener);
             response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
+            // On some platforms (macOS) with certain configurations (proxy auth, TLS/HTTP2),
+            // Jetty may complete a small PUT without firing onRequestContent callbacks, leaving
+            // the progress listener uninformed even though the upload was sent.
+            // Fire the missing events regardless of response status so the listener contract
+            // is honoured on both success and error paths.
+            if (task.getDataLength() > 0 && !progressed.get()) {
+                if (started.compareAndSet(false, true)) {
+                    try {
+                        task.getListener().transportStarted(0, task.getDataLength());
+                    } catch (TransferCancelledException e) {
+                        // upload already sent — retroactive notification cannot be cancelled;
+                        // fall through to transportPropertiesAvailable and status check
+                    }
+                }
+                try (InputStream is = task.newInputStream()) {
+                    byte[] buf = new byte[1024 * 32];
+                    int n;
+                    while ((n = is.read(buf)) != -1) {
+                        try {
+                            task.getListener().transportProgressed(ByteBuffer.wrap(buf, 0, n));
+                        } catch (TransferCancelledException e) {
+                            break; // upload already sent — retroactive notification cannot be cancelled
+                        }
+                    }
+                }
+            }
+            // transportPropertiesAvailable is called after transportStarted/transportProgressed
+            // to honour the TransportListener contract: "for remote put tasks this is called
+            // after transportStarted(long, long)". Placed before the status check so it is
+            // reachable on both success (2xx) and error (3xx/4xx/5xx) responses.
             task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
             if (response.getStatus() >= MULTIPLE_CHOICES) {
                 JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
