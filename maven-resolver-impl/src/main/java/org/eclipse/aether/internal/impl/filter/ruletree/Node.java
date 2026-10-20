@@ -25,11 +25,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 abstract class Node<N extends Node<?>> {
     protected final String name;
-    protected final ConcurrentHashMap<String, N> siblings;
+    protected final ConcurrentHashMap<String, N> children;
 
     protected Node(String name) {
         this.name = name;
-        this.siblings = new ConcurrentHashMap<>();
+        this.children = new ConcurrentHashMap<>();
     }
 
     public String getName() {
@@ -37,7 +37,7 @@ abstract class Node<N extends Node<?>> {
     }
 
     public boolean isLeaf() {
-        return siblings.isEmpty();
+        return children.isEmpty();
     }
 
     @Override
@@ -47,7 +47,7 @@ abstract class Node<N extends Node<?>> {
 
     public void dump(String prefix) {
         System.out.println(prefix + this);
-        for (N node : siblings.values()) {
+        for (N node : children.values()) {
             node.dump(prefix + "  ");
         }
     }

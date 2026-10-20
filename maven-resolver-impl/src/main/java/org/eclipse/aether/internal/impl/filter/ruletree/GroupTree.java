@@ -116,10 +116,10 @@ public class GroupTree extends Node<GroupTree> {
             }
             List<String> groupElements = elementsOfGroup(line);
             for (String groupElement : groupElements.subList(0, groupElements.size() - 1)) {
-                currentNode = currentNode.siblings.computeIfAbsent(groupElement, GroupTree::new);
+                currentNode = currentNode.children.computeIfAbsent(groupElement, GroupTree::new);
             }
             String lastElement = groupElements.get(groupElements.size() - 1);
-            currentNode = currentNode.siblings.computeIfAbsent(lastElement, GroupTree::new);
+            currentNode = currentNode.children.computeIfAbsent(lastElement, GroupTree::new);
             currentNode.stop = stop;
             currentNode.accept = accept;
             return true;
@@ -134,7 +134,7 @@ public class GroupTree extends Node<GroupTree> {
         GroupTree currentNode = this;
         for (String groupElement : groupElements) {
             current.add(groupElement);
-            currentNode = currentNode.siblings.get(groupElement);
+            currentNode = currentNode.children.get(groupElement);
             if (currentNode == null) {
                 // we stepped off the tree; use value we got so far
                 break;
@@ -159,7 +159,7 @@ public class GroupTree extends Node<GroupTree> {
     @Override
     public void dump(String prefix) {
         System.out.println(prefix + this);
-        for (GroupTree node : siblings.values()) {
+        for (GroupTree node : children.values()) {
             node.dump(prefix + "  ");
         }
     }

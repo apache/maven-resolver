@@ -47,8 +47,25 @@ public class PrefixTree extends Node<PrefixTree> {
         return Arrays.stream(path.split("/")).filter(e -> !e.isEmpty()).collect(toList());
     }
 
+    /**
+     * In prefix tree, a node is leaf not if it has no children, but if node was added as last element of a
+     * loaded path.
+     */
+    private final boolean leaf;
+
     public PrefixTree(String name) {
         super(name);
+        this.leaf = false;
+    }
+
+    private PrefixTree(String name, boolean leaf) {
+        super(name);
+        this.leaf = leaf;
+    }
+
+    @Override
+    public boolean isLeaf() {
+        return leaf;
     }
 
     public int loadNodes(Stream<String> linesStream) {
@@ -61,11 +78,37 @@ public class PrefixTree extends Node<PrefixTree> {
         return counter.get();
     }
 
+    /**
+     * Adds a line to the tree:
+     * <ul>
+     *     <li>it parses the URI-path-like element into list of segments {@link #elementsOfPath(String)}</li>
+     *     <li>cycles over the list, and marks last node added as {@code leaf=true}</li>
+     *     <li>if already on leaf node, processing stops (shorter path wins)</li>
+     * </ul>
+     */
     public boolean loadNode(String line) {
         if (!line.startsWith("#") && !line.trim().isEmpty()) {
+            final List<String> elements = elementsOfPath(line);
+            final int lastElementIdx = elements.size() - 1;
             PrefixTree currentNode = this;
-            for (String element : elementsOfPath(line)) {
-                currentNode = currentNode.siblings.computeIfAbsent(element, PrefixTree::new);
+            for (int i = 0; i <= lastElementIdx; i++) {
+                String element = elements.get(i);
+                boolean leaf = i == lastElementIdx;
+                PrefixTree siblingNode = currentNode.children.get(element);
+                if (leaf && siblingNode != null && !siblingNode.isLeaf()) {
+                    // shorter wins regardless of load order: we got /a/b/c, now /a/b arrives, drop the subtree
+                    siblingNode = new PrefixTree(element, true);
+                    currentNode.children.put(element, siblingNode);
+                }
+                if (siblingNode == null) {
+                    if (currentNode.isLeaf()) {
+                        break; // shorter wins: we got /a/b/c, but we already had /a/b
+                    } else {
+                        siblingNode = new PrefixTree(element, leaf);
+                        currentNode.children.put(element, siblingNode);
+                    }
+                }
+                currentNode = siblingNode;
             }
             return true;
         }
@@ -76,12 +119,19 @@ public class PrefixTree extends Node<PrefixTree> {
         final List<String> pathElements = elementsOfPath(path);
         PrefixTree currentNode = this;
         for (String pathElement : pathElements) {
-            currentNode = currentNode.siblings.get(pathElement);
+            currentNode = currentNode.children.get(pathElement);
             if (currentNode == null || currentNode.isLeaf()) {
                 break;
             }
         }
         // path is accepted if its elements lead to an existing node that is a leaf node
         return currentNode != null && currentNode.isLeaf();
+    }
+
+    public void dump(String prefix) {
+        System.out.println(prefix + this + (leaf ? "*" : ""));
+        for (PrefixTree node : children.values()) {
+            node.dump(prefix + "  ");
+        }
     }
 }
