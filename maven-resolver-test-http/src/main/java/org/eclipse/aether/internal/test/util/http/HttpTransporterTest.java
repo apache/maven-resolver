@@ -350,14 +350,6 @@ public abstract class HttpTransporterTest {
         return true;
     }
 
-    protected boolean supportsHttpOriginScopedHeaders() {
-        return true;
-    }
-
-    protected boolean supportsHttpFollowInsecureRedirect() {
-        return true;
-    }
-
     @Test
     protected void testClassify() {
         assertEquals(Transporter.ERROR_OTHER, transporter.classify(new FileNotFoundException()));
@@ -1063,7 +1055,6 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_Redirect_OriginScopedHeadersByDefault() throws Exception {
-        assumeTrue(supportsHttpOriginScopedHeaders(), "Transporter does not support origin-scoped headers");
         Map<String, String> headers = Map.of("X-Secret", "secret");
         session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS + ".test", headers);
         newTransporter(httpServer.getHttpUrl());
@@ -1078,7 +1069,6 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_Redirect_OriginScopedHeadersDisabled() throws Exception {
-        assumeTrue(supportsHttpOriginScopedHeaders(), "Transporter does not support origin-scoped headers");
         Map<String, String> headers = Map.of("X-Secret", "secret");
         session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS + ".test", headers);
         session.setConfigProperty(ConfigurationProperties.HTTP_ORIGIN_SCOPED_HEADERS, false);
@@ -1095,7 +1085,6 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_Redirect_OriginScopedAuthenticationNotReplayed() throws Exception {
-        assumeTrue(supportsHttpOriginScopedHeaders(), "Transporter does not support origin-scoped headers");
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
                 .addUsername("testuser")
@@ -1114,7 +1103,6 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_Redirect_InsecureRedirectRefusedByDefault() throws Exception {
-        assumeTrue(supportsHttpFollowInsecureRedirect(), "Transporter does not support insecure-redirect control");
         httpServer.addHttp2ConnectorWithMutualTLS();
         session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_1_1);
         newTransporter(httpServer.getHttpsUrl());
@@ -1126,7 +1114,6 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_Redirect_InsecureRedirectAllowedWhenConfigured() throws Exception {
-        assumeTrue(supportsHttpFollowInsecureRedirect(), "Transporter does not support insecure-redirect control");
         httpServer.addHttp2ConnectorWithMutualTLS();
         session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_1_1);
         session.setConfigProperty(ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT, true);
