@@ -70,6 +70,10 @@ public final class SampleConfigurationKeys {
      * @configurationType {@link SampleEnum}
      * @configurationDefaultValue {@link #DEFAULT_ENUM}
      * @deprecated Use {@link #ENUM2_KEY} instead
+     * @see <a href="https://bugs.openjdk.org/browse/JDK-8225647">JDK-8225647</a>
+     * @see SampleConfigurationKeys#STRING_KEY label
+     * @see "simple text"
+     * @see SampleConfigurationKeys#STRING_KEY
      */
     @Deprecated()
     public static final String ENUM_KEY = "sample.enum";
