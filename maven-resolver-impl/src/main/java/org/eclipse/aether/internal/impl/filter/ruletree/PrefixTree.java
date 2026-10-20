@@ -48,9 +48,7 @@ public class PrefixTree extends Node<PrefixTree> {
     }
 
     /**
-     * In prefix tree, a node is leaf if node was added as last element of a loaded path, unlike
-     * the original check "it has no children". This simplifies parsing, as during parsing "leaf" based
-     * on children would need extra bookkeeping.
+     * In prefix tree, a node is leaf if node was added as last element of a loaded path.
      */
     private final boolean leaf;
 
@@ -64,7 +62,6 @@ public class PrefixTree extends Node<PrefixTree> {
         this.leaf = leaf;
     }
 
-    @Override
     public boolean isLeaf() {
         return leaf;
     }

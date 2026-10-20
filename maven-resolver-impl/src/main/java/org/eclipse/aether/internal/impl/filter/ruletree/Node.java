@@ -18,26 +18,22 @@
  */
 package org.eclipse.aether.internal.impl.filter.ruletree;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 /**
  * A tree structure with rules.
  */
 abstract class Node<N extends Node<?>> {
     protected final String name;
-    protected final ConcurrentHashMap<String, N> children;
+    protected final HashMap<String, N> children;
 
     protected Node(String name) {
         this.name = name;
-        this.children = new ConcurrentHashMap<>();
+        this.children = new HashMap<>();
     }
 
     public String getName() {
         return name;
-    }
-
-    public boolean isLeaf() {
-        return children.isEmpty();
     }
 
     @Override

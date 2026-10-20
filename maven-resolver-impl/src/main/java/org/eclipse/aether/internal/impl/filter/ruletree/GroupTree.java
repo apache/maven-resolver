@@ -155,12 +155,4 @@ public class GroupTree extends Node<GroupTree> {
     public String toString() {
         return (accept != null ? (accept ? "+" : "-") : "?") + (stop ? "=" : "") + name;
     }
-
-    @Override
-    public void dump(String prefix) {
-        System.out.println(prefix + this);
-        for (GroupTree node : children.values()) {
-            node.dump(prefix + "  ");
-        }
-    }
 }
