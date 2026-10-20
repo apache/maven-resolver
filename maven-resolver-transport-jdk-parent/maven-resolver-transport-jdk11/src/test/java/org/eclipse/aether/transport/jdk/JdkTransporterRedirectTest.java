@@ -23,6 +23,7 @@ import java.net.http.HttpRequest;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.eclipse.aether.ConfigurationProperties.RedirectMode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -175,5 +176,19 @@ class JdkTransporterRedirectTest {
         assertEquals(
                 URI.create("http://repo.example.com/maven2/a.jar"),
                 JdkTransporter.followableRedirect(302, requestUri, "http://repo.example.com/maven2/a.jar", true));
+    }
+
+    @Test
+    void redirectModeRestrictsRedirectTargets() {
+        URI requestUri = BASE_URI.resolve("a.jar");
+
+        assertNull(JdkTransporter.followableRedirect(
+                302, requestUri, "https://repo.example.com/maven2/b.jar", false, RedirectMode.NONE));
+        assertEquals(
+                URI.create("https://repo.example.com/maven2/b.jar"),
+                JdkTransporter.followableRedirect(
+                        302, requestUri, "https://repo.example.com/maven2/b.jar", false, RedirectMode.SAME_AUTHORITY));
+        assertNull(JdkTransporter.followableRedirect(
+                302, requestUri, "https://cdn.example.net/b.jar", false, RedirectMode.SAME_AUTHORITY));
     }
 }

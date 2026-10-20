@@ -1014,6 +1014,54 @@ public abstract class HttpTransporterTest {
     }
 
     @Test
+    protected void testGet_Redirect_ModeNone() throws Exception {
+        session.setConfigProperty(
+                ConfigurationProperties.HTTP_REDIRECT_MODE + ".test", ConfigurationProperties.RedirectMode.NONE);
+        newTransporter(httpServer.getHttpUrl());
+
+        assertThrows(Exception.class, () -> transporter.get(new GetTask(URI.create("redirect/file.txt"))));
+        assertEquals(1, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    protected void testGet_Redirect_ModeSameAuthority() throws Exception {
+        session.setConfigProperty(
+                ConfigurationProperties.HTTP_REDIRECT_MODE + ".test",
+                ConfigurationProperties.RedirectMode.SAME_AUTHORITY);
+        newTransporter(httpServer.getHttpUrl());
+
+        GetTask task = new GetTask(URI.create("redirect/file.txt"));
+        transporter.get(task);
+
+        assertEquals("test", task.getDataString());
+        assertEquals(2, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    protected void testGet_Redirect_ModeSameAuthorityRefusesDifferentAuthority() throws Exception {
+        session.setConfigProperty(
+                ConfigurationProperties.HTTP_REDIRECT_MODE + ".test",
+                ConfigurationProperties.RedirectMode.SAME_AUTHORITY);
+        newTransporter(httpServer.getHttpUrl());
+
+        assertThrows(
+                Exception.class, () -> transporter.get(new GetTask(URI.create("redirect/file.txt?host=127.0.0.1"))));
+        assertEquals(1, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    protected void testGet_Redirect_ModeAnyAllowsDifferentAuthority() throws Exception {
+        session.setConfigProperty(ConfigurationProperties.HTTP_REDIRECT_MODE, ConfigurationProperties.RedirectMode.ANY);
+        newTransporter(httpServer.getHttpUrl());
+
+        GetTask task = new GetTask(URI.create("redirect/file.txt?host=127.0.0.1"));
+        transporter.get(task);
+
+        assertEquals("test", task.getDataString());
+        assertEquals(2, httpServer.getLogEntries().size());
+    }
+
+    @Test
     protected void testGet_Redirect_OriginScopedHeadersByDefault() throws Exception {
         assumeTrue(supportsHttpOriginScopedHeaders(), "Transporter does not support origin-scoped headers");
         Map<String, String> headers = Map.of("X-Secret", "secret");

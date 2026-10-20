@@ -261,6 +261,43 @@ public final class ConfigurationProperties {
      */
     public static final String HTTP_HEADERS = PREFIX_TRANSPORT_HTTP + "headers";
 
+    public enum RedirectMode {
+        /**
+         * No redirects allowed.
+         */
+        NONE,
+        /**
+         * Redirects only within same authority.
+         */
+        SAME_AUTHORITY,
+        /**
+         * Any redirect is followed.
+         */
+        ANY
+    }
+
+    /**
+     * Optionally restricts HTTP redirects to either the same authority or not allowing any redirects at all.
+     * By default any redirect is followed.
+     * Blocked redirects lead to exceptions being thrown by the transport.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link ConfigurationProperties.RedirectMode}
+     * @configurationDefaultValue {@link #HTTP_REDIRECT_MODE}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.25
+     * @see {@link #HTTP_ORIGIN_SCOPED_HEADERS} for restricing headers passed to redirect targets
+     * @see {@link #HTTP_FOLLOW_INSECURE_REDIRECT} for controlling whether HTTPS-to-HTTP redirects are followed
+     */
+    public static final String HTTP_REDIRECT_MODE = PREFIX_TRANSPORT_HTTP + "redirectMode";
+
+    /**
+     * Default value if {@link #HTTP_REDIRECT_MODE} is not set.
+     *
+     * @since 2.0.25
+     */
+    public static final RedirectMode DEFAULT_REDIRECT_MODE = RedirectMode.ANY;
+
     /**
      * If enabled (default), HTTP transports only send configured request headers and preemptively applied
      * {@code Authorization} on requests targeting the repository origin.
@@ -270,6 +307,7 @@ public final class ConfigurationProperties {
      * @configurationDefaultValue {@link #DEFAULT_HTTP_ORIGIN_SCOPED_HEADERS}
      * @configurationRepoIdSuffix Yes
      * @since 2.0.25
+     * @see {@link#HTTP_REDIRECT_MODE} for controlling the behavior of HTTP redirects
      */
     public static final String HTTP_ORIGIN_SCOPED_HEADERS = PREFIX_TRANSPORT_HTTP + "originScopedHeaders";
 

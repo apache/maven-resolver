@@ -41,7 +41,7 @@ public final class UrlTransporterConfigurationKeys {
      * @configurationType {@link String}
      * @configurationDefaultValue {@link #DEFAULT_REDIRECT_MODE}
      * @configurationRepoIdSuffix Yes
-     * @deprecated Use {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT} and {@link ConfigurationProperties#HTTP_ORIGIN_SCOPED_HEADERS} instead.
+     * @deprecated Use {@link ConfigurationProperties#HTTP_REDIRECT_MODE} instead.
      */
     @Deprecated
     public static final String CONFIG_PROP_REDIRECT_MODE = CONFIG_PROPS_PREFIX + "redirectMode";

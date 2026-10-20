@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.transport.apache;
 
+import java.net.URI;
+
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
@@ -29,6 +31,7 @@ import org.apache.http.message.BasicStatusLine;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.ConfigurationProperties.RedirectMode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +43,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * repository credentials must be bound to the repository's scheme-implied port.
  */
 class ResolverRedirectStrategyTest {
+    private static ResolverRedirectStrategy strategy(boolean followInsecureRedirects) {
+        return new ResolverRedirectStrategy(
+                RedirectMode.ANY, URI.create("https://repo.example.com/"), followInsecureRedirects);
+    }
+
     private static HttpResponse redirectResponse(String location) {
         HttpResponse response = new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 302, "Found"));
         response.setHeader("Location", location);
@@ -54,7 +62,7 @@ class ResolverRedirectStrategyTest {
 
     @Test
     void httpsToHttpRedirectRefusedByDefault() {
-        ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
+        ResolverRedirectStrategy strategy = strategy(false);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("http://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
@@ -66,7 +74,7 @@ class ResolverRedirectStrategyTest {
 
     @Test
     void httpsToHttpCrossHostRedirectRefusedByDefault() {
-        ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
+        ResolverRedirectStrategy strategy = strategy(false);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("http://evil.example.org/g/a/1.0/a-1.0.jar");
         HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
@@ -76,7 +84,7 @@ class ResolverRedirectStrategyTest {
 
     @Test
     void httpsToHttpsRedirectFollowed() throws ProtocolException {
-        ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
+        ResolverRedirectStrategy strategy = strategy(false);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("https://mirror.example.com/g/a/1.0/a-1.0.jar");
         HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
@@ -86,7 +94,7 @@ class ResolverRedirectStrategyTest {
 
     @Test
     void relativeRedirectFollowed() throws ProtocolException {
-        ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
+        ResolverRedirectStrategy strategy = strategy(false);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("/elsewhere/a-1.0.jar");
         HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
@@ -96,7 +104,7 @@ class ResolverRedirectStrategyTest {
 
     @Test
     void httpToHttpRedirectFollowed() throws ProtocolException {
-        ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
+        ResolverRedirectStrategy strategy = strategy(false);
         HttpGet request = new HttpGet("http://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("http://mirror.example.com/g/a/1.0/a-1.0.jar");
         HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 80, "http"));
@@ -106,7 +114,7 @@ class ResolverRedirectStrategyTest {
 
     @Test
     void httpsToHttpRedirectFollowedWhenExplicitlyAllowed() throws ProtocolException {
-        ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(true);
+        ResolverRedirectStrategy strategy = strategy(true);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("http://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
@@ -116,7 +124,7 @@ class ResolverRedirectStrategyTest {
 
     @Test
     void currentSchemeFallsBackToRequestUriWithoutContextTarget() {
-        ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(false);
+        ResolverRedirectStrategy strategy = strategy(false);
         HttpGet request = new HttpGet("https://repo.example.com/g/a/1.0/a-1.0.jar");
         HttpResponse response = redirectResponse("http://repo.example.com/g/a/1.0/a-1.0.jar");
 
@@ -130,5 +138,31 @@ class ResolverRedirectStrategyTest {
         assertEquals(80, ApacheTransporter.effectivePort(new HttpHost("repo.example.com", -1, "http")));
         assertEquals(8443, ApacheTransporter.effectivePort(new HttpHost("repo.example.com", 8443, "https")));
         assertEquals(8081, ApacheTransporter.effectivePort(new HttpHost("repo.example.com", 8081, "http")));
+    }
+
+    @Test
+    void redirectModeNoneRefusesRedirects() {
+        ResolverRedirectStrategy strategy =
+                new ResolverRedirectStrategy(RedirectMode.NONE, URI.create("https://repo.example.com/"), true);
+        HttpGet request = new HttpGet("https://repo.example.com/a.jar");
+        HttpResponse response = redirectResponse("https://repo.example.com/b.jar");
+        HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
+
+        assertThrows(ProtocolException.class, () -> strategy.isRedirected(request, response, context));
+    }
+
+    @Test
+    void sameAuthorityRedirectModeAllowsOnlyRepositoryAuthority() throws ProtocolException {
+        ResolverRedirectStrategy strategy = new ResolverRedirectStrategy(
+                RedirectMode.SAME_AUTHORITY, URI.create("https://repo.example.com/"), true);
+        HttpGet request = new HttpGet("https://repo.example.com/a.jar");
+        HttpContext context = contextWithTarget(new HttpHost("repo.example.com", 443, "https"));
+
+        assertTrue(strategy.isRedirected(request, redirectResponse("/b.jar"), context));
+
+        ProtocolException e = assertThrows(
+                ProtocolException.class,
+                () -> strategy.isRedirected(request, redirectResponse("https://mirror.example.com/b.jar"), context));
+        assertTrue(e.getMessage().contains("different authority"));
     }
 }

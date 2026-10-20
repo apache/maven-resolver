@@ -48,6 +48,20 @@ public final class TransporterUtils {
                 && effectivePort(origin) == effectivePort(target);
     }
 
+    /**
+     * Checks whether two URIs have the same authority (user, host and port).
+     *
+     * @param origin the URI to compare
+     * @param target the URI to compare with the origin
+     * @return {@code true} when both URIs have the same authority
+     * @since 2.0.25
+     */
+    public static boolean isSameAuthority(URI origin, URI target) {
+        String originAuthority = origin.getAuthority();
+        String targetAuthority = target.getAuthority();
+        return originAuthority != null && targetAuthority != null && originAuthority.equalsIgnoreCase(targetAuthority);
+    }
+
     private static int effectivePort(URI uri) {
         if (uri.getPort() >= 0) {
             return uri.getPort();

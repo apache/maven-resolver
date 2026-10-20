@@ -30,20 +30,28 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.protocol.HttpContext;
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.ConfigurationProperties.RedirectMode;
+import org.eclipse.aether.util.connector.transport.TransporterUtils;
 
 /**
  * A redirect strategy that refuses protocol downgrades: a redirect from an {@code https} URL to an {@code http}
  * URL strips transport encryption from artifact and checksum bytes and makes repository credentials eligible for
  * transmission over plaintext, so it fails the transfer instead of being followed silently, unless explicitly
- * allowed via {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT}. All other
- * redirects behave exactly as {@link LaxRedirectStrategy} handled them before.
+ * allowed via {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT}. Redirects are also restricted by the
+ * configured {@link RedirectMode}.
  *
  * @since 2.0.23
  */
 final class ResolverRedirectStrategy extends LaxRedirectStrategy {
+    private final RedirectMode redirectMode;
+
+    private final URI repositoryUri;
+
     private final boolean followInsecureRedirects;
 
-    ResolverRedirectStrategy(boolean followInsecureRedirects) {
+    ResolverRedirectStrategy(RedirectMode redirectMode, URI repositoryUri, boolean followInsecureRedirects) {
+        this.redirectMode = redirectMode;
+        this.repositoryUri = repositoryUri;
         this.followInsecureRedirects = followInsecureRedirects;
     }
 
@@ -51,20 +59,31 @@ final class ResolverRedirectStrategy extends LaxRedirectStrategy {
     public boolean isRedirected(HttpRequest request, HttpResponse response, HttpContext context)
             throws ProtocolException {
         boolean redirected = super.isRedirected(request, response, context);
-        if (redirected && !followInsecureRedirects) {
+        if (redirected) {
             Header locationHeader = response.getFirstHeader("location");
             if (locationHeader != null) {
                 URI location = createLocationURI(locationHeader.getValue());
-                String locationScheme = location.getScheme();
-                String currentScheme = currentScheme(request, context);
-                if (locationScheme != null
-                        && "https".equalsIgnoreCase(currentScheme)
-                        && !"https".equalsIgnoreCase(locationScheme)) {
-                    throw new ProtocolException("Insecure redirect to '" + location
-                            + "' not followed: protocol downgrade from https to " + locationScheme
-                            + " would expose credentials and artifact content; set the configuration property "
-                            + ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT
-                            + "=true to allow it");
+                URI target = repositoryUri.resolve(location);
+                if (redirectMode == RedirectMode.NONE) {
+                    throw new ProtocolException(
+                            "Refusing to follow redirect to '" + target + "': redirect mode is " + redirectMode);
+                }
+                if (redirectMode == RedirectMode.SAME_AUTHORITY
+                        && !TransporterUtils.isSameAuthority(repositoryUri, target)) {
+                    throw new ProtocolException("Refusing to follow redirect to different authority: " + target);
+                }
+                if (!followInsecureRedirects) {
+                    String locationScheme = location.getScheme();
+                    String currentScheme = currentScheme(request, context);
+                    if (locationScheme != null
+                            && "https".equalsIgnoreCase(currentScheme)
+                            && !"https".equalsIgnoreCase(locationScheme)) {
+                        throw new ProtocolException("Insecure redirect to '" + location
+                                + "' not followed: protocol downgrade from https to " + locationScheme
+                                + " would expose credentials and artifact content; set the configuration property "
+                                + ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT
+                                + "=true to allow it");
+                    }
                 }
             }
         }

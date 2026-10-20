@@ -107,7 +107,9 @@ public final class ApacheTransporterConfigurationKeys {
      * @configurationDefaultValue {@link #DEFAULT_FOLLOW_REDIRECTS}
      * @configurationRepoIdSuffix Yes
      * @since 2.0.2
+     * @deprecated Use {@link ConfigurationProperties#HTTP_REDIRECT_MODE} instead.
      */
+    @Deprecated
     public static final String CONFIG_PROP_FOLLOW_REDIRECTS = CONFIG_PROPS_PREFIX + "followRedirects";
 
     public static final boolean DEFAULT_FOLLOW_REDIRECTS = true;

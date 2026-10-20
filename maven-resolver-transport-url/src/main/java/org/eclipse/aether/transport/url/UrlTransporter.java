@@ -146,7 +146,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         this.authEncoding = HttpTransporterUtils.getHttpCredentialsEncoding(session, repository);
         this.auth = authString;
         this.preemptiveAuth = this.auth != null && HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
-        this.originScopedHeaders = HttpTransporterUtils.isHttpOriginScopedHeaders(session, repository);
+        this.originScopedHeaders = HttpTransporterUtils.isOriginScopedHeaders(session, repository);
 
         org.eclipse.aether.repository.Proxy repoProxy = repository.getProxy();
         this.proxy = repoProxy != null
@@ -163,12 +163,10 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
         }
         this.proxyAuth = proxyAuthString;
-        this.redirectMode = RedirectMode.valueOf(ConfigUtils.getString(
-                session,
-                UrlTransporterConfigurationKeys.DEFAULT_REDIRECT_MODE,
-                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE + "." + repository.getId(),
-                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE));
-        this.redirectAllowDowngrade = HttpTransporterUtils.isHttpFollowInsecureRedirect(
+        this.redirectMode = RedirectMode.valueOf(HttpTransporterUtils.getRedirectMode(
+                        session, repository, UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE)
+                .name());
+        this.redirectAllowDowngrade = HttpTransporterUtils.isFollowInsecureRedirect(
                 session, repository, UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE);
         this.maxRedirects = ConfigUtils.getInteger(
                 session,
@@ -349,11 +347,10 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
             String currentAuthority = currentUri.getAuthority();
             String redirectAuthority = redirectUri.getAuthority();
-            if (currentAuthority == null || !currentAuthority.equalsIgnoreCase(redirectAuthority)) {
-                if (redirectMode == RedirectMode.SAME_AUTHORITY) {
-                    con.disconnect();
-                    throw new IOException("Refusing to follow redirect to different authority: " + redirectAuthority);
-                }
+            if (redirectMode == RedirectMode.SAME_AUTHORITY
+                    && !TransporterUtils.isSameAuthority(currentUri, redirectUri)) {
+                con.disconnect();
+                throw new IOException("Refusing to follow redirect to different authority: " + redirectAuthority);
             }
             if (originScopedHeaders && !TransporterUtils.isSameOrigin(baseUri, redirectUri)) {
                 currAuth = null;

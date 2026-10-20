@@ -90,6 +90,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.aether.ConfigurationProperties.RedirectMode;
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -228,12 +229,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 DEFAULT_MAX_REDIRECTS,
                 CONFIG_PROP_MAX_REDIRECTS + "." + repository.getId(),
                 CONFIG_PROP_MAX_REDIRECTS);
-        boolean followRedirects = ConfigUtils.getBoolean(
-                session,
-                DEFAULT_FOLLOW_REDIRECTS,
-                CONFIG_PROP_FOLLOW_REDIRECTS + "." + repository.getId(),
-                CONFIG_PROP_FOLLOW_REDIRECTS);
-        boolean followInsecureRedirects = HttpTransporterUtils.isHttpFollowInsecureRedirect(
+        RedirectMode redirectMode = HttpTransporterUtils.getRedirectMode(
+                session, repository, DEFAULT_FOLLOW_REDIRECTS, CONFIG_PROP_FOLLOW_REDIRECTS);
+        boolean followInsecureRedirects = HttpTransporterUtils.isFollowInsecureRedirect(
                 session, repository, ApacheTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS);
         String userAgent = HttpTransporterUtils.getUserAgent(session, repository);
 
@@ -250,8 +248,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 SocketConfig.custom().setSoTimeout(requestTimeout).build();
         RequestConfig requestConfig = RequestConfig.custom()
                 .setMaxRedirects(maxRedirects)
-                .setRedirectsEnabled(followRedirects)
-                .setRelativeRedirectsAllowed(followRedirects)
+                .setRedirectsEnabled(redirectMode != RedirectMode.NONE)
+                .setRelativeRedirectsAllowed(redirectMode != RedirectMode.NONE)
                 // the time waiting for data; max time between two data packets
                 .setSocketTimeout(requestTimeout)
                 // the time to establish the connection (high level)
@@ -280,7 +278,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
         HttpClientBuilder builder = HttpClientBuilder.create()
                 .setUserAgent(userAgent)
-                .setRedirectStrategy(new ResolverRedirectStrategy(followInsecureRedirects))
+                .setRedirectStrategy(new ResolverRedirectStrategy(redirectMode, baseUri, followInsecureRedirects))
                 .setDefaultSocketConfig(socketConfig)
                 .setDefaultRequestConfig(requestConfig)
                 .setServiceUnavailableRetryStrategy(serviceUnavailableRetryStrategy)
@@ -290,7 +288,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 .setConnectionManagerShared(true)
                 .setDefaultCredentialsProvider(toCredentialsProvider(server, repoAuthContext, proxy, proxyAuthContext))
                 .setProxy(proxy);
-        if (HttpTransporterUtils.isHttpOriginScopedHeaders(
+        if (HttpTransporterUtils.isOriginScopedHeaders(
                 session, repository, ApacheTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS)) {
             // Configured headers are per-repository data and frequently carry credentials; scope them to the
             // repository origin so a cross-origin redirect hop does not replay them to the redirect target.
