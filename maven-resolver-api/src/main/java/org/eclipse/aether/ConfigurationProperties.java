@@ -530,13 +530,21 @@ public final class ConfigurationProperties {
      */
     public static final String HTTPS_SECURITY_MODE_INSECURE = "insecure";
 
+    /**
+     * HTTP protocol version to use for the HTTP transport.
+     *
+     * @since 2.0.21
+     */
     public enum HttpVersion {
         /**
          * The default HTTP version supported by the respective transporter (the most recent stable one, usually HTTP/2)
          */
         DEFAULT,
+        /** HTTP/1.1. */
         HTTP_1_1,
+        /** HTTP/2. */
         HTTP_2,
+        /** HTTP/3. */
         HTTP_3,
         /**
          * The maximum HTTP version supported by the respective transporter (may be unstable).
@@ -625,6 +633,11 @@ public final class ConfigurationProperties {
      */
     public static final String REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = PREFIX_SYSTEM + "repositoryKeyFunction";
 
+    /**
+     * Default value if {@link #REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION} is not set.
+     *
+     * @since 2.0.14
+     */
     public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid";
 
     /**
@@ -652,6 +665,11 @@ public final class ConfigurationProperties {
     public static final String REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION =
             PREFIX_SYSTEM + "trackingRepositoryKeyFunction";
 
+    /**
+     * Default value if {@link #REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION} is not set.
+     *
+     * @since 2.0.23
+     */
     public static final String DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
 
     /**

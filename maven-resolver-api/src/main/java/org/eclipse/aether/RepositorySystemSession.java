@@ -587,6 +587,7 @@ public interface RepositorySystemSession {
      *
      * @see #getArtifactUpdatePolicy()
      * @see #getMetadataUpdatePolicy()
+     * @return The global update policy, or {@code null} if not set.
      */
     String getUpdatePolicy();
 

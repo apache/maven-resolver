@@ -31,6 +31,9 @@ public final class DefaultSessionData implements SessionData {
 
     private final ConcurrentMap<Object, Object> data;
 
+    /**
+     * Creates a new session data instance.
+     */
     public DefaultSessionData() {
         data = new ConcurrentHashMap<>();
     }

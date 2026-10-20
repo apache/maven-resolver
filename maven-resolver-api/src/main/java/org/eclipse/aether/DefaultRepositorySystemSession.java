@@ -155,6 +155,8 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
      * Note: preferred way to create sessions is {@link RepositorySystem#createSessionBuilder()}, as then client code
      * does not have to fiddle with session close callbacks. This constructor is meant more for testing purposes.
      *
+     * @param onSessionEndedRegistrar The function to register an "on session ended" handler with, invoked with the
+     *            handler and returning {@code true} if registration succeeded, must not be {@code null}.
      * @since 2.0.0
      */
     public DefaultRepositorySystemSession(Function<Runnable, Boolean> onSessionEndedRegistrar) {

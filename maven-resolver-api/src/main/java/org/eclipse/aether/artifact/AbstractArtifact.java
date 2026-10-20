@@ -36,6 +36,11 @@ public abstract class AbstractArtifact implements Artifact {
 
     private static final Pattern SNAPSHOT_TIMESTAMP = Pattern.compile("^(.*-)?([0-9]{8}\\.[0-9]{6}-[0-9]+)$");
 
+    /**
+     * Constructor for subclasses.
+     */
+    public AbstractArtifact() {}
+
     @Override
     public boolean isSnapshot() {
         return isSnapshot(getVersion());

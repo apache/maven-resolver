@@ -40,31 +40,43 @@ public final class TransferEvent {
     public enum EventType {
 
         /**
+         * The transfer has been initiated.
+         *
          * @see TransferListener#transferInitiated(TransferEvent)
          */
         INITIATED,
 
         /**
+         * The transfer has started.
+         *
          * @see TransferListener#transferStarted(TransferEvent)
          */
         STARTED,
 
         /**
+         * The transfer is progressing.
+         *
          * @see TransferListener#transferProgressed(TransferEvent)
          */
         PROGRESSED,
 
         /**
+         * The transferred data is corrupt.
+         *
          * @see TransferListener#transferCorrupted(TransferEvent)
          */
         CORRUPTED,
 
         /**
+         * The transfer has succeeded.
+         *
          * @see TransferListener#transferSucceeded(TransferEvent)
          */
         SUCCEEDED,
 
         /**
+         * The transfer has failed.
+         *
          * @see TransferListener#transferFailed(TransferEvent)
          */
         FAILED
@@ -415,5 +427,10 @@ public final class TransferEvent {
         }
     }
 
+    /**
+     * Marker interface for keys used in {@link #getTransportProperties()}.
+     *
+     * @since 2.0.21
+     */
     public interface TransportPropertyKey {}
 }

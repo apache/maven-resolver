@@ -31,11 +31,15 @@ import java.util.Set;
 public interface ResolutionScope {
     /**
      * The label.
+     *
+     * @return The identifier of this resolution scope, never {@code null}.
      */
     String getId();
 
     /**
      * Aliases, for easier legacy mapping, never {@code null}.
+     *
+     * @return The aliases of this resolution scope, never {@code null}.
      */
     Set<String> getAliases();
 }

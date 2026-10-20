@@ -159,6 +159,7 @@ public final class ArtifactResult {
     /**
      * Records the specified exception while resolving the artifact.
      *
+     * @param repository The repository the exception occurred with, may be {@code null}.
      * @param exception The exception to record, may be {@code null}.
      * @return This result for chaining, never {@code null}.
      * @since 2.0.0

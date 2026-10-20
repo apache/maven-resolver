@@ -30,6 +30,13 @@ public final class RepositoryUriUtils {
 
     private RepositoryUriUtils() {}
 
+    /**
+     * Converts the given repository URL or file path to a {@link URI}, resolving plain file paths and
+     * {@code file:} URLs against the local file system.
+     *
+     * @param repositoryUrl The repository URL or file path to convert, must not be {@code null}.
+     * @return The resulting URI, never {@code null}.
+     */
     public static URI toUri(String repositoryUrl) {
         final String protocol = protocol(repositoryUrl);
         if ("file".equals(protocol)

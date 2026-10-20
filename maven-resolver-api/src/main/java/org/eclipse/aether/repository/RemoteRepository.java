@@ -52,8 +52,11 @@ public final class RemoteRepository implements ArtifactRepository {
      * @since 2.0.14
      */
     public enum Intent {
+        /** The repository is newly created and not yet adapted for a particular use. */
         BARE,
+        /** The repository is used to resolve artifacts or metadata. */
         RESOLUTION,
+        /** The repository is used to deploy artifacts or metadata. */
         DEPLOYMENT
     }
 
@@ -326,6 +329,7 @@ public final class RemoteRepository implements ArtifactRepository {
      * These properties are managed by repository system, based on configuration. See {@link org.eclipse.aether.RepositorySystem}
      * and (internal component) {@code org.eclipse.aether.impl.RemoteRepositoryManager}.
      *
+     * @return The "bare" repository, never {@code null}.
      * @since 2.0.14
      */
     public RemoteRepository toBareRemoteRepository() {
