@@ -19,6 +19,7 @@
 package org.eclipse.aether.internal.impl.filter.ruletree;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -42,10 +43,13 @@ import static java.util.stream.Collectors.toList;
  *     <li><a href="https://repo.eclipse.org/content/repositories/tycho/.meta/prefixes.txt">Eclipse Tycho</a></li>
  * </ul>
  */
-public class PrefixTree extends Node<PrefixTree> {
+public class PrefixTree {
     private static List<String> elementsOfPath(final String path) {
         return Arrays.stream(path.split("/")).filter(e -> !e.isEmpty()).collect(toList());
     }
+
+    private final String name;
+    private final HashMap<String, PrefixTree> children;
 
     /**
      * In prefix tree, a node is leaf if node was added as last element of a loaded path.
@@ -53,12 +57,12 @@ public class PrefixTree extends Node<PrefixTree> {
     private final boolean leaf;
 
     public PrefixTree(String name) {
-        super(name);
-        this.leaf = false;
+        this(name, false);
     }
 
     private PrefixTree(String name, boolean leaf) {
-        super(name);
+        this.name = name;
+        this.children = new HashMap<>();
         this.leaf = leaf;
     }
 
@@ -124,5 +128,17 @@ public class PrefixTree extends Node<PrefixTree> {
         }
         // path is accepted if its elements lead to an existing node that is a leaf node
         return currentNode != null && currentNode.isLeaf();
+    }
+
+    @Override
+    public String toString() {
+        return name + (leaf ? "*" : "");
+    }
+
+    public void dump(String prefix) {
+        System.out.println(prefix + this);
+        for (PrefixTree node : children.values()) {
+            node.dump(prefix + "  ");
+        }
     }
 }

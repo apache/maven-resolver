@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.filter.ruletree;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -62,7 +63,7 @@ import static java.util.stream.Collectors.toList;
  * In case of conflicting rules, parsing happens by "last wins", so line closer to last line in file "wins", and conflicting
  * line value is lost.
  */
-public class GroupTree extends Node<GroupTree> {
+public class GroupTree {
     /**
      * Creates root, that is special: accept is never null.
      */
@@ -80,11 +81,14 @@ public class GroupTree extends Node<GroupTree> {
         return Arrays.stream(groupId.split("\\.")).filter(e -> !e.isEmpty()).collect(toList());
     }
 
+    private final String name;
+    private final ConcurrentHashMap<String, GroupTree> children;
     private boolean stop;
     private Boolean accept;
 
     private GroupTree(String name) {
-        super(name);
+        this.name = name;
+        this.children = new ConcurrentHashMap<>();
     }
 
     public int loadNodes(Stream<String> linesStream) {
@@ -154,5 +158,12 @@ public class GroupTree extends Node<GroupTree> {
     @Override
     public String toString() {
         return (accept != null ? (accept ? "+" : "-") : "?") + (stop ? "=" : "") + name;
+    }
+
+    public void dump(String prefix) {
+        System.out.println(prefix + this);
+        for (GroupTree node : children.values()) {
+            node.dump(prefix + "  ");
+        }
     }
 }
