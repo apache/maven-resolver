@@ -34,7 +34,6 @@ public class PrefixTreeTest {
     void smoke() {
         PrefixTree prefixTree = new PrefixTree("root");
         prefixTree.loadNodes(Stream.of("# comment", "", "/org/apache/maven"));
-        prefixTree.dump("");
 
         assertFalse(prefixTree.acceptedPath("/com/google"));
         assertFalse(prefixTree.acceptedPath("/com/google/maven/aaa"));
@@ -53,7 +52,6 @@ public class PrefixTreeTest {
     void overlappingShallow() {
         PrefixTree prefixTree = new PrefixTree("root");
         prefixTree.loadNodes(Stream.of("# comment", "/org", "/org/apache"));
-        prefixTree.dump("");
 
         assertFalse(prefixTree.acceptedPath("/com/google"));
         assertFalse(prefixTree.acceptedPath("/com/google/maven/aaa"));
@@ -72,7 +70,6 @@ public class PrefixTreeTest {
     void overlappingDeep() {
         PrefixTree prefixTree = new PrefixTree("root");
         prefixTree.loadNodes(Stream.of("# comment", "", "/org/apache", "/org/apache/maven"));
-        prefixTree.dump("");
 
         assertFalse(prefixTree.acceptedPath("/com/google"));
         assertFalse(prefixTree.acceptedPath("/com/google/maven/aaa"));
