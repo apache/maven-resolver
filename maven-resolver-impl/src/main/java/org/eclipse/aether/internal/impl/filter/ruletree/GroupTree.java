@@ -154,16 +154,4 @@ public class GroupTree {
         // use 'accepted', if defined; otherwise fallback to root (it always has 'allow' set)
         return accepted != null ? accepted : this.accept;
     }
-
-    @Override
-    public String toString() {
-        return (accept != null ? (accept ? "+" : "-") : "?") + (stop ? "=" : "") + name;
-    }
-
-    public void dump(String prefix) {
-        System.out.println(prefix + this);
-        for (GroupTree node : children.values()) {
-            node.dump(prefix + "  ");
-        }
-    }
 }

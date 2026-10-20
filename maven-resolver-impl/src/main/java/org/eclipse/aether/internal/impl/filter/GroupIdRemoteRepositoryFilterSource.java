@@ -320,9 +320,6 @@ public final class GroupIdRemoteRepositoryFilterSource extends RemoteRepositoryF
                             GroupTree.create(filePath.getFileName().toString());
                     int rules = groupTree.loadNodes(lines);
                     logger.info("Loaded {} group rules for remote repository {}", rules, remoteRepository.getId());
-                    if (logger.isDebugEnabled()) {
-                        groupTree.dump("");
-                    }
                     return groupTree;
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);

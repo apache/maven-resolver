@@ -125,16 +125,4 @@ public class PrefixTree {
         // path is accepted if its elements lead to an existing node that is a leaf node
         return currentNode != null && currentNode.isLeaf();
     }
-
-    @Override
-    public String toString() {
-        return name + (leaf ? "*" : "");
-    }
-
-    public void dump(String prefix) {
-        System.out.println(prefix + this);
-        for (PrefixTree node : children.values()) {
-            node.dump(prefix + "  ");
-        }
-    }
 }
