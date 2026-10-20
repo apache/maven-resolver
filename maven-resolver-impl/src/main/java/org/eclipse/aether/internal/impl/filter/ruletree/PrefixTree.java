@@ -19,6 +19,7 @@
 package org.eclipse.aether.internal.impl.filter.ruletree;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -42,13 +43,27 @@ import static java.util.stream.Collectors.toList;
  *     <li><a href="https://repo.eclipse.org/content/repositories/tycho/.meta/prefixes.txt">Eclipse Tycho</a></li>
  * </ul>
  */
-public class PrefixTree extends Node<PrefixTree> {
+public class PrefixTree {
     private static List<String> elementsOfPath(final String path) {
         return Arrays.stream(path.split("/")).filter(e -> !e.isEmpty()).collect(toList());
     }
 
+    private final String name;
+    private final HashMap<String, PrefixTree> children;
+    private final boolean leaf;
+
     public PrefixTree(String name) {
-        super(name);
+        this(name, false);
+    }
+
+    private PrefixTree(String name, boolean leaf) {
+        this.name = name;
+        this.children = new HashMap<>();
+        this.leaf = leaf;
+    }
+
+    public boolean isLeaf() {
+        return leaf;
     }
 
     public int loadNodes(Stream<String> linesStream) {
@@ -61,11 +76,37 @@ public class PrefixTree extends Node<PrefixTree> {
         return counter.get();
     }
 
+    /**
+     * Adds a line to the tree:
+     * <ul>
+     *     <li>it parses the URI-path-like element into list of segments {@link #elementsOfPath(String)}</li>
+     *     <li>cycles over the list, and marks last node added as {@code leaf=true}</li>
+     *     <li>if already on leaf node, processing stops (shorter path wins)</li>
+     * </ul>
+     */
     public boolean loadNode(String line) {
         if (!line.startsWith("#") && !line.trim().isEmpty()) {
+            final List<String> elements = elementsOfPath(line);
+            final int lastElementIdx = elements.size() - 1;
             PrefixTree currentNode = this;
-            for (String element : elementsOfPath(line)) {
-                currentNode = currentNode.siblings.computeIfAbsent(element, PrefixTree::new);
+            for (int i = 0; i <= lastElementIdx; i++) {
+                String element = elements.get(i);
+                boolean leaf = i == lastElementIdx;
+                PrefixTree siblingNode = currentNode.children.get(element);
+                if (leaf && siblingNode != null && !siblingNode.isLeaf()) {
+                    // shorter wins regardless of load order: we got /a/b/c, now /a/b arrives, drop the subtree
+                    siblingNode = new PrefixTree(element, true);
+                    currentNode.children.put(element, siblingNode);
+                }
+                if (siblingNode == null) {
+                    if (currentNode.isLeaf()) {
+                        break; // shorter wins: we got /a/b/c, but we already had /a/b
+                    } else {
+                        siblingNode = new PrefixTree(element, leaf);
+                        currentNode.children.put(element, siblingNode);
+                    }
+                }
+                currentNode = siblingNode;
             }
             return true;
         }
@@ -76,7 +117,7 @@ public class PrefixTree extends Node<PrefixTree> {
         final List<String> pathElements = elementsOfPath(path);
         PrefixTree currentNode = this;
         for (String pathElement : pathElements) {
-            currentNode = currentNode.siblings.get(pathElement);
+            currentNode = currentNode.children.get(pathElement);
             if (currentNode == null || currentNode.isLeaf()) {
                 break;
             }
