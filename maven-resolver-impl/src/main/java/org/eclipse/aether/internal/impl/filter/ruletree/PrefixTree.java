@@ -48,8 +48,9 @@ public class PrefixTree extends Node<PrefixTree> {
     }
 
     /**
-     * In prefix tree, a node is leaf not if it has no children, but if node was added as last element of a
-     * loaded path.
+     * In prefix tree, a node is leaf if node was added as last element of a loaded path, unlike
+     * the original check "it has no children". This simplifies parsing, as during parsing "leaf" based
+     * on children would need extra bookkeeping.
      */
     private final boolean leaf;
 
@@ -126,12 +127,5 @@ public class PrefixTree extends Node<PrefixTree> {
         }
         // path is accepted if its elements lead to an existing node that is a leaf node
         return currentNode != null && currentNode.isLeaf();
-    }
-
-    public void dump(String prefix) {
-        System.out.println(prefix + this + (leaf ? "*" : ""));
-        for (PrefixTree node : children.values()) {
-            node.dump(prefix + "  ");
-        }
     }
 }
