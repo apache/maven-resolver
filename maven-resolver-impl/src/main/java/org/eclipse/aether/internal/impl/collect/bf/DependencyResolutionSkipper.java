@@ -250,6 +250,12 @@ abstract class DependencyResolutionSkipper implements Closeable {
             }
 
             boolean isVersionConflict(DependencyNode node) {
+                if (isRangeDependency(node)) {
+                    // A version range can select a different version than one already seen. Resolve it so its
+                    // dependencies are available to the conflict resolver.
+                    return false;
+                }
+
                 String ga = keyFunction.apply(node.getArtifact());
                 if (winnerGAs.containsKey(ga)) {
                     Artifact result = winnerGAs.get(ga);
@@ -261,11 +267,19 @@ abstract class DependencyResolutionSkipper implements Closeable {
 
             void cacheWinner(DependencyNode node) {
                 winners.put(node.getArtifact(), node);
-                winnerGAs.put(keyFunction.apply(node.getArtifact()), node.getArtifact());
+                // A range candidate is not a reliable winner for the versionless key.
+                if (!isRangeDependency(node)) {
+                    winnerGAs.put(keyFunction.apply(node.getArtifact()), node.getArtifact());
+                }
             }
 
             boolean isDuplicate(DependencyNode node) {
                 return winners.containsKey(node.getArtifact());
+            }
+
+            private static boolean isRangeDependency(DependencyNode node) {
+                return node.getVersionConstraint() != null
+                        && node.getVersionConstraint().getRange() != null;
             }
         }
 

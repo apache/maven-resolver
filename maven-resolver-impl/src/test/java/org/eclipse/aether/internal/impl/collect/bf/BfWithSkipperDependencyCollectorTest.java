@@ -141,6 +141,26 @@ public class BfWithSkipperDependencyCollectorTest extends DependencyCollectorDel
     }
 
     @Test
+    void testVersionRangeCandidateDependenciesAreNotSkipped() throws DependencyCollectionException {
+        collector = setupCollector(newReader("maven13430/"));
+
+        CollectResult result = collector.collectDependencies(
+                session,
+                new CollectRequest(newDep("maven13430:root:ext:1", "compile"), Collections.singletonList(repository)));
+
+        assertEquals(0, result.getExceptions().size());
+
+        DependencyNode rangeCandidate = path(result.getRoot(), 0, 0);
+        assertEquals("library", rangeCandidate.getArtifact().getArtifactId());
+        assertEquals("3", rangeCandidate.getArtifact().getVersion());
+        assertTrue(
+                rangeCandidate.getChildren().stream()
+                        .anyMatch(
+                                node -> "range-asset".equals(node.getArtifact().getArtifactId())),
+                "dependencies of the resolved version-range candidate must be collected");
+    }
+
+    @Test
     void testSkipperWithDifferentExclusion() throws DependencyCollectionException {
         collector = setupCollector(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
