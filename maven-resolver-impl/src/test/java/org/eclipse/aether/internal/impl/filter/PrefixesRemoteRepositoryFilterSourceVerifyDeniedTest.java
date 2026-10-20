@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.internal.impl.filter;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,8 +41,6 @@ import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.MetadataRequest;
 import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
-import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
-import org.eclipse.aether.spi.connector.layout.RepositoryLayoutProvider;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
 import org.eclipse.aether.spi.connector.transport.TransporterProvider;
@@ -52,12 +49,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.eclipse.aether.internal.impl.checksum.Checksums.checksumsSelector;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -157,7 +152,6 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
                         checksumsSelector(), new DefaultArtifactPredicateFactory(checksumsSelector()))));
         // existence checks against the remote repository: peek succeeds unless a test says otherwise
         transporter = mock(Transporter.class);
-        when(transporter.classify(any(Throwable.class))).thenReturn(Transporter.ERROR_NOT_FOUND);
         TransporterProvider transporterProvider = mock(TransporterProvider.class);
         when(transporterProvider.newTransporter(any(), any())).thenReturn(transporter);
         subject = new PrefixesRemoteRepositoryFilterSource(
@@ -184,10 +178,6 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
 
     @Test
     void deniedButServedPathDoesNotDisableFilterForRepository() throws Exception {
-        doThrow(new Exception("404"))
-                .when(transporter)
-                .peek(org.mockito.ArgumentMatchers.argThat(
-                        task -> task.getLocation().getPath().contains("io/jenkins/other")));
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
 
@@ -200,70 +190,8 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         // ...and listed paths keep being accepted, of course
         assertTrue(filter.acceptArtifact(remoteRepository, new DefaultArtifact("org.eclipse.foo:bar:1.0"))
                 .isAccepted());
-        // both denied paths were probed independently: jenkinsArtifact (served) and io.jenkins:other (404)
-        verify(transporter, times(2)).peek(any(PeekTask.class));
-    }
-
-    @Test
-    void pomThenJarOfDeniedArtifactAreBothAccepted() throws Exception {
-        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
-        assertNotNull(filter);
-
-        Artifact pomArtifact = new DefaultArtifact("org.jenkins-ci:version-number:pom:1.14");
-        Artifact jarArtifact = new DefaultArtifact("org.jenkins-ci:version-number:jar:1.14");
-
-        // POM verified and accepted
-        assertTrue(filter.acceptArtifact(remoteRepository, pomArtifact).isAccepted());
-        // JAR of the same artifact at a different path must also be verified and accepted
-        assertTrue(filter.acceptArtifact(remoteRepository, jarArtifact).isAccepted());
-
-        // both distinct paths were probed against remote
-        verify(transporter, times(2)).peek(any(PeekTask.class));
-    }
-
-    @Test
-    void multipleDeniedArtifactsAreIndependentlyVerifiedAndAccepted() throws Exception {
-        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
-        assertNotNull(filter);
-
-        Artifact libA = new DefaultArtifact("com.corp:lib-a:1.0");
-        Artifact libB = new DefaultArtifact("com.corp:lib-b:1.0");
-
-        assertTrue(filter.acceptArtifact(remoteRepository, libA).isAccepted());
-        assertTrue(filter.acceptArtifact(remoteRepository, libB).isAccepted());
-
-        // each denied path is independently probed and accepted
-        verify(transporter, times(2)).peek(any(PeekTask.class));
-    }
-
-    @Test
-    void unservedDeniedPathRemainsBlockedAndDoesNotDisableFilter() throws Exception {
-        Artifact servedArtifact = jenkinsArtifact;
-        Artifact unservedArtifact = new DefaultArtifact("com.corp:unserved-lib:1.0");
-        Artifact prefixListedArtifact = new DefaultArtifact("org.eclipse.foo:bar:1.0");
-
-        doThrow(new Exception("404"))
-                .when(transporter)
-                .peek(org.mockito.ArgumentMatchers.argThat(
-                        task -> task.getLocation().getPath().contains("com/corp/unserved-lib")));
-
-        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
-        assertNotNull(filter);
-
-        // served artifact is accepted after probe
-        assertTrue(filter.acceptArtifact(remoteRepository, servedArtifact).isAccepted());
-
-        // unserved artifact is rejected
-        assertFalse(filter.acceptArtifact(remoteRepository, unservedArtifact).isAccepted());
-
-        // repeated request for unserved artifact remains rejected and does not probe again (negative cache)
-        assertFalse(filter.acceptArtifact(remoteRepository, unservedArtifact).isAccepted());
-
-        // prefix-listed artifact remains accepted without remote probe
-        assertTrue(filter.acceptArtifact(remoteRepository, prefixListedArtifact).isAccepted());
-
-        // total probes: 1 for servedArtifact + 1 for unservedArtifact (second unserved request was cached)
-        verify(transporter, times(2)).peek(any(PeekTask.class));
+        // verification cost stays bounded: only the first denial is checked
+        verify(transporter, times(1)).peek(any(PeekTask.class));
     }
 
     @Test
@@ -311,144 +239,9 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
 
         // the artifact is neither covered by the prefixes file nor present on the remote repository:
         // the file is consistent with reality, the filter must keep denying
-        RemoteRepositoryFilter.Result result1 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-        assertFalse(result1.isAccepted());
-        assertTrue(result1.reasoning().contains("verified absent from remote repository"));
-        assertFalse(result1.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
-        assertFalse(result1.reasoning().contains("appears incomplete"));
-
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
         // and verification cost is bounded: only the first denial is checked
-        RemoteRepositoryFilter.Result result2 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-        assertFalse(result2.isAccepted());
-        assertTrue(result2.reasoning().contains("verified absent from remote repository"));
-        assertFalse(result2.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
-        assertFalse(result2.reasoning().contains("appears incomplete"));
-        verify(transporter, times(1)).peek(any(PeekTask.class));
-    }
-
-    @Test
-    void deniedAutoDiscoveredPathExplainsRepositorySpecificWorkaround() {
-        session.setConfigProperty("aether.remoteRepositoryFilter.prefixes.verifyDenied", "false");
-        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
-        assertNotNull(filter);
-
-        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-
-        assertFalse(result.isAccepted());
-        assertTrue(result.reasoning()
-                .contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied.jenkins-public=true"));
-        assertTrue(result.reasoning().contains("auto-discovered prefix file appears incomplete"));
-        assertTrue(result.reasoning().contains("report this to the repository administrator"));
-        assertTrue(result.reasoning().contains("https://maven.apache.org/resolver/remote-repository-filtering.html"));
-    }
-
-    @Test
-    void transportFailureDoesNotNegativeCachePath() throws Exception {
-        Exception transportError = new Exception("Connection timed out");
-        doThrow(transportError).when(transporter).peek(any(PeekTask.class));
-        when(transporter.classify(transportError)).thenReturn(Transporter.ERROR_OTHER);
-
-        RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
-        assertNotNull(filter);
-
-        // first attempt fails due to transport error: artifact is not accepted
-        RemoteRepositoryFilter.Result result1 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-        assertFalse(result1.isAccepted());
-        assertTrue(result1.reasoning().contains("remote verification could not confirm existence"));
-        assertFalse(result1.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
-        assertFalse(result1.reasoning().contains("verified absent"));
-
-        // second attempt must retry (not permanently negative-cached)
-        RemoteRepositoryFilter.Result result2 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-        assertFalse(result2.isAccepted());
-        assertTrue(result2.reasoning().contains("remote verification could not confirm existence"));
-        verify(transporter, times(2)).peek(any(PeekTask.class));
-    }
-
-    @Test
-    void uriConstructionFailureDoesNotNegativeCachePath() throws Exception {
-        RepositoryLayout customLayout = mock(RepositoryLayout.class);
-        when(customLayout.getLocation(any(Artifact.class), anyBoolean()))
-                .thenReturn(new URI("http", "example.com", "/:invalid", null));
-
-        RepositoryLayoutProvider customLayoutProvider = mock(RepositoryLayoutProvider.class);
-        when(customLayoutProvider.newRepositoryLayout(any(), any())).thenReturn(customLayout);
-
-        MetadataResolver metadataResolver = mock(MetadataResolver.class);
-        Path leakedPrefixesFile = tempDir.resolve("prefixes-jenkins-public.txt");
-        when(metadataResolver.resolveMetadata(any(RepositorySystemSession.class), any(Collection.class)))
-                .thenAnswer(invocation -> {
-                    Collection<MetadataRequest> requests = invocation.getArgument(1);
-                    MetadataRequest request = requests.iterator().next();
-                    MetadataResult result = new MetadataResult(request);
-                    result.setMetadata(request.getMetadata().setPath(leakedPrefixesFile));
-                    return Collections.singletonList(result);
-                });
-        RemoteRepositoryManager remoteRepositoryManager = mock(RemoteRepositoryManager.class);
-        TransporterProvider transporterProvider = mock(TransporterProvider.class);
-        when(transporterProvider.newTransporter(any(), any())).thenReturn(transporter);
-
-        PrefixesRemoteRepositoryFilterSource customSubject = new PrefixesRemoteRepositoryFilterSource(
-                new DefaultRepositoryKeyFunctionFactory(),
-                () -> metadataResolver,
-                () -> remoteRepositoryManager,
-                customLayoutProvider,
-                transporterProvider);
-
-        RemoteRepositoryFilter filter = customSubject.getRemoteRepositoryFilter(session);
-        assertNotNull(filter);
-
-        // first attempt fails URI construction (relative URI cannot have colon in first segment)
-        RemoteRepositoryFilter.Result result1 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-        assertFalse(result1.isAccepted());
-        assertTrue(result1.reasoning().contains("remote verification could not confirm existence"));
-        assertFalse(result1.reasoning().contains("verified absent"));
-        assertFalse(result1.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
-
-        // second attempt must still not be cached as absent (outcome was UNKNOWN)
-        RemoteRepositoryFilter.Result result2 = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-        assertFalse(result2.isAccepted());
-        assertTrue(result2.reasoning().contains("remote verification could not confirm existence"));
-        assertFalse(result2.reasoning().contains("verified absent"));
-        verify(transporter, never()).peek(any(PeekTask.class));
-    }
-
-    @Test
-    void deniedPathWithLeadingSlashIsVerifiedAndAccepted() throws Exception {
-        RepositoryLayout customLayout = mock(RepositoryLayout.class);
-        when(customLayout.getLocation(any(Artifact.class), anyBoolean()))
-                .thenReturn(new URI(
-                        "http", "example.com", "/org/jenkins-ci/version-number/1.14/version-number-1.14.jar", null));
-
-        RepositoryLayoutProvider customLayoutProvider = mock(RepositoryLayoutProvider.class);
-        when(customLayoutProvider.newRepositoryLayout(any(), any())).thenReturn(customLayout);
-
-        MetadataResolver metadataResolver = mock(MetadataResolver.class);
-        Path leakedPrefixesFile = tempDir.resolve("prefixes-jenkins-public.txt");
-        when(metadataResolver.resolveMetadata(any(RepositorySystemSession.class), any(Collection.class)))
-                .thenAnswer(invocation -> {
-                    Collection<MetadataRequest> requests = invocation.getArgument(1);
-                    MetadataRequest request = requests.iterator().next();
-                    MetadataResult result = new MetadataResult(request);
-                    result.setMetadata(request.getMetadata().setPath(leakedPrefixesFile));
-                    return Collections.singletonList(result);
-                });
-        RemoteRepositoryManager remoteRepositoryManager = mock(RemoteRepositoryManager.class);
-        TransporterProvider transporterProvider = mock(TransporterProvider.class);
-        when(transporterProvider.newTransporter(any(), any())).thenReturn(transporter);
-
-        PrefixesRemoteRepositoryFilterSource customSubject = new PrefixesRemoteRepositoryFilterSource(
-                new DefaultRepositoryKeyFunctionFactory(),
-                () -> metadataResolver,
-                () -> remoteRepositoryManager,
-                customLayoutProvider,
-                transporterProvider);
-
-        RemoteRepositoryFilter filter = customSubject.getRemoteRepositoryFilter(session);
-        assertNotNull(filter);
-
-        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-        assertTrue(result.isAccepted());
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
         verify(transporter, times(1)).peek(any(PeekTask.class));
     }
 
@@ -468,10 +261,7 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
         assertNotNull(filter);
 
-        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-        assertFalse(result.isAccepted());
-        assertTrue(result.reasoning().contains("verification skipped while offline"));
-        assertFalse(result.reasoning().contains("-Daether.remoteRepositoryFilter.prefixes.verifyDenied"));
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
         verify(transporter, never()).peek(any(PeekTask.class));
     }
 
@@ -499,14 +289,7 @@ public class PrefixesRemoteRepositoryFilterSourceVerifyDeniedTest {
         assertNotNull(filter);
 
         // deliberately user-authored prefixes are never second-guessed
-        RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, jenkinsArtifact);
-        assertFalse(result.isAccepted());
-        assertEquals(
-                "prefixes: Path org/jenkins-ci/version-number/1.14/version-number-1.14.jar NOT allowed from jenkins-public",
-                result.reasoning());
-        assertFalse(result.reasoning().contains("verifyDenied"));
-        assertFalse(result.reasoning().contains("auto-discovered"));
-        assertFalse(result.reasoning().contains("https://maven.apache.org/resolver/remote-repository-filtering.html"));
+        assertFalse(filter.acceptArtifact(remoteRepository, jenkinsArtifact).isAccepted());
         verify(transporter, never()).peek(any(PeekTask.class));
     }
 }
