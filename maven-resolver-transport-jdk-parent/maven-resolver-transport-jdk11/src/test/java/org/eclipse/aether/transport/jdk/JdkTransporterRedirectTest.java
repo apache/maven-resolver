@@ -176,15 +176,4 @@ class JdkTransporterRedirectTest {
                 URI.create("http://repo.example.com/maven2/a.jar"),
                 JdkTransporter.followableRedirect(302, requestUri, "http://repo.example.com/maven2/a.jar", true));
     }
-
-    @Test
-    void effectivePortFollowsScheme() {
-        assertEquals(443, JdkTransporter.effectivePort("https", -1));
-        assertEquals(80, JdkTransporter.effectivePort("http", -1));
-        assertEquals(8081, JdkTransporter.effectivePort("https", 8081));
-        assertTrue(JdkTransporter.isSameOrigin(
-                URI.create("https://repo.example.com/maven2/"), URI.create("https://repo.example.com:443/other")));
-        assertFalse(JdkTransporter.isSameOrigin(
-                URI.create("https://repo.example.com/maven2/"), URI.create("https://repo.example.com:8443/other")));
-    }
 }

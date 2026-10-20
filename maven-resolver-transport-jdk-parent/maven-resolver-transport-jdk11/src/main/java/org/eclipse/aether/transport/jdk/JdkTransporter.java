@@ -633,7 +633,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         HttpRequest.Builder builder = HttpRequest.newBuilder().uri(target).expectContinue(previous.expectContinue());
         previous.version().ifPresent(builder::version);
         previous.timeout().ifPresent(builder::timeout);
-        boolean sameOrigin = isSameOrigin(baseUri, target);
+        boolean sameOrigin = HttpTransporterUtils.isSameOrigin(baseUri, target);
         previous.headers().map().forEach((name, values) -> {
             if (sameOrigin || !crossOriginExcludedHeaders.contains(name)) {
                 for (String value : values) {
@@ -650,26 +650,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             builder.method(method, previous.bodyPublisher().orElse(HttpRequest.BodyPublishers.noBody()));
         }
         return builder.build();
-    }
-
-    static boolean isSameOrigin(URI origin, URI target) {
-        if (origin.getScheme() == null
-                || origin.getHost() == null
-                || target.getScheme() == null
-                || target.getHost() == null) {
-            return false;
-        }
-        return origin.getScheme().equalsIgnoreCase(target.getScheme())
-                && origin.getHost().equalsIgnoreCase(target.getHost())
-                && effectivePort(origin.getScheme(), origin.getPort())
-                        == effectivePort(target.getScheme(), target.getPort());
-    }
-
-    static int effectivePort(String scheme, int port) {
-        if (port >= 0) {
-            return port;
-        }
-        return "https".equalsIgnoreCase(scheme) ? 443 : 80;
     }
 
     @Override
@@ -930,16 +910,12 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             if (protocol == null || host == null || baseUri.getScheme() == null || baseUri.getHost() == null) {
                 return false;
             }
-            return protocol.equalsIgnoreCase(baseUri.getScheme())
-                    && host.equalsIgnoreCase(baseUri.getHost())
-                    && effectivePort(protocol, port) == effectivePort(baseUri.getScheme(), baseUri.getPort());
-        }
-
-        private static int effectivePort(String protocol, int port) {
-            if (port >= 0) {
-                return port;
+            try {
+                URI requestingUri = new URI(protocol, null, host, port, null, null, null);
+                return HttpTransporterUtils.isSameOrigin(baseUri, requestingUri);
+            } catch (URISyntaxException e) {
+                return false;
             }
-            return "https".equalsIgnoreCase(protocol) ? 443 : 80;
         }
     }
 

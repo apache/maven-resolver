@@ -296,7 +296,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         con.setRequestProperty(HttpConstants.CACHE_CONTROL, "no-cache, no-store");
         con.setRequestProperty("Pragma", "no-cache");
         con.setRequestProperty(HttpConstants.USER_AGENT, userAgent);
-        boolean sameOrigin = isSameOrigin(baseUri, target.get(0));
+        boolean sameOrigin = HttpTransporterUtils.isSameOrigin(baseUri, target.get(0));
         if (!originScopedHeaders || sameOrigin) {
             headers.forEach(con::setRequestProperty);
         }
@@ -354,7 +354,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
                     throw new IOException("Refusing to follow redirect to different authority: " + redirectAuthority);
                 }
             }
-            if (originScopedHeaders && !isSameOrigin(baseUri, redirectUri)) {
+            if (originScopedHeaders && !HttpTransporterUtils.isSameOrigin(baseUri, redirectUri)) {
                 currAuth = null;
             } else if (currentAuthority == null || !currentAuthority.equalsIgnoreCase(redirectAuthority)) {
                 // reset auth if authority differs after redirect
@@ -373,7 +373,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED
                 && currAuth == null
                 && this.auth != null
-                && (!originScopedHeaders || isSameOrigin(baseUri, target.get(0)))) {
+                && (!originScopedHeaders || HttpTransporterUtils.isSameOrigin(baseUri, target.get(0)))) {
             con.disconnect();
             return perform(method, target, this.auth, currProxyAuth, task);
         } else if (responseCode == HttpURLConnection.HTTP_PROXY_AUTH
@@ -393,24 +393,5 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
 
     private String basicAuthorization(String credentials) {
         return AUTH_SCHEME_BASIC + " " + Base64.getEncoder().encodeToString(credentials.getBytes(authEncoding));
-    }
-
-    private static boolean isSameOrigin(URI origin, URI target) {
-        if (origin.getScheme() == null
-                || origin.getHost() == null
-                || target.getScheme() == null
-                || target.getHost() == null) {
-            return false;
-        }
-        return origin.getScheme().equalsIgnoreCase(target.getScheme())
-                && origin.getHost().equalsIgnoreCase(target.getHost())
-                && effectivePort(origin) == effectivePort(target);
-    }
-
-    private static int effectivePort(URI uri) {
-        if (uri.getPort() >= 0) {
-            return uri.getPort();
-        }
-        return "https".equalsIgnoreCase(uri.getScheme()) ? 443 : 80;
     }
 }

@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.eclipse.jetty.client.Request;
 
 /**
@@ -65,36 +66,12 @@ final class OriginScopedHeadersListener implements Request.HeadersListener {
         }
         URI target = request.getURI();
         // fail closed: when the target cannot be determined, do not send the scoped headers
-        if (target == null || !isSameOrigin(origin, target)) {
+        if (target == null || !HttpTransporterUtils.isSameOrigin(origin, target)) {
             request.headers(headers -> {
                 for (String scopedHeaderName : scopedHeaderNames) {
                     headers.remove(scopedHeaderName);
                 }
             });
         }
-    }
-
-    static boolean isSameOrigin(URI origin, URI target) {
-        if (origin.getScheme() == null
-                || origin.getHost() == null
-                || target.getScheme() == null
-                || target.getHost() == null) {
-            return false;
-        }
-        return origin.getScheme().equalsIgnoreCase(target.getScheme())
-                && origin.getHost().equalsIgnoreCase(target.getHost())
-                && effectivePort(origin.getScheme(), origin.getPort())
-                        == effectivePort(target.getScheme(), target.getPort());
-    }
-
-    /**
-     * Determines the effective port: the explicit port if present, otherwise the default port implied by the
-     * scheme.
-     */
-    static int effectivePort(String scheme, int port) {
-        if (port >= 0) {
-            return port;
-        }
-        return "https".equalsIgnoreCase(scheme) ? 443 : 80;
     }
 }
