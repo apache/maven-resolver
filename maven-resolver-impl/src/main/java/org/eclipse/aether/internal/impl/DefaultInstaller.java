@@ -22,6 +22,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,6 +34,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -55,6 +58,7 @@ import org.eclipse.aether.spi.artifact.generator.ArtifactGeneratorFactory;
 import org.eclipse.aether.spi.artifact.transformer.ArtifactTransformer;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
+import org.eclipse.aether.util.ConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,6 +151,12 @@ public class DefaultInstaller implements Installer {
                 result.addMetadata(metadata);
             }
 
+            boolean hardLink = ConfigUtils.getBoolean(
+                    session,
+                    ConfigurationProperties.DEFAULT_INSTALLER_HARD_LINK,
+                    ConfigurationProperties.INSTALLER_HARD_LINK);
+
+            Exception linkFailure = null;
             for (ListIterator<Artifact> iterator = artifacts.listIterator(); iterator.hasNext(); ) {
                 Artifact artifact = iterator.next();
 
@@ -156,10 +166,21 @@ public class DefaultInstaller implements Installer {
 
                 iterator.set(artifact);
 
-                install(session, trace, artifact);
+                Exception failure = install(session, trace, artifact, hardLink);
+                if (failure != null && linkFailure == null) {
+                    linkFailure = failure;
+                } else if (failure != null) {
+                    linkFailure.addSuppressed(failure);
+                }
                 if (artifact.getProperty(ArtifactGeneratorFactory.ARTIFACT_GENERATOR_ID, null) == null) {
                     result.addArtifact(artifact);
                 }
+            }
+            if (linkFailure != null) {
+                logger.warn(
+                        "Hard link not supported, falling back to copy for all artifacts: {}",
+                        linkFailure.getMessage(),
+                        linkFailure);
             }
 
             metadatas = Utils.finishMetadata(metadataGenerators, artifacts);
@@ -191,7 +212,12 @@ public class DefaultInstaller implements Installer {
         }
     }
 
-    private void install(RepositorySystemSession session, RequestTrace trace, Artifact artifact)
+    /**
+     * Installs a single artifact. Returns the link failure exception if hard-linking was attempted but failed
+     * (caller logs it once after the loop), or {@code null} if the artifact was installed successfully via hard link
+     * or if {@code hardLink} is {@code false}.
+     */
+    private Exception install(RepositorySystemSession session, RequestTrace trace, Artifact artifact, boolean hardLink)
             throws InstallationException {
         final LocalRepositoryManager lrm = session.getLocalRepositoryManager();
         final Path srcPath = artifact.getPath();
@@ -199,13 +225,29 @@ public class DefaultInstaller implements Installer {
 
         artifactInstalling(session, trace, artifact, dstPath);
 
+        Exception linkFailure = null;
         Exception exception = null;
         try {
             if (dstPath.equals(srcPath)) {
                 throw new IllegalStateException("cannot install " + dstPath + " to same path");
             }
 
-            pathProcessor.copyWithTimestamp(srcPath, dstPath);
+            if (hardLink) {
+                Files.createDirectories(dstPath.getParent());
+                if (Files.isDirectory(dstPath)) {
+                    throw new IOException("destination is a directory: " + dstPath);
+                }
+                try {
+                    Files.deleteIfExists(dstPath);
+                    Files.createLink(dstPath, srcPath);
+                } catch (UnsupportedOperationException | IllegalArgumentException | IOException e) {
+                    // cross-device link (EXDEV), provider mismatch (e.g. Jimfs), or unsupported FS — fall back to copy
+                    linkFailure = e;
+                    pathProcessor.copyWithTimestamp(srcPath, dstPath);
+                }
+            } else {
+                pathProcessor.copyWithTimestamp(srcPath, dstPath);
+            }
             lrm.add(session, new LocalArtifactRegistration(artifact));
         } catch (Exception e) {
             exception = e;
@@ -213,6 +255,7 @@ public class DefaultInstaller implements Installer {
         } finally {
             artifactInstalled(session, trace, artifact, dstPath, exception);
         }
+        return linkFailure;
     }
 
     private void install(RepositorySystemSession session, RequestTrace trace, Metadata metadata)
