@@ -68,6 +68,7 @@ import com.sun.source.doctree.EntityTree;
 import com.sun.source.doctree.LinkTree;
 import com.sun.source.doctree.LiteralTree;
 import com.sun.source.doctree.ReferenceTree;
+import com.sun.source.doctree.SeeTree;
 import com.sun.source.doctree.SinceTree;
 import com.sun.source.doctree.SystemPropertyTree;
 import com.sun.source.doctree.TextTree;
@@ -141,7 +142,9 @@ public class ConfigurationCollectorDoclet implements Doclet {
             String typeJavadocUrl,
             boolean supportsRepoIdSuffix,
             // is empty if not deprecated
-            String deprecated) {
+            String deprecated,
+            // see also section
+            Collection<String> see) {
 
         public ConfigurationEntry {
             Objects.requireNonNull(key);
@@ -382,7 +385,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 configurationType.name(),
                 configurationType.javadocUrl(),
                 isSupportsRepoIdSuffix(path, blockTags),
-                getDeprecated(path, field).orElse(""));
+                getDeprecated(path, field).orElse(""),
+                getSee(path));
     }
 
     private Optional<String> getDeprecated(DocTreePath path, Element element) {
@@ -417,6 +421,15 @@ public class ConfigurationCollectorDoclet implements Doclet {
         } else {
             return getDeprecated(new DocTreePath(docTrees.getPath(element), docCommentTree), element);
         }
+    }
+
+    private Collection<String> getSee(DocTreePath path) {
+        Objects.requireNonNull(path, "path must not be null");
+
+        return path.getDocComment().getBlockTags().stream()
+                .filter(t -> com.sun.source.doctree.DocTree.Kind.SEE == t.getKind())
+                .map(seeTag -> renderContent(DocTreePath.getPath(path, seeTag), RenderMode.HTML, true))
+                .toList();
     }
 
     private boolean isSupportsRepoIdSuffix(DocTreePath path, Map<String, UnknownBlockTagTree> blockTags) {
@@ -496,7 +509,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 configurationType,
                 "",
                 false,
-                getDeprecated(path, field).orElse(""));
+                getDeprecated(path, field).orElse(""),
+                getSee(path));
     }
 
     private AnnotationMirror getAnnotation(Element element, String fqName) {
@@ -536,6 +550,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
         properties.setProperty(prefix + "configurationTypeJavadocUrl", entry.typeJavadocUrl());
         properties.setProperty(prefix + "supportRepoIdSuffix", toYesNo(entry.supportsRepoIdSuffix()));
         properties.setProperty(prefix + "deprecated", entry.deprecated());
+        properties.setProperty(prefix + "see", String.join(", ", entry.see()));
     }
 
     // --- Javadoc extraction helpers -------------------------------------------------------------------------------
@@ -569,7 +584,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 DocTreePath linkTreePath = DocTreePath.getPath(path, tree);
                 // resolve the referenced constant using the fully qualified signature, so that references
                 // to constants declared in other types (e.g. {@link OtherType#CONSTANT}) can be resolved
-                VariableElement referenced = resolveReferencedField(linkTreePath, link);
+                VariableElement referenced = resolveReferencedField(linkTreePath, link.getReference());
                 String value = referenced != null ? lookupConstant(referenced) : null;
                 if (value == null) {
                     // hard fail: default value constants must be resolvable; report at the precise
@@ -592,8 +607,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
      * signature (so references into other types are supported). Returns {@code null} if the reference cannot be
      * resolved to a field.
      */
-    private VariableElement resolveReferencedField(DocTreePath path, LinkTree link) {
-        DocTreePath refPath = DocTreePath.getPath(path, link.getReference());
+    private VariableElement resolveReferencedField(DocTreePath path, ReferenceTree reference) {
+        DocTreePath refPath = DocTreePath.getPath(path, reference);
         if (refPath == null) {
             return null;
         }
@@ -723,28 +738,11 @@ public class ConfigurationCollectorDoclet implements Doclet {
 
             @Override
             public String visitLink(LinkTree node, Void p) {
-                String ref = node.getReference() != null ? node.getReference().getSignature() : "";
                 List<? extends DocTree> labelTrees = node.getLabel();
                 String label = (labelTrees != null && !labelTrees.isEmpty())
                         ? renderContent(docTreePath, mode, false, labelTrees)
                         : "";
-                String text = label.isEmpty() ? ref : label;
-                String rendered = node.getKind() == DocTree.Kind.LINK_PLAIN ? escape(mode, text) : renderAsCode(text);
-                if (mode == RenderMode.HTML) {
-                    VariableElement referenced = resolveReferencedField(docTreePath, node);
-                    String configurationKey = getConfigurationKey(referenced);
-                    if (configurationKey != null) {
-                        rendered = node.getKind() == DocTree.Kind.LINK_PLAIN
-                                ? escape(mode, configurationKey)
-                                : renderAsCode(configurationKey);
-                        return "<a href=\"#" + escape(mode, configurationKey) + "\">" + rendered + "</a>";
-                    }
-                    Optional<String> javadocUrl = getJavadocUrl(docTreePath, node.getReference());
-                    if (javadocUrl.isPresent()) {
-                        return "<a href=\"" + javadocUrl.get() + "\">" + rendered + "</a>";
-                    }
-                }
-                return rendered;
+                return renderReference(node.getReference(), node.getKind() == DocTree.Kind.LINK_PLAIN, label);
             }
 
             @Override
@@ -810,6 +808,49 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 StringBuilder sb = new StringBuilder();
                 node.getBody().forEach(child -> sb.append(child.accept(this, p)));
                 return sb.toString();
+            }
+
+            @Override
+            public String visitSee(SeeTree node, Void p) {
+                // if the first reference is of type REFERENCE, the label may follow afterwards
+                if (!node.getReference().isEmpty() && node.getReference().get(0) instanceof ReferenceTree reference) {
+                    String label = renderContent(
+                            docTreePath,
+                            mode,
+                            trim,
+                            node.getReference().subList(1, node.getReference().size()));
+                    return renderReference(reference, false, label);
+                } else {
+                    return renderContent(docTreePath, mode, trim, node.getReference());
+                }
+            }
+
+            /**
+             * Used from {@link #visitLink(LinkTree, Void)} and {@link #visitSee(SeeTree, Void)} to render a reference to a field or type (optionally with a label).
+             * @param node the reference node
+             * @param isPlain true if it should be emitted outside of a code block, false otherwise
+             * @param label may be empty, in which case the reference signature is used as the label
+             * @return the rendered reference (never {@code null})
+             */
+            private String renderReference(ReferenceTree node, boolean isPlain, String label) {
+                String effectiveLabel = label.isEmpty() ? node.getSignature() : label;
+                String escapedLabel = isPlain ? escape(mode, effectiveLabel) : renderAsCode(effectiveLabel);
+                if (mode == RenderMode.HTML) {
+                    VariableElement referenced = resolveReferencedField(docTreePath, node);
+                    String configurationKey = getConfigurationKey(referenced);
+                    if (configurationKey != null) {
+                        if (label.isEmpty()) {
+                            // override the effective label with the configuration key
+                            escapedLabel = isPlain ? escape(mode, configurationKey) : renderAsCode(configurationKey);
+                        }
+                        return "<a href=\"#" + escape(mode, configurationKey) + "\">" + escapedLabel + "</a>";
+                    }
+                    Optional<String> javadocUrl = getJavadocUrl(docTreePath, node);
+                    if (javadocUrl.isPresent()) {
+                        return "<a href=\"" + javadocUrl.get() + "\">" + escapedLabel + "</a>";
+                    }
+                }
+                return escapedLabel;
             }
 
             @Override

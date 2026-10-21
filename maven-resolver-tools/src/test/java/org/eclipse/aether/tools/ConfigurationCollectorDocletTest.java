@@ -157,6 +157,9 @@ class ConfigurationCollectorDocletTest {
         // no @configurationRepoIdSuffix -> defaults to "No"
         assertEquals("No", enumKey.get("supportRepoIdSuffix"));
         assertEquals("Use <a href=\"#sample.enum2\"><code>sample.enum2</code></a> instead", enumKey.get("deprecated"));
+        assertEquals(
+                "<a href=\"https://bugs.openjdk.org/browse/JDK-8225647\">JDK-8225647</a>, <a href=\"#sample.string\"><code>label</code></a>, \"simple text\", <a href=\"#sample.string\"><code>sample.string</code></a>",
+                enumKey.get("see"));
 
         Map<String, String> enum2Key = keys.get("sample.enum2");
         assertNotNull(enum2Key, "enum key missing");
