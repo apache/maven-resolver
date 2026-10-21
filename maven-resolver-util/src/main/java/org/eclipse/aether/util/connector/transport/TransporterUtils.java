@@ -37,15 +37,7 @@ public final class TransporterUtils {
      * @since 2.0.25
      */
     public static boolean isSameOrigin(URI origin, URI target) {
-        if (origin.getScheme() == null
-                || origin.getHost() == null
-                || target.getScheme() == null
-                || target.getHost() == null) {
-            return false;
-        }
-        return origin.getScheme().equalsIgnoreCase(target.getScheme())
-                && origin.getHost().equalsIgnoreCase(target.getHost())
-                && effectivePort(origin) == effectivePort(target);
+        return isSameEndpoint(origin, target, true, false);
     }
 
     /**
@@ -57,9 +49,25 @@ public final class TransporterUtils {
      * @since 2.0.25
      */
     public static boolean isSameAuthority(URI origin, URI target) {
-        String originAuthority = origin.getAuthority();
-        String targetAuthority = target.getAuthority();
-        return originAuthority != null && targetAuthority != null && originAuthority.equalsIgnoreCase(targetAuthority);
+        return isSameEndpoint(origin, target, false, true);
+    }
+
+    private static boolean isSameEndpoint(
+            URI origin, URI target, boolean requireSameScheme, boolean requireSameUserInfo) {
+        if (origin.getHost() == null || target.getHost() == null) {
+            return false;
+        }
+        if (requireSameScheme && !equalsIgnoreCase(origin.getScheme(), target.getScheme())) {
+            return false;
+        }
+        if (requireSameUserInfo && !equalsIgnoreCase(origin.getUserInfo(), target.getUserInfo())) {
+            return false;
+        }
+        return origin.getHost().equalsIgnoreCase(target.getHost()) && effectivePort(origin) == effectivePort(target);
+    }
+
+    private static boolean equalsIgnoreCase(String left, String right) {
+        return left != null ? left.equalsIgnoreCase(right) : right == null;
     }
 
     private static int effectivePort(URI uri) {

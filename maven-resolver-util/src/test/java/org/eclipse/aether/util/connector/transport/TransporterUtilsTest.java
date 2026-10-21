@@ -42,4 +42,20 @@ public class TransporterUtilsTest {
                 URI.create("ftp://repo.example.com/"), URI.create("ftp://repo.example.com:80/")));
         assertFalse(TransporterUtils.isSameOrigin(URI.create("https://repo.example.com/"), URI.create("relative")));
     }
+
+    @Test
+    void sameAuthorityUsesUserHostAndEffectivePort() {
+        assertTrue(TransporterUtils.isSameAuthority(
+                URI.create("https://user@repo.example.com/maven2/"),
+                URI.create("https://USER@REPO.EXAMPLE.COM:443/other")));
+        assertTrue(TransporterUtils.isSameAuthority(
+                URI.create("http://repo.example.com/"), URI.create("https://repo.example.com:80/other")));
+        assertFalse(TransporterUtils.isSameAuthority(
+                URI.create("https://user@repo.example.com/"), URI.create("https://other@repo.example.com/")));
+        assertFalse(TransporterUtils.isSameAuthority(
+                URI.create("https://repo.example.com/"), URI.create("https://repo.example.com:8443/")));
+        assertFalse(TransporterUtils.isSameAuthority(
+                URI.create("https://repo.example.com/"), URI.create("https://cdn.example.com/")));
+        assertFalse(TransporterUtils.isSameAuthority(URI.create("https://repo.example.com/"), URI.create("relative")));
+    }
 }

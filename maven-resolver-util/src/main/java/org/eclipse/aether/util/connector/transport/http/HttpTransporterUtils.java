@@ -117,6 +117,8 @@ public final class HttpTransporterUtils {
 
     /**
      * Getter for {@link ConfigurationProperties#HTTP_REDIRECT_MODE}.
+     *
+     * @since 2.0.25
      */
     public static ConfigurationProperties.RedirectMode getRedirectMode(
             RepositorySystemSession session, RemoteRepository repository) {
