@@ -261,6 +261,12 @@ public final class ConfigurationProperties {
      */
     public static final String HTTP_HEADERS = PREFIX_TRANSPORT_HTTP + "headers";
 
+    /**
+     * The mode that controls how HTTP redirects are handled. By default, any redirect is followed, but this can be
+     * restricted to only redirects within the same authority or no redirects at all.
+     *
+     * @since 2.0.25
+     */
     public enum RedirectMode {
         /**
          * No redirects allowed.
@@ -277,17 +283,17 @@ public final class ConfigurationProperties {
     }
 
     /**
-     * Optionally restricts HTTP redirects to either the same authority or not allowing any redirects at all.
+     * Optionally restricts following HTTP redirects to either the same authority or not allowing any redirects at all.
      * By default any redirect is followed.
      * Blocked redirects lead to exceptions being thrown by the transport.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link ConfigurationProperties.RedirectMode}
-     * @configurationDefaultValue {@link #HTTP_REDIRECT_MODE}
+     * @configurationDefaultValue {@link #DEFAULT_REDIRECT_MODE}
      * @configurationRepoIdSuffix Yes
      * @since 2.0.25
-     * @see {@link #HTTP_ORIGIN_SCOPED_HEADERS} for restricing headers passed to redirect targets
-     * @see {@link #HTTP_FOLLOW_INSECURE_REDIRECT} for controlling whether HTTPS-to-HTTP redirects are followed
+     * @see #HTTP_ORIGIN_SCOPED_HEADERS
+     * @see #HTTP_FOLLOW_INSECURE_REDIRECT
      */
     public static final String HTTP_REDIRECT_MODE = PREFIX_TRANSPORT_HTTP + "redirectMode";
 
@@ -307,7 +313,7 @@ public final class ConfigurationProperties {
      * @configurationDefaultValue {@link #DEFAULT_HTTP_ORIGIN_SCOPED_HEADERS}
      * @configurationRepoIdSuffix Yes
      * @since 2.0.25
-     * @see {@link#HTTP_REDIRECT_MODE} for controlling the behavior of HTTP redirects
+     * @see #HTTP_REDIRECT_MODE
      */
     public static final String HTTP_ORIGIN_SCOPED_HEADERS = PREFIX_TRANSPORT_HTTP + "originScopedHeaders";
 
