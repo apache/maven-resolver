@@ -137,11 +137,4 @@ class OriginScopedHeadersListenerTest {
         assertNull(request.getHeaders().get("Private-Token"));
         assertNotNull(request.getHeaders().get("Accept"));
     }
-
-    @Test
-    void effectivePortFollowsScheme() {
-        assertEquals(443, OriginScopedHeadersListener.effectivePort("https", -1));
-        assertEquals(80, OriginScopedHeadersListener.effectivePort("http", -1));
-        assertEquals(8081, OriginScopedHeadersListener.effectivePort("https", 8081));
-    }
 }

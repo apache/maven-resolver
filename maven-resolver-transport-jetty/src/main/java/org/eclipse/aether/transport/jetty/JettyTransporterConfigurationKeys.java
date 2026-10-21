@@ -39,7 +39,9 @@ public final class JettyTransporterConfigurationKeys {
      * @configurationType {@link Boolean}
      * @configurationDefaultValue {@link #DEFAULT_FOLLOW_REDIRECTS}
      * @configurationRepoIdSuffix Yes
+     * @deprecated Use {@link ConfigurationProperties#HTTP_REDIRECT_MODE} instead.
      */
+    @Deprecated
     public static final String CONFIG_PROP_FOLLOW_REDIRECTS = CONFIG_PROPS_PREFIX + "followRedirects";
 
     public static final boolean DEFAULT_FOLLOW_REDIRECTS = true;
@@ -66,9 +68,13 @@ public final class JettyTransporterConfigurationKeys {
      * @configurationDefaultValue {@link #DEFAULT_FOLLOW_INSECURE_REDIRECTS}
      * @configurationRepoIdSuffix Yes
      * @since 2.0.23
+     * @deprecated Use {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT} instead.
      */
+    @Deprecated
     public static final String CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS = CONFIG_PROPS_PREFIX + "followInsecureRedirects";
 
+    /** @deprecated Use {@link ConfigurationProperties#DEFAULT_HTTP_FOLLOW_INSECURE_REDIRECT} instead. */
+    @Deprecated
     public static final boolean DEFAULT_FOLLOW_INSECURE_REDIRECTS = false;
 
     /**
@@ -84,8 +90,12 @@ public final class JettyTransporterConfigurationKeys {
      * @configurationDefaultValue {@link #DEFAULT_ORIGIN_SCOPED_HEADERS}
      * @configurationRepoIdSuffix Yes
      * @since 2.0.23
+     * @deprecated Use {@link ConfigurationProperties#HTTP_ORIGIN_SCOPED_HEADERS} instead.
      */
+    @Deprecated
     public static final String CONFIG_PROP_ORIGIN_SCOPED_HEADERS = CONFIG_PROPS_PREFIX + "originScopedHeaders";
 
+    /** @deprecated Use {@link ConfigurationProperties#DEFAULT_HTTP_ORIGIN_SCOPED_HEADERS} instead. */
+    @Deprecated
     public static final boolean DEFAULT_ORIGIN_SCOPED_HEADERS = true;
 }

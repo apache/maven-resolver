@@ -840,10 +840,12 @@ public class HttpServer {
                 return false;
             }
             StringBuilder location = new StringBuilder(128);
-            String scheme = Request.getParameters(req).getValue("scheme");
+            var parameters = Request.getParameters(req);
+            String scheme = parameters.getValue("scheme");
+            String host = parameters.getValue("host");
             location.append(scheme != null ? scheme : req.getHttpURI().getScheme());
             location.append("://");
-            location.append(Request.getServerName(req));
+            location.append(host != null ? host : Request.getServerName(req));
             location.append(":");
             if ("http".equalsIgnoreCase(scheme)) {
                 location.append(getHttpPort());

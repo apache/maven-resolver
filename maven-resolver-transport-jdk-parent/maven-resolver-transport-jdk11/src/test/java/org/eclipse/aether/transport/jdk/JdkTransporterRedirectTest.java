@@ -23,6 +23,7 @@ import java.net.http.HttpRequest;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.eclipse.aether.ConfigurationProperties.RedirectMode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -170,13 +171,24 @@ class JdkTransporterRedirectTest {
     }
 
     @Test
-    void effectivePortFollowsScheme() {
-        assertEquals(443, JdkTransporter.effectivePort("https", -1));
-        assertEquals(80, JdkTransporter.effectivePort("http", -1));
-        assertEquals(8081, JdkTransporter.effectivePort("https", 8081));
-        assertTrue(JdkTransporter.isSameOrigin(
-                URI.create("https://repo.example.com/maven2/"), URI.create("https://repo.example.com:443/other")));
-        assertFalse(JdkTransporter.isSameOrigin(
-                URI.create("https://repo.example.com/maven2/"), URI.create("https://repo.example.com:8443/other")));
+    void insecureRedirectIsFollowedWhenConfigured() {
+        URI requestUri = BASE_URI.resolve("a.jar");
+        assertEquals(
+                URI.create("http://repo.example.com/maven2/a.jar"),
+                JdkTransporter.followableRedirect(302, requestUri, "http://repo.example.com/maven2/a.jar", true));
+    }
+
+    @Test
+    void redirectModeRestrictsRedirectTargets() {
+        URI requestUri = BASE_URI.resolve("a.jar");
+
+        assertNull(JdkTransporter.followableRedirect(
+                302, requestUri, "https://repo.example.com/maven2/b.jar", false, RedirectMode.NONE));
+        assertEquals(
+                URI.create("https://repo.example.com/maven2/b.jar"),
+                JdkTransporter.followableRedirect(
+                        302, requestUri, "https://repo.example.com/maven2/b.jar", false, RedirectMode.SAME_AUTHORITY));
+        assertNull(JdkTransporter.followableRedirect(
+                302, requestUri, "https://cdn.example.net/b.jar", false, RedirectMode.SAME_AUTHORITY));
     }
 }

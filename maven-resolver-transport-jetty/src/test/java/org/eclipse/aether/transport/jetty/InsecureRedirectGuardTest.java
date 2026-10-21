@@ -20,6 +20,7 @@ package org.eclipse.aether.transport.jetty;
 
 import java.io.File;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
 import org.junit.jupiter.api.AfterAll;
@@ -60,8 +61,7 @@ class InsecureRedirectGuardTest {
         new InsecureRedirectGuard().onQueued(request);
         Throwable cause = request.getAbortCause();
         assertNotNull(cause, "expected the plain http request to be aborted");
-        assertTrue(
-                cause.getMessage().contains(JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS));
+        assertTrue(cause.getMessage().contains(ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT));
     }
 
     @Test

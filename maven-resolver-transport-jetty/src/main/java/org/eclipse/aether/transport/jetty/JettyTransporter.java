@@ -43,6 +43,7 @@ import java.util.regex.Matcher;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.ConfigurationProperties.HttpVersion;
+import org.eclipse.aether.ConfigurationProperties.RedirectMode;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -466,7 +467,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
     }
 
-    @SuppressWarnings("checkstyle:methodlength")
+    @SuppressWarnings({"checkstyle:methodlength", "deprecation"})
     private HttpClient createClient() throws RuntimeException {
         BasicAuthentication.BasicResult serverAuth = null;
         BasicAuthentication.BasicResult proxyAuth = null;
@@ -545,26 +546,21 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         HttpClient httpClient = new HttpClient(dynamicTransport);
         httpClient.setConnectTimeout(connectTimeout);
         httpClient.setIdleTimeout(requestTimeout);
-        httpClient.setFollowRedirects(ConfigUtils.getBoolean(
+        RedirectMode redirectMode = HttpTransporterUtils.getRedirectMode(
                 session,
+                repository,
                 JettyTransporterConfigurationKeys.DEFAULT_FOLLOW_REDIRECTS,
-                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS));
+                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS);
+        httpClient.setFollowRedirects(redirectMode != RedirectMode.NONE);
         httpClient.setMaxRedirects(ConfigUtils.getInteger(
                 session,
                 JettyTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS,
                 JettyTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS));
 
-        boolean followInsecureRedirects = ConfigUtils.getBoolean(
-                session,
-                JettyTransporterConfigurationKeys.DEFAULT_FOLLOW_INSECURE_REDIRECTS,
-                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS + "." + repository.getId(),
-                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS);
-
-        boolean originScopedHeaders = ConfigUtils.getBoolean(
-                session,
-                JettyTransporterConfigurationKeys.DEFAULT_ORIGIN_SCOPED_HEADERS,
-                JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS + "." + repository.getId(),
-                JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
+        boolean followInsecureRedirects = HttpTransporterUtils.isFollowInsecureRedirect(
+                session, repository, JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS);
+        boolean originScopedHeaders = HttpTransporterUtils.isOriginScopedHeaders(
+                session, repository, JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
 
         httpClient.setUserAgentField(null); // we manage it
 
@@ -609,6 +605,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 // this client serves exactly one repository: any non-https request it ever issues can only be the
                 // result of following a protocol-downgrading redirect, so refuse it before anything is sent
                 httpClient.getRequestListeners().addQueuedListener(new InsecureRedirectGuard());
+            }
+            if (redirectMode == RedirectMode.SAME_AUTHORITY) {
+                httpClient.getRequestListeners().addQueuedListener(new SameAuthorityRedirectGuard(baseUri));
             }
             if (originScopedHeaders) {
                 // Jetty's redirector copies the request headers onto every redirect hop it follows; scope configured

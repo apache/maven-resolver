@@ -93,8 +93,12 @@ public final class JdkTransporterConfigurationKeys {
      * @configurationDefaultValue {@link #DEFAULT_ORIGIN_SCOPED_HEADERS}
      * @configurationRepoIdSuffix Yes
      * @since 2.0.23
+     * @deprecated Use {@link ConfigurationProperties#HTTP_ORIGIN_SCOPED_HEADERS} instead.
      */
+    @Deprecated
     public static final String CONFIG_PROP_ORIGIN_SCOPED_HEADERS = CONFIG_PROPS_PREFIX + "originScopedHeaders";
 
+    /** @deprecated Use {@link ConfigurationProperties#DEFAULT_HTTP_ORIGIN_SCOPED_HEADERS} instead. */
+    @Deprecated
     public static final boolean DEFAULT_ORIGIN_SCOPED_HEADERS = true;
 }

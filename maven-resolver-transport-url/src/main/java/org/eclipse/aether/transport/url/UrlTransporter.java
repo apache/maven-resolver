@@ -36,6 +36,7 @@ import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
+import org.eclipse.aether.ConfigurationProperties.RedirectMode;
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -51,6 +52,7 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.connector.transport.TransporterUtils;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 
 /**
@@ -70,21 +72,6 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     private static final int HTTP_STATUS_TEMPORARY_REDIRECT = 307;
     private static final int HTTP_STATUS_PERMANENT_REDIRECT = 308;
 
-    private enum RedirectMode {
-        /**
-         * No redirects allowed.
-         */
-        NONE,
-        /**
-         * Redirects only within same authority.
-         */
-        SAME_AUTHORITY,
-        /**
-         * Any redirect is followed.
-         */
-        ANY
-    }
-
     private final ChecksumExtractor checksumExtractor;
     private final PathProcessor pathProcessor;
     private final URI baseUri;
@@ -98,6 +85,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     private final Proxy proxy;
     private final String proxyAuth;
     private final RedirectMode redirectMode;
+    private final boolean originScopedHeaders;
     private final boolean redirectAllowDowngrade;
     private final int maxRedirects;
     private final boolean closeConnection;
@@ -112,6 +100,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         T get() throws IOException;
     }
 
+    @SuppressWarnings("deprecation")
     public UrlTransporter(
             RemoteRepository repository,
             RepositorySystemSession session,
@@ -143,6 +132,7 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         this.authEncoding = HttpTransporterUtils.getHttpCredentialsEncoding(session, repository);
         this.auth = authString;
         this.preemptiveAuth = this.auth != null && HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
+        this.originScopedHeaders = HttpTransporterUtils.isOriginScopedHeaders(session, repository);
 
         org.eclipse.aether.repository.Proxy repoProxy = repository.getProxy();
         this.proxy = repoProxy != null
@@ -159,17 +149,10 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
         }
         this.proxyAuth = proxyAuthString;
-
-        this.redirectMode = RedirectMode.valueOf(ConfigUtils.getString(
-                session,
-                UrlTransporterConfigurationKeys.DEFAULT_REDIRECT_MODE,
-                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE + "." + repository.getId(),
-                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE));
-        this.redirectAllowDowngrade = ConfigUtils.getBoolean(
-                session,
-                UrlTransporterConfigurationKeys.DEFAULT_REDIRECT_ALLOW_DOWNGRADE,
-                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE + "." + repository.getId(),
-                UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE);
+        this.redirectMode = HttpTransporterUtils.getRedirectMode(
+                session, repository, UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE);
+        this.redirectAllowDowngrade = HttpTransporterUtils.isFollowInsecureRedirect(
+                session, repository, UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE);
         this.maxRedirects = ConfigUtils.getInteger(
                 session,
                 UrlTransporterConfigurationKeys.DEFAULT_MAX_REDIRECT_COUNT,
@@ -297,11 +280,14 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
         con.setRequestProperty(HttpConstants.CACHE_CONTROL, "no-cache, no-store");
         con.setRequestProperty("Pragma", "no-cache");
         con.setRequestProperty(HttpConstants.USER_AGENT, userAgent);
-        headers.forEach(con::setRequestProperty);
+        boolean sameOrigin = TransporterUtils.isSameOrigin(baseUri, target.get(0));
+        if (!originScopedHeaders || sameOrigin) {
+            headers.forEach(con::setRequestProperty);
+        }
         if (closeConnection) {
             con.setRequestProperty("Connection", "close");
         }
-        if (currAuth != null) {
+        if (currAuth != null && (!originScopedHeaders || sameOrigin)) {
             con.setRequestProperty(HEADER_AUTHORIZATION, basicAuthorization(currAuth));
         }
         if (currProxyAuth != null) {
@@ -346,14 +332,16 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
             String currentAuthority = currentUri.getAuthority();
             String redirectAuthority = redirectUri.getAuthority();
-            if (currentAuthority == null || !currentAuthority.equalsIgnoreCase(redirectAuthority)) {
-                if (redirectMode == RedirectMode.SAME_AUTHORITY) {
-                    con.disconnect();
-                    throw new IOException("Refusing to follow redirect to different authority: " + redirectAuthority);
-                } else {
-                    // reset auth if authority differs after redirect
-                    currAuth = null;
-                }
+            if (redirectMode == RedirectMode.SAME_AUTHORITY
+                    && !TransporterUtils.isSameAuthority(currentUri, redirectUri)) {
+                con.disconnect();
+                throw new IOException("Refusing to follow redirect to different authority: " + redirectAuthority);
+            }
+            if (originScopedHeaders && !TransporterUtils.isSameOrigin(baseUri, redirectUri)) {
+                currAuth = null;
+            } else if (currentAuthority == null || !currentAuthority.equalsIgnoreCase(redirectAuthority)) {
+                // reset auth if authority differs after redirect
+                currAuth = null;
             }
             if ("https".equalsIgnoreCase(currentUri.getScheme())
                     && "http".equalsIgnoreCase(redirectUri.getScheme())
@@ -365,7 +353,10 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             target.add(0, redirectUri);
             con.disconnect();
             return perform(method, target, currAuth, currProxyAuth, task);
-        } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED && currAuth == null && this.auth != null) {
+        } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED
+                && currAuth == null
+                && this.auth != null
+                && (!originScopedHeaders || TransporterUtils.isSameOrigin(baseUri, target.get(0)))) {
             con.disconnect();
             return perform(method, target, this.auth, currProxyAuth, task);
         } else if (responseCode == HttpURLConnection.HTTP_PROXY_AUTH
