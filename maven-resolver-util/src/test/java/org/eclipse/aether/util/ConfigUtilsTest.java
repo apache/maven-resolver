@@ -215,11 +215,15 @@ public class ConfigUtilsTest {
     void testGetEnum_StringConversion() {
         config.put("some-enum", "SECOND");
         assertEquals(TestEnum.SECOND, ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
+        config.put("some-enum", "second");
+        assertEquals(TestEnum.SECOND, ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
+        config.put("some-enum", "SeCoNd");
+        assertEquals(TestEnum.SECOND, ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
     }
 
     @Test
     void testGetEnum_StringInvalidValue() {
-        config.put("some-enum", "second");
+        config.put("some-enum", "third");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ConfigUtils.getEnum(config, TestEnum.class, TestEnum.FIRST, "some-enum"));
