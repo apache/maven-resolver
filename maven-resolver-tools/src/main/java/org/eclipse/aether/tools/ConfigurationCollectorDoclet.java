@@ -143,7 +143,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
             boolean supportsRepoIdSuffix,
             // is empty if not deprecated
             String deprecated,
-            // see also section, comma-separated list
+            // see also section
             Collection<String> see) {
 
         public ConfigurationEntry {
@@ -386,7 +386,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 configurationType.javadocUrl(),
                 isSupportsRepoIdSuffix(path, blockTags),
                 getDeprecated(path, field).orElse(""),
-                getSee(path, field));
+                getSee(path));
     }
 
     private Optional<String> getDeprecated(DocTreePath path, Element element) {
@@ -423,9 +423,8 @@ public class ConfigurationCollectorDoclet implements Doclet {
         }
     }
 
-    private Collection<String> getSee(DocTreePath path, Element element) {
+    private Collection<String> getSee(DocTreePath path) {
         Objects.requireNonNull(path, "path must not be null");
-        Objects.requireNonNull(element, "field must not be null");
 
         return path.getDocComment().getBlockTags().stream()
                 .filter(t -> com.sun.source.doctree.DocTree.Kind.SEE == t.getKind())
@@ -511,7 +510,7 @@ public class ConfigurationCollectorDoclet implements Doclet {
                 "",
                 false,
                 getDeprecated(path, field).orElse(""),
-                getSee(path, field));
+                getSee(path));
     }
 
     private AnnotationMirror getAnnotation(Element element, String fqName) {
