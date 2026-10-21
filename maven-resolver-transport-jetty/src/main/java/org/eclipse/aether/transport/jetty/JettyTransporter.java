@@ -411,15 +411,13 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             // Jetty may complete a small PUT without firing onRequestContent callbacks, leaving
             // the progress listener uninformed even though the upload was sent.
             // Fire the missing events regardless of response status so the listener contract
-            // is honoured on both success and error paths.
+            // is honoured on both success and error paths. TransferCancelledException from
+            // transportStarted is propagated to the caller (cancelStart must be observable).
             if (task.getDataLength() > 0 && !progressed.get()) {
                 if (started.compareAndSet(false, true)) {
-                    try {
-                        task.getListener().transportStarted(0, task.getDataLength());
-                    } catch (TransferCancelledException e) {
-                        // upload already sent — retroactive notification cannot be cancelled;
-                        // fall through to transportPropertiesAvailable and status check
-                    }
+                    // propagate cancellation: even though the bytes are already sent,
+                    // the TransportListener contract requires callers to observe cancelStart
+                    task.getListener().transportStarted(0, task.getDataLength());
                 }
                 try (InputStream is = task.newInputStream()) {
                     byte[] buf = new byte[1024 * 32];
@@ -428,7 +426,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                         try {
                             task.getListener().transportProgressed(ByteBuffer.wrap(buf, 0, n));
                         } catch (TransferCancelledException e) {
-                            break; // upload already sent — retroactive notification cannot be cancelled
+                            break; // exit loop; fall through to transportPropertiesAvailable
                         }
                     }
                 }
