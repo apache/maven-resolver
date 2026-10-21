@@ -353,7 +353,8 @@ public final class ConfigUtils {
      * @param defaultValue the default value to return in case none of the property keys is set to a convertible String or T.
      * @param keys the property keys to read, must not be {@code null}. The specified keys are read one after one until
      *            a enum type {@code T} or a string (compared case-insensitively against enum constant names;
-     *            if no constant matches, the key is skipped) is found.
+     *            a enum type {@code T} or a string (compared case-insensitively against enum constant names;
+     *            if no constant matches, an {@link IllegalArgumentException} is thrown) is found.
      * @return the property value or {@code defaultValue} if none found
      * @throws IllegalArgumentException if a property value is found but cannot be converted to the specified enum type
      * @since 2.0.21
