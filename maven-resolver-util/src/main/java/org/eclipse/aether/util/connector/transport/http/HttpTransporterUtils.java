@@ -126,6 +126,8 @@ public final class HttpTransporterUtils {
     /**
      * Getter for {@link ConfigurationProperties#HTTP_REDIRECT_MODE}, with an optional deprecated
      * transport-specific property as a fallback.
+     *
+     * @since 2.0.25
      */
     public static ConfigurationProperties.RedirectMode getRedirectMode(
             RepositorySystemSession session, RemoteRepository repository, String deprecatedTransportProperty) {
@@ -151,6 +153,8 @@ public final class HttpTransporterUtils {
      * Getter for {@link ConfigurationProperties#HTTP_REDIRECT_MODE}, with an optional deprecated
      * transport-specific boolean property as a fallback. A {@code true} legacy value maps to {@code ANY}, and a
      * {@code false} value maps to {@code NONE}.
+     *
+     * @since 2.0.25
      */
     public static ConfigurationProperties.RedirectMode getRedirectMode(
             RepositorySystemSession session,

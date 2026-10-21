@@ -36,6 +36,7 @@ import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
+import org.eclipse.aether.ConfigurationProperties.RedirectMode;
 import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
@@ -70,21 +71,6 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
     private static final String AUTH_SCHEME_BASIC = "Basic";
     private static final int HTTP_STATUS_TEMPORARY_REDIRECT = 307;
     private static final int HTTP_STATUS_PERMANENT_REDIRECT = 308;
-
-    private enum RedirectMode {
-        /**
-         * No redirects allowed.
-         */
-        NONE,
-        /**
-         * Redirects only within same authority.
-         */
-        SAME_AUTHORITY,
-        /**
-         * Any redirect is followed.
-         */
-        ANY
-    }
 
     private final ChecksumExtractor checksumExtractor;
     private final PathProcessor pathProcessor;
@@ -163,9 +149,8 @@ public class UrlTransporter extends AbstractTransporter implements HttpTransport
             }
         }
         this.proxyAuth = proxyAuthString;
-        this.redirectMode = RedirectMode.valueOf(HttpTransporterUtils.getRedirectMode(
-                        session, repository, UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE)
-                .name());
+        this.redirectMode = HttpTransporterUtils.getRedirectMode(
+                session, repository, UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_MODE);
         this.redirectAllowDowngrade = HttpTransporterUtils.isFollowInsecureRedirect(
                 session, repository, UrlTransporterConfigurationKeys.CONFIG_PROP_REDIRECT_ALLOW_DOWNGRADE);
         this.maxRedirects = ConfigUtils.getInteger(
