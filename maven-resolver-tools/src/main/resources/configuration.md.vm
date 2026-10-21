@@ -68,7 +68,7 @@ From | To | How
 `String` | `int` | [`Integer.parseInt(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Integer.html#parseInt(java.lang.String))
 `String` | `long` | [`Long.parseLong(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Long.html#parseLong(java.lang.String))
 `String` | `float` | [`Float.parseFloat(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Float.html#parseFloat(java.lang.String))
-`String` | `T extends Enum<T>` | Each [`Enum.name(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Enum.html#name()) compared with `String.equalsIgnoreCase(...)` until a match is found. If no match is found an `IllegalArgumentException` is thrown.
+`String` | `T extends Enum<T>` | Each [`Enum.name()`](https://docs.oracle.com/javase/7/docs/api/java/lang/Enum.html#name()) compared with `String.equalsIgnoreCase(...)` until a match is found. If no match is found an `IllegalArgumentException` is thrown.
 
 ## Set Configuration from Apache Maven
 
