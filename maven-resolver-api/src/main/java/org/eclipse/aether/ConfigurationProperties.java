@@ -359,7 +359,7 @@ public final class ConfigurationProperties {
      *
      * @since 1.9.16
      */
-    public static final String DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE = "429,503";
+    public static final String DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE = "429,502,503,504";
 
     /**
      * Should HTTP client use preemptive-authentication for all HTTP verbs (works only w/ BASIC). By default, is
