@@ -18,8 +18,8 @@
  */
 package org.eclipse.aether.repository;
 
-import java.io.File;
 import java.net.URI;
+import java.nio.file.Paths;
 
 /**
  * URL handling for file URLs. Based on org.apache.maven.wagon.PathUtils.
@@ -43,7 +43,9 @@ public final class RepositoryUriUtils {
                 || protocol.isEmpty()
                 || protocol.length() == 1
                         && (Character.isLetter(protocol.charAt(0)) && Character.isUpperCase(protocol.charAt(0)))) {
-            return new File(basedir(repositoryUrl)).toURI();
+            // Use Path.of() to parse the local path lexically, without resolving against the JVM
+            // working directory via File (which may be on a different drive on Windows).
+            return Paths.get(basedir(repositoryUrl)).toUri();
         } else {
             return URI.create(repositoryUrl);
         }
@@ -76,7 +78,15 @@ public final class RepositoryUriUtils {
         String retValue;
 
         if (!protocol.isEmpty()) {
-            retValue = url.substring(protocol.length() + 1);
+            // A single uppercase letter is a Windows drive letter (e.g. "C:\path"), not a URL scheme.
+            // Keep it in the path; do not strip it as if it were a protocol prefix.
+            if (protocol.length() == 1
+                    && Character.isLetter(protocol.charAt(0))
+                    && Character.isUpperCase(protocol.charAt(0))) {
+                retValue = url;
+            } else {
+                retValue = url.substring(protocol.length() + 1);
+            }
         } else {
             retValue = url;
         }

@@ -20,8 +20,13 @@ package org.eclipse.aether.repository;
 
 import java.io.File;
 import java.nio.file.FileSystems;
+import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LocalRepositoryTest {
     @Test
@@ -48,5 +53,34 @@ public class LocalRepositoryTest {
 
     private void doIt(File file) {
         new LocalRepository(file.toPath().toUri().toASCIIString());
+    }
+
+    /**
+     * Verifies that a plain Windows path string (e.g. {@code C:\Users\foo\repo}) passed to
+     * {@link LocalRepository#LocalRepository(String)} preserves the drive letter and does not
+     * resolve against the JVM working directory. Previously, {@code RepositoryUriUtils.basedir()}
+     * treated the drive letter as a URL scheme and stripped it, producing a drive-relative path
+     * ({@code \Users\foo\repo}) that {@code Path.of(...).toUri()} then resolved against the JVM
+     * working directory — which can be on a different drive on Windows CI runners.
+     */
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    void windowsPlainPathPreservesDriveLetter() {
+        // Use the current drive letter so the path is always valid on any Windows machine.
+        String currentDrive = Paths.get(".").toAbsolutePath().getRoot().toString(); // e.g. "C:\"
+        char driveLetter = currentDrive.charAt(0);
+        String plainPath = driveLetter + ":\\Users\\runneradmin\\AppData\\Local\\Temp\\my-repo";
+
+        LocalRepository repo = new LocalRepository(plainPath);
+        String repoPath = repo.getBasePath().toString();
+
+        // The resolved path must start with the same drive letter, not a different one.
+        assertEquals(
+                String.valueOf(driveLetter),
+                repoPath.substring(0, 1).toUpperCase(),
+                "Drive letter must be preserved when parsing a plain Windows path: " + repoPath);
+        // The full absolute path must round-trip unchanged.
+        assertEquals(
+                plainPath, repoPath, "Plain Windows path must round-trip through LocalRepository(String) unchanged");
     }
 }
