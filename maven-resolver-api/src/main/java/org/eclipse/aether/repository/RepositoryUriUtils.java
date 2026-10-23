@@ -42,7 +42,15 @@ public final class RepositoryUriUtils {
         if ("file".equals(protocol)) {
             // Parse as a proper file: URI so that percent-encoding and Windows paths like
             // file:/C:/... or file:///C:/... are handled correctly by the JDK.
-            return Paths.get(URI.create(repositoryUrl)).toUri();
+            // Normalize single-slash file URIs (file:/D:/...) to triple-slash (file:///D:/...)
+            // so that Paths.get(URI) works on Windows: the JDK strips the leading '/' when
+            // the authority component is empty (""), giving "D:/..." which Windows accepts.
+            String normalized = repositoryUrl;
+            if (repositoryUrl.startsWith("file:/") && !repositoryUrl.startsWith("file://")) {
+                // file:/X:/... → file:///X:/... (single-slash non-standard form)
+                normalized = "file://" + repositoryUrl.substring("file:".length());
+            }
+            return Paths.get(URI.create(normalized)).toUri();
         } else if (protocol.isEmpty() || isWindowsDriveLetter(protocol)) {
             // Use Paths.get() to parse the local path lexically, without resolving against the JVM
             // working directory via File (which may be on a different drive on Windows).
