@@ -146,11 +146,15 @@ public final class RepositoryUriUtils {
 
     /**
      * Returns {@code true} if the given protocol token is a single ASCII letter, which on Windows indicates
-     * a drive letter (e.g. {@code C} in {@code C:\path} or {@code c} in {@code c:/path}) rather than a URL scheme.
-     * The check is locale-independent.
+     * a drive letter (e.g. {@code C} in {@code C:\\path} or {@code c} in {@code c:/path}) rather than a URL scheme.
+     * The check is restricted to ASCII letters only (not Unicode letters) and is locale-independent.
      */
     private static boolean isWindowsDriveLetter(String protocol) {
-        return protocol.length() == 1 && Character.isLetter(protocol.charAt(0));
+        if (protocol.length() != 1) {
+            return false;
+        }
+        char c = protocol.charAt(0);
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
     }
 
     /**
