@@ -40,6 +40,8 @@ import org.eclipse.aether.util.repository.DefaultMirrorSelector;
 import org.eclipse.aether.util.repository.DefaultProxySelector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -106,6 +108,59 @@ public class DefaultRepositorySystemTest {
         assertEquals("test-2", resolveRepo.getId());
         assertSame(proxy, resolveRepo.getProxy());
         assertSame(auth, resolveRepo.getAuthentication());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"external:*", "*"})
+    void testNewResolutionRepositories_PreparedMirrorIsNotMirroredAgain(String corporatePattern) {
+        session.setMirrorSelector(new DefaultMirrorSelector()
+                .add("central-exception", "https://central-exception.invalid/", "default", false, false, "central", "*")
+                .add("corporate", "https://corporate.invalid/", "default", false, false, corporatePattern, "*"));
+        Authentication auth = new AuthenticationBuilder().addUsername("user").build();
+        session.setAuthenticationSelector(new DefaultAuthenticationSelector().add("central-exception", auth));
+        Proxy proxy = new Proxy("http", "localhost", 8080);
+        session.setProxySelector(new DefaultProxySelector().add(proxy, null));
+        RemoteRepository central =
+                new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2").build();
+        List<RemoteRepository> prepared = system.newResolutionRepositories(session, Collections.singletonList(central));
+        assertEquals("central-exception", prepared.get(0).getId());
+
+        List<RemoteRepository> result = system.newResolutionRepositories(session, prepared);
+
+        assertEquals(prepared, result);
+        assertEquals(Collections.singletonList(central), result.get(0).getMirroredRepositories());
+        assertSame(auth, result.get(0).getAuthentication());
+        assertSame(proxy, result.get(0).getProxy());
+    }
+
+    @Test
+    void testNewResolutionRepositories_PreparedMirrorKeepsSelectionAfterSessionChange() {
+        session.setMirrorSelector(new DefaultMirrorSelector()
+                .add("corp", "https://corp.invalid/", "default", true, false, "central", "*"));
+        RemoteRepository central =
+                new RemoteRepository.Builder("central", "default", "https://central.invalid/").build();
+        List<RemoteRepository> prepared = system.newResolutionRepositories(session, Collections.singletonList(central));
+        DefaultRepositorySystemSession changedSession = new DefaultRepositorySystemSession(session);
+        changedSession.setMirrorSelector(
+                new DefaultMirrorSelector().add("blocked", "http://0.0.0.0/", "default", false, true, "*", "*"));
+        Authentication auth =
+                new AuthenticationBuilder().addUsername("new-user").build();
+        changedSession.setAuthenticationSelector(new DefaultAuthenticationSelector().add("corp", auth));
+        Proxy proxy = new Proxy("http", "new-proxy.invalid", 8080);
+        changedSession.setProxySelector(new DefaultProxySelector().add(proxy, null));
+
+        List<RemoteRepository> result = system.newResolutionRepositories(changedSession, prepared);
+
+        assertEquals(1, result.size());
+        assertEquals("corp", result.get(0).getId());
+        assertEquals("https://corp.invalid/", result.get(0).getUrl());
+        assertTrue(result.get(0).isRepositoryManager());
+        assertFalse(result.get(0).isBlocked());
+        assertEquals(Collections.singletonList(central), result.get(0).getMirroredRepositories());
+        assertSame(auth, result.get(0).getAuthentication());
+        assertSame(proxy, result.get(0).getProxy());
+        assertNull(prepared.get(0).getAuthentication());
+        assertNull(prepared.get(0).getProxy());
     }
 
     @Test
