@@ -300,8 +300,8 @@ public final class ConfigurationProperties {
 
     /**
      * The initial retry interval in millis of request to a remote server should be waited in case of
-     * "too many requests" (HTTP codes 429 and 503). Accepts long as milliseconds. This value is used if remote server
-     * does not use {@code Retry-After} header, in which case Server value is obeyed.
+     * "service unavailable" or "too many requests" (HTTP codes 429, 502, 503, and 504). Accepts long as milliseconds.
+     * This value is used if remote server does not use {@code Retry-After} header, in which case Server value is obeyed.
      *
      * @since 1.9.16
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -341,8 +341,8 @@ public final class ConfigurationProperties {
     public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL_MAX = 300_000L;
 
     /**
-     * The HTTP codes of remote server responses that should be handled as "too many requests"
-     * (examples: HTTP codes 429 and 503). Accepts comma separated list of HTTP response codes.
+     * The HTTP codes of remote server responses that should be handled as "service unavailable" or "too many requests"
+     * (examples: HTTP codes 429, 502, 503, and 504). Accepts comma separated list of HTTP response codes.
      *
      * @since 1.9.16
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -354,8 +354,8 @@ public final class ConfigurationProperties {
             PREFIX_TRANSPORT_HTTP + "retryHandler.serviceUnavailable";
 
     /**
-     * The default HTTP codes of remote server responses that should be handled as "too many requests".
-     * Default value: "429,503".
+     * The default HTTP codes of remote server responses that should be handled as "service unavailable" or "too many requests".
+     * Default value: "429,502,503,504".
      *
      * @since 1.9.16
      */
