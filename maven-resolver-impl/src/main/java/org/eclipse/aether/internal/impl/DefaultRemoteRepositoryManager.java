@@ -138,7 +138,9 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             RemoteRepository repository = recessiveRepository;
             boolean mirrored = false;
 
-            if (recessiveIsRaw) {
+            if (recessiveIsRaw
+                    && (recessiveIsFromDescriptor
+                            || recessiveRepository.getMirroredRepositories().isEmpty())) {
                 RemoteRepository mirrorRepository = mirrorSelector.getMirror(recessiveRepository);
 
                 if (mirrorRepository != null) {
