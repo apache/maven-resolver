@@ -21,20 +21,28 @@ package org.eclipse.aether.repository;
 import java.net.URI;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link RepositoryUriUtils#toUri(String)}, focusing on Windows drive-letter handling.
- * These tests exercise the string-parsing logic and run on all platforms.
+ * Tests that pass plain Windows paths (with backslash or {@code X:} prefix) are
+ * {@link EnabledOnOs @EnabledOnOs(OS.WINDOWS)} because on Linux {@code Paths.get("C:\\...")}
+ * treats the input as a relative path (backslash is not a separator), producing a wrong URI
+ * that could accidentally satisfy the drive-letter assertion.
+ * Tests that pass {@code file:} URLs are safe to run on all platforms.
  */
 public class RepositoryUriUtilsTest {
 
     /**
      * A plain Windows path with an uppercase drive letter must produce a {@code file:} URI
      * whose path starts with the drive letter, not a relative path missing the drive.
+     * <p>Restricted to Windows because on Linux {@code Paths.get("C:\\...")} is a relative path.</p>
      */
     @Test
+    @EnabledOnOs(OS.WINDOWS)
     void windowsUppercaseDriveLetterPreserved() {
         URI uri = RepositoryUriUtils.toUri("C:\\Users\\foo\\repo");
         assertEquals("file", uri.getScheme());
@@ -46,20 +54,24 @@ public class RepositoryUriUtilsTest {
     /**
      * A plain Windows path with a lowercase drive letter must also be handled correctly.
      * Before the fix, only uppercase letters were detected as drive letters.
+     * <p>Restricted to Windows because on Linux {@code Paths.get("c:\\...")} is a relative path.</p>
      */
     @Test
+    @EnabledOnOs(OS.WINDOWS)
     void windowsLowercaseDriveLetterPreserved() {
         URI uri = RepositoryUriUtils.toUri("c:\\Users\\foo\\repo");
         assertEquals("file", uri.getScheme());
         String path = uri.getSchemeSpecificPart();
-        // drive letter is normalized to uppercase by Paths.get on Windows, lowercase on Linux path string
         assertContainsDriveLetter('c', path);
     }
 
     /**
      * A Windows path with forward slashes must also be handled correctly.
+     * <p>Restricted to Windows because {@code C:/...} is parsed as a URL scheme on Linux
+     * ({@code "C"} would be the protocol), which takes a different code path.</p>
      */
     @Test
+    @EnabledOnOs(OS.WINDOWS)
     void windowsDriveLetterForwardSlash() {
         URI uri = RepositoryUriUtils.toUri("C:/Users/foo/repo");
         assertEquals("file", uri.getScheme());
