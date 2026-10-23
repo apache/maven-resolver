@@ -104,11 +104,11 @@
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
-    <version.sisu-maven-plugin>1.1.0</version.sisu-maven-plugin>
+    <version.sisu-maven-plugin>1.1.1</version.sisu-maven-plugin>
     <version.guice>5.1.0</version.guice>
     <version.slf4j>2.0.20</version.slf4j>
     <version.testcontainers>2.0.5</version.testcontainers>
-    <version.bouncycastle>1.85</version.bouncycastle>
+    <version.bouncycastle>1.86</version.bouncycastle>
 
     <!-- Used by Jetty Transport (client) and Test HTTP (server), 12.1 introduced support for different compressions (https://github.com/jetty/jetty.project/issues/8769) -->
     <version.jetty>12.1.14</version.jetty>
@@ -117,9 +117,9 @@
 
     <!-- used by supplier and demo only; not in resolver itself -->
     <maven3Version>3.10.0</maven3Version>
-    <maven4Version>4.0.0-rc-6</maven4Version>
+    <maven4Version>4.0.0-rc-7</maven4Version>
     <plexusUtils3Version>3.6.2</plexusUtils3Version>
-    <plexusUtils4Version>4.0.3</plexusUtils4Version>
+    <plexusUtils4Version>4.1.0</plexusUtils4Version>
     <plexusXml4Version>4.2.0</plexusXml4Version>
 
     <!-- Build -->
@@ -312,7 +312,7 @@
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>
-        <version>${version.bouncycastle}.2</version>
+        <version>${version.bouncycastle}</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
@@ -370,7 +370,7 @@
         <plugin>
           <groupId>com.github.siom79.japicmp</groupId>
           <artifactId>japicmp-maven-plugin</artifactId>
-          <version>0.26.3</version>
+          <version>0.26.5</version>
           <configuration>
             <oldVersion>
               <!-- We compare same module against 1.8.0 set as "baseline" -->

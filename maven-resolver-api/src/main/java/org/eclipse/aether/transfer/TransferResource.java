@@ -50,10 +50,20 @@ public final class TransferResource {
 
     private volatile long resumeOffset;
 
+    /**
+     * Gets the clock used to determine the start time of transfers.
+     *
+     * @return The clock currently in use, never {@code null}.
+     */
     public static Clock getClock() {
         return clock;
     }
 
+    /**
+     * Sets the clock used to determine the start time of transfers. Intended for testing purposes.
+     *
+     * @param clock The clock to use, must not be {@code null}.
+     */
     public static void setClock(Clock clock) {
         TransferResource.clock = clock;
     }

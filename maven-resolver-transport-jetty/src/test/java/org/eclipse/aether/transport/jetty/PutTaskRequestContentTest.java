@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.transport.jetty;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
@@ -25,9 +26,31 @@ import java.nio.channels.SeekableByteChannel;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PutTaskRequestContentTest {
+    @Test
+    void readPropagatesUnexpectedRuntimeExceptionsFromChannel() {
+        ReadableByteChannel channel = new ReadableByteChannel() {
+            @Override
+            public int read(ByteBuffer destination) {
+                throw new IllegalStateException("unexpected read failure");
+            }
+
+            @Override
+            public boolean isOpen() {
+                return true;
+            }
+
+            @Override
+            public void close() {}
+        };
+        PutTaskRequestContent content = new PutTaskRequestContent(ByteBufferPool.SIZED_NON_POOLING, () -> channel);
+
+        assertThrows(IllegalStateException.class, content::read);
+    }
+
     @Test
     void readPropagatesErrorsFromChannel() {
         ReadableByteChannel channel = new ReadableByteChannel() {
@@ -47,6 +70,52 @@ class PutTaskRequestContentTest {
         PutTaskRequestContent content = new PutTaskRequestContent(ByteBufferPool.SIZED_NON_POOLING, () -> channel);
 
         assertThrows(AssertionError.class, content::read);
+    }
+
+    @Test
+    void rewindPropagatesUnexpectedRuntimeExceptionsFromSeekableChannel() {
+        SeekableByteChannel channel = new SeekableByteChannel() {
+            @Override
+            public int read(ByteBuffer destination) {
+                return -1;
+            }
+
+            @Override
+            public int write(ByteBuffer source) {
+                return 0;
+            }
+
+            @Override
+            public long position() {
+                return 0;
+            }
+
+            @Override
+            public SeekableByteChannel position(long newPosition) {
+                throw new IllegalStateException("unexpected rewind failure");
+            }
+
+            @Override
+            public long size() {
+                return 0;
+            }
+
+            @Override
+            public SeekableByteChannel truncate(long size) {
+                return this;
+            }
+
+            @Override
+            public boolean isOpen() {
+                return true;
+            }
+
+            @Override
+            public void close() {}
+        };
+        PutTaskRequestContent content = new PutTaskRequestContent(ByteBufferPool.SIZED_NON_POOLING, () -> channel);
+
+        assertThrows(IllegalStateException.class, content::rewind);
     }
 
     @Test
@@ -93,5 +162,51 @@ class PutTaskRequestContentTest {
         PutTaskRequestContent content = new PutTaskRequestContent(ByteBufferPool.SIZED_NON_POOLING, () -> channel);
 
         assertThrows(AssertionError.class, content::rewind);
+    }
+
+    @Test
+    void rewindReturnsFalseWhenPositionFailsWithIOException() {
+        SeekableByteChannel channel = new SeekableByteChannel() {
+            @Override
+            public int read(ByteBuffer destination) {
+                return -1;
+            }
+
+            @Override
+            public int write(ByteBuffer source) {
+                return 0;
+            }
+
+            @Override
+            public long position() {
+                return 0;
+            }
+
+            @Override
+            public SeekableByteChannel position(long newPosition) throws IOException {
+                throw new IOException("rewind failed");
+            }
+
+            @Override
+            public long size() {
+                return 0;
+            }
+
+            @Override
+            public SeekableByteChannel truncate(long size) {
+                return this;
+            }
+
+            @Override
+            public boolean isOpen() {
+                return true;
+            }
+
+            @Override
+            public void close() {}
+        };
+        PutTaskRequestContent content = new PutTaskRequestContent(ByteBufferPool.SIZED_NON_POOLING, () -> channel);
+
+        assertFalse(content.rewind());
     }
 }

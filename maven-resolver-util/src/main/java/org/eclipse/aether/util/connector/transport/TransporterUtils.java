@@ -1,0 +1,82 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.eclipse.aether.util.connector.transport;
+
+import java.net.URI;
+
+/**
+ * A utility class for transporters.
+ *
+ * @since 2.0.25
+ */
+public final class TransporterUtils {
+    private TransporterUtils() {}
+
+    /**
+     * Checks whether two URIs have the same origin (scheme, host and effective port).
+     *
+     * @param origin the repository origin
+     * @param target the URI to compare with the origin
+     * @return {@code true} when both URIs have the same origin
+     * @since 2.0.25
+     */
+    public static boolean isSameOrigin(URI origin, URI target) {
+        return isSameEndpoint(origin, target, true, false);
+    }
+
+    /**
+     * Checks whether two URIs have the same authority (user, host and port).
+     *
+     * @param origin the URI to compare
+     * @param target the URI to compare with the origin
+     * @return {@code true} when both URIs have the same authority
+     * @since 2.0.25
+     */
+    public static boolean isSameAuthority(URI origin, URI target) {
+        return isSameEndpoint(origin, target, false, true);
+    }
+
+    private static boolean isSameEndpoint(
+            URI origin, URI target, boolean requireSameScheme, boolean requireSameUserInfo) {
+        if (origin.getHost() == null || target.getHost() == null) {
+            return false;
+        }
+        if (requireSameScheme && !equalsIgnoreCase(origin.getScheme(), target.getScheme())) {
+            return false;
+        }
+        if (requireSameUserInfo && !equalsIgnoreCase(origin.getUserInfo(), target.getUserInfo())) {
+            return false;
+        }
+        return origin.getHost().equalsIgnoreCase(target.getHost()) && effectivePort(origin) == effectivePort(target);
+    }
+
+    private static boolean equalsIgnoreCase(String left, String right) {
+        return left != null ? left.equalsIgnoreCase(right) : right == null;
+    }
+
+    private static int effectivePort(URI uri) {
+        if (uri.getPort() >= 0) {
+            return uri.getPort();
+        }
+        if ("https".equalsIgnoreCase(uri.getScheme())) {
+            return 443;
+        }
+        return "http".equalsIgnoreCase(uri.getScheme()) ? 80 : -1;
+    }
+}

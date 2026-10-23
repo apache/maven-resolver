@@ -29,6 +29,11 @@ public final class DefaultRepositoryCache implements RepositoryCache {
 
     private final ConcurrentHashMap<Object, Object> cache = new ConcurrentHashMap<>(256);
 
+    /**
+     * Creates a new cache instance.
+     */
+    public DefaultRepositoryCache() {}
+
     public Object get(RepositorySystemSession session, Object key) {
         return cache.get(key);
     }

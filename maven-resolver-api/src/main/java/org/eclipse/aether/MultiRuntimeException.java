@@ -29,6 +29,7 @@ import static java.util.Objects.requireNonNull;
  * @since 1.9.0
  */
 public final class MultiRuntimeException extends RuntimeException {
+    /** The wrapped throwables. */
     private final List<? extends Throwable> throwables;
 
     private MultiRuntimeException(String message, List<? extends Throwable> throwables) {
@@ -54,6 +55,10 @@ public final class MultiRuntimeException extends RuntimeException {
      *     <li>if list is empty - nothing</li>
      *     <li>if list not empty - {@link MultiRuntimeException} is thrown wrapping all elements</li>
      * </ul>
+     *
+     * @param message The exception message to use if a {@link MultiRuntimeException} is thrown, must not be
+     *            {@code null}.
+     * @param throwables The throwables to wrap, must not be {@code null}.
      */
     public static void mayThrow(String message, List<? extends Throwable> throwables) {
         requireNonNull(message);

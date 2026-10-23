@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -42,6 +43,7 @@ import java.util.regex.Matcher;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.ConfigurationProperties.HttpVersion;
+import org.eclipse.aether.ConfigurationProperties.RedirectMode;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -374,6 +376,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             return true; // continue processing
         });
         AtomicBoolean started = new AtomicBoolean(false);
+        AtomicBoolean progressed = new AtomicBoolean(false);
         Response response;
         try (InputStreamResponseListener listener = new InputStreamResponseListener()) {
             request.onRequestCommit(r -> {
@@ -396,6 +399,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                                 return;
                             }
                         }
+                        progressed.set(true);
                         try {
                             task.getListener().transportProgressed(b);
                         } catch (TransferCancelledException e) {
@@ -404,6 +408,34 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     })
                     .send(listener);
             response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
+            // On some platforms (macOS) with certain configurations (proxy auth, TLS/HTTP2),
+            // Jetty may complete a small PUT without firing onRequestContent callbacks, leaving
+            // the progress listener uninformed even though the upload was sent.
+            // Fire the missing events regardless of response status so the listener contract
+            // is honoured on both success and error paths. TransferCancelledException from
+            // transportStarted is propagated to the caller (cancelStart must be observable).
+            if (task.getDataLength() > 0 && !progressed.get()) {
+                if (started.compareAndSet(false, true)) {
+                    // propagate cancellation: even though the bytes are already sent,
+                    // the TransportListener contract requires callers to observe cancelStart
+                    task.getListener().transportStarted(0, task.getDataLength());
+                }
+                try (InputStream is = task.newInputStream()) {
+                    byte[] buf = new byte[1024 * 32];
+                    int n;
+                    while ((n = is.read(buf)) != -1) {
+                        try {
+                            task.getListener().transportProgressed(ByteBuffer.wrap(buf, 0, n));
+                        } catch (TransferCancelledException e) {
+                            break; // exit loop; fall through to transportPropertiesAvailable
+                        }
+                    }
+                }
+            }
+            // transportPropertiesAvailable is called after transportStarted/transportProgressed
+            // to honour the TransportListener contract: "for remote put tasks this is called
+            // after transportStarted(long, long)". Placed before the status check so it is
+            // reachable on both success (2xx) and error (3xx/4xx/5xx) responses.
             task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
             if (response.getStatus() >= MULTIPLE_CHOICES) {
                 JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
@@ -435,7 +467,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         }
     }
 
-    @SuppressWarnings("checkstyle:methodlength")
+    @SuppressWarnings({"checkstyle:methodlength", "deprecation"})
     private HttpClient createClient() throws RuntimeException {
         BasicAuthentication.BasicResult serverAuth = null;
         BasicAuthentication.BasicResult proxyAuth = null;
@@ -514,26 +546,21 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         HttpClient httpClient = new HttpClient(dynamicTransport);
         httpClient.setConnectTimeout(connectTimeout);
         httpClient.setIdleTimeout(requestTimeout);
-        httpClient.setFollowRedirects(ConfigUtils.getBoolean(
+        RedirectMode redirectMode = HttpTransporterUtils.getRedirectMode(
                 session,
+                repository,
                 JettyTransporterConfigurationKeys.DEFAULT_FOLLOW_REDIRECTS,
-                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS));
+                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_REDIRECTS);
+        httpClient.setFollowRedirects(redirectMode != RedirectMode.NONE);
         httpClient.setMaxRedirects(ConfigUtils.getInteger(
                 session,
                 JettyTransporterConfigurationKeys.DEFAULT_MAX_REDIRECTS,
                 JettyTransporterConfigurationKeys.CONFIG_PROP_MAX_REDIRECTS));
 
-        boolean followInsecureRedirects = ConfigUtils.getBoolean(
-                session,
-                JettyTransporterConfigurationKeys.DEFAULT_FOLLOW_INSECURE_REDIRECTS,
-                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS + "." + repository.getId(),
-                JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS);
-
-        boolean originScopedHeaders = ConfigUtils.getBoolean(
-                session,
-                JettyTransporterConfigurationKeys.DEFAULT_ORIGIN_SCOPED_HEADERS,
-                JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS + "." + repository.getId(),
-                JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
+        boolean followInsecureRedirects = HttpTransporterUtils.isFollowInsecureRedirect(
+                session, repository, JettyTransporterConfigurationKeys.CONFIG_PROP_FOLLOW_INSECURE_REDIRECTS);
+        boolean originScopedHeaders = HttpTransporterUtils.isOriginScopedHeaders(
+                session, repository, JettyTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
 
         httpClient.setUserAgentField(null); // we manage it
 
@@ -578,6 +605,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 // this client serves exactly one repository: any non-https request it ever issues can only be the
                 // result of following a protocol-downgrading redirect, so refuse it before anything is sent
                 httpClient.getRequestListeners().addQueuedListener(new InsecureRedirectGuard());
+            }
+            if (redirectMode == RedirectMode.SAME_AUTHORITY) {
+                httpClient.getRequestListeners().addQueuedListener(new SameAuthorityRedirectGuard(baseUri));
             }
             if (originScopedHeaders) {
                 // Jetty's redirector copies the request headers onto every redirect hop it follows; scope configured

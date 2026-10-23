@@ -34,17 +34,23 @@ import org.eclipse.aether.graph.DependencyNode;
 public interface CollectStepData {
     /**
      * Returns the context of collection. Never {@code null}.
+     *
+     * @return The context of the collection, never {@code null}.
      */
     String getContext();
 
     /**
      * Returns the path of dependency nodes that led collector to current node returned by {@link #getNode()}.
      * Never {@code null}.
+     *
+     * @return The path of dependency nodes leading to the current node, never {@code null}.
      */
     List<DependencyNode> getPath();
 
     /**
      * Returns the current node being collected. Never {@code null}.
+     *
+     * @return The current node being collected, never {@code null}.
      */
     Dependency getNode();
 }

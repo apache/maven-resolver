@@ -31,6 +31,10 @@ import java.util.Objects;
  * the repository.
  */
 public final class LocalRepository implements ArtifactRepository {
+    /**
+     * Repository key constant representing the local repository, used in place of a remote repository key where
+     * none applies, for example when composing local repository paths for locally installed metadata.
+     */
     public static final String ID = "local";
 
     private final Path basePath;

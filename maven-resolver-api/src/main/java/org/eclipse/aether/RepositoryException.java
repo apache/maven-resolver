@@ -44,6 +44,8 @@ public class RepositoryException extends Exception {
     }
 
     /**
+     * Builds a detail message from the given cause, prefixed with the given string.
+     *
      * @param  prefix The prefix.
      * @param cause The exception that caused this one, may be {@code null}.
      * @return The message.

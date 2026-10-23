@@ -60,9 +60,13 @@ public final class HttpTransportProperty {
      * HTTP version used for the HTTP transport.
      */
     public enum HttpVersion {
+        /** HTTP/1.0. */
         HTTP_1_0("HTTP/1.0"),
+        /** HTTP/1.1. */
         HTTP_1_1("HTTP/1.1"),
+        /** HTTP/2. */
         HTTP_2("HTTP/2"),
+        /** HTTP/3. */
         HTTP_3("HTTP/3");
 
         private final String label;
@@ -81,10 +85,15 @@ public final class HttpTransportProperty {
      * SSL protocol including version used for the HTTP transport.
      */
     public enum SslProtocol {
+        /** SSL 3.0. */
         SSL_3_0("SSLv3"),
+        /** TLS 1.0. */
         TLS_1_0("TLSv1"),
+        /** TLS 1.1. */
         TLS_1_1("TLSv1.1"),
+        /** TLS 1.2. */
         TLS_1_2("TLSv1.2"),
+        /** TLS 1.3. */
         TLS_1_3("TLSv1.3");
 
         private final String label;

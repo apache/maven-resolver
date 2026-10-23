@@ -32,12 +32,16 @@ import org.eclipse.aether.RepositoryException;
  */
 public class ChecksumFailureException extends RepositoryException {
 
+    /** The expected checksum as declared by the hosting repository. */
     private final String expected;
 
+    /** The kind of the expected checksum. */
     private final String expectedKind;
 
+    /** The actual checksum as computed from the local bytes. */
     private final String actual;
 
+    /** Whether retrying the download might solve the checksum failure. */
     private final boolean retryWorthy;
 
     /**
@@ -48,6 +52,7 @@ public class ChecksumFailureException extends RepositoryException {
      * @param expected The expected checksum as declared by the hosting repository, may be {@code null}.
      * @param expectedKind The expected checksum kind, may be {@code null}.
      * @param actual The actual checksum as computed from the local bytes, may be {@code null}.
+     * @return The new exception, never {@code null}.
      * @since 2.0.19
      */
     public static ChecksumFailureException mismatch(String expected, String expectedKind, String actual) {
@@ -63,6 +68,7 @@ public class ChecksumFailureException extends RepositoryException {
      * @param expected The expected checksum as declared by the hosting repository, may be {@code null}.
      * @param expectedKind The expected checksum kind, may be {@code null}.
      * @param actual The actual checksum as computed from the local bytes, may be {@code null}.
+     * @return The new exception, never {@code null}.
      * @since 2.0.19
      */
     public static ChecksumFailureException mismatchDetail(
@@ -109,6 +115,7 @@ public class ChecksumFailureException extends RepositoryException {
      *
      * @param message The message.
      * @param expectedKind The expected checksum kind, may be {@code null}.
+     * @return The new exception, never {@code null}.
      * @since 2.0.19
      */
     public static ChecksumFailureException noneAvailable(String message, String expectedKind) {
@@ -121,6 +128,7 @@ public class ChecksumFailureException extends RepositoryException {
      *
      * @param message The message.
      * @param cause The cause.
+     * @return The new exception, never {@code null}.
      * @since 2.0.19
      */
     public static ChecksumFailureException processingFailure(String message, Throwable cause) {

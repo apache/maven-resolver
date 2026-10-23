@@ -1006,6 +1006,127 @@ public abstract class HttpTransporterTest {
     }
 
     @Test
+    protected void testGet_Redirect_ModeNone() throws Exception {
+        session.setConfigProperty(
+                ConfigurationProperties.HTTP_REDIRECT_MODE + ".test", ConfigurationProperties.RedirectMode.NONE);
+        newTransporter(httpServer.getHttpUrl());
+
+        assertThrows(Exception.class, () -> transporter.get(new GetTask(URI.create("redirect/file.txt"))));
+        assertEquals(1, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    protected void testGet_Redirect_ModeSameAuthority() throws Exception {
+        session.setConfigProperty(
+                ConfigurationProperties.HTTP_REDIRECT_MODE + ".test",
+                ConfigurationProperties.RedirectMode.SAME_AUTHORITY);
+        newTransporter(httpServer.getHttpUrl());
+
+        GetTask task = new GetTask(URI.create("redirect/file.txt"));
+        transporter.get(task);
+
+        assertEquals("test", task.getDataString());
+        assertEquals(2, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    protected void testGet_Redirect_ModeSameAuthorityRefusesDifferentAuthority() throws Exception {
+        session.setConfigProperty(
+                ConfigurationProperties.HTTP_REDIRECT_MODE + ".test",
+                ConfigurationProperties.RedirectMode.SAME_AUTHORITY);
+        newTransporter(httpServer.getHttpUrl());
+
+        assertThrows(
+                Exception.class, () -> transporter.get(new GetTask(URI.create("redirect/file.txt?host=127.0.0.1"))));
+        assertEquals(1, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    protected void testGet_Redirect_ModeAnyAllowsDifferentAuthority() throws Exception {
+        session.setConfigProperty(ConfigurationProperties.HTTP_REDIRECT_MODE, ConfigurationProperties.RedirectMode.ANY);
+        newTransporter(httpServer.getHttpUrl());
+
+        GetTask task = new GetTask(URI.create("redirect/file.txt?host=127.0.0.1"));
+        transporter.get(task);
+
+        assertEquals("test", task.getDataString());
+        assertEquals(2, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    protected void testGet_Redirect_OriginScopedHeadersByDefault() throws Exception {
+        Map<String, String> headers = Map.of("X-Secret", "secret");
+        session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS + ".test", headers);
+        newTransporter(httpServer.getHttpUrl());
+
+        transporter.get(new GetTask(URI.create("redirect/file.txt?host=127.0.0.1")));
+
+        assertEquals(2, httpServer.getLogEntries().size());
+        assertEquals(
+                "secret", httpServer.getLogEntries().get(0).getRequestHeaders().get("X-Secret"));
+        assertNull(httpServer.getLogEntries().get(1).getRequestHeaders().get("X-Secret"));
+    }
+
+    @Test
+    protected void testGet_Redirect_OriginScopedHeadersDisabled() throws Exception {
+        Map<String, String> headers = Map.of("X-Secret", "secret");
+        session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS + ".test", headers);
+        session.setConfigProperty(ConfigurationProperties.HTTP_ORIGIN_SCOPED_HEADERS, false);
+        newTransporter(httpServer.getHttpUrl());
+
+        transporter.get(new GetTask(URI.create("redirect/file.txt?host=127.0.0.1")));
+
+        assertEquals(2, httpServer.getLogEntries().size());
+        assertEquals(
+                "secret", httpServer.getLogEntries().get(0).getRequestHeaders().get("X-Secret"));
+        assertEquals(
+                "secret", httpServer.getLogEntries().get(1).getRequestHeaders().get("X-Secret"));
+    }
+
+    @Test
+    protected void testGet_Redirect_OriginScopedAuthenticationNotReplayed() throws Exception {
+        httpServer.setAuthentication("testuser", "testpass");
+        auth = new AuthenticationBuilder()
+                .addUsername("testuser")
+                .addPassword("testpass")
+                .build();
+        newTransporter(httpServer.getHttpUrl());
+
+        assertThrows(
+                Exception.class, () -> transporter.get(new GetTask(URI.create("redirect/file.txt?host=127.0.0.1"))));
+
+        HttpServer.LogEntry redirectTarget =
+                httpServer.getLogEntries().get(httpServer.getLogEntries().size() - 1);
+        assertTrue(redirectTarget.getPath().startsWith("/repo/file.txt"));
+        assertNull(redirectTarget.getRequestHeaders().get("Authorization"));
+    }
+
+    @Test
+    protected void testGet_Redirect_InsecureRedirectRefusedByDefault() throws Exception {
+        httpServer.addHttp2ConnectorWithMutualTLS();
+        session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_1_1);
+        newTransporter(httpServer.getHttpsUrl());
+
+        assertThrows(Exception.class, () -> transporter.get(new GetTask(URI.create("redirect/file.txt?scheme=http"))));
+
+        assertEquals(1, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    protected void testGet_Redirect_InsecureRedirectAllowedWhenConfigured() throws Exception {
+        httpServer.addHttp2ConnectorWithMutualTLS();
+        session.setConfigProperty(ConfigurationProperties.HTTP_VERSION, ConfigurationProperties.HttpVersion.HTTP_1_1);
+        session.setConfigProperty(ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT, true);
+        newTransporter(httpServer.getHttpsUrl());
+
+        GetTask task = new GetTask(URI.create("redirect/file.txt?scheme=http"));
+        transporter.get(task);
+
+        assertEquals("test", task.getDataString());
+        assertEquals(2, httpServer.getLogEntries().size());
+    }
+
+    @Test
     protected void testGet_Resume() throws Exception {
         File file = TestFileUtils.createTempFile("re");
         RecordingTransportListener listener = new RecordingTransportListener();

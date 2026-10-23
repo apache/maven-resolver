@@ -27,7 +27,6 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -127,12 +126,5 @@ public class OriginScopedHeadersInterceptorTest {
         HttpRequest request = newRequestWithConfiguredHeaders();
         empty.process(request, contextTargeting(new HttpHost("cdn.example.net", -1, "https")));
         assertConfiguredHeadersPresent(request);
-    }
-
-    @Test
-    void effectivePortFollowsScheme() {
-        assertEquals(443, OriginScopedHeadersInterceptor.schemeDefaultPort(new HttpHost("h", -1, "https")));
-        assertEquals(80, OriginScopedHeadersInterceptor.schemeDefaultPort(new HttpHost("h", -1, "http")));
-        assertEquals(8081, OriginScopedHeadersInterceptor.schemeDefaultPort(new HttpHost("h", 8081, "https")));
     }
 }

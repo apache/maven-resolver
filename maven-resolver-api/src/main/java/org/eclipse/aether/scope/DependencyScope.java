@@ -29,11 +29,16 @@ package org.eclipse.aether.scope;
 public interface DependencyScope {
     /**
      * The label.
+     *
+     * @return The identifier of this dependency scope, never {@code null}.
      */
     String getId();
 
     /**
      * Shorthand method of {@code getId().equals(String label)}.
+     *
+     * @param label The label to compare against, must not be {@code null}.
+     * @return {@code true} if this scope's identifier equals the given label, {@code false} otherwise.
      */
     default boolean is(String label) {
         return getId().equals(label);
@@ -41,6 +46,8 @@ public interface DependencyScope {
 
     /**
      * Is it transitive scope?
+     *
+     * @return {@code true} if dependencies in this scope are transitive, {@code false} otherwise.
      */
     boolean isTransitive();
 }

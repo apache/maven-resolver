@@ -76,6 +76,11 @@ public final class RepositoryPolicy {
     /**
      * Creates a new policy with the specified settings (uses same update policy for data and metadata, retains old
      * resolver behaviour).
+     *
+     * @param enabled A flag whether the associated repository should be accessed or not.
+     * @param updatePolicy The update interval after which locally cached data from the repository is considered
+     *            stale and should be re-fetched, may be {@code null}.
+     * @param checksumPolicy The way checksum verification should be handled, may be {@code null}.
      */
     public RepositoryPolicy(boolean enabled, String updatePolicy, String checksumPolicy) {
         this(enabled, updatePolicy, updatePolicy, checksumPolicy);
@@ -115,6 +120,7 @@ public final class RepositoryPolicy {
      *
      * @see #getArtifactUpdatePolicy()
      * @see #getMetadataUpdatePolicy()
+     * @return The update policy for locally cached artifacts, never {@code null}.
      * @deprecated This method should not be used. Since version 2 Resolver internally distinguishes between artifact
      * update policy and metadata update policy. This method was left only to preserve binary compatibility, and in
      * reality invokes {@link #getArtifactUpdatePolicy()}.

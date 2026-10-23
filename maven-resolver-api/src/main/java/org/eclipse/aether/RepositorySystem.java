@@ -342,6 +342,7 @@ public interface RepositorySystem extends Closeable {
      * associated with its creator {@link RepositorySystem} instance, and may be used only with that given instance and
      * only within the lifespan of it, and after use should be closed.
      *
+     * @return A new session builder, never {@code null}.
      * @since 2.0.0
      */
     RepositorySystemSession.SessionBuilder createSessionBuilder();

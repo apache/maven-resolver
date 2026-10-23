@@ -16,39 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.internal.impl.filter.ruletree;
+package org.eclipse.aether.transport.jetty;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.IOException;
+import java.net.URI;
 
-/**
- * A tree structure with rules.
- */
-abstract class Node<N extends Node<?>> {
-    protected final String name;
-    protected final ConcurrentHashMap<String, N> siblings;
+import org.eclipse.aether.util.connector.transport.TransporterUtils;
+import org.eclipse.jetty.client.Request;
 
-    protected Node(String name) {
-        this.name = name;
-        this.siblings = new ConcurrentHashMap<>();
-    }
+final class SameAuthorityRedirectGuard implements Request.QueuedListener {
+    private final URI repositoryUri;
 
-    public String getName() {
-        return name;
-    }
-
-    public boolean isLeaf() {
-        return siblings.isEmpty();
+    SameAuthorityRedirectGuard(URI repositoryUri) {
+        this.repositoryUri = repositoryUri;
     }
 
     @Override
-    public String toString() {
-        return name;
-    }
-
-    public void dump(String prefix) {
-        System.out.println(prefix + this);
-        for (N node : siblings.values()) {
-            node.dump(prefix + "  ");
+    public void onQueued(Request request) {
+        URI target = request.getURI();
+        if (target == null || !TransporterUtils.isSameAuthority(repositoryUri, target)) {
+            request.abort(new IOException("Refusing to follow redirect to different authority: " + target));
         }
     }
 }

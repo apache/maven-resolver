@@ -104,14 +104,20 @@ class PathProcessorSupportTest {
     }
 
     @Test
-    void retryingMoveNeverTruncatesTargetOnFailure(@TempDir Path tempDir) throws IOException {
+    void retryingMoveNeverTruncatesTargetOnFailureWhenFallbackDisabled(@TempDir Path tempDir) throws IOException {
         AtomicInteger attempts = new AtomicInteger();
+        // Subclass that disables the classic-copy fallback so the strict no-truncate guarantee is maintained
         PathProcessorSupport subject = new PathProcessorSupport() {
             @Override
             protected void fileSystemMove(Path source, Path target, StandardCopyOption... copyOptions)
                     throws IOException {
                 attempts.incrementAndGet();
                 throw new AccessDeniedException(target.toString());
+            }
+
+            @Override
+            protected boolean isClassicCopyFallbackEnabled() {
+                return false;
             }
         };
         Path source = write(tempDir, "source.txt", "new content");
@@ -124,6 +130,29 @@ class PathProcessorSupportTest {
         // it never opens the final path with truncation
         assertEquals("old content", read(target));
         assertEquals("new content", read(source));
+    }
+
+    @Test
+    void retryingMoveFallsBackToClassicCopyOnPersistentLock(@TempDir Path tempDir) throws IOException {
+        AtomicInteger attempts = new AtomicInteger();
+        // Simulate an IDE holding the target .jar open — all rename attempts fail with AccessDeniedException.
+        // The classic-copy fallback is enabled (default), so the build should complete.
+        PathProcessorSupport subject = new PathProcessorSupport() {
+            @Override
+            protected void fileSystemMove(Path source, Path target, StandardCopyOption... copyOptions)
+                    throws IOException {
+                attempts.incrementAndGet();
+                throw new AccessDeniedException(target.toString());
+            }
+        };
+        Path source = write(tempDir, "source.txt", "new content");
+        Path target = write(tempDir, "target.txt", "old content");
+
+        // Should succeed via the classic-copy fallback, not throw
+        subject.retryingMove(source, target, ATOMIC_OPTIONS);
+
+        assertEquals(PathProcessorSupport.WINDOWS_MOVE_ATTEMPTS, attempts.get(), "all retry attempts must be made");
+        assertEquals("new content", read(target), "target must contain the new content after classic-copy fallback");
     }
 
     @Test

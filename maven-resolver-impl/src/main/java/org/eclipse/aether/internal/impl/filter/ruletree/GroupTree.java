@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl.filter.ruletree;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -62,7 +63,7 @@ import static java.util.stream.Collectors.toList;
  * In case of conflicting rules, parsing happens by "last wins", so line closer to last line in file "wins", and conflicting
  * line value is lost.
  */
-public class GroupTree extends Node<GroupTree> {
+public class GroupTree {
     /**
      * Creates root, that is special: accept is never null.
      */
@@ -80,11 +81,14 @@ public class GroupTree extends Node<GroupTree> {
         return Arrays.stream(groupId.split("\\.")).filter(e -> !e.isEmpty()).collect(toList());
     }
 
+    private final String name;
+    private final ConcurrentHashMap<String, GroupTree> children;
     private boolean stop;
     private Boolean accept;
 
     private GroupTree(String name) {
-        super(name);
+        this.name = name;
+        this.children = new ConcurrentHashMap<>();
     }
 
     public int loadNodes(Stream<String> linesStream) {
@@ -116,10 +120,10 @@ public class GroupTree extends Node<GroupTree> {
             }
             List<String> groupElements = elementsOfGroup(line);
             for (String groupElement : groupElements.subList(0, groupElements.size() - 1)) {
-                currentNode = currentNode.siblings.computeIfAbsent(groupElement, GroupTree::new);
+                currentNode = currentNode.children.computeIfAbsent(groupElement, GroupTree::new);
             }
             String lastElement = groupElements.get(groupElements.size() - 1);
-            currentNode = currentNode.siblings.computeIfAbsent(lastElement, GroupTree::new);
+            currentNode = currentNode.children.computeIfAbsent(lastElement, GroupTree::new);
             currentNode.stop = stop;
             currentNode.accept = accept;
             return true;
@@ -134,7 +138,7 @@ public class GroupTree extends Node<GroupTree> {
         GroupTree currentNode = this;
         for (String groupElement : groupElements) {
             current.add(groupElement);
-            currentNode = currentNode.siblings.get(groupElement);
+            currentNode = currentNode.children.get(groupElement);
             if (currentNode == null) {
                 // we stepped off the tree; use value we got so far
                 break;
@@ -149,18 +153,5 @@ public class GroupTree extends Node<GroupTree> {
         }
         // use 'accepted', if defined; otherwise fallback to root (it always has 'allow' set)
         return accepted != null ? accepted : this.accept;
-    }
-
-    @Override
-    public String toString() {
-        return (accept != null ? (accept ? "+" : "-") : "?") + (stop ? "=" : "") + name;
-    }
-
-    @Override
-    public void dump(String prefix) {
-        System.out.println(prefix + this);
-        for (GroupTree node : siblings.values()) {
-            node.dump(prefix + "  ");
-        }
     }
 }

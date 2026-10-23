@@ -116,6 +116,140 @@ public final class HttpTransporterUtils {
     }
 
     /**
+     * Getter for {@link ConfigurationProperties#HTTP_REDIRECT_MODE}.
+     *
+     * @since 2.0.25
+     */
+    public static ConfigurationProperties.RedirectMode getRedirectMode(
+            RepositorySystemSession session, RemoteRepository repository) {
+        return getRedirectMode(session, repository, null);
+    }
+
+    /**
+     * Getter for {@link ConfigurationProperties#HTTP_REDIRECT_MODE}, with an optional deprecated
+     * transport-specific property as a fallback.
+     *
+     * @since 2.0.25
+     */
+    public static ConfigurationProperties.RedirectMode getRedirectMode(
+            RepositorySystemSession session, RemoteRepository repository, String deprecatedTransportProperty) {
+        String[] configurationProperties = deprecatedTransportProperty == null
+                ? new String[] {
+                    ConfigurationProperties.HTTP_REDIRECT_MODE + "." + repository.getId(),
+                    ConfigurationProperties.HTTP_REDIRECT_MODE
+                }
+                : new String[] {
+                    ConfigurationProperties.HTTP_REDIRECT_MODE + "." + repository.getId(),
+                    ConfigurationProperties.HTTP_REDIRECT_MODE,
+                    deprecatedTransportProperty + "." + repository.getId(),
+                    deprecatedTransportProperty
+                };
+        return ConfigUtils.getEnum(
+                session,
+                ConfigurationProperties.RedirectMode.class,
+                ConfigurationProperties.DEFAULT_REDIRECT_MODE,
+                configurationProperties);
+    }
+
+    /**
+     * Getter for {@link ConfigurationProperties#HTTP_REDIRECT_MODE}, with an optional deprecated
+     * transport-specific boolean property as a fallback. A {@code true} legacy value maps to {@code ANY}, and a
+     * {@code false} value maps to {@code NONE}.
+     *
+     * @since 2.0.25
+     */
+    public static ConfigurationProperties.RedirectMode getRedirectMode(
+            RepositorySystemSession session,
+            RemoteRepository repository,
+            boolean defaultFollowRedirects,
+            String deprecatedTransportProperty) {
+        ConfigurationProperties.RedirectMode mode = ConfigUtils.getEnum(
+                session,
+                ConfigurationProperties.RedirectMode.class,
+                null,
+                ConfigurationProperties.HTTP_REDIRECT_MODE + "." + repository.getId(),
+                ConfigurationProperties.HTTP_REDIRECT_MODE);
+        if (mode != null) {
+            return mode;
+        }
+        boolean followRedirects = ConfigUtils.getBoolean(
+                session,
+                defaultFollowRedirects,
+                deprecatedTransportProperty + "." + repository.getId(),
+                deprecatedTransportProperty);
+        return followRedirects ? ConfigurationProperties.RedirectMode.ANY : ConfigurationProperties.RedirectMode.NONE;
+    }
+
+    /**
+     * Getter for {@link ConfigurationProperties#HTTP_ORIGIN_SCOPED_HEADERS}.
+     *
+     * @since 2.0.25
+     */
+    public static boolean isOriginScopedHeaders(RepositorySystemSession session, RemoteRepository repository) {
+        return isOriginScopedHeaders(session, repository, null);
+    }
+
+    /**
+     * Getter for {@link ConfigurationProperties#HTTP_ORIGIN_SCOPED_HEADERS}, with an optional deprecated
+     * transport-specific property as a fallback.
+     *
+     * @since 2.0.25
+     */
+    public static boolean isOriginScopedHeaders(
+            RepositorySystemSession session, RemoteRepository repository, String deprecatedTransportProperty) {
+        return getHttpBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_ORIGIN_SCOPED_HEADERS,
+                ConfigurationProperties.HTTP_ORIGIN_SCOPED_HEADERS,
+                repository,
+                deprecatedTransportProperty);
+    }
+
+    private static boolean getHttpBoolean(
+            RepositorySystemSession session,
+            boolean defaultValue,
+            String configurationProperty,
+            RemoteRepository repository,
+            String deprecatedTransportProperty) {
+        if (deprecatedTransportProperty == null) {
+            return ConfigUtils.getBoolean(
+                    session, defaultValue, configurationProperty + "." + repository.getId(), configurationProperty);
+        }
+        return ConfigUtils.getBoolean(
+                session,
+                defaultValue,
+                configurationProperty + "." + repository.getId(),
+                configurationProperty,
+                deprecatedTransportProperty + "." + repository.getId(),
+                deprecatedTransportProperty);
+    }
+
+    /**
+     * Getter for {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT}.
+     *
+     * @since 2.0.25
+     */
+    public static boolean isFollowInsecureRedirect(RepositorySystemSession session, RemoteRepository repository) {
+        return isFollowInsecureRedirect(session, repository, null);
+    }
+
+    /**
+     * Getter for {@link ConfigurationProperties#HTTP_FOLLOW_INSECURE_REDIRECT}, with an optional deprecated
+     * transport-specific property as a fallback.
+     *
+     * @since 2.0.25
+     */
+    public static boolean isFollowInsecureRedirect(
+            RepositorySystemSession session, RemoteRepository repository, String deprecatedTransportProperty) {
+        return getHttpBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_FOLLOW_INSECURE_REDIRECT,
+                ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT,
+                repository,
+                deprecatedTransportProperty);
+    }
+
+    /**
      * Getter for {@link ConfigurationProperties#HTTP_PREEMPTIVE_AUTH}.
      */
     public static boolean isHttpPreemptiveAuth(RepositorySystemSession session, RemoteRepository repository) {

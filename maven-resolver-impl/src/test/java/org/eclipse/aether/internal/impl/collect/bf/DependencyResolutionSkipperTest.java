@@ -30,6 +30,7 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
+import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -98,6 +99,29 @@ public class DependencyResolutionSkipperTest {
                     .collect(Collectors.toList());
             assertEquals(1, skipped.size());
             assertSame(skipped.get(0).current, c3Node);
+        }
+    }
+
+    @Test
+    void testVersionRangeDoesNotReplaceVersionlessWinner() throws Exception {
+        DependencyNode pinned = makeDependencyNode("some-group", "A", "1.0");
+        DefaultDependencyNode ranged = (DefaultDependencyNode) makeDependencyNode("some-group", "A", "3.0");
+        ranged.setVersionConstraint(new GenericVersionScheme().parseVersionConstraint("[2.0,4.0)"));
+        DependencyNode pinnedAgain = makeDependencyNode("some-group", "A", "1.0");
+
+        try (DependencyResolutionSkipper.DefaultDependencyResolutionSkipper skipper =
+                DependencyResolutionSkipper.defaultGACESkipper()) {
+            assertFalse(skipper.skipResolution(pinned, new ArrayList<>()));
+            skipper.cache(pinned, new ArrayList<>());
+
+            assertFalse(skipper.skipResolution(ranged, new ArrayList<>()));
+            skipper.cache(ranged, new ArrayList<>());
+
+            assertTrue(skipper.skipResolution(pinnedAgain, new ArrayList<>()));
+            DependencyResolutionSkipper.DependencyResolutionResult result =
+                    skipper.getResults().get(pinnedAgain);
+            assertTrue(result.skippedAsDuplicate);
+            assertFalse(result.skippedAsVersionConflict);
         }
     }
 

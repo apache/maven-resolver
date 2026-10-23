@@ -89,6 +89,13 @@ public final class ConfigurationProperties {
     public static final String PREFIX_UTIL = PREFIX_AETHER + "util.";
 
     /**
+     * Prefix for installer related configurations. <em>For internal use only.</em>
+     *
+     * @since 2.0.25
+     */
+    public static final String PREFIX_INSTALLER = PREFIX_AETHER + "installer.";
+
+    /**
      * Prefix for transport related configurations. <em>For internal use only.</em>
      *
      * @since 2.0.0
@@ -253,15 +260,95 @@ public final class ConfigurationProperties {
      * a redirect - including redirects that leave the repository origin. Avoid placing credentials (for example
      * {@code Authorization}, cookies or private token headers) in this map where repository authentication can be
      * used instead: repository authentication is negotiated per host. All shipped HTTP transports scope configured
-     * headers to the repository origin by default, see the per-transport {@code originScopedHeaders} configuration
-     * keys ({@code aether.transport.apache.originScopedHeaders}, {@code aether.transport.jdk.originScopedHeaders},
-     * {@code aether.transport.jetty.originScopedHeaders}).
+     * headers to the repository origin by default, controlled by {@link #HTTP_ORIGIN_SCOPED_HEADERS}.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.util.Map}
      * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_HEADERS = PREFIX_TRANSPORT_HTTP + "headers";
+
+    /**
+     * The mode that controls how HTTP redirects are handled. By default, any redirect is followed, but this can be
+     * restricted to only redirects within the same authority or no redirects at all.
+     *
+     * @since 2.0.25
+     */
+    public enum RedirectMode {
+        /**
+         * No redirects allowed.
+         */
+        NONE,
+        /**
+         * Redirects only within same authority.
+         */
+        SAME_AUTHORITY,
+        /**
+         * Any redirect is followed.
+         */
+        ANY
+    }
+
+    /**
+     * Optionally restricts following HTTP redirects to either the same authority or not allowing any redirects at all.
+     * By default any redirect is followed.
+     * Blocked redirects lead to exceptions being thrown by the transport.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link ConfigurationProperties.RedirectMode}
+     * @configurationDefaultValue {@link #DEFAULT_REDIRECT_MODE}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.25
+     * @see #HTTP_ORIGIN_SCOPED_HEADERS
+     * @see #HTTP_FOLLOW_INSECURE_REDIRECT
+     */
+    public static final String HTTP_REDIRECT_MODE = PREFIX_TRANSPORT_HTTP + "redirectMode";
+
+    /**
+     * Default value if {@link #HTTP_REDIRECT_MODE} is not set.
+     *
+     * @since 2.0.25
+     */
+    public static final RedirectMode DEFAULT_REDIRECT_MODE = RedirectMode.ANY;
+
+    /**
+     * If enabled (default), HTTP transports only send configured request headers and preemptively applied
+     * {@code Authorization} on requests targeting the repository origin.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_ORIGIN_SCOPED_HEADERS}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.25
+     * @see #HTTP_REDIRECT_MODE
+     */
+    public static final String HTTP_ORIGIN_SCOPED_HEADERS = PREFIX_TRANSPORT_HTTP + "originScopedHeaders";
+
+    /**
+     * The default value for {@link #HTTP_ORIGIN_SCOPED_HEADERS}: {@code true}.
+     *
+     * @since 2.0.25
+     */
+    public static final boolean DEFAULT_HTTP_ORIGIN_SCOPED_HEADERS = true;
+
+    /**
+     * If enabled, HTTP transports follow redirects that downgrade the protocol from HTTPS to HTTP. Disabled by
+     * default because such a downgrade removes transport encryption from artifact and checksum bytes.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_FOLLOW_INSECURE_REDIRECT}
+     * @configurationRepoIdSuffix Yes
+     * @since 2.0.25
+     */
+    public static final String HTTP_FOLLOW_INSECURE_REDIRECT = PREFIX_TRANSPORT_HTTP + "followInsecureRedirect";
+
+    /**
+     * The default value for {@link #HTTP_FOLLOW_INSECURE_REDIRECT}: {@code false}.
+     *
+     * @since 2.0.25
+     */
+    public static final boolean DEFAULT_HTTP_FOLLOW_INSECURE_REDIRECT = false;
 
     /**
      * The encoding/charset to use when exchanging credentials with HTTP servers. Besides this general key, clients may
@@ -523,13 +610,21 @@ public final class ConfigurationProperties {
      */
     public static final String HTTPS_SECURITY_MODE_INSECURE = "insecure";
 
+    /**
+     * HTTP protocol version to use for the HTTP transport.
+     *
+     * @since 2.0.21
+     */
     public enum HttpVersion {
         /**
          * The default HTTP version supported by the respective transporter (the most recent stable one, usually HTTP/2)
          */
         DEFAULT,
+        /** HTTP/1.1. */
         HTTP_1_1,
+        /** HTTP/2. */
         HTTP_2,
+        /** HTTP/3. */
         HTTP_3,
         /**
          * The maximum HTTP version supported by the respective transporter (may be unstable).
@@ -618,6 +713,11 @@ public final class ConfigurationProperties {
      */
     public static final String REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = PREFIX_SYSTEM + "repositoryKeyFunction";
 
+    /**
+     * Default value if {@link #REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION} is not set.
+     *
+     * @since 2.0.14
+     */
     public static final String DEFAULT_REPOSITORY_SYSTEM_REPOSITORY_KEY_FUNCTION = "nid";
 
     /**
@@ -645,6 +745,11 @@ public final class ConfigurationProperties {
     public static final String REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION =
             PREFIX_SYSTEM + "trackingRepositoryKeyFunction";
 
+    /**
+     * Default value if {@link #REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION} is not set.
+     *
+     * @since 2.0.23
+     */
     public static final String DEFAULT_REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION = "nid_hurl";
 
     /**
@@ -688,6 +793,37 @@ public final class ConfigurationProperties {
      * @since 2.0.19
      */
     public static final boolean DEFAULT_HTTP_SEND_RFC9457_ACCEPT = true;
+
+    /**
+     * A flag indicating whether artifact installation should use hard links instead of copying files. When enabled,
+     * the installer creates a hard link from the source artifact (build output) to its destination in the local
+     * repository, avoiding a full file copy and saving disk I/O and space for large JARs.
+     * <p>
+     * Hard links require that the source and target paths reside on the <strong>same filesystem volume</strong>.
+     * When they do not (e.g. {@code ~/.m2} is on a separate mount, or a custom in-memory filesystem such as
+     * Jimfs is used for testing), the JVM throws {@link java.lang.UnsupportedOperationException},
+     * {@link IllegalArgumentException} (provider mismatch), or {@link java.io.IOException} (cross-device),
+     * and the installer automatically falls back to a regular file copy, so the build is never broken.
+     * <p>
+     * <strong>Note:</strong> hard links share an inode. Any tool that overwrites the build output file
+     * <em>in-place</em> (rather than via an atomic rename) would silently corrupt the cached artifact.
+     * Standard Maven build tooling always replaces output via rename, so this is generally safe. Set this
+     * property to {@code false} if your environment performs in-place writes to build output files.
+     *
+     * @since 2.0.25
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_INSTALLER_HARD_LINK}
+     * @configurationRepoIdSuffix No
+     */
+    public static final String INSTALLER_HARD_LINK = PREFIX_INSTALLER + "hardLink";
+
+    /**
+     * The default value for {@link #INSTALLER_HARD_LINK}: {@code true}.
+     *
+     * @since 2.0.25
+     */
+    public static final boolean DEFAULT_INSTALLER_HARD_LINK = true;
 
     private ConfigurationProperties() {
         // hide constructor

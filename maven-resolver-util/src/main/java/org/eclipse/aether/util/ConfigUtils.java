@@ -352,19 +352,33 @@ public final class ConfigUtils {
      * @param enumClass the enum class to read, must not be {@code null}
      * @param defaultValue the default value to return in case none of the property keys is set to a convertible String or T.
      * @param keys the property keys to read, must not be {@code null}. The specified keys are read one after one until
-     *            a enum type {@code T} or a string (parsed using {@link Enum#valueOf(Class, String)} is found.
+     *            a enum type {@code T} or a string (compared case-insensitively against enum constant names;
+     *            if no constant matches, an {@link IllegalArgumentException} is thrown) is found.
      * @return the property value or {@code defaultValue} if none found
+     * @throws IllegalArgumentException if a property value is found but cannot be converted to the specified enum type
      * @since 2.0.21
      */
     public static <T extends Enum<T>> T getEnum(
             Map<?, ?> properties, Class<T> enumClass, T defaultValue, String... keys) {
         for (String key : keys) {
             Object value = properties.get(key);
-
+            if (value == null) {
+                continue;
+            }
             if (enumClass.isInstance(value)) { // validate type
                 return enumClass.cast(value);
             } else if (value instanceof String) {
-                return Enum.valueOf(enumClass, (String) value);
+                String enumName = (String) value;
+                for (T enumConstant : enumClass.getEnumConstants()) {
+                    if (enumConstant.name().equalsIgnoreCase(enumName)) {
+                        return enumConstant;
+                    }
+                }
+                throw new IllegalArgumentException("Invalid enum value '" + enumName + "' for key '" + key
+                        + "' in enum class " + enumClass.getName());
+            } else {
+                throw new IllegalArgumentException("Invalid value type for key '" + key + "' in enum class "
+                        + enumClass.getName() + ": " + value.getClass().getName());
             }
         }
         return defaultValue;
@@ -379,7 +393,9 @@ public final class ConfigUtils {
      * @param enumClass the enum class to read, must not be {@code null}
      * @param defaultValue the default value to return in case none of the property keys is set to a convertible String or T.
      * @param keys the property keys to read, must not be {@code null}. The specified keys are read one after one until
-     *            a enum type {@code T} or a string (parsed using {@link Enum#valueOf(Class, String)} is found.
+     *            a enum type {@code T} or a string (compared case-insensitively against enum constant names;
+     *            if no constant matches, an {@link IllegalArgumentException} is thrown) is found.
+     * @throws IllegalArgumentException if a property value is found but cannot be converted to the specified enum type
      * @return the property value or {@code defaultValue} if none found
      * @since 2.0.21
      */

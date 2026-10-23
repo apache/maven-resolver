@@ -45,6 +45,11 @@ public class PrefixesSourceTest {
         assertEquals("OK", source.message());
         assertEquals(3, source.entries().size());
 
+        source = PrefixesSource.of(origin, prefixes.resolve("overlapping.txt"));
+        assertTrue(source.valid());
+        assertEquals("OK", source.message());
+        assertEquals(3, source.entries().size());
+
         source = PrefixesSource.of(origin, prefixes.resolve("empty.txt"));
         assertFalse(source.valid());
         assertEquals("No expected magic in file", source.message());

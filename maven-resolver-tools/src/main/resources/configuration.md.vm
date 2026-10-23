@@ -52,7 +52,7 @@ To modify this file, edit the template and regenerate.
 | Key | Type | Description | Default Value | Since | Supports Repo ID suffix | Source |
 | --- | --- | --- | --- | --- | --- | --- |
 #foreach($key in $keys)
-| <a id="$key.key"></a>`$key.key` | #if ($key.configurationTypeJavadocUrl) [`$key.configurationType`]($key.configurationTypeJavadocUrl) #else `$key.configurationType` #end | #if($key.deprecated) **Deprecated**. <em>$key.deprecated</em><br/>#end$key.description | #value( $key.defaultValue ) | $key.since |  $key.supportRepoIdSuffix  | $key.configurationSource |
+| <a id="$key.key"></a>`$key.key` | #if ($key.configurationTypeJavadocUrl) [`$key.configurationType`]($key.configurationTypeJavadocUrl) #else `$key.configurationType` #end | #if($key.deprecated) **Deprecated**. <em>$key.deprecated</em><br/>#end$key.description#if($key.see)<br/>**See also:**<br/>$key.see<br/>#end | #value( $key.defaultValue ) | $key.since |  $key.supportRepoIdSuffix  | $key.configurationSource |
 #end
 
 #[[
@@ -62,13 +62,13 @@ All properties which have `yes` in the column `Supports Repo ID Suffix` can be o
 
 If the value is not given in the target type the following conversions are applied.
 
-From | To | With
+From | To | How
 --- | --- | ---
 `String` | `boolean` | [`Boolean.parseBoolean(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String))
 `String` | `int` | [`Integer.parseInt(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Integer.html#parseInt(java.lang.String))
 `String` | `long` | [`Long.parseLong(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Long.html#parseLong(java.lang.String))
 `String` | `float` | [`Float.parseFloat(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Float.html#parseFloat(java.lang.String))
-`String` | `T extends Enum<T>` | [`Enum.valueOf(...)`](https://docs.oracle.com/javase/7/docs/api/java/lang/Enum.html#valueOf(java.lang.Class,%20java.lang.String))
+`String` | `T extends Enum<T>` | Each [`Enum.name()`](https://docs.oracle.com/javase/7/docs/api/java/lang/Enum.html#name()) compared with `String.equalsIgnoreCase(...)` until a match is found. If no match is found an `IllegalArgumentException` is thrown.
 
 ## Set Configuration from Apache Maven
 

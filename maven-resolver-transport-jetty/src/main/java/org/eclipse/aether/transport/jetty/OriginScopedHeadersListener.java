@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.util.connector.transport.TransporterUtils;
 import org.eclipse.jetty.client.Request;
 
 /**
@@ -38,7 +40,7 @@ import org.eclipse.jetty.client.Request;
  * not the repository origin (same scheme, case-insensitive host and effective port) confines them to the
  * repository itself. Challenge-based authentication from the authentication store is URI-scoped by Jetty already
  * and is unaffected. Can be disabled via
- * {@link JettyTransporterConfigurationKeys#CONFIG_PROP_ORIGIN_SCOPED_HEADERS}.
+ * {@link ConfigurationProperties#HTTP_ORIGIN_SCOPED_HEADERS}.
  * <p>
  * Registered as a {@link Request.HeadersListener} rather than a {@link Request.QueuedListener} so that the
  * callback fires <em>after</em> Jetty's content decoder factories have populated the {@code Accept-Encoding}
@@ -64,36 +66,12 @@ final class OriginScopedHeadersListener implements Request.HeadersListener {
         }
         URI target = request.getURI();
         // fail closed: when the target cannot be determined, do not send the scoped headers
-        if (target == null || !isSameOrigin(origin, target)) {
+        if (target == null || !TransporterUtils.isSameOrigin(origin, target)) {
             request.headers(headers -> {
                 for (String scopedHeaderName : scopedHeaderNames) {
                     headers.remove(scopedHeaderName);
                 }
             });
         }
-    }
-
-    static boolean isSameOrigin(URI origin, URI target) {
-        if (origin.getScheme() == null
-                || origin.getHost() == null
-                || target.getScheme() == null
-                || target.getHost() == null) {
-            return false;
-        }
-        return origin.getScheme().equalsIgnoreCase(target.getScheme())
-                && origin.getHost().equalsIgnoreCase(target.getHost())
-                && effectivePort(origin.getScheme(), origin.getPort())
-                        == effectivePort(target.getScheme(), target.getPort());
-    }
-
-    /**
-     * Determines the effective port: the explicit port if present, otherwise the default port implied by the
-     * scheme.
-     */
-    static int effectivePort(String scheme, int port) {
-        if (port >= 0) {
-            return port;
-        }
-        return "https".equalsIgnoreCase(scheme) ? 443 : 80;
     }
 }
