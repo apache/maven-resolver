@@ -39,11 +39,12 @@ public final class RepositoryUriUtils {
      */
     public static URI toUri(String repositoryUrl) {
         final String protocol = protocol(repositoryUrl);
-        if ("file".equals(protocol)
-                || protocol.isEmpty()
-                || protocol.length() == 1
-                        && (Character.isLetter(protocol.charAt(0)) && Character.isUpperCase(protocol.charAt(0)))) {
-            // Use Path.of() to parse the local path lexically, without resolving against the JVM
+        if ("file".equals(protocol)) {
+            // Parse as a proper file: URI so that percent-encoding and Windows paths like
+            // file:/C:/... or file:///C:/... are handled correctly by the JDK.
+            return Paths.get(URI.create(repositoryUrl)).toUri();
+        } else if (protocol.isEmpty() || isWindowsDriveLetter(protocol)) {
+            // Use Paths.get() to parse the local path lexically, without resolving against the JVM
             // working directory via File (which may be on a different drive on Windows).
             return Paths.get(basedir(repositoryUrl)).toUri();
         } else {
@@ -78,11 +79,9 @@ public final class RepositoryUriUtils {
         String retValue;
 
         if (!protocol.isEmpty()) {
-            // A single uppercase letter is a Windows drive letter (e.g. "C:\path"), not a URL scheme.
-            // Keep it in the path; do not strip it as if it were a protocol prefix.
-            if (protocol.length() == 1
-                    && Character.isLetter(protocol.charAt(0))
-                    && Character.isUpperCase(protocol.charAt(0))) {
+            // A single letter (case-insensitive) is a Windows drive letter (e.g. "C:\path" or "c:\path"),
+            // not a URL scheme. Keep it in the path; do not strip it as if it were a protocol prefix.
+            if (isWindowsDriveLetter(protocol)) {
                 retValue = url;
             } else {
                 retValue = url.substring(protocol.length() + 1);
@@ -121,6 +120,15 @@ public final class RepositoryUriUtils {
         }
 
         return retValue.trim();
+    }
+
+    /**
+     * Returns {@code true} if the given protocol token is a single ASCII letter, which on Windows indicates
+     * a drive letter (e.g. {@code C} in {@code C:\path} or {@code c} in {@code c:/path}) rather than a URL scheme.
+     * The check is locale-independent.
+     */
+    private static boolean isWindowsDriveLetter(String protocol) {
+        return protocol.length() == 1 && Character.isLetter(protocol.charAt(0));
     }
 
     /**
