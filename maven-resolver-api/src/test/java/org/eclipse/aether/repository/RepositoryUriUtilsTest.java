@@ -25,6 +25,7 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@link RepositoryUriUtils#toUri(String)}, focusing on Windows drive-letter handling.
@@ -133,6 +134,44 @@ public class RepositoryUriUtilsTest {
         URI uri = RepositoryUriUtils.toUri("https://repo.example.com/maven");
         assertEquals("https", uri.getScheme());
         assertEquals("repo.example.com", uri.getHost());
+    }
+
+    /**
+     * An opaque {@code file:} URL with an unencoded space (e.g. {@code file:repo space}) must not throw
+     * and must resolve to an absolute path that retains the space.
+     * Regression guard for the {@code URI.create()} path that rejects unencoded spaces.
+     */
+    @Test
+    void fileUrlOpaqueWithUnencodedSpace() {
+        URI uri = RepositoryUriUtils.toUri("file:repo space");
+        assertEquals("file", uri.getScheme());
+        // path must contain the space, not a percent-encoded form
+        assertTrue(
+                uri.getPath().contains(" ") || uri.getSchemeSpecificPart().contains(" "),
+                "Expected a space in the resolved URI but got: " + uri);
+    }
+
+    /**
+     * A hierarchical {@code file:} URL with an unencoded space (e.g. {@code file:/repo space}) must not throw
+     * and must resolve to a path that retains the space.
+     * Regression guard for the multi-arg {@code URI} constructor path.
+     */
+    @Test
+    void fileUrlHierarchicalWithUnencodedSpace() {
+        URI uri = RepositoryUriUtils.toUri("file:/repo space");
+        assertEquals("file", uri.getScheme());
+        assertTrue(uri.getPath().contains(" "), "Expected a space in the URI path but got: " + uri);
+    }
+
+    /**
+     * A {@code file:} URL with a percent-encoded space (e.g. {@code file:repo%20space}) must decode the space
+     * and resolve to an absolute path containing a literal space.
+     */
+    @Test
+    void fileUrlWithPercentEncodedSpace() {
+        URI uri = RepositoryUriUtils.toUri("file:repo%20space");
+        assertEquals("file", uri.getScheme());
+        assertTrue(uri.getPath().contains(" "), "Expected decoded space in the URI path but got: " + uri);
     }
 
     // ------------------------------------------------------------------
