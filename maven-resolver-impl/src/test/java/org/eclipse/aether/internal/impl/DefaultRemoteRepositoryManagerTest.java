@@ -34,12 +34,14 @@ import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.eclipse.aether.util.repository.DefaultMirrorSelector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -138,6 +140,136 @@ public class DefaultRemoteRepositoryManagerTest {
         assertEquals(2, result.size());
         assertEqual(dominant, result.get(0));
         assertEqual(recessive1, result.get(1));
+    }
+
+    @Test
+    public void testAggregateMirrorReposPreparedMirrorIsNotMirroredAgain() {
+        for (String corporatePattern : Arrays.asList("external:*", "*")) {
+            session.setMirrorSelector(new DefaultMirrorSelector()
+                    .add(
+                            "central-exception",
+                            "https://central-exception.invalid/",
+                            "test",
+                            false,
+                            false,
+                            "central",
+                            "*")
+                    .add("corporate", "https://corporate.invalid/", "test", false, false, corporatePattern, "*"));
+            RemoteRepository central = newRepo(
+                            "central",
+                            "https://repo.maven.apache.org/maven2",
+                            true,
+                            RepositoryPolicy.UPDATE_POLICY_DAILY,
+                            RepositoryPolicy.CHECKSUM_POLICY_WARN)
+                    .build();
+            RemoteRepository other = newRepo(
+                            "other",
+                            "https://other.invalid/",
+                            true,
+                            RepositoryPolicy.UPDATE_POLICY_DAILY,
+                            RepositoryPolicy.CHECKSUM_POLICY_WARN)
+                    .build();
+            List<RemoteRepository> prepared =
+                    manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(central), true);
+            assertEquals("central-exception", prepared.get(0).getId());
+
+            List<RemoteRepository> result = manager.aggregateRepositories(
+                    session, Collections.emptyList(), Arrays.asList(prepared.get(0), other), true);
+
+            assertEquals(2, result.size());
+            assertEqual(prepared.get(0), result.get(0));
+            assertEquals(Arrays.asList(central), result.get(0).getMirroredRepositories());
+            assertEquals("corporate", result.get(1).getId());
+            assertEquals(Arrays.asList(other), result.get(1).getMirroredRepositories());
+        }
+    }
+
+    @Test
+    public void testAggregateMirrorReposPreparedWildcardMirrorIsNotMirroredAgain() {
+        session.setMirrorSelector(
+                new DefaultMirrorSelector().add("corp", "https://corp.invalid/", "test", false, false, "*", "*"));
+        RemoteRepository central = new RemoteRepository.Builder("central", "test", "https://central.invalid/").build();
+        List<RemoteRepository> prepared =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(central), true);
+
+        List<RemoteRepository> result = manager.aggregateRepositories(session, Collections.emptyList(), prepared, true);
+
+        assertEquals("corp", result.get(0).getId());
+        assertEquals(Arrays.asList(central), result.get(0).getMirroredRepositories());
+    }
+
+    @Test
+    public void testAggregateMirrorReposPreparedMirrorsAreMerged() {
+        for (boolean prepareOther : new boolean[] {false, true}) {
+            session.setMirrorSelector(
+                    new DefaultMirrorSelector().add("corp", "https://corp.invalid/", "test", false, false, "*", "*"));
+            RemoteRepository central =
+                    new RemoteRepository.Builder("central", "test", "https://central.invalid/").build();
+            RemoteRepository other = new RemoteRepository.Builder("other", "test", "https://other.invalid/").build();
+            List<RemoteRepository> prepared =
+                    manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(central), true);
+            RemoteRepository second = prepareOther
+                    ? manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(other), true)
+                            .get(0)
+                    : other;
+
+            List<RemoteRepository> result = manager.aggregateRepositories(
+                    session, Collections.emptyList(), Arrays.asList(prepared.get(0), second), true);
+
+            assertEquals(1, result.size());
+            assertEquals("corp", result.get(0).getId());
+            assertEquals(Arrays.asList(central, other), result.get(0).getMirroredRepositories());
+        }
+    }
+
+    @Test
+    public void testAggregateMirrorReposPreparedHttpMirrorIsNotBlockedAgain() {
+        session.setMirrorSelector(new DefaultMirrorSelector()
+                .add("corp-http", "http://corp.invalid/", "test", false, false, "central", "*")
+                .add("maven-default-http-blocker", "http://0.0.0.0/", "test", false, true, "external:http:*", "*"));
+        RemoteRepository central = new RemoteRepository.Builder("central", "test", "https://central.invalid/").build();
+        List<RemoteRepository> prepared =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(central), true);
+
+        List<RemoteRepository> result = manager.aggregateRepositories(session, Collections.emptyList(), prepared, true);
+
+        assertEquals("corp-http", result.get(0).getId());
+        assertFalse(result.get(0).isBlocked());
+        assertEquals(Arrays.asList(central), result.get(0).getMirroredRepositories());
+    }
+
+    @Test
+    public void testAggregateMirrorReposPreparedBlockedMirrorRemainsBlocked() {
+        session.setMirrorSelector(new DefaultMirrorSelector()
+                .add("corp", "https://corp.invalid/", "test", false, false, "external:*,!foo", "*")
+                .add("maven-default-http-blocker", "http://0.0.0.0/", "test", false, true, "external:http:*", "*"));
+        RemoteRepository foo = new RemoteRepository.Builder("foo", "test", "http://foo.invalid/").build();
+        List<RemoteRepository> prepared =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(foo), true);
+        assertTrue(prepared.get(0).isBlocked());
+
+        List<RemoteRepository> result = manager.aggregateRepositories(session, Collections.emptyList(), prepared, true);
+
+        assertTrue(result.get(0).isBlocked());
+        assertEquals("maven-default-http-blocker", result.get(0).getId());
+        assertEquals(Arrays.asList(foo), result.get(0).getMirroredRepositories());
+    }
+
+    @Test
+    public void testAggregateMirrorReposDescriptorMirrorStillUsesSessionMirrors() {
+        session.setMirrorSelector(
+                new DefaultMirrorSelector().add("corp", "https://corp.invalid/", "test", false, false, "*", "*"));
+        RemoteRepository central = new RemoteRepository.Builder("central", "test", "https://central.invalid/").build();
+        List<RemoteRepository> prepared =
+                manager.aggregateRepositories(session, Collections.emptyList(), Arrays.asList(central), true);
+        session.setMirrorSelector(
+                new DefaultMirrorSelector().add("blocked", "http://0.0.0.0/", "test", false, true, "*", "*"));
+
+        List<RemoteRepository> result =
+                manager.aggregateRepositories(session, Collections.emptyList(), prepared, true, true);
+
+        assertEquals("blocked", result.get(0).getId());
+        assertTrue(result.get(0).isBlocked());
     }
 
     @Test
