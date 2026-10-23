@@ -43,6 +43,8 @@ public interface RemoteRepositoryManager {
      * @param recessiveRepositories The remote repositories to merge into the existing list, must not be {@code null}.
      * @param recessiveIsRaw {@code true} if the recessive repository definitions have not yet been subjected to mirror,
      *            proxy and authentication settings, {@code false} otherwise.
+     *            Repositories that already list mirrored repositories are not subjected to mirror selection again,
+     *            while proxy and authentication selection still apply.
      * @return The aggregated list of remote repositories, never {@code null}.
      * @see RepositorySystemSession#getMirrorSelector()
      * @see RepositorySystemSession#getProxySelector()
@@ -73,6 +75,8 @@ public interface RemoteRepositoryManager {
      * @param recessiveRepositories The remote repositories to merge into the existing list, must not be {@code null}.
      * @param recessiveIsRaw {@code true} if the recessive repository definitions have not yet been subjected to mirror,
      *            proxy and authentication settings, {@code false} otherwise.
+     *            Repositories that already list mirrored repositories are not subjected to mirror selection again
+     *            unless they are declared by a remote artifact descriptor; proxy and authentication selection still apply.
      * @param recessiveIsFromDescriptor {@code true} if the recessive repository definitions were declared by a remote
      *            artifact descriptor (POM) rather than by the build itself, {@code false} otherwise.
      * @return The aggregated list of remote repositories, never {@code null}.
