@@ -19,6 +19,7 @@
 package org.eclipse.aether.repository;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
 /**
@@ -40,17 +41,30 @@ public final class RepositoryUriUtils {
     public static URI toUri(String repositoryUrl) {
         final String protocol = protocol(repositoryUrl);
         if ("file".equals(protocol)) {
-            // Parse as a proper file: URI so that percent-encoding and Windows paths like
-            // file:/C:/... or file:///C:/... are handled correctly by the JDK.
-            // Normalize single-slash file URIs (file:/D:/...) to triple-slash (file:///D:/...)
-            // so that Paths.get(URI) works on Windows: the JDK strips the leading '/' when
-            // the authority component is empty (""), giving "D:/..." which Windows accepts.
-            String normalized = repositoryUrl;
-            if (repositoryUrl.startsWith("file:/") && !repositoryUrl.startsWith("file://")) {
-                // file:/X:/... → file:///X:/... (single-slash non-standard form)
-                normalized = "file://" + repositoryUrl.substring("file:".length());
+            // Use basedir() to normalize and extract the path from any file: URL form:
+            //   opaque (file:repo), with authority (file://host/path), unencoded spaces,
+            //   percent-encoded spaces, Windows drive letters (file:/C:/..., file:///C:/...).
+            // Then rebuild a well-formed file: URI using the multi-arg URI constructor
+            // (which percent-encodes the path automatically), and pass it to Paths.get(URI)
+            // so that Windows drive-letter handling is done by the JDK.
+            String path = basedir(repositoryUrl);
+            try {
+                URI uri;
+                if (path.isEmpty()
+                        || (!path.startsWith("/") && !isWindowsDriveLetter(String.valueOf(path.charAt(0))))) {
+                    // Relative path (e.g. from opaque file:repo): resolve against cwd via Paths.get(String)
+                    return Paths.get(path).toAbsolutePath().toUri();
+                }
+                // Absolute path or Windows drive letter path.
+                // Use authority="" to produce file:///path (three-slash form) which Paths.get(URI)
+                // handles correctly on Windows: the JDK treats the empty authority as localhost
+                // and strips the leading '/' before a Windows drive letter (e.g. /C:/... → C:/...).
+                uri = new URI("file", "", path, null, null);
+                return Paths.get(uri).toUri();
+            } catch (URISyntaxException e) {
+                // Should not happen since basedir() returns a clean path; fall back to string-based parse
+                return Paths.get(path).toUri();
             }
-            return Paths.get(URI.create(normalized)).toUri();
         } else if (protocol.isEmpty() || isWindowsDriveLetter(protocol)) {
             // Use Paths.get() to parse the local path lexically, without resolving against the JVM
             // working directory via File (which may be on a different drive on Windows).
