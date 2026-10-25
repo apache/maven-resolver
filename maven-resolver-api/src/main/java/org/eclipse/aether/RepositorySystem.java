@@ -245,6 +245,7 @@ public interface RepositorySystem {
      * to already carry any required authentication or proxy configuration. This method can be used to apply the
      * authentication/proxy configuration from a session to a bare repository definition to obtain the complete
      * repository definition for use in the resolution request.
+     * <p>
      * Repositories that already list mirrored repositories are not subjected to mirror selection again, while proxy
      * and authentication selection still apply.
      *
