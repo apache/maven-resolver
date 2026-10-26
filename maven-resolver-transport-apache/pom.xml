@@ -50,7 +50,7 @@
       <version>4.5.14</version>
       <exclusions>
         <exclusion>
-          <!-- using jcl-over-slf4j instead -->
+          <!-- the application provides a JCL implementation, such as jcl-over-slf4j -->
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
         </exclusion>
@@ -77,10 +77,11 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
+      <!-- optional: the application picks the JCL implementation (GH-2174) -->
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
-      <version>${version.slf4j}</version>
       <scope>runtime</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>

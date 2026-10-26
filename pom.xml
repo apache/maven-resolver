@@ -304,6 +304,11 @@
         <artifactId>slf4j-nop</artifactId>
         <version>${version.slf4j}</version>
       </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jcl-over-slf4j</artifactId>
+        <version>${version.slf4j}</version>
+      </dependency>
 
       <dependency>
         <groupId>com.google.jimfs</groupId>
