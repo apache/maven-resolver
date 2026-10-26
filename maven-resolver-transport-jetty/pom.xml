@@ -36,6 +36,19 @@
     <javaVersion>17</javaVersion>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <!-- TODO: remove once Jetty ships with 1.24.0 or newer (in 12.1.15+) -->
+      <!-- workaround for CVE-2026-111497 -->
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>brotli4j-bom</artifactId>
+        <version>1.24.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>
