@@ -386,9 +386,10 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
     /**
-     * The initial retry interval in millis of request to a remote server should be waited in case of
+     * The initial delay in milliseconds for retried request after receiving a response from remote server with HTTP codes
      * "too many requests" (HTTP codes 429 and 503). Accepts long as milliseconds. This value is used if remote server
-     * does not use {@code Retry-After} header, in which case Server value is obeyed.
+     * does not use {@code Retry-After} header, in which case the server value is obeyed.
+     * This delay is increased for every retry, up to {@link #HTTP_RETRY_HANDLER_INTERVAL_MAX}.
      *
      * @since 1.9.16
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -399,7 +400,7 @@ public final class ConfigurationProperties {
     public static final String HTTP_RETRY_HANDLER_INTERVAL = PREFIX_TRANSPORT_HTTP + "retryHandler.interval";
 
     /**
-     * The default initial retry interval to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
+     * The default initial retry delay to use if {@link #HTTP_RETRY_HANDLER_INTERVAL} isn't set.
      * Default value 5000ms.
      *
      * @since 1.9.16
@@ -407,9 +408,8 @@ public final class ConfigurationProperties {
     public static final long DEFAULT_HTTP_RETRY_HANDLER_INTERVAL = 5000L;
 
     /**
-     * The maximum retry interval in millis of request to a remote server above which the request should be aborted
-     * instead. In theory, a malicious server could tell Maven "come back after 100 years" that would stall the build
-     * for some. Using this parameter Maven will fail the request instead, if interval is above this value.
+     * The maximum delay in milliseconds for retried requests. Every delay is capped to this value.
+     * This is a security measure to avoid malicious servers from stalling the build for too long.
      *
      * @since 1.9.16
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
@@ -420,7 +420,7 @@ public final class ConfigurationProperties {
     public static final String HTTP_RETRY_HANDLER_INTERVAL_MAX = PREFIX_TRANSPORT_HTTP + "retryHandler.intervalMax";
 
     /**
-     * The default retry interval maximum to use if {@link #HTTP_RETRY_HANDLER_INTERVAL_MAX} isn't set.
+     * The default retry delay maximum to use if {@link #HTTP_RETRY_HANDLER_INTERVAL_MAX} isn't set.
      * Default value 5 minutes.
      *
      * @since 1.9.16
