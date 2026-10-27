@@ -94,4 +94,4 @@ artifact consumption scenarios, but it is not suitable for artifact deployment.
 * Does neither support HTTP/2 nor HTTP/3
 * Supports only GET/HEAD, usable only for artifact consumption
 * Is and will never be present in Maven; is meant for applications integrating Resolver
-* No configurable retries
+* Does not support configurable retries.
