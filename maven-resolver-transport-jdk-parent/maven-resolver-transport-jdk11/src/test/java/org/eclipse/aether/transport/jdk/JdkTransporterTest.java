@@ -54,6 +54,16 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 class JdkTransporterTest extends HttpTransporterTest {
 
+    @Override
+    protected boolean supportsRetryLogging() {
+        return true;
+    }
+
+    @Override
+    @Disabled("JDK transport caps the retry interval instead of rejecting the retry")
+    @Test
+    protected void testRetryLogging_IntervalTooLong() {}
+
     static {
         // uncomment to enable http client logging
         // https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/module-summary.html#jdk.httpclient.HttpClient.log

@@ -282,7 +282,13 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 .setDefaultSocketConfig(socketConfig)
                 .setDefaultRequestConfig(requestConfig)
                 .setServiceUnavailableRetryStrategy(serviceUnavailableRetryStrategy)
-                .setRetryHandler(retryHandler)
+                .setRetryHandler((exception, executionCount, context) -> {
+                    if (retryHandler.retryRequest(exception, executionCount, context)) {
+                        logImmediateRetry(context, executionCount, retryCount, exception);
+                        return true;
+                    }
+                    return false;
+                })
                 .setDefaultAuthSchemeRegistry(authSchemeRegistry)
                 .setConnectionManager(state.getConnectionManager())
                 .setConnectionManagerShared(true)
@@ -764,6 +770,34 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
+    private static void logImmediateRetry(
+            HttpContext context, int executionCount, int retryCount, Throwable exception) {
+        HttpCoreContext coreContext = HttpCoreContext.adapt(context);
+        HttpRequest request = coreContext.getRequest();
+        String method = request.getRequestLine().getMethod();
+        URI uri = URIUtils.resolve(
+                URI.create(coreContext.getTargetHost().toURI()),
+                request.getRequestLine().getUri());
+        HttpTransporter.logImmediateRetry(LOGGER, method, uri, executionCount - 1, retryCount + 1, exception);
+    }
+
+    static void logRetry(
+            HttpContext context,
+            int executionCount,
+            int retryCount,
+            String reason,
+            long retryInterval,
+            String intervalReason) {
+        HttpCoreContext coreContext = HttpCoreContext.adapt(context);
+        HttpRequest request = coreContext.getRequest();
+        String method = request.getRequestLine().getMethod();
+        URI uri = URIUtils.resolve(
+                URI.create(coreContext.getTargetHost().toURI()),
+                request.getRequestLine().getUri());
+        HttpTransporter.logRetry(
+                LOGGER, method, uri, executionCount - 1, retryCount + 1, reason, retryInterval, intervalReason);
+    }
+
     private static class ResolverServiceUnavailableRetryStrategy implements ServiceUnavailableRetryStrategy {
         private final int retryCount;
 
@@ -822,6 +856,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
          */
         private Long retryInterval(HttpResponse httpResponse, int executionCount, HttpContext httpContext) {
             Long result = null;
+            String intervalReason = "";
             Header header = httpResponse.getFirstHeader(HttpHeaders.RETRY_AFTER);
             if (header != null && header.getValue() != null) {
                 String headerValue = header.getValue();
@@ -829,21 +864,42 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                     Date when = DateUtils.parseDate(headerValue); // presumably future
                     if (when != null) {
                         result = Math.max(when.getTime() - System.currentTimeMillis(), 0L);
+                        intervalReason = "Retry-After header with date value " + headerValue;
+                    } else {
+                        LOGGER.warn(
+                                "Invalid Retry-After header value {} for request to {}",
+                                headerValue,
+                                httpContext.getAttribute(HttpCoreContext.HTTP_TARGET_HOST));
                     }
                 } else {
                     try {
                         result = Long.parseLong(headerValue) * 1000L; // is in seconds
+                        intervalReason = "Retry-After header with seconds value " + headerValue;
                     } catch (NumberFormatException e) {
                         // fall through
+                        LOGGER.warn(
+                                "Invalid Retry-After header value {} for request to {}",
+                                headerValue,
+                                httpContext.getAttribute(HttpCoreContext.HTTP_TARGET_HOST));
                     }
                 }
             }
             if (result == null) {
                 result = executionCount * this.retryInterval;
+                intervalReason =
+                        "retryInterval " + this.retryInterval + " ms multiplied by execution count " + executionCount;
             }
             if (result > retryIntervalMax) {
-                return null;
+                intervalReason += ", capped at max value";
+                result = retryIntervalMax;
             }
+            logRetry(
+                    httpContext,
+                    executionCount,
+                    retryCount,
+                    "status " + httpResponse.getStatusLine().getStatusCode(),
+                    result,
+                    intervalReason);
             return result;
         }
 

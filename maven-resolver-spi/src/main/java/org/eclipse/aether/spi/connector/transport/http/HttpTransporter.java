@@ -18,7 +18,10 @@
  */
 package org.eclipse.aether.spi.connector.transport.http;
 
+import java.net.URI;
+
 import org.eclipse.aether.spi.connector.transport.Transporter;
+import org.slf4j.Logger;
 
 /**
  * A transporter using HTTP protocol.
@@ -35,5 +38,62 @@ public interface HttpTransporter extends Transporter {
             }
         }
         return ERROR_OTHER;
+    }
+
+    /**
+     *
+     * @param logger
+     * @param method
+     * @param uri
+     * @param requestAttempt the 0-based counter of the previous request attempt (0 for the first attempt, 1 for the first retry, etc.)
+     * @param maxRequestAttempt the maximum number of request attempts (this is including this original request)
+     * @param exception the exception that caused the immediate retry
+     */
+    static void logImmediateRetry(
+            Logger logger, String method, URI uri, int requestAttempt, int maxRequestAttempt, Throwable exception) {
+        String reason = String.format("%s: %s", exception.getClass().getName(), exception.getMessage());
+        logRetry(logger, method, uri, requestAttempt, maxRequestAttempt, reason, 0L, null);
+    }
+
+    /**
+     *
+     * @param logger
+     * @param method
+     * @param uri
+     * @param requestAttempt the 0-based counter of the previous request attempt (0 for the first attempt, 1 for the first retry, etc.)
+     * @param maxRequestAttempt the maximum number of request attempts (this is including this original request)
+     * @param reason the reason for the retry (usually a status code or an exception)
+     * @param retryDelay the interval in milliseconds before the next retry (0 or negative for immediate retry)
+     * @param retryDelayReason the reason for the retry interval (may be empty if unknown)
+     */
+    @SuppressWarnings("checkstyle:parameternumber")
+    static void logRetry(
+            Logger logger,
+            String method,
+            URI uri,
+            int requestAttempt,
+            int maxRequestAttempt,
+            String reason,
+            long retryDelay,
+            String retryDelayReason) {
+
+        final String retryingDelayMessage;
+        if (retryDelay > 0L) {
+            if (retryDelayReason != null && !retryDelayReason.isEmpty()) {
+                retryingDelayMessage = "Retrying in " + retryDelay + " ms (due to " + retryDelayReason + ")";
+            } else {
+                retryingDelayMessage = "Retrying in " + retryDelay + " ms";
+            }
+        } else {
+            retryingDelayMessage = "Retrying immediately";
+        }
+        logger.warn(
+                "{} request to {} failed (attempt {} of {}) due to {}. {}...",
+                method,
+                uri,
+                requestAttempt + 1,
+                maxRequestAttempt,
+                reason,
+                retryingDelayMessage);
     }
 }

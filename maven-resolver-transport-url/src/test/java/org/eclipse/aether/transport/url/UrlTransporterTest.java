@@ -61,6 +61,11 @@ class UrlTransporterTest extends HttpTransporterTest {
     }
 
     @Override
+    protected boolean supportsRetryLogging() {
+        return false;
+    }
+
+    @Override
     @Disabled("HTTP2 unsupported")
     @Test
     protected void testGet_HTTPS_HTTP2Only_Insecure_SecurityMode() {}
