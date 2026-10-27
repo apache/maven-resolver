@@ -535,4 +535,18 @@ class ApacheTransporterTest extends HttpTransporterTest {
                 .getTotalStats();
         assertEquals(0, stats.getAvailable(), stats.toString());
     }
+
+    @Test
+    void testRetryHandler_badGateway_defaultCount_positive() throws Exception {
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setServerErrorsBeforeWorks(1, 502);
+        transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+    }
+
+    @Test
+    void testRetryHandler_gatewayTimeout_defaultCount_positive() throws Exception {
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setServerErrorsBeforeWorks(1, 504);
+        transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+    }
 }

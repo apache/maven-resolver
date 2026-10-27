@@ -20,6 +20,9 @@ package org.eclipse.aether.util.connector.transport.http;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -33,7 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class HttpTransporterUtilsTest {
+class HttpTransporterUtilsTest {
+
     @Test
     void getRedirectMode() {
         DefaultRepositorySystemSession session = TestUtils.newSession();
@@ -144,7 +148,7 @@ public class HttpTransporterUtilsTest {
     @Test
     void clampRemoteLastModifiedClampsFutureValuesToLocalClock() {
         long testStart = System.currentTimeMillis();
-        long future = testStart + 365L * 24L * 60L * 60L * 1000L; // one year ahead
+        long future = testStart + 365L * 24L * 60L * 60L * 1000L;
         long clamped = HttpTransporterUtils.clampRemoteLastModified(future);
         assertTrue(clamped >= testStart, "clamped value must not predate the call");
         assertTrue(clamped <= System.currentTimeMillis(), "clamped value must not exceed the local clock");
@@ -154,8 +158,6 @@ public class HttpTransporterUtilsTest {
     @Test
     void goodUris() throws URISyntaxException {
         URI uri;
-
-        // URI gets appended / (slash), if there is no trailing slash
 
         uri = HttpTransporterUtils.getBaseUri(
                 new RemoteRepository.Builder("as-is", "", "https://host.com/base/").build());
@@ -220,5 +222,39 @@ public class HttpTransporterUtilsTest {
         assertEquals("host.de", uri.getHost());
         assertEquals("/räpo/", uri.getPath());
         assertEquals("https://host.de/r%C3%A4po/", uri.toASCIIString());
+    }
+
+    @Test
+    void getHttpServiceUnavailableCodesUsesDefaultCodes() {
+        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+        RemoteRepository repository = new RemoteRepository.Builder("test", "default", "https://example.com/").build();
+
+        Set<Integer> codes = HttpTransporterUtils.getHttpServiceUnavailableCodes(session, repository);
+
+        assertEquals(new HashSet<>(Arrays.asList(429, 502, 503, 504)), codes);
+    }
+
+    @Test
+    void getHttpServiceUnavailableCodesSupportsCustomConfiguration() {
+        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+        RemoteRepository repository = new RemoteRepository.Builder("test", "default", "https://example.com/").build();
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE, "429,502");
+
+        Set<Integer> codes = HttpTransporterUtils.getHttpServiceUnavailableCodes(session, repository);
+
+        assertEquals(new HashSet<>(Arrays.asList(429, 502)), codes);
+    }
+
+    @Test
+    void getHttpServiceUnavailableCodesSupportsRepositorySpecificConfiguration() {
+        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession();
+        RemoteRepository repository = new RemoteRepository.Builder("test", "default", "https://example.com/").build();
+
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE + ".test", "502,504");
+
+        Set<Integer> codes = HttpTransporterUtils.getHttpServiceUnavailableCodes(session, repository);
+
+        assertEquals(new HashSet<>(Arrays.asList(502, 504)), codes);
     }
 }
