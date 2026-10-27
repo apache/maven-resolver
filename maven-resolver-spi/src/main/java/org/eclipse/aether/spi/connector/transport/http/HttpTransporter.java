@@ -41,10 +41,10 @@ public interface HttpTransporter extends Transporter {
     }
 
     /**
-     *
-     * @param logger
-     * @param method
-     * @param uri
+     * Log a retry message for an immediate retry.
+     * @param logger the logger to log the retry message
+     * @param method the HTTP method of the request (e.g. GET, PUT, etc.)
+     * @param uri the URI of the request
      * @param requestAttempt the 0-based counter of the previous request attempt (0 for the first attempt, 1 for the first retry, etc.)
      * @param maxRequestAttempt the maximum number of request attempts (this is including this original request)
      * @param exception the exception that caused the immediate retry
@@ -56,10 +56,10 @@ public interface HttpTransporter extends Transporter {
     }
 
     /**
-     *
-     * @param logger
-     * @param method
-     * @param uri
+     * Log a retry message for a delayed retry.
+     * @param logger the logger to log the retry message
+     * @param method the HTTP method of the request (e.g. GET, PUT, etc.)
+     * @param uri the URI of the request
      * @param requestAttempt the 0-based counter of the previous request attempt (0 for the first attempt, 1 for the first retry, etc.)
      * @param maxRequestAttempt the maximum number of request attempts (this is including this original request)
      * @param reason the reason for the retry (usually a status code or an exception)
