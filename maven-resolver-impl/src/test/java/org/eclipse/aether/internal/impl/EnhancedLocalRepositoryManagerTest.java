@@ -26,6 +26,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -41,6 +43,7 @@ import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.LocalMetadataRequest;
 import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.StringDigestUtil;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -480,5 +483,38 @@ public class EnhancedLocalRepositoryManagerTest {
         LocalArtifactRequest request =
                 new LocalArtifactRequest(artifact, Collections.singletonList(repository), testContext);
         assertFalse(manager.find(session, request).isAvailable());
+    }
+
+    @Test
+    void testUrlQualifiedTrackingRejectsEntriesOfRepoIdSharingPrefix() throws Exception {
+        manager = newUrlQualifiedTrackingManager();
+        // plain (non repository manager) repository: its legacy key is the bare id
+        RemoteRepository central = new RemoteRepository.Builder("central", "default", "https://repo.example/").build();
+
+        // artifact tracked only for repositories whose id merely starts with "central-"
+        copy(artifact, manager.getPathForLocalArtifact(artifact));
+        File file = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        Map<String, String> entries = new HashMap<>();
+        entries.put(file.getName() + ">central-snapshots", "");
+        entries.put(file.getName() + ">central-snapshots-" + StringDigestUtil.sha1("x"), "");
+        trackingFileManager.update(new File(file.getParentFile(), "_remote.repositories").toPath(), entries);
+
+        LocalArtifactRequest request =
+                new LocalArtifactRequest(artifact, Collections.singletonList(central), testContext);
+        assertFalse(manager.find(session, request).isAvailable());
+    }
+
+    @Test
+    void testAddRemoteWithoutContextsIsTracked() throws Exception {
+        copy(artifact, manager.getPathForRemoteArtifact(artifact, repository, testContext));
+        manager.add(session, new LocalArtifactRegistration(artifact, repository, null));
+
+        // tracked for "repository" only: must not be accepted as locally installed for an unrelated repository
+        RemoteRepository other = new RemoteRepository.Builder("other", "default", "https://other.example/").build();
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Collections.singletonList(other), null);
+        assertFalse(manager.find(session, request).isAvailable());
+
+        request = new LocalArtifactRequest(artifact, Collections.singletonList(repository), null);
+        assertTrue(manager.find(session, request).isAvailable());
     }
 }
