@@ -386,8 +386,8 @@ public final class ConfigurationProperties {
     public static final int DEFAULT_HTTP_RETRY_HANDLER_COUNT = 3;
 
     /**
-     * The initial delay in milliseconds for retried request after receiving a response from remote server with HTTP codes
-     * "too many requests" (HTTP codes 429 and 503). Accepts long as milliseconds. This value is used if remote server
+     * The initial delay in milliseconds for retried requests after receiving a server response with status
+     * "too many requests" (HTTP codes 429 and 503). Accepts long as milliseconds. This value is used if the remote server
      * does not use {@code Retry-After} header, in which case the server value is obeyed.
      * This delay is increased for every retry, up to {@link #HTTP_RETRY_HANDLER_INTERVAL_MAX}.
      *
