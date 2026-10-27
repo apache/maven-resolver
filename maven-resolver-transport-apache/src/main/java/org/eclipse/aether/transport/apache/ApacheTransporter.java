@@ -781,7 +781,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         HttpTransporter.logImmediateRetry(LOGGER, method, uri, executionCount - 1, retryCount + 1, exception);
     }
 
-    static void logRetry(
+    private static void logRetry(
             HttpContext context,
             int executionCount,
             int retryCount,
@@ -852,9 +852,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
          * Otherwise, it returns {@link this#retryInterval} long value multiplied with {@code executionCount} (starts
          * from 1 and goes 2, 3,...).
          *
-         * @return Long representing the retry interval as millis, or {@code null} if the request should be failed.
+         * @return long representing the retry interval as milliseconds, capped at {@link #retryIntervalMax}.
          */
-        private Long retryInterval(HttpResponse httpResponse, int executionCount, HttpContext httpContext) {
+        private long retryInterval(HttpResponse httpResponse, int executionCount, HttpContext httpContext) {
             Long result = null;
             String intervalReason = "";
             Header header = httpResponse.getFirstHeader(HttpHeaders.RETRY_AFTER);
