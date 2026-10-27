@@ -837,11 +837,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                     && (serviceUnavailableHttpCodes.contains(
                             response.getStatusLine().getStatusCode()));
             if (retry) {
-                Long retryInterval = retryInterval(response, executionCount, context);
-                if (retryInterval != null) {
-                    RETRY_INTERVAL_HOLDER.set(retryInterval);
-                    return true;
-                }
+                RETRY_INTERVAL_HOLDER.set(retryInterval(response, executionCount, context));
+                return true;
             }
             RETRY_INTERVAL_HOLDER.remove();
             return false;
