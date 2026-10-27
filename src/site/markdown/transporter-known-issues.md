@@ -66,7 +66,7 @@ you need to add `org.apache.maven.resolver.transport:transport-http-jetty` artif
   This situation is probably improving with Jetty 13 (which is supposed to be shipping with a native Java QUIC implementation).
 * When HTTP/3 is configured there is [no fallback to lower versions](https://github.com/jetty/jetty.project/issues/15423).
   The request will just time out.
-* Jetty currently does not support configurable retries.
+* Does not support configurable retries.
 
 ## The `url` (Consumer Only) Transporter
 
