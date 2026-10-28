@@ -66,6 +66,7 @@ you need to add `org.apache.maven.resolver.transport:transport-http-jetty` artif
   This situation is probably improving with Jetty 13 (which is supposed to be shipping with a native Java QUIC implementation).
 * When HTTP/3 is configured there is [no fallback to lower versions](https://github.com/jetty/jetty.project/issues/15423).
   The request will just time out.
+* Does not support configurable retries.
 
 ## The `url` (Consumer Only) Transporter
 
@@ -93,3 +94,4 @@ artifact consumption scenarios, but it is not suitable for artifact deployment.
 * Does neither support HTTP/2 nor HTTP/3
 * Supports only GET/HEAD, usable only for artifact consumption
 * Is and will never be present in Maven; is meant for applications integrating Resolver
+* Does not support configurable retries.
