@@ -123,6 +123,17 @@ class ApacheTransporterTest extends HttpTransporterTest {
         super.tearDown();
     }
 
+    @Override
+    protected boolean supportsRetryLogging() {
+        return true;
+    }
+
+    @Test
+    void testRetryLogging_DefaultHandler() throws Exception {
+        session.setConfigProperty(ApacheTransporterConfigurationKeys.CONFIG_PROP_HTTP_RETRY_HANDLER_NAME, "default");
+        super.testRetryLogging_IoException();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"http", "https"})
     void testTransfers_SystemProxyAuthenticated(String protocol) throws Exception {

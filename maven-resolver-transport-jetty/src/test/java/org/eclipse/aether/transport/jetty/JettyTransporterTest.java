@@ -37,6 +37,11 @@ class JettyTransporterTest extends HttpTransporterTest {
     }
 
     @Override
+    protected boolean supportsRetryLogging() {
+        return false; // Jetty does not yet support configurable retries
+    }
+
+    @Override
     @Disabled
     @Test
     protected void testAuthSchemeReuse() {}

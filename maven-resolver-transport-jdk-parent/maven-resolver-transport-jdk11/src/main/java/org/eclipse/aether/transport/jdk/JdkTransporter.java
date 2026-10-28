@@ -955,24 +955,29 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
         @Override
         public void onRetry(Context<?> context, HttpRequest nextRequest, Duration delay) {
-            LOGGER.warn(
-                    "{} request to {} failed (attempt {} of {}) due to {}. Retrying in {} ms...",
-                    context.request().method(),
-                    context.request().uri(),
-                    context.retryCount() + 1,
-                    maxNumRetries + 1,
-                    getReason(context),
-                    delay.toMillis());
-        }
-
-        String getReason(Context<?> context) {
             if (context.exception().isPresent()) {
-                return context.exception().get().getMessage();
+                HttpTransporter.logImmediateRetry(
+                        LOGGER,
+                        context.request().method(),
+                        context.request().uri(),
+                        context.retryCount(),
+                        maxNumRetries + 1,
+                        context.exception().get());
             } else if (context.response().isPresent()) {
-                return "status " + context.response().get().statusCode();
+                // Methanol does not expose the reason for the backoff delay
+                // (https://github.com/mizosoft/methanol/issues/200)
+                HttpTransporter.logRetry(
+                        LOGGER,
+                        context.request().method(),
+                        context.request().uri(),
+                        context.retryCount(),
+                        maxNumRetries + 1,
+                        "status " + context.response().get().statusCode(),
+                        delay.toMillis(),
+                        "");
+            } else {
+                throw new IllegalStateException("Retry context has neither exception nor response");
             }
-            // should not happen
-            throw new IllegalStateException("No exception or response present in retry context");
         }
     }
 

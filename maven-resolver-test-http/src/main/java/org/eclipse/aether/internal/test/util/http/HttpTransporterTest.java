@@ -39,10 +39,12 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.awaitility.Awaitility;
@@ -87,6 +89,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -97,14 +100,12 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Common set of tests against Http transporter.
  */
-@SuppressWarnings({"checkstyle:MethodName"})
+@SuppressWarnings({"checkstyle:methodname", "checkstyle:sizes"})
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public abstract class HttpTransporterTest {
 
     protected static final Path SERVER_STORE_PATH = Paths.get("target/server-store");
-
     protected static final Path CLIENT_STORE_PATH = Paths.get("target/client-store");
-
     protected static final Path PEM_QUICHE_SERVER_PATH = Paths.get("target/pems");
 
     protected static SSLContext defaultSslContext;
@@ -375,6 +376,106 @@ public abstract class HttpTransporterTest {
     protected void testRetryHandler_defaultCount_positive() throws Exception {
         httpServer.setConnectionsToClose(3);
         transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+    }
+
+    protected boolean supportsRetryLogging() {
+        return true;
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {429, 503})
+    protected void testRetryLogging_HttpStatus(int status) throws Exception {
+        assumeTrue(supportsRetryLogging());
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 2);
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL, 1);
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setServerErrorsBeforeWorks(2, status);
+
+        try (RetryLogCapture capture = new RetryLogCapture(transporter.getClass())) {
+            transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+            String request = "HEAD request to " + httpServer.getHttpUrl() + "/repo/file.txt";
+            assertLinesMatch(
+                    List.of(
+                            Pattern.quote(request + " failed (attempt 1 of 3) due to status " + status
+                                            + ". Retrying in 1 ms")
+                                    + ".*\\.\\.\\.",
+                            Pattern.quote(request + " failed (attempt 2 of 3) due to status " + status
+                                            + ". Retrying in 2 ms")
+                                    + ".*\\.\\.\\."),
+                    capture.messages());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {429, 503})
+    protected void testRetryLogging_HttpStatusWithRetryAfter(int status) throws Exception {
+        assumeTrue(supportsRetryLogging());
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 1);
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL, 1);
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setServerErrorsBeforeWorks(1, status, Map.of("Retry-After", "1"));
+
+        try (RetryLogCapture capture = new RetryLogCapture(transporter.getClass())) {
+            transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+            String request = "HEAD request to " + httpServer.getHttpUrl() + "/repo/file.txt";
+            assertLinesMatch(
+                    List.of(Pattern.quote(request + " failed (attempt 1 of 2) due to status " + status
+                                    + ". Retrying in 1000 ms")
+                            + ".*\\.\\.\\."),
+                    capture.messages());
+        }
+    }
+
+    @Test
+    protected void testRetryLogging_IoException() throws Exception {
+        assumeTrue(supportsRetryLogging());
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 1);
+        newTransporter(httpServer.getHttpUrl());
+        // Exhaust the JDK client's internal retries as well as the transporter's retries.
+        httpServer.setConnectionsToClose(100);
+
+        try (RetryLogCapture capture = new RetryLogCapture(transporter.getClass())) {
+            assertThrows(IOException.class, () -> transporter.peek(new PeekTask(URI.create("repo/file.txt"))));
+            String request = "HEAD request to " + httpServer.getHttpUrl() + "/repo/file.txt";
+            assertLinesMatch(
+                    List.of(Pattern.quote(request + " failed (attempt 1 of 2) due to ") + ".*"
+                            + Pattern.quote("Retrying immediately...")),
+                    capture.messages());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    protected void testRetryLogging_NoRetry(int retryCount) throws Exception {
+        assumeTrue(supportsRetryLogging());
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, retryCount);
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setServerErrorsBeforeWorks(1, retryCount == 0 ? 503 : 404);
+
+        try (RetryLogCapture capture = new RetryLogCapture(transporter.getClass())) {
+            assertThrows(
+                    HttpTransporterException.class, () -> transporter.peek(new PeekTask(URI.create("repo/file.txt"))));
+            assertEquals(List.of(), capture.messages());
+        }
+    }
+
+    @Test
+    protected void testRetryLogging_IntervalTooLong() throws Exception {
+        assumeTrue(supportsRetryLogging());
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, 1);
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL_MAX, 1);
+        newTransporter(httpServer.getHttpUrl());
+        httpServer.setServerErrorsBeforeWorks(1, 503, Map.of("Retry-After", "1"));
+
+        try (RetryLogCapture capture = new RetryLogCapture(transporter.getClass())) {
+            transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+            String request = "HEAD request to " + httpServer.getHttpUrl() + "/repo/file.txt";
+            assertEquals(
+                    List.of(
+                            request + " failed (attempt 1 of 2) due to status " + 503
+                                    + ". Retrying in 1 ms (due to Retry-After header with seconds value 1, capped at max value)..."),
+                    capture.messages());
+        }
     }
 
     @Test
@@ -1865,9 +1966,7 @@ public abstract class HttpTransporterTest {
         assertEquals("test", task.getDataString());
         // there ARE challenge round-trips
         assertEquals(2, httpServer.getLogEntries().size());
-
         httpServer.getLogEntries().clear();
-
         session.setConfigProperty(ConfigurationProperties.HTTP_PREEMPTIVE_AUTH, true);
         newTransporter(httpServer.getHttpUrl());
         task = new GetTask(URI.create("repo/file.txt"));
