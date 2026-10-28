@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.transport.jetty;
 
-import java.io.IOException;
 import java.net.URI;
 
 import org.eclipse.aether.util.connector.transport.TransporterUtils;
@@ -35,7 +34,8 @@ final class SameAuthorityRedirectGuard implements Request.QueuedListener {
     public void onQueued(Request request) {
         URI target = request.getURI();
         if (target == null || !TransporterUtils.isSameAuthority(repositoryUri, target)) {
-            request.abort(new IOException("Refusing to follow redirect to different authority: " + target));
+            request.abort(
+                    new RedirectRefusedException("Refusing to follow redirect to different authority: " + target));
         }
     }
 }

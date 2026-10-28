@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -85,6 +86,8 @@ import org.eclipse.jetty.io.EndPoint.SslSessionData;
 import org.eclipse.jetty.quic.quiche.client.QuicheClientQuicConfiguration;
 import org.eclipse.jetty.quic.quiche.client.QuicheTransport;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.ACCEPT_ENCODING;
 import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.CONTENT_LENGTH;
@@ -103,6 +106,8 @@ import static org.eclipse.aether.spi.connector.transport.http.HttpConstants.USER
  * @since 2.0.0
  */
 final class JettyTransporter extends AbstractTransporter implements HttpTransporter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JettyTransporter.class);
+
     private static final long MODIFICATION_THRESHOLD = 60L * 1000L;
 
     private final RepositorySystemSession session;
@@ -120,6 +125,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
     private final int connectTimeout;
 
     private final int requestTimeout;
+
+    private final JettyRetryHandler retryHandler;
 
     private final Map<String, String> headers;
 
@@ -165,6 +172,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
         this.connectTimeout = HttpTransporterUtils.getHttpConnectTimeout(session, repository);
         this.requestTimeout = HttpTransporterUtils.getHttpRequestTimeout(session, repository);
+        this.retryHandler = new JettyRetryHandler(session, repository);
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
         this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
@@ -189,25 +197,73 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         return baseUri.resolve(task.getLocation());
     }
 
+    /**
+     * Logs that the request is sent again right away, after the given attempt failed without a (retriable) response.
+     */
+    private void logImmediateRetry(Request request, int attempt, Throwable failure) {
+        HttpTransporter.logImmediateRetry(
+                LOGGER, request.getMethod(), request.getURI(), attempt, retryHandler.getRetryCount() + 1, failure);
+    }
+
+    /**
+     * Logs and waits until the request is sent again, after the given attempt got a retriable response.
+     */
+    private void waitBeforeRetry(Request request, int attempt, Response response) throws InterruptedException {
+        JettyRetryHandler.Delay delay = retryHandler.getDelay(response.getHeaders(), attempt);
+        HttpTransporter.logRetry(
+                LOGGER,
+                request.getMethod(),
+                request.getURI(),
+                attempt,
+                retryHandler.getRetryCount() + 1,
+                "status " + response.getStatus(),
+                delay.millis(),
+                delay.reason());
+        if (delay.millis() > 0L) {
+            Thread.sleep(delay.millis());
+        }
+    }
+
     @Override
     protected void implPeek(PeekTask task) throws Exception {
-        Request request = client.newRequest(resolve(task)).method("HEAD");
-        request.headers(m -> headers.forEach(m::add));
-        if (preemptiveAuth) {
-            mayApplyPreemptiveAuth(request);
-        }
-        // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
-        Map<String, HttpField> rawResponseHeaders = new HashMap<>();
-        request.onResponseHeader((r, field) -> {
-            rawResponseHeaders.put(field.getLowerCaseName(), field);
-            return true; // continue processing
-        });
-        Response response = request.send();
-        Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
-                createTransportProperties(request, rawResponseHeaders);
-        task.getListener().transportPropertiesAvailable(transportProperties);
-        if (response.getStatus() >= MULTIPLE_CHOICES) {
-            throw new HttpTransporterException(response.getStatus());
+        for (int attempt = 0; ; attempt++) {
+            Request request = client.newRequest(resolve(task)).method("HEAD");
+            request.headers(m -> headers.forEach(m::add));
+            if (preemptiveAuth) {
+                mayApplyPreemptiveAuth(request);
+            }
+            // capture raw response headers as described in https://github.com/jetty/jetty.project/discussions/14404
+            Map<String, HttpField> rawResponseHeaders = new HashMap<>();
+            request.onResponseHeader((r, field) -> {
+                rawResponseHeaders.put(field.getLowerCaseName(), field);
+                return true; // continue processing
+            });
+            Response response;
+            try {
+                response = request.send();
+            } catch (ExecutionException | TimeoutException e) {
+                Throwable failure = e instanceof ExecutionException ? e.getCause() : e;
+                if (retryHandler.shouldRetry(attempt, failure)) {
+                    logImmediateRetry(request, attempt, failure);
+                    continue;
+                }
+                if (failure instanceof Exception) {
+                    throw (Exception) failure;
+                } else {
+                    throw new RuntimeException(failure);
+                }
+            }
+            if (retryHandler.shouldRetry(attempt, response.getStatus())) {
+                waitBeforeRetry(request, attempt, response);
+                continue;
+            }
+            Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                    createTransportProperties(request, rawResponseHeaders);
+            task.getListener().transportPropertiesAvailable(transportProperties);
+            if (response.getStatus() >= MULTIPLE_CHOICES) {
+                throw new HttpTransporterException(response.getStatus());
+            }
+            return;
         }
     }
 
@@ -217,6 +273,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         Response response;
         InputStreamResponseListener listener;
 
+        int attempt = 0;
         while (true) {
             Request request = client.newRequest(resolve(task)).method("GET");
             request.headers(m -> headers.forEach(m::add));
@@ -248,13 +305,25 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             request.send(listener);
             try {
                 response = listener.get(requestTimeout, TimeUnit.MILLISECONDS);
-            } catch (ExecutionException e) {
-                Throwable t = e.getCause();
+            } catch (ExecutionException | TimeoutException e) {
+                Throwable t = e instanceof ExecutionException ? e.getCause() : e;
+                if (retryHandler.shouldRetry(attempt, t)) {
+                    request.abort(t); // no-op if the request already failed
+                    logImmediateRetry(request, attempt, t);
+                    attempt++;
+                    continue;
+                }
                 if (t instanceof Exception) {
                     throw (Exception) t;
                 } else {
                     throw new RuntimeException(t);
                 }
+            }
+            if (retryHandler.shouldRetry(attempt, response.getStatus())) {
+                listener.close(); // discards the response body
+                waitBeforeRetry(request, attempt, response);
+                attempt++;
+                continue;
             }
             Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
                     createTransportProperties(request, rawResponseHeaders);
@@ -360,6 +429,19 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     @Override
     protected void implPut(PutTask task) throws Exception {
+        int attempt = 0;
+        while (!put(task, attempt)) {
+            attempt++;
+        }
+    }
+
+    /**
+     * Sends the PUT request once.
+     *
+     * @param attempt the 0-based number of this attempt
+     * @return {@code true} if the upload is complete, {@code false} if it failed in a way that is worth another attempt
+     */
+    private boolean put(PutTask task, int attempt) throws Exception {
         Request request = client.newRequest(resolve(task)).method("PUT");
         request.headers(m -> headers.forEach(m::add));
         if (sendRfc9457Accept) {
@@ -432,18 +514,26 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     }
                 }
             }
-            // transportPropertiesAvailable is called after transportStarted/transportProgressed
-            // to honour the TransportListener contract: "for remote put tasks this is called
-            // after transportStarted(long, long)". Placed before the status check so it is
-            // reachable on both success (2xx) and error (3xx/4xx/5xx) responses.
-            task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
-            if (response.getStatus() >= MULTIPLE_CHOICES) {
-                JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
-                    throw new HttpTransporterException(statusCode);
-                });
+            if (!retryHandler.shouldRetry(attempt, response.getStatus())) {
+                // transportPropertiesAvailable is called after transportStarted/transportProgressed
+                // to honour the TransportListener contract: "for remote put tasks this is called
+                // after transportStarted(long, long)". Placed before the status check so it is
+                // reachable on both success (2xx) and error (3xx/4xx/5xx) responses.
+                task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
+                if (response.getStatus() >= MULTIPLE_CHOICES) {
+                    JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
+                        throw new HttpTransporterException(statusCode);
+                    });
+                }
+                return true;
             }
-        } catch (ExecutionException e) {
-            Throwable t = e.getCause();
+        } catch (ExecutionException | TimeoutException e) {
+            Throwable t = e instanceof ExecutionException ? e.getCause() : e;
+            if (retryHandler.shouldRetry(attempt, t)) {
+                request.abort(t); // no-op if the request already failed
+                logImmediateRetry(request, attempt, t);
+                return false;
+            }
             if (t instanceof IOException ioex) {
                 if (ioex.getCause() instanceof TransferCancelledException) {
                     throw (TransferCancelledException) ioex.getCause();
@@ -456,6 +546,9 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 throw new RuntimeException(t);
             }
         }
+        // the listener is closed by now, which discards the response body
+        waitBeforeRetry(request, attempt, response);
+        return false;
     }
 
     @Override

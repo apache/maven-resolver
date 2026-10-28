@@ -18,13 +18,22 @@
  */
 package org.eclipse.aether.transport.jetty;
 
+import java.io.File;
+import java.net.URI;
 import java.util.stream.Stream;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
+import org.eclipse.aether.spi.connector.transport.GetTask;
+import org.eclipse.aether.spi.connector.transport.PutTask;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Jetty transporter UT.
@@ -34,11 +43,6 @@ class JettyTransporterTest extends HttpTransporterTest {
     @Override
     protected Stream<String> supportedCompressionAlgorithms() {
         return Stream.of("gzip", "deflate", "br", "zstd");
-    }
-
-    @Override
-    protected boolean supportsRetryLogging() {
-        return false; // Jetty does not yet support configurable retries
     }
 
     @Override
@@ -55,31 +59,6 @@ class JettyTransporterTest extends HttpTransporterTest {
     @Disabled
     @Test
     protected void testPut_Unauthenticated() {}
-
-    @Override
-    @Disabled
-    @Test
-    protected void testRetryHandler_defaultCount_positive() {}
-
-    @Override
-    @Disabled
-    @Test
-    protected void testRetryHandler_explicitCount_positive() {}
-
-    @Override
-    @Disabled
-    @Test
-    protected void testRetryHandler_tooManyRequests_explicitCount_positive() {}
-
-    @Override
-    @Disabled
-    @Test
-    protected void testRetryHandler_tooManyRequests_withRetryAfterHeader_explicitCount_positive() {}
-
-    @Override
-    @Disabled
-    @Test
-    protected void testRetryHandler_tooManyRequests_explicitCount_negative() {}
 
     @Override
     @Disabled
@@ -111,6 +90,72 @@ class JettyTransporterTest extends HttpTransporterTest {
         session.setConfigProperty(
                 ConfigurationProperties.HTTPS_SECURITY_MODE, ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE);
         super.testGet_HTTP3();
+    }
+
+    // the retry tests of the base class only cover HEAD requests
+
+    private void configureQuickRetries(int retryCount) throws Exception {
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, retryCount);
+        session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_INTERVAL, 1);
+        newTransporter(httpServer.getHttpUrl());
+    }
+
+    @Test
+    void testGet_RetriesAfterServiceUnavailable() throws Exception {
+        configureQuickRetries(2);
+        httpServer.setServerErrorsBeforeWorks(2, 503);
+        GetTask task = new GetTask(URI.create("repo/file.txt"));
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+        assertEquals(3, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    void testGet_RetriesAfterClosedConnection() throws Exception {
+        configureQuickRetries(2);
+        httpServer.setConnectionsToClose(2);
+        GetTask task = new GetTask(URI.create("repo/file.txt"));
+        transporter.get(task);
+        assertEquals("test", task.getDataString());
+    }
+
+    @Test
+    void testGet_GivesUpAfterRetryCount() throws Exception {
+        configureQuickRetries(2);
+        httpServer.setServerErrorsBeforeWorks(3, 503);
+        HttpTransporterException e = assertThrows(
+                HttpTransporterException.class, () -> transporter.get(new GetTask(URI.create("repo/file.txt"))));
+        assertEquals(503, e.getStatusCode());
+        assertEquals(3, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    void testPut_RetriesAfterServiceUnavailable() throws Exception {
+        configureQuickRetries(2);
+        httpServer.setServerErrorsBeforeWorks(2, 503);
+        transporter.put(new PutTask(URI.create("repo/file.txt")).setDataString("upload"));
+        assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
+        assertEquals(3, httpServer.getLogEntries().size());
+    }
+
+    @Test
+    void testPut_RetriesAfterClosedConnection() throws Exception {
+        configureQuickRetries(2);
+        httpServer.setConnectionsToClose(2);
+        transporter.put(new PutTask(URI.create("repo/file.txt")).setDataString("upload"));
+        assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
+    }
+
+    @Test
+    void testPut_GivesUpAfterRetryCount() throws Exception {
+        configureQuickRetries(1);
+        httpServer.setServerErrorsBeforeWorks(2, 503);
+        HttpTransporterException e = assertThrows(
+                HttpTransporterException.class,
+                () -> transporter.put(new PutTask(URI.create("repo/file.txt")).setDataString("upload")));
+        assertEquals(503, e.getStatusCode());
+        assertEquals(2, httpServer.getLogEntries().size());
+        assertEquals("test", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     public JettyTransporterTest() {
