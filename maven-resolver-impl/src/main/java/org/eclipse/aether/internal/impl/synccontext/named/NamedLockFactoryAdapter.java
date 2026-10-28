@@ -170,6 +170,7 @@ public final class NamedLockFactoryAdapter {
 
             final int attempts = retry + 1;
             final ArrayList<IllegalStateException> illegalStateExceptions = new ArrayList<>();
+            boolean acquired = false;
             for (int attempt = 1; attempt <= attempts; attempt++) {
                 LOGGER.trace(
                         "Attempt {}: Need {} {} lock(s) for {}", attempt, keys.size(), shared ? "read" : "write", keys);
@@ -214,10 +215,11 @@ public final class NamedLockFactoryAdapter {
                 }
                 LOGGER.trace("Attempt {}: Total locks acquired: {}", attempt, acquiredLockCount);
                 if (acquiredLockCount == keys.size()) {
+                    acquired = true;
                     break;
                 }
             }
-            if (!illegalStateExceptions.isEmpty()) {
+            if (!acquired) {
                 String message = "Could not acquire " + (shared ? "shared" : "exclusive") + " lock for "
                         + lockSubjects(artifacts, metadatas) + " in " + time + " " + timeUnit
                         + "; consider using '" + TIME_KEY
