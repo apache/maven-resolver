@@ -83,8 +83,8 @@
     <url>https://github.com/apache/maven-resolver/issues</url>
   </issueManagement>
   <ciManagement>
-    <system>Jenkins</system>
-    <url>https://ci-maven.apache.org/job/Maven/job/maven-box/job/maven-resolver/</url>
+    <system>GitHub</system>
+    <url>https://github.com/apache/maven-resolver/actions</url>
   </ciManagement>
   <distributionManagement>
     <site>
