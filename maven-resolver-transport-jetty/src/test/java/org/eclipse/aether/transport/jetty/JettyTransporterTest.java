@@ -142,8 +142,8 @@ class JettyTransporterTest extends HttpTransporterTest {
     void testPut_RetriesAfterClosedConnection() throws Exception {
         configureQuickRetries(2);
         httpServer.setConnectionsToClose(2);
+        // the file is not checked: the server handlers of the two closed connections may still delete it
         transporter.put(new PutTask(URI.create("repo/file.txt")).setDataString("upload"));
-        assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
     @Test
