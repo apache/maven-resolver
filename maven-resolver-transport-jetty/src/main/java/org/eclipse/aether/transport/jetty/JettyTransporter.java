@@ -309,6 +309,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 Throwable t = e instanceof ExecutionException ? e.getCause() : e;
                 if (retryHandler.shouldRetry(attempt, t)) {
                     request.abort(t); // no-op if the request already failed
+                    listener.close();
                     logImmediateRetry(request, attempt, t);
                     attempt++;
                     continue;
