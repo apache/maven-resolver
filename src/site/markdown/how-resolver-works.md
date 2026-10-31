@@ -104,7 +104,7 @@ for its own pom.xml. It does not affect the versions of the dependencies of the 
 In Resolver 2.x, `project/dependencyManagement` does define versions of dependencies
 for the transitive dependencies.
 
-See also [common misconceptions](common-misconceptions.html).
+See also [common misconceptions](https://maven.apache.org/repositories/dependency-resolution-misconceptions.html).
 
 ### Conflict Resolution
 
