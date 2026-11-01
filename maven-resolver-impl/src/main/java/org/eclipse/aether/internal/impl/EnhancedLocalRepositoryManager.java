@@ -34,6 +34,8 @@ import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.PathUtils;
+import org.eclipse.aether.util.StringDigestUtil;
 
 import static java.util.Objects.requireNonNull;
 
@@ -156,7 +158,8 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
             } else {
                 String context = result.getRequest().getContext();
                 for (RemoteRepository repository : result.getRequest().getRepositories()) {
-                    if (props.get(getKey(file, getRepositoryKey(repository, context))) != null) {
+                    if (props.get(getKey(file, getRepositoryKey(repository, context))) != null
+                            || props.get(getKey(file, getUrlQualifiedRepositoryKey(repository, context))) != null) {
                         // artifact downloaded from remote repository is accepted only downloaded from request
                         // repositories
                         result.setAvailable(true);
@@ -173,6 +176,19 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                 }
             }
         }
+    }
+
+    /**
+     * Returns the key Maven Resolver 2.x writes by default ({@code <id>-<sha1(url)>}), so that an artifact downloaded
+     * by Maven 3.10 or 4 from the same repository is accepted. Entries are still written with
+     * {@link #getRepositoryKey(RemoteRepository, String)}.
+     */
+    private static String getUrlQualifiedRepositoryKey(RemoteRepository repository, String context) {
+        String seed = repository.getUrl();
+        if (repository.isRepositoryManager() && context != null && !context.isEmpty()) {
+            seed += context;
+        }
+        return PathUtils.stringToPathSegment(repository.getId()) + "-" + StringDigestUtil.sha1(seed);
     }
 
     @Override
