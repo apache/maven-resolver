@@ -179,8 +179,10 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     }
 
     /**
-     * Returns the key Maven Resolver 2.x writes by default ({@code <id>-<sha1(url)>}), so that an artifact downloaded
-     * by Maven 3.10 or 4 from the same repository is accepted. Entries are still written with
+     * Returns the key Maven Resolver 2.x writes by default, so that an artifact downloaded
+     * by Maven 3.10 or 4 from the same repository is accepted. For a plain repository this is
+     * {@code <pathSegment(id)>-<sha1(url)>}; for a repository manager the context is appended to
+     * the URL before hashing: {@code <pathSegment(id)>-<sha1(url+context)>}. Entries are still written with
      * {@link #getRepositoryKey(RemoteRepository, String)}.
      */
     private static String getUrlQualifiedRepositoryKey(RemoteRepository repository, String context) {
