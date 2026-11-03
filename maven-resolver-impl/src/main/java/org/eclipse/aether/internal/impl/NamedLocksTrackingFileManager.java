@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.NamedLockKey;
+import org.eclipse.aether.util.FileUtils;
 import org.eclipse.aether.util.StringDigestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,11 +129,15 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
                         }
                     }
                     LOGGER.debug("Writing tracking file '{}'", path);
-                    try (OutputStream out = Files.newOutputStream(path)) {
-                        props.store(
-                                out,
-                                "NOTE: This is a Maven Resolver internal implementation file"
-                                        + ", its format can be changed without prior notice.");
+                    // write atomically: a truncated tracking file would make artifacts look untracked
+                    try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(path)) {
+                        try (OutputStream out = Files.newOutputStream(tempFile.getPath())) {
+                            props.store(
+                                    out,
+                                    "NOTE: This is a Maven Resolver internal implementation file"
+                                            + ", its format can be changed without prior notice.");
+                        }
+                        tempFile.move();
                     }
                     return props;
                 } catch (IOException e) {

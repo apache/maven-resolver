@@ -63,7 +63,8 @@ public final class LegacyTrackingFileManager implements TrackingFileManager {
 
     @Override
     public Properties read(Path path) {
-        if (Files.isReadable(path)) {
+        // existence, not readability: an unreadable tracking file must fail, not read as "untracked"
+        if (Files.exists(path)) {
             synchronized (mutex(path)) {
                 try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ);
                         FileLock unused = fileLock(fileChannel, true)) {

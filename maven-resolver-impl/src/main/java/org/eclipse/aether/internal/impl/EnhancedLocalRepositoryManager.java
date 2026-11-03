@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -76,6 +77,8 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(EnhancedLocalRepositoryManager.class);
 
     private static final String LOCAL_REPO_ID = "";
+
+    private static final Pattern SHA1_HEX = Pattern.compile("[0-9a-f]{40}");
 
     /**
      * Shared sentinel for "no tracking data". Mutation is forbidden: the instance is shared
@@ -345,11 +348,12 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                 // "central-<sha1(realUrl)>=" but the current build overrides central to "file:target/null"),
                 // the exact lookup misses because sha1(realUrl) != sha1(file:target/null). Match by repo-ID
                 // prefix: any entry starting with "filename>repoId-" is accepted as originating from the same
-                // logical repository.
+                // logical repository. The remainder must be exactly one SHA-1 hash, otherwise a different repository
+                // whose ID merely starts with "repoId-" (e.g. "central-snapshots") would be accepted as well.
                 String repoIdPrefix = getKey(path, legacyKey + "-");
                 for (Object key : props.keySet()) {
                     String k = key.toString();
-                    if (k.startsWith(repoIdPrefix) && !k.equals(getKey(path, trackingKey))) {
+                    if (k.startsWith(repoIdPrefix) && isSha1(k.substring(repoIdPrefix.length()))) {
                         LOGGER.debug(
                                 "Accepting locally cached artifact {} via same-id tracking entry '{}'"
                                         + " (current URL-qualified key would be '{}')",
@@ -366,18 +370,25 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         return false;
     }
 
+    private static boolean isSha1(String s) {
+        return SHA1_HEX.matcher(s).matches();
+    }
+
     @Override
     public void add(RepositorySystemSession session, LocalArtifactRegistration request) {
         Collection<String> repositories;
+        // no contexts would record nothing, leaving the artifact untracked, hence later accepted as locally installed
+        Collection<String> contexts =
+                request.getContexts().isEmpty() ? Collections.singleton("") : request.getContexts();
         if (request.getRepository() == null) {
             repositories = Collections.singleton(LOCAL_REPO_ID);
         } else {
-            repositories = getRepositoryKeys(request.getRepository(), request.getContexts());
+            repositories = getRepositoryKeys(request.getRepository(), contexts);
         }
         if (request.getRepository() == null) {
             addArtifact(request.getArtifact(), repositories, null, null);
         } else {
-            for (String context : request.getContexts()) {
+            for (String context : contexts) {
                 addArtifact(request.getArtifact(), repositories, request.getRepository(), context);
             }
         }
