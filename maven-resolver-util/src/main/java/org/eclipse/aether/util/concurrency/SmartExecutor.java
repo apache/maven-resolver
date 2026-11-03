@@ -64,7 +64,7 @@ public interface SmartExecutor extends AutoCloseable {
             CompletableFuture<T> future = new CompletableFuture<>();
             try {
                 future.complete(callable.call());
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 future.completeExceptionally(e);
             }
             return future;
@@ -118,7 +118,7 @@ public interface SmartExecutor extends AutoCloseable {
                     Thread.currentThread().setContextClassLoader(tccl);
                     try {
                         future.complete(callable.call());
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         future.completeExceptionally(e);
                     } finally {
                         Thread.currentThread().setContextClassLoader(old);
@@ -127,7 +127,7 @@ public interface SmartExecutor extends AutoCloseable {
             } catch (RejectedExecutionException e) {
                 try {
                     future.complete(callable.call());
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                     future.completeExceptionally(ex);
                 }
             }
@@ -191,7 +191,7 @@ public interface SmartExecutor extends AutoCloseable {
                     executor.submit(() -> {
                         try {
                             future.complete(callable.call());
-                        } catch (Exception e) {
+                        } catch (Throwable e) {
                             future.completeExceptionally(e);
                         } finally {
                             semaphore.release();
@@ -200,7 +200,7 @@ public interface SmartExecutor extends AutoCloseable {
                 } catch (RejectedExecutionException e) {
                     try {
                         future.complete(callable.call());
-                    } catch (Exception ex) {
+                    } catch (Throwable ex) {
                         future.completeExceptionally(ex);
                     } finally {
                         semaphore.release();
