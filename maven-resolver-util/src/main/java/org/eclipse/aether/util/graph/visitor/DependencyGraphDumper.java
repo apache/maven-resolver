@@ -236,11 +236,22 @@ public class DependencyGraphDumper implements DependencyVisitor {
         return result;
     }
 
-    private final Consumer<String> consumer;
+    /**
+     * The consumer of the formatted lines.
+     *
+     * @since 2.0.25
+     */
+    protected final Consumer<String> consumer;
 
     private final List<Function<DependencyNode, String>> decorators;
 
-    private final Deque<DependencyNode> nodes = new ArrayDeque<>();
+    /**
+     * The path from the root to the node currently being visited, with the current node at the head. Exposed so
+     * subclasses (such as a cycle-aware dumper) can inspect the current path without having to duplicate it.
+     *
+     * @since 2.0.25
+     */
+    protected final Deque<DependencyNode> nodes = new ArrayDeque<>();
 
     /**
      * Creates instance with given consumer.
@@ -289,7 +300,10 @@ public class DependencyGraphDumper implements DependencyVisitor {
         DependencyNode child = iter.hasNext() ? iter.next() : null;
         while (parent != null && child != null) {
             boolean lastChild = parent.getChildren().get(parent.getChildren().size() - 1) == child;
-            boolean end = child == nodes.peekFirst();
+            // Position in the walk, not identity: the same node instance can appear more than once in the
+            // path when the graph has a cycle, in which case comparing child against nodes.peekFirst() by
+            // identity would wrongly match an ancestor occurrence instead of the one actually being visited.
+            boolean end = !iter.hasNext();
             String indent;
             if (end) {
                 indent = lastChild ? "\\- " : "+- ";
