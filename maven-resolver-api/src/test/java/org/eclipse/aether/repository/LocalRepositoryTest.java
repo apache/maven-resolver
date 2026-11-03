@@ -22,6 +22,7 @@ import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.StreamSupport;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -63,14 +64,24 @@ public class LocalRepositoryTest {
      * treated the drive letter as a URL scheme and stripped it, producing a drive-relative path
      * ({@code \Users\foo\repo}) that {@code new File(...).toURI()} then resolved against the JVM
      * working directory — which can be on a different drive on Windows CI runners.
+     *
+     * <p>The test deliberately picks a drive letter <em>different</em> from the JVM working directory.
+     * This is essential for the regression guard: if the drive letter were the same as the CWD drive,
+     * the old bug (strip drive → drive-relative path → resolve against CWD) would still produce the
+     * correct result and the test would pass without detecting the bug.
      */
     @Test
     @EnabledOnOs(OS.WINDOWS)
     void windowsPlainPathUppercaseDriveLetterPreserved() {
-        // Build the path from the system temp dir so it is always on a valid drive and avoids
-        // hardcoding a specific username or profile path (which may not exist on all runners).
-        Path tmpBase = Paths.get(System.getProperty("java.io.tmpdir"));
-        char driveLetter = Character.toUpperCase(tmpBase.getRoot().toString().charAt(0));
+        // Pick a drive that is NOT the CWD drive to detect the cross-drive regression reliably.
+        char cwdDrive = Character.toUpperCase(
+                Paths.get("").toAbsolutePath().getRoot().toString().charAt(0));
+        char driveLetter = StreamSupport.stream(
+                        FileSystems.getDefault().getRootDirectories().spliterator(), false)
+                .map(p -> Character.toUpperCase(p.toString().charAt(0)))
+                .filter(c -> c != cwdDrive)
+                .findFirst()
+                .orElse(cwdDrive); // fall back to CWD drive if there is only one drive
         String plainPath = driveLetter + ":\\test-resolver-repo\\my-repo";
 
         LocalRepository repo = new LocalRepository(plainPath);
@@ -91,12 +102,21 @@ public class LocalRepositoryTest {
     /**
      * Verifies that a plain Windows path string with a <em>lowercase</em> drive letter (e.g. {@code c:\Users\foo\repo})
      * is also handled correctly. Before the fix, only uppercase drive letters were detected.
+     *
+     * <p>Picks a drive different from the CWD drive for the same reason as
+     * {@link #windowsPlainPathUppercaseDriveLetterPreserved()}.
      */
     @Test
     @EnabledOnOs(OS.WINDOWS)
     void windowsPlainPathLowercaseDriveLetterPreserved() {
-        Path tmpBase = Paths.get(System.getProperty("java.io.tmpdir"));
-        char upperDrive = Character.toUpperCase(tmpBase.getRoot().toString().charAt(0));
+        char cwdDrive = Character.toUpperCase(
+                Paths.get("").toAbsolutePath().getRoot().toString().charAt(0));
+        char upperDrive = StreamSupport.stream(
+                        FileSystems.getDefault().getRootDirectories().spliterator(), false)
+                .map(p -> Character.toUpperCase(p.toString().charAt(0)))
+                .filter(c -> c != cwdDrive)
+                .findFirst()
+                .orElse(cwdDrive);
         char lowerDrive = Character.toLowerCase(upperDrive);
         String plainPath = lowerDrive + ":\\test-resolver-repo\\my-repo";
 
@@ -115,12 +135,21 @@ public class LocalRepositoryTest {
 
     /**
      * Verifies that a Windows path with forward slashes (e.g. {@code C:/Users/foo/repo}) is handled correctly.
+     *
+     * <p>Picks a drive different from the CWD drive for the same reason as
+     * {@link #windowsPlainPathUppercaseDriveLetterPreserved()}.
      */
     @Test
     @EnabledOnOs(OS.WINDOWS)
     void windowsPlainPathForwardSlashPreserved() {
-        Path tmpBase = Paths.get(System.getProperty("java.io.tmpdir"));
-        char driveLetter = Character.toUpperCase(tmpBase.getRoot().toString().charAt(0));
+        char cwdDrive = Character.toUpperCase(
+                Paths.get("").toAbsolutePath().getRoot().toString().charAt(0));
+        char driveLetter = StreamSupport.stream(
+                        FileSystems.getDefault().getRootDirectories().spliterator(), false)
+                .map(p -> Character.toUpperCase(p.toString().charAt(0)))
+                .filter(c -> c != cwdDrive)
+                .findFirst()
+                .orElse(cwdDrive);
         String plainPath = driveLetter + ":/test-resolver-repo/my-repo";
 
         LocalRepository repo = new LocalRepository(plainPath);
