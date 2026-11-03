@@ -31,6 +31,10 @@
   <name>Maven Artifact Resolver Named Locks using Redisson</name>
   <description>A synchronization utility implementation using Redisson.</description>
 
+  <properties>
+    <javaVersion>11</javaVersion>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
@@ -45,7 +49,7 @@
     <dependency>
       <groupId>org.redisson</groupId>
       <artifactId>redisson</artifactId>
-      <version>4.7.0</version>
+      <version>4.8.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
