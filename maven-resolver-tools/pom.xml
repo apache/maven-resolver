@@ -204,6 +204,15 @@
       <artifactId>maven-settings</artifactId>
       <version>${maven3Version}</version>
     </dependency>
+    <!-- maven-plugin-tools-api's httpclient dependency needs this to fetch external javadoc package lists
+         (JavadocSite.createHttpClient). maven-resolver-transport-apache above also depends on httpclient but
+         excludes commons-logging, and since it is declared first, that exclusion otherwise wins the conflict
+         for the whole reactor. Declare it directly so the doclet run does not fail with NoClassDefFoundError. -->
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+    </dependency>
 
     <!-- Not needed during compile -->
     <dependency>
