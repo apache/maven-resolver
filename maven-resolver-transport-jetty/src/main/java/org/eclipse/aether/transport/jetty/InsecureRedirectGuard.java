@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.transport.jetty;
 
-import java.io.IOException;
-
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.jetty.client.Request;
 
@@ -39,7 +37,7 @@ final class InsecureRedirectGuard implements Request.QueuedListener {
     @Override
     public void onQueued(Request request) {
         if (!"https".equalsIgnoreCase(request.getScheme())) {
-            request.abort(new IOException("Insecure redirect to '" + request.getURI()
+            request.abort(new RedirectRefusedException("Insecure redirect to '" + request.getURI()
                     + "' not followed: protocol downgrade from https to " + request.getScheme()
                     + " would expose credentials and artifact content; set the configuration property "
                     + ConfigurationProperties.HTTP_FOLLOW_INSECURE_REDIRECT
