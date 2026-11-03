@@ -22,6 +22,8 @@ under the License.
 This module implement named locks using Redisson. It provides two implementations, that are distributed and rely on
 Redisson distributed objects feature.
 
+**Runtime requirement of Redisson library is Java 11+, hence to use Redisson Named Locks, you must use Java 11+ at runtime.**
+
 Out of the box "redisson" (distributed) named lock implementations are the following:
 
 - `rwlock-redisson` implemented in `org.eclipse.aether.named.redisson.RedissonReadWriteLockNamedLockFactory`
