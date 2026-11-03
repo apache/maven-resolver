@@ -18,8 +18,9 @@
  */
 package org.eclipse.aether.repository;
 
-import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 
 /**
  * URL handling for file URLs. Based on org.apache.maven.wagon.PathUtils.
@@ -39,11 +40,35 @@ public final class RepositoryUriUtils {
      */
     public static URI toUri(String repositoryUrl) {
         final String protocol = protocol(repositoryUrl);
-        if ("file".equals(protocol)
-                || protocol.isEmpty()
-                || protocol.length() == 1
-                        && (Character.isLetter(protocol.charAt(0)) && Character.isUpperCase(protocol.charAt(0)))) {
-            return new File(basedir(repositoryUrl)).toURI();
+        if ("file".equals(protocol)) {
+            // Use basedir() to normalize and extract the path from any file: URL form:
+            //   opaque (file:repo), with authority (file://host/path), unencoded spaces,
+            //   percent-encoded spaces, Windows drive letters (file:/C:/..., file:///C:/...).
+            // Then rebuild a well-formed file: URI using the multi-arg URI constructor
+            // (which percent-encodes the path automatically), and pass it to Paths.get(URI)
+            // so that Windows drive-letter handling is done by the JDK.
+            String path = basedir(repositoryUrl);
+            try {
+                URI uri;
+                if (path.isEmpty()
+                        || (!path.startsWith("/") && !isWindowsDriveLetter(String.valueOf(path.charAt(0))))) {
+                    // Relative path (e.g. from opaque file:repo): resolve against cwd via Paths.get(String)
+                    return Paths.get(path).toAbsolutePath().toUri();
+                }
+                // Absolute path or Windows drive letter path.
+                // Use authority="" to produce file:///path (three-slash form) which Paths.get(URI)
+                // handles correctly on Windows: the JDK treats the empty authority as localhost
+                // and strips the leading '/' before a Windows drive letter (e.g. /C:/... → C:/...).
+                uri = new URI("file", "", path, null, null);
+                return Paths.get(uri).toUri();
+            } catch (URISyntaxException e) {
+                // Should not happen since basedir() returns a clean path; fall back to string-based parse
+                return Paths.get(path).toUri();
+            }
+        } else if (protocol.isEmpty() || isWindowsDriveLetter(protocol)) {
+            // Use Paths.get() to parse the local path lexically, without resolving against the JVM
+            // working directory via File (which may be on a different drive on Windows).
+            return Paths.get(basedir(repositoryUrl)).toUri();
         } else {
             return URI.create(repositoryUrl);
         }
@@ -76,7 +101,13 @@ public final class RepositoryUriUtils {
         String retValue;
 
         if (!protocol.isEmpty()) {
-            retValue = url.substring(protocol.length() + 1);
+            // A single letter (case-insensitive) is a Windows drive letter (e.g. "C:\path" or "c:\path"),
+            // not a URL scheme. Keep it in the path; do not strip it as if it were a protocol prefix.
+            if (isWindowsDriveLetter(protocol)) {
+                retValue = url;
+            } else {
+                retValue = url.substring(protocol.length() + 1);
+            }
         } else {
             retValue = url;
         }
@@ -111,6 +142,19 @@ public final class RepositoryUriUtils {
         }
 
         return retValue.trim();
+    }
+
+    /**
+     * Returns {@code true} if the given protocol token is a single ASCII letter, which on Windows indicates
+     * a drive letter (e.g. {@code C} in {@code C:\\path} or {@code c} in {@code c:/path}) rather than a URL scheme.
+     * The check is restricted to ASCII letters only (not Unicode letters) and is locale-independent.
+     */
+    private static boolean isWindowsDriveLetter(String protocol) {
+        if (protocol.length() != 1) {
+            return false;
+        }
+        char c = protocol.charAt(0);
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
     }
 
     /**
