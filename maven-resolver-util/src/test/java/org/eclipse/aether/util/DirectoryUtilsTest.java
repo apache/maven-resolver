@@ -92,11 +92,8 @@ public class DirectoryUtilsTest {
 
         Path tmpDir = Files.createTempDirectory(testInfo.getDisplayName());
         Files.createFile(tmpDir.resolve("foo"));
-        try {
-            DirectoryUtils.resolveDirectory("foo", tmpDir, false);
-        } catch (IOException e) {
-            assertTrue(e.getMessage().startsWith("Path exists, but is not a directory:"), e.getMessage());
-        }
+        IOException e = assertThrows(IOException.class, () -> DirectoryUtils.resolveDirectory("foo", tmpDir, false));
+        assertTrue(e.getMessage().startsWith("Path exists, but is not a directory:"), e.getMessage());
     }
 
     @Test
