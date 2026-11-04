@@ -45,6 +45,12 @@ public class DefaultUpdatePolicyAnalyzer implements UpdatePolicyAnalyzer {
         return ordinalOfUpdatePolicy(policy1) < ordinalOfUpdatePolicy(policy2) ? policy1 : policy2;
     }
 
+    @Override
+    public String getStrongerUpdatePolicy(RepositorySystemSession session, String policy1, String policy2) {
+        requireNonNull(session, "session cannot be null");
+        return ordinalOfUpdatePolicy(policy1) > ordinalOfUpdatePolicy(policy2) ? policy1 : policy2;
+    }
+
     private int ordinalOfUpdatePolicy(String policy) {
         if (RepositoryPolicy.UPDATE_POLICY_DAILY.equals(policy)) {
             return 1440;

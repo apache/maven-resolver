@@ -356,6 +356,25 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
 
     public static final boolean DEFAULT_NATURE_MERGE_WEAKEST_CHECKSUM_POLICY = false;
 
+    /**
+     * Flag indicating whether the merge of a repository's release and snapshot update policies (used when a single
+     * effective policy has to serve both natures, most notably for metadata of nature RELEASE_OR_SNAPSHOT such as
+     * {@code maven-metadata.xml} version lists) may pick the policy with the <em>shorter</em> update interval of the
+     * two, which was the legacy behavior. When disabled (the default), the policy with the longer update interval
+     * wins, so enabling snapshots on a repository configured with {@code updatePolicy=never} for releases no longer
+     * silently forces metadata updates that the operator configured to never happen (or vice versa). An explicit
+     * update policy set on the session takes precedence over either behavior, as before.
+     *
+     * @since 2.0.25
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_NATURE_MERGE_WEAKEST_UPDATE_POLICY}
+     */
+    public static final String CONFIG_PROP_NATURE_MERGE_WEAKEST_UPDATE_POLICY =
+            "aether.remoteRepositoryManager.natureMergeWeakestUpdatePolicy";
+
+    public static final boolean DEFAULT_NATURE_MERGE_WEAKEST_UPDATE_POLICY = false;
+
     @Override
     public RepositoryPolicy getPolicy(
             RepositorySystemSession session, RemoteRepository repository, boolean releases, boolean snapshots) {
@@ -429,10 +448,21 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
                         session, policy1.getChecksumPolicy(), policy2.getChecksumPolicy());
             }
 
+            boolean mergeWeakestUpdatePolicy = ConfigUtils.getBoolean(
+                    session,
+                    DEFAULT_NATURE_MERGE_WEAKEST_UPDATE_POLICY,
+                    CONFIG_PROP_NATURE_MERGE_WEAKEST_UPDATE_POLICY);
+
             String artifactUpdates = session.getArtifactUpdatePolicy();
             //noinspection StatementWithEmptyBody
             if (globalPolicy && artifactUpdates != null && !artifactUpdates.isEmpty()) {
                 // use global override
+            } else if (globalPolicy && !mergeWeakestUpdatePolicy) {
+                // merging the release and snapshot policies of a single repository into one effective policy
+                // (e.g. for metadata of nature RELEASE_OR_SNAPSHOT): the result must not be more eager than what
+                // the operator configured for either nature, so the policy with the longer update interval wins
+                artifactUpdates = updatePolicyAnalyzer.getStrongerUpdatePolicy(
+                        session, policy1.getArtifactUpdatePolicy(), policy2.getArtifactUpdatePolicy());
             } else {
                 artifactUpdates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
                         session, policy1.getArtifactUpdatePolicy(), policy2.getArtifactUpdatePolicy());
@@ -440,6 +470,11 @@ public class DefaultRemoteRepositoryManager implements RemoteRepositoryManager {
             String metadataUpdates = session.getMetadataUpdatePolicy();
             if (globalPolicy && metadataUpdates != null && !metadataUpdates.isEmpty()) {
                 // use global override
+            } else if (globalPolicy && !mergeWeakestUpdatePolicy) {
+                // same reasoning as above, for metadata update policy; this is the composite RELEASE_OR_SNAPSHOT
+                // case that version-range and LATEST/RELEASE metadata requests go through
+                metadataUpdates = updatePolicyAnalyzer.getStrongerUpdatePolicy(
+                        session, policy1.getMetadataUpdatePolicy(), policy2.getMetadataUpdatePolicy());
             } else {
                 metadataUpdates = updatePolicyAnalyzer.getEffectiveUpdatePolicy(
                         session, policy1.getMetadataUpdatePolicy(), policy2.getMetadataUpdatePolicy());

@@ -117,4 +117,24 @@ public class DefaultUpdatePolicyAnalyzerTest {
                 analyzer.getEffectiveUpdatePolicy(
                         session, UPDATE_POLICY_INTERVAL + ":100", UPDATE_POLICY_INTERVAL + ":60"));
     }
+
+    @Test
+    void testStrongerUpdatePolicy() {
+        assertEquals(
+                UPDATE_POLICY_DAILY,
+                analyzer.getStrongerUpdatePolicy(session, UPDATE_POLICY_ALWAYS, UPDATE_POLICY_DAILY));
+        assertEquals(
+                UPDATE_POLICY_NEVER,
+                analyzer.getStrongerUpdatePolicy(session, UPDATE_POLICY_ALWAYS, UPDATE_POLICY_NEVER));
+        assertEquals(
+                UPDATE_POLICY_NEVER,
+                analyzer.getStrongerUpdatePolicy(session, UPDATE_POLICY_DAILY, UPDATE_POLICY_NEVER));
+        assertEquals(
+                UPDATE_POLICY_DAILY,
+                analyzer.getStrongerUpdatePolicy(session, UPDATE_POLICY_DAILY, UPDATE_POLICY_INTERVAL + ":60"));
+        assertEquals(
+                UPDATE_POLICY_INTERVAL + ":100",
+                analyzer.getStrongerUpdatePolicy(
+                        session, UPDATE_POLICY_INTERVAL + ":100", UPDATE_POLICY_INTERVAL + ":60"));
+    }
 }
