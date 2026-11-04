@@ -92,6 +92,9 @@ public class DefaultRemoteRepositoryManagerTest {
 
     @Test
     void testGetPolicy() {
+        // MRESOLVER-634: a repository with updatePolicy=never for releases and the (default) always for
+        // snapshots must keep honoring "never" once release and snapshot policies are merged into one
+        // effective policy for metadata of nature RELEASE_OR_SNAPSHOT, e.g. for version-range requests.
         RepositoryPolicy snapshotPolicy = new RepositoryPolicy(
                 true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_IGNORE);
         RepositoryPolicy releasePolicy =
@@ -105,8 +108,63 @@ public class DefaultRemoteRepositoryManagerTest {
         RepositoryPolicy effectivePolicy = manager.getPolicy(session, repo, true, true);
         assertTrue(effectivePolicy.isEnabled());
         assertEquals(RepositoryPolicy.CHECKSUM_POLICY_FAIL, effectivePolicy.getChecksumPolicy());
+        assertEquals(RepositoryPolicy.UPDATE_POLICY_NEVER, effectivePolicy.getArtifactUpdatePolicy());
+        assertEquals(RepositoryPolicy.UPDATE_POLICY_NEVER, effectivePolicy.getMetadataUpdatePolicy());
+    }
+
+    @Test
+    void testGetPolicy_NatureMergePicksStrongerUpdatePolicy() {
+        RepositoryPolicy snapshotPolicy =
+                new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_DAILY, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+        RepositoryPolicy releasePolicy = new RepositoryPolicy(
+                true, RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10080", RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+
+        RemoteRepository repo = new RemoteRepository.Builder("id", "type", "http://localhost")
+                .setSnapshotPolicy(snapshotPolicy)
+                .setReleasePolicy(releasePolicy)
+                .build();
+
+        RepositoryPolicy effectivePolicy = manager.getPolicy(session, repo, true, true);
+        assertEquals(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10080", effectivePolicy.getArtifactUpdatePolicy());
+        assertEquals(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10080", effectivePolicy.getMetadataUpdatePolicy());
+    }
+
+    @Test
+    void testGetPolicy_LegacyWeakestUpdatePolicyNatureMerge() {
+        RepositoryPolicy snapshotPolicy = new RepositoryPolicy(
+                true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+        RepositoryPolicy releasePolicy =
+                new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+
+        RemoteRepository repo = new RemoteRepository.Builder("id", "type", "http://localhost")
+                .setSnapshotPolicy(snapshotPolicy)
+                .setReleasePolicy(releasePolicy)
+                .build();
+
+        session.setConfigProperty(DefaultRemoteRepositoryManager.CONFIG_PROP_NATURE_MERGE_WEAKEST_UPDATE_POLICY, true);
+
+        RepositoryPolicy effectivePolicy = manager.getPolicy(session, repo, true, true);
         assertEquals(RepositoryPolicy.UPDATE_POLICY_ALWAYS, effectivePolicy.getArtifactUpdatePolicy());
         assertEquals(RepositoryPolicy.UPDATE_POLICY_ALWAYS, effectivePolicy.getMetadataUpdatePolicy());
+    }
+
+    @Test
+    void testGetPolicy_SessionUpdatePolicyOverridesNatureMerge() {
+        RepositoryPolicy snapshotPolicy = new RepositoryPolicy(
+                true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+        RepositoryPolicy releasePolicy =
+                new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+
+        RemoteRepository repo = new RemoteRepository.Builder("id", "type", "http://localhost")
+                .setSnapshotPolicy(snapshotPolicy)
+                .setReleasePolicy(releasePolicy)
+                .build();
+
+        session.setUpdatePolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
+
+        RepositoryPolicy effectivePolicy = manager.getPolicy(session, repo, true, true);
+        assertEquals(RepositoryPolicy.UPDATE_POLICY_DAILY, effectivePolicy.getArtifactUpdatePolicy());
+        assertEquals(RepositoryPolicy.UPDATE_POLICY_DAILY, effectivePolicy.getMetadataUpdatePolicy());
     }
 
     @Test
@@ -723,6 +781,11 @@ public class DefaultRemoteRepositoryManagerTest {
         public String getEffectiveUpdatePolicy(RepositorySystemSession session, String policy1, String policy2) {
             requireNonNull(session, "session cannot be null");
             return ordinalOfUpdatePolicy(policy1) < ordinalOfUpdatePolicy(policy2) ? policy1 : policy2;
+        }
+
+        public String getStrongerUpdatePolicy(RepositorySystemSession session, String policy1, String policy2) {
+            requireNonNull(session, "session cannot be null");
+            return ordinalOfUpdatePolicy(policy1) > ordinalOfUpdatePolicy(policy2) ? policy1 : policy2;
         }
 
         private int ordinalOfUpdatePolicy(String policy) {

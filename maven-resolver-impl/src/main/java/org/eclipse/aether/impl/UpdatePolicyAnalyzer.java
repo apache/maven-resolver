@@ -40,6 +40,17 @@ public interface UpdatePolicyAnalyzer {
     String getEffectiveUpdatePolicy(RepositorySystemSession session, String policy1, String policy2);
 
     /**
+     * Returns the policy with the longer update interval, i.e. the one that checks for updates least often.
+     *
+     * @param session The repository system session during which the request is made, must not be {@code null}.
+     * @param policy1 A policy to compare, may be {@code null}.
+     * @param policy2 A policy to compare, may be {@code null}.
+     * @return The policy with the longer update interval.
+     * @since 2.0.25
+     */
+    String getStrongerUpdatePolicy(RepositorySystemSession session, String policy1, String policy2);
+
+    /**
      * Determines whether the specified modification timestamp satisfies the freshness constraint expressed by the given
      * update policy.
      *
