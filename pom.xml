@@ -75,7 +75,7 @@
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-resolver.git</developerConnection>
-    <tag>maven-resolver-2.0.13</tag>
+    <tag>HEAD</tag>
     <url>https://github.com/apache/maven-resolver/tree/${project.scm.tag}</url>
   </scm>
   <issueManagement>
