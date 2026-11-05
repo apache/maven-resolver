@@ -64,7 +64,7 @@ public final class CollectResult {
     /**
      * Gets the exceptions that occurred while building the dependency graph.
      *
-     * @return An unmodifiable list of the exceptions that occurred, never {@code null}.
+     * @return an unmodifiable list of the exceptions that occurred, never {@code null}.
      */
     public List<Exception> getExceptions() {
         return Collections.unmodifiableList(exceptions);
@@ -86,7 +86,7 @@ public final class CollectResult {
     /**
      * Gets the dependency cycles that were encountered while building the dependency graph.
      *
-     * @return An unmodifiable list of the dependency cycles, never {@code null}.
+     * @return an unmodifiable list of the dependency cycles, never {@code null}.
      */
     public List<DependencyCycle> getCycles() {
         return Collections.unmodifiableList(cycles);
@@ -95,7 +95,7 @@ public final class CollectResult {
     /**
      * Records the specified dependency cycle.
      *
-     * @param cycle The dependency cycle, may be {@code null}.
+     * @param cycle the dependency cycle, may be {@code null}.
      * @return This result for chaining, never {@code null}.
      */
     public CollectResult addCycle(DependencyCycle cycle) {
