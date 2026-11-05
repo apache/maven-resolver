@@ -18,15 +18,19 @@
  */
 package org.eclipse.aether.collection;
 
+import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.aether.graph.DependencyCycle;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 
 class CollectResultTest {
 
@@ -41,28 +45,157 @@ class CollectResultTest {
         CountDownLatch start = new CountDownLatch(1);
 
         try {
-            for (int i = 0; i < threads; i++) {
-                executor.submit(() -> {
-                    try {
-                        start.await();
+            Future<?>[] futures = new Future<?>[threads];
 
-                        for (int j = 0; j < additionsPerThread; j++) {
-                            result.addException(new Exception());
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+            for (int i = 0; i < threads; i++) {
+                futures[i] = executor.submit(() -> {
+                    start.await();
+
+                    for (int j = 0; j < additionsPerThread; j++) {
+                        result.addException(new Exception());
                     }
+                    return null;
                 });
             }
 
             start.countDown();
-            executor.shutdown();
 
-            assertTrue(executor.awaitTermination(30, TimeUnit.SECONDS), "Executor did not terminate in time");
+            for (Future<?> future : futures) {
+                future.get(30, TimeUnit.SECONDS);
+            }
 
             assertEquals(threads * additionsPerThread, result.getExceptions().size());
         } finally {
             executor.shutdownNow();
         }
+    }
+
+    @Test
+    void testConcurrentAddCycle() throws Exception {
+        CollectResult result = new CollectResult(new CollectRequest());
+
+        int threads = 10;
+        int additionsPerThread = 100;
+
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        CountDownLatch start = new CountDownLatch(1);
+
+        try {
+            Future<?>[] futures = new Future<?>[threads];
+
+            for (int i = 0; i < threads; i++) {
+                futures[i] = executor.submit(() -> {
+                    start.await();
+
+                    for (int j = 0; j < additionsPerThread; j++) {
+                        result.addCycle(mock(DependencyCycle.class));
+                    }
+                    return null;
+                });
+            }
+
+            start.countDown();
+
+            for (Future<?> future : futures) {
+                future.get(30, TimeUnit.SECONDS);
+            }
+
+            assertEquals(threads * additionsPerThread, result.getCycles().size());
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void testGetExceptionsReturnsUnmodifiableList() {
+        CollectResult result = new CollectResult(new CollectRequest());
+        result.addException(new Exception());
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> result.getExceptions().clear());
+    }
+
+    @Test
+    void testGetCyclesReturnsUnmodifiableList() {
+        CollectResult result = new CollectResult(new CollectRequest());
+        result.addCycle(mock(DependencyCycle.class));
+
+        assertThrows(
+                UnsupportedOperationException.class, () -> result.getCycles().clear());
+    }
+
+    @Test
+    void testConcurrentIterationWhileAddingExceptions() throws Exception {
+        CollectResult result = new CollectResult(new CollectRequest());
+        result.addException(new Exception());
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountDownLatch iteratorCreated = new CountDownLatch(1);
+        CountDownLatch continueIteration = new CountDownLatch(1);
+
+        try {
+            Future<?> reader = executor.submit(() -> {
+                Iterator<Exception> iterator = result.getExceptions().iterator();
+                iteratorCreated.countDown();
+                continueIteration.await();
+
+                while (iterator.hasNext()) {
+                    iterator.next();
+                }
+                return null;
+            });
+
+            Future<?> writer = executor.submit(() -> {
+                iteratorCreated.await();
+                result.addException(new Exception());
+                continueIteration.countDown();
+                return null;
+            });
+
+            reader.get(30, TimeUnit.SECONDS);
+            writer.get(30, TimeUnit.SECONDS);
+        } finally {
+            executor.shutdownNow();
+        }
+
+        assertEquals(2, result.getExceptions().size());
+    }
+
+    @Test
+    void testConcurrentIterationWhileAddingCycles() throws Exception {
+        CollectResult result = new CollectResult(new CollectRequest());
+        result.addCycle(mock(DependencyCycle.class));
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountDownLatch iteratorCreated = new CountDownLatch(1);
+        CountDownLatch continueIteration = new CountDownLatch(1);
+
+        try {
+            Future<?> reader = executor.submit(() -> {
+                Iterator<DependencyCycle> iterator = result.getCycles().iterator();
+                iteratorCreated.countDown();
+                continueIteration.await();
+
+                while (iterator.hasNext()) {
+                    iterator.next();
+                }
+                return null;
+            });
+
+            Future<?> writer = executor.submit(() -> {
+                iteratorCreated.await();
+                result.addCycle(mock(DependencyCycle.class));
+                continueIteration.countDown();
+                return null;
+            });
+
+            reader.get(30, TimeUnit.SECONDS);
+            writer.get(30, TimeUnit.SECONDS);
+        } finally {
+            executor.shutdownNow();
+        }
+
+        assertEquals(2, result.getCycles().size());
     }
 }
