@@ -53,7 +53,9 @@ public class FixedBucketObjectNameMapperFactory implements ObjectNameMapperFacto
                 session,
                 S3TransporterConfigurationKeys.DEFAULT_FIXED_BUCKET_NAME,
                 S3TransporterConfigurationKeys.CONFIG_PROP_FIXED_BUCKET_NAME + "." + repository.getId(),
-                S3TransporterConfigurationKeys.CONFIG_PROP_FIXED_BUCKET_NAME);
+                S3TransporterConfigurationKeys.LEGACY_CONFIG_PROP_FIXED_BUCKET_NAME + "." + repository.getId(),
+                S3TransporterConfigurationKeys.CONFIG_PROP_FIXED_BUCKET_NAME,
+                S3TransporterConfigurationKeys.LEGACY_CONFIG_PROP_FIXED_BUCKET_NAME);
         return path -> new ObjectName(bucket, repository.getId() + "/" + ObjectName.normalize(path));
     }
 }

@@ -86,6 +86,13 @@ public final class S3TransporterFactory implements TransporterFactory {
                     .setUrl(repository.getUrl().substring("s3+".length()))
                     .build();
             prefixStripped = true;
+        } else if ("minio+http".equalsIgnoreCase(repository.getProtocol())
+                || "minio+https".equalsIgnoreCase(repository.getProtocol())) {
+            // the MinIO transport's URL form, accepted so that its repositories work with this transport unchanged
+            adjusted = new RemoteRepository.Builder(repository)
+                    .setUrl(repository.getUrl().substring("minio+".length()))
+                    .build();
+            prefixStripped = true;
         } else if (priority == DEFAULT_PRIORITY) {
             throw new NoTransporterException(
                     repository, "To use the S3 transport with plain HTTP/HTTPS repositories, increase its priority");
@@ -98,13 +105,16 @@ public final class S3TransporterFactory implements TransporterFactory {
                     session,
                     S3TransporterConfigurationKeys.DEFAULT_ALLOW_INSECURE_PROTOCOL,
                     S3TransporterConfigurationKeys.CONFIG_PROP_ALLOW_INSECURE_PROTOCOL + "." + repository.getId(),
-                    S3TransporterConfigurationKeys.CONFIG_PROP_ALLOW_INSECURE_PROTOCOL);
+                    S3TransporterConfigurationKeys.LEGACY_CONFIG_PROP_ALLOW_INSECURE_PROTOCOL + "."
+                            + repository.getId(),
+                    S3TransporterConfigurationKeys.CONFIG_PROP_ALLOW_INSECURE_PROTOCOL,
+                    S3TransporterConfigurationKeys.LEGACY_CONFIG_PROP_ALLOW_INSECURE_PROTOCOL);
             if (!allowInsecureProtocol) {
                 throw new NoTransporterException(
                         repository,
                         "Plaintext HTTP object storage endpoints are insecure (no transport integrity; not subject"
                                 + " to 'external:http:*' mirror blocking) and are refused by default: use the"
-                                + " 's3+https' URL form, or explicitly opt in by setting the configuration property '"
+                                + " 's3+https' (or 'minio+https') URL form, or explicitly opt in by setting the configuration property '"
                                 + S3TransporterConfigurationKeys.CONFIG_PROP_ALLOW_INSECURE_PROTOCOL
                                 + "' (optionally suffixed with '." + repository.getId() + "') to 'true'");
             }
@@ -113,7 +123,9 @@ public final class S3TransporterFactory implements TransporterFactory {
                 session,
                 S3TransporterConfigurationKeys.DEFAULT_OBJECT_NAME_MAPPER,
                 S3TransporterConfigurationKeys.CONFIG_PROP_OBJECT_NAME_MAPPER + "." + repository.getId(),
-                S3TransporterConfigurationKeys.CONFIG_PROP_OBJECT_NAME_MAPPER);
+                S3TransporterConfigurationKeys.LEGACY_CONFIG_PROP_OBJECT_NAME_MAPPER + "." + repository.getId(),
+                S3TransporterConfigurationKeys.CONFIG_PROP_OBJECT_NAME_MAPPER,
+                S3TransporterConfigurationKeys.LEGACY_CONFIG_PROP_OBJECT_NAME_MAPPER);
         ObjectNameMapperFactory objectNameMapperFactory = objectNameMapperFactories.get(objectNameMapperConf);
         if (objectNameMapperFactory == null) {
             throw new IllegalArgumentException("Unknown object name mapper configured '" + objectNameMapperConf

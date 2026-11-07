@@ -23,6 +23,8 @@
  * uses path-style access, and does not send the CRC-based request checksums that S3-compatible stores commonly lack.
  * The repository URL should be defined with protocol {@code s3+https}; the factory merely strips the "s3+" prefix
  * assuming the resulting URL points to the S3 endpoint, with the bucket chosen by the configured object name mapper.
+ * The MinIO transport's {@code minio+https} form and its {@code aether.transport.minio.*} configuration keys are
+ * accepted as well, so a repository set up for that transport works with this one unchanged.
  * Credentials come from the repository authentication (username as access key, password as secret key) when set,
  * and from the SDK default credentials provider chain otherwise.
  * The plaintext {@code s3+http} form is refused by default: it offers no transport integrity and is not matched by
