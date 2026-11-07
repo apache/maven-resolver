@@ -35,14 +35,14 @@ start, add the following dependencies to the plugin POM:
       <!-- required in all cases -->
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
-      <version>1.9.22</version>
+      <version>1.9.27</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <!-- optional helpers, might be superfluous depending on your use case -->
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-util</artifactId>
-      <version>1.9.22</version>
+      <version>1.9.27</version>
       <!-- Scope: use compile to make plugin work in Maven 3.8 and earlier -->
       <scope>compile</scope>
     </dependency>
@@ -56,6 +56,42 @@ start, add the following dependencies to the plugin POM:
 set by the Maven core so be sure to
 compile/test your plugin against the version of `maven-resolver-api` that is
 used by the minimum version of Maven that your plugin wants to support.
+
+## Which Resolver version to compile against
+
+Maven supplies the Resolver API at runtime, and the Maven lines ship
+different Resolver lines:
+
+| Maven | Resolver | Notes |
+|---|---|---|
+| 3.9.x | 1.9.x | Maven 3.9.12 bundles 1.9.25. |
+| 3.10.x | 2.0.x | Maven 3.10.0 bundles 2.0.24. |
+| 4.0.x | 2.0.x | Maven 4.0.0-rc-7 bundles 2.0.23. |
+
+Compile against the Resolver line of the oldest Maven you support. A plugin
+built against 2.0.x that calls a method 1.9.x does not have, such as
+`Artifact#getPath()`, fails with `NoSuchMethodError` inside Maven 3.9.
+
+### Plugins that support Maven 3.9 and later
+
+Resolver 2.x deprecated every `java.io.File` method of the API in favour of
+`java.nio.file.Path`, see [Upgrading Resolver](upgrading-resolver.html). The
+`File` methods still exist in 2.x and delegate to the `Path` ones, while the
+`Path` methods do not exist in 1.9.x. For a plugin that runs in Maven 3.9 as well as
+in Maven 3.10 or 4:
+
+* Compile against 1.9.x and keep calling `getFile()`, `setFile(File)` and
+  `new LocalRepository(File)`. They work unchanged in Maven 3.10 and 4.
+* Keep `maven-resolver-api` in `provided` scope and do not shade or bundle any
+  Resolver module; the runtime version is always Maven's.
+* Convert at the boundary: call `artifact.getFile().toPath()` where your own
+  code wants a `Path`.
+* When the plugin drops Maven 3.9 support, raise the dependency to 2.0.x and
+  replace the `File` methods; the `-Xlint:deprecation` warnings point at each
+  call site.
+
+Everything deprecated in 1.9.x is removed in 2.x, so a plugin that compiles
+against 1.9.x without deprecation warnings also loads in Maven 3.10 and 4.
 
 Next, in your mojo source, you need to inject the repository related
 components and parameters:
