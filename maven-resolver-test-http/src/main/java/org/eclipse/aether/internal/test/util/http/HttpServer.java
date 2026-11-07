@@ -292,13 +292,12 @@ public class HttpServer {
     private SslContextFactory.Server createServerSslContextFactory(boolean needClientAuth) {
         SslContextFactory.Server ssl = new SslContextFactory.Server();
         ssl.setSniRequired(false);
-        ssl.setKeyStorePath(
-                HttpTransporterTest.SERVER_STORE_PATH.toAbsolutePath().toString());
+        ssl.setKeyStorePath(SslTestSupport.SERVER_STORE_PATH.toAbsolutePath().toString());
         ssl.setKeyStorePassword("server-pwd");
         ssl.setNeedClientAuth(needClientAuth);
         if (needClientAuth) {
             ssl.setTrustStorePath(
-                    HttpTransporterTest.CLIENT_STORE_PATH.toAbsolutePath().toString());
+                    SslTestSupport.CLIENT_STORE_PATH.toAbsolutePath().toString());
             ssl.setTrustStorePassword("client-pwd");
         }
         return ssl;
@@ -311,7 +310,7 @@ public class HttpServer {
     public HttpServer addHttp3Connector(boolean needClientAuth, int port) {
         if (http3Connector == null) {
             QuicheServerQuicConfiguration serverQuicConfig = HTTP3ServerQuicConfiguration.configure(
-                    new QuicheServerQuicConfiguration(HttpTransporterTest.PEM_QUICHE_SERVER_PATH));
+                    new QuicheServerQuicConfiguration(SslTestSupport.PEM_QUICHE_SERVER_PATH));
             http3Connector = new QuicheServerConnector(
                     server,
                     createServerSslContextFactory(needClientAuth),
