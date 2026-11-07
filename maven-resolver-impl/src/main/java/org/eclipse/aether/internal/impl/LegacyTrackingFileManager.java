@@ -140,8 +140,13 @@ public final class LegacyTrackingFileManager implements TrackingFileManager {
     public boolean delete(Path path) {
         if (Files.isReadable(path)) {
             synchronized (mutex(path)) {
-                try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE);
-                        FileLock unused = fileLock(fileChannel, false)) {
+                try {
+                    // Take the lock to wait for other processes using the file, but release it and close the
+                    // channel before unlinking: NFS refuses to unlink a file this process still has open (EBUSY).
+                    try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.WRITE);
+                            FileLock unused = fileLock(fileChannel, false)) {
+                        // acquiring the lock is the whole point
+                    }
                     Files.delete(path);
                     return true;
                 } catch (NoSuchFileException e) {
