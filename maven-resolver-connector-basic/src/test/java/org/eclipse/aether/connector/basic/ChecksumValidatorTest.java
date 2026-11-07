@@ -21,6 +21,7 @@ package org.eclipse.aether.connector.basic;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.eclipse.aether.transfer.ChecksumFailureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.MD5;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA1;
@@ -92,7 +94,7 @@ public class ChecksumValidatorTest {
             if (conclusion instanceof ChecksumFailureException) {
                 throw (ChecksumFailureException) conclusion;
             } else if (!Boolean.TRUE.equals(conclusion)) {
-                throw new ChecksumFailureException("no checksums");
+                throw ChecksumFailureException.noneAvailable("no checksums", null);
             }
         }
 
@@ -130,7 +132,8 @@ public class ChecksumValidatorTest {
             if (checksum instanceof Exception) {
                 throw (Exception) checksum;
             }
-            TestFileUtils.writeString(local.toFile(), checksum.toString());
+            Files.createDirectories(local.getParent());
+            Files.write(local, checksum.toString().getBytes(StandardCharsets.UTF_8));
             checksumFiles.add(local);
             return true;
         }
@@ -155,6 +158,9 @@ public class ChecksumValidatorTest {
     private StubChecksumPolicy policy;
 
     private StubChecksumFetcher fetcher;
+
+    @TempDir
+    private Path tempDir;
 
     private File dataFile;
 
@@ -214,7 +220,7 @@ public class ChecksumValidatorTest {
 
     @BeforeEach
     void init() throws Exception {
-        dataFile = TestFileUtils.createTempFile("");
+        dataFile = Files.createTempFile(tempDir, "tmpfile-", ".data").toFile();
         dataFile.delete();
         policy = new StubChecksumPolicy();
         fetcher = new StubChecksumFetcher();
@@ -393,7 +399,7 @@ public class ChecksumValidatorTest {
     void testHandle_Accept() {
         policy.tolerateFailure = true;
         ChecksumValidator validator = newValidator(SHA1);
-        assertTrue(validator.handle(new ChecksumFailureException("accept")));
+        assertTrue(validator.handle(ChecksumFailureException.noneAvailable("accept", null)));
         policy.assertCallbacks("fail(accept)");
     }
 
@@ -401,7 +407,7 @@ public class ChecksumValidatorTest {
     void testHandle_Reject() {
         policy.tolerateFailure = false;
         ChecksumValidator validator = newValidator(SHA1);
-        assertFalse(validator.handle(new ChecksumFailureException("reject")));
+        assertFalse(validator.handle(ChecksumFailureException.noneAvailable("reject", null)));
         policy.assertCallbacks("fail(reject)");
     }
 

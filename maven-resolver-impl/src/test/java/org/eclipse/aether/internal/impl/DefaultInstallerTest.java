@@ -20,8 +20,10 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,20 +47,20 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultInstallerTest {
+
+    @TempDir
+    private Path tempDir;
 
     private Artifact artifact;
 
     private Metadata metadata;
 
     private DefaultRepositorySystemSession session;
-
-    private String localArtifactPath;
-
-    private String localMetadataPath;
 
     private DefaultInstaller installer;
 
@@ -70,23 +72,28 @@ public class DefaultInstallerTest {
 
     private TestLocalRepositoryManager lrm;
 
+    private Path createTempFile(String contents) throws IOException {
+        Path file = Files.createTempFile(tempDir, "tmpfile-", ".data");
+        Files.write(file, contents.getBytes(StandardCharsets.UTF_8));
+        return file;
+    }
+
+    private static void writeString(File file, String contents) throws IOException {
+        Files.createDirectories(file.toPath().getParent());
+        Files.write(file.toPath(), contents.getBytes(StandardCharsets.UTF_8));
+    }
+
     @BeforeEach
     void setup() throws IOException {
         artifact = new DefaultArtifact("gid", "aid", "jar", "ver");
-        artifact = artifact.setFile(TestFileUtils.createTempFile("artifact".getBytes(), 1));
+        artifact = artifact.setPath(createTempFile("artifact"));
         metadata = new DefaultMetadata(
-                "gid",
-                "aid",
-                "ver",
-                "type",
-                Nature.RELEASE_OR_SNAPSHOT,
-                TestFileUtils.createTempFile("metadata".getBytes(), 1));
+                "gid", "aid", "ver", "type", Nature.RELEASE_OR_SNAPSHOT, createTempFile("metadata"));
 
         session = TestUtils.newSession();
-        localArtifactPath = session.getLocalRepositoryManager().getPathForLocalArtifact(artifact);
-        localMetadataPath = session.getLocalRepositoryManager().getPathForLocalMetadata(metadata);
-
-        localArtifactFile = new File(session.getLocalRepository().getBasedir(), localArtifactPath);
+        localArtifactFile = session.getLocalRepositoryManager()
+                .getAbsolutePathForLocalArtifact(artifact)
+                .toFile();
 
         installer = new DefaultInstaller(
                 new PathProcessorSupport(),
@@ -101,20 +108,22 @@ public class DefaultInstallerTest {
 
         lrm = (TestLocalRepositoryManager) session.getLocalRepositoryManager();
 
-        TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
+        TestFileUtils.deleteFile(session.getLocalRepository().getBasePath().toFile());
     }
 
     @AfterEach
     void teardown() throws Exception {
-        TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
+        TestFileUtils.deleteFile(session.getLocalRepository().getBasePath().toFile());
     }
 
     @Test
     void testSuccessfulInstall() throws InstallationException, IOException {
-        File artifactFile =
-                new File(session.getLocalRepositoryManager().getRepository().getBasedir(), localArtifactPath);
-        File metadataFile =
-                new File(session.getLocalRepositoryManager().getRepository().getBasedir(), localMetadataPath);
+        File artifactFile = session.getLocalRepositoryManager()
+                .getAbsolutePathForLocalArtifact(artifact)
+                .toFile();
+        File metadataFile = session.getLocalRepositoryManager()
+                .getAbsolutePathForLocalMetadata(metadata)
+                .toFile();
 
         artifactFile.delete();
         metadataFile.delete();
@@ -147,7 +156,7 @@ public class DefaultInstallerTest {
     @Test
     void testNullArtifactFile() {
         InstallRequest request = new InstallRequest();
-        request.addArtifact(artifact.setFile(null));
+        request.addArtifact(artifact.setPath(null));
 
         assertThrows(InstallationException.class, () -> installer.install(session, request));
     }
@@ -155,7 +164,7 @@ public class DefaultInstallerTest {
     @Test
     void testNullMetadataFile() {
         InstallRequest request = new InstallRequest();
-        request.addMetadata(metadata.setFile(null));
+        request.addMetadata(metadata.setPath(null));
 
         assertThrows(InstallationException.class, () -> installer.install(session, request));
     }
@@ -163,7 +172,7 @@ public class DefaultInstallerTest {
     @Test
     void testNonExistentArtifactFile() {
         InstallRequest request = new InstallRequest();
-        request.addArtifact(artifact.setFile(new File("missing.txt")));
+        request.addArtifact(artifact.setPath(Paths.get("missing.txt")));
 
         assertThrows(InstallationException.class, () -> installer.install(session, request));
     }
@@ -171,15 +180,16 @@ public class DefaultInstallerTest {
     @Test
     void testNonExistentMetadataFile() {
         InstallRequest request = new InstallRequest();
-        request.addMetadata(metadata.setFile(new File("missing.xml")));
+        request.addMetadata(metadata.setPath(Paths.get("missing.xml")));
 
         assertThrows(InstallationException.class, () -> installer.install(session, request));
     }
 
     @Test
     void testArtifactExistsAsDir() {
-        String path = session.getLocalRepositoryManager().getPathForLocalArtifact(artifact);
-        File file = new File(session.getLocalRepository().getBasedir(), path);
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForLocalArtifact(artifact)
+                .toFile();
         assertFalse(file.isFile(), file.getAbsolutePath() + " is a file, not directory");
         assertFalse(file.exists(), file.getAbsolutePath() + " already exists");
         assertTrue(
@@ -192,10 +202,8 @@ public class DefaultInstallerTest {
 
     @Test
     void testMetadataExistsAsDir() {
-        String path = session.getLocalRepositoryManager().getPathForLocalMetadata(metadata);
-        assertTrue(
-                new File(session.getLocalRepository().getBasedir(), path).mkdirs(),
-                "failed to setup test: could not create " + path);
+        Path path = session.getLocalRepositoryManager().getAbsolutePathForLocalMetadata(metadata);
+        assertTrue(path.toFile().mkdirs(), "failed to setup test: could not create " + path);
 
         request.addMetadata(metadata);
         assertThrows(InstallationException.class, () -> installer.install(session, request));
@@ -203,10 +211,11 @@ public class DefaultInstallerTest {
 
     @Test
     void testArtifactDestinationEqualsSource() throws IOException {
-        String path = session.getLocalRepositoryManager().getPathForLocalArtifact(artifact);
-        File file = new File(session.getLocalRepository().getBasedir(), path);
-        artifact = artifact.setFile(file);
-        TestFileUtils.writeString(file, "test");
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForLocalArtifact(artifact)
+                .toFile();
+        artifact = artifact.setPath(file.toPath());
+        writeString(file, "test");
 
         request.addArtifact(artifact);
         assertThrows(InstallationException.class, () -> installer.install(session, request));
@@ -214,10 +223,11 @@ public class DefaultInstallerTest {
 
     @Test
     void testMetadataDestinationEqualsSource() throws IOException {
-        String path = session.getLocalRepositoryManager().getPathForLocalMetadata(metadata);
-        File file = new File(session.getLocalRepository().getBasedir(), path);
-        metadata = metadata.setFile(file);
-        TestFileUtils.writeString(file, "test");
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForLocalMetadata(metadata)
+                .toFile();
+        metadata = metadata.setPath(file.toPath());
+        writeString(file, "test");
 
         request.addMetadata(metadata);
         assertThrows(InstallationException.class, () -> installer.install(session, request));
@@ -243,29 +253,25 @@ public class DefaultInstallerTest {
 
     @Test
     void testFailingEventsNullArtifactFile() {
-        checkFailedEvents("null artifact file", this.artifact.setFile(null));
+        checkFailedEvents("null artifact file", this.artifact.setPath(null));
     }
 
     @Test
     void testFailingEventsNullMetadataFile() {
-        checkFailedEvents("null metadata file", this.metadata.setFile(null));
+        checkFailedEvents("null metadata file", this.metadata.setPath(null));
     }
 
     @Test
     void testFailingEventsArtifactExistsAsDir() {
-        String path = session.getLocalRepositoryManager().getPathForLocalArtifact(artifact);
-        assertTrue(
-                new File(session.getLocalRepository().getBasedir(), path).mkdirs(),
-                "failed to setup test: could not create " + path);
+        Path path = session.getLocalRepositoryManager().getAbsolutePathForLocalArtifact(artifact);
+        assertTrue(path.toFile().mkdirs(), "failed to setup test: could not create " + path);
         checkFailedEvents("target exists as dir", artifact);
     }
 
     @Test
     void testFailingEventsMetadataExistsAsDir() {
-        String path = session.getLocalRepositoryManager().getPathForLocalMetadata(metadata);
-        assertTrue(
-                new File(session.getLocalRepository().getBasedir(), path).mkdirs(),
-                "failed to setup test: could not create " + path);
+        Path path = session.getLocalRepositoryManager().getAbsolutePathForLocalMetadata(metadata);
+        assertTrue(path.toFile().mkdirs(), "failed to setup test: could not create " + path);
         checkFailedEvents("target exists as dir", metadata);
     }
 
@@ -355,14 +361,14 @@ public class DefaultInstallerTest {
 
     @Test
     void testSetArtifactTimestamps() throws InstallationException {
-        artifact.getFile().setLastModified(artifact.getFile().lastModified() - 60000);
+        artifact.getPath().toFile().setLastModified(artifact.getPath().toFile().lastModified() - 60000);
 
         request.addArtifact(artifact);
 
         installer.install(session, request);
 
         assertEquals(
-                artifact.getFile().lastModified(),
+                artifact.getPath().toFile().lastModified(),
                 localArtifactFile.lastModified(),
                 "artifact timestamp was not set to src file");
 
@@ -370,12 +376,12 @@ public class DefaultInstallerTest {
 
         request.addArtifact(artifact);
 
-        artifact.getFile().setLastModified(artifact.getFile().lastModified() - 60000);
+        artifact.getPath().toFile().setLastModified(artifact.getPath().toFile().lastModified() - 60000);
 
         installer.install(session, request);
 
         assertEquals(
-                artifact.getFile().lastModified(),
+                artifact.getPath().toFile().lastModified(),
                 localArtifactFile.lastModified(),
                 "artifact timestamp was not set to src file");
     }
@@ -405,7 +411,7 @@ public class DefaultInstallerTest {
         // On same-device filesystems, verify a hard link was created (same inode, no copy).
         // On cross-device (common in CI containers where /tmp and project dir are on different mounts),
         // Files.createLink throws IOException and the installer falls back to copy — both are correct.
-        Path srcPath = artifact.getFile().toPath();
+        Path srcPath = artifact.getPath();
         Path dstPath = localArtifactFile.toPath();
         try {
             boolean sameDevice =

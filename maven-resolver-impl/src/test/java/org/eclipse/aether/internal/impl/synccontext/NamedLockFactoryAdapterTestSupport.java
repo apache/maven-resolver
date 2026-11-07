@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.internal.impl.named.DefaultNamedLockFactorySelector;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
@@ -84,13 +85,12 @@ public abstract class NamedLockFactoryAdapterTestSupport {
     @BeforeEach
     void before() throws IOException {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
-        LocalRepository localRepository =
-                new LocalRepository(Files.createTempDirectory("test").toFile());
+        LocalRepository localRepository = new LocalRepository(Files.createTempDirectory("test"));
         session = mock(RepositorySystemSession.class);
         when(session.getLocalRepository()).thenReturn(localRepository);
         HashMap<String, Object> config = new HashMap<>();
-        config.put(NamedLockFactoryAdapter.CONFIG_PROP_TIME, String.valueOf(ADAPTER_TIME));
-        config.put(NamedLockFactoryAdapter.CONFIG_PROP_TIME_UNIT, ADAPTER_TIME_UNIT.name());
+        config.put(DefaultNamedLockFactorySelector.CONFIG_PROP_LOCK_WAIT_TIME, String.valueOf(ADAPTER_TIME));
+        config.put(DefaultNamedLockFactorySelector.CONFIG_PROP_LOCK_WAIT_TIME_UNIT, ADAPTER_TIME_UNIT.name());
         when(session.getConfigProperties()).thenReturn(config);
     }
 

@@ -26,6 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ContextualSnapshotVersionFilterTest extends AbstractVersionFilterTest {
 
+    // CONFIG_PROP_ENABLE is deprecated without a replacement key; the filter still honours it
+    @SuppressWarnings("deprecation")
     @Test
     void testFilterVersions() throws Exception {
         VersionFilter filter = new ContextualSnapshotVersionFilter();
@@ -43,6 +45,8 @@ public class ContextualSnapshotVersionFilterTest extends AbstractVersionFilterTe
         assertVersions(ctx, "1");
     }
 
+    // CONFIG_PROP_ENABLE is deprecated without a replacement key; the filter still honours it
+    @SuppressWarnings("deprecation")
     @Test
     void testDeriveChildFilter() {
         ContextualSnapshotVersionFilter filter = new ContextualSnapshotVersionFilter();

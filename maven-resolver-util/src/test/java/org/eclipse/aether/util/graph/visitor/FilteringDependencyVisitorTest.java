@@ -51,7 +51,8 @@ public class FilteringDependencyVisitorTest {
             }
         };
 
-        FilteringDependencyVisitor visitor = new FilteringDependencyVisitor(new PreorderNodeListGenerator(), filter);
+        FilteringDependencyVisitor visitor =
+                new FilteringDependencyVisitor(new PreorderDependencyNodeConsumerVisitor(n -> {}), filter);
         root.accept(visitor);
 
         assertEquals(",a,ba,cba,a,ea,", buffer.toString());

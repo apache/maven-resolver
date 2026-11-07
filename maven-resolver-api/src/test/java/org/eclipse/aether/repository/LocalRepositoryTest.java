@@ -30,6 +30,8 @@ import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// the subject of these tests is the deprecated LocalRepository(String) constructor
+@SuppressWarnings("deprecation")
 public class LocalRepositoryTest {
     @Test
     void cwd() {

@@ -35,7 +35,7 @@ public class FailChecksumPolicyTest {
     @BeforeEach
     void setup() {
         policy = new FailChecksumPolicy(new TransferResource("null", "file:/dev/null", "file.txt", null, null, null));
-        exception = new ChecksumFailureException("test");
+        exception = ChecksumFailureException.noneAvailable("test", null);
     }
 
     @Test
