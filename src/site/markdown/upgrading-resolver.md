@@ -28,7 +28,7 @@ own guide: [Using Resolver in Maven Plugins](using-resolver-in-maven-plugins.htm
 
 | Your code runs in | Compile against | Notes |
 |---|---|---|
-| Maven 3.9.x | Resolver 1.9.x | Maven 3.9.12 bundles 1.9.25. |
+| Maven 3.9.x | Resolver 1.9.x | Maven 3.9.16 bundles 1.9.27. |
 | Maven 3.10.x | Resolver 2.0.x | Maven 3.10.0 bundles 2.0.24. |
 | Maven 4.0.x | Resolver 2.0.x | Maven 4.0.0-rc-7 bundles 2.0.23. |
 | Your own application | Resolver 2.0.x | Use a supplier module to bootstrap, see below. |
@@ -97,7 +97,7 @@ use Eclipse Sisu or Guice keep injecting `RepositorySystem`: the components carr
 ## Session handling changes
 
 Maven Resolver 2.x introduced "onSessionEnd" hooks, that became required for
-some of the new features (like HTTP/2 transports are). While the existing "Resolver 1.x"
+some of the new features (the HTTP/2 transport being one example). While the existing "Resolver 1.x"
 way of handling sessions still works, it may produce resource leaks.
 Client code **managing Resolver** (like Maven) is strongly advised to upgrade
 session handling. Client code **using Resolver** (like Maven Mojos)

@@ -64,7 +64,7 @@ different Resolver lines:
 
 | Maven | Resolver | Notes |
 |---|---|---|
-| 3.9.x | 1.9.x | Maven 3.9.12 bundles 1.9.25. |
+| 3.9.x | 1.9.x | Maven 3.9.16 bundles 1.9.27. |
 | 3.10.x | 2.0.x | Maven 3.10.0 bundles 2.0.24. |
 | 4.0.x | 2.0.x | Maven 4.0.0-rc-7 bundles 2.0.23. |
 
