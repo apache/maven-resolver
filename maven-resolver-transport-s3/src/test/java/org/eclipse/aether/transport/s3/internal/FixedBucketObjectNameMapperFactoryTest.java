@@ -56,6 +56,15 @@ class FixedBucketObjectNameMapperFactoryTest {
     }
 
     @Test
+    void minioKeyIsHonoredButTheS3KeyWins() {
+        DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(h -> true);
+        session.setConfigProperty(S3TransporterConfigurationKeys.LEGACY_CONFIG_PROP_FIXED_BUCKET_NAME, "minio-bucket");
+        assertEquals("minio-bucket", effectiveBucket(session));
+        session.setConfigProperty(S3TransporterConfigurationKeys.CONFIG_PROP_FIXED_BUCKET_NAME, "s3-bucket");
+        assertEquals("s3-bucket", effectiveBucket(session));
+    }
+
+    @Test
     void repositoryIdSuffixedKeyTakesPrecedence() {
         DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(h -> true);
         session.setConfigProperty(S3TransporterConfigurationKeys.CONFIG_PROP_FIXED_BUCKET_NAME, "custom-bucket");

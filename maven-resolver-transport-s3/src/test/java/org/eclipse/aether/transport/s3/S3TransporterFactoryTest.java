@@ -35,6 +35,7 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class S3TransporterFactoryTest {
@@ -68,6 +69,37 @@ class S3TransporterFactoryTest {
         try (Transporter transporter = factory.newInstance(session, repository)) {
             // nope
         }
+    }
+
+    @Test
+    void minioUrlFormIsAccepted() throws Exception {
+        RemoteRepository minio = withAuth(new RemoteRepository.Builder("repo", "default", "minio+https://localhost"))
+                .build();
+        try (Transporter transporter = factory.newInstance(session, minio)) {
+            // nope
+        }
+    }
+
+    @Test
+    void minioPlaintextOptInKeyIsHonored() throws Exception {
+        DefaultRepositorySystemSession insecureSession = new DefaultRepositorySystemSession(h -> true);
+        insecureSession.setConfigProperty("aether.transport.minio.allowInsecureProtocol", Boolean.TRUE);
+        RemoteRepository plaintext = withAuth(new RemoteRepository.Builder("repo", "default", "minio+http://localhost"))
+                .build();
+        try (Transporter transporter = factory.newInstance(insecureSession, plaintext)) {
+            // nope
+        }
+    }
+
+    @Test
+    void minioObjectNameMapperKeyIsHonoredButTheS3KeyWins() {
+        DefaultRepositorySystemSession legacy = new DefaultRepositorySystemSession(h -> true);
+        legacy.setConfigProperty("aether.transport.minio.objectNameMapper", "nope");
+        assertThrows(IllegalArgumentException.class, () -> factory.newInstance(legacy, repository));
+        legacy.setConfigProperty(
+                S3TransporterConfigurationKeys.CONFIG_PROP_OBJECT_NAME_MAPPER,
+                RepositoryIdObjectNameMapperFactory.NAME);
+        assertDoesNotThrow(() -> factory.newInstance(legacy, repository).close());
     }
 
     @Test

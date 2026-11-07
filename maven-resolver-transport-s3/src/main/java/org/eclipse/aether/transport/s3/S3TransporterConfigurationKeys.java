@@ -34,7 +34,13 @@ public final class S3TransporterConfigurationKeys {
             ConfigurationProperties.PREFIX_TRANSPORT + S3TransporterFactory.NAME + ".";
 
     /**
-     * Object name mapper to use.
+     * The prefix of the MinIO transport's keys. The keys below that have a MinIO counterpart are also read under this
+     * prefix, so that a repository configured for the MinIO transport works with this one unchanged.
+     */
+    static final String LEGACY_CONFIG_PROPS_PREFIX = ConfigurationProperties.PREFIX_TRANSPORT + "minio.";
+
+    /**
+     * Object name mapper to use. Also read under the MinIO transport's key, {@code aether.transport.minio.objectNameMapper}.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link String}
@@ -43,10 +49,12 @@ public final class S3TransporterConfigurationKeys {
      */
     public static final String CONFIG_PROP_OBJECT_NAME_MAPPER = CONFIG_PROPS_PREFIX + "objectNameMapper";
 
+    static final String LEGACY_CONFIG_PROP_OBJECT_NAME_MAPPER = LEGACY_CONFIG_PROPS_PREFIX + "objectNameMapper";
+
     public static final String DEFAULT_OBJECT_NAME_MAPPER = FixedBucketObjectNameMapperFactory.NAME;
 
     /**
-     * The fixed bucket name to use.
+     * The fixed bucket name to use. Also read under the MinIO transport's key, {@code aether.transport.minio.fixedBucketName}.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link String}
@@ -54,6 +62,8 @@ public final class S3TransporterConfigurationKeys {
      * @configurationRepoIdSuffix Yes
      */
     public static final String CONFIG_PROP_FIXED_BUCKET_NAME = CONFIG_PROPS_PREFIX + "fixedBucketName";
+
+    public static final String LEGACY_CONFIG_PROP_FIXED_BUCKET_NAME = LEGACY_CONFIG_PROPS_PREFIX + "fixedBucketName";
 
     public static final String DEFAULT_FIXED_BUCKET_NAME = "maven";
 
@@ -76,7 +86,7 @@ public final class S3TransporterConfigurationKeys {
      * Plaintext endpoints offer no transport integrity (artifacts and their checksum objects travel over the same
      * tamperable channel) and, because the repository protocol string is not {@code http}, such URLs are not matched
      * by {@code external:http:*} mirror blocking. They are therefore refused unless this property is explicitly set
-     * to {@code true}.
+     * to {@code true}. Also read under the MinIO transport's key, {@code aether.transport.minio.allowInsecureProtocol}.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link Boolean}
@@ -84,6 +94,9 @@ public final class S3TransporterConfigurationKeys {
      * @configurationRepoIdSuffix Yes
      */
     public static final String CONFIG_PROP_ALLOW_INSECURE_PROTOCOL = CONFIG_PROPS_PREFIX + "allowInsecureProtocol";
+
+    static final String LEGACY_CONFIG_PROP_ALLOW_INSECURE_PROTOCOL =
+            LEGACY_CONFIG_PROPS_PREFIX + "allowInsecureProtocol";
 
     public static final boolean DEFAULT_ALLOW_INSECURE_PROTOCOL = false;
 }
