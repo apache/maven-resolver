@@ -62,11 +62,18 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     /**
-     * How long a contending {@link Access} waits for a lock; the loser of a contended lock waits this long before
-     * giving up. {@link #fullyConsumeLockTime(TestInfo)} asserts that the loser really waited this long.
+     * The default {@link #accessWaitMillis()}, and the time {@link #releasedExclusiveAllowAccess(TestInfo)} gives
+     * the lock holder to release its lock.
+     */
+    protected static final long DEFAULT_ACCESS_WAIT_MILLIS = 1000L;
+
+    /**
+     * How long a contending {@link Access} waits for a lock in the contention tests; the loser of a contended lock
+     * waits this long before giving up. {@link #fullyConsumeLockTime(TestInfo)} asserts that the loser really waited
+     * this long. Implementations may shorten it to speed those tests up.
      */
     protected long accessWaitMillis() {
-        return 1000L;
+        return DEFAULT_ACCESS_WAIT_MILLIS;
     }
 
     @Test
@@ -245,7 +252,9 @@ public abstract class NamedLockFactoryTestSupport {
         final Collection<NamedLockKey> keys = lockName(testInfo);
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 loser
-        Thread t1 = new Thread(new Access(namedLockFactory, keys, true, accessWaitMillis(), winners, losers));
+        // Not accessWaitMillis(): here the wait is not a loser's budget but the window in which this thread must
+        // release the lock, which on a slow CI runner takes longer than a shortened contention wait allows.
+        Thread t1 = new Thread(new Access(namedLockFactory, keys, true, DEFAULT_ACCESS_WAIT_MILLIS, winners, losers));
         try (NamedLock namedLock = namedLockFactory.getLock(keys)) {
             assertTrue(namedLock.lockExclusively(50L, TimeUnit.MILLISECONDS));
             try {
