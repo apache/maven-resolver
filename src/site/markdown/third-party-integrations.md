@@ -22,13 +22,14 @@ Maven was the Plexus DI container, that had its own limitations: no constructor 
 among others. Hence, the two was somewhat aligned with each other. Today, with Sisu DI, 
 this is not true anymore: we want to use constructor injection for components, but
 SL is always getting into our way forcing us to always add default constructor to components.
-Hence, decision was made, and SL was deprecated while ago, and is about to be 
-dropped in Resolver 2.0.0 release.
+Hence, decision was made, and SL was deprecated while ago, and was
+dropped in the Resolver 2.0.0 release.
 
 Resolver does provide alternative solution for those third-party integrations, where the
 (recommended) Sisu DI is not available or cannot be used for some reason. All the
 resolver integrations starting with release 1.9.15 can start migrating off the SL
 to current solution described below.
+In Resolver 2.x the module below is named `maven-resolver-supplier-mvn3`; the class and its use are the same.
 
 ## Maven Resolver Supplier
 

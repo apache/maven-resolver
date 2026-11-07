@@ -57,7 +57,7 @@ If a Java package contains following names:
 That Java package is meant as "internal" and does NOT offer guarantees of compatibility as API is. You
 may use classes from these packages, but again, you are on your own to deal with (binary or source)
 breakages. If you think a class from such package should be "pulled out" and made part of SPI or
-maybe API, better inform us via [JIRA](https://issues.apache.org/jira/projects/MRESOLVER): create a
+maybe API, better inform us via [GitHub](https://github.com/apache/maven-resolver/issues): create a
 ticket and let's discuss.
 
 As a side note, the count of those names in Java package is directly proportional to possibility of 
@@ -73,7 +73,7 @@ semantics:
 * On minor version change, we TRY to keep backward compatibility for those "exposed" 3 modules: 
   API, SPI and Util. Still, there are examples when we failed to do so, usually driven by new 
   features.
-* On minor version change, we ENSURE backward compatibility for those "exposed" 3 modules: API, 
+* On patch version change, we ENSURE backward compatibility for those "exposed" 3 modules: API, 
   SPI and Util.
 
 In any of three version changes above, in areas where we do not offer guarantees, everything
