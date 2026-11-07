@@ -32,3 +32,11 @@ jobs:
       maven4-version: '4.0.0-rc-6' # the same as used in project
       verify-fail-fast: false
       jdk-matrix: '[ "21", "25", "26" ]'
+      # every JDK and both Maven lines on Linux; Windows drops the middle JDK; macOS, the scarcest
+      # runner class, keeps the newest JDK only
+      matrix-exclude: >
+        [
+          {"os": "windows-latest", "jdk": "25"},
+          {"os": "macos-latest", "jdk": "21"},
+          {"os": "macos-latest", "jdk": "25"}
+        ]
