@@ -18,18 +18,35 @@
  */
 package org.eclipse.aether.named.ipc;
 
+import org.eclipse.aether.internal.impl.synccontext.NamedLockFactoryAdapterTestSupport;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
+@DisabledOnOs(value = OS.WINDOWS, disabledReason = "IPC named locks are not supported on Windows (Unix domain sockets)")
 public class IpcAdapterIT extends NamedLockFactoryAdapterTestSupport {
     @BeforeAll
     static void createNamedLockFactory() {
         System.setProperty(IpcServer.SYSTEM_PROP_DEBUG, Boolean.TRUE.toString());
-        setNamedLockFactory(new IpcNamedLockFactory() {
+        namedLockFactory = new IpcNamedLockFactory() {
             @Override
             protected void doShutdown() {
                 client.stopServer();
                 super.doShutdown();
             }
-        });
+        };
+        createAdapter();
+    }
+
+    /**
+     * The first lock request forks the server process, so this test gets more headroom than in-JVM locks.
+     */
+    @Test
+    @Timeout(25)
+    @Override
+    public void exclusiveAccess() throws InterruptedException {
+        super.exclusiveAccess();
     }
 }

@@ -18,8 +18,15 @@
  */
 package org.eclipse.aether.named.ipc;
 
+import org.eclipse.aether.named.NamedLockFactoryTestSupport;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
+@DisabledOnOs(value = OS.WINDOWS, disabledReason = "IPC named locks are not supported on Windows (Unix domain sockets)")
 public class IpcNamedLockFactoryIT extends NamedLockFactoryTestSupport {
     @BeforeAll
     static void createNamedLockFactory() {
@@ -31,5 +38,36 @@ public class IpcNamedLockFactoryIT extends NamedLockFactoryTestSupport {
                 super.doShutdown();
             }
         };
+    }
+
+    /**
+     * Every lock operation is a round trip to the server process.
+     */
+    @Override
+    protected long lockWaitMillis() {
+        return 100L;
+    }
+
+    // The first lock request forks the server process, so the contended tests get more headroom than in-JVM locks.
+
+    @Test
+    @Timeout(15)
+    @Override
+    public void sharedAccess(TestInfo testInfo) throws InterruptedException {
+        super.sharedAccess(testInfo);
+    }
+
+    @Test
+    @Timeout(25)
+    @Override
+    public void exclusiveAccess(TestInfo testInfo) throws InterruptedException {
+        super.exclusiveAccess(testInfo);
+    }
+
+    @Test
+    @Timeout(15)
+    @Override
+    public void mixedAccess(TestInfo testInfo) throws InterruptedException {
+        super.mixedAccess(testInfo);
     }
 }
