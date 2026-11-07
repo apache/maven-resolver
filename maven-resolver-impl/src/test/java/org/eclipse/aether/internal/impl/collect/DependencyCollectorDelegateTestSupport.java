@@ -52,9 +52,9 @@ import org.eclipse.aether.util.graph.manager.DefaultDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.transformer.ClassicConflictResolver;
+import org.eclipse.aether.util.graph.transformer.ConfigurableVersionSelector;
 import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
-import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.jupiter.api.BeforeEach;
@@ -568,7 +568,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
         collector = setupCollector(newReader("dependencies-empty/"));
 
         session.setDependencyGraphTransformer(new ClassicConflictResolver(
-                new NearestVersionSelector(),
+                new ConfigurableVersionSelector(),
                 new JavaScopeSelector(),
                 new SimpleOptionalitySelector(),
                 new JavaScopeDeriver()));

@@ -22,14 +22,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.MD5;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA1;
@@ -38,6 +40,9 @@ import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.S
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ChecksumCalculatorTest {
+
+    @TempDir
+    private Path tempDir;
 
     private File file;
 
@@ -57,7 +62,9 @@ public class ChecksumCalculatorTest {
 
     @BeforeEach
     void init() throws Exception {
-        file = TestFileUtils.createTempFile("Hello World!");
+        Path path = Files.createTempFile(tempDir, "tmpfile-", ".data");
+        Files.write(path, "Hello World!".getBytes(StandardCharsets.UTF_8));
+        file = path.toFile();
     }
 
     @Test

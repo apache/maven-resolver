@@ -28,6 +28,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("deprecation")
 public class FileUtilsTest {
     @Test
     void smoke(@TempDir Path tmp) throws IOException {

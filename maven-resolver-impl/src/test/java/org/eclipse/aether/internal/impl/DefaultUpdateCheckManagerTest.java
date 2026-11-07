@@ -21,9 +21,11 @@ package org.eclipse.aether.internal.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
@@ -73,33 +75,36 @@ public class DefaultUpdateCheckManagerTest {
     private Artifact artifact;
 
     @BeforeEach
-    void setup(@TempDir File dir) throws Exception {
+    void setup(@TempDir File dir, @TempDir File repoDir) throws Exception {
         TestFileUtils.deleteFile(dir);
 
         File metadataFile = new File(dir, "metadata.txt");
-        TestFileUtils.writeString(metadataFile, "metadata");
+        writeString(metadataFile, "metadata");
         File artifactFile = new File(dir, "artifact.txt");
-        TestFileUtils.writeString(artifactFile, "artifact");
+        writeString(artifactFile, "artifact");
 
         session = TestUtils.newSession();
         repository = new RemoteRepository.Builder(
-                        "id",
-                        "default",
-                        TestFileUtils.createTempDir().toURI().toURL().toString())
+                        "id", "default", repoDir.toURI().toURL().toString())
                 .build();
         manager = new DefaultUpdateCheckManager(
                 new TrackingFileManagerSupplier().get(), new DefaultUpdatePolicyAnalyzer(), new DefaultPathProcessor());
         metadata = new DefaultMetadata(
-                "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT, metadataFile);
-        artifact = new DefaultArtifact("gid", "aid", "", "ext", "ver").setFile(artifactFile);
+                "gid", "aid", "ver", "maven-metadata.xml", Metadata.Nature.RELEASE_OR_SNAPSHOT, metadataFile.toPath());
+        artifact = new DefaultArtifact("gid", "aid", "", "ext", "ver").setPath(artifactFile.toPath());
+    }
+
+    private static void writeString(File file, String contents) throws IOException {
+        Files.createDirectories(file.toPath().getParent());
+        Files.write(file.toPath(), contents.getBytes(StandardCharsets.UTF_8));
     }
 
     @AfterEach
     void teardown() throws Exception {
-        new File(metadata.getFile().getParent(), "resolver-status.properties").delete();
-        new File(artifact.getFile().getPath() + ".lastUpdated").delete();
-        metadata.getFile().delete();
-        artifact.getFile().delete();
+        new File(metadata.getPath().toFile().getParent(), "resolver-status.properties").delete();
+        new File(artifact.getPath().toFile().getPath() + ".lastUpdated").delete();
+        metadata.getPath().toFile().delete();
+        artifact.getPath().toFile().delete();
         TestFileUtils.deleteFile(new File(new URI(repository.getUrl())));
     }
 
@@ -126,7 +131,7 @@ public class DefaultUpdateCheckManagerTest {
     private UpdateCheck<Metadata, MetadataTransferException> newMetadataCheck() {
         UpdateCheck<Metadata, MetadataTransferException> check = new UpdateCheck<>();
         check.setItem(metadata);
-        check.setFile(metadata.getFile());
+        check.setPath(metadata.getPath());
         check.setRepository(repository);
         check.setAuthoritativeRepository(repository);
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
@@ -137,7 +142,7 @@ public class DefaultUpdateCheckManagerTest {
     private UpdateCheck<Artifact, ArtifactTransferException> newArtifactCheck() {
         UpdateCheck<Artifact, ArtifactTransferException> check = new UpdateCheck<>();
         check.setItem(artifact);
-        check.setFile(artifact.getFile());
+        check.setPath(artifact.getPath());
         check.setRepository(repository);
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_INTERVAL + ":10");
         return check;
@@ -145,7 +150,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testTouchArtifactExpiresSiblingCachedNotFoundOnSuccessfulDownload() throws Exception {
-        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+        File touchFile = new File(artifact.getPath().toFile().getPath() + ".lastUpdated");
 
         // a previous attempt cached a not-found answer from another repository
         RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
@@ -167,7 +172,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testTouchArtifactKeepsSiblingTransferErrorOnSuccessfulDownload() throws Exception {
-        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+        File touchFile = new File(artifact.getPath().toFile().getPath() + ".lastUpdated");
 
         // a previous attempt cached a transfer error (not a not-found) from another repository
         RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
@@ -192,7 +197,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testTouchArtifactDoesNotWarnAboutSiblingNotFoundFromSameSession() throws Exception {
-        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+        File touchFile = new File(artifact.getPath().toFile().getPath() + ".lastUpdated");
 
         RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
         UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
@@ -210,7 +215,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testTouchArtifactWarnsAboutSiblingNotFoundFromPreviousSession() throws Exception {
-        File touchFile = new File(artifact.getFile().getPath() + ".lastUpdated");
+        File touchFile = new File(artifact.getPath().toFile().getPath() + ".lastUpdated");
 
         RemoteRepository other = new RemoteRepository.Builder("other", "default", "file:///other-repo").build();
         UpdateCheck<Artifact, ArtifactTransferException> notFound = newArtifactCheck();
@@ -231,8 +236,8 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     void testCheckMetadataFailOnNoFile() {
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setItem(metadata.setFile(null));
-        check.setFile(null);
+        check.setItem(metadata.setPath(null));
+        check.setPath(null);
 
         assertThrows(NullPointerException.class, () -> manager.checkMetadata(session, check));
     }
@@ -304,7 +309,7 @@ public class DefaultUpdateCheckManagerTest {
         assertFalse(check.isRequired());
 
         // no local file
-        check.getFile().delete();
+        check.getPath().toFile().delete();
         manager.checkMetadata(session, check);
         assertTrue(check.isRequired());
         // (! file.exists && ! repoKey) -> no timestamp
@@ -312,7 +317,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testCheckMetadataNoLocalFile() {
-        metadata.getFile().delete();
+        metadata.getPath().toFile().delete();
 
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
 
@@ -327,7 +332,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testCheckMetadataNotFoundInRepoCachingEnabled() {
-        metadata.getFile().delete();
+        metadata.getPath().toFile().delete();
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
@@ -346,7 +351,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testCheckMetadataNotFoundInRepoCachingDisabled() {
-        metadata.getFile().delete();
+        metadata.getPath().toFile().delete();
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(false, false));
 
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
@@ -364,7 +369,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testCheckMetadataErrorFromRepoCachingEnabled() {
-        metadata.getFile().delete();
+        metadata.getPath().toFile().delete();
 
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
@@ -385,7 +390,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testCheckMetadataErrorFromRepoCachingDisabled() {
-        metadata.getFile().delete();
+        metadata.getPath().toFile().delete();
 
         UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
@@ -498,8 +503,8 @@ public class DefaultUpdateCheckManagerTest {
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
-        check.getFile().delete();
-        assertFalse(check.getFile().exists(), check.getFile().getAbsolutePath());
+        check.getPath().toFile().delete();
+        assertFalse(check.getPath().toFile().exists(), check.getPath().toFile().getAbsolutePath());
 
         manager.checkMetadata(session, check);
         assertTrue(check.isRequired());
@@ -528,8 +533,8 @@ public class DefaultUpdateCheckManagerTest {
         manager.touchMetadata(session, check);
         resetSessionData(session);
 
-        check.getFile().delete();
-        assertFalse(check.getFile().exists(), check.getFile().getAbsolutePath());
+        check.getPath().toFile().delete();
+        assertFalse(check.getPath().toFile().exists(), check.getPath().toFile().getAbsolutePath());
 
         manager.checkMetadata(session, check);
         assertTrue(check.isRequired());
@@ -549,8 +554,8 @@ public class DefaultUpdateCheckManagerTest {
     @Test
     void testCheckArtifactFailOnNoFile() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setItem(artifact.setFile(null));
-        check.setFile(null);
+        check.setItem(artifact.setPath(null));
+        check.setPath(null);
 
         assertThrows(NullPointerException.class, () -> manager.checkArtifact(session, check));
     }
@@ -559,12 +564,12 @@ public class DefaultUpdateCheckManagerTest {
     void testCheckArtifactUpdatePolicyRequired() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setItem(artifact);
-        check.setFile(artifact.getFile());
+        check.setPath(artifact.getPath());
 
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.add(Calendar.DATE, -1);
         long lastUpdate = cal.getTimeInMillis();
-        artifact.getFile().setLastModified(lastUpdate);
+        artifact.getPath().toFile().setLastModified(lastUpdate);
         check.setLocalLastUpdated(lastUpdate);
 
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_ALWAYS);
@@ -587,7 +592,7 @@ public class DefaultUpdateCheckManagerTest {
     void testCheckArtifactUpdatePolicyNotRequired() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setItem(artifact);
-        check.setFile(artifact.getFile());
+        check.setPath(artifact.getPath());
 
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.add(Calendar.HOUR_OF_DAY, -1);
@@ -614,9 +619,9 @@ public class DefaultUpdateCheckManagerTest {
     void testCheckArtifact() {
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         long fifteenMinutes = new Date().getTime() - (15L * 60L * 1000L);
-        check.getFile().setLastModified(fifteenMinutes);
+        check.getPath().toFile().setLastModified(fifteenMinutes);
         // time is truncated on setLastModified
-        fifteenMinutes = check.getFile().lastModified();
+        fifteenMinutes = check.getPath().toFile().lastModified();
 
         // never checked before
         manager.checkArtifact(session, check);
@@ -625,22 +630,22 @@ public class DefaultUpdateCheckManagerTest {
         // just checked
         check.setLocalLastUpdated(0L);
         long lastUpdate = new Date().getTime();
-        check.getFile().setLastModified(lastUpdate);
-        lastUpdate = check.getFile().lastModified();
+        check.getPath().toFile().setLastModified(lastUpdate);
+        lastUpdate = check.getPath().toFile().lastModified();
 
         manager.checkArtifact(session, check);
         assertFalse(check.isRequired());
 
         // no local file, no repo timestamp
         check.setLocalLastUpdated(0L);
-        check.getFile().delete();
+        check.getPath().toFile().delete();
         manager.checkArtifact(session, check);
         assertTrue(check.isRequired());
     }
 
     @Test
     void testCheckArtifactNoLocalFile() {
-        artifact.getFile().delete();
+        artifact.getPath().toFile().delete();
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
 
         long lastUpdate = new Date().getTime() - HOUR;
@@ -653,7 +658,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testCheckArtifactNotFoundInRepoCachingEnabled() {
-        artifact.getFile().delete();
+        artifact.getPath().toFile().delete();
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
@@ -671,7 +676,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testCheckArtifactNotFoundInRepoCachingDisabled() {
-        artifact.getFile().delete();
+        artifact.getPath().toFile().delete();
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(false, false));
 
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
@@ -688,7 +693,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testCheckArtifactErrorFromRepoCachingEnabled() {
-        artifact.getFile().delete();
+        artifact.getPath().toFile().delete();
 
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
@@ -707,7 +712,7 @@ public class DefaultUpdateCheckManagerTest {
 
     @Test
     void testCheckArtifactErrorFromRepoCachingDisabled() {
-        artifact.getFile().delete();
+        artifact.getPath().toFile().delete();
 
         UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_DAILY);
@@ -812,8 +817,8 @@ public class DefaultUpdateCheckManagerTest {
         check.setArtifactPolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
-        check.getFile().delete();
-        assertFalse(check.getFile().exists(), check.getFile().getAbsolutePath());
+        check.getPath().toFile().delete();
+        assertFalse(check.getPath().toFile().exists(), check.getPath().toFile().getAbsolutePath());
 
         manager.checkArtifact(session, check);
         assertTrue(check.isRequired());
@@ -842,8 +847,8 @@ public class DefaultUpdateCheckManagerTest {
         manager.touchArtifact(session, check);
         resetSessionData(session);
 
-        check.getFile().delete();
-        assertFalse(check.getFile().exists(), check.getFile().getAbsolutePath());
+        check.getPath().toFile().delete();
+        assertFalse(check.getPath().toFile().exists(), check.getPath().toFile().getAbsolutePath());
 
         manager.checkArtifact(session, check);
         assertTrue(check.isRequired());

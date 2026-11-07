@@ -18,13 +18,14 @@
  */
 package org.eclipse.aether.transport.classpath;
 
-import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.GetTask;
@@ -37,6 +38,7 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,11 +46,20 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ClasspathTransporterTest {
 
+    @TempDir
+    private Path tempDir;
+
     private DefaultRepositorySystemSession session;
 
     private TransporterFactory factory;
 
     private Transporter transporter;
+
+    private Path createTempFile(String contents) throws IOException {
+        Path file = Files.createTempFile(tempDir, "tmpfile-", ".data");
+        Files.write(file, contents.getBytes(StandardCharsets.UTF_8));
+        return file;
+    }
 
     private RemoteRepository newRepo(String url) {
         return new RemoteRepository.Builder("test", "default", url).build();
@@ -126,11 +137,11 @@ public class ClasspathTransporterTest {
 
     @Test
     void testGet_ToFile() throws Exception {
-        File file = TestFileUtils.createTempFile("failure");
+        Path file = createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetTask task = new GetTask(URI.create("file.txt")).setDataFile(file).setListener(listener);
+        GetTask task = new GetTask(URI.create("file.txt")).setDataPath(file).setListener(listener);
         transporter.get(task);
-        assertEquals("test", TestFileUtils.readString(file));
+        assertEquals("test", new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
@@ -140,11 +151,11 @@ public class ClasspathTransporterTest {
 
     @Test
     void testGet_EmptyResource() throws Exception {
-        File file = TestFileUtils.createTempFile("failure");
+        Path file = createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetTask task = new GetTask(URI.create("empty.txt")).setDataFile(file).setListener(listener);
+        GetTask task = new GetTask(URI.create("empty.txt")).setDataPath(file).setListener(listener);
         transporter.get(task);
-        assertEquals("", TestFileUtils.readString(file));
+        assertEquals("", new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
         assertEquals(0L, listener.dataOffset);
         assertEquals(0L, listener.dataLength);
         assertEquals(1, listener.startedCount);
@@ -176,9 +187,9 @@ public class ClasspathTransporterTest {
     @Test
     void testGet_FileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
-            File file = TestFileUtils.createTempFile("failure");
-            transporter.get(new GetTask(URI.create("file.txt")).setDataFile(file));
-            assertTrue(file.delete(), i + ", " + file.getAbsolutePath());
+            Path file = createTempFile("failure");
+            transporter.get(new GetTask(URI.create("file.txt")).setDataPath(file));
+            assertTrue(file.toFile().delete(), i + ", " + file.toAbsolutePath());
         }
     }
 

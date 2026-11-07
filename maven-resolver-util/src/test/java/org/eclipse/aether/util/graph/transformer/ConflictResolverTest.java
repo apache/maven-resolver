@@ -46,12 +46,12 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
     private static Stream<Arguments> conflictResolverSource() {
         return Stream.of(
                 Arguments.of(new ClassicConflictResolver(
-                        new NearestVersionSelector(),
+                        new ConfigurableVersionSelector(),
                         new JavaScopeSelector(),
                         new SimpleOptionalitySelector(),
                         new JavaScopeDeriver())),
                 Arguments.of(new PathConflictResolver(
-                        new NearestVersionSelector(),
+                        new ConfigurableVersionSelector(),
                         new JavaScopeSelector(),
                         new SimpleOptionalitySelector(),
                         new JavaScopeDeriver())));
@@ -734,7 +734,7 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         // explicit "auto" config
         session.setConfigProperty(ConflictResolver.CONFIG_PROP_CONFLICT_RESOLVER_IMPL, "auto");
         ConflictResolver delegating = new ConflictResolver(
-                new NearestVersionSelector(),
+                new ConfigurableVersionSelector(),
                 new JavaScopeSelector(),
                 new SimpleOptionalitySelector(),
                 new JavaScopeDeriver());
@@ -765,7 +765,7 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
     void explicitPathConfigResolvesConflicts() throws RepositoryException {
         session.setConfigProperty(ConflictResolver.CONFIG_PROP_CONFLICT_RESOLVER_IMPL, "path");
         ConflictResolver delegating = new ConflictResolver(
-                new NearestVersionSelector(),
+                new ConfigurableVersionSelector(),
                 new JavaScopeSelector(),
                 new SimpleOptionalitySelector(),
                 new JavaScopeDeriver());
@@ -793,7 +793,7 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
     void explicitClassicConfigResolvesConflicts() throws RepositoryException {
         session.setConfigProperty(ConflictResolver.CONFIG_PROP_CONFLICT_RESOLVER_IMPL, "classic");
         ConflictResolver delegating = new ConflictResolver(
-                new NearestVersionSelector(),
+                new ConfigurableVersionSelector(),
                 new JavaScopeSelector(),
                 new SimpleOptionalitySelector(),
                 new JavaScopeDeriver());
@@ -820,7 +820,7 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
     void unknownConfigThrows() {
         session.setConfigProperty(ConflictResolver.CONFIG_PROP_CONFLICT_RESOLVER_IMPL, "bogus");
         ConflictResolver delegating = new ConflictResolver(
-                new NearestVersionSelector(),
+                new ConfigurableVersionSelector(),
                 new JavaScopeSelector(),
                 new SimpleOptionalitySelector(),
                 new JavaScopeDeriver());
@@ -840,7 +840,7 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
     void defaultConfigUsesAutoSelection() throws RepositoryException {
         // No explicit config property set — should use AUTO_CONFLICT_RESOLVER default
         ConflictResolver delegating = new ConflictResolver(
-                new NearestVersionSelector(),
+                new ConfigurableVersionSelector(),
                 new JavaScopeSelector(),
                 new SimpleOptionalitySelector(),
                 new JavaScopeDeriver());

@@ -18,13 +18,16 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.ArtifactUpload;
@@ -97,7 +100,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
                     if (fail) {
                         download.setException(new ArtifactTransferException(artifact, null, "forced failure"));
                     } else {
-                        TestFileUtils.writeString(download.getFile(), artifact.toString());
+                        writeString(download.getPath(), artifact.toString());
                     }
                     fireDone(download);
                 }
@@ -110,7 +113,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
                     if (fail) {
                         download.setException(new MetadataTransferException(metadata, null, "forced failure"));
                     } else {
-                        TestFileUtils.writeString(download.getFile(), metadata.toString());
+                        writeString(download.getPath(), metadata.toString());
                     }
                     fireDone(download);
                 }
@@ -129,7 +132,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
                 for (ArtifactUpload upload : artifactUploads) {
                     // mimic "real" connector
                     fireInitiated(upload);
-                    if (upload.getFile() == null) {
+                    if (upload.getPath() == null) {
                         upload.setException(new ArtifactTransferException(upload.getArtifact(), null, "no file"));
                     } else if (fail) {
                         upload.setException(
@@ -143,7 +146,7 @@ class RecordingRepositoryConnector implements RepositoryConnector {
                 for (MetadataUpload upload : metadataUploads) {
                     // mimic "real" connector
                     fireInitiated(upload);
-                    if (upload.getFile() == null) {
+                    if (upload.getPath() == null) {
                         upload.setException(new MetadataTransferException(upload.getMetadata(), null, "no file"));
                     } else if (fail) {
                         upload.setException(
@@ -245,5 +248,10 @@ class RecordingRepositoryConnector implements RepositoryConnector {
         this.actualGetMD = new ArrayList<>();
         this.actualPut = new ArrayList<>();
         this.actualPutMD = new ArrayList<>();
+    }
+
+    private static void writeString(Path path, String content) throws IOException {
+        Files.createDirectories(path.getParent());
+        Files.write(path, content.getBytes(StandardCharsets.UTF_8));
     }
 }

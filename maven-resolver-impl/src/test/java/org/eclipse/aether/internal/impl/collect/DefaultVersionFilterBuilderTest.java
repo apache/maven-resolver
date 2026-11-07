@@ -119,7 +119,7 @@ public class DefaultVersionFilterBuilderTest {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(session);
         VersionRangeResult result =
                 new VersionRangeResult(new VersionRangeRequest()).setVersions(new ArrayList<>(versions));
-        context.set(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
+        context = context.initialize(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
 
         vf.filterVersions(context);
 
@@ -131,7 +131,7 @@ public class DefaultVersionFilterBuilderTest {
         sessionConfigProperties.put(VersionFilterBuilder.VERSION_FILTER_SUPPRESSED, Boolean.TRUE);
 
         context = new DefaultVersionFilterContext(session);
-        context.set(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
+        context = context.initialize(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
 
         // suppressed
         assertEquals(versions, context.get());
@@ -152,7 +152,7 @@ public class DefaultVersionFilterBuilderTest {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(session);
         VersionRangeResult result =
                 new VersionRangeResult(new VersionRangeRequest()).setVersions(new ArrayList<>(versions));
-        context.set(new Dependency(new DefaultArtifact("g:a:[1,)"), ""), result);
+        context = context.initialize(new Dependency(new DefaultArtifact("g:a:[1,)"), ""), result);
 
         vf.filterVersions(context);
 
@@ -174,7 +174,7 @@ public class DefaultVersionFilterBuilderTest {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(session);
         VersionRangeResult result =
                 new VersionRangeResult(new VersionRangeRequest()).setVersions(new ArrayList<>(versions));
-        context.set(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
+        context = context.initialize(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
 
         vf.filterVersions(context);
 
@@ -198,7 +198,7 @@ public class DefaultVersionFilterBuilderTest {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(session);
         VersionRangeResult result =
                 new VersionRangeResult(new VersionRangeRequest()).setVersions(new ArrayList<>(versions));
-        context.set(new Dependency(new DefaultArtifact("g:a:[1,)"), ""), result);
+        context = context.initialize(new Dependency(new DefaultArtifact("g:a:[1,)"), ""), result);
 
         vf.filterVersions(context);
 
@@ -220,7 +220,7 @@ public class DefaultVersionFilterBuilderTest {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(session);
         VersionRangeResult result =
                 new VersionRangeResult(new VersionRangeRequest()).setVersions(new ArrayList<>(versions));
-        context.set(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
+        context = context.initialize(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
 
         vf.filterVersions(context);
 
@@ -242,7 +242,7 @@ public class DefaultVersionFilterBuilderTest {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(session);
         VersionRangeResult result =
                 new VersionRangeResult(new VersionRangeRequest()).setVersions(new ArrayList<>(versions));
-        context.set(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
+        context = context.initialize(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
 
         vf.filterVersions(context);
 
@@ -264,7 +264,7 @@ public class DefaultVersionFilterBuilderTest {
         DefaultVersionFilterContext context = new DefaultVersionFilterContext(session);
         VersionRangeResult result =
                 new VersionRangeResult(new VersionRangeRequest()).setVersions(new ArrayList<>(versions));
-        context.set(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
+        context = context.initialize(new Dependency(new DefaultArtifact("group:a:[1,)"), ""), result);
 
         vf.filterVersions(context);
 

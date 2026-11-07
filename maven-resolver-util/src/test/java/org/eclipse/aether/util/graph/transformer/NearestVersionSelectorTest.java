@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  */
+@SuppressWarnings("deprecation")
 public final class NearestVersionSelectorTest extends AbstractConflictResolverTest {
     private static Stream<Arguments> conflictResolverSource() {
         return Stream.of(

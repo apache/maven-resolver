@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("deprecation")
 public class PredicateVersionFilterTest extends AbstractVersionFilterTest {
 
     @Test

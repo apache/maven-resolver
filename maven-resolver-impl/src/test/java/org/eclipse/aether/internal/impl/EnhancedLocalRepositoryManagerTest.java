@@ -21,6 +21,7 @@ package org.eclipse.aether.internal.impl;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -62,6 +63,9 @@ public class EnhancedLocalRepositoryManagerTest {
     @TempDir
     protected File basedir;
 
+    @TempDir
+    private Path tempDir;
+
     protected EnhancedLocalRepositoryManager manager;
 
     private File artifactFile;
@@ -78,6 +82,12 @@ public class EnhancedLocalRepositoryManagerTest {
 
     private Metadata noVerMetadata;
 
+    private File createTempFile(String contents) throws IOException {
+        Path file = Files.createTempFile(tempDir, "tmpfile-", ".data");
+        Files.write(file, contents.getBytes(StandardCharsets.UTF_8));
+        return file.toFile();
+    }
+
     @BeforeEach
     void setup(@TempDir File dir) throws Exception {
         String url = dir.toURI().toURL().toString();
@@ -86,28 +96,32 @@ public class EnhancedLocalRepositoryManagerTest {
                 .build();
 
         artifact = new DefaultArtifact(
-                "gid", "aid", "", "jar", "1-test", Collections.emptyMap(), TestFileUtils.createTempFile("artifact"));
+                "gid", "aid", "", "jar", "1-test", Collections.emptyMap(), createTempFile("artifact"));
 
         snapshot = new DefaultArtifact(
-                "gid",
-                "aid",
-                "",
-                "jar",
-                "1.0-20120710.231549-9",
-                Collections.emptyMap(),
-                TestFileUtils.createTempFile("artifact"));
+                "gid", "aid", "", "jar", "1.0-20120710.231549-9", Collections.emptyMap(), createTempFile("artifact"));
 
         metadata = new DefaultMetadata(
-                "gid", "aid", "1-test", "maven-metadata.xml", Nature.RELEASE, TestFileUtils.createTempFile("metadata"));
+                "gid",
+                "aid",
+                "1-test",
+                "maven-metadata.xml",
+                Nature.RELEASE,
+                createTempFile("metadata").toPath());
 
         noVerMetadata = new DefaultMetadata(
-                "gid", "aid", null, "maven-metadata.xml", Nature.RELEASE, TestFileUtils.createTempFile("metadata"));
+                "gid",
+                "aid",
+                null,
+                "maven-metadata.xml",
+                Nature.RELEASE,
+                createTempFile("metadata").toPath());
 
         session = TestUtils.newSession();
         trackingFileManager = new TrackingFileManagerSupplier().get();
         manager = getManager();
 
-        artifactFile = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        artifactFile = manager.getAbsolutePathForLocalArtifact(artifact).toFile();
     }
 
     protected EnhancedLocalRepositoryManager getManager() throws IOException {
@@ -135,7 +149,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     protected long addLocalArtifact(Artifact artifact) throws IOException {
         manager.add(session, new LocalArtifactRegistration(artifact));
-        String path = manager.getPathForLocalArtifact(artifact);
+        Path path = manager.getAbsolutePathForLocalArtifact(artifact);
 
         return copy(artifact, path);
     }
@@ -143,25 +157,26 @@ public class EnhancedLocalRepositoryManagerTest {
     protected long addRemoteArtifact(Artifact artifact) throws IOException {
         Collection<String> contexts = Arrays.asList(testContext);
         manager.add(session, new LocalArtifactRegistration(artifact, repository, contexts));
-        String path = manager.getPathForRemoteArtifact(artifact, repository, testContext);
+        Path path = manager.getAbsolutePathForRemoteArtifact(artifact, repository, testContext);
         return copy(artifact, path);
     }
 
-    private long copy(Metadata metadata, String path) throws IOException {
-        if (metadata.getFile() == null) {
+    private long copy(Metadata metadata, Path target) throws IOException {
+        if (metadata.getPath() == null) {
             return -1L;
         }
-        return TestFileUtils.copyFile(metadata.getFile(), new File(basedir, path));
+        return TestFileUtils.copyFile(metadata.getPath().toFile(), target.toFile());
     }
 
-    private long copy(Artifact artifact, String path) throws IOException {
-        if (artifact.getFile() == null) {
+    private long copy(Artifact artifact, Path target) throws IOException {
+        if (artifact.getPath() == null) {
             return -1L;
         }
-        File artifactFile = new File(basedir, path);
-        return TestFileUtils.copyFile(artifact.getFile(), artifactFile);
+        return TestFileUtils.copyFile(artifact.getPath().toFile(), target.toFile());
     }
 
+    // asserts on the composed relative path, which only the deprecated getPathFor* methods expose
+    @SuppressWarnings("deprecation")
     @Test
     void testGetPathForLocalArtifact() {
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
@@ -173,6 +188,8 @@ public class EnhancedLocalRepositoryManagerTest {
         assertEquals("g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar", manager.getPathForLocalArtifact(artifact));
     }
 
+    // asserts on the composed relative path, which only the deprecated getPathFor* methods expose
+    @SuppressWarnings("deprecation")
     @Test
     void testGetPathForRemoteArtifact() {
         RemoteRepository remoteRepo = new RemoteRepository.Builder("repo", "default", "ram:/void").build();
@@ -236,7 +253,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     @Test
     void testDoNotFindNullFile() throws Exception {
-        artifact = artifact.setFile(null);
+        artifact = artifact.setPath(null);
         addLocalArtifact(artifact);
 
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
@@ -262,8 +279,8 @@ public class EnhancedLocalRepositoryManagerTest {
         addLocalArtifact(artifact);
 
         Artifact aliased = new DefaultArtifact("gid", "aid", "", "JAR", "1-test");
-        Path aliasPath = new File(basedir, manager.getPathForLocalArtifact(aliased)).toPath();
-        Path realPath = new File(basedir, manager.getPathForLocalArtifact(artifact)).toPath();
+        Path aliasPath = manager.getAbsolutePathForLocalArtifact(aliased);
+        Path realPath = manager.getAbsolutePathForLocalArtifact(artifact);
         try {
             Files.createSymbolicLink(aliasPath, realPath.getFileName());
         } catch (IOException | UnsupportedOperationException e) {
@@ -295,7 +312,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     @Test
     void testFindUntrackedFile() throws Exception {
-        copy(artifact, manager.getPathForLocalArtifact(artifact));
+        copy(artifact, manager.getAbsolutePathForLocalArtifact(artifact));
 
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
         LocalArtifactResult result = manager.find(session, request);
@@ -303,11 +320,11 @@ public class EnhancedLocalRepositoryManagerTest {
     }
 
     private long addMetadata(Metadata metadata, RemoteRepository repo) throws IOException {
-        String path;
+        Path path;
         if (repo == null) {
-            path = manager.getPathForLocalMetadata(metadata);
+            path = manager.getAbsolutePathForLocalMetadata(metadata);
         } else {
-            path = manager.getPathForRemoteMetadata(metadata, repo, testContext);
+            path = manager.getAbsolutePathForRemoteMetadata(metadata, repo, testContext);
         }
         System.err.println(path);
 
@@ -321,7 +338,7 @@ public class EnhancedLocalRepositoryManagerTest {
         LocalMetadataRequest request = new LocalMetadataRequest(metadata, null, testContext);
         LocalMetadataResult result = manager.find(session, request);
 
-        assertNotNull(result.getFile());
+        assertNotNull(result.getPath());
     }
 
     @Test
@@ -331,7 +348,7 @@ public class EnhancedLocalRepositoryManagerTest {
         LocalMetadataRequest request = new LocalMetadataRequest(noVerMetadata, null, testContext);
         LocalMetadataResult result = manager.find(session, request);
 
-        assertNotNull(result.getFile());
+        assertNotNull(result.getPath());
     }
 
     @Test
@@ -341,25 +358,26 @@ public class EnhancedLocalRepositoryManagerTest {
 
         LocalMetadataRequest request = new LocalMetadataRequest(noVerMetadata, repository, "different");
         LocalMetadataResult result = manager.find(session, request);
-        assertNull(result.getFile());
+        assertNull(result.getPath());
 
         request = new LocalMetadataRequest(metadata, repository, "different");
         result = manager.find(session, request);
-        assertNull(result.getFile());
+        assertNull(result.getPath());
     }
 
     @Test
     void testFindArtifactUsesTimestampedVersion() throws Exception {
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
-        File file = new File(basedir, manager.getPathForLocalArtifact(artifact));
-        TestFileUtils.writeString(file, "test");
+        File file = manager.getAbsolutePathForLocalArtifact(artifact).toFile();
+        Files.createDirectories(file.toPath().getParent());
+        Files.write(file.toPath(), "test".getBytes(StandardCharsets.UTF_8));
         addLocalArtifact(artifact);
 
         artifact = artifact.setVersion("1.0-20110329.221805-4");
         LocalArtifactRequest request = new LocalArtifactRequest();
         request.setArtifact(artifact);
         LocalArtifactResult result = manager.find(session, request);
-        assertNull(result.getFile(), result.toString());
+        assertNull(result.getPath(), result.toString());
         assertFalse(result.isAvailable(), result.toString());
     }
 
@@ -367,13 +385,13 @@ public class EnhancedLocalRepositoryManagerTest {
     void testStaleUntrackedCacheDoesNotOverrideExternallyRecordedOrigin() throws Exception {
         // Artifact file exists but is untracked: find() accepts it (simple local repo inter-op) and
         // caches the "untracked" state of the shared tracking file.
-        copy(artifact, manager.getPathForLocalArtifact(artifact));
+        copy(artifact, manager.getAbsolutePathForLocalArtifact(artifact));
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
         assertTrue(manager.find(session, request).isAvailable());
 
         // Another process (bypassing this manager and hence its cache) records that the artifact
         // actually originates from a repository that is NOT among the request repositories.
-        File artifactFile = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        File artifactFile = manager.getAbsolutePathForLocalArtifact(artifact).toFile();
         File trackingFile = new File(artifactFile.getParentFile(), "_remote.repositories");
         trackingFileManager.update(
                 trackingFile.toPath(), Collections.singletonMap(artifactFile.getName() + ">not-a-request-repo", ""));
@@ -386,13 +404,13 @@ public class EnhancedLocalRepositoryManagerTest {
 
     @Test
     void testFreshReadPicksUpExternallyRecordedRequestRepository() throws Exception {
-        copy(artifact, manager.getPathForLocalArtifact(artifact));
+        copy(artifact, manager.getAbsolutePathForLocalArtifact(artifact));
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
         assertTrue(manager.find(session, request).isAvailable());
 
         // Another process records the artifact as downloaded from the request repository: the fresh
         // re-read must pick that up and report the origin repository.
-        File artifactFile = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        File artifactFile = manager.getAbsolutePathForLocalArtifact(artifact).toFile();
         File trackingFile = new File(artifactFile.getParentFile(), "_remote.repositories");
         trackingFileManager.update(
                 trackingFile.toPath(),
@@ -472,8 +490,8 @@ public class EnhancedLocalRepositoryManagerTest {
         manager = newUrlQualifiedTrackingManager();
 
         // artifact file present, tracked under a legacy ID-only key for a DIFFERENT repository
-        copy(artifact, manager.getPathForLocalArtifact(artifact));
-        File file = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        copy(artifact, manager.getAbsolutePathForLocalArtifact(artifact));
+        File file = manager.getAbsolutePathForLocalArtifact(artifact).toFile();
         trackingFileManager.update(
                 new File(file.getParentFile(), "_remote.repositories").toPath(),
                 Collections.singletonMap(file.getName() + ">some-other-repo", ""));
@@ -492,8 +510,8 @@ public class EnhancedLocalRepositoryManagerTest {
         RemoteRepository central = new RemoteRepository.Builder("central", "default", "https://repo.example/").build();
 
         // artifact tracked only for repositories whose id merely starts with "central-"
-        copy(artifact, manager.getPathForLocalArtifact(artifact));
-        File file = new File(basedir, manager.getPathForLocalArtifact(artifact));
+        copy(artifact, manager.getAbsolutePathForLocalArtifact(artifact));
+        File file = manager.getAbsolutePathForLocalArtifact(artifact).toFile();
         Map<String, String> entries = new HashMap<>();
         entries.put(file.getName() + ">central-snapshots", "");
         entries.put(file.getName() + ">central-snapshots-" + StringDigestUtil.sha1("x"), "");
@@ -506,7 +524,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     @Test
     void testAddRemoteWithoutContextsIsTracked() throws Exception {
-        copy(artifact, manager.getPathForRemoteArtifact(artifact, repository, testContext));
+        copy(artifact, manager.getAbsolutePathForRemoteArtifact(artifact, repository, testContext));
         manager.add(session, new LocalArtifactRegistration(artifact, repository, null));
 
         // tracked for "repository" only: must not be accepted as locally installed for an unrelated repository
