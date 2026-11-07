@@ -18,26 +18,18 @@
  */
 package org.eclipse.aether.internal.test.util.http;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,10 +96,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public abstract class HttpTransporterTest {
 
-    protected static final Path SERVER_STORE_PATH = Paths.get("target/server-store");
-    protected static final Path CLIENT_STORE_PATH = Paths.get("target/client-store");
-    protected static final Path PEM_QUICHE_SERVER_PATH = Paths.get("target/pems");
-
     protected static SSLContext defaultSslContext;
 
     static {
@@ -117,97 +105,17 @@ public abstract class HttpTransporterTest {
 
     @BeforeAll
     protected static void beforeAll() throws NoSuchAlgorithmException {
-        // populate custom keystore and truststore
-        try {
-            try (InputStream keyStoreStream =
-                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/server-store");
-                    InputStream trustStoreStream =
-                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/client-store"); ) {
-                Files.copy(keyStoreStream, SERVER_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(trustStoreStream, CLIENT_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                Files.createDirectories(PEM_QUICHE_SERVER_PATH);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        SslTestSupport.installKeyStores();
         // override default SSLContext to include our custom keystore and truststore (which are "cross connected" with
         // HttpServer)
         defaultSslContext = SSLContext.getDefault();
-        SSLContext.setDefault(createClientSSLContext());
+        SSLContext.setDefault(SslTestSupport.createClientSSLContext());
     }
 
     @AfterAll
     protected static void afterAll() {
         if (defaultSslContext != null) {
             SSLContext.setDefault(defaultSslContext);
-        }
-    }
-
-    /**
-     * Creates an {@link SSLContext} for the client that extends the default keystore and truststore with the entries
-     * from {@link #SERVER_STORE_PATH} (password {@code "server-pwd"}) and {@link #CLIENT_STORE_PATH}
-     * (password {@code "client-pwd"}).
-     *
-     * @return an {@link SSLContext} combining default and custom key/trust material
-     */
-    protected static SSLContext createClientSSLContext() {
-        try {
-            // Load custom key store (KEY_STORE_PATH acts as truststore in "cross connected" setup)
-            KeyStore customTrustStore = KeyStore.getInstance("pkcs12");
-            try (InputStream is = Files.newInputStream(SERVER_STORE_PATH)) {
-                customTrustStore.load(is, "server-pwd".toCharArray());
-            }
-
-            // Load custom trust store (TRUST_STORE_PATH acts as keystore in "cross connected" setup)
-            KeyStore customKeyStore = KeyStore.getInstance("pkcs12");
-            try (InputStream is = Files.newInputStream(CLIENT_STORE_PATH)) {
-                customKeyStore.load(is, "client-pwd".toCharArray());
-            }
-
-            // Load default truststore and merge custom entries
-            KeyStore defaultTrustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            Path defaultTrustStorePath = Path.of(System.getProperty("java.home"), "lib", "security", "cacerts");
-            if (Files.exists(defaultTrustStorePath)) {
-                try (InputStream is = Files.newInputStream(defaultTrustStorePath)) {
-                    defaultTrustStore.load(is, "changeit".toCharArray());
-                }
-            } else {
-                defaultTrustStore.load(null, null);
-            }
-            Enumeration<String> aliases = customTrustStore.aliases();
-            while (aliases.hasMoreElements()) {
-                String alias = aliases.nextElement();
-                defaultTrustStore.setCertificateEntry("custom-trust-" + alias, customTrustStore.getCertificate(alias));
-            }
-
-            // Load default keystore and merge custom entries
-            KeyStore mergedKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            mergedKeyStore.load(null, null);
-            Enumeration<String> keyAliases = customKeyStore.aliases();
-            while (keyAliases.hasMoreElements()) {
-                String alias = keyAliases.nextElement();
-                if (customKeyStore.isKeyEntry(alias)) {
-                    mergedKeyStore.setKeyEntry(
-                            alias,
-                            customKeyStore.getKey(alias, "client-pwd".toCharArray()),
-                            "client-pwd".toCharArray(),
-                            customKeyStore.getCertificateChain(alias));
-                } else {
-                    mergedKeyStore.setCertificateEntry(alias, customKeyStore.getCertificate(alias));
-                }
-            }
-
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init(defaultTrustStore);
-
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(mergedKeyStore, "client-pwd".toCharArray());
-
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-            return sslContext;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create SSLContext", e);
         }
     }
 
@@ -979,7 +887,7 @@ public abstract class HttpTransporterTest {
             assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
         } finally {
             // restore the default SSL context used for all other tests
-            SSLContext.setDefault(createClientSSLContext());
+            SSLContext.setDefault(SslTestSupport.createClientSSLContext());
         }
     }
 
@@ -1009,7 +917,7 @@ public abstract class HttpTransporterTest {
             });
         } finally {
             // restore the default SSL context used for all other tests
-            SSLContext.setDefault(createClientSSLContext());
+            SSLContext.setDefault(SslTestSupport.createClientSSLContext());
         }
     }
 
