@@ -25,6 +25,19 @@ Maven Resolver upcoming major version 2.x should be "smooth sailing", as long yo
 do not depend (directly or indirectly) on **deprecated** classes from Resolver
 1.x line. Always use latest 1.x release to check for deprecated classes.
 
+## Module changes
+
+Some artifacts changed their name or were split, so dependency declarations need updating even
+where no code does:
+
+* `maven-resolver-transport-http` became `maven-resolver-transport-apache`. The new `maven-resolver-transport-jdk`
+  and `maven-resolver-transport-jetty` modules are HTTP/2 capable alternatives.
+* `maven-resolver-supplier` became `maven-resolver-supplier-mvn3`; `maven-resolver-supplier-mvn4` is its
+  counterpart built on the Maven 4 model.
+* `ServiceLocator` and `DefaultServiceLocator`, deprecated since 1.7.0, are gone. The
+  [Third-party Integrations](third-party-integrations.html) page describes the supplier, available since 1.9.15,
+  that replaces them.
+
 ## Session handling changes
 
 Maven Resolver 2.x introduced "onSessionEnd" hooks, that became required for
