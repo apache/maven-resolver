@@ -46,6 +46,7 @@ public class SisuRepositorySystemFactory {
     }
 
     @Named
+    @SuppressWarnings("deprecation") // Maven 4 deprecated maven-model-builder in favour of maven-impl
     private static class ModelBuilderProvider implements Provider<ModelBuilder> {
         public ModelBuilder get() {
             return new DefaultModelBuilderFactory().newInstance();

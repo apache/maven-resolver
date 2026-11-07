@@ -153,18 +153,20 @@ final class BasicRepositoryConnector implements RepositoryConnector {
         this.executors = new ConcurrentHashMap<>();
         this.closed = new AtomicBoolean(false);
 
+        @SuppressWarnings("deprecation") // legacy key, still honoured so that existing configurations keep working
+        String legacyThreadsKey = CONFIG_PROP_THREADS;
         maxUpstreamThreads = ConfigUtils.getInteger(
                 session,
                 DEFAULT_THREADS,
                 CONFIG_PROP_UPSTREAM_THREADS + "." + repository.getId(),
                 CONFIG_PROP_UPSTREAM_THREADS,
-                CONFIG_PROP_THREADS);
+                legacyThreadsKey);
         maxDownstreamThreads = ConfigUtils.getInteger(
                 session,
                 DEFAULT_THREADS,
                 CONFIG_PROP_DOWNSTREAM_THREADS + "." + repository.getId(),
                 CONFIG_PROP_DOWNSTREAM_THREADS,
-                CONFIG_PROP_THREADS);
+                legacyThreadsKey);
         includedChecksums = ConfigUtils.getBoolean(
                 session, DEFAULT_INCLUDED_CHECKSUMS, CONFIG_PROP_INCLUDED_CHECKSUMS, "aether.connector.smartChecksums");
         parallelPut = ConfigUtils.getBoolean(

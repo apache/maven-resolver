@@ -174,9 +174,14 @@ import org.eclipse.aether.version.VersionScheme;
  * Important: Given the instance of supplier memorizes the supplier {@link RepositorySystem} instance it supplies,
  * their lifecycle is shared as well: once supplied repository system is shut-down, this instance becomes closed as
  * well. Any subsequent {@code getXXX} method invocation attempt will fail with {@link IllegalStateException}.
+ * <p>
+ * Maven 4 deprecated the {@code maven-resolver-provider} and {@code maven-model-builder} components this supplier
+ * wires, in favour of its {@code maven-impl} module. The wiring stays until the supplier moves there, so deprecation
+ * warnings are suppressed for the whole class.
  *
  * @since 2.0.0
  */
+@SuppressWarnings("deprecation")
 public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
@@ -227,7 +232,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected TrackingFileManager createTrackingFileManager() {
-        return new TrackingFileManagerSupplier(getNamedLockFactorySelector()).get();
+        return new TrackingFileManagerSupplier(getNamedLockFactorySelector(), getPathProcessor()).get();
     }
 
     private LocalPathComposer localPathComposer;

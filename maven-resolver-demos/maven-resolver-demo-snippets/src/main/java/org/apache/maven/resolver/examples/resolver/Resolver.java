@@ -95,7 +95,7 @@ public class Resolver {
         NodeListGenerator nlg = new NodeListGenerator();
         rootNode.accept(new PreorderDependencyNodeConsumerVisitor(nlg));
 
-        return new ResolverResult(rootNode, nlg.getFiles(), nlg.getClassPath());
+        return new ResolverResult(rootNode, nlg.getPaths(), nlg.getClassPath());
     }
 
     public void install(Artifact artifact, Artifact pom) throws InstallationException {

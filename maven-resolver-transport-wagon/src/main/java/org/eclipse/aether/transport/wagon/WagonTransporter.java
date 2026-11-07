@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.Map;
@@ -419,7 +420,8 @@ final class WagonTransporter implements Transporter {
         @Override
         public void run(Wagon wagon) throws IOException, WagonException {
             final String src = task.getLocation().toString();
-            final File file = task.getDataFile();
+            final Path dataPath = task.getDataPath();
+            final File file = dataPath != null ? dataPath.toFile() : null;
             if (file == null && wagon instanceof StreamingWagon) {
                 try (OutputStream dst = task.newOutputStream()) {
                     ((StreamingWagon) wagon).getToStream(src, dst);
@@ -465,7 +467,8 @@ final class WagonTransporter implements Transporter {
         @Override
         public void run(Wagon wagon) throws WagonException, IOException {
             final String dst = task.getLocation().toString();
-            final File file = task.getDataFile();
+            final Path dataPath = task.getDataPath();
+            final File file = dataPath != null ? dataPath.toFile() : null;
             if (file == null && wagon instanceof StreamingWagon) {
                 try (InputStream src = task.newInputStream()) {
                     // StreamingWagon uses an internal buffer on src input stream.

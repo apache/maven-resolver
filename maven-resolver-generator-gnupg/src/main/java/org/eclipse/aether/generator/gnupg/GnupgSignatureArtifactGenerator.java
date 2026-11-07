@@ -166,7 +166,8 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
 
     private void sign(InputStream content, OutputStream signature) throws IOException {
         PGPSignatureGenerator sGen = new PGPSignatureGenerator(
-                new BcPGPContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA512));
+                new BcPGPContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA512),
+                secretKey.getPublicKey());
         try {
             sGen.init(PGPSignature.BINARY_DOCUMENT, privateKey);
             sGen.setHashedSubpackets(hashSubPackets);

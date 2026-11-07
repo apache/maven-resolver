@@ -18,7 +18,6 @@
  */
 package org.eclipse.aether.internal.test.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -67,6 +66,8 @@ public class TestLocalRepositoryManager implements LocalRepositoryManager {
         return localRepository;
     }
 
+    @Deprecated
+    @Override
     public String getPathForLocalArtifact(Artifact artifact) {
         requireNonNull(artifact, "artifact cannot be null");
 
@@ -81,6 +82,8 @@ public class TestLocalRepositoryManager implements LocalRepositoryManager {
                 groupId, artifactId, version, groupId, artifactId, version, classifier, extension);
     }
 
+    @Deprecated
+    @Override
     public String getPathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
         requireNonNull(artifact, "artifact cannot be null");
         requireNonNull(repository, "repository cannot be null");
@@ -88,6 +91,8 @@ public class TestLocalRepositoryManager implements LocalRepositoryManager {
         return getPathForLocalArtifact(artifact);
     }
 
+    @Deprecated
+    @Override
     public String getPathForLocalMetadata(Metadata metadata) {
         requireNonNull(metadata, "metadata cannot be null");
 
@@ -97,6 +102,8 @@ public class TestLocalRepositoryManager implements LocalRepositoryManager {
         return String.format("%s/%s/%s/%s-%s-%s.xml", groupId, artifactId, version, groupId, artifactId, version);
     }
 
+    @Deprecated
+    @Override
     public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
         requireNonNull(metadata, "metadata cannot be null");
         requireNonNull(repository, "repository cannot be null");
@@ -111,9 +118,10 @@ public class TestLocalRepositoryManager implements LocalRepositoryManager {
         Artifact artifact = request.getArtifact();
 
         LocalArtifactResult result = new LocalArtifactResult(request);
-        File file = new File(localRepository.getBasedir(), getPathForLocalArtifact(artifact));
-        result.setFile(file.isFile() ? file : null);
-        result.setAvailable(file.isFile() && !unavailableArtifacts.contains(artifact));
+        Path file = getAbsolutePathForLocalArtifact(artifact);
+        boolean isFile = Files.isRegularFile(file);
+        result.setPath(isFile ? file : null);
+        result.setAvailable(isFile && !unavailableArtifacts.contains(artifact));
 
         return result;
     }
@@ -132,8 +140,8 @@ public class TestLocalRepositoryManager implements LocalRepositoryManager {
         Metadata metadata = request.getMetadata();
 
         LocalMetadataResult result = new LocalMetadataResult(request);
-        File file = new File(localRepository.getBasedir(), getPathForLocalMetadata(metadata));
-        result.setFile(file.isFile() ? file : null);
+        Path file = getAbsolutePathForLocalMetadata(metadata);
+        result.setPath(Files.isRegularFile(file) ? file : null);
 
         return result;
     }
