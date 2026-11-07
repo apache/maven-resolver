@@ -21,7 +21,6 @@ package org.eclipse.aether.internal.test.util.http;
 import java.io.File;
 import java.io.IOException;
 import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.nio.channels.SeekableByteChannel;
@@ -36,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -332,34 +332,29 @@ public class HttpServer {
 
     /**
      * Finds a port that is free for both TCP and UDP, so that the HTTP/2 (TCP) and HTTP/3 (UDP) connectors can be
-     * bound to the same port number. TCP and UDP port spaces are independent, so an OS-assigned TCP port may have its
-     * same-numbered UDP port already taken by another process, which makes binding HTTP/3 to the HTTPS port flaky.
+     * bound to the same port number. TCP and UDP port spaces are independent, so a port that is free for one may be
+     * taken, or reserved by the OS, for the other.
+     * <p>
+     * Candidates are drawn at random rather than taken from the OS: Windows hands out ephemeral ports in sequence and
+     * Hyper-V reserves UDP port blocks 100 ports wide, so probing OS-assigned ports one after another could walk
+     * through an entire reserved block without finding a free pair (MRESOLVER-2142). The candidate range stays below
+     * the ephemeral ranges of Linux (32768+) and Windows (49152+) to limit races with other processes' client sockets
+     * between the probe and the connector's own bind.
      *
      * @return a port number that is (at probe time) free for both TCP and UDP
      */
     int findFreeTcpAndUdpPort() {
-        // 100 retries: 20 was insufficient on busy CI hosts (MRESOLVER-2142)
+        ThreadLocalRandom random = ThreadLocalRandom.current();
         for (int i = 0; i < 100; i++) {
-            int port;
-            try (ServerSocket serverSocket = new ServerSocket(0)) {
-                port = serverSocket.getLocalPort();
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to find a free TCP port", e);
-            }
-            if (isUdpPortFree(port)) {
+            int port = random.nextInt(10_000, 32_768);
+            try (ServerSocket tcp = new ServerSocket(port);
+                    DatagramSocket udp = new DatagramSocket(port)) {
                 return port;
+            } catch (IOException e) {
+                // taken or reserved for one of the protocols: try another candidate
             }
         }
         throw new IllegalStateException("Failed to find a port free for both TCP and UDP");
-    }
-
-    private static boolean isUdpPortFree(int port) {
-        try (DatagramSocket socket = new DatagramSocket(null)) {
-            socket.bind(new InetSocketAddress(port));
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
     }
 
     public List<LogEntry> getLogEntries() {
