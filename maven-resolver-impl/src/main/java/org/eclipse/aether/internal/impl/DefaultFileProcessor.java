@@ -23,9 +23,12 @@ import javax.inject.Singleton;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -34,7 +37,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.util.ChecksumUtils;
 import org.eclipse.aether.util.FileUtils;
 
 /**
@@ -135,8 +137,35 @@ public class DefaultFileProcessor implements FileProcessor {
 
     @Override
     public String readChecksum(final File checksumFile) throws IOException {
-        // for now do exactly same as happened before, but FileProcessor is a component and can be replaced
-        return ChecksumUtils.read(checksumFile);
+        // same parsing as the deprecated ChecksumUtils.read(File), which this component replaces
+        String checksum = "";
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new FileInputStream(checksumFile), StandardCharsets.UTF_8), 512)) {
+            while (true) {
+                String line = br.readLine();
+                if (line == null) {
+                    break;
+                }
+                line = line.trim();
+                if (line.length() > 0) {
+                    checksum = line;
+                    break;
+                }
+            }
+        }
+
+        if (checksum.matches(".+= [0-9A-Fa-f]+")) {
+            int lastSpacePos = checksum.lastIndexOf(' ');
+            checksum = checksum.substring(lastSpacePos + 1);
+        } else {
+            int spacePos = checksum.indexOf(' ');
+
+            if (spacePos != -1) {
+                checksum = checksum.substring(0, spacePos);
+            }
+        }
+
+        return checksum;
     }
 
     @Override

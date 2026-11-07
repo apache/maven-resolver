@@ -28,7 +28,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -49,9 +53,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.util.B64Code;
 import org.eclipse.jetty.util.IO;
-import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
@@ -341,12 +343,11 @@ public class HttpServer {
                             "bytes " + offset + "-" + (file.length() - 1L) + "/" + file.length());
                 }
                 if (checksumHeader != null) {
-                    Map<String, Object> checksums = ChecksumUtils.calc(file, Collections.singleton("SHA-1"));
+                    String sha1 = sha1Hex(file);
                     if (checksumHeader == ChecksumHeader.NEXUS) {
-                        response.setHeader(HttpHeader.ETAG.asString(), "{SHA1{" + checksums.get("SHA-1") + "}}");
+                        response.setHeader(HttpHeader.ETAG.asString(), "{SHA1{" + sha1 + "}}");
                     } else if (checksumHeader == ChecksumHeader.XCHECKSUM) {
-                        response.setHeader(
-                                "x-checksum-sha1", checksums.get("SHA-1").toString());
+                        response.setHeader("x-checksum-sha1", sha1);
                     }
                 }
                 if (HttpMethod.HEAD.is(req.getMethod())) {
@@ -531,7 +532,7 @@ public class HttpServer {
                 String method = credentials.substring(0, space);
                 if ("basic".equalsIgnoreCase(method)) {
                     credentials = credentials.substring(space + 1);
-                    credentials = B64Code.decode(credentials, StringUtil.__ISO_8859_1);
+                    credentials = new String(Base64.getDecoder().decode(credentials), StandardCharsets.ISO_8859_1);
                     int i = credentials.indexOf(':');
                     if (i > 0) {
                         String user = credentials.substring(0, i);
@@ -544,5 +545,14 @@ public class HttpServer {
             }
         }
         return false;
+    }
+
+    private static String sha1Hex(File file) throws IOException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            return ChecksumUtils.toHexString(digest.digest(Files.readAllBytes(file.toPath())));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

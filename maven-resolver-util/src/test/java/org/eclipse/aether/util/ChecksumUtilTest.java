@@ -36,6 +36,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings("deprecation") // covers the deprecated File and byte[] variants until they are removed
 public class ChecksumUtilTest {
     private static final String EMPTY = "EMPTY";
     private static final String PATTERN = "PATTERN";
