@@ -152,6 +152,12 @@
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-named-locks</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-named-locks-hazelcast</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -164,6 +170,12 @@
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-impl</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-impl</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
