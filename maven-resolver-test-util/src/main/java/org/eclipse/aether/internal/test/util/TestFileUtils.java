@@ -55,6 +55,13 @@ public class TestFileUtils {
         // hide constructor
     }
 
+    /**
+     * Deletes the files created by the temp-file helpers of this class.
+     *
+     * @throws IOException if an I/O error occurs
+     * @deprecated use the JUnit 5 {@code @TempDir} extension instead, which cleans up after
+     * themselves
+     */
     @Deprecated
     public static void deleteTempFiles() throws IOException {
         deleteFile(TMP);
@@ -96,6 +103,13 @@ public class TestFileUtils {
         return false;
     }
 
+    /**
+     * Creates a directory and its missing parents.
+     *
+     * @param directory the directory to create
+     * @return {@code true} if the directory exists afterwards
+     * @deprecated use {@code Files.createDirectories(Path)} instead
+     */
     @Deprecated
     public static boolean mkdirs(File directory) {
         if (directory == null) {
@@ -121,19 +135,28 @@ public class TestFileUtils {
     }
 
     /**
+     * Creates a temporary file with the given UTF-8 content.
+     *
+     * @param contents the content to write
+     * @return the temporary file
      * @throws IOException if an I/O error occurs
-     * @deprecated use @TempDir (JUnit 5) Or TemporaryFolder (JUnit 4) instead
+     * @deprecated use the JUnit 5 {@code @TempDir} extension instead
      */
     @Deprecated
     public static File createTempFile(String contents) throws IOException {
         return createTempFile(contents.getBytes(StandardCharsets.UTF_8), 1);
     }
 
-    @Deprecated
     /**
+     * Creates a temporary file holding the byte pattern the given number of times.
+     *
+     * @param pattern the bytes to repeat
+     * @param repeat how many times the pattern is written
+     * @return the temporary file
      * @throws IOException if an I/O error occurs
-     * @deprecated use @TempDir (JUnit 5) Or TemporaryFolder (JUnit 4) instead
+     * @deprecated use the JUnit 5 {@code @TempDir} extension instead
      */
+    @Deprecated
     public static File createTempFile(byte[] pattern, int repeat) throws IOException {
         mkdirs(TMP);
         File tmpFile = File.createTempFile("tmpfile-", ".data", TMP);
@@ -146,7 +169,7 @@ public class TestFileUtils {
      *
      * @return the temporary directory
      * @throws IOException if an I/O error occurs
-     * @deprecated use @TempDir (JUnit 5) Or TemporaryFolder (JUnit 4) instead
+     * @deprecated use the JUnit 5 {@code @TempDir} extension instead
      */
     @Deprecated
     public static File createTempDir() throws IOException {
@@ -158,7 +181,7 @@ public class TestFileUtils {
      *
      * @return the temporary directory
      * @throws IOException if an I/O error occurs
-     * @deprecated use {@code @TempDir} (JUnit 5) or {@code TemporaryFolder} (JUnit 4) instead
+     * @deprecated use the JUnit 5 {@code @TempDir} extension instead
      */
     @Deprecated
     public static File createTempDir(String suffix) throws IOException {
@@ -208,6 +231,15 @@ public class TestFileUtils {
         }
     }
 
+    /**
+     * Writes a byte pattern to a file the given number of times.
+     *
+     * @param file the file to write
+     * @param pattern the bytes to repeat
+     * @param repeat how many times the pattern is written
+     * @throws IOException if an I/O error occurs
+     * @deprecated use {@code Files.write(Path, byte[])} instead
+     */
     @Deprecated
     public static void writeBytes(File file, byte[] pattern, int repeat) throws IOException {
         file.deleteOnExit();
@@ -224,11 +256,28 @@ public class TestFileUtils {
         return new String(content, StandardCharsets.UTF_8);
     }
 
+    /**
+     * Writes a UTF-8 string to a file.
+     *
+     * @param file the file to write
+     * @param content the content to write
+     * @throws IOException if an I/O error occurs
+     * @deprecated use {@code Files.write(Path, byte[])} instead
+     */
     @Deprecated
     public static void writeString(File file, String content) throws IOException {
         writeBytes(file, content.getBytes(StandardCharsets.UTF_8), 1);
     }
 
+    /**
+     * Writes a UTF-8 string to a file and sets its last-modified time.
+     *
+     * @param file the file to write
+     * @param content the content to write
+     * @param timestamp the last-modified time to set, in milliseconds since the epoch
+     * @throws IOException if an I/O error occurs
+     * @deprecated use {@code Files.write(Path, byte[])} and {@code Files.setLastModifiedTime(Path, FileTime)} instead
+     */
     @Deprecated
     public static void writeString(File file, String content, long timestamp) throws IOException {
         writeBytes(file, content.getBytes(StandardCharsets.UTF_8), 1);

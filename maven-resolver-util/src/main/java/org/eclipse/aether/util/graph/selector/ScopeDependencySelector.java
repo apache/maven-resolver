@@ -37,8 +37,11 @@ import static java.util.Objects.requireNonNull;
  * In particular, the filter is not aware of scopes that logically include other scopes.
  *
  * @see Dependency#getScope()
- * @deprecated this class is deprecated. Use same named class from impl module instead.
- * @see org.eclipse.aether.scope.ScopeManager#getDependencySelector(org.eclipse.aether.RepositorySystemSession, org.eclipse.aether.scope.ResolutionScope)
+ * @deprecated Scope semantics belong to the consumer project since Resolver 2.0.0. Obtain the selector from
+ * {@link org.eclipse.aether.scope.ScopeManager#getDependencySelector(org.eclipse.aether.RepositorySystemSession,
+ * org.eclipse.aether.scope.ResolutionScope)}, or use the session created by the {@code SessionBuilderSupplier} of
+ * the {@code maven-resolver-supplier-mvn3} or {@code maven-resolver-supplier-mvn4} module, which already carries the
+ * Maven scope-aware selectors.
  */
 @Deprecated
 public final class ScopeDependencySelector implements DependencySelector {
