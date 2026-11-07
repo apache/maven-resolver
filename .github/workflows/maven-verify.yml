@@ -26,10 +26,13 @@ jobs:
     name: Verify
     uses: apache/maven-gh-actions-shared/.github/workflows/maven-verify.yml@v5
     with:
-      ff-run: false
+      # one Linux job first; the matrix only starts when it passes. master builds on JDK 21+, so the
+      # shared default of 17 cannot be used here
+      ff-run: true
+      ff-jdk: '21'
       ff-site-run: false
       maven4-enabled: true
-      maven4-version: '4.0.0-rc-6' # the same as used in project
+      maven4-version: '4.0.0-rc-7' # the same as maven4Version in the root POM
       verify-fail-fast: false
       jdk-matrix: '[ "21", "25", "26" ]'
       # every JDK and both Maven lines on Linux; Windows drops the middle JDK; macOS, the scarcest
