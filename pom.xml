@@ -717,6 +717,8 @@
           <proc>none</proc>
           <compilerArgs>
             <compilerArg>-Xlint:deprecation</compilerArg>
+            <!-- Java 8 stays the target; javac 21+ warns about it on every module -->
+            <compilerArg>-Xlint:-options</compilerArg>
           </compilerArgs>
         </configuration>
       </plugin>
