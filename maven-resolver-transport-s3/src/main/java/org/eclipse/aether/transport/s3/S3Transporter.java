@@ -127,7 +127,7 @@ final class S3Transporter extends AbstractTransporter implements Transporter {
                 .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                 .overrideConfiguration(configuration -> headers.forEach(configuration::putHeader))
                 .build();
-        this.objectNameMapper = objectNameMapperFactory.create(session, repository, client, headers);
+        this.objectNameMapper = objectNameMapperFactory.create(session, repository, headers);
         this.pathProcessor = requireNonNull(pathProcessor);
     }
 

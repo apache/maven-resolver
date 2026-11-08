@@ -38,7 +38,7 @@ class FixedBucketObjectNameMapperFactoryTest {
             new RemoteRepository.Builder("repo", "default", "s3+https://localhost").build();
 
     private String effectiveBucket(DefaultRepositorySystemSession session) {
-        ObjectNameMapper mapper = factory.create(session, repository, null, Collections.emptyMap());
+        ObjectNameMapper mapper = factory.create(session, repository, Collections.emptyMap());
         return mapper.name("g/a/v/a.jar").getBucket();
     }
 

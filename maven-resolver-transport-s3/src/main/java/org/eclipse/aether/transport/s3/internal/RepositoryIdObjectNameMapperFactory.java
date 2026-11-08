@@ -28,7 +28,6 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transport.s3.ObjectName;
 import org.eclipse.aether.transport.s3.ObjectNameMapper;
 import org.eclipse.aether.transport.s3.ObjectNameMapperFactory;
-import software.amazon.awssdk.services.s3.S3Client;
 
 /**
  * A mapper that uses repository ID as bucket name and layout path as object name. Assumes repository ID is a valid
@@ -41,10 +40,7 @@ public class RepositoryIdObjectNameMapperFactory implements ObjectNameMapperFact
 
     @Override
     public ObjectNameMapper create(
-            RepositorySystemSession session,
-            RemoteRepository repository,
-            S3Client unused,
-            Map<String, String> headers) {
+            RepositorySystemSession session, RemoteRepository repository, Map<String, String> headers) {
         return path -> new ObjectName(repository.getId(), ObjectName.normalize(path));
     }
 }

@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
-import software.amazon.awssdk.services.s3.S3Client;
 
 /**
  * Factory for {@link ObjectNameMapper}.
@@ -31,11 +30,9 @@ import software.amazon.awssdk.services.s3.S3Client;
  */
 public interface ObjectNameMapperFactory {
     /**
-     * Creates a factory for mapping artifact layout path onto {@link ObjectName}. Should never return {@code null}.
+     * Creates an {@link ObjectNameMapper} that maps artifact layout paths onto {@link ObjectName}s for the given
+     * session and repository. Should never return {@code null}.
      */
     ObjectNameMapper create(
-            RepositorySystemSession session,
-            RemoteRepository repository,
-            S3Client s3Client,
-            Map<String, String> extraHeaders);
+            RepositorySystemSession session, RemoteRepository repository, Map<String, String> extraHeaders);
 }
