@@ -54,6 +54,7 @@ class AwsSigV4JdkTransporterIT {
     private static final String REGION = "us-east-1";
 
     @Container
+    // the same image MinioTransporterIT uses (#2140), so that every S3-compatible IT runs against one server
     static final MinIOContainer CONTAINER =
             new MinIOContainer(DockerImageName.parse("pgsty/silo:RELEASE.2026-09-03T13-18-01Z-distroless")
                     .asCompatibleSubstituteFor("minio/minio"));
