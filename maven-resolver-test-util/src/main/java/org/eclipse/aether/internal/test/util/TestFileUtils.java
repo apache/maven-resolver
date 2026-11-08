@@ -60,7 +60,7 @@ public class TestFileUtils {
      *
      * @throws IOException if an I/O error occurs
      * @deprecated use the JUnit 5 {@code @TempDir} extension instead, which cleans up after
-     * themselves
+     * itself
      */
     @Deprecated
     public static void deleteTempFiles() throws IOException {
