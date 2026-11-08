@@ -238,7 +238,8 @@ public class TestFileUtils {
      * @param pattern the bytes to repeat
      * @param repeat how many times the pattern is written
      * @throws IOException if an I/O error occurs
-     * @deprecated use {@code Files.write(Path, byte[])} instead
+     * @deprecated use {@code Files.write(Path, byte[])} instead; it writes the array once, so for
+     * {@code repeat > 1} build the repeated bytes first
      */
     @Deprecated
     public static void writeBytes(File file, byte[] pattern, int repeat) throws IOException {
