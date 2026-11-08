@@ -23,6 +23,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import org.junit.jupiter.api.Test;
 
@@ -153,5 +154,35 @@ class AwsSigV4RequestSignerTest {
         AwsSigV4RequestSigner signer = signer("us-east-1", null);
         signer.close();
         assertThrows(IllegalStateException.class, () -> signer.sign("GET", URI.create("https://s3.example/a")));
+    }
+
+    /**
+     * Races {@code close()} against {@code sign()}: each signature that is produced must equal the one of an
+     * untouched signer, since the fixed clock makes it deterministic; a signer closed first must refuse instead.
+     */
+    @Test
+    void closeDuringSignNeverYieldsAWrongSignature() throws Exception {
+        URI uri = URI.create("https://s3.example/bucket/a");
+        Map<String, String> expected = signer("us-east-1", null).sign("GET", uri);
+        for (int i = 0; i < 500; i++) {
+            AwsSigV4RequestSigner signer = signer("us-east-1", null);
+            CountDownLatch go = new CountDownLatch(1);
+            Thread closer = new Thread(() -> {
+                try {
+                    go.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                signer.close();
+            });
+            closer.start();
+            go.countDown();
+            try {
+                assertEquals(expected, signer.sign("GET", uri));
+            } catch (IllegalStateException closedFirst) {
+                // refusing after close is the correct outcome
+            }
+            closer.join(2000);
+        }
     }
 }
