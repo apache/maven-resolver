@@ -674,10 +674,11 @@ final class HttpTransporter extends AbstractTransporter {
             client.close();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } finally {
+            AuthenticationContext.close(repoAuthContext);
+            AuthenticationContext.close(proxyAuthContext);
+            state.close();
         }
-        AuthenticationContext.close(repoAuthContext);
-        AuthenticationContext.close(proxyAuthContext);
-        state.close();
     }
 
     private class EntityGetter {
