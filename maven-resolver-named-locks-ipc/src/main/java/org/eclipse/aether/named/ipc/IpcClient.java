@@ -81,6 +81,13 @@ public class IpcClient {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     protected volatile boolean initialized;
+
+    /**
+     * Set by {@link #close()}: the owning factory shut down, so no new connection is made (and no new server is
+     * spawned) on behalf of a lock that is still held.
+     */
+    protected volatile boolean closed;
+
     protected final Path lockPath;
     protected final Path logPath;
     protected final Path syncPath;
@@ -114,6 +121,9 @@ public class IpcClient {
         if (!initialized) {
             // caller must block on this method
             synchronized (this) {
+                if (closed) {
+                    throw new IOException("IPC client is closed");
+                }
                 if (!initialized) {
                     socket = createClient();
                     ByteChannel wrapper = new ByteChannelWrapper(socket);
@@ -384,6 +394,7 @@ public class IpcClient {
     }
 
     void close() {
+        closed = true;
         try {
             if (noFork) {
                 stopServer();
