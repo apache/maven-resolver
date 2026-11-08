@@ -345,9 +345,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                             resume = false;
                             continue;
                         }
-                        JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
-                            throw new HttpTransporterException(statusCode);
-                        });
+                        JdkRFC9457Reporter.INSTANCE.generateException(response);
                     }
                 } catch (ConnectException e) {
                     throw enhance(e);
@@ -492,9 +490,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
             task.getListener().transportPropertiesAvailable(createTransportProperties(response));
             if (response.statusCode() >= MULTIPLE_CHOICES) {
-                JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
-                    throw new HttpTransporterException(statusCode);
-                });
+                JdkRFC9457Reporter.INSTANCE.generateException(response);
             }
         } catch (ConnectException e) {
             throw enhance(e);

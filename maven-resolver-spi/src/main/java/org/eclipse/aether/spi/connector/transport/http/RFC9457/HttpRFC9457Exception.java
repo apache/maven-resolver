@@ -18,33 +18,19 @@
  */
 package org.eclipse.aether.spi.connector.transport.http.RFC9457;
 
-import java.io.IOException;
-
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporter;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 
 /**
- * Exception thrown by {@link HttpTransporter} in case of errors.
+ * Exception thrown by {@link HttpTransporter} in case of non 2xx responses carrying a RFC 9457 payload.
  */
-public class HttpRFC9457Exception extends IOException {
-    private final int statusCode;
-
-    private final String reasonPhrase;
+public class HttpRFC9457Exception extends HttpTransporterException {
 
     private final RFC9457Payload payload;
 
     public HttpRFC9457Exception(int statusCode, String reasonPhrase, RFC9457Payload payload) {
-        super(payload.toString());
-        this.statusCode = statusCode;
-        this.reasonPhrase = reasonPhrase;
+        super(statusCode, reasonPhrase);
         this.payload = payload;
-    }
-
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    public String getReasonPhrase() {
-        return reasonPhrase;
     }
 
     public RFC9457Payload getPayload() {

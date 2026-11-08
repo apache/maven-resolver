@@ -56,7 +56,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpRequestRetryHandler;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ServiceUnavailableRetryStrategy;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.CookieSpecs;
@@ -409,11 +408,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     @Override
     protected void implPeek(PeekTask task) throws Exception {
         HttpHead request = commonHeaders(new HttpHead(resolve(task)));
-        try {
-            execute(request, null, task.getListener());
-        } catch (HttpResponseException e) {
-            throw new HttpTransporterException(e.getStatusCode());
-        }
+        execute(request, null, task.getListener());
     }
 
     @Override
@@ -432,7 +427,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 }
                 execute(request, getter, task.getListener());
                 break;
-            } catch (HttpResponseException e) {
+            } catch (HttpTransporterException e) {
                 if (resume
                         && e.getStatusCode() == HttpStatus.SC_PRECONDITION_FAILED
                         && request.containsHeader(HttpHeaders.RANGE)) {
@@ -440,7 +435,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                     resume = false;
                     continue;
                 }
-                throw new HttpTransporterException(e.getStatusCode());
+                throw e;
             }
         }
     }
@@ -454,7 +449,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
         try {
             execute(request, null, task.getListener());
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             if (e.getStatusCode() == HttpStatus.SC_EXPECTATION_FAILED && request.containsHeader(HttpHeaders.EXPECT)) {
                 state.setExpectContinue(false);
                 request = commonHeaders(entity(new HttpPut(request.getURI()), entity));
@@ -598,12 +593,10 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
-    private void handleStatus(CloseableHttpResponse response) throws Exception {
+    private void handleStatus(CloseableHttpResponse response) throws HttpTransporterException {
         int status = response.getStatusLine().getStatusCode();
         if (status >= 300) {
-            ApacheRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
-                throw new HttpResponseException(statusCode, reasonPhrase + " (" + statusCode + ")");
-            });
+            ApacheRFC9457Reporter.INSTANCE.generateException(response);
         }
     }
 

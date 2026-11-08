@@ -334,9 +334,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                     resume = false;
                     continue;
                 }
-                JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
-                    throw new HttpTransporterException(statusCode);
-                });
+                JettyRFC9457Reporter.INSTANCE.generateException(listener);
             }
             break;
         }
@@ -522,9 +520,7 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 // reachable on both success (2xx) and error (3xx/4xx/5xx) responses.
                 task.getListener().transportPropertiesAvailable(createTransportProperties(request, rawResponseHeaders));
                 if (response.getStatus() >= MULTIPLE_CHOICES) {
-                    JettyRFC9457Reporter.INSTANCE.generateException(listener, (statusCode, reasonPhrase) -> {
-                        throw new HttpTransporterException(statusCode);
-                    });
+                    JettyRFC9457Reporter.INSTANCE.generateException(listener);
                 }
                 return true;
             }

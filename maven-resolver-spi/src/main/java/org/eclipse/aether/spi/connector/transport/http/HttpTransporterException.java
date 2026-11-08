@@ -19,19 +19,60 @@
 package org.eclipse.aether.spi.connector.transport.http;
 
 /**
- * Exception thrown by {@link HttpTransporter} in case of errors.
+ * Exception thrown by {@link HttpTransporter} in case of non 2xx responses.
  *
  * @since 2.0.0
  */
 public class HttpTransporterException extends Exception {
     private final int statusCode;
+    private final String reasonPhrase;
+    private final String bodyExtract;
 
     public HttpTransporterException(int statusCode) {
-        super("HTTP Status: " + statusCode);
+        super(buildMessage(statusCode, null));
         this.statusCode = statusCode;
+        this.reasonPhrase = null;
+        this.bodyExtract = null;
+    }
+
+    public HttpTransporterException(int statusCode, String reasonPhrase) {
+        super(buildMessage(statusCode, reasonPhrase));
+        this.statusCode = statusCode;
+        this.reasonPhrase = reasonPhrase;
+        this.bodyExtract = null;
+    }
+
+    public HttpTransporterException(int statusCode, String reasonPhrase, String bodyExtract) {
+        super(buildMessage(statusCode, reasonPhrase));
+        this.statusCode = statusCode;
+        this.reasonPhrase = reasonPhrase;
+        this.bodyExtract = bodyExtract;
+    }
+
+    private static String buildMessage(int statusCode, String reasonPhrase) {
+        return "HTTP Status: " + statusCode + (reasonPhrase != null ? " (" + reasonPhrase + ")" : "");
     }
 
     public int getStatusCode() {
         return statusCode;
+    }
+
+    /**
+     * Returns the reason phrase of the response, if available.
+     * @return The reason phrase of the response, or {@code null} if not available.
+     * @since 2.0.26
+     */
+    public String getReasonPhrase() {
+        return reasonPhrase;
+    }
+
+    /**
+     * Returns the body extract of the response, if available.
+     *
+     * @return The body extract of the response, or {@code null} if not available.
+     * @since 2.0.26
+     */
+    public String getBodyExtract() {
+        return bodyExtract;
     }
 }

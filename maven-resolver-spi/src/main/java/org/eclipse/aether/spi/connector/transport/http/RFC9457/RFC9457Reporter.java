@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
+
 /**
  * A reporter for RFC 9457 messages.
  * RFC 9457 is a standard for reporting problems in HTTP responses as a JSON object.
@@ -103,18 +105,16 @@ public abstract class RFC9457Reporter<T, E extends Exception, R> {
 
     /**
      * Generates a {@link HttpRFC9457Exception} if the response type is a RFC 9457 message.
-     * Otherwise, it throws the base exception
+     * Otherwise, it throws an {@link HttpTransporterException} with the status code and reason phrase.
      *
      * @param response The response to check for RFC 9457 messages.
-     * @param baseException The base exception to throw if the response is not a RFC 9457 message.
      */
-    public void generateException(T response, BiConsumerChecked<Integer, String, E> baseException)
-            throws E, HttpRFC9457Exception {
+    public void generateException(T response) throws HttpTransporterException {
         int statusCode = getStatusCode(response);
         String reasonPhrase = getReasonPhrase(response);
 
+        final String body;
         if (isRFC9457Message(response)) {
-            String body;
             try {
                 body = getBody(response);
             } catch (IOException ignore) {
@@ -133,12 +133,25 @@ public abstract class RFC9457Reporter<T, E extends Exception, R> {
                 }
                 if (rfc9457Payload != null) {
                     throw new HttpRFC9457Exception(statusCode, reasonPhrase, rfc9457Payload);
+                } else {
+                    throw new HttpTransporterException(statusCode, reasonPhrase, generateBodyExtract(body));
                 }
-                baseException.accept(statusCode, reasonPhrase);
-                return;
+            } else {
+                // No body found but it is representing a RFC 9457 message due to the content type.
+                throw new HttpRFC9457Exception(statusCode, reasonPhrase, RFC9457Payload.INSTANCE);
             }
-            throw new HttpRFC9457Exception(statusCode, reasonPhrase, RFC9457Payload.INSTANCE);
+        } else {
+            try {
+                body = getBody(response);
+                throw new HttpTransporterException(statusCode, reasonPhrase, generateBodyExtract(body));
+            } catch (IOException e) {
+                throw new HttpTransporterException(statusCode, reasonPhrase);
+            }
         }
-        baseException.accept(statusCode, reasonPhrase);
+    }
+
+    public static String generateBodyExtract(String body) {
+        // convert from HTML to plain text
+        return body;
     }
 }

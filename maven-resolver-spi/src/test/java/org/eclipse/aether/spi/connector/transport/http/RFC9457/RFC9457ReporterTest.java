@@ -24,16 +24,19 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RFC9457ReporterTest {
 
     private static final class TestReporter extends RFC9457Reporter<String, IOException, Object> {
         private final boolean rfc9457;
-
-        private boolean bodyRead;
 
         private TestReporter(boolean rfc9457) {
             this.rfc9457 = rfc9457;
@@ -56,7 +59,6 @@ class RFC9457ReporterTest {
 
         @Override
         protected String getBody(String response) throws IOException {
-            bodyRead = true;
             try (InputStream is = new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8))) {
                 return readBody(is);
             }
@@ -64,10 +66,6 @@ class RFC9457ReporterTest {
 
         @Override
         public void prepareRequest(Object request) {}
-    }
-
-    private static void throwBaseException(Integer statusCode, String reasonPhrase) throws IOException {
-        throw new IOException("base:" + statusCode);
     }
 
     @Test
@@ -122,8 +120,7 @@ class RFC9457ReporterTest {
         TestReporter reporter = new TestReporter(true);
         HttpRFC9457Exception exception = assertThrows(
                 HttpRFC9457Exception.class,
-                () -> reporter.generateException(
-                        "{\"status\":404,\"title\":\"not found\"}", RFC9457ReporterTest::throwBaseException));
+                () -> reporter.generateException("{\"status\":404,\"title\":\"not found\"}"));
         assertEquals(404, exception.getStatusCode());
         assertEquals("not found", exception.getPayload().getTitle());
     }
@@ -131,44 +128,38 @@ class RFC9457ReporterTest {
     @Test
     void malformedProblemDetailsFallsBackToBaseException() {
         TestReporter reporter = new TestReporter(true);
-        IOException exception = assertThrows(
-                IOException.class,
-                () -> reporter.generateException("{ this is not json", RFC9457ReporterTest::throwBaseException));
-        assertFalse(exception instanceof HttpRFC9457Exception);
-        assertEquals("base:404", exception.getMessage());
+        HttpTransporterException exception =
+                assertThrows(HttpTransporterException.class, () -> reporter.generateException("{ this is not json"));
+        assertEquals("HTTP Status: 404 (Not Found)", exception.getMessage());
+        assertEquals("{ this is not json", exception.getBodyExtract());
     }
 
     @Test
-    void oversizedProblemDetailsIsTruncatedAndFallsBackToBaseException() {
+    void oversizedProblemDetailsFallsBackToBaseException() {
         char[] padding = new char[RFC9457Reporter.MAX_BODY_BYTES];
         Arrays.fill(padding, 'a');
         // valid problem details if read completely, malformed once truncated at the cap
         String oversized = "{\"title\":\"" + new String(padding) + "\"}";
         TestReporter reporter = new TestReporter(true);
-        IOException exception = assertThrows(
-                IOException.class,
-                () -> reporter.generateException(oversized, RFC9457ReporterTest::throwBaseException));
-        assertFalse(exception instanceof HttpRFC9457Exception);
-        assertEquals("base:404", exception.getMessage());
+        HttpTransporterException exception =
+                assertThrows(HttpTransporterException.class, () -> reporter.generateException(oversized));
+        assertEquals("HTTP Status: 404 (Not Found)", exception.getMessage());
     }
 
     @Test
     void emptyBodyThrowsExceptionWithEmptyPayload() {
         TestReporter reporter = new TestReporter(true);
-        HttpRFC9457Exception exception = assertThrows(
-                HttpRFC9457Exception.class,
-                () -> reporter.generateException("", RFC9457ReporterTest::throwBaseException));
+        HttpRFC9457Exception exception = assertThrows(HttpRFC9457Exception.class, () -> reporter.generateException(""));
         assertSame(RFC9457Payload.INSTANCE, exception.getPayload());
     }
 
     @Test
-    void nonProblemDetailsResponseDoesNotReadBody() {
+    void nonRFC9457Response() {
         TestReporter reporter = new TestReporter(false);
-        IOException exception = assertThrows(
-                IOException.class,
-                () -> reporter.generateException("{\"title\":\"ignored\"}", RFC9457ReporterTest::throwBaseException));
+        HttpTransporterException exception = assertThrows(
+                HttpTransporterException.class, () -> reporter.generateException("{\"title\":\"ignored\"}"));
         assertFalse(exception instanceof HttpRFC9457Exception);
-        assertEquals("base:404", exception.getMessage());
-        assertFalse(reporter.bodyRead);
+        assertEquals("HTTP Status: 404 (Not Found)", exception.getMessage());
+        assertEquals("{\"title\":\"ignored\"}", exception.getBodyExtract());
     }
 }
