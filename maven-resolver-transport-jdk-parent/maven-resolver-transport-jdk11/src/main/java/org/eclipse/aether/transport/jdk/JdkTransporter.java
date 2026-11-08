@@ -338,13 +338,14 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 prepare(request);
                 try {
                     response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+                    if (resume && response.statusCode() == PRECONDITION_FAILED) {
+                        // the local contents are outdated: discard this response and fetch the whole file
+                        closeBody(response);
+                        resume = false;
+                        continue;
+                    }
                     task.getListener().transportPropertiesAvailable(createTransportProperties(response));
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
-                        if (resume && response.statusCode() == PRECONDITION_FAILED) {
-                            closeBody(response);
-                            resume = false;
-                            continue;
-                        }
                         JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
                             throw new HttpTransporterException(statusCode);
                         });
