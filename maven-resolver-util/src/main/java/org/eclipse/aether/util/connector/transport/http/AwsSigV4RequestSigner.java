@@ -94,7 +94,13 @@ public final class AwsSigV4RequestSigner implements HttpRequestSigner {
      */
     private final byte[] signingKeySeed;
 
-    private volatile boolean closed;
+    /**
+     * Guards {@link #signingKeySeed} and {@link #closed}, so that {@link #close()} cannot wipe the seed while a
+     * signature is being derived from it.
+     */
+    private final Object keyLock = new Object();
+
+    private boolean closed;
 
     private final String sessionToken;
 
@@ -132,9 +138,6 @@ public final class AwsSigV4RequestSigner implements HttpRequestSigner {
     public Map<String, String> sign(String method, URI uri) {
         requireNonNull(method, "method");
         requireNonNull(uri, "uri");
-        if (closed) {
-            throw new IllegalStateException("The signer is closed");
-        }
         String amzDate = AMZ_DATE_FORMAT.format(clock.instant());
         String dateStamp = amzDate.substring(0, 8);
 
@@ -174,7 +177,13 @@ public final class AwsSigV4RequestSigner implements HttpRequestSigner {
         String scope = dateStamp + '/' + region + '/' + service + "/aws4_request";
         String stringToSign = ALGORITHM + '\n' + amzDate + '\n' + scope + '\n' + hex(sha256(canonicalRequest));
 
-        byte[] signingKey = hmac(hmac(hmac(hmac(signingKeySeed, dateStamp), region), service), "aws4_request");
+        byte[] signingKey;
+        synchronized (keyLock) {
+            if (closed) {
+                throw new IllegalStateException("The signer is closed");
+            }
+            signingKey = hmac(hmac(hmac(hmac(signingKeySeed, dateStamp), region), service), "aws4_request");
+        }
         String signature = hex(hmac(signingKey, stringToSign));
 
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
@@ -330,8 +339,10 @@ public final class AwsSigV4RequestSigner implements HttpRequestSigner {
      */
     @Override
     public void close() {
-        closed = true;
-        Arrays.fill(signingKeySeed, (byte) 0);
+        synchronized (keyLock) {
+            closed = true;
+            Arrays.fill(signingKeySeed, (byte) 0);
+        }
     }
 
     private static byte[] signingKeySeed(char[] secretKey) {

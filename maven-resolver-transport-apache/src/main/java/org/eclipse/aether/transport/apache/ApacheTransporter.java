@@ -657,12 +657,14 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             client.close();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        }
-        AuthenticationContext.close(repoAuthContext);
-        AuthenticationContext.close(proxyAuthContext);
-        state.close();
-        if (requestSigner != null) {
-            requestSigner.close();
+        } finally {
+            // wipe the credentials and release the state even when closing the client fails
+            AuthenticationContext.close(repoAuthContext);
+            AuthenticationContext.close(proxyAuthContext);
+            state.close();
+            if (requestSigner != null) {
+                requestSigner.close();
+            }
         }
     }
 
