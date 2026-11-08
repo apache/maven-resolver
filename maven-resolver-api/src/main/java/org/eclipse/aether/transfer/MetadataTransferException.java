@@ -18,14 +18,17 @@
  */
 package org.eclipse.aether.transfer;
 
+import org.eclipse.aether.DebugMessageSupplier;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.ArtifactRepository;
+import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * Thrown when metadata could not be uploaded/downloaded to/from a particular remote repository.
  */
-public class MetadataTransferException extends RepositoryException {
+public class MetadataTransferException extends RepositoryException implements DebugMessageSupplier {
 
     private final transient Metadata metadata;
 
@@ -34,11 +37,19 @@ public class MetadataTransferException extends RepositoryException {
     /** Whether this exception was played back from the error cache. */
     private final boolean fromCache;
 
-    static String getString(String prefix, RemoteRepository repository) {
+    static String getString(String prefix, ArtifactRepository repository) {
         if (repository == null) {
             return "";
+        } else if (repository instanceof RemoteRepository) {
+            RemoteRepository remoteRepository = (RemoteRepository) repository;
+            return prefix + repository.getId() + " (" + remoteRepository.getUrl() + ")";
+        } else if (repository instanceof LocalRepository) {
+            LocalRepository localRepository = (LocalRepository) repository;
+            return prefix + repository.getId() + " ("
+                    + localRepository.getBasePath().toAbsolutePath() + ")";
         } else {
-            return prefix + repository.getId() + " (" + repository.getUrl() + ")";
+            // fallback for unknown repository types
+            return prefix + repository.getId() + " (" + repository.getClass().getName() + ")";
         }
     }
 
@@ -127,5 +138,14 @@ public class MetadataTransferException extends RepositoryException {
      */
     public boolean isFromCache() {
         return fromCache;
+    }
+
+    @Override
+    public String getDebugMessage() {
+        if (getCause() instanceof DebugMessageSupplier) {
+            return ((DebugMessageSupplier) getCause()).getDebugMessage();
+        } else {
+            return "";
+        }
     }
 }

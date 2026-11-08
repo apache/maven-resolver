@@ -212,6 +212,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private PasswordAuthentication proxyAuthentication;
 
+    private final JdkRFC9457Reporter rfc9457Reporter;
+
     @SuppressWarnings("deprecation")
     JdkTransporter(
             RepositorySystemSession session,
@@ -281,6 +283,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
         this.headers = headers;
         this.client = createClient(session, repository, insecure);
+        this.rfc9457Reporter = new JdkRFC9457Reporter(HttpTransporterUtils.getCaptureResponseBodyForErrors(session));
     }
 
     private URI resolve(TransportTask task) {
@@ -322,7 +325,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         HttpRequest.newBuilder().uri(resolve(task)).GET();
                 headers.forEach(request::setHeader);
                 if (sendRfc9457Accept) {
-                    JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+                    rfc9457Reporter.prepareRequest(request);
                 }
 
                 if (resume) {
@@ -345,9 +348,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                             resume = false;
                             continue;
                         }
-                        JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
-                            throw new HttpTransporterException(statusCode);
-                        });
+                        rfc9457Reporter.generateException(response);
                     }
                 } catch (ConnectException e) {
                     throw enhance(e);
@@ -468,7 +469,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         }
         headers.forEach(request::setHeader);
         if (sendRfc9457Accept) {
-            JdkRFC9457Reporter.INSTANCE.prepareRequest(request);
+            rfc9457Reporter.prepareRequest(request);
         }
         if (task.getDataLength() == 0L) {
             request.PUT(HttpRequest.BodyPublishers.noBody());
@@ -492,9 +493,7 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
             task.getListener().transportPropertiesAvailable(createTransportProperties(response));
             if (response.statusCode() >= MULTIPLE_CHOICES) {
-                JdkRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
-                    throw new HttpTransporterException(statusCode);
-                });
+                rfc9457Reporter.generateException(response);
             }
         } catch (ConnectException e) {
             throw enhance(e);

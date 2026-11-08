@@ -324,7 +324,7 @@ public class DefaultDeployerTest {
                     Collection<? extends MetadataDownload> metadataDownloads) {
                 if (metadataDownloads != null) {
                     for (MetadataDownload download : metadataDownloads) {
-                        download.setException(new MetadataNotFoundException(download.getMetadata(), null, null));
+                        download.setException(new MetadataNotFoundException(download.getMetadata(), null, ""));
                     }
                 }
             }

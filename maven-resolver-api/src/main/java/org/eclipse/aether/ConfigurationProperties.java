@@ -825,6 +825,24 @@ public final class ConfigurationProperties {
      */
     public static final boolean DEFAULT_INSTALLER_HARD_LINK = true;
 
+    /**
+     * A flag indicating whether HTTP transport should capture the response body for non-RFC 9457 error responses.
+     * When enabled, the response body is captured and made available to the caller, which can be
+     * useful for debugging and error reporting. When disabled, the response body is discarded to save memory and
+     * improve performance.
+     * To disable capturing of RFC 9457 error responses, set {@link #HTTP_SEND_RFC9457_ACCEPT} to {@code false}.
+     *
+     * @since 2.0.27
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_CAPTURE_RESPONSE_BODY_FOR_ERRORS}
+     * @configurationRepoIdSuffix No
+     */
+    public static final String HTTP_CAPTURE_RESPONSE_BODY_FOR_ERRORS =
+            PREFIX_TRANSPORT_HTTP + "captureResponseBodyForErrors";
+
+    public static final boolean DEFAULT_HTTP_CAPTURE_RESPONSE_BODY_FOR_ERRORS = false;
+
     private ConfigurationProperties() {
         // hide constructor
     }

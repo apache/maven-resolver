@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.aether.DebugMessageSupplier;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalArtifactResult;
@@ -33,7 +34,7 @@ import org.eclipse.aether.transfer.RepositoryOfflineException;
 /**
  * Thrown in case of a unresolvable artifacts.
  */
-public class ArtifactResolutionException extends RepositoryException {
+public class ArtifactResolutionException extends RepositoryException implements DebugMessageSupplier {
     private final transient List<ArtifactResult> results;
 
     /**
@@ -221,5 +222,13 @@ public class ArtifactResolutionException extends RepositoryException {
             }
         }
         return result;
+    }
+
+    @Override
+    public String getDebugMessage() {
+        if (getCause() instanceof DebugMessageSupplier) {
+            return ((DebugMessageSupplier) getCause()).getDebugMessage();
+        }
+        return "";
     }
 }

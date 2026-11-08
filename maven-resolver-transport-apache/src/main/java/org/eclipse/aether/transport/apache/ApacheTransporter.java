@@ -56,7 +56,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpRequestRetryHandler;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ServiceUnavailableRetryStrategy;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.CookieSpecs;
@@ -171,6 +170,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     private final boolean sendRfc9457Accept;
 
     private final AuthCache authCache;
+
+    private ApacheRFC9457Reporter rfc9457Reporter;
 
     @SuppressWarnings({"checkstyle:methodlength", "deprecation"})
     ApacheTransporter(
@@ -347,6 +348,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             this.authCache = new ConcurrentAuthCache();
         }
         this.client = builder.build();
+        this.rfc9457Reporter = new ApacheRFC9457Reporter(HttpTransporterUtils.getCaptureResponseBodyForErrors(session));
     }
 
     private static HttpHost toHost(Proxy proxy) {
@@ -409,11 +411,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     @Override
     protected void implPeek(PeekTask task) throws Exception {
         HttpHead request = commonHeaders(new HttpHead(resolve(task)));
-        try {
-            execute(request, null, task.getListener());
-        } catch (HttpResponseException e) {
-            throw new HttpTransporterException(e.getStatusCode());
-        }
+        execute(request, null, task.getListener());
     }
 
     @Override
@@ -423,7 +421,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         EntityGetter getter = new EntityGetter(task);
         HttpGet request = commonHeaders(new HttpGet(resolve(task)));
         if (sendRfc9457Accept) {
-            ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
+            rfc9457Reporter.prepareRequest(request);
         }
         while (true) {
             try {
@@ -432,7 +430,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 }
                 execute(request, getter, task.getListener());
                 break;
-            } catch (HttpResponseException e) {
+            } catch (HttpTransporterException e) {
                 if (resume
                         && e.getStatusCode() == HttpStatus.SC_PRECONDITION_FAILED
                         && request.containsHeader(HttpHeaders.RANGE)) {
@@ -440,7 +438,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                     resume = false;
                     continue;
                 }
-                throw new HttpTransporterException(e.getStatusCode());
+                throw e;
             }
         }
     }
@@ -450,18 +448,18 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         PutTaskEntity entity = new PutTaskEntity(task);
         HttpPut request = commonHeaders(entity(new HttpPut(resolve(task)), entity));
         if (sendRfc9457Accept) {
-            ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
+            rfc9457Reporter.prepareRequest(request);
         }
         try {
             execute(request, null, task.getListener());
-        } catch (HttpResponseException e) {
+        } catch (HttpTransporterException e) {
             if (e.getStatusCode() == HttpStatus.SC_EXPECTATION_FAILED && request.containsHeader(HttpHeaders.EXPECT)) {
                 state.setExpectContinue(false);
                 request = commonHeaders(entity(new HttpPut(request.getURI()), entity));
                 execute(request, null, task.getListener());
                 return;
             }
-            throw new HttpTransporterException(e.getStatusCode());
+            throw e;
         }
     }
 
@@ -529,7 +527,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 } finally {
                     EntityUtils.consumeQuietly(response.getEntity());
                 }
-            } catch (IOException e) {
+            } catch (IOException | HttpTransporterException e) {
                 LOGGER.debug("Failed to create parent directory {}", dirs.get(index), e);
                 return;
             }
@@ -542,7 +540,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 } finally {
                     EntityUtils.consumeQuietly(response.getEntity());
                 }
-            } catch (IOException e) {
+            } catch (IOException | HttpTransporterException e) {
                 LOGGER.debug("Failed to create parent directory {}", dirs.get(index), e);
                 return;
             }
@@ -598,12 +596,10 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         }
     }
 
-    private void handleStatus(CloseableHttpResponse response) throws Exception {
+    private void handleStatus(CloseableHttpResponse response) throws HttpTransporterException {
         int status = response.getStatusLine().getStatusCode();
         if (status >= 300) {
-            ApacheRFC9457Reporter.INSTANCE.generateException(response, (statusCode, reasonPhrase) -> {
-                throw new HttpResponseException(statusCode, reasonPhrase + " (" + statusCode + ")");
-            });
+            rfc9457Reporter.generateException(response);
         }
     }
 
