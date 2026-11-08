@@ -199,6 +199,12 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         this.proxyAuthContext = AuthenticationContext.forProxy(session, repository);
         // with a request signer the repository credentials are signing keys, not HTTP authentication
         this.requestSigner = HttpTransporterUtils.getHttpRequestSigner(session, repository);
+        if (requestSigner != null && "http".equalsIgnoreCase(repository.getProtocol())) {
+            LOGGER.warn(
+                    "Signing requests to repository {} over plain HTTP: the signature cannot leak the secret key, but"
+                            + " the request and any session token can be read and replayed in transit",
+                    repository.getId());
+        }
 
         String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         final int connectionMaxTtlSeconds = HttpTransporterUtils.getHttpConnectionMaxTtlSeconds(session, repository);
@@ -655,6 +661,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
         AuthenticationContext.close(repoAuthContext);
         AuthenticationContext.close(proxyAuthContext);
         state.close();
+        if (requestSigner != null) {
+            requestSigner.close();
+        }
     }
 
     private class EntityGetter {

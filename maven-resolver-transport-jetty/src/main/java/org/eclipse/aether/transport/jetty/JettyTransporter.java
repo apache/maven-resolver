@@ -181,6 +181,12 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
         // with a request signer the repository credentials are signing keys, not HTTP authentication
         this.requestSigner = HttpTransporterUtils.getHttpRequestSigner(session, repository);
+        if (requestSigner != null && "http".equalsIgnoreCase(repository.getProtocol())) {
+            LOGGER.warn(
+                    "Signing requests to repository {} over plain HTTP: the signature cannot leak the secret key, but"
+                            + " the request and any session token can be read and replayed in transit",
+                    repository.getId());
+        }
         final String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
@@ -563,6 +569,10 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             this.client.stop();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            if (requestSigner != null) {
+                requestSigner.close();
+            }
         }
     }
 

@@ -271,6 +271,12 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
         // with a request signer the repository credentials are signing keys, not HTTP authentication
         this.requestSigner = HttpTransporterUtils.getHttpRequestSigner(session, repository);
+        if (requestSigner != null && "http".equalsIgnoreCase(repository.getProtocol())) {
+            LOGGER.warn(
+                    "Signing requests to repository {} over plain HTTP: the signature cannot leak the secret key, but"
+                            + " the request and any session token can be read and replayed in transit",
+                    repository.getId());
+        }
 
         this.originScopedHeaders = HttpTransporterUtils.isOriginScopedHeaders(
                 session, repository, JdkTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
@@ -524,7 +530,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             // all other headers are set by now; the signature covers the request as built
             requestSigner.sign(built.method(), built.uri()).forEach(requestBuilder::setHeader);
         }
-        if (preemptiveAuth || (preemptivePutAuth && built.method().equals("PUT"))) {
+        if (requestSigner == null
+                && (preemptiveAuth || (preemptivePutAuth && built.method().equals("PUT")))) {
             if (serverAuthentication != null) {
                 // https://stackoverflow.com/a/58612586
                 requestBuilder.setHeader(
@@ -668,12 +675,6 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     }
 
     /**
-     * Builds the next-hop request: the previous request re-targeted at the redirect target, with the origin-scoped
-     * headers (operator-configured headers and preemptively applied {@code Authorization}) removed when the target
-     * is not the repository origin (same scheme, case-insensitive host and effective port). Method rewriting
-     * mirrors {@link HttpClient.Redirect#NORMAL}.
-     */
-    /**
      * A redirect hop carries the previous hop's headers: replace the signature with one for the new request when
      * the hop stays within the repository origin, and strip it otherwise.
      */
@@ -696,6 +697,12 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         return builder.build();
     }
 
+    /**
+     * Builds the next-hop request: the previous request re-targeted at the redirect target, with the origin-scoped
+     * headers (operator-configured headers and preemptively applied {@code Authorization}) removed when the target
+     * is not the repository origin (same scheme, case-insensitive host and effective port). Method rewriting
+     * mirrors {@link HttpClient.Redirect#NORMAL}.
+     */
     static HttpRequest redirectRequest(
             HttpRequest previous, int statusCode, URI target, URI baseUri, Set<String> crossOriginExcludedHeaders) {
         HttpRequest.Builder builder = HttpRequest.newBuilder().uri(target).expectContinue(previous.expectContinue());
@@ -724,6 +731,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     protected void implClose() {
         if (client != null) {
             JdkTransporterCloser.closer(client).run();
+        }
+        if (requestSigner != null) {
+            requestSigner.close();
         }
     }
 
