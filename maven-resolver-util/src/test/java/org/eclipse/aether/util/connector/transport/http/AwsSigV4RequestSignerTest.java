@@ -41,7 +41,7 @@ class AwsSigV4RequestSignerTest {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2015-08-30T12:36:00Z"), ZoneOffset.UTC);
 
     private static AwsSigV4RequestSigner signer(String region, String sessionToken) {
-        return new AwsSigV4RequestSigner(ACCESS_KEY, SECRET_KEY, sessionToken, region, "s3", CLOCK);
+        return new AwsSigV4RequestSigner(ACCESS_KEY, SECRET_KEY.toCharArray(), sessionToken, region, "s3", CLOCK);
     }
 
     private static void assertSignature(Map<String, String> headers, String signedHeaders, String signature) {
@@ -146,5 +146,12 @@ class AwsSigV4RequestSignerTest {
         assertTrue(signer("us-east-1", null).signedHeaderNames().contains("AUTHORIZATION"));
         assertTrue(signer("us-east-1", null).signedHeaderNames().contains("X-Amz-Date"));
         assertFalse(signer("us-east-1", null).signedHeaderNames().contains("Host"));
+    }
+
+    @Test
+    void closedSignerRefusesToSign() {
+        AwsSigV4RequestSigner signer = signer("us-east-1", null);
+        signer.close();
+        assertThrows(IllegalStateException.class, () -> signer.sign("GET", URI.create("https://s3.example/a")));
     }
 }

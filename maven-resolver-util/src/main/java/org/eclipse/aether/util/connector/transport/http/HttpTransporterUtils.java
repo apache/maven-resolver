@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -255,10 +256,11 @@ public final class HttpTransporterUtils {
      * {@code null} when requests are not signed. For {@link ConfigurationProperties#HTTP_REQUEST_SIGNER_AWS_SIGV4}
      * the repository's username and password are the access key and secret key; without repository authentication
      * the {@code AWS_ACCESS_KEY_ID}, {@code AWS_SECRET_ACCESS_KEY} and {@code AWS_SESSION_TOKEN} environment
-     * variables are used. The region comes from {@link ConfigurationProperties#HTTP_AWS_REGION}, then the
+     * variables are used. A repository authentication with only one of the two is an error. The region comes from {@link ConfigurationProperties#HTTP_AWS_REGION}, then the
      * {@code AWS_REGION} and {@code AWS_DEFAULT_REGION} environment variables, then the default.
      *
-     * @throws IllegalStateException if signing is configured but no credentials can be found
+     * @throws IllegalStateException if signing is configured but no credentials can be found, or the repository
+     *     authentication has only one of username and password
      * @throws IllegalArgumentException if an unknown signer is configured
      * @since 2.0.26
      */
@@ -272,26 +274,6 @@ public final class HttpTransporterUtils {
             return null;
         }
         if (ConfigurationProperties.HTTP_REQUEST_SIGNER_AWS_SIGV4.equals(signer)) {
-            String accessKey = null;
-            String secretKey = null;
-            String sessionToken = null;
-            try (AuthenticationContext authContext = AuthenticationContext.forRepository(session, repository)) {
-                if (authContext != null) {
-                    accessKey = authContext.get(AuthenticationContext.USERNAME);
-                    secretKey = authContext.get(AuthenticationContext.PASSWORD);
-                }
-            }
-            if (accessKey == null || secretKey == null) {
-                accessKey = System.getenv("AWS_ACCESS_KEY_ID");
-                secretKey = System.getenv("AWS_SECRET_ACCESS_KEY");
-                sessionToken = emptyToNull(System.getenv("AWS_SESSION_TOKEN"));
-                if (accessKey == null || secretKey == null) {
-                    throw new IllegalStateException("Repository " + repository.getId()
-                            + " is configured for AWS Signature V4 but has no credentials: set the repository"
-                            + " username (access key) and password (secret key), or the AWS_ACCESS_KEY_ID and"
-                            + " AWS_SECRET_ACCESS_KEY environment variables");
-                }
-            }
             String region = ConfigUtils.getString(
                     session,
                     null,
@@ -311,7 +293,38 @@ public final class HttpTransporterUtils {
                     ConfigurationProperties.DEFAULT_HTTP_AWS_SERVICE,
                     ConfigurationProperties.HTTP_AWS_SERVICE + "." + repository.getId(),
                     ConfigurationProperties.HTTP_AWS_SERVICE);
-            return new AwsSigV4RequestSigner(accessKey, secretKey, sessionToken, region, service);
+            try (AuthenticationContext authContext = AuthenticationContext.forRepository(session, repository)) {
+                if (authContext != null) {
+                    String accessKey = authContext.get(AuthenticationContext.USERNAME);
+                    // the context wipes its char[] values when it closes; the signer keeps its own copy
+                    char[] secretKey = authContext.get(AuthenticationContext.PASSWORD, char[].class);
+                    if (accessKey != null && secretKey != null) {
+                        return new AwsSigV4RequestSigner(accessKey, secretKey, null, region, service);
+                    }
+                    if (accessKey != null || secretKey != null) {
+                        throw new IllegalStateException("Repository " + repository.getId()
+                                + " is configured for AWS Signature V4 but its authentication has only a "
+                                + (accessKey != null ? "username (access key)" : "password (secret key)")
+                                + ": set both, or neither to use the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+                                + " environment variables");
+                    }
+                }
+            }
+            String accessKey = System.getenv("AWS_ACCESS_KEY_ID");
+            String secretKey = System.getenv("AWS_SECRET_ACCESS_KEY");
+            if (accessKey == null || secretKey == null) {
+                throw new IllegalStateException("Repository " + repository.getId()
+                        + " is configured for AWS Signature V4 but has no credentials: set the repository"
+                        + " username (access key) and password (secret key), or the AWS_ACCESS_KEY_ID and"
+                        + " AWS_SECRET_ACCESS_KEY environment variables");
+            }
+            char[] secretKeyChars = secretKey.toCharArray();
+            try {
+                return new AwsSigV4RequestSigner(
+                        accessKey, secretKeyChars, emptyToNull(System.getenv("AWS_SESSION_TOKEN")), region, service);
+            } finally {
+                Arrays.fill(secretKeyChars, '\0');
+            }
         }
         throw new IllegalArgumentException(
                 "Unknown HTTP request signer '" + signer + "' configured for repository " + repository.getId());

@@ -31,7 +31,7 @@ import java.util.Set;
  *      org.eclipse.aether.repository.RemoteRepository)
  * @since 2.0.26
  */
-public interface HttpRequestSigner {
+public interface HttpRequestSigner extends AutoCloseable {
     /**
      * Computes the headers that sign the given request.
      *
@@ -46,4 +46,11 @@ public interface HttpRequestSigner {
      * them before signing a request again and before sending a request to another origin.
      */
     Set<String> signedHeaderNames();
+
+    /**
+     * Releases what the signer holds, such as key material. Transports call it when they close; a closed signer
+     * must not be used again. The default does nothing.
+     */
+    @Override
+    default void close() {}
 }

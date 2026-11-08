@@ -86,6 +86,20 @@ class HttpTransporterUtilsRequestSignerTest {
     }
 
     @Test
+    void awsSigV4WithOnlyAUsernameIsAnError() {
+        RemoteRepository usernameOnly = new RemoteRepository.Builder(
+                        "s3", "default", "https://s3.example/bucket/prefix/")
+                .setAuthentication(
+                        new AuthenticationBuilder().addUsername("AKIDEXAMPLE").build())
+                .build();
+        IllegalStateException e = assertThrows(
+                IllegalStateException.class,
+                () -> HttpTransporterUtils.getHttpRequestSigner(
+                        session(ConfigurationProperties.HTTP_REQUEST_SIGNER_AWS_SIGV4), usernameOnly));
+        assertTrue(e.getMessage().contains("only a username"), e.getMessage());
+    }
+
+    @Test
     void unknownSignerIsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
