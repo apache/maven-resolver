@@ -39,6 +39,7 @@ import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.LocalMetadataRequest;
 import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.util.StringDigestUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -263,6 +264,48 @@ public class EnhancedLocalRepositoryManagerTest {
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
         LocalArtifactResult result = manager.find(session, request);
         assertTrue(result.isAvailable());
+    }
+
+    private void trackWith(String repositoryKey) throws IOException {
+        copy(artifact, manager.getPathForLocalArtifact(artifact));
+        File trackingFile = new File(artifactFile.getParentFile(), "_remote.repositories");
+        trackingFileManager.update(
+                trackingFile, Collections.singletonMap(artifactFile.getName() + ">" + repositoryKey, ""));
+    }
+
+    @Test
+    public void testFindArtifactTrackedWithUrlQualifiedKey() throws Exception {
+        // entry as written by Maven Resolver 2.x, i.e. Maven 3.10 and 4
+        RemoteRepository central =
+                new RemoteRepository.Builder("central", "default", "https://repo.example.org/maven2").build();
+        trackWith("central-" + StringDigestUtil.sha1("https://repo.example.org/maven2"));
+
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(central), testContext);
+        LocalArtifactResult result = manager.find(session, request);
+        assertTrue(result.isAvailable());
+        assertEquals(central, result.getRepository());
+    }
+
+    @Test
+    public void testDoNotFindUrlQualifiedKeyOfOtherUrl() throws Exception {
+        RemoteRepository central =
+                new RemoteRepository.Builder("central", "default", "https://repo.example.org/maven2").build();
+        trackWith("central-" + StringDigestUtil.sha1("https://other.example.org/maven2"));
+
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(central), testContext);
+        LocalArtifactResult result = manager.find(session, request);
+        assertFalse(result.isAvailable());
+    }
+
+    @Test
+    public void testFindArtifactTrackedWithUrlQualifiedKeyOfRepositoryManager() throws Exception {
+        trackWith(repository.getId() + "-" + StringDigestUtil.sha1(repository.getUrl() + testContext));
+
+        LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
+        assertTrue(manager.find(session, request).isAvailable());
+
+        request = new LocalArtifactRequest(artifact, Arrays.asList(repository), "other-context");
+        assertFalse(manager.find(session, request).isAvailable());
     }
 
     private long addMetadata(Metadata metadata, RemoteRepository repo) throws IOException {
