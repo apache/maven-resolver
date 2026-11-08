@@ -22,6 +22,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -29,6 +31,7 @@ import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -85,7 +88,13 @@ public final class AwsSigV4RequestSigner implements HttpRequestSigner {
 
     private final String accessKey;
 
-    private final String secretKey;
+    /**
+     * {@code "AWS4"} followed by the secret key, in UTF-8: the only form of the secret the signer keeps, so that
+     * {@link #close()} can wipe it.
+     */
+    private final byte[] signingKeySeed;
+
+    private volatile boolean closed;
 
     private final String sessionToken;
 
@@ -99,20 +108,20 @@ public final class AwsSigV4RequestSigner implements HttpRequestSigner {
      * Creates a signer for the given credentials, region and service, signing with the system UTC clock.
      *
      * @param accessKey the access key id, never {@code null}
-     * @param secretKey the secret access key, never {@code null}
+     * @param secretKey the secret access key, never {@code null}; the signer copies it, so the caller may wipe it
      * @param sessionToken the session token of temporary credentials, may be {@code null}
      * @param region the region to sign for, never {@code null}
      * @param service the service to sign for, for S3 {@code s3}, never {@code null}
      */
     public AwsSigV4RequestSigner(
-            String accessKey, String secretKey, String sessionToken, String region, String service) {
+            String accessKey, char[] secretKey, String sessionToken, String region, String service) {
         this(accessKey, secretKey, sessionToken, region, service, Clock.systemUTC());
     }
 
     AwsSigV4RequestSigner(
-            String accessKey, String secretKey, String sessionToken, String region, String service, Clock clock) {
+            String accessKey, char[] secretKey, String sessionToken, String region, String service, Clock clock) {
         this.accessKey = requireNonNull(accessKey, "accessKey");
-        this.secretKey = requireNonNull(secretKey, "secretKey");
+        this.signingKeySeed = signingKeySeed(requireNonNull(secretKey, "secretKey"));
         this.sessionToken = sessionToken;
         this.region = requireNonNull(region, "region");
         this.service = requireNonNull(service, "service");
@@ -123,6 +132,9 @@ public final class AwsSigV4RequestSigner implements HttpRequestSigner {
     public Map<String, String> sign(String method, URI uri) {
         requireNonNull(method, "method");
         requireNonNull(uri, "uri");
+        if (closed) {
+            throw new IllegalStateException("The signer is closed");
+        }
         String amzDate = AMZ_DATE_FORMAT.format(clock.instant());
         String dateStamp = amzDate.substring(0, 8);
 
@@ -162,9 +174,7 @@ public final class AwsSigV4RequestSigner implements HttpRequestSigner {
         String scope = dateStamp + '/' + region + '/' + service + "/aws4_request";
         String stringToSign = ALGORITHM + '\n' + amzDate + '\n' + scope + '\n' + hex(sha256(canonicalRequest));
 
-        byte[] signingKey = hmac(
-                hmac(hmac(hmac(("AWS4" + secretKey).getBytes(StandardCharsets.UTF_8), dateStamp), region), service),
-                "aws4_request");
+        byte[] signingKey = hmac(hmac(hmac(hmac(signingKeySeed, dateStamp), region), service), "aws4_request");
         String signature = hex(hmac(signingKey, stringToSign));
 
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
@@ -313,6 +323,29 @@ public final class AwsSigV4RequestSigner implements HttpRequestSigner {
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException("SHA-256 is not available", e);
         }
+    }
+
+    /**
+     * Wipes the key material; the signer refuses to sign afterwards.
+     */
+    @Override
+    public void close() {
+        closed = true;
+        Arrays.fill(signingKeySeed, (byte) 0);
+    }
+
+    private static byte[] signingKeySeed(char[] secretKey) {
+        char[] chars = new char[4 + secretKey.length];
+        "AWS4".getChars(0, 4, chars, 0);
+        System.arraycopy(secretKey, 0, chars, 4, secretKey.length);
+        ByteBuffer encoded = StandardCharsets.UTF_8.encode(CharBuffer.wrap(chars));
+        byte[] seed = new byte[encoded.remaining()];
+        encoded.get(seed);
+        Arrays.fill(chars, '\0');
+        if (encoded.hasArray()) {
+            Arrays.fill(encoded.array(), (byte) 0);
+        }
+        return seed;
     }
 
     private static byte[] hmac(byte[] key, String data) {
