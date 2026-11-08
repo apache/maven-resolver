@@ -49,3 +49,16 @@ URL Protocol | Implementation | Description
 `classpath` | `org.eclipse.aether.transport.classpath.ClasspathTransporter` | Unsupported
 `minio+http`, `minio+https`, `s3+http`, `s3+https` | `org.eclipse.aether.transport.minio.MinioTransporter` | Uploads the artifact or metadata as an object to the bucket. The configuration defines how the transporter converts the location from the `RepositoryLayout` into an object name and a bucket name.
 `*` | `org.eclipse.aether.transport.wagon.WagonTransporter` | Calls `StreamingWagon.putFromStream(...)` or `Wagon.put(...)`. [Apache Wagon](https://maven.apache.org/wagon/) provides further details.
+
+### S3 and S3-compatible object stores over the HTTP transports
+
+With path-style access an S3 bucket is an HTTP repository: the repository URL is
+`https://<endpoint>/<bucket>/<prefix>/`, and the only addition S3 needs is a signature on each request.
+Set `aether.connector.http.requestSigner` to `aws-sigv4`, for one repository with the `.<repositoryId>`
+suffix, and the Apache, JDK and Jetty transports sign every request with AWS Signature Version 4. The
+repository username and password are the access key and the secret key; without repository authentication
+the `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` environment variables are used.
+The region comes from `aether.connector.http.aws.region`, then `AWS_REGION` or `AWS_DEFAULT_REGION`, then
+`us-east-1`, which S3-compatible stores accept. The signature never leaves the repository origin: a redirect
+to another host is followed without it. The MinIO transporter above offers the same through dedicated
+`minio+https` and `s3+https` URLs and an SDK client.
