@@ -221,7 +221,14 @@ public class IpcServer {
             if (forkedProcess) {
                 System.out.println("[ipc] [debug] " + format(msg, args));
             } else {
-                LoggerFactory.getLogger(IpcServer.class).debug(msg, args);
+                try {
+                    LoggerFactory.getLogger(IpcServer.class).debug(msg, args);
+                } catch (LinkageError e) {
+                    // forkedProcess was reset to false while this call was already in flight (run()'s
+                    // finally block races callers such as sendAcquireResponse() during shutdown); slf4j-api
+                    // is still absent from the forked process classpath, so fall back the same way.
+                    System.out.println("[ipc] [debug] " + format(msg, args));
+                }
             }
         }
     }
@@ -230,7 +237,11 @@ public class IpcServer {
         if (forkedProcess) {
             System.out.println("[ipc] [info] " + format(msg, args));
         } else {
-            LoggerFactory.getLogger(IpcServer.class).info(msg, args);
+            try {
+                LoggerFactory.getLogger(IpcServer.class).info(msg, args);
+            } catch (LinkageError e) {
+                System.out.println("[ipc] [info] " + format(msg, args));
+            }
         }
     }
 
@@ -239,7 +250,12 @@ public class IpcServer {
             System.out.println("[ipc] [error] " + msg);
             t.printStackTrace(System.out);
         } else {
-            LoggerFactory.getLogger(IpcServer.class).error(msg, t);
+            try {
+                LoggerFactory.getLogger(IpcServer.class).error(msg, t);
+            } catch (LinkageError e) {
+                System.out.println("[ipc] [error] " + msg);
+                t.printStackTrace(System.out);
+            }
         }
     }
 
