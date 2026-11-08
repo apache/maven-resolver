@@ -69,7 +69,7 @@ import static java.util.Objects.requireNonNull;
  * @see RepositorySystemSession.CloseableSession
  */
 public final class DefaultRepositorySystemSession implements RepositorySystemSession {
-    private boolean readOnly;
+    private volatile boolean readOnly;
 
     private boolean offline;
 
@@ -877,7 +877,7 @@ public final class DefaultRepositorySystemSession implements RepositorySystemSes
     }
 
     /**
-     * Verifies this instance state for mutation operations: mutated instance must not be read-only or closed.
+     * Verifies this instance state for mutation operations: mutated instance must not be read-only.
      */
     private void verifyStateForMutation() {
         if (readOnly) {
