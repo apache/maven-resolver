@@ -30,7 +30,6 @@ import org.eclipse.aether.transport.s3.ObjectNameMapper;
 import org.eclipse.aether.transport.s3.ObjectNameMapperFactory;
 import org.eclipse.aether.transport.s3.S3TransporterConfigurationKeys;
 import org.eclipse.aether.util.ConfigUtils;
-import software.amazon.awssdk.services.s3.S3Client;
 
 /**
  * A fixed bucket mapper, uses given bucket ID and then constructs object name using repository ID and layout path as
@@ -43,10 +42,7 @@ public class FixedBucketObjectNameMapperFactory implements ObjectNameMapperFacto
 
     @Override
     public ObjectNameMapper create(
-            RepositorySystemSession session,
-            RemoteRepository repository,
-            S3Client unused,
-            Map<String, String> headers) {
+            RepositorySystemSession session, RemoteRepository repository, Map<String, String> headers) {
         // ConfigUtils.getString(session, defaultValue, keys...): the default value ("maven") comes first,
         // then the repository-suffixed key, then the global key.
         String bucket = ConfigUtils.getString(

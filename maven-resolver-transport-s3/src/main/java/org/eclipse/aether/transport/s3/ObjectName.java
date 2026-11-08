@@ -76,6 +76,12 @@ public final class ObjectName {
         return bucket + "/" + name;
     }
 
+    /**
+     * Turns a layout path into an object key by replacing backslashes, the Windows path separator, with forward slashes.
+     *
+     * @param name the path to normalize
+     * @return the path with forward slashes only
+     */
     public static String normalize(String name) {
         return name.replace('\\', '/');
     }
