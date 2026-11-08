@@ -231,7 +231,8 @@ Every other old key is ignored silently, so grep your configuration for
 | `aether.connector.smartChecksums` | `aether.connector.basic.includedChecksums` | yes |
 | `aether.connector.basic.threads` | `aether.connector.basic.upstreamThreads` and `.downstreamThreads` | yes, deprecated |
 | `aether.checksums.algorithms` | `aether.checksums.checksumAlgorithms` | yes |
-| `aether.enhancedLocalRepository.*` (`split`, `splitLocal`, `splitRemote`, `localPrefix`, `remotePrefix`, `releasesPrefix`, `snapshotsPrefix`, `splitRemoteRepository`, `splitRemoteRepositoryLast`, `trackingFilename`) | `aether.lrm.enhanced.*` with the same suffixes | yes |
+| `aether.enhancedLocalRepository.*` (`split`, `splitLocal`, `splitRemote`, `localPrefix`, `remotePrefix`, `releasesPrefix`, `snapshotsPrefix`, `splitRemoteRepository`, `splitRemoteRepositoryLast`) | `aether.lrm.enhanced.*` with the same suffixes | yes |
+| `aether.enhancedLocalRepository.trackingFilename` | `aether.lrm.enhanced.trackingFilename` | no |
 | `aether.syncContext.named.time`, `.time.unit` | `aether.system.named.time`, `.timeUnit` | yes, deprecated |
 | `aether.remoteRepositoryFilter.groupId.truncateOnSave` | Removed. | no |
 
