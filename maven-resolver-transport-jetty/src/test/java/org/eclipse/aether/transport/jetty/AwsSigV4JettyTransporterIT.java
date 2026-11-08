@@ -66,7 +66,8 @@ class AwsSigV4JettyTransporterIT {
         connection.setRequestMethod("PUT");
         connection.setDoOutput(true);
         connection.setFixedLengthStreamingMode(0);
-        new AwsSigV4RequestSigner(CONTAINER.getUserName(), CONTAINER.getPassword(), null, REGION, "s3")
+        new AwsSigV4RequestSigner(
+                        CONTAINER.getUserName(), CONTAINER.getPassword().toCharArray(), null, REGION, "s3")
                 .sign("PUT", bucketUri)
                 .forEach(connection::setRequestProperty);
         connection.getOutputStream().close();
