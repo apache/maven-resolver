@@ -191,6 +191,20 @@ public abstract class DependencyCollectorDelegateTestSupport {
     }
 
     @Test
+    void testCollectionInterrupted() {
+        CollectRequest request = new CollectRequest(newDep("gid:aid:ext:ver", "compile"), singletonList(repository));
+        Thread.currentThread().interrupt();
+        try {
+            DependencyCollectionException e = assertThrows(
+                    DependencyCollectionException.class, () -> collector.collectDependencies(session, request));
+            assertInstanceOf(InterruptedException.class, e.getCause());
+            assertTrue(Thread.currentThread().isInterrupted(), "the interrupt status is restored for the caller");
+        } finally {
+            Thread.interrupted(); // clear it, so that it does not leak into the next test
+        }
+    }
+
+    @Test
     void testMissingDependencyDescription() {
         CollectRequest request = new CollectRequest(newDep("missing:description:ext:ver"), singletonList(repository));
         try {
