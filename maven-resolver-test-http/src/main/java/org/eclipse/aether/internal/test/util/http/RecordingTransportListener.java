@@ -46,6 +46,8 @@ public class RecordingTransportListener extends TransportListener {
 
     private Map<TransferEvent.TransportPropertyKey, Object> transportProperties;
 
+    private int transportPropertiesCount;
+
     @Override
     public void transportStarted(long dataOffset, long dataLength) throws TransferCancelledException {
         startedCount++;
@@ -77,6 +79,7 @@ public class RecordingTransportListener extends TransportListener {
     @Override
     public void transportPropertiesAvailable(Map<TransportPropertyKey, Object> transportProperties)
             throws TransferCancelledException {
+        transportPropertiesCount++;
         this.transportProperties = transportProperties;
     }
 
@@ -118,5 +121,13 @@ public class RecordingTransportListener extends TransportListener {
 
     public Map<TransferEvent.TransportPropertyKey, Object> getTransportProperties() {
         return transportProperties;
+    }
+
+    /**
+     * The number of {@link #transportPropertiesAvailable(Map)} calls: one per transfer, since the properties of a
+     * response the transporter discarded (for example a 412 to a resume request) are not reported.
+     */
+    public int getTransportPropertiesCount() {
+        return transportPropertiesCount;
     }
 }
