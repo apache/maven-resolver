@@ -76,6 +76,9 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
 
     @Override
     public synchronized Collection<? extends Artifact> generate(Collection<? extends Artifact> generatedArtifacts) {
+        if (closed.get()) {
+            throw new IllegalStateException("generator is closed");
+        }
         try {
             artifacts.addAll(generatedArtifacts);
 
@@ -184,7 +187,7 @@ final class SigstoreSignatureArtifactGenerator implements ArtifactGenerator {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         if (closed.compareAndSet(false, true)) {
             signatureTempFiles.forEach(p -> {
                 try {
