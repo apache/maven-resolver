@@ -18,8 +18,11 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -47,6 +50,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class DefaultInstallerTest {
 
@@ -459,6 +463,73 @@ public class DefaultInstallerTest {
         // Verify copyWithTimestamp was called (hardLink=false must NOT attempt Files.createLink)
         assertEquals(
                 1, countingProcessor.copyWithTimestampCount, "copyWithTimestamp must be called when hardLink=false");
+    }
+
+    @Test
+    void testHardLinkFallbackLoggedOncePerSession() throws Exception {
+        // This test verifies that when hard-link creation fails (cross-device), the INFO log message
+        // is emitted exactly once per session even if install is called multiple times.
+        // The test is only meaningful when the environment is cross-device (copy fallback is triggered);
+        // it skips on same-device filesystems where hard links succeed and no message is emitted.
+        CountingPathProcessor countingProcessor = new CountingPathProcessor();
+        installer = new DefaultInstaller(
+                countingProcessor,
+                new StubRepositoryEventDispatcher(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                new StubSyncContextFactory());
+
+        // First install — detect if we're on a cross-device filesystem (copy fallback triggered)
+        request.addArtifact(artifact);
+        installer.install(session, request);
+        assumeTrue(
+                countingProcessor.copyWithTimestampCount == 1,
+                "skipped: same-device filesystem — hard link succeeded, no fallback log to deduplicate");
+
+        // We're on a cross-device filesystem. Capture stderr (slf4j-simple logs there) and
+        // install a second artifact in the same session — the dedup set must suppress the 2nd log.
+        Artifact artifact2 = new DefaultArtifact("gid", "aid2", "jar", "ver");
+        artifact2 = artifact2.setFile(TestFileUtils.createTempFile("artifact2".getBytes(), 1));
+
+        PrintStream original = System.err;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        String log;
+        try (PrintStream capture = new PrintStream(buffer, true, StandardCharsets.UTF_8.name())) {
+            System.setErr(capture);
+            InstallRequest request2 = new InstallRequest();
+            request2.addArtifact(artifact2);
+            installer.install(session, request2);
+        } finally {
+            System.setErr(original);
+            log = buffer.toString(StandardCharsets.UTF_8.name());
+        }
+
+        // The second install triggered another copy (cross-device), but the log must be suppressed
+        assertEquals(2, countingProcessor.copyWithTimestampCount, "second install should also copy (cross-device)");
+        assertFalse(
+                log.contains("Hard link not supported"),
+                "hard-link warning must NOT fire a second time in the same session; captured log:\n" + log);
+    }
+
+    /**
+     * Runs the action while capturing the slf4j-simple output written to {@code System.err}.
+     */
+    private static String captureStdErr(ThrowingRunnable action) throws Exception {
+        PrintStream original = System.err;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        try (PrintStream capture = new PrintStream(buffer, true, StandardCharsets.UTF_8.name())) {
+            System.setErr(capture);
+            action.run();
+        } finally {
+            System.setErr(original);
+        }
+        return buffer.toString(StandardCharsets.UTF_8.name());
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     /** PathProcessor wrapper that counts copyWithTimestamp invocations. */

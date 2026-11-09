@@ -183,19 +183,30 @@ public class DefaultInstaller implements Installer {
             if (linkFailure != null) {
                 Path localRepoBasedir =
                         session.getLocalRepositoryManager().getRepository().getBasePath();
-                @SuppressWarnings("unchecked")
-                Set<Path> logged = (Set<Path>) session.getData()
-                        .computeIfAbsent(
-                                SESSION_HARDLINK_LOGGED,
-                                () -> Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>()));
-                if (logged.add(localRepoBasedir)) {
+                if (localRepoBasedir == null) {
+                    // No base path (custom or in-memory local repository manager) — log without dedup
                     logger.info(
-                            "Hard link not supported for local repository at {}, falling back to file copy."
+                            "Hard link not supported for local repository, falling back to file copy."
                                     + " To suppress this message, set '{}=false'.",
-                            localRepoBasedir,
                             ConfigurationProperties.INSTALLER_HARD_LINK);
                     if (logger.isDebugEnabled()) {
                         logger.debug("Hard link failure cause: {}", linkFailure.getMessage(), linkFailure);
+                    }
+                } else {
+                    @SuppressWarnings("unchecked")
+                    Set<Path> logged = (Set<Path>) session.getData()
+                            .computeIfAbsent(
+                                    SESSION_HARDLINK_LOGGED,
+                                    () -> Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>()));
+                    if (logged.add(localRepoBasedir)) {
+                        logger.info(
+                                "Hard link not supported for local repository at {}, falling back to file copy."
+                                        + " To suppress this message, set '{}=false'.",
+                                localRepoBasedir,
+                                ConfigurationProperties.INSTALLER_HARD_LINK);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Hard link failure cause: {}", linkFailure.getMessage(), linkFailure);
+                        }
                     }
                 }
             }
