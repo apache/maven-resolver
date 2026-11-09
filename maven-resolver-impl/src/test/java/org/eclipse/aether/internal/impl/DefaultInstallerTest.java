@@ -480,12 +480,16 @@ public class DefaultInstallerTest {
                 Collections.emptyMap(),
                 new StubSyncContextFactory());
 
-        // First install — detect if we're on a cross-device filesystem (copy fallback triggered)
+        // First install — detect if we're on a cross-device filesystem (copy fallback triggered),
+        // and assert the message IS emitted on the first occurrence.
         request.addArtifact(artifact);
-        installer.install(session, request);
+        String log1 = captureStdErr(() -> installer.install(session, request));
         assumeTrue(
                 countingProcessor.copyWithTimestampCount == 1,
                 "skipped: same-device filesystem — hard link succeeded, no fallback log to deduplicate");
+        assertTrue(
+                log1.contains("Hard link not supported"),
+                "hard-link warning must fire on the first cross-device install; captured log:\n" + log1);
 
         // We're on a cross-device filesystem. Capture stderr (slf4j-simple logs there) and
         // install a second artifact in the same session — the dedup set must suppress the 2nd log.
@@ -495,13 +499,13 @@ public class DefaultInstallerTest {
         final Artifact artifact2Final = artifact2;
         InstallRequest request2 = new InstallRequest();
         request2.addArtifact(artifact2Final);
-        String log = captureStdErr(() -> installer.install(session, request2));
+        String log2 = captureStdErr(() -> installer.install(session, request2));
 
         // The second install triggered another copy (cross-device), but the log must be suppressed
         assertEquals(2, countingProcessor.copyWithTimestampCount, "second install should also copy (cross-device)");
         assertFalse(
-                log.contains("Hard link not supported"),
-                "hard-link warning must NOT fire a second time in the same session; captured log:\n" + log);
+                log2.contains("Hard link not supported"),
+                "hard-link warning must NOT fire a second time in the same session; captured log:\n" + log2);
     }
 
     /**
