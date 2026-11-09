@@ -492,18 +492,10 @@ public class DefaultInstallerTest {
         Artifact artifact2 = new DefaultArtifact("gid", "aid2", "jar", "ver");
         artifact2 = artifact2.setFile(TestFileUtils.createTempFile("artifact2".getBytes(), 1));
 
-        PrintStream original = System.err;
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        String log;
-        try (PrintStream capture = new PrintStream(buffer, true, StandardCharsets.UTF_8.name())) {
-            System.setErr(capture);
-            InstallRequest request2 = new InstallRequest();
-            request2.addArtifact(artifact2);
-            installer.install(session, request2);
-        } finally {
-            System.setErr(original);
-            log = buffer.toString(StandardCharsets.UTF_8.name());
-        }
+        final Artifact artifact2Final = artifact2;
+        InstallRequest request2 = new InstallRequest();
+        request2.addArtifact(artifact2Final);
+        String log = captureStdErr(() -> installer.install(session, request2));
 
         // The second install triggered another copy (cross-device), but the log must be suppressed
         assertEquals(2, countingProcessor.copyWithTimestampCount, "second install should also copy (cross-device)");

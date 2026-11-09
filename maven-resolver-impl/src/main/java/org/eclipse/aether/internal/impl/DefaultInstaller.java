@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.Keys;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryEvent.EventType;
 import org.eclipse.aether.RepositorySystemSession;
@@ -71,7 +72,12 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultInstaller implements Installer {
-    private static final Object SESSION_HARDLINK_LOGGED = new Object();
+    private static final Object SESSION_HARDLINK_LOGGED = Keys.of(new Object() {
+        @Override
+        public String toString() {
+            return "installer.hardLinkLogged";
+        }
+    });
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
