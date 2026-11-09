@@ -71,10 +71,12 @@ class IpcNamedLock extends NamedLockSupport {
     @Override
     public boolean doLockExclusively(long time, TimeUnit unit) {
         ArrayDeque<Ctx> contexts = this.contexts.get();
-        if (contexts.stream().anyMatch(c -> c.shared)) {
-            throw new LockUpgradeNotSupportedException(this);
-        }
         if (!contexts.isEmpty()) {
+            // boxing: the outermost context already holds the server-side lock; only a shared-only stack is an
+            // upgrade, as in the other named lock implementations
+            if (contexts.stream().allMatch(c -> c.shared)) {
+                throw new LockUpgradeNotSupportedException(this);
+            }
             contexts.push(new Ctx(false, null, false));
             return true;
         }
