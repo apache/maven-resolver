@@ -33,6 +33,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositoryEvent;
@@ -69,6 +71,8 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 @Named
 public class DefaultInstaller implements Installer {
+    private static final Object SESSION_HARDLINK_LOGGED = new Object();
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final PathProcessor pathProcessor;
@@ -177,10 +181,23 @@ public class DefaultInstaller implements Installer {
                 }
             }
             if (linkFailure != null) {
-                logger.warn(
-                        "Hard link not supported, falling back to copy for all artifacts: {}",
-                        linkFailure.getMessage(),
-                        linkFailure);
+                Path localRepoBasedir =
+                        session.getLocalRepositoryManager().getRepository().getBasePath();
+                @SuppressWarnings("unchecked")
+                Set<Path> logged = (Set<Path>) session.getData()
+                        .computeIfAbsent(
+                                SESSION_HARDLINK_LOGGED,
+                                () -> Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>()));
+                if (logged.add(localRepoBasedir)) {
+                    logger.info(
+                            "Hard link not supported for local repository at {}, falling back to file copy."
+                                    + " To suppress this message, set '{}=false'.",
+                            localRepoBasedir,
+                            ConfigurationProperties.INSTALLER_HARD_LINK);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Hard link failure cause: {}", linkFailure.getMessage(), linkFailure);
+                    }
+                }
             }
 
             metadatas = Utils.finishMetadata(metadataGenerators, artifacts);
