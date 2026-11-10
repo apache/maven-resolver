@@ -48,6 +48,8 @@ updates:
       versions: [ "[10.0.0,)" ]
     - dependency-name: "org.mockito:mockito-core"
       versions: [ "[5.0.0,)" ]
+    - dependency-name: "org.redisson:redisson"
+      versions: [ "[4.8.0,)" ]
     - dependency-name: "org.slf4j:*"
       versions: [ "[2.0.0,)" ]
 
