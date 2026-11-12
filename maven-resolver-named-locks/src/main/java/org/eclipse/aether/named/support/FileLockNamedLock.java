@@ -87,12 +87,36 @@ public final class FileLockNamedLock extends NamedLockSupport {
 
     @Override
     protected boolean doLockShared(final long time, final TimeUnit unit) throws InterruptedException {
-        return retry(time, unit, RETRY_SLEEP_MILLIS, () -> doLockSharedPerform(time, unit), null, false);
+        boolean locked = retry(time, unit, RETRY_SLEEP_MILLIS, () -> doLockSharedPerform(time, unit), null, false);
+        if (!locked) {
+            forgetThreadWithoutSteps();
+        }
+        return locked;
     }
 
     @Override
     protected boolean doLockExclusively(final long time, final TimeUnit unit) throws InterruptedException {
-        return retry(time, unit, RETRY_SLEEP_MILLIS, () -> doLockExclusivelyPerform(time, unit), null, false);
+        boolean locked = retry(time, unit, RETRY_SLEEP_MILLIS, () -> doLockExclusivelyPerform(time, unit), null, false);
+        if (!locked) {
+            forgetThreadWithoutSteps();
+        }
+        return locked;
+    }
+
+    /**
+     * Drops the current thread's entry if it holds no step, so that the map does not retain threads that no longer
+     * use this lock.
+     */
+    private void forgetThreadWithoutSteps() {
+        criticalRegion.lock();
+        try {
+            Deque<Boolean> steps = threadSteps.get(Thread.currentThread());
+            if (steps != null && steps.isEmpty()) {
+                threadSteps.remove(Thread.currentThread());
+            }
+        } finally {
+            criticalRegion.unlock();
+        }
     }
 
     private Boolean doLockSharedPerform(final long time, final TimeUnit unit) throws InterruptedException {
@@ -180,11 +204,14 @@ public final class FileLockNamedLock extends NamedLockSupport {
                 throw new IllegalStateException("Wrong API usage: unlock without lock");
             }
             steps.pop();
-            if (steps.isEmpty() && !anyOtherThreadHasSteps()) {
-                try {
-                    fileLockRef.getAndSet(null).release();
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
+            if (steps.isEmpty()) {
+                threadSteps.remove(Thread.currentThread());
+                if (!anyOtherThreadHasSteps()) {
+                    try {
+                        fileLockRef.getAndSet(null).release();
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
                 }
             }
         } finally {
