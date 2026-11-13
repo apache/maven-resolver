@@ -100,7 +100,7 @@
     <failsafe.redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</failsafe.redirectTestOutputToFile>
     <maven.site.path>resolver-archives/resolver-LATEST</maven.site.path>
     <checkstyle.violation.ignore>None</checkstyle.violation.ignore>
-    <version.sisu-maven-plugin>1.1.1</version.sisu-maven-plugin>
+    <version.sisu-maven-plugin>1.1.2</version.sisu-maven-plugin>
     <version.guice>5.1.0</version.guice>
     <version.slf4j>2.0.20</version.slf4j>
     <version.testcontainers>2.0.5</version.testcontainers>
