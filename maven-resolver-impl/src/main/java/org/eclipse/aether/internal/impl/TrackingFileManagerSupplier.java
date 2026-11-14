@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.impl.NamedLockFactorySelector;
 import org.eclipse.aether.named.NamedLockFactory;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.util.ConfigUtils;
 
 /**
@@ -68,8 +69,12 @@ public class TrackingFileManagerSupplier implements Supplier<TrackingFileManager
     /**
      * Constructor to be used in production.
      */
-    @Inject
     public TrackingFileManagerSupplier(NamedLockFactorySelector selector) {
+        this(selector, new DefaultPathProcessor());
+    }
+
+    @Inject
+    public TrackingFileManagerSupplier(NamedLockFactorySelector selector, PathProcessor pathProcessor) {
         // this is early construction; no session, hence we must rely on system properties instead
         Map<String, String> config = new HashMap<>();
         for (String name : System.getProperties().stringPropertyNames()) {
@@ -83,7 +88,7 @@ public class TrackingFileManagerSupplier implements Supplier<TrackingFileManager
             NamedLockFactory factory = selector.getNamedLockFactory(config);
             long time = selector.getLockWaitTime(config);
             TimeUnit timeUnit = selector.getLockWaitTimeUnit(config);
-            this.trackingFileManager = new NamedLocksTrackingFileManager(factory, time, timeUnit);
+            this.trackingFileManager = new NamedLocksTrackingFileManager(factory, pathProcessor, time, timeUnit);
         } else {
             throw new IllegalArgumentException("Unknown tracking file manager name: " + tfmName);
         }

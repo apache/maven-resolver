@@ -35,18 +35,18 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import org.eclipse.aether.spi.io.FileProcessor;
-import org.eclipse.aether.util.FileUtils;
-
 /**
  * A utility class helping with file-based operations.
+ * <p>
+ * The deprecated types it uses are referenced by their fully qualified names: with {@code --release 8}, javac reports
+ * an import of a deprecated type even in a deprecated class.
  *
  * @deprecated
  */
 @Deprecated
 @Singleton
 @Named
-public class DefaultFileProcessor implements FileProcessor {
+public class DefaultFileProcessor implements org.eclipse.aether.spi.io.FileProcessor {
 
     /**
      * Thread-safe variant of {@link File#mkdirs()}. Creates the directory named by the given abstract pathname,
@@ -83,12 +83,14 @@ public class DefaultFileProcessor implements FileProcessor {
 
     @Override
     public void write(File target, String data) throws IOException {
-        FileUtils.writeFile(target.toPath(), p -> Files.write(p, data.getBytes(StandardCharsets.UTF_8)));
+        org.eclipse.aether.util.FileUtils.writeFile(
+                target.toPath(), p -> Files.write(p, data.getBytes(StandardCharsets.UTF_8)));
     }
 
     @Override
     public void write(File target, InputStream source) throws IOException {
-        FileUtils.writeFile(target.toPath(), p -> Files.copy(source, p, StandardCopyOption.REPLACE_EXISTING));
+        org.eclipse.aether.util.FileUtils.writeFile(
+                target.toPath(), p -> Files.copy(source, p, StandardCopyOption.REPLACE_EXISTING));
     }
 
     @Override
@@ -99,7 +101,8 @@ public class DefaultFileProcessor implements FileProcessor {
     @Override
     public long copy(File source, File target, ProgressListener listener) throws IOException {
         try (InputStream in = new BufferedInputStream(Files.newInputStream(source.toPath()));
-                FileUtils.CollocatedTempFile tempTarget = FileUtils.newTempFile(target.toPath());
+                org.eclipse.aether.util.FileUtils.CollocatedTempFile tempTarget =
+                        org.eclipse.aether.util.FileUtils.newTempFile(target.toPath());
                 OutputStream out = new BufferedOutputStream(Files.newOutputStream(tempTarget.getPath()))) {
             long result = copy(out, in, listener);
             tempTarget.move();

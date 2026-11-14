@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.NamedLockKey;
-import org.eclipse.aether.util.FileUtils;
+import org.eclipse.aether.spi.io.PathProcessor;
 import org.eclipse.aether.util.StringDigestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,11 +53,18 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
     private static final Logger LOGGER = LoggerFactory.getLogger(NamedLocksTrackingFileManager.class);
 
     private final NamedLockFactory namedLockFactory;
+    private final PathProcessor pathProcessor;
     private final long time;
     private final TimeUnit unit;
 
     public NamedLocksTrackingFileManager(NamedLockFactory namedLockFactory, long time, TimeUnit unit) {
+        this(namedLockFactory, new DefaultPathProcessor(), time, unit);
+    }
+
+    public NamedLocksTrackingFileManager(
+            NamedLockFactory namedLockFactory, PathProcessor pathProcessor, long time, TimeUnit unit) {
         this.namedLockFactory = namedLockFactory;
+        this.pathProcessor = pathProcessor;
         this.time = time;
         this.unit = unit;
     }
@@ -130,7 +137,7 @@ public final class NamedLocksTrackingFileManager implements TrackingFileManager 
                     }
                     LOGGER.debug("Writing tracking file '{}'", path);
                     // write atomically: a truncated tracking file would make artifacts look untracked
-                    try (FileUtils.CollocatedTempFile tempFile = FileUtils.newTempFile(path)) {
+                    try (PathProcessor.CollocatedTempFile tempFile = pathProcessor.newTempFile(path)) {
                         try (OutputStream out = Files.newOutputStream(tempFile.getPath())) {
                             props.store(
                                     out,

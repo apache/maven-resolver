@@ -108,11 +108,10 @@ public class DefaultNamedLockFactorySelector implements NamedLockFactorySelector
 
     @Override
     public NamedLockFactory getNamedLockFactory(Map<String, ?> configuration) {
-        String factoryName = ConfigUtils.getString(
-                configuration,
-                DEFAULT_FACTORY_NAME,
-                CONFIG_PROP_FACTORY_NAME,
-                NamedLockFactoryAdapterFactoryImpl.CONFIG_PROP_FACTORY_KEY);
+        @SuppressWarnings("deprecation") // legacy key, still honoured so that existing configurations keep working
+        String legacyFactoryKey = NamedLockFactoryAdapterFactoryImpl.CONFIG_PROP_FACTORY_KEY;
+        String factoryName =
+                ConfigUtils.getString(configuration, DEFAULT_FACTORY_NAME, CONFIG_PROP_FACTORY_NAME, legacyFactoryKey);
         NamedLockFactory factory = factories.get(factoryName);
         if (factory == null) {
             throw new IllegalArgumentException(
@@ -124,11 +123,10 @@ public class DefaultNamedLockFactorySelector implements NamedLockFactorySelector
 
     @Override
     public long getLockWaitTime(Map<String, ?> configuration) {
-        long result = ConfigUtils.getLong(
-                configuration,
-                DEFAULT_LOCK_WAIT_TIME,
-                CONFIG_PROP_LOCK_WAIT_TIME,
-                NamedLockFactoryAdapter.CONFIG_PROP_TIME);
+        @SuppressWarnings("deprecation") // legacy key, still honoured so that existing configurations keep working
+        String legacyTimeKey = NamedLockFactoryAdapter.CONFIG_PROP_TIME;
+        long result =
+                ConfigUtils.getLong(configuration, DEFAULT_LOCK_WAIT_TIME, CONFIG_PROP_LOCK_WAIT_TIME, legacyTimeKey);
         if (result <= 0) {
             throw new IllegalArgumentException(
                     "The " + CONFIG_PROP_LOCK_WAIT_TIME + " configuration must be greater than zero");
@@ -138,11 +136,10 @@ public class DefaultNamedLockFactorySelector implements NamedLockFactorySelector
 
     @Override
     public TimeUnit getLockWaitTimeUnit(Map<String, ?> configuration) {
+        @SuppressWarnings("deprecation") // legacy key, still honoured so that existing configurations keep working
+        String legacyTimeUnitKey = NamedLockFactoryAdapter.CONFIG_PROP_TIME_UNIT;
         return TimeUnit.valueOf(ConfigUtils.getString(
-                configuration,
-                DEFAULT_LOCK_WAIT_TIME_UNIT,
-                CONFIG_PROP_LOCK_WAIT_TIME_UNIT,
-                NamedLockFactoryAdapter.CONFIG_PROP_TIME_UNIT));
+                configuration, DEFAULT_LOCK_WAIT_TIME_UNIT, CONFIG_PROP_LOCK_WAIT_TIME_UNIT, legacyTimeUnitKey));
     }
 
     private void shutdown() {

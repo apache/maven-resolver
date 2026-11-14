@@ -63,12 +63,14 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
         return repository;
     }
 
+    @Deprecated
     @Override
     public String getPathForLocalArtifact(Artifact artifact) {
         requireNonNull(artifact, "artifact cannot be null");
         return localPathComposer.getPathForArtifact(artifact, true);
     }
 
+    @Deprecated
     @Override
     public String getPathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
         requireNonNull(artifact, "artifact cannot be null");
@@ -76,12 +78,14 @@ class SimpleLocalRepositoryManager implements LocalRepositoryManager {
         return localPathComposer.getPathForArtifact(artifact, false);
     }
 
+    @Deprecated
     @Override
     public String getPathForLocalMetadata(Metadata metadata) {
         requireNonNull(metadata, "metadata cannot be null");
         return localPathComposer.getPathForMetadata(metadata, LocalRepository.ID);
     }
 
+    @Deprecated
     @Override
     public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
         requireNonNull(metadata, "metadata cannot be null");

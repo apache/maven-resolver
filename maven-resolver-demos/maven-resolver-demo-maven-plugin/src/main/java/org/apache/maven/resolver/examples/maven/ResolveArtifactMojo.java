@@ -100,7 +100,7 @@ public class ResolveArtifactMojo extends AbstractMojo {
         LOGGER.info(
                 "Resolved artifact {} to {} from {}",
                 artifact,
-                result.getArtifact().getFile(),
+                result.getArtifact().getPath(),
                 result.getRepository());
     }
 }

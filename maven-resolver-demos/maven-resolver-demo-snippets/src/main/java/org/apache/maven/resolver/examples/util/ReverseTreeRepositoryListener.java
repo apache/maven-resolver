@@ -77,8 +77,7 @@ public class ReverseTreeRepositoryListener extends AbstractRepositoryListener {
                 trackingData += indent + curr + " (" + collectStepTrace.getContext() + ")" + EOL;
             }
             try {
-                Path trackingDir =
-                        resolvedArtifact.getFile().getParentFile().toPath().resolve(".tracking");
+                Path trackingDir = resolvedArtifact.getPath().getParent().resolve(".tracking");
                 Files.createDirectories(trackingDir);
                 Path trackingFile = trackingDir.resolve(collectStepTrace
                         .getPath()

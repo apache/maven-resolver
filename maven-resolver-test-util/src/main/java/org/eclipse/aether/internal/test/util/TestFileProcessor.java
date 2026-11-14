@@ -30,12 +30,13 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-import org.eclipse.aether.spi.io.FileProcessor;
-
 /**
- * A simple file processor implementation to help satisfy component requirements during tests.
+ * A simple file processor implementation to help satisfy component requirements during tests. It implements the
+ * deprecated {@code FileProcessor} SPI on purpose, referenced by its fully qualified name as javac reports an import
+ * of a deprecated type with {@code --release 8}.
  */
-public class TestFileProcessor implements FileProcessor {
+@SuppressWarnings("deprecation")
+public class TestFileProcessor implements org.eclipse.aether.spi.io.FileProcessor {
 
     public boolean mkdirs(File directory) {
         if (directory == null) {

@@ -690,8 +690,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         HttpVersion httpVersion = HttpTransporterUtils.getHttpVersion(session, repository);
         if (httpVersion == ConfigurationProperties.DEFAULT_HTTP_VERSION) {
             // Fall back to legacy JDK Transporter specific property when it is explicitly configured.
+            @SuppressWarnings("deprecation")
+            String legacyHttpVersionKey = CONFIG_PROP_HTTP_VERSION;
             String configuredLegacyHttpVersion = ConfigUtils.getString(
-                    session, null, CONFIG_PROP_HTTP_VERSION + "." + repository.getId(), CONFIG_PROP_HTTP_VERSION);
+                    session, null, legacyHttpVersionKey + "." + repository.getId(), legacyHttpVersionKey);
             if (configuredLegacyHttpVersion != null) {
                 return resolveHttpVersion(configuredLegacyHttpVersion);
             }
