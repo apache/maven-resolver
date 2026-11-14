@@ -63,6 +63,7 @@ import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.connector.transport.http.HttpRequestSigner;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.eclipse.jetty.client.Authentication;
 import org.eclipse.jetty.client.BasicAuthentication;
@@ -134,6 +135,8 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
 
     private final boolean preemptivePutAuth;
 
+    private final HttpRequestSigner requestSigner;
+
     private final boolean sendRfc9457Accept;
 
     private final boolean insecure;
@@ -176,6 +179,14 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
         this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
+        // with a request signer the repository credentials are signing keys, not HTTP authentication
+        this.requestSigner = HttpTransporterUtils.getHttpRequestSigner(session, repository);
+        if (requestSigner != null && "http".equalsIgnoreCase(repository.getProtocol())) {
+            LOGGER.warn(
+                    "Signing requests to repository {} over plain HTTP: the signature cannot leak the secret key, but"
+                            + " the request and any session token can be read and replayed in transit",
+                    repository.getId());
+        }
         final String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         this.insecure = ConfigurationProperties.HTTPS_SECURITY_MODE_INSECURE.equals(httpsSecurityMode);
 
@@ -558,6 +569,10 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             this.client.stop();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            if (requestSigner != null) {
+                requestSigner.close();
+            }
         }
     }
 
@@ -574,10 +589,13 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                 String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
 
-                URI uri = URI.create(repository.getUrl());
-                basicAuthentication = new BasicAuthentication(uri, Authentication.ANY_REALM, username, password);
-                if (preemptiveAuth || preemptivePutAuth) {
-                    serverAuth = new BasicAuthentication.BasicResult(uri, HttpHeader.AUTHORIZATION, username, password);
+                if (requestSigner == null) {
+                    URI uri = URI.create(repository.getUrl());
+                    basicAuthentication = new BasicAuthentication(uri, Authentication.ANY_REALM, username, password);
+                    if (preemptiveAuth || preemptivePutAuth) {
+                        serverAuth =
+                                new BasicAuthentication.BasicResult(uri, HttpHeader.AUTHORIZATION, username, password);
+                    }
                 }
             }
         }
@@ -702,6 +720,10 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
             }
             if (redirectMode == RedirectMode.SAME_AUTHORITY) {
                 httpClient.getRequestListeners().addQueuedListener(new SameAuthorityRedirectGuard(baseUri));
+            }
+            if (requestSigner != null) {
+                // signs each request, and each redirect hop Jetty follows, with its final headers
+                httpClient.getRequestListeners().addHeadersListener(new SigningHeadersListener(baseUri, requestSigner));
             }
             if (originScopedHeaders) {
                 // Jetty's redirector copies the request headers onto every redirect hop it follows; scope configured

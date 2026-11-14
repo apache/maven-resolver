@@ -113,6 +113,7 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.StringDigestUtil;
+import org.eclipse.aether.util.connector.transport.http.HttpRequestSigner;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,6 +167,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private final boolean preemptivePutAuth;
 
+    private final HttpRequestSigner requestSigner;
+
     private final boolean supportWebDav;
 
     private final boolean sendRfc9457Accept;
@@ -194,6 +197,14 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
         this.repoAuthContext = AuthenticationContext.forRepository(session, repository);
         this.proxyAuthContext = AuthenticationContext.forProxy(session, repository);
+        // with a request signer the repository credentials are signing keys, not HTTP authentication
+        this.requestSigner = HttpTransporterUtils.getHttpRequestSigner(session, repository);
+        if (requestSigner != null && "http".equalsIgnoreCase(repository.getProtocol())) {
+            LOGGER.warn(
+                    "Signing requests to repository {} over plain HTTP: the signature cannot leak the secret key, but"
+                            + " the request and any session token can be read and replayed in transit",
+                    repository.getId());
+        }
 
         String httpsSecurityMode = HttpTransporterUtils.getHttpsSecurityMode(session, repository);
         final int connectionMaxTtlSeconds = HttpTransporterUtils.getHttpConnectionMaxTtlSeconds(session, repository);
@@ -292,7 +303,8 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 .setDefaultAuthSchemeRegistry(authSchemeRegistry)
                 .setConnectionManager(state.getConnectionManager())
                 .setConnectionManagerShared(true)
-                .setDefaultCredentialsProvider(toCredentialsProvider(server, repoAuthContext, proxy, proxyAuthContext))
+                .setDefaultCredentialsProvider(toCredentialsProvider(
+                        server, requestSigner != null ? null : repoAuthContext, proxy, proxyAuthContext))
                 .setProxy(proxy);
         if (HttpTransporterUtils.isOriginScopedHeaders(
                 session, repository, ApacheTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS)) {
@@ -325,6 +337,9 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
                 if (conn instanceof ManagedHttpClientConnection) {
                     context.setAttribute(
                             CONTEXT_ATTRIBUTE_NAME_SSL_SESSION, ((ManagedHttpClientConnection) conn).getSSLSession());
+                }
+                if (requestSigner != null) {
+                    signRequest(request, context);
                 }
                 return super.execute(request, conn, context);
             }
@@ -493,7 +508,7 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
 
     private void prepare(HttpUriRequest request, SharingHttpContext context) throws Exception {
         final boolean put = HttpPut.METHOD_NAME.equalsIgnoreCase(request.getMethod());
-        if (preemptiveAuth || (preemptivePutAuth && put)) {
+        if (requestSigner == null && (preemptiveAuth || (preemptivePutAuth && put))) {
             context.getAuthCache().put(server, new BasicScheme());
         }
         if (supportWebDav) {
@@ -552,6 +567,35 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     private <T extends HttpEntityEnclosingRequest> T entity(T request, HttpEntity entity) {
         request.setEntity(entity);
         return request;
+    }
+
+    /**
+     * Signs the request as it is about to go on the wire: after the protocol interceptors set the {@code Host}
+     * header and after any redirect was resolved, so the signature covers the request actually sent. A hop to
+     * another origin is sent without the signature headers, as it is sent without the repository's other
+     * credentials.
+     */
+    private void signRequest(HttpRequest request, HttpContext context) {
+        for (String name : requestSigner.signedHeaderNames()) {
+            request.removeHeaders(name);
+        }
+        HttpHost target = (HttpHost) context.getAttribute(HttpCoreContext.HTTP_TARGET_HOST);
+        if (target == null || !isSameOrigin(target, server)) {
+            return;
+        }
+        Header host = request.getFirstHeader(HttpHeaders.HOST);
+        String authority = host != null ? host.getValue() : target.toHostString();
+        String requestUri = request.getRequestLine().getUri();
+        URI uri = requestUri.startsWith("/")
+                ? URI.create(target.getSchemeName() + "://" + authority + requestUri)
+                : URI.create(requestUri);
+        requestSigner.sign(request.getRequestLine().getMethod(), uri).forEach(request::setHeader);
+    }
+
+    private static boolean isSameOrigin(HttpHost a, HttpHost b) {
+        return a.getSchemeName().equalsIgnoreCase(b.getSchemeName())
+                && a.getHostName().equalsIgnoreCase(b.getHostName())
+                && effectivePort(a) == effectivePort(b);
     }
 
     private boolean isPayloadPresent(HttpUriRequest request) {
@@ -613,10 +657,15 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             client.close();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } finally {
+            // wipe the credentials and release the state even when closing the client fails
+            AuthenticationContext.close(repoAuthContext);
+            AuthenticationContext.close(proxyAuthContext);
+            state.close();
+            if (requestSigner != null) {
+                requestSigner.close();
+            }
         }
-        AuthenticationContext.close(repoAuthContext);
-        AuthenticationContext.close(proxyAuthContext);
-        state.close();
     }
 
     private class EntityGetter {

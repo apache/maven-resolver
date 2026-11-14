@@ -95,6 +95,7 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.util.ConfigUtils;
 import org.eclipse.aether.util.connector.transport.TransporterUtils;
+import org.eclipse.aether.util.connector.transport.http.HttpRequestSigner;
 import org.eclipse.aether.util.connector.transport.http.HttpTransporterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,6 +207,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     private final boolean preemptiveAuth;
 
+    private final HttpRequestSigner requestSigner;
+
     private final boolean sendRfc9457Accept;
 
     private PasswordAuthentication serverAuthentication;
@@ -266,6 +269,14 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         this.preemptiveAuth = HttpTransporterUtils.isHttpPreemptiveAuth(session, repository);
         this.preemptivePutAuth = HttpTransporterUtils.isHttpPreemptivePutAuth(session, repository);
         this.sendRfc9457Accept = HttpTransporterUtils.isHttpSendRfc9457Accept(session, repository);
+        // with a request signer the repository credentials are signing keys, not HTTP authentication
+        this.requestSigner = HttpTransporterUtils.getHttpRequestSigner(session, repository);
+        if (requestSigner != null && "http".equalsIgnoreCase(repository.getProtocol())) {
+            LOGGER.warn(
+                    "Signing requests to repository {} over plain HTTP: the signature cannot leak the secret key, but"
+                            + " the request and any session token can be read and replayed in transit",
+                    repository.getId());
+        }
 
         this.originScopedHeaders = HttpTransporterUtils.isOriginScopedHeaders(
                 session, repository, JdkTransporterConfigurationKeys.CONFIG_PROP_ORIGIN_SCOPED_HEADERS);
@@ -276,6 +287,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         crossOriginExcludedHeaders.add("Authorization");
         if (configuredHeaders != null) {
             crossOriginExcludedHeaders.addAll(configuredHeaders.keySet());
+        }
+        if (requestSigner != null) {
+            crossOriginExcludedHeaders.addAll(requestSigner.signedHeaderNames());
         }
         this.crossOriginExcludedHeaders = crossOriginExcludedHeaders;
 
@@ -511,8 +525,13 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     }
 
     private void prepare(HttpRequest.Builder requestBuilder) {
-        if (preemptiveAuth
-                || (preemptivePutAuth && requestBuilder.build().method().equals("PUT"))) {
+        HttpRequest built = requestBuilder.build();
+        if (requestSigner != null) {
+            // all other headers are set by now; the signature covers the request as built
+            requestSigner.sign(built.method(), built.uri()).forEach(requestBuilder::setHeader);
+        }
+        if (requestSigner == null
+                && (preemptiveAuth || (preemptivePutAuth && built.method().equals("PUT")))) {
             if (serverAuthentication != null) {
                 // https://stackoverflow.com/a/58612586
                 requestBuilder.setHeader(
@@ -537,7 +556,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
             throws Exception {
         maxConcurrentRequests.acquire();
         try {
-            if (redirectMode == RedirectMode.ANY && !originScopedHeaders && !followInsecureRedirect) {
+            if (redirectMode == RedirectMode.ANY
+                    && !originScopedHeaders
+                    && !followInsecureRedirect
+                    && requestSigner == null) {
                 return client.send(request, responseBodyHandler);
             }
             // the client is configured with Redirect.NEVER: follow redirects here instead, so that configured
@@ -570,6 +592,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                         target,
                         baseUri,
                         originScopedHeaders ? crossOriginExcludedHeaders : Set.of());
+                if (requestSigner != null) {
+                    current = resign(current);
+                }
             }
         } finally {
             maxConcurrentRequests.release();
@@ -650,6 +675,29 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     }
 
     /**
+     * A redirect hop carries the previous hop's headers: replace the signature with one for the new request when
+     * the hop stays within the repository origin, and strip it otherwise.
+     */
+    private HttpRequest resign(HttpRequest request) {
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder().uri(request.uri()).expectContinue(request.expectContinue());
+        request.version().ifPresent(builder::version);
+        request.timeout().ifPresent(builder::timeout);
+        request.headers().map().forEach((name, values) -> {
+            if (!requestSigner.signedHeaderNames().contains(name)) {
+                for (String value : values) {
+                    builder.header(name, value);
+                }
+            }
+        });
+        builder.method(request.method(), request.bodyPublisher().orElse(HttpRequest.BodyPublishers.noBody()));
+        if (TransporterUtils.isSameOrigin(baseUri, request.uri())) {
+            requestSigner.sign(request.method(), request.uri()).forEach(builder::setHeader);
+        }
+        return builder.build();
+    }
+
+    /**
      * Builds the next-hop request: the previous request re-targeted at the redirect target, with the origin-scoped
      * headers (operator-configured headers and preemptively applied {@code Authorization}) removed when the target
      * is not the repository origin (same scheme, case-insensitive host and effective port). Method rewriting
@@ -683,6 +731,9 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
     protected void implClose() {
         if (client != null) {
             JdkTransporterCloser.closer(client).run();
+        }
+        if (requestSigner != null) {
+            requestSigner.close();
         }
     }
 
@@ -743,8 +794,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
                 String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                 String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
-                serverAuthentication = new PasswordAuthentication(username, password.toCharArray());
-                authentications.put(Authenticator.RequestorType.SERVER, serverAuthentication);
+                if (requestSigner == null && username != null && password != null) {
+                    serverAuthentication = new PasswordAuthentication(username, password.toCharArray());
+                    authentications.put(Authenticator.RequestorType.SERVER, serverAuthentication);
+                }
             }
         }
 

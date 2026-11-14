@@ -449,6 +449,84 @@ public final class ConfigurationProperties {
     public static final String DEFAULT_HTTP_RETRY_HANDLER_SERVICE_UNAVAILABLE = "429,503";
 
     /**
+     * The request signer the HTTP transports apply to every request of a repository. Supported values are
+     * {@link #HTTP_REQUEST_SIGNER_NONE} (the default) and {@link #HTTP_REQUEST_SIGNER_AWS_SIGV4}, which signs each
+     * request with AWS Signature Version 4, so that a plain {@code https://host/bucket/prefix/} repository URL can
+     * address S3 and S3-compatible object stores through the regular HTTP transports. With a signer active the
+     * repository's username and password are not sent as HTTP authentication: for AWS SigV4 they are the access
+     * key and the secret key, and when the repository has no authentication the {@code AWS_ACCESS_KEY_ID},
+     * {@code AWS_SECRET_ACCESS_KEY} and {@code AWS_SESSION_TOKEN} environment variables are used instead.
+     *
+     * @since 2.0.26
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_REQUEST_SIGNER}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String HTTP_REQUEST_SIGNER = PREFIX_TRANSPORT_HTTP + "requestSigner";
+
+    /**
+     * The {@link #HTTP_REQUEST_SIGNER} value that signs nothing.
+     *
+     * @since 2.0.26
+     */
+    public static final String HTTP_REQUEST_SIGNER_NONE = "none";
+
+    /**
+     * The {@link #HTTP_REQUEST_SIGNER} value for AWS Signature Version 4.
+     *
+     * @since 2.0.26
+     */
+    public static final String HTTP_REQUEST_SIGNER_AWS_SIGV4 = "aws-sigv4";
+
+    /**
+     * The default value to use if {@link #HTTP_REQUEST_SIGNER} isn't set ({@value #HTTP_REQUEST_SIGNER_NONE}).
+     *
+     * @since 2.0.26
+     */
+    public static final String DEFAULT_HTTP_REQUEST_SIGNER = HTTP_REQUEST_SIGNER_NONE;
+
+    /**
+     * The AWS region requests are signed for when {@link #HTTP_REQUEST_SIGNER} is
+     * {@link #HTTP_REQUEST_SIGNER_AWS_SIGV4}. S3-compatible stores accept any value, but the signature needs one.
+     * When unset, the {@code AWS_REGION} and {@code AWS_DEFAULT_REGION} environment variables are consulted in that
+     * order, and {@link #DEFAULT_HTTP_AWS_REGION} is used if both are unset.
+     *
+     * @since 2.0.26
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_AWS_REGION}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String HTTP_AWS_REGION = PREFIX_TRANSPORT_HTTP + "aws.region";
+
+    /**
+     * The default value to use if {@link #HTTP_AWS_REGION} isn't set and the environment names no region.
+     *
+     * @since 2.0.26
+     */
+    public static final String DEFAULT_HTTP_AWS_REGION = "us-east-1";
+
+    /**
+     * The AWS service name requests are signed for when {@link #HTTP_REQUEST_SIGNER} is
+     * {@link #HTTP_REQUEST_SIGNER_AWS_SIGV4}.
+     *
+     * @since 2.0.26
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.String}
+     * @configurationDefaultValue {@link #DEFAULT_HTTP_AWS_SERVICE}
+     * @configurationRepoIdSuffix Yes
+     */
+    public static final String HTTP_AWS_SERVICE = PREFIX_TRANSPORT_HTTP + "aws.service";
+
+    /**
+     * The default value to use if {@link #HTTP_AWS_SERVICE} isn't set.
+     *
+     * @since 2.0.26
+     */
+    public static final String DEFAULT_HTTP_AWS_SERVICE = "s3";
+
+    /**
      * Should HTTP client use preemptive-authentication for all HTTP verbs (works only w/ BASIC). By default, is
      * disabled, as it is considered less secure.
      *
