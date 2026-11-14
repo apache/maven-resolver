@@ -21,6 +21,7 @@ package org.eclipse.aether.named.redisson;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -74,7 +75,7 @@ public class RedissonSemaphoreNamedLockFactory extends RedissonNamedLockFactoryS
 
         @Override
         public boolean tryAcquire(final int perms, final long time, final TimeUnit unit) throws InterruptedException {
-            return semaphore.tryAcquire(perms, time, unit);
+            return semaphore.tryAcquire(perms, Duration.ofNanos(unit.toNanos(time)));
         }
 
         @Override
