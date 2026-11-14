@@ -155,6 +155,46 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
         assertTrue(manager.find(session, fromImpostor).isAvailable());
     }
 
+    private Path trackingFileFor(LocalRepositoryManager manager, Artifact artifact, String trackingFilename) {
+        return basedir.resolve(manager.getPathForRemoteArtifact(artifact, repository, context))
+                .getParent()
+                .resolve(trackingFilename);
+    }
+
+    @Test
+    void trackingFilenameFromCurrentKey() throws Exception {
+        session.setConfigProperty(EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_TRACKING_FILENAME, "_current.txt");
+        LocalRepositoryManager manager = newManager();
+        Artifact artifact = addTrackedRemoteArtifact(manager);
+
+        assertTrue(Files.exists(trackingFileFor(manager, artifact, "_current.txt")));
+        assertFalse(Files.exists(
+                trackingFileFor(manager, artifact, EnhancedLocalRepositoryManagerFactory.DEFAULT_TRACKING_FILENAME)));
+    }
+
+    @Test
+    void trackingFilenameFromLegacyKey() throws Exception {
+        // the Resolver 1.9.x name of the key is read as a fallback, like the other enhanced LRM keys
+        session.setConfigProperty("aether.enhancedLocalRepository.trackingFilename", "_legacy.txt");
+        LocalRepositoryManager manager = newManager();
+        Artifact artifact = addTrackedRemoteArtifact(manager);
+
+        assertTrue(Files.exists(trackingFileFor(manager, artifact, "_legacy.txt")));
+        assertFalse(Files.exists(
+                trackingFileFor(manager, artifact, EnhancedLocalRepositoryManagerFactory.DEFAULT_TRACKING_FILENAME)));
+    }
+
+    @Test
+    void currentKeyWinsOverLegacyKey() throws Exception {
+        session.setConfigProperty(EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_TRACKING_FILENAME, "_current.txt");
+        session.setConfigProperty("aether.enhancedLocalRepository.trackingFilename", "_legacy.txt");
+        LocalRepositoryManager manager = newManager();
+        Artifact artifact = addTrackedRemoteArtifact(manager);
+
+        assertTrue(Files.exists(trackingFileFor(manager, artifact, "_current.txt")));
+        assertFalse(Files.exists(trackingFileFor(manager, artifact, "_legacy.txt")));
+    }
+
     @Test
     void newInstanceForNotYetExistingBasedir() throws Exception {
         // a fresh local repository (first build on a machine, or a new -Dmaven.repo.local) does not exist yet
