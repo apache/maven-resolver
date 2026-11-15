@@ -142,8 +142,14 @@ public final class FileUtils {
 
     /**
      * On Windows we use pre-NIO2 way to copy files, as for some reason it works. Beat me why.
+     * <p>
+     * The target gets the last modified time of the source,
+     * which the transports set from the remote "Last-Modified" header,
+     * as it does with the move used on other systems.
+     * <p>
+     * Package-private for tests, which call it on every system.
      */
-    private static void copy(Path source, Path target) throws IOException {
+    static void copy(Path source, Path target) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(1024 * 32);
         byte[] array = buffer.array();
         try (InputStream is = Files.newInputStream(source);
@@ -155,6 +161,11 @@ public final class FileUtils {
                 }
                 os.write(array, 0, bytes);
             }
+        }
+        try {
+            Files.setLastModifiedTime(target, Files.getLastModifiedTime(source));
+        } catch (IOException e) {
+            // the content is copied: the target keeps the current time, as it did before the time was copied
         }
     }
 
