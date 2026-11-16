@@ -18,13 +18,22 @@
  */
 package org.eclipse.aether.named.redisson;
 
+import com.redis.testcontainers.RedisContainer;
+import org.eclipse.aether.internal.impl.synccontext.NamedLockFactoryAdapterTestSupport;
 import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+@Testcontainers(disabledWithoutDocker = true)
 public class RedissonReadWriteLockAdapterIT extends NamedLockFactoryAdapterTestSupport {
+    @Container
+    static final RedisContainer container =
+            new RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag(RedisContainer.DEFAULT_TAG));
+
     @BeforeAll
     static void createNamedLockFactory() {
-        container.start();
         System.setProperty(RedissonNamedLockFactorySupport.SYSTEM_PROP_REDIS_ADDRESS, container.getRedisURI());
-        setNamedLockFactory(new RedissonReadWriteLockNamedLockFactory());
+        namedLockFactory = new RedissonReadWriteLockNamedLockFactory();
+        createAdapter();
     }
 }

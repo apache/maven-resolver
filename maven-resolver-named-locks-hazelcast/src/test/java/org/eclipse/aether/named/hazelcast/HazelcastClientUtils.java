@@ -28,11 +28,15 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
- * Hazelcast test utilities.
+ * Hazelcast test utilities: creates members and clients for a test class and shuts the members down once the class
+ * is done. Register it as a static {@link org.junit.jupiter.api.extension.RegisterExtension} so that the members
+ * outlive the {@code @AfterAll} method that shuts down the lock factory using them.
  */
-public final class HazelcastClientUtils {
+public final class HazelcastClientUtils implements AfterAllCallback {
     private final List<HazelcastInstance> servers = new ArrayList<>();
 
     /**
@@ -80,5 +84,10 @@ public final class HazelcastClientUtils {
     public synchronized void cleanup() {
         servers.forEach(HazelcastInstance::shutdown);
         servers.clear();
+    }
+
+    @Override
+    public void afterAll(ExtensionContext context) {
+        cleanup();
     }
 }
