@@ -104,6 +104,12 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     public static final boolean DEFAULT_LEGACY_LOCAL_REPOSITORY = true;
 
+    // Legacy support: the property was renamed in Resolver 2.0.x, but we should support the 1.9.x property as well,
+    // like LocalPathPrefixComposerFactorySupport does for its keys. This below is the Resolver 1.9.x property, is
+    // undocumented and shall be removed with Resolver 2.1.x (or later).
+
+    private static final String R1_CONF_PROP_TRACKING_FILENAME = "aether.enhancedLocalRepository.trackingFilename";
+
     private float priority = 10.0f;
 
     private final LocalPathComposer localPathComposer;
@@ -132,7 +138,8 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
         requireNonNull(session, "session cannot be null");
         requireNonNull(repository, "repository cannot be null");
 
-        String trackingFilename = ConfigUtils.getString(session, "", CONFIG_PROP_TRACKING_FILENAME);
+        String trackingFilename =
+                ConfigUtils.getString(session, "", CONFIG_PROP_TRACKING_FILENAME, R1_CONF_PROP_TRACKING_FILENAME);
         if (trackingFilename.isEmpty()
                 || trackingFilename.contains("/")
                 || trackingFilename.contains("\\")
