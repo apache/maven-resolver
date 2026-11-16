@@ -104,8 +104,13 @@ public class DefaultRepositorySystemLifecycle implements RepositorySystemLifecyc
     @Override
     public void sessionEnded(CloseableSession session) {
         requireNonNull(session, "session cannot be null");
-        requireNotShutdown();
         String sessionId = session.sessionId();
+        if (shutdown.get()) {
+            // systemEnded() already ran this session's handlers and reported it as not closed; closing it now,
+            // for example from try-with-resources after an explicit shutdown, has nothing left to do
+            onSessionEndedHandlers.remove(sessionId);
+            return;
+        }
         ArrayList<Runnable> handlers = new ArrayList<>();
         onSessionEndedHandlers.compute(sessionId, (k, v) -> {
             if (v == null) {
