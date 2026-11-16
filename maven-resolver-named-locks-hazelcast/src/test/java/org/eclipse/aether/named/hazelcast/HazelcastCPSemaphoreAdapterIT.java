@@ -20,6 +20,7 @@ package org.eclipse.aether.named.hazelcast;
 
 import org.junit.jupiter.api.BeforeAll;
 
+@SuppressWarnings("deprecation")
 public class HazelcastCPSemaphoreAdapterIT extends NamedLockFactoryAdapterTestSupport {
 
     @BeforeAll

@@ -34,6 +34,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// set() is deprecated without a named replacement and is part of what these tests exercise
+@SuppressWarnings("deprecation")
 public class DefaultVersionFilterContextTest {
     private static final Dependency FOO_DEPENDENCY = new Dependency(new DefaultArtifact("group-id:foo:1.0"), "test");
     private static final Dependency BAR_DEPENDENCY = new Dependency(new DefaultArtifact("group-id:bar:1.0"), "test");

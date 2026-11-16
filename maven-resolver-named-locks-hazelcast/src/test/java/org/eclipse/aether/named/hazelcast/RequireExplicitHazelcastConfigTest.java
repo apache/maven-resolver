@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * from built-in defaults would expose the lock state to unauthenticated network peers, so the guard must refuse
  * when no explicit configuration is discoverable.
  */
+@SuppressWarnings("deprecation")
 class RequireExplicitHazelcastConfigTest {
     @Test
     void refusesWithoutExplicitConfiguration() {

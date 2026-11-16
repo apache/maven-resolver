@@ -18,7 +18,7 @@
  */
 package org.eclipse.aether.artifact;
 
-import java.io.File;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +97,7 @@ public class DefaultArtifactTest {
     @Test
     void testImmutability() {
         Artifact a = new DefaultArtifact("gid:aid:ext:cls:ver");
-        assertNotSame(a, a.setFile(new File("file")));
+        assertNotSame(a, a.setPath(Paths.get("file")));
         assertNotSame(a, a.setVersion("otherVersion"));
         assertNotSame(a, a.setProperties(Collections.singletonMap("key", "value")));
     }

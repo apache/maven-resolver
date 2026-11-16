@@ -51,6 +51,8 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
                         .createComposer(session));
     }
 
+    // asserts on the composed relative path, which only the deprecated getPathFor* methods expose
+    @SuppressWarnings("deprecation")
     @Test
     @Override
     public void testGetPathForLocalArtifact() {
@@ -65,6 +67,8 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
                 "installed/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar", manager.getPathForLocalArtifact(artifact));
     }
 
+    // asserts on the composed relative path, which only the deprecated getPathFor* methods expose
+    @SuppressWarnings("deprecation")
     @Test
     @Override
     public void testGetPathForRemoteArtifact() {
