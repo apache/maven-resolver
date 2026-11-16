@@ -117,6 +117,8 @@ public class DfDependencyCollector extends DependencyCollectorDelegate {
                 session.getVersionFilter() != null ? session.getVersionFilter().deriveChildFilter(context) : null);
 
         if (args.interruptedException.get() != null) {
+            // Thread.interrupted() cleared the flag when the interrupt was detected; restore it for the caller
+            Thread.currentThread().interrupt();
             throw new DependencyCollectionException(
                     results.getResult(), "Collection interrupted", args.interruptedException.get());
         }

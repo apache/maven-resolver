@@ -25,6 +25,9 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -44,6 +47,12 @@ class PathProcessorSupportTest {
     private static final StandardCopyOption[] ATOMIC_OPTIONS = {
         StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING
     };
+
+    /**
+     * A time in the past, in whole seconds, as file systems differ in the precision they store.
+     */
+    private static final FileTime LAST_MODIFIED =
+            FileTime.from(Instant.now().truncatedTo(ChronoUnit.SECONDS).minus(12, ChronoUnit.DAYS));
 
     private Path write(Path dir, String name, String content) throws IOException {
         Path file = dir.resolve(name);
@@ -153,6 +162,61 @@ class PathProcessorSupportTest {
 
         assertEquals(PathProcessorSupport.WINDOWS_MOVE_ATTEMPTS, attempts.get(), "all retry attempts must be made");
         assertEquals("new content", read(target), "target must contain the new content after classic-copy fallback");
+    }
+
+    @Test
+    void retryingMoveKeepsLastModified(@TempDir Path tempDir) throws IOException {
+        PathProcessorSupport subject = new PathProcessorSupport();
+        Path source = write(tempDir, "source.txt", "new content");
+        Path target = write(tempDir, "target.txt", "old content");
+        Files.setLastModifiedTime(source, LAST_MODIFIED);
+
+        subject.retryingMove(source, target, ATOMIC_OPTIONS);
+
+        assertEquals(LAST_MODIFIED, Files.getLastModifiedTime(target));
+    }
+
+    @Test
+    void retryingMoveKeepsLastModifiedOnClassicCopyFallback(@TempDir Path tempDir) throws IOException {
+        // all rename attempts fail, so the content reaches the target via the classic-copy fallback
+        PathProcessorSupport subject = new PathProcessorSupport() {
+            @Override
+            protected void fileSystemMove(Path source, Path target, StandardCopyOption... copyOptions)
+                    throws IOException {
+                throw new AccessDeniedException(target.toString());
+            }
+        };
+        Path source = write(tempDir, "source.txt", "new content");
+        Path target = write(tempDir, "target.txt", "old content");
+        Files.setLastModifiedTime(source, LAST_MODIFIED);
+
+        subject.retryingMove(source, target, ATOMIC_OPTIONS);
+
+        assertEquals("new content", read(target));
+        assertEquals(LAST_MODIFIED, Files.getLastModifiedTime(target));
+    }
+
+    @Test
+    void retryingMoveKeepsLastModifiedWhenAtomicMoveNotSupported(@TempDir Path tempDir) throws IOException {
+        // the first move fails, so the content is staged with a classic copy next to the target and then renamed
+        PathProcessorSupport subject = new PathProcessorSupport() {
+            @Override
+            protected void fileSystemMove(Path source, Path target, StandardCopyOption... copyOptions)
+                    throws IOException {
+                if (source.getFileName().toString().equals("source.txt")) {
+                    throw new AtomicMoveNotSupportedException(source.toString(), target.toString(), "test");
+                }
+                super.fileSystemMove(source, target, copyOptions);
+            }
+        };
+        Path source = write(tempDir, "source.txt", "new content");
+        Path target = write(tempDir, "target.txt", "old content");
+        Files.setLastModifiedTime(source, LAST_MODIFIED);
+
+        subject.retryingMove(source, target, ATOMIC_OPTIONS);
+
+        assertEquals("new content", read(target));
+        assertEquals(LAST_MODIFIED, Files.getLastModifiedTime(target));
     }
 
     @Test

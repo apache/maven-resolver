@@ -21,9 +21,13 @@ package org.eclipse.aether.spi.locator;
 import java.util.List;
 
 /**
- * This class here is merely to provide backward compatibility to Maven3. Pretend is not here.
+ * Binary-compatibility shim for Maven 3 code that still links against the Resolver 1.x service locator API.
+ * Resolver 2.x does not provide a service locator: this interface is never implemented or looked up by Resolver
+ * itself, and it is not available on the class path of applications that do not use this module.
  *
  * @since 2.0.0
+ * @deprecated Use JSR-330 dependency injection (Eclipse Sisu, Guice) or
+ * {@link org.eclipse.aether.supplier.RepositorySystemSupplier} to obtain a {@code RepositorySystem}.
  */
 @Deprecated
 public interface ServiceLocator {

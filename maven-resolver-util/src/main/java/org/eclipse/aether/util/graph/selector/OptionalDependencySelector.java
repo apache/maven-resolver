@@ -28,7 +28,11 @@ import static java.util.Objects.requireNonNull;
  * A dependency selector that excludes optional dependencies which occur beyond level one of the dependency graph.
  *
  * @see Dependency#isOptional()
- * @deprecated this class is deprecated. Use same named class from impl module instead.
+ * @deprecated Scope semantics belong to the consumer project since Resolver 2.0.0. Obtain the selector from
+ * {@link org.eclipse.aether.scope.ScopeManager#getDependencySelector(org.eclipse.aether.RepositorySystemSession,
+ * org.eclipse.aether.scope.ResolutionScope)}, or use the session created by the {@code SessionBuilderSupplier} of
+ * the {@code maven-resolver-supplier-mvn3} or {@code maven-resolver-supplier-mvn4} module, which already carries the
+ * Maven scope-aware selectors.
  */
 @Deprecated
 public final class OptionalDependencySelector implements DependencySelector {
