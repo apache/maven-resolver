@@ -19,20 +19,25 @@
 package org.eclipse.aether.supplier;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.ModelBuilder;
+import org.apache.maven.repository.internal.ArtifactDescriptorDecorator;
 import org.apache.maven.repository.internal.DefaultArtifactDescriptorReader;
 import org.apache.maven.repository.internal.DefaultModelCacheFactory;
 import org.apache.maven.repository.internal.DefaultVersionRangeResolver;
 import org.apache.maven.repository.internal.DefaultVersionResolver;
+import org.apache.maven.repository.internal.MavenArtifactRelocationSource;
 import org.apache.maven.repository.internal.ModelCacheFactory;
 import org.apache.maven.repository.internal.PluginsMetadataGeneratorFactory;
 import org.apache.maven.repository.internal.SnapshotMetadataGeneratorFactory;
 import org.apache.maven.repository.internal.VersionsMetadataGeneratorFactory;
+import org.apache.maven.repository.internal.relocation.DistributionManagementArtifactRelocationSource;
+import org.apache.maven.repository.internal.relocation.UserPropertiesArtifactRelocationSource;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
@@ -223,7 +228,7 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     }
 
     protected TrackingFileManager createTrackingFileManager() {
-        return new TrackingFileManagerSupplier(getNamedLockFactorySelector()).get();
+        return new TrackingFileManagerSupplier(getNamedLockFactorySelector(), getPathProcessor()).get();
     }
 
     private LocalPathComposer localPathComposer;
@@ -1044,6 +1049,41 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
         return result;
     }
 
+    private LinkedHashMap<String, MavenArtifactRelocationSource> artifactRelocationSources;
+
+    public final LinkedHashMap<String, MavenArtifactRelocationSource> getMavenArtifactRelocationSources() {
+        checkClosed();
+        if (artifactRelocationSources == null) {
+            artifactRelocationSources = createMavenArtifactRelocationSources();
+        }
+        return artifactRelocationSources;
+    }
+
+    protected LinkedHashMap<String, MavenArtifactRelocationSource> createMavenArtifactRelocationSources() {
+        // from maven-resolver-provider
+        LinkedHashMap<String, MavenArtifactRelocationSource> result = new LinkedHashMap<>();
+        result.put(UserPropertiesArtifactRelocationSource.NAME, new UserPropertiesArtifactRelocationSource());
+        result.put(
+                DistributionManagementArtifactRelocationSource.NAME,
+                new DistributionManagementArtifactRelocationSource());
+        return result;
+    }
+
+    private LinkedHashMap<String, ArtifactDescriptorDecorator> artifactDescriptorDecorators;
+
+    public final LinkedHashMap<String, ArtifactDescriptorDecorator> getArtifactDescriptorDecorators() {
+        checkClosed();
+        if (artifactDescriptorDecorators == null) {
+            artifactDescriptorDecorators = createArtifactDescriptorDecorators();
+        }
+        return artifactDescriptorDecorators;
+    }
+
+    protected LinkedHashMap<String, ArtifactDescriptorDecorator> createArtifactDescriptorDecorators() {
+        // from maven-resolver-provider: none by default
+        return new LinkedHashMap<>();
+    }
+
     private ArtifactDescriptorReader artifactDescriptorReader;
 
     public final ArtifactDescriptorReader getArtifactDescriptorReader() {
@@ -1063,7 +1103,9 @@ public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
                 getArtifactResolver(),
                 getModelBuilder(),
                 getRepositoryEventDispatcher(),
-                getModelCacheFactory());
+                getModelCacheFactory(),
+                getMavenArtifactRelocationSources(),
+                getArtifactDescriptorDecorators());
     }
 
     private VersionResolver versionResolver;

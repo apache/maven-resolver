@@ -19,8 +19,11 @@
 package org.eclipse.aether.transport.wagon;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,6 +49,7 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.eclipse.aether.transport.wagon.WagonTransporterConfigurationKeys.CONFIG_PROP_CONFIG;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,6 +57,9 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  */
 public abstract class AbstractWagonTransporterTest {
+
+    @TempDir
+    private Path tempDir;
 
     private DefaultRepositorySystemSession session;
 
@@ -80,6 +87,12 @@ public abstract class AbstractWagonTransporterTest {
             transporter = null;
         }
         transporter = factory.newInstance(session, repo);
+    }
+
+    private File createTempFile(String contents) throws IOException {
+        Path file = Files.createTempFile(tempDir, "tmpfile-", ".data");
+        Files.write(file, contents.getBytes(StandardCharsets.UTF_8));
+        return file.toFile();
     }
 
     @BeforeEach
@@ -167,9 +180,10 @@ public abstract class AbstractWagonTransporterTest {
 
     @Test
     void testGet_ToFile() throws Exception {
-        File file = TestFileUtils.createTempFile("failure");
+        File file = createTempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetTask task = new GetTask(URI.create("file.txt")).setDataFile(file).setListener(listener);
+        GetTask task =
+                new GetTask(URI.create("file.txt")).setDataPath(file.toPath()).setListener(listener);
         transporter.get(task);
         assertEquals("test", TestFileUtils.readString(file));
         assertEquals(0L, listener.dataOffset);
@@ -181,10 +195,11 @@ public abstract class AbstractWagonTransporterTest {
 
     @Test
     void testGet_EmptyResource() throws Exception {
-        File file = TestFileUtils.createTempFile("failure");
+        File file = createTempFile("failure");
         assertTrue(file.delete() && !file.exists());
         RecordingTransportListener listener = new RecordingTransportListener();
-        GetTask task = new GetTask(URI.create("empty.txt")).setDataFile(file).setListener(listener);
+        GetTask task =
+                new GetTask(URI.create("empty.txt")).setDataPath(file.toPath()).setListener(listener);
         transporter.get(task);
         assertEquals("", TestFileUtils.readString(file));
         assertEquals(0L, listener.dataOffset);
@@ -204,8 +219,8 @@ public abstract class AbstractWagonTransporterTest {
     @Test
     void testGet_FileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
-            File file = TestFileUtils.createTempFile("failure");
-            transporter.get(new GetTask(URI.create("file.txt")).setDataFile(file));
+            File file = createTempFile("failure");
+            transporter.get(new GetTask(URI.create("file.txt")).setDataPath(file.toPath()));
             assertTrue(file.delete(), i + ", " + file.getAbsolutePath());
         }
     }
@@ -271,9 +286,9 @@ public abstract class AbstractWagonTransporterTest {
 
     @Test
     void testPut_FromFile() throws Exception {
-        File file = TestFileUtils.createTempFile("upload");
+        File file = createTempFile("upload");
         RecordingTransportListener listener = new RecordingTransportListener();
-        PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataFile(file);
+        PutTask task = new PutTask(URI.create("file.txt")).setListener(listener).setDataPath(file.toPath());
         transporter.put(task);
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
@@ -325,8 +340,8 @@ public abstract class AbstractWagonTransporterTest {
     @Test
     void testPut_FileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
-            File src = TestFileUtils.createTempFile("upload");
-            transporter.put(new PutTask(URI.create("file.txt")).setDataFile(src));
+            File src = createTempFile("upload");
+            transporter.put(new PutTask(URI.create("file.txt")).setDataPath(src.toPath()));
             assertTrue(src.delete(), i + ", " + src.getAbsolutePath());
         }
     }

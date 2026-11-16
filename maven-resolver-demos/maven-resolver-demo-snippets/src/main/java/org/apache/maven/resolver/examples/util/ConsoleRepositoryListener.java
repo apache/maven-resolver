@@ -63,12 +63,12 @@ public class ConsoleRepositoryListener extends AbstractRepositoryListener {
 
     public void artifactInstalled(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
-        out.println("Installed " + event.getArtifact() + " to " + event.getFile());
+        out.println("Installed " + event.getArtifact() + " to " + event.getPath());
     }
 
     public void artifactInstalling(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
-        out.println("Installing " + event.getArtifact() + " to " + event.getFile());
+        out.println("Installing " + event.getArtifact() + " to " + event.getPath());
     }
 
     public void artifactResolved(RepositoryEvent event) {
@@ -103,12 +103,12 @@ public class ConsoleRepositoryListener extends AbstractRepositoryListener {
 
     public void metadataInstalled(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
-        out.println("Installed " + event.getMetadata() + " to " + event.getFile());
+        out.println("Installed " + event.getMetadata() + " to " + event.getPath());
     }
 
     public void metadataInstalling(RepositoryEvent event) {
         requireNonNull(event, "event cannot be null");
-        out.println("Installing " + event.getMetadata() + " to " + event.getFile());
+        out.println("Installing " + event.getMetadata() + " to " + event.getPath());
     }
 
     public void metadataInvalid(RepositoryEvent event) {

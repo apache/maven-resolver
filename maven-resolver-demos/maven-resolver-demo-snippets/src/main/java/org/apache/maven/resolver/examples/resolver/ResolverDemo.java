@@ -18,7 +18,7 @@
  */
 package org.apache.maven.resolver.examples.resolver;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -60,7 +60,7 @@ public class ResolverDemo {
 
         // Get the list of files for the artifacts resolved
         //
-        List<File> artifacts = result.getResolvedFiles();
+        List<Path> artifacts = result.getResolvedFiles();
 
         // Get the classpath of the artifacts resolved
         //
@@ -72,9 +72,9 @@ public class ResolverDemo {
                 args, "http://localhost:8081/nexus/content/groups/public", Paths.get("target/aether-repo"));
 
         Artifact artifact = new DefaultArtifact("com.mycompany.super", "super-core", "jar", "0.1-SNAPSHOT");
-        artifact = artifact.setFile(new File("jar-from-whatever-process.jar"));
+        artifact = artifact.setPath(Paths.get("jar-from-whatever-process.jar"));
         Artifact pom = new SubArtifact(artifact, null, "pom");
-        pom = pom.setFile(new File("pom-from-whatever-process.xml"));
+        pom = pom.setPath(Paths.get("pom-from-whatever-process.xml"));
 
         // Install into the local repository specified
         //

@@ -33,12 +33,12 @@ public final class JavaScopeSelectorTest extends AbstractConflictResolverTest {
     private static Stream<Arguments> conflictResolverSource() {
         return Stream.of(
                 Arguments.of(new ClassicConflictResolver(
-                        new NearestVersionSelector(),
+                        new ConfigurableVersionSelector(),
                         new JavaScopeSelector(),
                         new SimpleOptionalitySelector(),
                         new JavaScopeDeriver())),
                 Arguments.of(new PathConflictResolver(
-                        new NearestVersionSelector(),
+                        new ConfigurableVersionSelector(),
                         new JavaScopeSelector(),
                         new SimpleOptionalitySelector(),
                         new JavaScopeDeriver())));

@@ -103,8 +103,10 @@ public abstract class AbstractArtifact implements Artifact {
 
     /**
      * This method should (and in Resolver is) overridden, but is kept just to preserve backward compatibility if
-     * this class is extended somewhere.
+     * this class is extended somewhere. It delegates to the deprecated {@link #getFile()} on purpose, as that is
+     * the method such a subclass implements.
      */
+    @SuppressWarnings("deprecation")
     public Path getPath() {
         File file = getFile();
         return file != null ? file.toPath() : null;

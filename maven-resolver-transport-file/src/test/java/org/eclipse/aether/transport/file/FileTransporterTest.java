@@ -31,7 +31,6 @@ import java.util.HashMap;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.GetTask;
@@ -44,6 +43,7 @@ import org.eclipse.aether.transfer.TransferCancelledException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -67,6 +67,9 @@ public class FileTransporterTest {
     private Path repoDir;
 
     private Path tempDir;
+
+    @TempDir
+    private Path junitTempDir;
 
     private FileSystem fileSystem;
 
@@ -123,9 +126,9 @@ public class FileTransporterTest {
     void setUp(FS fs) {
         try {
             fileSystem = fs.name().startsWith("JIMFS") ? Jimfs.newFileSystem() : null;
-            repoDir = fileSystem == null ? TestFileUtils.createTempDir().toPath() : fileSystem.getPath("repo");
+            repoDir = fileSystem == null ? Files.createTempDirectory(junitTempDir, "repo") : fileSystem.getPath("repo");
             Files.createDirectories(repoDir);
-            tempDir = fileSystem == null ? TestFileUtils.createTempDir().toPath() : fileSystem.getPath("tmp");
+            tempDir = fileSystem == null ? Files.createTempDirectory(junitTempDir, "tmp") : fileSystem.getPath("tmp");
             Files.createDirectories(tempDir);
             Files.write(repoDir.resolve("file.txt"), "test".getBytes(StandardCharsets.UTF_8));
             Files.write(repoDir.resolve("empty.txt"), "".getBytes(StandardCharsets.UTF_8));

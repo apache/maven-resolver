@@ -49,7 +49,7 @@ public class FatArtifactTraverserTest {
     @AfterEach
     void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
-            TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
+            TestFileUtils.deleteFile(session.getLocalRepository().getBasePath().toFile());
         }
         session = null;
         context = null;

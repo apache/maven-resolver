@@ -20,6 +20,8 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -52,11 +54,15 @@ import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultDeployerTest {
+
+    @TempDir
+    private Path tempDir;
 
     private Artifact artifact;
 
@@ -74,12 +80,18 @@ public class DefaultDeployerTest {
 
     private RecordingRepositoryListener listener;
 
+    private Path createTempFile(String contents) throws IOException {
+        Path file = Files.createTempFile(tempDir, "tmpfile-", ".data");
+        Files.write(file, contents.getBytes(StandardCharsets.UTF_8));
+        return file;
+    }
+
     @BeforeEach
     void setup() throws IOException {
         artifact = new DefaultArtifact("gid", "aid", "jar", "ver");
-        artifact = artifact.setFile(TestFileUtils.createTempFile("artifact"));
+        artifact = artifact.setPath(createTempFile("artifact"));
         metadata = new DefaultMetadata(
-                "gid", "aid", "ver", "type", Nature.RELEASE_OR_SNAPSHOT, TestFileUtils.createTempFile("metadata"));
+                "gid", "aid", "ver", "type", Nature.RELEASE_OR_SNAPSHOT, createTempFile("metadata"));
 
         session = TestUtils.newSession();
         connectorProvider = new StubRepositoryConnectorProvider();
@@ -108,7 +120,7 @@ public class DefaultDeployerTest {
     @AfterEach
     void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
-            TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
+            TestFileUtils.deleteFile(session.getLocalRepository().getBasePath().toFile());
         }
         session = null;
         listener = null;
@@ -133,13 +145,13 @@ public class DefaultDeployerTest {
 
     @Test
     void testNullArtifactFile() {
-        request.addArtifact(artifact.setFile(null));
+        request.addArtifact(artifact.setPath(null));
         assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
     }
 
     @Test
     void testNullMetadataFile() {
-        request.addMetadata(metadata.setFile(null));
+        request.addMetadata(metadata.setPath(null));
         assertThrows(DeploymentException.class, () -> deployer.deploy(session, request));
     }
 
@@ -238,6 +250,7 @@ public class DefaultDeployerTest {
             throws Exception {
         MergeableMetadata metadata = new MergeableMetadata() {
 
+            @Deprecated
             public Metadata setFile(File file) {
                 return this;
             }
@@ -262,6 +275,7 @@ public class DefaultDeployerTest {
                 return "org";
             }
 
+            @Deprecated
             public File getFile() {
                 return null;
             }
@@ -287,25 +301,26 @@ public class DefaultDeployerTest {
             }
 
             public void merge(Path current, Path result) throws RepositoryException {
-                merge(current != null ? current.toFile() : null, result != null ? result.toFile() : null);
-            }
-
-            public void merge(File current, File result) throws RepositoryException {
                 requireNonNull(current, "current cannot be null");
                 requireNonNull(result, "result cannot be null");
                 Properties props = new Properties();
 
                 try {
-                    if (current.isFile()) {
-                        TestFileUtils.readProps(current, props);
+                    if (Files.isRegularFile(current)) {
+                        TestFileUtils.readProps(current.toFile(), props);
                     }
 
                     props.setProperty("new", "value");
 
-                    TestFileUtils.writeProps(result, props);
+                    TestFileUtils.writeProps(result.toFile(), props);
                 } catch (IOException e) {
                     throw new RepositoryException(e.getMessage(), e);
                 }
+            }
+
+            @Deprecated
+            public void merge(File current, File result) throws RepositoryException {
+                merge(current != null ? current.toPath() : null, result != null ? result.toPath() : null);
             }
 
             public boolean isMerged() {
@@ -334,9 +349,9 @@ public class DefaultDeployerTest {
 
         request.addMetadata(metadata);
 
-        File metadataFile = new File(
-                session.getLocalRepository().getBasedir(),
-                session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, request.getRepository(), ""));
+        File metadataFile = session.getLocalRepositoryManager()
+                .getAbsolutePathForRemoteMetadata(metadata, request.getRepository(), "")
+                .toFile();
         Properties props = new Properties();
         props.setProperty("old", "value");
         TestFileUtils.writeProps(metadataFile, props);

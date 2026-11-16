@@ -20,11 +20,12 @@ package org.eclipse.aether.internal.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
@@ -52,6 +53,8 @@ public class SimpleLocalRepositoryManagerTest {
         session = TestUtils.newSession();
     }
 
+    // asserts on the composed relative path, which only the deprecated getPathFor* methods expose
+    @SuppressWarnings("deprecation")
     @Test
     void testGetPathForLocalArtifact() {
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
@@ -66,6 +69,8 @@ public class SimpleLocalRepositoryManagerTest {
         assertEquals("g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT", manager.getPathForLocalArtifact(artifact));
     }
 
+    // asserts on the composed relative path, which only the deprecated getPathFor* methods expose
+    @SuppressWarnings("deprecation")
     @Test
     void testGetPathForRemoteArtifact() {
         RemoteRepository remoteRepo = new RemoteRepository.Builder("repo", "default", "ram:/void").build();
@@ -86,14 +91,15 @@ public class SimpleLocalRepositoryManagerTest {
     @Test
     void testFindArtifactUsesTimestampedVersion() throws Exception {
         Artifact artifact = new DefaultArtifact("g.i.d:a.i.d:1.0-SNAPSHOT");
-        File file = new File(basedir, manager.getPathForLocalArtifact(artifact));
-        TestFileUtils.writeString(file, "test");
+        File file = manager.getAbsolutePathForLocalArtifact(artifact).toFile();
+        Files.createDirectories(file.toPath().getParent());
+        Files.write(file.toPath(), "test".getBytes(StandardCharsets.UTF_8));
 
         artifact = artifact.setVersion("1.0-20110329.221805-4");
         LocalArtifactRequest request = new LocalArtifactRequest();
         request.setArtifact(artifact);
         LocalArtifactResult result = manager.find(session, request);
-        assertNull(result.getFile(), result.toString());
+        assertNull(result.getPath(), result.toString());
         assertFalse(result.isAvailable(), result.toString());
     }
 }
