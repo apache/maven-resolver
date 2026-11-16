@@ -130,6 +130,20 @@ public abstract class NamedLockFactoryTestSupport {
     }
 
     @Test
+    void wrwBoxing(TestInfo testInfo) throws InterruptedException {
+        final Collection<NamedLockKey> keys = lockName(testInfo);
+        try (NamedLock one = namedLockFactory.getLock(keys)) {
+            assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
+            assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
+            // the exclusive lock is still held, so this is boxing, not an upgrade
+            assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
+            one.unlock();
+            one.unlock();
+            one.unlock();
+        }
+    }
+
+    @Test
     void rwBoxing(TestInfo testInfo) throws InterruptedException {
         final Collection<NamedLockKey> keys = lockName(testInfo);
         try (NamedLock one = namedLockFactory.getLock(keys)) {
