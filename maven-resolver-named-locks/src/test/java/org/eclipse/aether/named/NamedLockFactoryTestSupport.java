@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.named;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
@@ -90,6 +91,18 @@ public abstract class NamedLockFactoryTestSupport {
     void unlockWoLock(TestInfo testInfo) {
         assertThrows(IllegalStateException.class, () -> {
             final Collection<NamedLockKey> keys = lockName(testInfo);
+            try (NamedLock one = namedLockFactory.getLock(keys)) {
+                one.unlock();
+            }
+        });
+    }
+
+    @Test
+    void unlockWoLockComposite(TestInfo testInfo) {
+        assertThrows(IllegalStateException.class, () -> {
+            final String name = lockName(testInfo).iterator().next().name();
+            final Collection<NamedLockKey> keys =
+                    Arrays.asList(NamedLockKey.of(name + "-1"), NamedLockKey.of(name + "-2"));
             try (NamedLock one = namedLockFactory.getLock(keys)) {
                 one.unlock();
             }

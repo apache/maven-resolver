@@ -101,6 +101,9 @@ public final class CompositeNamedLock extends NamedLockSupport {
 
     @Override
     protected void doUnlock() {
+        if (steps.isEmpty()) {
+            throw new IllegalStateException("Wrong API usage: unlock without lock");
+        }
         unlockAll(steps.pop());
     }
 
