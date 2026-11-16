@@ -357,6 +357,10 @@ public class PathProcessorSupport implements PathProcessor {
      * Pre-NIO2 way to copy files. Opens the target with truncation; normally callers stage into a temporary file and
      * rename into place to avoid exposing partially written content. Used as a last resort on Windows when all atomic
      * rename attempts are exhausted due to a persistent file lock (see {@link #retryingMove}).
+     * <p>
+     * The target gets the last modified time of the source,
+     * which the transports set from the remote "Last-Modified" header,
+     * as it does with a move.
      */
     protected void classicCopy(Path source, Path target) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(1024 * 32);
@@ -370,6 +374,11 @@ public class PathProcessorSupport implements PathProcessor {
                 }
                 os.write(array, 0, bytes);
             }
+        }
+        try {
+            setLastModified(target, Files.getLastModifiedTime(source).toMillis());
+        } catch (IOException e) {
+            LOGGER.debug("Could not set the last modified time of {}", target, e);
         }
     }
 }
