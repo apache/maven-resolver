@@ -86,8 +86,18 @@ class IpcServerLoggingWithoutSlf4jTest {
         return method;
     }
 
+    private static Method infoMethod(Class<?> ipcServerClass) throws NoSuchMethodException {
+        Method method = ipcServerClass.getDeclaredMethod("info", String.class, Object[].class);
+        method.setAccessible(true);
+        return method;
+    }
+
     @Test
-    void errorFallsBackToStdoutWhenForkedProcessFlagIsCorrectlySet() throws Exception {
+    void errorTakesTheForkedProcessStdoutPathDirectlyWithoutExercisingTheFix() throws Exception {
+        // with forkedProcess=true, error() takes the "if (forkedProcess)" branch straight to stdout and never
+        // reaches the new try/catch (LinkageError) block below; this is a sanity check for that pre-existing
+        // path, not a validation of the fix - see errorFallsBackToStdoutWhenForkedProcessFlagHasBeenReset...()
+        // for the test that actually exercises the catch block.
         Class<?> ipcServerClass = loadIpcServerWithoutSlf4j();
         Field forkedProcess = ipcServerClass.getDeclaredField("forkedProcess");
         forkedProcess.setAccessible(true);
@@ -106,5 +116,15 @@ class IpcServerLoggingWithoutSlf4jTest {
 
         assertDoesNotThrow(
                 () -> errorMethod(ipcServerClass).invoke(null, "Error writing lock response", new IOException("boom")));
+    }
+
+    @Test
+    void infoFallsBackToStdoutWhenForkedProcessFlagHasBeenResetDuringShutdown() throws Exception {
+        // same scenario as the error() test above, for the identical catch (LinkageError) block added to
+        // info(); forkedProcess defaults to false on this freshly loaded class.
+        Class<?> ipcServerClass = loadIpcServerWithoutSlf4j();
+
+        assertDoesNotThrow(
+                () -> infoMethod(ipcServerClass).invoke(null, "New client connected ({} connected)", new Object[] {1}));
     }
 }
