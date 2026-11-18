@@ -92,6 +92,12 @@ class IpcServerLoggingWithoutSlf4jTest {
         return method;
     }
 
+    private static Method debugMethod(Class<?> ipcServerClass) throws NoSuchMethodException {
+        Method method = ipcServerClass.getDeclaredMethod("debug", String.class, Object[].class);
+        method.setAccessible(true);
+        return method;
+    }
+
     @Test
     void errorTakesTheForkedProcessStdoutPathDirectlyWithoutExercisingTheFix() throws Exception {
         // with forkedProcess=true, error() takes the "if (forkedProcess)" branch straight to stdout and never
@@ -126,5 +132,21 @@ class IpcServerLoggingWithoutSlf4jTest {
 
         assertDoesNotThrow(
                 () -> infoMethod(ipcServerClass).invoke(null, "New client connected ({} connected)", new Object[] {1}));
+    }
+
+    @Test
+    void debugFallsBackToStdoutWhenForkedProcessFlagHasBeenResetDuringShutdown() throws Exception {
+        // debug() is a no-op unless the aether.named.ipc.debug system property is set, since DEBUG is a static
+        // final field read once at class-load time; it must be set before loading the class below, or the
+        // catch (LinkageError) block under test is never reached. Same scenario as the error()/info() tests
+        // above otherwise: forkedProcess defaults to false on this freshly loaded class.
+        System.setProperty(IpcServer.SYSTEM_PROP_DEBUG, "true");
+        try {
+            Class<?> ipcServerClass = loadIpcServerWithoutSlf4j();
+
+            assertDoesNotThrow(() -> debugMethod(ipcServerClass).invoke(null, "Received request {}", new Object[] {1}));
+        } finally {
+            System.clearProperty(IpcServer.SYSTEM_PROP_DEBUG);
+        }
     }
 }
