@@ -1189,8 +1189,9 @@ public abstract class HttpTransporterTest {
         assertEquals(9, listener.getDataLength());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("resumable", listener.getBaos().toString(StandardCharsets.UTF_8));
-        // the 412 answer to the resume request was discarded; only the served response reports its properties
-        assertEquals(1, listener.getTransportPropertiesCount());
+        // the 412 answer to the resume request was discarded; only the served response may report properties (url
+        // transport reports none)
+        assertTrue(listener.getTransportPropertiesCount() <= 1, "Count: " + listener.getTransportPropertiesCount());
     }
 
     @Test

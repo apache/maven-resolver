@@ -749,6 +749,16 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <!-- aggregate classpath holds maven-resolver-provider 4 only; supplier-mvn3 needs types only in 3.10.x -->
+              <additionalDependencies>
+                <additionalDependency>
+                  <groupId>org.apache.maven</groupId>
+                  <artifactId>maven-resolver-provider</artifactId>
+                  <version>${maven3Version}</version>
+                </additionalDependency>
+              </additionalDependencies>
+            </configuration>
             <reportSets>
               <reportSet>
                 <id>aggregate</id>
