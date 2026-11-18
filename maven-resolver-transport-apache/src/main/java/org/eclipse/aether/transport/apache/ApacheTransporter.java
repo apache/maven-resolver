@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.IntPredicate;
 import java.util.regex.Matcher;
 
 import org.apache.http.Header;
@@ -426,11 +427,17 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
             ApacheRFC9457Reporter.INSTANCE.prepareRequest(request);
         }
         while (true) {
+            final boolean resumeRequested = resume;
             try {
-                if (resume) {
+                if (resumeRequested) {
                     resume(request, task);
                 }
-                execute(request, getter, task.getListener());
+                // a 412 to a resume request is retried below as a plain GET, so that response is not reported
+                execute(
+                        request,
+                        getter,
+                        task.getListener(),
+                        status -> resumeRequested && status == HttpStatus.SC_PRECONDITION_FAILED);
                 break;
             } catch (HttpResponseException e) {
                 if (resume
@@ -466,15 +473,27 @@ final class ApacheTransporter extends AbstractTransporter implements HttpTranspo
     }
 
     private void execute(HttpUriRequest request, EntityGetter getter, TransportListener listener) throws Exception {
+        execute(request, getter, listener, status -> false);
+    }
+
+    /**
+     * @param discardedStatus the response statuses the caller retries with another request; such a response does
+     *                        not serve the transfer, so its transport properties are not reported
+     */
+    private void execute(
+            HttpUriRequest request, EntityGetter getter, TransportListener listener, IntPredicate discardedStatus)
+            throws Exception {
         try {
             SharingHttpContext context = new SharingHttpContext(state);
             context.setAuthCache(authCache);
             prepare(request, context);
             try (CloseableHttpResponse response = client.execute(server, request, context)) {
                 try {
-                    Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
-                            createTransportProperties(response, context);
-                    listener.transportPropertiesAvailable(transportProperties);
+                    if (!discardedStatus.test(response.getStatusLine().getStatusCode())) {
+                        Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
+                                createTransportProperties(response, context);
+                        listener.transportPropertiesAvailable(transportProperties);
+                    }
                     handleStatus(response);
                     if (getter != null) {
                         getter.handle(response);
