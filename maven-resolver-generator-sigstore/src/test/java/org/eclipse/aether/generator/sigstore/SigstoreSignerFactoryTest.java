@@ -69,6 +69,18 @@ public class SigstoreSignerFactoryTest {
     }
 
     @Test
+    void generateAfterCloseIsRejected() throws Exception {
+        SigstoreSignatureArtifactGeneratorFactory factory = createFactory();
+        ArtifactGenerator signer = factory.newInstance(createSession(), new DeployRequest());
+        assertNotNull(signer);
+        signer.close();
+        assertThrows(
+                IllegalStateException.class,
+                () -> signer.generate(
+                        Collections.singletonList(new DefaultArtifact("org.apache.maven.resolver:test:jar:1.0"))));
+    }
+
+    @Test
     void doNotSignNonRelevantArtifacts() throws Exception {
         SigstoreSignatureArtifactGeneratorFactory factory = createFactory();
         try (ArtifactGenerator signer = factory.newInstance(createSession(), new DeployRequest())) {

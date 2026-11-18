@@ -90,6 +90,21 @@ public class GpgSignerFactoryTest {
     }
 
     @Test
+    void generateAfterCloseIsRejected() throws Exception {
+        Path keyFile =
+                Paths.get("src/test/resources/gpg-signing/gpg-secret.key").toAbsolutePath();
+        String keyPass = "TheBigSecret";
+        GnupgSignatureArtifactGeneratorFactory factory = createFactory();
+        ArtifactGenerator signer = factory.newInstance(createSession(keyFile, keyPass, false), new DeployRequest());
+        assertNotNull(signer);
+        signer.close();
+        assertThrows(
+                IllegalStateException.class,
+                () -> signer.generate(
+                        Collections.singletonList(new DefaultArtifact("org.apache.maven.resolver:test:jar:1.0"))));
+    }
+
+    @Test
     void doNotSignNonRelevantArtifacts() throws Exception {
         Path keyFile =
                 Paths.get("src/test/resources/gpg-signing/gpg-secret.key").toAbsolutePath();
