@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("deprecation")
 public class PostorderNodeListGeneratorTest {
 
     private DependencyNode parse(String resource) throws Exception {

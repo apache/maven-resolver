@@ -63,6 +63,9 @@ public final class DefaultVersionFilterContext implements VersionFilter.VersionF
 
     /**
      * The use of this method allows strictly single-threaded use of context. Is unused in production, only in tests.
+     *
+     * @deprecated Use {@link #initialize(Dependency, VersionRangeResult)} instead, which creates a new context and
+     * is safe to use from several threads.
      */
     @Deprecated
     public void set(Dependency dependency, VersionRangeResult result) {

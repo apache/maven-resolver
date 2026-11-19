@@ -18,6 +18,8 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.nio.file.Files;
+
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.impl.UpdateCheck;
@@ -66,7 +68,7 @@ class StaticUpdateCheckManager implements UpdateCheckManager {
         if (check.getLocalLastUpdated() != 0L && localUpToDate) {
             check.setRequired(false);
         }
-        if (!check.isRequired() && !check.getFile().isFile()) {
+        if (!check.isRequired() && !Files.isRegularFile(check.getPath())) {
             check.setException(new MetadataNotFoundException(check.getItem(), check.getRepository()));
         }
     }
@@ -80,7 +82,7 @@ class StaticUpdateCheckManager implements UpdateCheckManager {
         if (check.getLocalLastUpdated() != 0L && localUpToDate) {
             check.setRequired(false);
         }
-        if (!check.isRequired() && !check.getFile().isFile()) {
+        if (!check.isRequired() && !Files.isRegularFile(check.getPath())) {
             check.setException(new ArtifactNotFoundException(check.getItem(), check.getRepository()));
         }
     }

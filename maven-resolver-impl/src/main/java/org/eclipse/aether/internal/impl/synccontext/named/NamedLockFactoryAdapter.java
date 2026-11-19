@@ -55,11 +55,14 @@ public final class NamedLockFactoryAdapter {
      * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Long}
-     * @deprecated
+     * @deprecated Use {@code aether.system.named.time} instead.
      */
     @Deprecated
     public static final String CONFIG_PROP_TIME = CONFIG_PROPS_PREFIX + "time";
 
+    /**
+     * @deprecated Use {@link DefaultNamedLockFactorySelector#DEFAULT_LOCK_WAIT_TIME} instead.
+     */
     @Deprecated
     public static final long DEFAULT_TIME = DefaultNamedLockFactorySelector.DEFAULT_LOCK_WAIT_TIME;
 
@@ -70,11 +73,14 @@ public final class NamedLockFactoryAdapter {
      * @since 1.7.0
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.String}
-     * @deprecated
+     * @deprecated Use {@code aether.system.named.timeUnit} instead.
      */
     @Deprecated
     public static final String CONFIG_PROP_TIME_UNIT = CONFIG_PROPS_PREFIX + "time.unit";
 
+    /**
+     * @deprecated Use {@link DefaultNamedLockFactorySelector#DEFAULT_LOCK_WAIT_TIME_UNIT} instead.
+     */
     @Deprecated
     public static final String DEFAULT_TIME_UNIT = DefaultNamedLockFactorySelector.DEFAULT_LOCK_WAIT_TIME_UNIT;
 

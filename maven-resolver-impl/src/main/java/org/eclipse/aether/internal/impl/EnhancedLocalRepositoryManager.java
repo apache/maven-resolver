@@ -160,6 +160,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
         return prefix + '/' + artifactPath;
     }
 
+    @Deprecated
     @Override
     public String getPathForLocalArtifact(Artifact artifact) {
         return concatPaths(
@@ -167,6 +168,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                 super.getPathForLocalArtifact(artifact));
     }
 
+    @Deprecated
     @Override
     public String getPathForRemoteArtifact(Artifact artifact, RemoteRepository repository, String context) {
         return concatPaths(
@@ -174,6 +176,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                 super.getPathForRemoteArtifact(artifact, repository, context));
     }
 
+    @Deprecated
     @Override
     public String getPathForLocalMetadata(Metadata metadata) {
         return concatPaths(
@@ -181,6 +184,7 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                 super.getPathForLocalMetadata(metadata));
     }
 
+    @Deprecated
     @Override
     public String getPathForRemoteMetadata(Metadata metadata, RemoteRepository repository, String context) {
         requireNonNull(metadata, "metadata cannot be null");

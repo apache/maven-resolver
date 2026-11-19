@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 
 import org.apache.maven.api.DependencyScope;
 import org.apache.maven.repository.internal.artifact.FatArtifactTraverser;
-import org.apache.maven.utils.Os;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
@@ -90,7 +89,8 @@ public class SessionBuilderSupplier {
 
     public void configureSessionBuilder(RepositorySystemSession.SessionBuilder session) {
         session.setSystemProperties(System.getProperties());
-        boolean caseSensitive = !Os.IS_WINDOWS;
+        boolean caseSensitive =
+                !System.getProperty("os.name", "").toLowerCase(Locale.ENGLISH).contains("windows");
         System.getenv().forEach((key, value) -> {
             key = "env." + (caseSensitive ? key : key.toUpperCase(Locale.ENGLISH));
             session.setSystemProperty(key, value);
@@ -110,6 +110,8 @@ public class SessionBuilderSupplier {
         return this.scopeManager;
     }
 
+    @SuppressWarnings(
+            "deprecation") // the maven-resolver-provider traverser stays until the supplier moves to maven-impl
     public DependencyTraverser getDependencyTraverser() {
         return new FatArtifactTraverser();
     }

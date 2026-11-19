@@ -21,6 +21,7 @@ package org.eclipse.aether;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -194,7 +195,7 @@ public class RepositoryExceptionTest {
 
     @Test
     void testNoLocalRepositoryManagerException_Serializable() {
-        assertSerializable(new NoLocalRepositoryManagerException(new LocalRepository("/tmp")));
+        assertSerializable(new NoLocalRepositoryManagerException(new LocalRepository(Paths.get("/tmp"))));
     }
 
     @Test
@@ -220,7 +221,8 @@ public class RepositoryExceptionTest {
     @Test
     void testUnsolvableVersionConflictException_Serializable() {
         DependencyNode node = new DefaultDependencyNode(new Dependency(newArtifact(), "test"));
-        assertSerializable(new UnsolvableVersionConflictException(Collections.singleton(Arrays.asList(node))));
+        assertSerializable(new UnsolvableVersionConflictException(
+                "Unsolvable hard constraint combination", Collections.singleton(Arrays.asList(node))));
     }
 
     @Test

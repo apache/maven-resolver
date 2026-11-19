@@ -19,6 +19,7 @@
 package org.eclipse.aether.util.artifact;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,10 +40,10 @@ public class SubArtifactTest {
 
     @Test
     void testMainArtifactFileNotRetained() {
-        Artifact a = newMainArtifact("gid:aid:ver").setFile(new File(""));
-        assertNotNull(a.getFile());
+        Artifact a = newMainArtifact("gid:aid:ver").setPath(Paths.get(""));
+        assertNotNull(a.getPath());
         a = new SubArtifact(a, "", "pom");
-        assertNull(a.getFile());
+        assertNull(a.getPath());
     }
 
     @Test
@@ -118,7 +119,7 @@ public class SubArtifactTest {
     @Test
     void testImmutability() {
         Artifact a = new SubArtifact(newMainArtifact("gid:aid:ver"), "", "pom");
-        assertNotSame(a, a.setFile(new File("file")));
+        assertNotSame(a, a.setPath(Paths.get("file")));
         assertNotSame(a, a.setVersion("otherVersion"));
         assertNotSame(a, a.setProperties(Collections.singletonMap("key", "value")));
     }

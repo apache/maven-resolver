@@ -48,7 +48,7 @@ project:
     start_vote_template_url: https://maven.apache.org/atr/templates/start_vote_template.txt
     finish_vote_template_url: https://maven.apache.org/atr/templates/finish_vote_template.txt
     download_path_suffix: resolver
-#    auto_archive_prior_release: true - wait for infrastructure-asfyaml support it
+    auto_archive_prior_release: true
     vote_recipients:
       to: dev@maven.apache.org
     announce_recipients:
@@ -58,3 +58,4 @@ project:
         - users@maven.apache.org
   features:
     atr_sync: true
+    atr_sync_mode: full

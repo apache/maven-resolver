@@ -22,6 +22,8 @@ import java.io.File;
 import java.net.URI;
 import java.util.stream.Stream;
 
+import com.aayushatharva.brotli4j.Brotli4jLoader;
+import com.github.luben.zstd.util.Native;
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
@@ -42,7 +44,19 @@ class JettyTransporterTest extends HttpTransporterTest {
 
     @Override
     protected Stream<String> supportedCompressionAlgorithms() {
-        return Stream.of("gzip", "deflate", "br", "zstd");
+        // Jetty advertises "br" and "zstd" only if their native libraries load on this platform
+        return Stream.of("gzip", "deflate", "br", "zstd")
+                .filter(e -> !e.equals("br") || Brotli4jLoader.isAvailable())
+                .filter(e -> !e.equals("zstd") || isZstdAvailable());
+    }
+
+    private static boolean isZstdAvailable() {
+        try {
+            Native.load(); // same call Jetty's ZstandardCompression makes
+            return true;
+        } catch (Throwable e) {
+            return false;
+        }
     }
 
     @Override

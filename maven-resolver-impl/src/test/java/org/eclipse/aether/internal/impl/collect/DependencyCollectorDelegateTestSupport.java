@@ -52,9 +52,9 @@ import org.eclipse.aether.util.graph.manager.DefaultDependencyManager;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.transformer.ClassicConflictResolver;
+import org.eclipse.aether.util.graph.transformer.ConfigurableVersionSelector;
 import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
-import org.eclipse.aether.util.graph.transformer.NearestVersionSelector;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.graph.version.HighestVersionFilter;
 import org.junit.jupiter.api.BeforeEach;
@@ -188,6 +188,20 @@ public abstract class DependencyCollectorDelegateTestSupport {
 
         Dependency expect = newDep("gid:aid2:ext:ver", "compile");
         assertEquals(expect, root.getChildren().get(0).getDependency());
+    }
+
+    @Test
+    void testCollectionInterrupted() {
+        CollectRequest request = new CollectRequest(newDep("gid:aid:ext:ver", "compile"), singletonList(repository));
+        Thread.currentThread().interrupt();
+        try {
+            DependencyCollectionException e = assertThrows(
+                    DependencyCollectionException.class, () -> collector.collectDependencies(session, request));
+            assertInstanceOf(InterruptedException.class, e.getCause());
+            assertTrue(Thread.currentThread().isInterrupted(), "the interrupt status is restored for the caller");
+        } finally {
+            Thread.interrupted(); // clear it, so that it does not leak into the next test
+        }
     }
 
     @Test
@@ -568,7 +582,7 @@ public abstract class DependencyCollectorDelegateTestSupport {
         collector = setupCollector(newReader("dependencies-empty/"));
 
         session.setDependencyGraphTransformer(new ClassicConflictResolver(
-                new NearestVersionSelector(),
+                new ConfigurableVersionSelector(),
                 new JavaScopeSelector(),
                 new SimpleOptionalitySelector(),
                 new JavaScopeDeriver()));

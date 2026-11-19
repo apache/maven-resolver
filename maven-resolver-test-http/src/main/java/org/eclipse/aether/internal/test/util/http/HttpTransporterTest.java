@@ -18,26 +18,20 @@
  */
 package org.eclipse.aether.internal.test.util.http;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.security.KeyStore;
+import java.nio.file.attribute.FileTime;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +78,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -104,10 +99,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public abstract class HttpTransporterTest {
 
-    protected static final Path SERVER_STORE_PATH = Paths.get("target/server-store");
-    protected static final Path CLIENT_STORE_PATH = Paths.get("target/client-store");
-    protected static final Path PEM_QUICHE_SERVER_PATH = Paths.get("target/pems");
-
     protected static SSLContext defaultSslContext;
 
     static {
@@ -117,97 +108,17 @@ public abstract class HttpTransporterTest {
 
     @BeforeAll
     protected static void beforeAll() throws NoSuchAlgorithmException {
-        // populate custom keystore and truststore
-        try {
-            try (InputStream keyStoreStream =
-                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/server-store");
-                    InputStream trustStoreStream =
-                            HttpTransporterTest.class.getClassLoader().getResourceAsStream("ssl/client-store"); ) {
-                Files.copy(keyStoreStream, SERVER_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(trustStoreStream, CLIENT_STORE_PATH, StandardCopyOption.REPLACE_EXISTING);
-                Files.createDirectories(PEM_QUICHE_SERVER_PATH);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        SslTestSupport.installKeyStores();
         // override default SSLContext to include our custom keystore and truststore (which are "cross connected" with
         // HttpServer)
         defaultSslContext = SSLContext.getDefault();
-        SSLContext.setDefault(createClientSSLContext());
+        SSLContext.setDefault(SslTestSupport.createClientSSLContext());
     }
 
     @AfterAll
     protected static void afterAll() {
         if (defaultSslContext != null) {
             SSLContext.setDefault(defaultSslContext);
-        }
-    }
-
-    /**
-     * Creates an {@link SSLContext} for the client that extends the default keystore and truststore with the entries
-     * from {@link #SERVER_STORE_PATH} (password {@code "server-pwd"}) and {@link #CLIENT_STORE_PATH}
-     * (password {@code "client-pwd"}).
-     *
-     * @return an {@link SSLContext} combining default and custom key/trust material
-     */
-    protected static SSLContext createClientSSLContext() {
-        try {
-            // Load custom key store (KEY_STORE_PATH acts as truststore in "cross connected" setup)
-            KeyStore customTrustStore = KeyStore.getInstance("pkcs12");
-            try (InputStream is = Files.newInputStream(SERVER_STORE_PATH)) {
-                customTrustStore.load(is, "server-pwd".toCharArray());
-            }
-
-            // Load custom trust store (TRUST_STORE_PATH acts as keystore in "cross connected" setup)
-            KeyStore customKeyStore = KeyStore.getInstance("pkcs12");
-            try (InputStream is = Files.newInputStream(CLIENT_STORE_PATH)) {
-                customKeyStore.load(is, "client-pwd".toCharArray());
-            }
-
-            // Load default truststore and merge custom entries
-            KeyStore defaultTrustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            Path defaultTrustStorePath = Path.of(System.getProperty("java.home"), "lib", "security", "cacerts");
-            if (Files.exists(defaultTrustStorePath)) {
-                try (InputStream is = Files.newInputStream(defaultTrustStorePath)) {
-                    defaultTrustStore.load(is, "changeit".toCharArray());
-                }
-            } else {
-                defaultTrustStore.load(null, null);
-            }
-            Enumeration<String> aliases = customTrustStore.aliases();
-            while (aliases.hasMoreElements()) {
-                String alias = aliases.nextElement();
-                defaultTrustStore.setCertificateEntry("custom-trust-" + alias, customTrustStore.getCertificate(alias));
-            }
-
-            // Load default keystore and merge custom entries
-            KeyStore mergedKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            mergedKeyStore.load(null, null);
-            Enumeration<String> keyAliases = customKeyStore.aliases();
-            while (keyAliases.hasMoreElements()) {
-                String alias = keyAliases.nextElement();
-                if (customKeyStore.isKeyEntry(alias)) {
-                    mergedKeyStore.setKeyEntry(
-                            alias,
-                            customKeyStore.getKey(alias, "client-pwd".toCharArray()),
-                            "client-pwd".toCharArray(),
-                            customKeyStore.getCertificateChain(alias));
-                } else {
-                    mergedKeyStore.setCertificateEntry(alias, customKeyStore.getCertificate(alias));
-                }
-            }
-
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init(defaultTrustStore);
-
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(mergedKeyStore, "client-pwd".toCharArray());
-
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-            return sslContext;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create SSLContext", e);
         }
     }
 
@@ -220,6 +131,9 @@ public abstract class HttpTransporterTest {
     protected HttpTransporter transporter;
 
     protected Runnable closer;
+
+    @TempDir
+    protected Path tempDir;
 
     protected File repoDir;
 
@@ -275,19 +189,18 @@ public abstract class HttpTransporterTest {
         });
         session.setLocalRepositoryManager(new TestLocalRepositoryManager());
         factory = transporterFactorySupplier.get();
-        repoDir = TestFileUtils.createTempDir();
-        TestFileUtils.writeString(new File(repoDir, "file.txt"), "test");
-        TestFileUtils.writeString(new File(repoDir, "artifact.pom"), "<xml>pom</xml>");
-        TestFileUtils.writeString(new File(repoDir, "dir/file.txt"), "test");
-        TestFileUtils.writeString(new File(repoDir, "dir/oldFile.txt"), "oldTest", OLD_FILE_TIMESTAMP);
-        TestFileUtils.writeString(new File(repoDir, "empty.txt"), "");
-        TestFileUtils.writeString(new File(repoDir, "some space.txt"), "space");
+        repoDir = Files.createDirectories(tempDir.resolve("repo")).toFile();
+        repoFile("file.txt", "test");
+        repoFile("artifact.pom", "<xml>pom</xml>");
+        repoFile("dir/file.txt", "test");
+        Files.setLastModifiedTime(repoFile("dir/oldFile.txt", "oldTest"), FileTime.fromMillis(OLD_FILE_TIMESTAMP));
+        repoFile("empty.txt", "");
+        repoFile("some space.txt", "space");
         try (InputStream is = getCompressibleFileStream()) {
             Files.copy(is, repoDir.toPath().resolve("compressible-file.xml"));
         }
-        File resumable = new File(repoDir, "resume.txt");
-        TestFileUtils.writeString(resumable, "resumable");
-        resumable.setLastModified(System.currentTimeMillis() - 90 * 1000);
+        Files.setLastModifiedTime(
+                repoFile("resume.txt", "resumable"), FileTime.fromMillis(System.currentTimeMillis() - 90 * 1000));
         httpServer = new HttpServer().setRepoDir(repoDir).start();
         // always create a transporter connecting to the Http URL
         newTransporter(httpServer.getHttpUrl());
@@ -295,6 +208,24 @@ public abstract class HttpTransporterTest {
 
     private static InputStream getCompressibleFileStream() {
         return HttpTransporterTest.class.getClassLoader().getResourceAsStream("compressible-file.xml");
+    }
+
+    /**
+     * Writes a file with the given relative name and content into the repository directory served by the test server.
+     */
+    protected Path repoFile(String name, String content) throws IOException {
+        Path file = repoDir.toPath().resolve(name);
+        Files.createDirectories(file.getParent());
+        return Files.write(file, content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Creates a file with the given content in the per-test temporary directory.
+     */
+    protected File tempFile(String content) throws IOException {
+        Path file = Files.createTempFile(tempDir, "tmpfile-", ".data");
+        Files.write(file, content.getBytes(StandardCharsets.UTF_8));
+        return file.toFile();
     }
 
     @AfterEach
@@ -669,7 +600,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_ToFile() throws Exception {
-        File file = TestFileUtils.createTempFile("failure");
+        File file = tempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/file.txt"))
                 .setDataPath(file.toPath())
@@ -685,7 +616,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_ToFileTimestamp() throws Exception {
-        File file = TestFileUtils.createTempFile("failure");
+        File file = tempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/dir/oldFile.txt"))
                 .setDataPath(file.toPath())
@@ -783,7 +714,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_EmptyResource() throws Exception {
-        File file = TestFileUtils.createTempFile("failure");
+        File file = tempFile("failure");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/empty.txt"))
                 .setDataPath(file.toPath())
@@ -979,7 +910,7 @@ public abstract class HttpTransporterTest {
             assertEquals(task.getDataString(), listener.getBaos().toString(StandardCharsets.UTF_8));
         } finally {
             // restore the default SSL context used for all other tests
-            SSLContext.setDefault(createClientSSLContext());
+            SSLContext.setDefault(SslTestSupport.createClientSSLContext());
         }
     }
 
@@ -1009,7 +940,7 @@ public abstract class HttpTransporterTest {
             });
         } finally {
             // restore the default SSL context used for all other tests
-            SSLContext.setDefault(createClientSSLContext());
+            SSLContext.setDefault(SslTestSupport.createClientSSLContext());
         }
     }
 
@@ -1229,7 +1160,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_Resume() throws Exception {
-        File file = TestFileUtils.createTempFile("re");
+        File file = tempFile("re");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/resume.txt"))
                 .setDataPath(file.toPath(), true)
@@ -1245,7 +1176,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testGet_ResumeLocalContentsOutdated() throws Exception {
-        File file = TestFileUtils.createTempFile("re");
+        File file = tempFile("re");
         file.setLastModified(System.currentTimeMillis() - 5 * 60 * 1000);
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/resume.txt"))
@@ -1258,12 +1189,15 @@ public abstract class HttpTransporterTest {
         assertEquals(9, listener.getDataLength());
         assertTrue(listener.getProgressedCount() > 0, "Count: " + listener.getProgressedCount());
         assertEquals("resumable", listener.getBaos().toString(StandardCharsets.UTF_8));
+        // the 412 answer to the resume request was discarded; only the served response may report properties (url
+        // transport reports none)
+        assertTrue(listener.getTransportPropertiesCount() <= 1, "Count: " + listener.getTransportPropertiesCount());
     }
 
     @Test
     protected void testGet_ResumeRangesNotSupportedByServer() throws Exception {
         httpServer.setRangeSupport(false);
-        File file = TestFileUtils.createTempFile("re");
+        File file = tempFile("re");
         RecordingTransportListener listener = new RecordingTransportListener();
         GetTask task = new GetTask(URI.create("repo/resume.txt"))
                 .setDataPath(file.toPath(), true)
@@ -1320,7 +1254,7 @@ public abstract class HttpTransporterTest {
     @Test
     protected void testGet_FileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
-            File file = TestFileUtils.createTempFile("failure");
+            File file = tempFile("failure");
             transporter.get(new GetTask(URI.create("repo/file.txt")).setDataPath(file.toPath()));
             assertTrue(file.delete(), i + ", " + file.getAbsolutePath());
         }
@@ -1413,7 +1347,7 @@ public abstract class HttpTransporterTest {
 
     @Test
     protected void testPut_FromFile() throws Exception {
-        File file = TestFileUtils.createTempFile("upload");
+        File file = tempFile("upload");
         RecordingTransportListener listener = new RecordingTransportListener();
         PutTask task =
                 new PutTask(URI.create("repo/file.txt")).setListener(listener).setDataPath(file.toPath());
@@ -1647,7 +1581,7 @@ public abstract class HttpTransporterTest {
     @Test
     protected void testPut_FileHandleLeak() throws Exception {
         for (int i = 0; i < 100; i++) {
-            File src = TestFileUtils.createTempFile("upload");
+            File src = tempFile("upload");
             File dst = new File(repoDir, "file.txt");
             transporter.put(new PutTask(URI.create("repo/file.txt")).setDataPath(src.toPath()));
             assertTrue(src.delete(), i + ", " + src.getAbsolutePath());

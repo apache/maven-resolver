@@ -329,14 +329,16 @@ final class JettyTransporter extends AbstractTransporter implements HttpTranspor
                 attempt++;
                 continue;
             }
+            if (resume && response.getStatus() == PRECONDITION_FAILED) {
+                // the local contents are outdated: discard this response and fetch the whole file
+                listener.close();
+                resume = false;
+                continue;
+            }
             Map<TransferEvent.TransportPropertyKey, Object> transportProperties =
                     createTransportProperties(request, rawResponseHeaders);
             task.getListener().transportPropertiesAvailable(transportProperties);
             if (response.getStatus() >= MULTIPLE_CHOICES) {
-                if (resume && response.getStatus() == PRECONDITION_FAILED) {
-                    resume = false;
-                    continue;
-                }
                 rfc9457Reporter.generateException(listener);
             }
             break;

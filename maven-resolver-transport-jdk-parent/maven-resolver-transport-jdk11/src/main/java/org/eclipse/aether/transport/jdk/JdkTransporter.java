@@ -341,13 +341,14 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 prepare(request);
                 try {
                     response = send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+                    if (resume && response.statusCode() == PRECONDITION_FAILED) {
+                        // the local contents are outdated: discard this response and fetch the whole file
+                        closeBody(response);
+                        resume = false;
+                        continue;
+                    }
                     task.getListener().transportPropertiesAvailable(createTransportProperties(response));
                     if (response.statusCode() >= MULTIPLE_CHOICES) {
-                        if (resume && response.statusCode() == PRECONDITION_FAILED) {
-                            closeBody(response);
-                            resume = false;
-                            continue;
-                        }
                         rfc9457Reporter.generateException(response);
                     }
                 } catch (ConnectException e) {
@@ -689,8 +690,10 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         HttpVersion httpVersion = HttpTransporterUtils.getHttpVersion(session, repository);
         if (httpVersion == ConfigurationProperties.DEFAULT_HTTP_VERSION) {
             // Fall back to legacy JDK Transporter specific property when it is explicitly configured.
+            @SuppressWarnings("deprecation")
+            String legacyHttpVersionKey = CONFIG_PROP_HTTP_VERSION;
             String configuredLegacyHttpVersion = ConfigUtils.getString(
-                    session, null, CONFIG_PROP_HTTP_VERSION + "." + repository.getId(), CONFIG_PROP_HTTP_VERSION);
+                    session, null, legacyHttpVersionKey + "." + repository.getId(), legacyHttpVersionKey);
             if (configuredLegacyHttpVersion != null) {
                 return resolveHttpVersion(configuredLegacyHttpVersion);
             }

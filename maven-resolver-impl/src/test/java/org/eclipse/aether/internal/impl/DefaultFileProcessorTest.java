@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.aether.internal.test.util.TestFileUtils;
-import org.eclipse.aether.spi.io.FileProcessor.ProgressListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("deprecation")
 public class DefaultFileProcessorTest {
 
     @TempDir
@@ -90,11 +90,12 @@ public class DefaultFileProcessorTest {
         File target = new File(targetDir, "testProgressingChannel");
         target.delete();
         final AtomicInteger progressed = new AtomicInteger();
-        ProgressListener listener = new ProgressListener() {
-            public void progressed(ByteBuffer buffer) {
-                progressed.addAndGet(buffer.remaining());
-            }
-        };
+        org.eclipse.aether.spi.io.FileProcessor.ProgressListener listener =
+                new org.eclipse.aether.spi.io.FileProcessor.ProgressListener() {
+                    public void progressed(ByteBuffer buffer) {
+                        progressed.addAndGet(buffer.remaining());
+                    }
+                };
         fileProcessor.copy(file, target, listener);
         assertTrue(target.isFile(), "file was not created");
         assertEquals(4L, target.length(), "file was not fully copied");

@@ -67,7 +67,7 @@ public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsS
         final RepositorySystemLifecycle lifecycle = new DefaultRepositorySystemLifecycle();
         final FileTrustedChecksumsSourceSupport src = prepareSubject(lifecycle);
         final DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(h -> false);
-        final LocalRepository repository = new LocalRepository(work.toFile(), "simple");
+        final LocalRepository repository = new LocalRepository(work, "simple");
         session.setLocalRepositoryManager(new SimpleLocalRepositoryManagerFactory().newInstance(session, repository));
 
         final Sha1ChecksumAlgorithmFactory algorithmFactory = new Sha1ChecksumAlgorithmFactory();
@@ -120,7 +120,7 @@ public class SummaryFileTrustedChecksumsSourceTest extends FileTrustedChecksumsS
                 unsafeKeyFunctionFactory, new DefaultLocalPathComposer(), lifecycle, new PathProcessorSupport());
         final DefaultRepositorySystemSession session = new DefaultRepositorySystemSession(h -> false);
         session.setConfigProperty("aether.trustedChecksumsSource.summaryFile", Boolean.TRUE.toString());
-        final LocalRepository repository = new LocalRepository(work.toFile(), "simple");
+        final LocalRepository repository = new LocalRepository(work, "simple");
         session.setLocalRepositoryManager(new SimpleLocalRepositoryManagerFactory().newInstance(session, repository));
 
         final TrustedChecksumsSource.Writer writer = src.getTrustedArtifactChecksumsWriter(session);

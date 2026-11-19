@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.internal.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -28,7 +29,6 @@ import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.metadata.DefaultMetadata;
 import org.eclipse.aether.metadata.Metadata;
@@ -85,8 +85,9 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
     private Artifact addTrackedRemoteArtifact(LocalRepositoryManager manager) throws Exception {
         Artifact artifact = new DefaultArtifact("gid:aid:1.0");
         manager.add(session, new LocalArtifactRegistration(artifact, repository, Collections.singleton(context)));
-        Path file = basedir.resolve(manager.getPathForRemoteArtifact(artifact, repository, context));
-        TestFileUtils.writeString(file.toFile(), "artifact");
+        Path file = manager.getAbsolutePathForRemoteArtifact(artifact, repository, context);
+        Files.createDirectories(file.getParent());
+        Files.write(file, "artifact".getBytes(StandardCharsets.UTF_8));
         return artifact;
     }
 
@@ -109,6 +110,8 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
         assertTrue(manager.find(session, fromSameId).isAvailable());
     }
 
+    // asserts on the composed relative path, which only the deprecated getPathFor* methods expose
+    @SuppressWarnings("deprecation")
     @Test
     void trackingKeyFunctionDoesNotAffectPathComposition() throws Exception {
         LocalRepositoryManager manager = newManager();
@@ -153,6 +156,46 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
         LocalArtifactRequest fromImpostor =
                 new LocalArtifactRequest(artifact, Collections.singletonList(impostor), context);
         assertTrue(manager.find(session, fromImpostor).isAvailable());
+    }
+
+    private Path trackingFileFor(LocalRepositoryManager manager, Artifact artifact, String trackingFilename) {
+        return basedir.resolve(manager.getPathForRemoteArtifact(artifact, repository, context))
+                .getParent()
+                .resolve(trackingFilename);
+    }
+
+    @Test
+    void trackingFilenameFromCurrentKey() throws Exception {
+        session.setConfigProperty(EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_TRACKING_FILENAME, "_current.txt");
+        LocalRepositoryManager manager = newManager();
+        Artifact artifact = addTrackedRemoteArtifact(manager);
+
+        assertTrue(Files.exists(trackingFileFor(manager, artifact, "_current.txt")));
+        assertFalse(Files.exists(
+                trackingFileFor(manager, artifact, EnhancedLocalRepositoryManagerFactory.DEFAULT_TRACKING_FILENAME)));
+    }
+
+    @Test
+    void trackingFilenameFromLegacyKey() throws Exception {
+        // the Resolver 1.9.x name of the key is read as a fallback, like the other enhanced LRM keys
+        session.setConfigProperty("aether.enhancedLocalRepository.trackingFilename", "_legacy.txt");
+        LocalRepositoryManager manager = newManager();
+        Artifact artifact = addTrackedRemoteArtifact(manager);
+
+        assertTrue(Files.exists(trackingFileFor(manager, artifact, "_legacy.txt")));
+        assertFalse(Files.exists(
+                trackingFileFor(manager, artifact, EnhancedLocalRepositoryManagerFactory.DEFAULT_TRACKING_FILENAME)));
+    }
+
+    @Test
+    void currentKeyWinsOverLegacyKey() throws Exception {
+        session.setConfigProperty(EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_TRACKING_FILENAME, "_current.txt");
+        session.setConfigProperty("aether.enhancedLocalRepository.trackingFilename", "_legacy.txt");
+        LocalRepositoryManager manager = newManager();
+        Artifact artifact = addTrackedRemoteArtifact(manager);
+
+        assertTrue(Files.exists(trackingFileFor(manager, artifact, "_current.txt")));
+        assertFalse(Files.exists(trackingFileFor(manager, artifact, "_legacy.txt")));
     }
 
     @Test

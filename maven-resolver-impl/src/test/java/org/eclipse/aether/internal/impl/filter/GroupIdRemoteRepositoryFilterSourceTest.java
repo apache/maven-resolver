@@ -66,8 +66,7 @@ public class GroupIdRemoteRepositoryFilterSourceTest extends RemoteRepositoryFil
             DefaultRepositorySystemSession session, RemoteRepository remoteRepository, Artifact artifact) {
         DefaultRepositorySystemSession newSession = new DefaultRepositorySystemSession(session);
         try {
-            Artifact resolvedArtifact =
-                    artifact.setFile(Files.createTempFile("test", "tmp").toFile());
+            Artifact resolvedArtifact = artifact.setPath(Files.createTempFile("test", "tmp"));
             ArtifactResult artifactResult = new ArtifactResult(
                     new ArtifactRequest(resolvedArtifact, Collections.singletonList(remoteRepository), "context"));
             artifactResult.setArtifact(resolvedArtifact);

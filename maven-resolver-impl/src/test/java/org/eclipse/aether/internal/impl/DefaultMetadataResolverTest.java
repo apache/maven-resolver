@@ -21,6 +21,8 @@ package org.eclipse.aether.internal.impl;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -116,10 +118,15 @@ public class DefaultMetadataResolverTest {
         session.setRepositoryListener(listener);
     }
 
+    private static void writeString(File file, String contents) throws IOException {
+        Files.createDirectories(file.toPath().getParent());
+        Files.write(file.toPath(), contents.getBytes(StandardCharsets.UTF_8));
+    }
+
     @AfterEach
     void teardown() throws Exception {
         TestFileUtils.deleteFile(new File(new URI(repository.getUrl())));
-        TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
+        TestFileUtils.deleteFile(session.getLocalRepository().getBasePath().toFile());
     }
 
     @Test
@@ -141,11 +148,11 @@ public class DefaultMetadataResolverTest {
         connector.setExpectGet(metadata);
 
         // prepare "download"
-        File file = new File(
-                session.getLocalRepository().getBasedir(),
-                session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, repository, ""));
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForRemoteMetadata(metadata, repository, "")
+                .toFile();
 
-        TestFileUtils.writeString(file, file.getAbsolutePath());
+        writeString(file, file.getAbsolutePath());
 
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
@@ -156,10 +163,10 @@ public class DefaultMetadataResolverTest {
         assertSame(request, result.getRequest());
         assertNull(result.getException());
         assertNotNull(result.getMetadata());
-        assertNotNull(result.getMetadata().getFile());
+        assertNotNull(result.getMetadata().getPath());
 
-        assertEquals(file, result.getMetadata().getFile());
-        assertEquals(metadata, result.getMetadata().setFile(null));
+        assertEquals(file, result.getMetadata().getPath().toFile());
+        assertEquals(metadata, result.getMetadata().setPath(null));
 
         connector.assertSeenExpected();
         Set<Metadata> metadataRegistration =
@@ -180,7 +187,7 @@ public class DefaultMetadataResolverTest {
         assertEquals(EventType.METADATA_DOWNLOADED, event.getType());
         assertEquals(metadata, event.getMetadata());
         assertNull(event.getException());
-        assertNotNull(event.getFile());
+        assertNotNull(event.getPath());
     }
 
     @Test
@@ -199,11 +206,11 @@ public class DefaultMetadataResolverTest {
         };
         connectorProvider.setConnector(connector);
 
-        File file = new File(
-                session.getLocalRepository().getBasedir(),
-                session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, repository, ""));
-        TestFileUtils.writeString(file, file.getAbsolutePath());
-        metadata.setFile(file);
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForRemoteMetadata(metadata, repository, "")
+                .toFile();
+        writeString(file, file.getAbsolutePath());
+        metadata.setPath(file.toPath());
 
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         request.setDeleteLocalCopyIfMissing(true);
@@ -236,12 +243,13 @@ public class DefaultMetadataResolverTest {
     void testOfflineSessionResolveMetadata() throws IOException {
         session.setOffline(true);
 
-        String path = session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, repository, "");
-        File file = new File(session.getLocalRepository().getBasedir(), path);
-        TestFileUtils.writeString(file, file.getAbsolutePath());
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForRemoteMetadata(metadata, repository, "")
+                .toFile();
+        writeString(file, file.getAbsolutePath());
 
         // set file to use in TestLRM find()
-        metadata = metadata.setFile(file);
+        metadata = metadata.setPath(file.toPath());
 
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
@@ -251,10 +259,10 @@ public class DefaultMetadataResolverTest {
         assertSame(request, result.getRequest());
         assertNull(result.getException(), String.valueOf(result.getException()));
         assertNotNull(result.getMetadata());
-        assertNotNull(result.getMetadata().getFile());
+        assertNotNull(result.getMetadata().getPath());
 
-        assertEquals(file, result.getMetadata().getFile());
-        assertEquals(metadata.setFile(null), result.getMetadata().setFile(null));
+        assertEquals(file, result.getMetadata().getPath().toFile());
+        assertEquals(metadata.setPath(null), result.getMetadata().setPath(null));
 
         connector.assertSeenExpected();
     }
@@ -262,9 +270,10 @@ public class DefaultMetadataResolverTest {
     @Test
     void testFavorLocal() throws IOException {
         lrm.add(session, new LocalMetadataRegistration(metadata));
-        String path = session.getLocalRepositoryManager().getPathForLocalMetadata(metadata);
-        File file = new File(session.getLocalRepository().getBasedir(), path);
-        TestFileUtils.writeString(file, file.getAbsolutePath());
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForLocalMetadata(metadata)
+                .toFile();
+        writeString(file, file.getAbsolutePath());
 
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         request.setFavorLocalRepository(true);
@@ -296,11 +305,11 @@ public class DefaultMetadataResolverTest {
         connector.setExpectGet(metadata);
 
         // prepare "download"
-        File file = new File(
-                session.getLocalRepository().getBasedir(),
-                session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, repository, ""));
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForRemoteMetadata(metadata, repository, "")
+                .toFile();
 
-        TestFileUtils.writeString(file, file.getAbsolutePath());
+        writeString(file, file.getAbsolutePath());
 
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
@@ -311,10 +320,10 @@ public class DefaultMetadataResolverTest {
         assertSame(request, result.getRequest());
         assertNull(result.getException());
         assertNotNull(result.getMetadata());
-        assertNotNull(result.getMetadata().getFile());
+        assertNotNull(result.getMetadata().getPath());
 
-        assertEquals(file, result.getMetadata().getFile());
-        assertEquals(metadata, result.getMetadata().setFile(null));
+        assertEquals(file, result.getMetadata().getPath().toFile());
+        assertEquals(metadata, result.getMetadata().setPath(null));
 
         connector.assertSeenExpected();
         Set<Metadata> metadataRegistration =
@@ -330,11 +339,11 @@ public class DefaultMetadataResolverTest {
         // connector.setExpectGet( metadata ); // should not see it
 
         // prepare "download"
-        File file = new File(
-                session.getLocalRepository().getBasedir(),
-                session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, repository, ""));
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForRemoteMetadata(metadata, repository, "")
+                .toFile();
 
-        TestFileUtils.writeString(file, file.getAbsolutePath());
+        writeString(file, file.getAbsolutePath());
 
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
@@ -357,11 +366,11 @@ public class DefaultMetadataResolverTest {
         connector.setExpectGet(metadata);
 
         // prepare "download"
-        File file = new File(
-                session.getLocalRepository().getBasedir(),
-                session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, repository, ""));
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForRemoteMetadata(metadata, repository, "")
+                .toFile();
 
-        TestFileUtils.writeString(file, file.getAbsolutePath());
+        writeString(file, file.getAbsolutePath());
 
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));
@@ -372,10 +381,10 @@ public class DefaultMetadataResolverTest {
         assertSame(request, result.getRequest());
         assertNull(result.getException());
         assertNotNull(result.getMetadata());
-        assertNotNull(result.getMetadata().getFile());
+        assertNotNull(result.getMetadata().getPath());
 
-        assertEquals(file, result.getMetadata().getFile());
-        assertEquals(metadata, result.getMetadata().setFile(null));
+        assertEquals(file, result.getMetadata().getPath().toFile());
+        assertEquals(metadata, result.getMetadata().setPath(null));
 
         connector.assertSeenExpected();
         Set<Metadata> metadataRegistration =
@@ -390,11 +399,11 @@ public class DefaultMetadataResolverTest {
         // connector.setExpectGet( metadata ); // should not see it
 
         // prepare "download"
-        File file = new File(
-                session.getLocalRepository().getBasedir(),
-                session.getLocalRepositoryManager().getPathForRemoteMetadata(metadata, repository, ""));
+        File file = session.getLocalRepositoryManager()
+                .getAbsolutePathForRemoteMetadata(metadata, repository, "")
+                .toFile();
 
-        TestFileUtils.writeString(file, file.getAbsolutePath());
+        writeString(file, file.getAbsolutePath());
 
         MetadataRequest request = new MetadataRequest(metadata, repository, "");
         List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(request));

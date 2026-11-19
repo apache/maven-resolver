@@ -18,7 +18,7 @@
  */
 package org.apache.maven.resolver.examples.resolver;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.eclipse.aether.graph.DependencyNode;
@@ -27,10 +27,10 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 public class ResolverResult {
     private final DependencyNode root;
-    private final List<File> resolvedFiles;
+    private final List<Path> resolvedFiles;
     private final String resolvedClassPath;
 
-    public ResolverResult(DependencyNode root, List<File> resolvedFiles, String resolvedClassPath) {
+    public ResolverResult(DependencyNode root, List<Path> resolvedFiles, String resolvedClassPath) {
         this.root = root;
         this.resolvedFiles = resolvedFiles;
         this.resolvedClassPath = resolvedClassPath;
@@ -40,7 +40,7 @@ public class ResolverResult {
         return root;
     }
 
-    public List<File> getResolvedFiles() {
+    public List<Path> getResolvedFiles() {
         return resolvedFiles;
     }
 

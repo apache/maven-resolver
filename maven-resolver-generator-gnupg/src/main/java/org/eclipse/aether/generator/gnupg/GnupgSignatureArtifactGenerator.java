@@ -84,6 +84,9 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
 
     @Override
     public synchronized Collection<? extends Artifact> generate(Collection<? extends Artifact> generatedArtifacts) {
+        if (closed.get()) {
+            throw new IllegalStateException("generator " + generatorId() + " is closed");
+        }
         try {
             artifacts.addAll(generatedArtifacts);
 
@@ -152,7 +155,7 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         if (closed.compareAndSet(false, true)) {
             signatureTempFiles.forEach(p -> {
                 try {
@@ -166,7 +169,8 @@ final class GnupgSignatureArtifactGenerator implements ArtifactGenerator {
 
     private void sign(InputStream content, OutputStream signature) throws IOException {
         PGPSignatureGenerator sGen = new PGPSignatureGenerator(
-                new BcPGPContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA512));
+                new BcPGPContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA512),
+                secretKey.getPublicKey());
         try {
             sGen.init(PGPSignature.BINARY_DOCUMENT, privateKey);
             sGen.setHashedSubpackets(hashSubPackets);
