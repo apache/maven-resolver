@@ -194,6 +194,13 @@ public abstract class AbstractWagonTransporterTest {
     }
 
     @Test
+    void testGet_ToFileKeepsRemoteLastModified() throws Exception {
+        File file = createTempFile("failure");
+        transporter.get(new GetTask(URI.create("file.txt")).setDataPath(file.toPath()));
+        assertEquals(MemWagonUtils.LAST_MODIFIED, file.lastModified());
+    }
+
+    @Test
     void testGet_EmptyResource() throws Exception {
         File file = createTempFile("failure");
         assertTrue(file.delete() && !file.exists());
