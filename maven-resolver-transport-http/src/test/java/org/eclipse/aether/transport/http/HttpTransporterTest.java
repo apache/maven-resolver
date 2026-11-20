@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
@@ -32,7 +33,9 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -80,18 +83,18 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.Timeout;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  */
@@ -105,8 +108,7 @@ public class HttpTransporterTest {
         System.setProperty("javax.net.ssl.keyStorePassword", "client-pwd");
     }
 
-    @Rule
-    public TestName testName = new TestName();
+    private String testName;
 
     private DefaultRepositorySystemSession session;
 
@@ -139,9 +141,13 @@ public class HttpTransporterTest {
 
     private static final long OLD_FILE_TIMESTAMP = 160660800000L;
 
-    @Before
-    public void setUp() throws Exception {
-        System.out.println("=== " + testName.getMethodName() + " ===");
+    @BeforeEach
+    public void setUp(TestInfo testInfo) throws Exception {
+        Optional<Method> testMethod = testInfo.getTestMethod();
+        if (testMethod.isPresent()) {
+            this.testName = testMethod.get().getName();
+        }
+        System.out.println("=== " + testName + " ===");
         session = TestUtils.newSession();
         factory = new HttpTransporterFactory();
         repoDir = TestFileUtils.createTempDir();
@@ -157,7 +163,7 @@ public class HttpTransporterTest {
         newTransporter(httpServer.getHttpUrl());
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (transporter != null) {
             transporter.close();
@@ -696,7 +702,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -711,7 +717,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("test", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -727,7 +733,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(7L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("oldTest", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
         assertEquals(file.lastModified(), OLD_FILE_TIMESTAMP);
     }
@@ -769,7 +775,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -801,7 +807,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -830,7 +836,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -861,7 +867,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -876,12 +882,10 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
         assertEquals(
-                httpServer.getLogEntries().toString(),
-                1,
-                httpServer.getLogEntries().size());
+                1, httpServer.getLogEntries().size(), httpServer.getLogEntries().toString());
     }
 
     @Test
@@ -894,7 +898,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(4L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals(task.getDataString(), new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -910,7 +914,7 @@ public class HttpTransporterTest {
         assertEquals(1L, listener.startedCount);
         assertEquals(2L, listener.dataOffset);
         assertEquals(9, listener.dataLength);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("sumable", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -927,7 +931,7 @@ public class HttpTransporterTest {
         assertEquals(1L, listener.startedCount);
         assertEquals(0L, listener.dataOffset);
         assertEquals(9, listener.dataLength);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("resumable", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -944,7 +948,7 @@ public class HttpTransporterTest {
         assertEquals(1L, listener.startedCount);
         assertEquals(0L, listener.dataOffset);
         assertEquals(9, listener.dataLength);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("resumable", new String(listener.baos.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -973,7 +977,7 @@ public class HttpTransporterTest {
         for (int i = 0; i < 100; i++) {
             File file = TestFileUtils.createTempFile("failure");
             transporter.get(new GetTask(URI.create("repo/file.txt")).setDataFile(file));
-            assertTrue(i + ", " + file.getAbsolutePath(), file.delete());
+            assertTrue(file.delete(), i + ", " + file.getAbsolutePath());
         }
     }
 
@@ -1042,7 +1046,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -1056,7 +1060,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -1082,7 +1086,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(2L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("OK", TestFileUtils.readString(new File(repoDir, "some space.txt")));
     }
 
@@ -1101,7 +1105,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -1123,7 +1127,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -1143,7 +1147,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -1164,7 +1168,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount); // w/ expectContinue enabled would have here 2
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -1187,7 +1191,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -1224,7 +1228,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -1263,7 +1267,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "file.txt")));
     }
 
@@ -1281,7 +1285,7 @@ public class HttpTransporterTest {
         assertEquals(0L, listener.dataOffset);
         assertEquals(6L, listener.dataLength);
         assertEquals(1, listener.startedCount);
-        assertTrue("Count: " + listener.progressedCount, listener.progressedCount > 0);
+        assertTrue(listener.progressedCount > 0, "Count: " + listener.progressedCount);
         assertEquals("upload", TestFileUtils.readString(new File(repoDir, "dir1/dir2/file.txt")));
 
         assertEquals(5, httpServer.getLogEntries().size());
@@ -1301,8 +1305,8 @@ public class HttpTransporterTest {
             File src = TestFileUtils.createTempFile("upload");
             File dst = new File(repoDir, "file.txt");
             transporter.put(new PutTask(URI.create("repo/file.txt")).setDataFile(src));
-            assertTrue(i + ", " + src.getAbsolutePath(), src.delete());
-            assertTrue(i + ", " + dst.getAbsolutePath(), dst.delete());
+            assertTrue(src.delete(), i + ", " + src.getAbsolutePath());
+            assertTrue(dst.delete(), i + ", " + dst.getAbsolutePath());
         }
     }
 
@@ -1419,7 +1423,8 @@ public class HttpTransporterTest {
         assertEquals(1, httpServer.getLogEntries().size()); // put w/ auth
     }
 
-    @Test(timeout = 20000L)
+    @Test
+    @Timeout(value = 20000L, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void testConcurrency() throws Exception {
         httpServer.setAuthentication("testuser", "testpass");
         auth = new AuthenticationBuilder()
@@ -1455,10 +1460,11 @@ public class HttpTransporterTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        assertNull(String.valueOf(error.get()), error.get());
+        assertNull(error.get(), String.valueOf(error.get()));
     }
 
-    @Test(timeout = 1000L)
+    @Test
+    @Timeout(value = 1000L, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void testConnectTimeout() throws Exception {
         session.setConfigProperty(ConfigurationProperties.CONNECT_TIMEOUT, 100);
         int port = 1;
@@ -1471,7 +1477,8 @@ public class HttpTransporterTest {
         }
     }
 
-    @Test(timeout = 1000L)
+    @Test
+    @Timeout(value = 1000L, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void testRequestTimeout() throws Exception {
         session.setConfigProperty(ConfigurationProperties.REQUEST_TIMEOUT, 100);
         ServerSocket server = new ServerSocket(0);
@@ -1511,7 +1518,7 @@ public class HttpTransporterTest {
         assertEquals(1, httpServer.getLogEntries().size());
         for (HttpServer.LogEntry log : httpServer.getLogEntries()) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
-                assertEquals(entry.getKey(), entry.getValue(), log.headers.get(entry.getKey()));
+                assertEquals(entry.getValue(), log.headers.get(entry.getKey()), entry.getKey());
             }
         }
     }
@@ -1622,7 +1629,7 @@ public class HttpTransporterTest {
         PoolStats stats = ((ConnPoolControl<?>)
                         ((HttpTransporter) transporter).getState().getConnectionManager())
                 .getTotalStats();
-        assertEquals(stats.toString(), 1, stats.getAvailable());
+        assertEquals(1, stats.getAvailable(), stats.toString());
     }
 
     @Test
@@ -1639,17 +1646,17 @@ public class HttpTransporterTest {
         PoolStats stats = ((ConnPoolControl<?>)
                         ((HttpTransporter) transporter).getState().getConnectionManager())
                 .getTotalStats();
-        assertEquals(stats.toString(), 0, stats.getAvailable());
+        assertEquals(0, stats.getAvailable(), stats.toString());
     }
 
-    @Test(expected = NoTransporterException.class)
+    @Test
     public void testInitBadProtocol() throws Exception {
-        newTransporter("bad:/void");
+        assertThrows(NoTransporterException.class, () -> newTransporter("bad:/void"));
     }
 
-    @Test(expected = NoTransporterException.class)
+    @Test
     public void testInitBadUrl() throws Exception {
-        newTransporter("http://localhost:NaN");
+        assertThrows(NoTransporterException.class, () -> newTransporter("http://localhost:NaN"));
     }
 
     @Test

@@ -29,12 +29,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.aether.version.Version;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  */
@@ -452,8 +452,9 @@ public class GenericVersionTest extends AbstractVersionTest {
         // Sorted output is non-decreasing under compareTo (sanity-checks the comparator itself).
         for (int i = 0; i + 1 < sorted.size(); i++) {
             assertTrue(
-                    "sorted[" + i + "]=" + sorted.get(i) + " should be <= sorted[" + (i + 1) + "]=" + sorted.get(i + 1),
-                    sorted.get(i).compareTo(sorted.get(i + 1)) <= 0);
+                    sorted.get(i).compareTo(sorted.get(i + 1)) <= 0,
+                    "sorted[" + i + "]=" + sorted.get(i) + " should be <= sorted[" + (i + 1) + "]="
+                            + sorted.get(i + 1));
         }
 
         // All string-prefixed entries must sort before all numeric-prefixed entries, and the specific

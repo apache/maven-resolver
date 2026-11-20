@@ -19,15 +19,18 @@
 package org.eclipse.aether;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DefaultSessionDataTest {
 
@@ -49,14 +52,14 @@ public class DefaultSessionDataTest {
         return data.computeIfAbsent(key, supplier);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testGetNullKey() {
-        get(null);
+        assertThrows(RuntimeException.class, () -> get(null));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testSetNullKey() {
-        set(null, "data");
+        assertThrows(RuntimeException.class, () -> set(null, "data"));
     }
 
     @Test
@@ -101,7 +104,8 @@ public class DefaultSessionDataTest {
         assertEquals("value", computeIfAbsent(key, () -> "changed"));
     }
 
-    @Test(timeout = 10000L)
+    @Test
+    @Timeout(value = 10000L, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void testConcurrency() throws Exception {
         final AtomicReference<Throwable> error = new AtomicReference<>();
         Thread[] threads = new Thread[20];
@@ -128,6 +132,6 @@ public class DefaultSessionDataTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        assertNull(String.valueOf(error.get()), error.get());
+        assertNull(error.get(), String.valueOf(error.get()));
     }
 }

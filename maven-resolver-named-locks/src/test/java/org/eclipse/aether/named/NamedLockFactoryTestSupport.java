@@ -18,20 +18,22 @@
  */
 package org.eclipse.aether.named;
 
+import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.Timeout;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * UT support for {@link NamedLockFactory}.
@@ -40,39 +42,40 @@ public abstract class NamedLockFactoryTestSupport {
 
     protected static NamedLockFactory namedLockFactory;
 
-    @Rule
-    public TestName testName = new TestName();
+    protected String testName;
 
     protected String lockName() {
-        return testName.getMethodName();
+        return testName;
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testFailure() throws InterruptedException {
-        // note: set system property "aether.named.diagnostic.enabled" to "true" to have log output
-        // this test does NOT assert its presence, only the proper flow
-        Thread t1 = new Thread(() -> {
-            try {
-                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
-                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+        assertThrows(IllegalStateException.class, () -> {
+            // note: set system property "aether.named.diagnostic.enabled" to "true" to have log output
+            // this test does NOT assert its presence, only the proper flow
+            Thread t1 = new Thread(() -> {
+                try {
+                    namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                    namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            Thread t2 = new Thread(() -> {
+                try {
+                    namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                    namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                    namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            t1.start();
+            t2.start();
+            t1.join();
+            t2.join();
+            throw namedLockFactory.onFailure(new IllegalStateException("failure"));
         });
-        Thread t2 = new Thread(() -> {
-            try {
-                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
-                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
-                namedLockFactory.getLock(lockName()).lockShared(1L, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
-        throw namedLockFactory.onFailure(new IllegalStateException("failure"));
     }
 
     @Test
@@ -80,30 +83,32 @@ public abstract class NamedLockFactoryTestSupport {
         final String name = lockName();
         try (NamedLock one = namedLockFactory.getLock(name);
                 NamedLock two = namedLockFactory.getLock(name)) {
-            assertThat(one, sameInstance(two));
+            assertSame(one, two);
             one.close();
             two.close();
 
             try (NamedLock three = namedLockFactory.getLock(name)) {
-                assertThat(three, not(sameInstance(two)));
+                assertNotSame(three, two);
             }
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void unlockWoLock() {
-        final String name = lockName();
-        try (NamedLock one = namedLockFactory.getLock(name)) {
-            one.unlock();
-        }
+        assertThrows(IllegalStateException.class, () -> {
+            final String name = lockName();
+            try (NamedLock one = namedLockFactory.getLock(name)) {
+                one.unlock();
+            }
+        });
     }
 
     @Test
     public void wwBoxing() throws InterruptedException {
         final String name = lockName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
-            assertThat(one.lockExclusively(1L, TimeUnit.MILLISECONDS), is(true));
-            assertThat(one.lockExclusively(1L, TimeUnit.MILLISECONDS), is(true));
+            assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
+            assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
             one.unlock();
             one.unlock();
         }
@@ -113,8 +118,8 @@ public abstract class NamedLockFactoryTestSupport {
     public void rrBoxing() throws InterruptedException {
         final String name = lockName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
-            assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
-            assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
+            assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
+            assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             one.unlock();
             one.unlock();
         }
@@ -124,8 +129,8 @@ public abstract class NamedLockFactoryTestSupport {
     public void wrBoxing() throws InterruptedException {
         final String name = lockName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
-            assertThat(one.lockExclusively(1L, TimeUnit.MILLISECONDS), is(true));
-            assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
+            assertTrue(one.lockExclusively(1L, TimeUnit.MILLISECONDS));
+            assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             one.unlock();
             one.unlock();
         }
@@ -135,7 +140,7 @@ public abstract class NamedLockFactoryTestSupport {
     public void rwBoxing() throws InterruptedException {
         final String name = lockName();
         try (NamedLock one = namedLockFactory.getLock(name)) {
-            assertThat(one.lockShared(1L, TimeUnit.MILLISECONDS), is(true));
+            assertTrue(one.lockShared(1L, TimeUnit.MILLISECONDS));
             try {
                 one.lockExclusively(1L, TimeUnit.MILLISECONDS);
             } catch (LockUpgradeNotSupportedException e) {
@@ -145,7 +150,8 @@ public abstract class NamedLockFactoryTestSupport {
         }
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void sharedAccess() throws InterruptedException {
         final String name = lockName();
         CountDownLatch winners = new CountDownLatch(2); // we expect 2 winners
@@ -160,7 +166,8 @@ public abstract class NamedLockFactoryTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void exclusiveAccess() throws InterruptedException {
         final String name = lockName();
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
@@ -175,7 +182,8 @@ public abstract class NamedLockFactoryTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void mixedAccess() throws InterruptedException {
         final String name = lockName();
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
@@ -190,7 +198,8 @@ public abstract class NamedLockFactoryTestSupport {
         losers.await();
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void fullyConsumeLockTime() throws InterruptedException {
         long start = System.nanoTime();
         final String name = lockName();
@@ -207,17 +216,18 @@ public abstract class NamedLockFactoryTestSupport {
         long end = System.nanoTime();
         long duration = end - start;
         long expectedDuration = TimeUnit.MILLISECONDS.toNanos(ACCESS_WAIT_MILLIS);
-        assertThat(duration, greaterThanOrEqualTo(expectedDuration)); // equal in ideal case
+        assertTrue(duration >= expectedDuration); // equal in ideal case
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void releasedExclusiveAllowAccess() throws InterruptedException {
         final String name = lockName();
         CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
         CountDownLatch losers = new CountDownLatch(0); // we expect 0 loser
         Thread t1 = new Thread(new Access(namedLockFactory, name, true, winners, losers));
         try (NamedLock namedLock = namedLockFactory.getLock(name)) {
-            assertThat(namedLock.lockExclusively(50L, TimeUnit.MILLISECONDS), is(true));
+            assertTrue(namedLock.lockExclusively(50L, TimeUnit.MILLISECONDS));
             try {
                 t1.start();
                 Thread.sleep(50L);
@@ -269,8 +279,16 @@ public abstract class NamedLockFactoryTestSupport {
                     winner.await();
                 }
             } catch (InterruptedException e) {
-                Assert.fail(e.getMessage());
+                fail(e.getMessage());
             }
+        }
+    }
+
+    @BeforeEach
+    public void setup(TestInfo testInfo) {
+        Optional<Method> testMethod = testInfo.getTestMethod();
+        if (testMethod.isPresent()) {
+            this.testName = testMethod.get().getName();
         }
     }
 }

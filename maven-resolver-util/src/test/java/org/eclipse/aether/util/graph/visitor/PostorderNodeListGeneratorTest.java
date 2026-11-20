@@ -19,7 +19,7 @@
 package org.eclipse.aether.util.graph.visitor;
 
 import org.eclipse.aether.graph.DependencyNode;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class PostorderNodeListGeneratorTest extends AbstractDepthFirstNodeListGeneratorTestSupport {
 

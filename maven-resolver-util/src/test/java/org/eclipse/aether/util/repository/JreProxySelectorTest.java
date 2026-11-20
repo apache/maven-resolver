@@ -35,13 +35,13 @@ import org.eclipse.aether.repository.AuthenticationContext;
 import org.eclipse.aether.repository.Proxy;
 import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class JreProxySelectorTest {
 
@@ -54,12 +54,12 @@ public class JreProxySelectorTest {
 
     private java.net.ProxySelector original;
 
-    @Before
+    @BeforeEach
     public void init() {
         original = java.net.ProxySelector.getDefault();
     }
 
-    @After
+    @AfterEach
     public void exit() {
         java.net.ProxySelector.setDefault(original);
         Authenticator.setDefault(null);

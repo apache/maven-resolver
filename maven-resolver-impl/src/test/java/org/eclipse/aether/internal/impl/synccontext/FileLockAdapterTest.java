@@ -20,10 +20,10 @@ package org.eclipse.aether.internal.impl.synccontext;
 
 import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
 public class FileLockAdapterTest extends NamedLockFactoryAdapterTestSupport {
-    @BeforeClass
+    @BeforeAll
     public static void createNamedLockFactory() {
         nameMapper = NameMappers.fileGavNameMapper();
         namedLockFactory = new FileLockNamedLockFactory();

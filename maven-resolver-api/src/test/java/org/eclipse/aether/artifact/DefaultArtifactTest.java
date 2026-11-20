@@ -23,12 +23,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  */
@@ -87,14 +88,18 @@ public class DefaultArtifactTest {
         assertEquals("cls", a.getClassifier());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testDefaultArtifactContainsGroupAndArtifactOnly() {
-        new DefaultArtifact("gid:aid");
+        assertThrows(IllegalArgumentException.class, () -> {
+            new DefaultArtifact("gid:aid");
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testDefaultArtifactContainsGroupOnly() {
-        new DefaultArtifact("gid");
+        assertThrows(IllegalArgumentException.class, () -> {
+            new DefaultArtifact("gid");
+        });
     }
 
     @Test
@@ -170,15 +175,15 @@ public class DefaultArtifactTest {
     @Test
     public void testIsSnapshot() {
         Artifact a = new DefaultArtifact("gid:aid:ext:cls:1.0");
-        assertFalse(a.getVersion(), a.isSnapshot());
+        assertFalse(a.isSnapshot(), a.getVersion());
 
         a = new DefaultArtifact("gid:aid:ext:cls:1.0-SNAPSHOT");
-        assertTrue(a.getVersion(), a.isSnapshot());
+        assertTrue(a.isSnapshot(), a.getVersion());
 
         a = new DefaultArtifact("gid:aid:ext:cls:1.0-20101116.150650-3");
-        assertTrue(a.getVersion(), a.isSnapshot());
+        assertTrue(a.isSnapshot(), a.getVersion());
 
         a = new DefaultArtifact("gid:aid:ext:cls:1.0-20101116x150650-3");
-        assertFalse(a.getVersion(), a.isSnapshot());
+        assertFalse(a.isSnapshot(), a.getVersion());
     }
 }

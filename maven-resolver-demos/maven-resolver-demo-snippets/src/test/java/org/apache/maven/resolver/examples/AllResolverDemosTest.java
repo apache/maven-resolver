@@ -19,7 +19,7 @@
 package org.apache.maven.resolver.examples;
 
 import org.apache.maven.resolver.examples.util.Booter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Runs all demos at once as part of UT.

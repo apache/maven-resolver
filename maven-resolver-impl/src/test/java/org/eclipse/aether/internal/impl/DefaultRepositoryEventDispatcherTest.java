@@ -27,10 +27,10 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  */
@@ -55,12 +55,12 @@ public class DefaultRepositoryEventDispatcherTest {
 
             dispatcher.dispatch(event);
 
-            assertNotNull("not handled: " + type, handler.methodName);
+            assertNotNull(handler.methodName, "not handled: " + type);
 
             assertEquals(
-                    "badly handled: " + type,
                     type.name().replace("_", "").toLowerCase(Locale.ENGLISH),
-                    handler.methodName.toLowerCase(Locale.ENGLISH));
+                    handler.methodName.toLowerCase(Locale.ENGLISH),
+                    "badly handled: " + type);
         }
     }
 

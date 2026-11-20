@@ -30,12 +30,13 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  */
@@ -45,17 +46,19 @@ public class IniArtifactDescriptorReaderTest {
 
     private RepositorySystemSession session;
 
-    @Before
+    @BeforeEach
     public void setup() {
         reader = new IniArtifactDescriptorReader("org/eclipse/aether/internal/test/util/");
         session = TestUtils.newSession();
     }
 
-    @Test(expected = ArtifactDescriptorException.class)
-    public void testMissingDescriptor() throws ArtifactDescriptorException {
-        Artifact art = new DefaultArtifact("missing:aid:ver:ext");
-        ArtifactDescriptorRequest request = new ArtifactDescriptorRequest(art, null, "");
-        reader.readArtifactDescriptor(session, request);
+    @Test
+    public void testMissingDescriptor() {
+        assertThrows(ArtifactDescriptorException.class, () -> {
+            Artifact art = new DefaultArtifact("missing:aid:ver:ext");
+            ArtifactDescriptorRequest request = new ArtifactDescriptorRequest(art, null, "");
+            reader.readArtifactDescriptor(session, request);
+        });
     }
 
     @Test

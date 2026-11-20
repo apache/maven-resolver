@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -25,16 +26,15 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class FileUtilsTest {
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    private File temporaryFolder;
 
     /**
      * A time in the past, in whole seconds, as file systems differ in the precision they store.
@@ -44,7 +44,7 @@ public class FileUtilsTest {
 
     @Test
     public void collocatedTempFileMoveKeepsLastModifiedOfNewFile() throws IOException {
-        Path target = temporaryFolder.getRoot().toPath().resolve("target.txt");
+        Path target = temporaryFolder.toPath().resolve("target.txt");
 
         moveWithLastModified(target, "content");
 
@@ -54,7 +54,7 @@ public class FileUtilsTest {
 
     @Test
     public void collocatedTempFileMoveKeepsLastModifiedOfReplacedFile() throws IOException {
-        Path target = temporaryFolder.newFile("target.txt").toPath();
+        Path target = newFile(temporaryFolder, "target.txt").toPath();
         Files.write(target, "old content".getBytes(StandardCharsets.UTF_8));
 
         moveWithLastModified(target, "new content");
@@ -69,7 +69,7 @@ public class FileUtilsTest {
     @Test
     public void copyKeepsLastModifiedOfNewFile() throws IOException {
         Path source = sourceWithLastModified("content");
-        Path target = temporaryFolder.getRoot().toPath().resolve("target.txt");
+        Path target = temporaryFolder.toPath().resolve("target.txt");
 
         FileUtils.copy(source, target);
 
@@ -83,7 +83,7 @@ public class FileUtilsTest {
     @Test
     public void copyKeepsLastModifiedOfReplacedFile() throws IOException {
         Path source = sourceWithLastModified("new content");
-        Path target = temporaryFolder.newFile("target.txt").toPath();
+        Path target = newFile(temporaryFolder, "target.txt").toPath();
         Files.write(target, "old content".getBytes(StandardCharsets.UTF_8));
 
         FileUtils.copy(source, target);
@@ -108,7 +108,7 @@ public class FileUtilsTest {
     }
 
     private Path sourceWithLastModified(String content) throws IOException {
-        Path source = temporaryFolder.newFile("source.txt").toPath();
+        Path source = newFile(temporaryFolder, "source.txt").toPath();
         Files.write(source, content.getBytes(StandardCharsets.UTF_8));
         Files.setLastModifiedTime(source, LAST_MODIFIED);
         return source;
@@ -116,5 +116,11 @@ public class FileUtilsTest {
 
     private static String read(Path file) throws IOException {
         return new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+    }
+
+    private static File newFile(File parent, String child) throws IOException {
+        File result = new File(parent, child);
+        result.createNewFile();
+        return result;
     }
 }

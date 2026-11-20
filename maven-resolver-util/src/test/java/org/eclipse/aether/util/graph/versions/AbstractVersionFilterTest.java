@@ -31,22 +31,22 @@ import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionScheme;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AbstractVersionFilterTest {
 
     protected DefaultRepositorySystemSession session;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         session = TestUtils.newSession();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         session = null;
     }

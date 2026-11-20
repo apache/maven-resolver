@@ -35,16 +35,16 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.eclipse.aether.util.repository.DefaultMirrorSelector;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  *
@@ -55,7 +55,7 @@ public class DefaultRemoteRepositoryManagerTest {
 
     private DefaultRemoteRepositoryManager manager;
 
-    @Before
+    @BeforeEach
     public void setup() {
         session = TestUtils.newSession();
         session.setChecksumPolicy(null);
@@ -65,7 +65,7 @@ public class DefaultRemoteRepositoryManagerTest {
         manager.setChecksumPolicyProvider(new DefaultChecksumPolicyProvider());
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         manager = null;
         session = null;
@@ -77,17 +77,17 @@ public class DefaultRemoteRepositoryManagerTest {
     }
 
     private void assertEqual(RemoteRepository expected, RemoteRepository actual) {
-        assertEquals("id", expected.getId(), actual.getId());
-        assertEquals("url", expected.getUrl(), actual.getUrl());
-        assertEquals("type", expected.getContentType(), actual.getContentType());
+        assertEquals(expected.getId(), actual.getId(), "id");
+        assertEquals(expected.getUrl(), actual.getUrl(), "url");
+        assertEquals(expected.getContentType(), actual.getContentType(), "type");
         assertEqual(expected.getPolicy(false), actual.getPolicy(false));
         assertEqual(expected.getPolicy(true), actual.getPolicy(true));
     }
 
     private void assertEqual(RepositoryPolicy expected, RepositoryPolicy actual) {
-        assertEquals("enabled", expected.isEnabled(), actual.isEnabled());
-        assertEquals("checksums", expected.getChecksumPolicy(), actual.getChecksumPolicy());
-        assertEquals("updates", expected.getUpdatePolicy(), actual.getUpdatePolicy());
+        assertEquals(expected.isEnabled(), actual.isEnabled(), "enabled");
+        assertEquals(expected.getChecksumPolicy(), actual.getChecksumPolicy(), "checksums");
+        assertEquals(expected.getUpdatePolicy(), actual.getUpdatePolicy(), "updates");
     }
 
     @Test

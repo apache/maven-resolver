@@ -71,17 +71,17 @@ import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  */
@@ -102,7 +102,7 @@ public class DefaultArtifactResolverTest {
 
     private RemoteRepositoryFilterManager remoteRepositoryFilterManager;
 
-    @Before
+    @BeforeEach
     public void setup() {
         remoteRepositoryFilterSources = new HashMap<>();
         remoteRepositoryFilterManager = new DefaultRemoteRepositoryFilterManager(remoteRepositoryFilterSources);
@@ -130,7 +130,7 @@ public class DefaultArtifactResolverTest {
         repositoryConnectorProvider.setConnector(connector);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         if (session.getLocalRepository() != null) {
             TestFileUtils.deleteFile(session.getLocalRepository().getBasedir());
@@ -405,8 +405,8 @@ public class DefaultArtifactResolverTest {
             connector.assertSeenExpected();
             for (ArtifactResult result : e.getResults()) {
                 Throwable t = result.getExceptions().get(0);
-                assertTrue(t.toString(), t instanceof ArtifactNotFoundException);
-                assertTrue(t.toString(), t.getMessage().contains("cached"));
+                assertTrue(t instanceof ArtifactNotFoundException, t.toString());
+                assertTrue(t.getMessage().contains("cached"), t.toString());
             }
         }
     }
@@ -477,7 +477,7 @@ public class DefaultArtifactResolverTest {
 
         ArtifactResult result = resolver.resolveArtifact(session, request);
 
-        assertTrue("exception on resolveArtifact", result.getExceptions().isEmpty());
+        assertTrue(result.getExceptions().isEmpty(), "exception on resolveArtifact");
 
         Artifact resolved = result.getArtifact();
         assertNotNull(resolved.getFile());
@@ -555,7 +555,7 @@ public class DefaultArtifactResolverTest {
         resolver.resolveArtifact(session, request);
 
         List<RepositoryEvent> events = listener.getEvents();
-        assertEquals(events.toString(), 4, events.size());
+        assertEquals(4, events.size(), events.toString());
         RepositoryEvent event = events.get(0);
         assertEquals(EventType.ARTIFACT_RESOLVING, event.getType());
         assertNull(event.getException());
@@ -607,7 +607,7 @@ public class DefaultArtifactResolverTest {
         }
 
         List<RepositoryEvent> events = listener.getEvents();
-        assertEquals(events.toString(), 4, events.size());
+        assertEquals(4, events.size(), events.toString());
 
         RepositoryEvent event = events.get(0);
         assertEquals(artifact, event.getArtifact());
@@ -1045,8 +1045,8 @@ public class DefaultArtifactResolverTest {
         }
 
         // distinct instances for the shared and the exclusive context: each must be closed exactly once
-        assertEquals("Shared SyncContext should be closed exactly once", 1, sharedCloses.get());
-        assertEquals("Exclusive SyncContext should be closed exactly once", 1, exclusiveCloses.get());
+        assertEquals(1, sharedCloses.get(), "Shared SyncContext should be closed exactly once");
+        assertEquals(1, exclusiveCloses.get(), "Exclusive SyncContext should be closed exactly once");
     }
 
     @Test
@@ -1081,6 +1081,6 @@ public class DefaultArtifactResolverTest {
         }
 
         assertEquals(
-                "Shared SyncContext should be closed when the exclusive one cannot be created", 1, sharedCloses.get());
+                1, sharedCloses.get(), "Shared SyncContext should be closed when the exclusive one cannot be created");
     }
 }

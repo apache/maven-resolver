@@ -19,40 +19,41 @@
 package org.eclipse.aether.util;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class DirectoryUtilsTest {
-    @Rule
-    public TestName testName = new TestName();
+
+    private String testName;
 
     @Test
     public void expectedCasesRelative() throws IOException {
         // hack for surefire: sets the property but directory may not exist
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
-        Path tmpDir = Files.createTempDirectory(testName.getMethodName());
+        Path tmpDir = Files.createTempDirectory(testName);
         Path result;
 
         result = DirectoryUtils.resolveDirectory("foo", tmpDir, false);
-        assertThat(result, equalTo(tmpDir.resolve("foo")));
+        assertEquals(tmpDir.resolve("foo"), result);
 
         result = DirectoryUtils.resolveDirectory("foo/bar", tmpDir, false);
-        assertThat(result, equalTo(tmpDir.resolve("foo/bar")));
+        assertEquals(tmpDir.resolve("foo/bar"), result);
 
         result = DirectoryUtils.resolveDirectory("foo/./bar/..", tmpDir, false);
-        assertThat(result, equalTo(tmpDir.resolve("foo")));
+        assertEquals(tmpDir.resolve("foo"), result);
     }
 
     @Test
@@ -67,17 +68,17 @@ public class DirectoryUtilsTest {
         // hack for surefire: sets the property but directory may not exist
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
-        Path tmpDir = Files.createTempDirectory(testName.getMethodName());
+        Path tmpDir = Files.createTempDirectory(testName);
         Path result;
 
         result = DirectoryUtils.resolveDirectory("/foo", tmpDir, false);
-        assertThat(result, equalTo(FileSystems.getDefault().getPath("/foo").toAbsolutePath()));
+        assertEquals(FileSystems.getDefault().getPath("/foo").toAbsolutePath(), result);
 
         result = DirectoryUtils.resolveDirectory("/foo/bar", tmpDir, false);
-        assertThat(result, equalTo(FileSystems.getDefault().getPath("/foo/bar").toAbsolutePath()));
+        assertEquals(FileSystems.getDefault().getPath("/foo/bar").toAbsolutePath(), result);
 
         result = DirectoryUtils.resolveDirectory("/foo/./bar/..", tmpDir, false);
-        assertThat(result, equalTo(FileSystems.getDefault().getPath("/foo").toAbsolutePath()));
+        assertEquals(FileSystems.getDefault().getPath("/foo").toAbsolutePath(), result);
     }
 
     @Test
@@ -85,10 +86,10 @@ public class DirectoryUtilsTest {
         // hack for surefire: sets the property but directory may not exist
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
-        Path tmpDir = Files.createTempDirectory(testName.getMethodName());
+        Path tmpDir = Files.createTempDirectory(testName);
         Files.createDirectories(tmpDir.resolve("foo"));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, false);
-        assertThat(result, equalTo(tmpDir.resolve("foo")));
+        assertEquals(tmpDir.resolve("foo"), result);
     }
 
     @Test
@@ -96,12 +97,12 @@ public class DirectoryUtilsTest {
         // hack for surefire: sets the property but directory may not exist
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
-        Path tmpDir = Files.createTempDirectory(testName.getMethodName());
+        Path tmpDir = Files.createTempDirectory(testName);
         Files.createFile(tmpDir.resolve("foo"));
         try {
             DirectoryUtils.resolveDirectory("foo", tmpDir, false);
         } catch (IOException e) {
-            assertThat(e.getMessage(), startsWith("Path exists, but is not a directory:"));
+            assertTrue(e.getMessage().startsWith("Path exists, but is not a directory:"));
         }
     }
 
@@ -110,10 +111,18 @@ public class DirectoryUtilsTest {
         // hack for surefire: sets the property but directory may not exist
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
-        Path tmpDir = Files.createTempDirectory(testName.getMethodName());
+        Path tmpDir = Files.createTempDirectory(testName);
         Files.createDirectories(tmpDir.resolve("foo"));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, true);
-        assertThat(result, equalTo(tmpDir.resolve("foo")));
-        assertThat(Files.isDirectory(tmpDir.resolve("foo")), equalTo(true));
+        assertEquals(tmpDir.resolve("foo"), result);
+        assertTrue(Files.isDirectory(tmpDir.resolve("foo")));
+    }
+
+    @BeforeEach
+    public void setup(TestInfo testInfo) {
+        Optional<Method> testMethod = testInfo.getTestMethod();
+        if (testMethod.isPresent()) {
+            this.testName = testMethod.get().getName();
+        }
     }
 }

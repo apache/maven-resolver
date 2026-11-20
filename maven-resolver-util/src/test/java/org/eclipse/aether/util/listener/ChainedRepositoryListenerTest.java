@@ -25,10 +25,10 @@ import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;
 import org.eclipse.aether.RepositoryListener;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  */
@@ -68,6 +68,6 @@ public class ChainedRepositoryListenerTest {
 
         chained.artifactResolved(event);
         assertTrue(
-                "Subsequent listener should still receive event despite previous failure", secondListenerCalled.get());
+                secondListenerCalled.get(), "Subsequent listener should still receive event despite previous failure");
     }
 }

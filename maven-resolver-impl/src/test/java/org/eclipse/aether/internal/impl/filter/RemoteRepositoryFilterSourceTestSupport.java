@@ -25,14 +25,13 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilter;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * UT helper for {@link RemoteRepositoryFilterSource} UTs.
@@ -48,7 +47,7 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
 
     private RemoteRepositoryFilterSource subject;
 
-    @Before
+    @BeforeEach
     public void setup() {
         remoteRepository = new RemoteRepository.Builder("test", "default", "https://irrelevant.com").build();
         session = TestUtils.newSession();
@@ -66,7 +65,7 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
     @Test
     public void notEnabled() {
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
-        assertThat(filter, nullValue());
+        assertNull(filter);
     }
 
     @Test
@@ -75,12 +74,12 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
         enableSource(session);
 
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
-        assertThat(filter, notNullValue());
+        assertNotNull(filter);
 
         RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, acceptedArtifact);
 
-        assertThat(result.isAccepted(), equalTo(true));
-        assertThat(result.reasoning(), containsString("allowed from test"));
+        assertTrue(result.isAccepted());
+        assertTrue(result.reasoning().contains("allowed from test"));
     }
 
     @Test
@@ -89,11 +88,11 @@ public abstract class RemoteRepositoryFilterSourceTestSupport {
         enableSource(session);
 
         RemoteRepositoryFilter filter = subject.getRemoteRepositoryFilter(session);
-        assertThat(filter, notNullValue());
+        assertNotNull(filter);
 
         RemoteRepositoryFilter.Result result = filter.acceptArtifact(remoteRepository, notAcceptedArtifact);
 
-        assertThat(result.isAccepted(), equalTo(false));
-        assertThat(result.reasoning(), containsString("NOT allowed from test"));
+        assertFalse(result.isAccepted());
+        assertTrue(result.reasoning().contains("NOT allowed from test"));
     }
 }

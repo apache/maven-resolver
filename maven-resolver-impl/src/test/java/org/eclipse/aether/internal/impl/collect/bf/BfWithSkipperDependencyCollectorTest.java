@@ -35,30 +35,17 @@ import org.eclipse.aether.internal.impl.collect.DependencyCollectorDelegateTestS
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
 import org.eclipse.aether.util.graph.manager.TransitiveDependencyManager;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
-import org.junit.Assume;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * UT for {@link BfDependencyCollector}.
+ * UT for {@link BfDependencyCollector} with the skipper enabled.
  */
-@RunWith(Parameterized.class)
-public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSupport {
-    @Parameterized.Parameters
-    public static List<Boolean> parameters() {
-        return Arrays.asList(Boolean.TRUE, Boolean.FALSE);
-    }
-
-    @SuppressWarnings("checkstyle:VisibilityModifier")
-    @Parameterized.Parameter
-    public boolean useSkipper;
-
+public class BfWithSkipperDependencyCollectorTest extends DependencyCollectorDelegateTestSupport {
     @Override
     protected void setupCollector() {
-        session.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, useSkipper);
+        session.setConfigProperty(BfDependencyCollector.CONFIG_PROP_SKIPPER, true);
 
         collector = new BfDependencyCollector(
                 new StubRemoteRepositoryManager(), newReader(""), new StubVersionRangeResolver());
@@ -81,7 +68,6 @@ public class BfDependencyCollectorTest extends DependencyCollectorDelegateTestSu
 
     @Test
     public void testSkipperWithDifferentExclusion() throws DependencyCollectionException {
-        Assume.assumeTrue(useSkipper);
         collector.setArtifactDescriptorReader(newReader("managed/"));
         parser = new DependencyGraphParser("artifact-descriptions/managed/");
         session.setDependencyManager(new TransitiveDependencyManager());

@@ -62,7 +62,7 @@ import org.eclipse.aether.transfer.NoRepositoryConnectorException;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.RepositoryOfflineException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class RepositoryExceptionTest {
 

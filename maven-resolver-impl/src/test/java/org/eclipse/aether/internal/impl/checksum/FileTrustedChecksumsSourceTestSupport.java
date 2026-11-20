@@ -30,17 +30,14 @@ import org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle;
 import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.spi.checksums.TrustedChecksumsSource;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.anEmptyMap;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public abstract class FileTrustedChecksumsSourceTestSupport {
     private static final Artifact ARTIFACT_WITHOUT_CHECKSUM = new DefaultArtifact("test:test:1.0");
@@ -59,7 +56,7 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
 
     private boolean checksumWritten;
 
-    @Before
+    @BeforeEach
     public void before() throws Exception {
         session = TestUtils.newSession();
         // populate local repository
@@ -89,13 +86,11 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
 
     @Test
     public void notEnabled() {
-        assertThat(
-                subject.getTrustedArtifactChecksums(
-                        session,
-                        ARTIFACT_WITH_CHECKSUM,
-                        session.getLocalRepository(),
-                        Collections.singletonList(checksumAlgorithmFactory)),
-                nullValue());
+        assertNull(subject.getTrustedArtifactChecksums(
+                session,
+                ARTIFACT_WITH_CHECKSUM,
+                session.getLocalRepository(),
+                Collections.singletonList(checksumAlgorithmFactory)));
     }
 
     @Test
@@ -106,21 +101,21 @@ public abstract class FileTrustedChecksumsSourceTestSupport {
                 ARTIFACT_WITHOUT_CHECKSUM,
                 session.getLocalRepository(),
                 Collections.singletonList(checksumAlgorithmFactory));
-        assertThat(providedChecksums, notNullValue());
-        assertThat(providedChecksums, anEmptyMap());
+        assertNotNull(providedChecksums);
+        assertTrue(providedChecksums.isEmpty());
     }
 
     @Test
     public void haveProvidedArtifactChecksum() {
-        assumeThat(checksumWritten, is(true));
+        assumeTrue(checksumWritten);
         enableSource(session);
         Map<String, String> providedChecksums = subject.getTrustedArtifactChecksums(
                 session,
                 ARTIFACT_WITH_CHECKSUM,
                 session.getLocalRepository(),
                 Collections.singletonList(checksumAlgorithmFactory));
-        assertThat(providedChecksums, notNullValue());
-        assertThat(providedChecksums, aMapWithSize(1));
-        assertThat(providedChecksums, hasEntry(checksumAlgorithmFactory.getName(), ARTIFACT_TRUSTED_CHECKSUM));
+        assertNotNull(providedChecksums);
+        assertEquals(1, providedChecksums.size());
+        assertEquals(ARTIFACT_TRUSTED_CHECKSUM, providedChecksums.get(checksumAlgorithmFactory.getName()));
     }
 }

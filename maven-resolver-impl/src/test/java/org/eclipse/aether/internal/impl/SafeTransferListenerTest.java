@@ -21,9 +21,9 @@ package org.eclipse.aether.internal.impl;
 import java.lang.reflect.Method;
 
 import org.eclipse.aether.transfer.TransferListener;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  */
