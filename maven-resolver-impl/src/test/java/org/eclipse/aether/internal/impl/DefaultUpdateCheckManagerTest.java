@@ -40,14 +40,15 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.util.repository.SimpleResolutionErrorPolicy;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  */
@@ -65,7 +66,7 @@ public class DefaultUpdateCheckManagerTest {
 
     private Artifact artifact;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         File dir = TestFileUtils.createTempFile("");
         TestFileUtils.deleteFile(dir);
@@ -89,7 +90,7 @@ public class DefaultUpdateCheckManagerTest {
         artifact = new DefaultArtifact("gid", "aid", "", "ext", "ver").setFile(artifactFile);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         new File(metadata.getFile().getParent(), "resolver-status.properties").delete();
         new File(artifact.getFile().getPath() + ".lastUpdated").delete();
@@ -121,13 +122,15 @@ public class DefaultUpdateCheckManagerTest {
         return check;
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void testCheckMetadataFailOnNoFile() {
-        UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
-        check.setItem(metadata.setFile(null));
-        check.setFile(null);
+        assertThrows(Exception.class, () -> {
+            UpdateCheck<Metadata, MetadataTransferException> check = newMetadataCheck();
+            check.setItem(metadata.setFile(null));
+            check.setFile(null);
 
-        manager.checkMetadata(session, check);
+            manager.checkMetadata(session, check);
+        });
     }
 
     @Test
@@ -272,9 +275,7 @@ public class DefaultUpdateCheckManagerTest {
         manager.checkMetadata(session, check);
         assertFalse(check.isRequired());
         assertTrue(check.getException() instanceof MetadataTransferException);
-        assertTrue(
-                String.valueOf(check.getException()),
-                check.getException().getMessage().contains("some error"));
+        assertTrue(check.getException().getMessage().contains("some error"), String.valueOf(check.getException()));
         assertTrue(check.getException().isFromCache());
     }
 
@@ -390,7 +391,7 @@ public class DefaultUpdateCheckManagerTest {
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         check.getFile().delete();
-        assertFalse(check.getFile().getAbsolutePath(), check.getFile().exists());
+        assertFalse(check.getFile().exists(), check.getFile().getAbsolutePath());
 
         manager.checkMetadata(session, check);
         assertTrue(check.isRequired());
@@ -420,7 +421,7 @@ public class DefaultUpdateCheckManagerTest {
         resetSessionData(session);
 
         check.getFile().delete();
-        assertFalse(check.getFile().getAbsolutePath(), check.getFile().exists());
+        assertFalse(check.getFile().exists(), check.getFile().getAbsolutePath());
 
         manager.checkMetadata(session, check);
         assertTrue(check.isRequired());
@@ -436,14 +437,16 @@ public class DefaultUpdateCheckManagerTest {
         assertFalse(check.isRequired());
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testCheckArtifactFailOnNoFile() {
-        UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
-        check.setItem(artifact.setFile(null));
-        check.setFile(null);
+        assertThrows(NullPointerException.class, () -> {
+            UpdateCheck<Artifact, ArtifactTransferException> check = newArtifactCheck();
+            check.setItem(artifact.setFile(null));
+            check.setFile(null);
 
-        manager.checkArtifact(session, check);
-        assertNotNull(check.getException());
+            manager.checkArtifact(session, check);
+            assertNotNull(check.getException());
+        });
     }
 
     @Test
@@ -704,7 +707,7 @@ public class DefaultUpdateCheckManagerTest {
         session.setResolutionErrorPolicy(new SimpleResolutionErrorPolicy(true, false));
 
         check.getFile().delete();
-        assertFalse(check.getFile().getAbsolutePath(), check.getFile().exists());
+        assertFalse(check.getFile().exists(), check.getFile().getAbsolutePath());
 
         manager.checkArtifact(session, check);
         assertTrue(check.isRequired());
@@ -734,7 +737,7 @@ public class DefaultUpdateCheckManagerTest {
         resetSessionData(session);
 
         check.getFile().delete();
-        assertFalse(check.getFile().getAbsolutePath(), check.getFile().exists());
+        assertFalse(check.getFile().exists(), check.getFile().getAbsolutePath());
 
         manager.checkArtifact(session, check);
         assertTrue(check.isRequired());

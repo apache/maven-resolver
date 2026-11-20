@@ -39,15 +39,15 @@ import org.eclipse.aether.repository.LocalArtifactResult;
 import org.eclipse.aether.repository.LocalMetadataRequest;
 import org.eclipse.aether.repository.LocalMetadataResult;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnhancedLocalRepositoryManagerTest {
 
@@ -73,7 +73,7 @@ public class EnhancedLocalRepositoryManagerTest {
 
     private Metadata noVerMetadata;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         String url = TestFileUtils.createTempDir("enhanced-remote-repo")
                 .toURI()
@@ -124,7 +124,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 new DefaultLocalPathPrefixComposerFactory().createComposer(session));
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         TestFileUtils.deleteFile(basedir);
         TestFileUtils.deleteFile(new File(new URI(repository.getUrl())));
@@ -249,7 +249,7 @@ public class EnhancedLocalRepositoryManagerTest {
     @Test
     public void testDoNotFindDeletedFile() throws Exception {
         addLocalArtifact(artifact);
-        assertTrue("could not delete artifact file", artifactFile.delete());
+        assertTrue(artifactFile.delete(), "could not delete artifact file");
 
         LocalArtifactRequest request = new LocalArtifactRequest(artifact, Arrays.asList(repository), testContext);
         LocalArtifactResult result = manager.find(session, request);
@@ -322,7 +322,7 @@ public class EnhancedLocalRepositoryManagerTest {
         LocalArtifactRequest request = new LocalArtifactRequest();
         request.setArtifact(artifact);
         LocalArtifactResult result = manager.find(session, request);
-        assertNull(result.toString(), result.getFile());
-        assertFalse(result.toString(), result.isAvailable());
+        assertNull(result.getFile(), result.toString());
+        assertFalse(result.isAvailable(), result.toString());
     }
 }

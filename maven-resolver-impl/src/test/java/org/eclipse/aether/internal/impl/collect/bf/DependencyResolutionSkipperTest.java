@@ -30,11 +30,11 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.TestVersion;
 import org.eclipse.aether.internal.test.util.TestVersionConstraint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DependencyResolutionSkipperTest {
     private static DependencyNode makeDependencyNode(String groupId, String artifactId, String version) {

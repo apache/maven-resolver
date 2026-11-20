@@ -22,16 +22,16 @@ import java.util.Calendar;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_ALWAYS;
 import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_DAILY;
 import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_INTERVAL;
 import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_NEVER;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  */
@@ -41,7 +41,7 @@ public class DefaultUpdatePolicyAnalyzerTest {
 
     private DefaultRepositorySystemSession session;
 
-    @Before
+    @BeforeEach
     public void setup() {
         analyzer = new DefaultUpdatePolicyAnalyzer();
         session = TestUtils.newSession();

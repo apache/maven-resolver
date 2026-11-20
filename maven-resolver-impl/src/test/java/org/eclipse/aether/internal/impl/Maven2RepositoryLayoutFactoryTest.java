@@ -35,12 +35,13 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySupport
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.ChecksumLocation;
 import org.eclipse.aether.transfer.NoRepositoryLayoutException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class Maven2RepositoryLayoutFactoryTest {
     private static final ChecksumAlgorithmFactory SHA512 = new ChecksumAlgorithmFactorySupport("SHA-512", "sha512") {
@@ -99,16 +100,16 @@ public class Maven2RepositoryLayoutFactoryTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         session = TestUtils.newSession();
         factory = new Maven2RepositoryLayoutFactory();
         layout = factory.newInstance(session, newRepo("default"));
     }
 
-    @Test(expected = NoRepositoryLayoutException.class)
+    @Test
     public void testBadLayout() throws Exception {
-        factory.newInstance(session, newRepo("DEFAULT"));
+        assertThrows(NoRepositoryLayoutException.class, () -> factory.newInstance(session, newRepo("DEFAULT")));
     }
 
     @Test
@@ -206,10 +207,12 @@ public class Maven2RepositoryLayoutFactoryTest {
         assertChecksum(checksums.get(1), "g/i/d/a-i.d/1.0/a-i.d-1.0-cls.ext.sha1", SHA1);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testArtifactChecksumsDownloadWithUnsupportedAlgorithms() throws NoRepositoryLayoutException {
-        session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_CHECKSUMS_ALGORITHMS, "FOO,SHA-1");
-        layout = factory.newInstance(session, newRepo("default"));
+        assertThrows(IllegalArgumentException.class, () -> {
+            session.setConfigProperty(Maven2RepositoryLayoutFactory.CONFIG_PROP_CHECKSUMS_ALGORITHMS, "FOO,SHA-1");
+            layout = factory.newInstance(session, newRepo("default"));
+        });
     }
 
     @Test
@@ -326,7 +329,7 @@ public class Maven2RepositoryLayoutFactoryTest {
         } catch (IllegalArgumentException e) {
             String message = e.getMessage();
             assertTrue(
-                    message, message.contains(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS));
+                    message.contains(Maven2RepositoryLayoutFactory.CONFIG_PROP_OMIT_CHECKSUMS_FOR_EXTENSIONS), message);
         }
     }
 }
