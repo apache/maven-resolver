@@ -39,6 +39,8 @@ import org.apache.maven.wagon.StreamingWagon;
 import org.apache.maven.wagon.Wagon;
 import org.apache.maven.wagon.WagonException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
+import org.apache.maven.wagon.events.TransferEvent;
+import org.apache.maven.wagon.observers.AbstractTransferListener;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.proxy.ProxyInfoProvider;
 import org.apache.maven.wagon.repository.Repository;
@@ -410,6 +412,18 @@ final class WagonTransporter implements Transporter {
         }
     }
 
+    /**
+     * Records the last modified time of the remote resource, which wagons read but do not set on the file.
+     */
+    private static final class LastModifiedListener extends AbstractTransferListener {
+        private long value;
+
+        @Override
+        public void transferCompleted(TransferEvent event) {
+            value = event.getResource().getLastModified();
+        }
+    }
+
     private static class GetTaskRunner implements TaskRunner {
 
         private final GetTask task;
@@ -431,7 +445,13 @@ final class WagonTransporter implements Transporter {
                 try (FileUtils.TempFile tempFile =
                         file == null ? FileUtils.newTempFile() : FileUtils.newTempFile(file.toPath())) {
                     File dst = tempFile.getPath().toFile();
-                    wagon.get(src, dst);
+                    LastModifiedListener lastModified = new LastModifiedListener();
+                    wagon.addTransferListener(lastModified);
+                    try {
+                        wagon.get(src, dst);
+                    } finally {
+                        wagon.removeTransferListener(lastModified);
+                    }
                     /*
                      * NOTE: Wagon (1.0-beta-6) doesn't create the destination file when transferring a 0-byte
                      * resource. So if the resource we asked for didn't cause any exception but doesn't show up in
@@ -439,6 +459,11 @@ final class WagonTransporter implements Transporter {
                      */
                     if (!dst.exists() && !dst.createNewFile()) {
                         throw new IOException(String.format("Failure creating file '%s'.", dst.getAbsolutePath()));
+                    }
+
+                    // Wagon reads the remote last modified time but does not set it on the file
+                    if (file != null && lastModified.value > 0) {
+                        dst.setLastModified(Math.min(lastModified.value, System.currentTimeMillis()));
                     }
 
                     if (file != null) {
