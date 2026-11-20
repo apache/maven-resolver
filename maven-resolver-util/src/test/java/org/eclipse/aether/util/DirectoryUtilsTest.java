@@ -47,13 +47,13 @@ public class DirectoryUtilsTest {
         Path result;
 
         result = DirectoryUtils.resolveDirectory("foo", tmpDir, false);
-        assertEquals(result, tmpDir.resolve("foo"));
+        assertEquals(tmpDir.resolve("foo"), result);
 
         result = DirectoryUtils.resolveDirectory("foo/bar", tmpDir, false);
-        assertEquals(result, tmpDir.resolve("foo/bar"));
+        assertEquals(tmpDir.resolve("foo/bar"), result);
 
         result = DirectoryUtils.resolveDirectory("foo/./bar/..", tmpDir, false);
-        assertEquals(result, tmpDir.resolve("foo"));
+        assertEquals(tmpDir.resolve("foo"), result);
     }
 
     @Test
@@ -72,13 +72,13 @@ public class DirectoryUtilsTest {
         Path result;
 
         result = DirectoryUtils.resolveDirectory("/foo", tmpDir, false);
-        assertEquals(result, FileSystems.getDefault().getPath("/foo").toAbsolutePath());
+        assertEquals(FileSystems.getDefault().getPath("/foo").toAbsolutePath(), result);
 
         result = DirectoryUtils.resolveDirectory("/foo/bar", tmpDir, false);
-        assertEquals(result, FileSystems.getDefault().getPath("/foo/bar").toAbsolutePath());
+        assertEquals(FileSystems.getDefault().getPath("/foo/bar").toAbsolutePath(), result);
 
         result = DirectoryUtils.resolveDirectory("/foo/./bar/..", tmpDir, false);
-        assertEquals(result, FileSystems.getDefault().getPath("/foo").toAbsolutePath());
+        assertEquals(FileSystems.getDefault().getPath("/foo").toAbsolutePath(), result);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class DirectoryUtilsTest {
         Path tmpDir = Files.createTempDirectory(testName);
         Files.createDirectories(tmpDir.resolve("foo"));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, false);
-        assertEquals(result, tmpDir.resolve("foo"));
+        assertEquals(tmpDir.resolve("foo"), result);
     }
 
     @Test
@@ -114,8 +114,8 @@ public class DirectoryUtilsTest {
         Path tmpDir = Files.createTempDirectory(testName);
         Files.createDirectories(tmpDir.resolve("foo"));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, true);
-        assertEquals(result, tmpDir.resolve("foo"));
-        assertEquals(Files.isDirectory(tmpDir.resolve("foo")), true);
+        assertEquals(tmpDir.resolve("foo"), result);
+        assertTrue(Files.isDirectory(tmpDir.resolve("foo")));
     }
 
     @BeforeEach
