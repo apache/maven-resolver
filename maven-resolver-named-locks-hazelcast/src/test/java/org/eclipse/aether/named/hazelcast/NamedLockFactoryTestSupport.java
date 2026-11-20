@@ -27,7 +27,6 @@ import org.eclipse.aether.named.NamedLock;
 import org.eclipse.aether.named.NamedLockFactory;
 import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -37,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * UT support for {@link NamedLockFactory}.
@@ -213,7 +213,7 @@ public abstract class NamedLockFactoryTestSupport {
                     winner.await();
                 }
             } catch (InterruptedException e) {
-                Assertions.fail(e.getMessage());
+                fail(e.getMessage());
             }
         }
     }

@@ -36,11 +36,11 @@ import org.eclipse.aether.named.support.LockUpgradeNotSupportedException;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.spi.synccontext.SyncContextFactory;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -243,7 +243,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
                     winner.await();
                 }
             } catch (InterruptedException e) {
-                Assertions.fail("interrupted");
+                fail("interrupted");
             }
         }
     }
