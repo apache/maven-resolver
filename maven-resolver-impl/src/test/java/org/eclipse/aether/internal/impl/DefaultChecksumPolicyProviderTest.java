@@ -86,11 +86,9 @@ public class DefaultChecksumPolicyProviderTest {
 
     @Test
     public void testNewChecksumPolicyUnknown() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            ChecksumPolicy policy = provider.newChecksumPolicy(session, repository, resource, CHECKSUM_POLICY_UNKNOWN);
-            assertNotNull(policy);
-            assertEquals(WarnChecksumPolicy.class, policy.getClass());
-        });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> provider.newChecksumPolicy(session, repository, resource, CHECKSUM_POLICY_UNKNOWN));
     }
 
     @Test
