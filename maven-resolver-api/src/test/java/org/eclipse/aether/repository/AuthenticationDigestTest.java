@@ -22,14 +22,14 @@ import java.util.Map;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystemSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class AuthenticationDigestTest {
 
@@ -63,7 +63,7 @@ public class AuthenticationDigestTest {
                 assertSame(session, digest.getSession());
                 assertNotNull(digest.getRepository());
                 assertNull(digest.getProxy());
-                assertNull("digest() should only be called once", repos[0]);
+                assertNull(repos[0], "digest() should only be called once");
                 repos[0] = digest.getRepository();
 
                 digest.update((byte[]) null);
@@ -104,7 +104,7 @@ public class AuthenticationDigestTest {
                 assertSame(session, digest.getSession());
                 assertNotNull(digest.getRepository());
                 assertNotNull(digest.getProxy());
-                assertNull("digest() should only be called once", proxies[0]);
+                assertNull(proxies[0], "digest() should only be called once");
                 proxies[0] = digest.getProxy();
 
                 digest.update((byte[]) null);
