@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.eclipse.aether.named.providers.FileLockNamedLockFactory;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
 public class FileLockNamedLockFactorySupportTest extends NamedLockFactoryTestSupport {
 
@@ -38,10 +38,10 @@ public class FileLockNamedLockFactorySupportTest extends NamedLockFactoryTestSup
 
     @Override
     protected String lockName() {
-        return baseDir.resolve(testName.getMethodName()).toAbsolutePath().toString();
+        return baseDir.resolve(testName).toAbsolutePath().toString();
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void createNamedLockFactory() throws IOException {
         namedLockFactory = new FileLockNamedLockFactory();
     }
