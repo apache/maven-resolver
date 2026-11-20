@@ -20,11 +20,11 @@ package org.eclipse.aether.util.graph.transformer;
 
 import org.eclipse.aether.util.graph.transformer.ConflictIdSorter.ConflictId;
 import org.eclipse.aether.util.graph.transformer.ConflictIdSorter.RootQueue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RootQueueTest {
 

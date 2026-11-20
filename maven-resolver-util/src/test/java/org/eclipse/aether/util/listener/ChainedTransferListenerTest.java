@@ -26,10 +26,10 @@ import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferListener;
 import org.eclipse.aether.transfer.TransferResource;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  */
@@ -72,6 +72,6 @@ public class ChainedTransferListenerTest {
 
         chained.transferSucceeded(event);
         assertTrue(
-                "Subsequent listener should still receive event despite previous failure", secondListenerCalled.get());
+                secondListenerCalled.get(), "Subsequent listener should still receive event despite previous failure");
     }
 }

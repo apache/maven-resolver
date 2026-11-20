@@ -23,11 +23,12 @@ import java.util.List;
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  */
@@ -98,18 +99,22 @@ public class NearestVersionSelectorTest extends AbstractDependencyGraphTransform
         assertTrue(root.getChildren().get(1).getChildren().isEmpty());
     }
 
-    @Test(expected = UnsolvableVersionConflictException.class)
+    @Test
     public void testUnsolvableRangeConflictBetweenHardConstraints() throws Exception {
-        DependencyNode root = parseResource("unsolvable.txt");
+        assertThrows(UnsolvableVersionConflictException.class, () -> {
+            DependencyNode root = parseResource("unsolvable.txt");
 
-        assertSame(root, transform(root));
+            assertSame(root, transform(root));
+        });
     }
 
-    @Test(expected = UnsolvableVersionConflictException.class)
+    @Test
     public void testUnsolvableRangeConflictWithUnrelatedCycle() throws Exception {
-        DependencyNode root = parseResource("unsolvable-with-cycle.txt");
+        assertThrows(UnsolvableVersionConflictException.class, () -> {
+            DependencyNode root = parseResource("unsolvable-with-cycle.txt");
 
-        transform(root);
+            transform(root);
+        });
     }
 
     @Test

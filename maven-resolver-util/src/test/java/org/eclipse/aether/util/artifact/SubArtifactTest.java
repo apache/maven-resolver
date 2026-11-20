@@ -25,13 +25,14 @@ import java.util.Map;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  */
@@ -58,9 +59,11 @@ public class SubArtifactTest {
         assertSame(null, a.getProperty("key", null));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testMainArtifactMissing() {
-        new SubArtifact(null, "", "pom");
+        assertThrows(NullPointerException.class, () -> {
+            new SubArtifact(null, "", "pom");
+        });
     }
 
     @Test

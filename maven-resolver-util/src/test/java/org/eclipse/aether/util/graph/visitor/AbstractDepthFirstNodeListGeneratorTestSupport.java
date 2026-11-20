@@ -24,10 +24,10 @@ import java.util.List;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
 import org.eclipse.aether.internal.test.util.DependencyGraphParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AbstractDepthFirstNodeListGeneratorTestSupport {
 
@@ -36,13 +36,10 @@ public abstract class AbstractDepthFirstNodeListGeneratorTestSupport {
     }
 
     protected void assertSequence(List<DependencyNode> actual, String... expected) {
-        assertEquals(actual.toString(), expected.length, actual.size());
+        assertEquals(expected.length, actual.size(), actual.toString());
         for (int i = 0; i < expected.length; i++) {
             DependencyNode node = actual.get(i);
-            assertEquals(
-                    actual.toString(),
-                    expected[i],
-                    node.getDependency().getArtifact().getArtifactId());
+            assertEquals(expected[i], node.getDependency().getArtifact().getArtifactId(), actual.toString());
         }
     }
 
@@ -81,7 +78,7 @@ public abstract class AbstractDepthFirstNodeListGeneratorTestSupport {
         String classpath = visitor.getClassPath();
         assertEquals(5, classpath.split(File.pathSeparator).length);
         for (File file : visitor.getFiles()) {
-            assertTrue("missing: " + file, classpath.contains(file.getAbsolutePath()));
+            assertTrue(classpath.contains(file.getAbsolutePath()), "missing: " + file);
         }
     }
 }
