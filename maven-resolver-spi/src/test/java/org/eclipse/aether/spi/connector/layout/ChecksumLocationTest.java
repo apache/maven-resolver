@@ -24,9 +24,10 @@ import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithm;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactorySupport;
 import org.eclipse.aether.spi.connector.layout.RepositoryLayout.ChecksumLocation;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ChecksumLocationTest {
     private static final ChecksumAlgorithmFactory SHA512 = new ChecksumAlgorithmFactorySupport("SHA-512", "sha512") {
@@ -76,13 +77,17 @@ public class ChecksumLocationTest {
         assertEquals("dir/sub%20dir/file.txt.md5", cs.getLocation().toString());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testForLocationWithQueryParams() {
-        ChecksumLocation.forLocation(URI.create("file.php?param=1"), SHA1);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ChecksumLocation.forLocation(URI.create("file.php?param=1"), SHA1));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testForLocationWithFragment() {
-        ChecksumLocation.forLocation(URI.create("file.html#fragment"), SHA1);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ChecksumLocation.forLocation(URI.create("file.html#fragment"), SHA1));
     }
 }
