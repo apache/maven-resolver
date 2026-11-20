@@ -28,16 +28,17 @@ import java.util.Map;
 
 import org.eclipse.aether.internal.test.util.TestFileUtils;
 import org.eclipse.aether.spi.connector.checksum.ChecksumAlgorithmFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.MD5;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA1;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA256;
 import static org.eclipse.aether.connector.basic.TestChecksumAlgorithmSelector.SHA512;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ChecksumCalculatorTest {
 
@@ -57,7 +58,7 @@ public class ChecksumCalculatorTest {
         return ByteBuffer.wrap(data.getBytes(StandardCharsets.UTF_8));
     }
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         file = TestFileUtils.createTempFile("Hello World!");
     }
@@ -108,11 +109,14 @@ public class ChecksumCalculatorTest {
         assertEquals(4, digests.size());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testUnknownAlgorithm() {
-        // resolver now does not tolerate unknown checksums: as they may be set by user only, it is user
-        // misconfiguration
-        newCalculator("unknown", SHA1);
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        // resolver now does not tolerate unknown checksums: as they may be set by user only, it is user
+                        // misconfiguration
+                        newCalculator("unknown", SHA1));
     }
 
     @Test
