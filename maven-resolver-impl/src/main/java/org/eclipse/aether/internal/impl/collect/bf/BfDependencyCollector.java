@@ -394,7 +394,9 @@ public class BfDependencyCollector extends DependencyCollectorDelegate implement
     }
 
     private boolean filter(DependencyProcessingContext context) {
-        return context.depSelector != null && !context.depSelector.selectDependency(context.dependency);
+        // Dependency management must run before selection: selectors reason about the managed scope/optionality.
+        return context.depSelector != null
+                && !context.depSelector.selectDependency(context.premanagedDependency.getManagedDependency());
     }
 
     private void resolveArtifactDescriptorAsync(Args args, DependencyProcessingContext context, Results results) {
