@@ -1075,6 +1075,21 @@ public final class ConflictResolverTest extends AbstractConflictResolverTest {
         assertEquals(K, subHubCount.get(), "All sub-hub nodes must survive in the resolved graph");
     }
 
+    /**
+     * A hard version range below a cycle must still be honoured: c:1 has range [1,1], so it wins over the nearer
+     * but incompatible c:2. See maven-resolver#2325.
+     */
+    @ParameterizedTest
+    @MethodSource("conflictResolverSource")
+    void hardVersionConstraintInsideCycle(ConflictResolver conflictResolver) throws Exception {
+        DependencyNode root = parseResource("issue-2325-w-cycle.txt");
+        DependencyNode result = transform(conflictResolver, root);
+
+        List<DependencyNode> path = find(result, "c");
+        assertEquals(5, path.size(), "the hard-constrained c:1 under b must win");
+        assertEquals("1", path.get(path.size() - 1).getArtifact().getVersion());
+    }
+
     private static List<DependencyNode> mutableList(DependencyNode... nodes) {
         return new ArrayList<>(Arrays.asList(nodes));
     }
