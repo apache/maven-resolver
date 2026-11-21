@@ -19,16 +19,12 @@
 package org.eclipse.aether.util;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -37,14 +33,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class DirectoryUtilsTest {
 
-    private String testName;
-
     @Test
-    public void expectedCasesRelative() throws IOException {
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testName);
+    public void expectedCasesRelative(@TempDir Path tmpDir) throws IOException {
         Path result;
 
         result = DirectoryUtils.resolveDirectory("foo", tmpDir, false);
@@ -58,7 +48,7 @@ public class DirectoryUtilsTest {
     }
 
     @Test
-    public void expectedCasesAbsolute() throws IOException {
+    public void expectedCasesAbsolute(@TempDir Path tmpDir) throws IOException {
         // TODO: this test is skipped on Windows, as it is not clear which drive letter will `new File("/foo")`
         // path get. According to Windows (and  assuming Java Path does separator change OK), "\foo" file should
         // get resolved to CWD drive + "\foo" path, but seems Java 17 is different from 11 and 8 in this respect.
@@ -66,10 +56,6 @@ public class DirectoryUtilsTest {
         assumeTrue(
                 !"WindowsFileSystem".equals(FileSystems.getDefault().getClass().getSimpleName()));
 
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testName);
         Path result;
 
         result = DirectoryUtils.resolveDirectory("/foo", tmpDir, false);
@@ -83,22 +69,14 @@ public class DirectoryUtilsTest {
     }
 
     @Test
-    public void existsButIsADirectory() throws IOException {
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testName);
+    public void existsButIsADirectory(@TempDir Path tmpDir) throws IOException {
         Files.createDirectories(tmpDir.resolve("foo"));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, false);
         assertEquals(tmpDir.resolve("foo"), result);
     }
 
     @Test
-    public void existsButNotADirectory() throws IOException {
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testName);
+    public void existsButNotADirectory(@TempDir Path tmpDir) throws IOException {
         Files.createFile(tmpDir.resolve("foo"));
         try {
             DirectoryUtils.resolveDirectory("foo", tmpDir, false);
@@ -108,22 +86,10 @@ public class DirectoryUtilsTest {
     }
 
     @Test
-    public void notExistsAndIsCreated() throws IOException {
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testName);
+    public void notExistsAndIsCreated(@TempDir Path tmpDir) throws IOException {
         assertFalse(Files.exists(tmpDir.resolve("foo")));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, true);
         assertEquals(tmpDir.resolve("foo"), result);
         assertTrue(Files.isDirectory(tmpDir.resolve("foo")));
-    }
-
-    @BeforeEach
-    public void setup(TestInfo testInfo) {
-        Optional<Method> testMethod = testInfo.getTestMethod();
-        if (testMethod.isPresent()) {
-            this.testName = testMethod.get().getName();
-        }
     }
 }
