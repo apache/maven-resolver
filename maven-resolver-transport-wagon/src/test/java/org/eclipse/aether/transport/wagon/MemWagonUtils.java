@@ -34,6 +34,11 @@ import org.apache.maven.wagon.proxy.ProxyInfo;
  */
 class MemWagonUtils {
 
+    /**
+     * The remote last modified time of every resource, in whole seconds.
+     */
+    static final long LAST_MODIFIED = 1_700_000_000_000L;
+
     private static final ConcurrentMap<String, Map<String, String>> MOUNTS = new ConcurrentHashMap<>();
 
     public static Map<String, String> getFilesystem(String id) {

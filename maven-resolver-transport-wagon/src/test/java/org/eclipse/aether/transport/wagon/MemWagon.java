@@ -128,6 +128,7 @@ public class MemWagon extends AbstractWagon implements Configurable {
         }
         byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
         inputData.getResource().setContentLength(bytes.length);
+        inputData.getResource().setLastModified(MemWagonUtils.LAST_MODIFIED);
         inputData.setInputStream(new ByteArrayInputStream(bytes));
     }
 
