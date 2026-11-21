@@ -22,21 +22,16 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class DirectoryUtilsTest {
     @Test
-    void expectedCasesRelative(TestInfo testInfo) throws IOException {
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testInfo.getDisplayName());
+    void expectedCasesRelative(@TempDir Path tmpDir) throws IOException {
         Path result;
 
         result = DirectoryUtils.resolveDirectory("foo", tmpDir, false);
@@ -50,7 +45,7 @@ public class DirectoryUtilsTest {
     }
 
     @Test
-    void expectedCasesAbsolute(TestInfo testInfo) throws IOException {
+    void expectedCasesAbsolute(@TempDir Path tmpDir) throws IOException {
         // TODO: this test is skipped on Windows, as it is not clear which drive letter will `new File("/foo")`
         // path get. According to Windows (and  assuming Java Path does separator change OK), "\foo" file should
         // get resolved to CWD drive + "\foo" path, but seems Java 17 is different from 11 and 8 in this respect.
@@ -58,10 +53,6 @@ public class DirectoryUtilsTest {
         assumeTrue(
                 !"WindowsFileSystem".equals(FileSystems.getDefault().getClass().getSimpleName()));
 
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testInfo.getDisplayName());
         Path result;
 
         result = DirectoryUtils.resolveDirectory("/foo", tmpDir, false);
@@ -75,33 +66,21 @@ public class DirectoryUtilsTest {
     }
 
     @Test
-    void existsButIsADirectory(TestInfo testInfo) throws IOException {
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testInfo.getDisplayName());
+    void existsButIsADirectory(@TempDir Path tmpDir) throws IOException {
         Files.createDirectories(tmpDir.resolve("foo"));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, false);
         assertEquals(tmpDir.resolve("foo"), result);
     }
 
     @Test
-    void existsButNotADirectory(TestInfo testInfo) throws IOException {
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testInfo.getDisplayName());
+    void existsButNotADirectory(@TempDir Path tmpDir) throws IOException {
         Files.createFile(tmpDir.resolve("foo"));
         IOException e = assertThrows(IOException.class, () -> DirectoryUtils.resolveDirectory("foo", tmpDir, false));
         assertTrue(e.getMessage().startsWith("Path exists, but is not a directory:"), e.getMessage());
     }
 
     @Test
-    void notExistsAndIsCreated(TestInfo testInfo) throws IOException {
-        // hack for surefire: sets the property but directory may not exist
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
-
-        Path tmpDir = Files.createTempDirectory(testInfo.getDisplayName());
+    void notExistsAndIsCreated(@TempDir Path tmpDir) throws IOException {
         assertFalse(Files.exists(tmpDir.resolve("foo")));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, true);
         assertEquals(tmpDir.resolve("foo"), result);
