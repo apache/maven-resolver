@@ -27,7 +27,7 @@ author:
 
 Apache Maven Artifact Resolver is a library for working with artifact repositories and dependency resolution.
 
-Maven Artifact Resolver deals with the specification of local repository, remote repository, developer workspaces, artifact transports, and artifact resolution. It is expected to be extended by a concrete repository implementation, such as [Maven Artifact Resolver Provider](/ref/current/maven-resolver-provider/) for Maven repositories or any other provider for other repository formats. 
+Maven Artifact Resolver deals with the specification of local repository, remote repository, developer workspaces, artifact transports, and artifact resolution. It is expected to be extended by a concrete repository implementation, such as the `org.apache.maven.impl` implementation in Maven 4's [maven-impl module](https://maven.apache.org/ref/4-LATEST/impl/maven-impl/apidocs/index.html) for Maven repositories, or any other provider for other repository formats.
 
 <img src="images/maven-resolver-deps.png" width="792" height="441" border="0" usemap="#Maven_Resolver_dependencies" alt="Maven Resolver module dependency diagram" />
 <map name="Maven_Resolver_dependencies">
@@ -46,7 +46,7 @@ Maven Artifact Resolver deals with the specification of local repository, remote
           <area shape="rect" coords="279,1,537,78"    href="./maven-resolver-demos/" />
           <area shape="rect" coords="551,33,663,69"   href="/resolver-ant-tasks/" />
           <area shape="rect" coords="130,33,240,69"   href="/ref/current/maven-plugin-api/" />
-          <area shape="rect" coords="19,117,199,153"  href="/ref/current/maven-resolver-provider/" />
+          <area shape="rect" coords="19,117,199,153"  href="https://maven.apache.org/ref/4-LATEST/impl/maven-impl/apidocs/index.html" />
           <area shape="rect" coords="114,180,257,215" href="/ref/current/maven-model-builder/" />
           <area shape="rect" coords="142,234,228,270" href="/ref/current/maven-model/" />
           <area shape="rect" coords="6,284,212,320"   href="/ref/current/maven-repository-metadata/" />
