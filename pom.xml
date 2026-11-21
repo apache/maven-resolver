@@ -62,6 +62,7 @@
     <module>maven-resolver-transport-jdk-parent</module>
     <module>maven-resolver-transport-jetty</module>
     <module>maven-resolver-transport-minio</module>
+    <module>maven-resolver-transport-s3</module>
     <module>maven-resolver-transport-url</module>
     <module>maven-resolver-transport-wagon</module>
     <module>maven-resolver-generator-gnupg</module>
