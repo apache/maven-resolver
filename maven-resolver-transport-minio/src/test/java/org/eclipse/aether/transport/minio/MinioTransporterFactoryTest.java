@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.transport.minio;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -50,7 +48,6 @@ class MinioTransporterFactoryTest {
 
     @BeforeEach
     void startSuite() throws Exception {
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
 
         factories = new HashMap<>();
         factories.put(RepositoryIdObjectNameMapperFactory.NAME, new RepositoryIdObjectNameMapperFactory());

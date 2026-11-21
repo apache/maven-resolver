@@ -21,7 +21,6 @@ package org.eclipse.aether.internal.impl.resolution;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -70,7 +69,6 @@ public class TrustedChecksumsArtifactResolverPostProcessorTest implements Truste
 
     @BeforeEach
     void prepareSubject() throws IOException {
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
         // make the two artifacts, BOTH as resolved
         File tmp = Files.createTempFile("artifact", "tmp").toFile();
         artifactWithoutTrustedChecksum = new DefaultArtifact("test:test:1.0").setPath(tmp.toPath());

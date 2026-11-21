@@ -21,7 +21,6 @@ package org.eclipse.aether.transport.minio;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
@@ -67,7 +66,6 @@ class MinioTransporterIT {
 
     @BeforeEach
     void startSuite() throws Exception {
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
 
         pathProcessor = new PathProcessorSupport();
         minioContainer = new MinIOContainer(DockerImageName.parse("pgsty/silo:RELEASE.2026-09-03T13-18-01Z-distroless")
