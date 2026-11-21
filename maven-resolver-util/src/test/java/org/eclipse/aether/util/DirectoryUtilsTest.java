@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -112,7 +113,7 @@ public class DirectoryUtilsTest {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
         Path tmpDir = Files.createTempDirectory(testName);
-        Files.createDirectories(tmpDir.resolve("foo"));
+        assertFalse(Files.exists(tmpDir.resolve("foo")));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, true);
         assertEquals(tmpDir.resolve("foo"), result);
         assertTrue(Files.isDirectory(tmpDir.resolve("foo")));
