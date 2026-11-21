@@ -1,0 +1,8 @@
+test:root:1
++- test:p:1
+|  \- test:a:1
+|     \- test:b:1                 (b)
+|        +- test:a:1
+|        |  \- ^b
+|        \- test:c:1[1]
+\- test:c:2
