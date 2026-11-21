@@ -18,9 +18,9 @@
  */
 package org.eclipse.aether.collection;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.graph.DependencyCycle;
@@ -37,9 +37,9 @@ public final class CollectResult {
 
     private final CollectRequest request;
 
-    private List<Exception> exceptions;
+    private final List<Exception> exceptions = new CopyOnWriteArrayList<>();
 
-    private List<DependencyCycle> cycles;
+    private final List<DependencyCycle> cycles = new CopyOnWriteArrayList<>();
 
     private DependencyNode root;
 
@@ -50,8 +50,6 @@ public final class CollectResult {
      */
     public CollectResult(CollectRequest request) {
         this.request = requireNonNull(request, "dependency collection request cannot be null");
-        exceptions = Collections.emptyList();
-        cycles = Collections.emptyList();
     }
 
     /**
@@ -66,10 +64,10 @@ public final class CollectResult {
     /**
      * Gets the exceptions that occurred while building the dependency graph.
      *
-     * @return The exceptions that occurred, never {@code null}.
+     * @return an unmodifiable list of the exceptions that occurred, never {@code null}.
      */
     public List<Exception> getExceptions() {
-        return exceptions;
+        return Collections.unmodifiableList(exceptions);
     }
 
     /**
@@ -80,9 +78,6 @@ public final class CollectResult {
      */
     public CollectResult addException(Exception exception) {
         if (exception != null) {
-            if (exceptions.isEmpty()) {
-                exceptions = new ArrayList<>();
-            }
             exceptions.add(exception);
         }
         return this;
@@ -91,23 +86,20 @@ public final class CollectResult {
     /**
      * Gets the dependency cycles that were encountered while building the dependency graph.
      *
-     * @return The dependency cycles in the (raw) graph, never {@code null}.
+     * @return an unmodifiable list of the dependency cycles, never {@code null}.
      */
     public List<DependencyCycle> getCycles() {
-        return cycles;
+        return Collections.unmodifiableList(cycles);
     }
 
     /**
      * Records the specified dependency cycle.
      *
-     * @param cycle The dependency cycle to record, may be {@code null}.
+     * @param cycle the dependency cycle, may be {@code null}.
      * @return This result for chaining, never {@code null}.
      */
     public CollectResult addCycle(DependencyCycle cycle) {
         if (cycle != null) {
-            if (cycles.isEmpty()) {
-                cycles = new ArrayList<>();
-            }
             cycles.add(cycle);
         }
         return this;
