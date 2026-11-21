@@ -417,7 +417,7 @@
             <argLine>-Xmx128m</argLine>
             <redirectTestOutputToFile>${failsafe.redirectTestOutputToFile}</redirectTestOutputToFile>
             <systemPropertyVariables>
-              <java.io.tmpdir>${project.build.directory}/failsafe-tmp</java.io.tmpdir>
+              <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
             </systemPropertyVariables>
           </configuration>
           <executions>

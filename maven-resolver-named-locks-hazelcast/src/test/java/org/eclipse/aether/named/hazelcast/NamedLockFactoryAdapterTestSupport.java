@@ -20,7 +20,6 @@ package org.eclipse.aether.named.hazelcast;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
@@ -77,7 +76,6 @@ public abstract class NamedLockFactoryAdapterTestSupport {
 
     @BeforeEach
     public void before() throws IOException {
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
         LocalRepository localRepository =
                 new LocalRepository(Files.createTempDirectory("test").toFile());
         session = mock(RepositorySystemSession.class);
