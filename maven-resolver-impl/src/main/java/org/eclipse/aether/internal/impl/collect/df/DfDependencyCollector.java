@@ -180,14 +180,16 @@ public class DfDependencyCollector extends DependencyCollectorDelegate implement
             Dependency dependency,
             List<Artifact> relocations,
             boolean disableVersionManagement) {
+        PremanagedDependency preManaged =
+                PremanagedDependency.create(depManager, dependency, disableVersionManagement, args.premanagedState);
+        dependency = preManaged.getManagedDependency();
+
+        // Dependency management must run before selection: selectors reason about the managed scope/optionality.
         if (depSelector != null && !depSelector.selectDependency(dependency)) {
             return;
         }
 
         RequestTrace trace = collectStepTrace(parent, args.request.getRequestContext(), args.nodes.nodes, dependency);
-        PremanagedDependency preManaged =
-                PremanagedDependency.create(depManager, dependency, disableVersionManagement, args.premanagedState);
-        dependency = preManaged.getManagedDependency();
 
         boolean noDescriptor = isLackingDescriptor(dependency.getArtifact());
 
