@@ -112,9 +112,8 @@ class DefaultTransporterProviderTest {
             factories.put("capable", capable);
             DefaultTransporterProvider provider = new DefaultTransporterProvider(factories);
 
-            RemoteRepository repository = new RemoteRepository.Builder(
-                            "test", "default", protocol + ":/repository")
-                    .build();
+            RemoteRepository repository =
+                    new RemoteRepository.Builder("test", "default", protocol + ":/repository").build();
             assertSame(usable, provider.newTransporter(TestUtils.newSession(), repository));
             assertEquals(protocol, capable.lastProtocol);
             assertEquals(1, capable.newInstanceCalls);
