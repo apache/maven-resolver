@@ -26,14 +26,13 @@ import java.net.http.HttpResponse;
 import java.util.Optional;
 
 import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
-import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
-public class JdkRFC9457Reporter
-        extends RFC9457Reporter<HttpResponse<InputStream>, HttpTransporterException, HttpRequest.Builder> {
-    public static final JdkRFC9457Reporter INSTANCE = new JdkRFC9457Reporter();
+public class JdkRFC9457Reporter extends RFC9457Reporter<HttpResponse<InputStream>, HttpRequest.Builder> {
 
-    private JdkRFC9457Reporter() {}
+    protected JdkRFC9457Reporter(boolean captureResponseBody) {
+        super(captureResponseBody);
+    }
 
     @Override
     public void prepareRequest(Builder requestBuilder) {
@@ -41,13 +40,9 @@ public class JdkRFC9457Reporter
     }
 
     @Override
-    protected boolean isRFC9457Message(final HttpResponse<InputStream> response) {
-        Optional<String> optionalContentType = response.headers().firstValue("Content-Type");
-        if (optionalContentType.isPresent()) {
-            String contentType = optionalContentType.get();
-            return hasRFC9457ContentType(contentType);
-        }
-        return false;
+    protected String getContentType(final HttpResponse<InputStream> response) {
+        Optional<String> optionalContentType = response.headers().firstValue(HttpConstants.CONTENT_TYPE);
+        return optionalContentType.orElse(null);
     }
 
     @Override
@@ -63,7 +58,7 @@ public class JdkRFC9457Reporter
     @Override
     protected String getBody(final HttpResponse<InputStream> response) throws IOException {
         try (InputStream is = response.body()) {
-            return readBody(is);
+            return readBody(is, getContentType(response));
         }
     }
 }

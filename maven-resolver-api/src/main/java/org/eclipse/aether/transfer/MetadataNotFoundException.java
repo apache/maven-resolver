@@ -19,6 +19,7 @@
 package org.eclipse.aether.transfer;
 
 import org.eclipse.aether.metadata.Metadata;
+import org.eclipse.aether.repository.ArtifactRepository;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 
@@ -34,15 +35,7 @@ public class MetadataNotFoundException extends MetadataTransferException {
      * @param repository The involved local repository, may be {@code null}.
      */
     public MetadataNotFoundException(Metadata metadata, LocalRepository repository) {
-        super(metadata, null, "Could not find metadata " + metadata + getString(" in ", repository));
-    }
-
-    private static String getString(String prefix, LocalRepository repository) {
-        if (repository == null) {
-            return "";
-        } else {
-            return prefix + repository.getId() + " (" + repository.getBasePath().toAbsolutePath() + ")";
-        }
+        super(metadata, null, getMessage(metadata, repository));
     }
 
     /**
@@ -52,7 +45,7 @@ public class MetadataNotFoundException extends MetadataTransferException {
      * @param repository The involved remote repository, may be {@code null}.
      */
     public MetadataNotFoundException(Metadata metadata, RemoteRepository repository) {
-        super(metadata, repository, "Could not find metadata " + metadata + getString(" in ", repository));
+        super(metadata, repository, getMessage(metadata, repository));
     }
 
     /**
@@ -90,5 +83,24 @@ public class MetadataNotFoundException extends MetadataTransferException {
      */
     public MetadataNotFoundException(Metadata metadata, RemoteRepository repository, String message, Throwable cause) {
         super(metadata, repository, message, cause);
+    }
+
+    /**
+     * Creates a new exception with the specified metadata, repository and root cause.
+     *
+     * @param metadata The missing metadata, may be {@code null}.
+     * @param repository The involved remote repository, may be {@code null}.
+     * @param cause The exception that caused this one, may be {@code null}.
+     * @since 2.0.26
+     */
+    public MetadataNotFoundException(Metadata metadata, RemoteRepository repository, Throwable cause) {
+        super(metadata, repository, getMessage(metadata, repository), cause);
+    }
+
+    private static String getMessage(Metadata metadata, ArtifactRepository repository) {
+        StringBuilder buffer = new StringBuilder(256);
+        buffer.append("Could not find metadata ").append(metadata);
+        buffer.append(getString(" in ", repository));
+        return buffer.toString();
     }
 }

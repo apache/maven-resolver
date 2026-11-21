@@ -25,15 +25,15 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequest;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.eclipse.aether.spi.connector.transport.http.HttpConstants;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 
-public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse, HttpResponseException, HttpRequest> {
-    public static final ApacheRFC9457Reporter INSTANCE = new ApacheRFC9457Reporter();
+public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse, HttpRequest> {
 
-    private ApacheRFC9457Reporter() {}
+    protected ApacheRFC9457Reporter(boolean captureResponseBody) {
+        super(captureResponseBody);
+    }
 
     @Override
     public void prepareRequest(HttpRequest request) {
@@ -41,13 +41,12 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
     }
 
     @Override
-    protected boolean isRFC9457Message(final CloseableHttpResponse response) {
+    protected String getContentType(final CloseableHttpResponse response) {
         Header[] headers = response.getHeaders(HttpHeaders.CONTENT_TYPE);
         if (headers.length > 0) {
-            String contentType = headers[0].getValue();
-            return hasRFC9457ContentType(contentType);
+            return headers[0].getValue();
         }
-        return false;
+        return null;
     }
 
     @Override
@@ -58,11 +57,11 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
     @Override
     protected String getReasonPhrase(final CloseableHttpResponse response) {
         String reasonPhrase = response.getStatusLine().getReasonPhrase();
-        if (reasonPhrase == null || reasonPhrase.isEmpty()) {
+        if (reasonPhrase == null) {
             return "";
+        } else {
+            return reasonPhrase;
         }
-        int statusCode = getStatusCode(response);
-        return reasonPhrase + " (" + statusCode + ")";
     }
 
     @Override
@@ -76,7 +75,7 @@ public class ApacheRFC9457Reporter extends RFC9457Reporter<CloseableHttpResponse
             return "";
         }
         try (InputStream stream = is) {
-            return readBody(stream);
+            return readBody(stream, getContentType(response));
         }
     }
 }

@@ -38,6 +38,17 @@ public class ArtifactNotFoundException extends ArtifactTransferException {
     }
 
     /**
+     * Creates a new exception with the specified artifact, repository and root cause.
+     *
+     * @param artifact The missing artifact, may be {@code null}.
+     * @param repository The involved remote repository, may be {@code null}.
+     * @since 2.0.26
+     */
+    public ArtifactNotFoundException(Artifact artifact, RemoteRepository repository, Throwable cause) {
+        super(artifact, repository, getMessage(artifact, null, repository), cause);
+    }
+
+    /**
      * Creates a new exception with the specified system artifact and expected local path.
      *
      * @param artifact The missing artifact, may be {@code null}.
