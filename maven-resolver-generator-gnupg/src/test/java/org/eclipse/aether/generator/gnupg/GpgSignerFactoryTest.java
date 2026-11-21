@@ -48,7 +48,6 @@ import static org.mockito.Mockito.when;
 
 public class GpgSignerFactoryTest {
     private GnupgSignatureArtifactGeneratorFactory createFactory() throws Exception {
-        Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"))); // hack for Surefire
 
         ArtifactPredicate artifactPredicate = mock(ArtifactPredicate.class);
         when(artifactPredicate.hasChecksums(any(Artifact.class))).thenAnswer(a -> {

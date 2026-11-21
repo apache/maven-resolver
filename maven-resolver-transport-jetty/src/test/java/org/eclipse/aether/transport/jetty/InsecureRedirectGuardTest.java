@@ -18,8 +18,6 @@
  */
 package org.eclipse.aether.transport.jetty;
 
-import java.io.File;
-
 import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
@@ -40,12 +38,6 @@ class InsecureRedirectGuardTest {
 
     @BeforeAll
     static void startClient() throws Exception {
-        // Ensure java.io.tmpdir exists before starting HttpClient. Jetty's HttpClient loads
-        // compression providers (including Brotli) via ServiceLoader during start(). Brotli4j
-        // extracts a native library to a temp file; if the tmpdir does not exist yet (Surefire
-        // sets it to target/surefire-tmp which is deleted by mvn clean), extraction fails and
-        // Brotli is permanently disabled for the JVM lifetime, breaking later compression tests.
-        new File(System.getProperty("java.io.tmpdir")).mkdirs();
         httpClient = new HttpClient();
         httpClient.start();
     }
