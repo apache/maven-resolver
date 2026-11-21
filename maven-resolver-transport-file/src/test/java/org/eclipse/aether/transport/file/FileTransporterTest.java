@@ -41,7 +41,6 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transfer.NoTransporterException;
 import org.eclipse.aether.transfer.TransferCancelledException;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -148,7 +147,7 @@ public class FileTransporterTest {
             }
             newTransporter(fs.uriPrefix + repoDir.toUri().toASCIIString());
         } catch (Exception e) {
-            Assertions.fail(e);
+            fail(e);
         }
     }
 
