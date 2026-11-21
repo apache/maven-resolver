@@ -89,7 +89,7 @@ class DefaultTransporterProviderTest {
         StubTransporterFactory accepting = new StubTransporterFactory("accepting", true, usable);
 
         Map<String, TransporterFactory> factories = new HashMap<>();
-        factories.put("declining", declining);
+        Map<String, TransporterFactory> factories = new LinkedHashMap<>();
         factories.put("accepting", accepting);
         DefaultTransporterProvider provider = new DefaultTransporterProvider(factories);
 
