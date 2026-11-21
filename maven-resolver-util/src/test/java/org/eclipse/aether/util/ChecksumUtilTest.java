@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("deprecation") // covers the deprecated File and byte[] variants until they are removed
 public class ChecksumUtilTest {
     private static final String EMPTY = "EMPTY";
     private static final String PATTERN = "PATTERN";

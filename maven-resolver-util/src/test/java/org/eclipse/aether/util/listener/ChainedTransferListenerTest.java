@@ -63,8 +63,8 @@ public class ChainedTransferListenerTest {
 
         ChainedTransferListener chained = new ChainedTransferListener(faultyListener, normalListener);
 
-        TransferResource resource =
-                new TransferResource("https://repo.example.com", "path/to/artifact.jar", (java.io.File) null, null);
+        TransferResource resource = new TransferResource(
+                null, "https://repo.example.com", "path/to/artifact.jar", (java.io.File) null, null);
         TransferEvent event = new TransferEvent.Builder(TestUtils.newSession(), resource)
                 .setType(TransferEvent.EventType.SUCCEEDED)
                 .setRequestType(TransferEvent.RequestType.GET)
