@@ -68,8 +68,21 @@ public final class DefaultTransporterProvider implements TransporterProvider {
 
         List<NoTransporterException> errors = new ArrayList<>();
         for (PrioritizedComponent<TransporterFactory> factory : factories.getEnabled()) {
+            TransporterFactory transporterFactory = factory.getComponent();
+            if (!transporterFactory.canHandle(repository.getProtocol())) {
+                LOGGER.debug(
+                        "Transporter factory {} cannot handle protocol {} ({})",
+                        transporterFactory.getClass().getName(),
+                        repository.getProtocol(),
+                        transporterFactory.getDescription());
+                errors.add(new NoTransporterException(
+                        repository,
+                        "Transporter factory " + transporterFactory.getClass().getSimpleName()
+                                + " cannot handle protocol " + repository.getProtocol()));
+                continue;
+            }
             try {
-                Transporter transporter = factory.getComponent().newInstance(session, repository);
+                Transporter transporter = transporterFactory.newInstance(session, repository);
 
                 if (LOGGER.isDebugEnabled()) {
                     StringBuilder buffer = new StringBuilder(256);
@@ -106,13 +119,13 @@ public final class DefaultTransporterProvider implements TransporterProvider {
                 if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace(
                             "Transporter factory {} did not provide Transporter for {}",
-                            factory.getComponent().getClass(),
+                            transporterFactory.getClass(),
                             repository,
                             e);
                 } else {
                     LOGGER.debug(
                             "Transporter factory {} did not provide Transporter for {}: {}",
-                            factory.getComponent().getClass(),
+                            transporterFactory.getClass(),
                             repository,
                             e.getMessage());
                 }

@@ -72,6 +72,18 @@ public final class WagonTransporterFactory implements TransporterFactory {
     }
 
     @Override
+    public boolean canHandle(String protocol) {
+        // Wagon decides which protocols it supports from the complete repository via the WagonProvider,
+        // so this factory cannot rule any protocol out by name alone.
+        return true;
+    }
+
+    @Override
+    public String getDescription() {
+        return "Maven Wagon transporter (protocol support depends on the registered WagonProvider)";
+    }
+
+    @Override
     public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");
