@@ -141,20 +141,19 @@ public final class ClassicConflictResolver extends ConflictResolver {
             throw new RepositoryException("conflict groups have not been identified");
         }
 
-        Map<String, Collection<String>> cyclicPredecessors = new HashMap<>();
+        Collection<String> cyclicIds = new HashSet<>();
         for (Collection<String> cycle : conflictIdCycles) {
-            for (String conflictId : cycle) {
-                Collection<String> predecessors = cyclicPredecessors.computeIfAbsent(conflictId, k -> new HashSet<>());
-                predecessors.addAll(cycle);
-            }
+            cyclicIds.addAll(cycle);
         }
 
         State state = new State(node, conflictIds, sortedConflictIds.size(), context);
         for (Iterator<String> it = sortedConflictIds.iterator(); it.hasNext(); ) {
             String conflictId = it.next();
 
-            // reset data structures for next graph walk
-            state.prepare(conflictId, cyclicPredecessors.get(conflictId));
+            // A conflict id below a cycle is not itself part of that cycle, but the graph walk still has to descend
+            // through the cycle to reach its nodes. Hence every cyclic id must be eligible as a potential ancestor,
+            // otherwise hard constraints on those nodes are never offered to the version selector (maven-resolver#2325).
+            state.prepare(conflictId, cyclicIds);
 
             // find nodes with the current conflict id and while walking the graph (more deeply), nuke leftover losers
             gatherConflictItems(node, state);
