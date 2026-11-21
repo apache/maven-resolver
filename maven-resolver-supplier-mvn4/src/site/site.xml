@@ -24,7 +24,7 @@ under the License.
       xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd" name="Supplier Maven 4">
   <body>
     <menu name="Overview">
-      <item name="Introduction" href="index.html"/>
+      <item name="Deprecation notice" href="index.html"/>
       <item name="JavaDocs" href="apidocs/index.html"/>
       <item name="Source Xref" href="xref/index.html"/>
       <!--item name="FAQ" href="faq.html"/-->
