@@ -149,7 +149,11 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
         boolean legacyLocalRepository =
                 ConfigUtils.getBoolean(session, DEFAULT_LEGACY_LOCAL_REPOSITORY, CONFIG_PROP_LEGACY_LOCAL_REPOSITORY);
 
-        if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
+        // "enhanced" is the content type the manager reports, so accept it to make create -> getContentType ->
+        // recreate round-trips work. "" and "default" stay accepted for existing callers.
+        if ("".equals(repository.getContentType())
+                || "default".equals(repository.getContentType())
+                || EnhancedLocalRepositoryManagerFactory.NAME.equals(repository.getContentType())) {
             return new EnhancedLocalRepositoryManager(
                     repository.getBasePath(),
                     localPathComposer,
