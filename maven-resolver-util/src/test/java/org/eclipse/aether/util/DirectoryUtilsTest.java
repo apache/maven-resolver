@@ -102,7 +102,7 @@ public class DirectoryUtilsTest {
         Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir")));
 
         Path tmpDir = Files.createTempDirectory(testInfo.getDisplayName());
-        Files.createDirectories(tmpDir.resolve("foo"));
+        assertFalse(Files.exists(tmpDir.resolve("foo")));
         Path result = DirectoryUtils.resolveDirectory("foo", tmpDir, true);
         assertEquals(tmpDir.resolve("foo"), result);
         assertTrue(Files.isDirectory(tmpDir.resolve("foo")));
