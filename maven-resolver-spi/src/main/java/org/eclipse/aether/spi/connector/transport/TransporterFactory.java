@@ -32,6 +32,35 @@ import org.eclipse.aether.transfer.NoTransporterException;
 public interface TransporterFactory {
 
     /**
+     * Indicates whether this factory may be able to handle the given repository protocol. A {@code true} result does
+     * not guarantee that a transporter can be created: {@link #newInstance(RepositorySystemSession, RemoteRepository)}
+     * remains authoritative and still validates the complete repository.
+     * <p>
+     * The default implementation returns {@code true}. This keeps existing factories source and binary compatible and
+     * accommodates protocols that cannot be decided by name alone, such as {@code symlink+file} or custom file system
+     * providers.
+     *
+     * @param protocol The repository protocol, may be {@code null}.
+     * @return {@code true} if this factory may be able to create a transporter for the given protocol.
+     * @since 2.0.27
+     */
+    default boolean canHandle(String protocol) {
+        return true;
+    }
+
+    /**
+     * Gets a short human-readable description of this factory, for example the transport library it uses.
+     * <p>
+     * The default implementation returns an empty string.
+     *
+     * @return The description, never {@code null}.
+     * @since 2.0.27
+     */
+    default String getDescription() {
+        return "";
+    }
+
+    /**
      * Tries to create a transporter for the specified remote repository. Typically, a factory will inspect
      * {@link RemoteRepository#getProtocol()} to determine whether it can handle a repository.
      *

@@ -63,6 +63,16 @@ public final class JettyTransporterFactory implements HttpTransporterFactory {
     }
 
     @Override
+    public boolean canHandle(String protocol) {
+        return "http".equalsIgnoreCase(protocol) || "https".equalsIgnoreCase(protocol);
+    }
+
+    @Override
+    public String getDescription() {
+        return "Eclipse Jetty transporter";
+    }
+
+    @Override
     public HttpTransporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");

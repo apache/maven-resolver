@@ -68,6 +68,16 @@ public final class ApacheTransporterFactory implements HttpTransporterFactory {
     }
 
     @Override
+    public boolean canHandle(String protocol) {
+        return "http".equalsIgnoreCase(protocol) || "https".equalsIgnoreCase(protocol);
+    }
+
+    @Override
+    public String getDescription() {
+        return "Apache HttpClient transporter";
+    }
+
+    @Override
     public HttpTransporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");
