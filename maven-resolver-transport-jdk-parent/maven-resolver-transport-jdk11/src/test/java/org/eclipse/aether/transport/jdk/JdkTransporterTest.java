@@ -18,10 +18,19 @@
  */
 package org.eclipse.aether.transport.jdk;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.ConnectException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Version;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -31,6 +40,7 @@ import org.eclipse.aether.internal.test.util.TestUtils;
 import org.eclipse.aether.internal.test.util.http.HttpServer;
 import org.eclipse.aether.internal.test.util.http.HttpTransporterTest;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.spi.connector.transport.GetTask;
 import org.eclipse.aether.spi.connector.transport.PeekTask;
 import org.eclipse.aether.spi.connector.transport.PutTask;
 import org.eclipse.aether.spi.connector.transport.Transporter;
@@ -38,6 +48,7 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -224,5 +235,49 @@ class JdkTransporterTest extends HttpTransporterTest {
         assertTrue(
                 "100-continue".equalsIgnoreCase(expectHeader),
                 "Expect header should be sent when explicitly enabled on Java 17.0.17+");
+    }
+
+    @Test
+    @Timeout(10)
+    void testBodyReadTimeout() throws Exception {
+        session.setConfigProperty(ConfigurationProperties.REQUEST_TIMEOUT, 300);
+        try (ServerSocket server = new ServerSocket(0)) {
+            newTransporter("http://localhost:" + server.getLocalPort());
+
+            Thread responder = new Thread(() -> {
+                try (Socket socket = server.accept()) {
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1));
+                    String line;
+                    while ((line = reader.readLine()) != null && !line.isEmpty()) {
+                        // drain the request headers before responding
+                    }
+                    OutputStream out = socket.getOutputStream();
+                    out.write("HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\npartial"
+                            .getBytes(StandardCharsets.ISO_8859_1));
+                    out.flush();
+                    Thread.sleep(5000);
+                } catch (IOException e) {
+                    // the client closed the connection after the timeout, as expected
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+            responder.setDaemon(true);
+            responder.start();
+
+            long start = System.nanoTime();
+            Exception error =
+                    assertThrows(Exception.class, () -> transporter.get(new GetTask(URI.create("repo/file.txt"))));
+            long elapsedMillis = Duration.ofNanos(System.nanoTime() - start).toMillis();
+
+            assertTrue(
+                    (error.getClass().getSimpleName() + " " + error.getMessage())
+                            .toLowerCase(Locale.ROOT)
+                            .contains("timeout"),
+                    () -> "Expected a timeout, got " + error);
+            assertEquals(Transporter.ERROR_OTHER, transporter.classify(error));
+            assertTrue(elapsedMillis < 2000, "Body stall should fail at the timeout, took " + elapsedMillis + "ms");
+        }
     }
 }
