@@ -111,7 +111,9 @@ public final class ConfigurationProperties {
      * {@code Map<String, String>}, mapping a header name to its value. Besides this general key, clients may also
      * specify headers for a specific remote repository by appending the suffix {@code .<repoId>} to this key when
      * storing the headers map. The repository-specific headers map is supposed to be complete, i.e. is not merged with
-     * the general headers map.
+     * the general headers map. When this property is set to a string, for example from the Maven command line, it is
+     * parsed as a properties file: one {@code name=value} pair per line, with the escaping rules of
+     * {@link java.util.Properties#load(java.io.Reader)}.
      */
     public static final String HTTP_HEADERS = PREFIX_CONNECTOR + "http.headers";
 

@@ -129,6 +129,16 @@ If the value is not given in the target type the following conversions are appli
 | `String` | `int`     | [`Integer.parseInt(...)`](https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html#parseInt(java.lang.String))         |
 | `String` | `long`    | [`Long.parseLong(...)`](https://docs.oracle.com/javase/8/docs/api/java/lang/Long.html#parseLong(java.lang.String))             |
 | `String` | `float`   | [`Float.parseFloat(...)`](https://docs.oracle.com/javase/8/docs/api/java/lang/Float.html#parseFloat(java.lang.String))         |
+| `String` | `Map`     | [`Properties.load(...)`](https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html#load(java.io.Reader)) with one `key=value` pair per line |
+
+A string converted to a `Map` uses the properties-file syntax: one `key=value` pair per line, with the escaping rules of `java.util.Properties`. Lines starting with `#` are comments. For example:
+
+```properties
+X-Test=one
+Accept=application/json
+```
+
+The same string can be passed as a Maven system property, for example `-Daether.connector.http.headers="X-Test=one\nAccept=application/json"` with actual line breaks in the value.
 
 ## Set Configuration from Apache Maven
 

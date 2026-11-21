@@ -64,6 +64,28 @@ public class ConfigUtilsTest {
     }
 
     @Test
+    public void testGetMapStringConversion() {
+        config.put("some-map", "X-Test=value\nAccept=application/json\n");
+
+        Map<?, ?> result = ConfigUtils.getMap(config, null, "some-map");
+
+        assertEquals("value", result.get("X-Test"));
+        assertEquals("application/json", result.get("Accept"));
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void testGetMapStringConversionEscapesAndComments() {
+        config.put("some-map", "X-Test=one\\ttwo\\nthree\n# a comment\nEmpty=\n");
+
+        Map<?, ?> result = ConfigUtils.getMap(config, null, "some-map");
+
+        assertEquals("one\ttwo\nthree", result.get("X-Test"));
+        assertEquals("", result.get("Empty"));
+        assertEquals(2, result.size());
+    }
+
+    @Test
     public void testGetListDefault() {
         List<?> val = new ArrayList<Object>();
         assertSame(val, ConfigUtils.getList(config, val, "no-value"));
