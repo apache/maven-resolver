@@ -19,17 +19,17 @@
 package org.eclipse.aether.util;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class DirectoryUtilsTest {
 
@@ -49,23 +49,28 @@ public class DirectoryUtilsTest {
 
     @Test
     public void expectedCasesAbsolute(@TempDir Path tmpDir) throws IOException {
-        // TODO: this test is skipped on Windows, as it is not clear which drive letter will `new File("/foo")`
-        // path get. According to Windows (and  assuming Java Path does separator change OK), "\foo" file should
-        // get resolved to CWD drive + "\foo" path, but seems Java 17 is different from 11 and 8 in this respect.
-        // This below WORKS on win + Java8 abd win + Java11 but FAILS on win + Java17
-        assumeTrue(
-                !"WindowsFileSystem".equals(FileSystems.getDefault().getClass().getSimpleName()));
-
+        // absolute on every platform: "/foo" on Unix, "C:\foo" (the drive of tmpDir) on Windows
+        Path root = tmpDir.getRoot();
         Path result;
 
-        result = DirectoryUtils.resolveDirectory("/foo", tmpDir, false);
-        assertEquals(FileSystems.getDefault().getPath("/foo").toAbsolutePath(), result);
+        result = DirectoryUtils.resolveDirectory(root.resolve("foo").toString(), tmpDir, false);
+        assertEquals(root.resolve("foo"), result);
 
-        result = DirectoryUtils.resolveDirectory("/foo/bar", tmpDir, false);
-        assertEquals(FileSystems.getDefault().getPath("/foo/bar").toAbsolutePath(), result);
+        result = DirectoryUtils.resolveDirectory(root.resolve("foo/bar").toString(), tmpDir, false);
+        assertEquals(root.resolve("foo/bar"), result);
 
-        result = DirectoryUtils.resolveDirectory("/foo/./bar/..", tmpDir, false);
-        assertEquals(FileSystems.getDefault().getPath("/foo").toAbsolutePath(), result);
+        result = DirectoryUtils.resolveDirectory(root.resolve("foo/./bar/..").toString(), tmpDir, false);
+        assertEquals(root.resolve("foo"), result);
+    }
+
+    /**
+     * On Windows "/foo" has a root but no drive, so it is not absolute: it resolves against the drive of the base.
+     */
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    public void rootedWithoutDriveOnWindows(@TempDir Path tmpDir) throws IOException {
+        Path result = DirectoryUtils.resolveDirectory("/foo", tmpDir, false);
+        assertEquals(tmpDir.getRoot().resolve("foo"), result);
     }
 
     @Test
