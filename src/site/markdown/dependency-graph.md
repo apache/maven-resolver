@@ -73,3 +73,26 @@ It also helps them understand why a dependency is in a given scope.
 
 The API documentation for these configuration properties describes their effects.
 It also describes how to access the additional data.
+
+### Detecting cycles while visiting the graph
+
+A graph in verbose mode may contain cycles, so a plain recursive visitor can overflow the stack.
+Wrap a visitor with `CycleRecordingDependencyVisitor` to stop at nodes that have already been seen and to record
+the back-edges. The delegate still sees the repeated node, which makes the cycle visible in the output:
+
+```java
+    DependencyNode root = repoSystem.collectDependencies( session, collectRequest ).getRoot();
+
+    CycleRecordingDependencyVisitor cycles =
+        new CycleRecordingDependencyVisitor( new DependencyGraphDumper( System.out::println ) );
+    root.accept( cycles );
+
+    for ( List<DependencyNode> cycle : cycles.getCycles() )
+    {
+        // the last node repeats the first one; the last edge is the back-edge
+        System.out.println( "cycle: " + cycle );
+    }
+```
+
+`getBackEdges()` returns the closing edge of each cycle as a `(source, target)` pair. A node reached again on a
+different path is a diamond, not a cycle, and is not recorded.
