@@ -63,6 +63,16 @@ public final class JdkTransporterFactory implements HttpTransporterFactory {
     }
 
     @Override
+    public boolean canHandle(String protocol) {
+        return "http".equalsIgnoreCase(protocol) || "https".equalsIgnoreCase(protocol);
+    }
+
+    @Override
+    public String getDescription() {
+        return "JDK HttpClient transporter (Methanol)";
+    }
+
+    @Override
     public HttpTransporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");

@@ -68,6 +68,16 @@ public final class UrlTransporterFactory implements HttpTransporterFactory {
     }
 
     @Override
+    public boolean canHandle(String protocol) {
+        return "http".equalsIgnoreCase(protocol) || "https".equalsIgnoreCase(protocol);
+    }
+
+    @Override
+    public String getDescription() {
+        return "Bootstrap URL transporter backed by java.net.URLConnection";
+    }
+
+    @Override
     public UrlTransporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");

@@ -596,6 +596,16 @@ public class FileTransporterTest {
     }
 
     @Test
+    void testCanHandleCompoundAndCustomProtocols() {
+        FileTransporterFactory factory = new FileTransporterFactory();
+        assertTrue(factory.canHandle("file"));
+        assertTrue(factory.canHandle("bundle"));
+        assertTrue(factory.canHandle("symlink+file"));
+        assertTrue(factory.canHandle("hardlink+file"));
+        assertTrue(factory.canHandle("jimfs"));
+    }
+
+    @Test
     void testInit_CaseInsensitiveProtocol() throws Exception {
         newTransporter("file:/void");
         newTransporter("FILE:/void");

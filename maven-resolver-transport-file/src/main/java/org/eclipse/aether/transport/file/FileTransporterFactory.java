@@ -65,6 +65,19 @@ public final class FileTransporterFactory implements TransporterFactory {
         return this;
     }
 
+    @Override
+    public boolean canHandle(String protocol) {
+        // Besides "file" and "bundle", the factory accepts compound protocols such as "symlink+file" and
+        // "hardlink+file" as well as any custom FileSystemProvider (e.g. JIMFS). Those names cannot be enumerated,
+        // so newInstance() remains the authority for this factory and the default "true" is kept intentionally.
+        return true;
+    }
+
+    @Override
+    public String getDescription() {
+        return "Java NIO file system transporter (file, bundle, compound and custom file protocols)";
+    }
+
     /**
      * Creates new instance of {@link FileTransporter}.
      *

@@ -70,6 +70,16 @@ public final class ClasspathTransporterFactory implements TransporterFactory {
     }
 
     @Override
+    public boolean canHandle(String protocol) {
+        return "classpath".equalsIgnoreCase(protocol);
+    }
+
+    @Override
+    public String getDescription() {
+        return "Classpath transporter backed by class loader resources";
+    }
+
+    @Override
     public Transporter newInstance(RepositorySystemSession session, RemoteRepository repository)
             throws NoTransporterException {
         requireNonNull(session, "session cannot be null");
