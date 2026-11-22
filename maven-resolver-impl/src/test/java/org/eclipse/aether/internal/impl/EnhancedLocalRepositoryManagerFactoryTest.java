@@ -212,13 +212,13 @@ public class EnhancedLocalRepositoryManagerFactoryTest {
     @Test
     void contentTypeRoundTrip() throws Exception {
         LocalRepositoryManager created = newManager();
-        String contentType = created.getContentType();
+        String contentType = created.getRepository().getContentType();
         assertEquals("enhanced", contentType);
 
         // The reported content type must be accepted by the factory again (maven-resolver#760).
         LocalRepository recreated = new LocalRepository(basedir, contentType);
         LocalRepositoryManager again = factory.newInstance(session, recreated);
-        assertEquals(contentType, again.getContentType());
+        assertEquals(contentType, again.getRepository().getContentType());
         assertInstanceOf(EnhancedLocalRepositoryManager.class, again);
     }
 
