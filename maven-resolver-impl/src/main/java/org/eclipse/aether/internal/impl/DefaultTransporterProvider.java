@@ -75,10 +75,6 @@ public final class DefaultTransporterProvider implements TransporterProvider {
                         transporterFactory.getClass().getName(),
                         repository.getProtocol(),
                         transporterFactory.getDescription());
-                errors.add(new NoTransporterException(
-                        repository,
-                        "Transporter factory " + transporterFactory.getClass().getSimpleName()
-                                + " cannot handle protocol " + repository.getProtocol()));
                 continue;
             }
             try {

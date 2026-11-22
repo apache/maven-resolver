@@ -84,12 +84,13 @@ class DefaultTransporterProviderTest {
     }
 
     @Test
-    void skipsFactoryThatCannotHandleProtocol() {
+    void skipsFactoryThatCannotHandleProtocol() throws NoTransporterException {
         Transporter usable = mock(Transporter.class);
         StubTransporterFactory declining = new StubTransporterFactory("declining", false, mock(Transporter.class));
         StubTransporterFactory accepting = new StubTransporterFactory("accepting", true, usable);
 
         Map<String, TransporterFactory> factories = new LinkedHashMap<>();
+        factories.put("declining", declining);
         factories.put("accepting", accepting);
         DefaultTransporterProvider provider = new DefaultTransporterProvider(factories);
 
@@ -103,7 +104,7 @@ class DefaultTransporterProviderTest {
     }
 
     @Test
-    void compoundAndCustomProtocolsReachCapableFactory() {
+    void compoundAndCustomProtocolsReachCapableFactory() throws NoTransporterException {
         for (String protocol : new String[] {"file", "symlink+file", "hardlink+file", "jimfs"}) {
             Transporter usable = mock(Transporter.class);
             StubTransporterFactory capable = new StubTransporterFactory("capable", true, usable);
@@ -134,7 +135,8 @@ class DefaultTransporterProviderTest {
                 NoTransporterException.class, () -> provider.newTransporter(TestUtils.newSession(), repository));
 
         assertTrue(error.getMessage().contains("https://example.com/repository"));
-        assertEquals(1, error.getSuppressed().length);
+        assertTrue(error.getCause() == null);
+        assertEquals(0, error.getSuppressed().length);
         assertEquals(0, declining.newInstanceCalls);
     }
 }
