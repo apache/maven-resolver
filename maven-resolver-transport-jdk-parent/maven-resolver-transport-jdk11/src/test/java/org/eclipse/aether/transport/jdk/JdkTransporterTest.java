@@ -271,10 +271,12 @@ class JdkTransporterTest extends HttpTransporterTest {
                     assertThrows(Exception.class, () -> transporter.get(new GetTask(URI.create("repo/file.txt"))));
             long elapsedMillis = Duration.ofNanos(System.nanoTime() - start).toMillis();
 
+            boolean timeoutSignalled = (error.getClass().getSimpleName() + " " + error.getMessage())
+                    .toLowerCase(Locale.ROOT)
+                    .contains("timeout");
+            // Methanol closes the body stream when the read deadline fires, which surfaces as IOException("closed").
             assertTrue(
-                    (error.getClass().getSimpleName() + " " + error.getMessage())
-                            .toLowerCase(Locale.ROOT)
-                            .contains("timeout"),
+                    timeoutSignalled || (error instanceof IOException && "closed".equalsIgnoreCase(error.getMessage())),
                     () -> "Expected a timeout, got " + error);
             assertEquals(Transporter.ERROR_OTHER, transporter.classify(error));
             assertTrue(elapsedMillis < 2000, "Body stall should fail at the timeout, took " + elapsedMillis + "ms");
