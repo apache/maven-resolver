@@ -265,7 +265,10 @@ public class HttpTransporterUtilsTest {
         RemoteRepository repository = new RemoteRepository.Builder("test", "default", "https://example.com/").build();
         session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS, "X-Test=one\nAccept=application/json\n");
 
-        assertEquals("one", HttpTransporterUtils.getHttpHeaders(session, repository).get("X-Test"));
-        assertEquals("application/json", HttpTransporterUtils.getHttpHeaders(session, repository).get("Accept"));
+        assertEquals(
+                "one", HttpTransporterUtils.getHttpHeaders(session, repository).get("X-Test"));
+        assertEquals(
+                "application/json",
+                HttpTransporterUtils.getHttpHeaders(session, repository).get("Accept"));
     }
 }
