@@ -290,12 +290,11 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                 }
 
                 if (!descriptorResult.getRelocations().isEmpty()) {
-                    boolean disableVersionManagementSubsequently = originalArtifact
-                                    .getGroupId()
-                                    .equals(d.getArtifact().getGroupId())
-                            && originalArtifact
-                                    .getArtifactId()
-                                    .equals(d.getArtifact().getArtifactId());
+                    boolean disableVersionManagementSubsequently =
+                            originalArtifact.getGroupId().equals(d.getArtifact().getGroupId())
+                                    && originalArtifact
+                                            .getArtifactId()
+                                            .equals(d.getArtifact().getArtifactId());
 
                     PremanagedDependency premanagedDependency = PremanagedDependency.create(
                             context.depManager, d, disableVersionManagementSubsequently, args.premanagedState);
