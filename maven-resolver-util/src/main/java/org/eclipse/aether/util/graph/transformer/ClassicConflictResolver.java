@@ -152,7 +152,8 @@ public final class ClassicConflictResolver extends ConflictResolver {
 
             // A conflict id below a cycle is not itself part of that cycle, but the graph walk still has to descend
             // through the cycle to reach its nodes. Hence every cyclic id must be eligible as a potential ancestor,
-            // otherwise hard constraints on those nodes are never offered to the version selector (maven-resolver#2325).
+            // otherwise hard constraints on those nodes are never offered to the version selector
+            // (maven-resolver#2325).
             state.prepare(conflictId, cyclicIds);
 
             // find nodes with the current conflict id and while walking the graph (more deeply), nuke leftover losers
