@@ -77,6 +77,29 @@ public class CycleRecordingDependencyVisitorTest {
     }
 
     @Test
+    void delegateVisitLeaveIsPairedWhenVisitEnterPrunes() throws Exception {
+        DependencyNode root = parse("cycles.txt");
+        StringBuilder trace = new StringBuilder();
+        CycleRecordingDependencyVisitor visitor = new CycleRecordingDependencyVisitor(new DependencyVisitor() {
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                trace.append('>').append(artifactId(node)).append(' ');
+                return !"b".equals(artifactId(node));
+            }
+
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                trace.append('<').append(artifactId(node)).append(' ');
+                return true;
+            }
+        });
+
+        assertTimeoutPreemptively(Duration.ofSeconds(10), () -> root.accept(visitor));
+
+        assertEquals(">a >b <b >d <d <a ", trace.toString());
+    }
+
+    @Test
     void recordsCyclesWithoutDelegate() throws Exception {
         DependencyNode root = parse("cycles.txt");
         CycleRecordingDependencyVisitor visitor = new CycleRecordingDependencyVisitor();

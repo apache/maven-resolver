@@ -125,8 +125,8 @@ public final class CycleRecordingDependencyVisitor implements DependencyVisitor 
             }
             // A node seen on a different path is a diamond, not a cycle: suppress it as TreeDependencyVisitor does.
         } else if (visitor != null) {
-            delegated = visitor.visitEnter(node);
-            descend = delegated;
+            delegated = true;
+            descend = visitor.visitEnter(node);
         }
 
         stack.push(new Frame(node, delegated));
