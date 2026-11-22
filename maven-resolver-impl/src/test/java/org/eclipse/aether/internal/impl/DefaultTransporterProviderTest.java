@@ -20,6 +20,7 @@ package org.eclipse.aether.internal.impl;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.internal.test.util.TestUtils;
