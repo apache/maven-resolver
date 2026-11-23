@@ -79,7 +79,7 @@ path composition keep following the system-wide function above, whose default is
 function is explicitly configured, tracking follows it; the `aether.system.trackingRepositoryKeyFunction`
 configuration property, when set, overrides both.
 With strict origin checking, tracking entries written under a different function than the active one make affected artifacts locally unavailable, so they are re-fetched (with checksum validation) once.
-The [enhanced LRM release availability policy](local-repository.html#release-availability-policy), controlled by the Boolean `aether.lrm.enhanced.ignoreAvailability` (legacy alias `aether.enhancedLocalRepository.ignoreAvailability`, with the current key taking precedence), can instead reuse tracked releases across an origin mismatch without changing repository keys or provenance records.
+The [enhanced LRM release availability policy](local-repository.html#Release_Availability_Policy), controlled by the Boolean `aether.lrm.enhanced.ignoreAvailability` (legacy alias `aether.enhancedLocalRepository.ignoreAvailability`, with the current key taking precedence), can instead reuse tracked releases across an origin mismatch without changing repository keys or provenance records.
 Matching origins retain normal repository attribution; fallback results have a `null` repository, while registration (`add`), snapshots and metadata remain unchanged.
 The fallback still rejects missing files and noncanonical paths and does not search other split paths.
 **Warning:** This changes the trust policy because different repositories may supply different bytes for the same coordinates.
