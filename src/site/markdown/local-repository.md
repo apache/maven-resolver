@@ -61,7 +61,8 @@ Missing files and noncanonical paths are still rejected, and the fallback does n
 The chained LRM's tail availability bypass remains independent and defaults to `true`, so strict origin checking across all chain members requires both `aether.lrm.enhanced.ignoreAvailability=false` and `aether.chainedLocalRepository.ignoreTailAvailability=false`.
 
 **Warning:** Enabling this fallback changes the trust policy: repositories may serve different bytes for the same coordinates, and a cached release may now be reused despite its origin mismatch.
-If you previously changed `aether.lrm.enhanced.trackingFilename` (or its legacy alias `aether.enhancedLocalRepository.trackingFilename`) to bypass origin checks, restore the original tracking filename and use the availability policy instead, keeping the existing provenance records rather than deleting them.
+If you previously changed `aether.lrm.enhanced.trackingFilename` (or its legacy alias `aether.enhancedLocalRepository.trackingFilename`) to bypass origin checks, restore the original tracking filename and use the availability policy instead.
+This preserves existing provenance records rather than discarding them.
 
 #### Split Local Repository
 

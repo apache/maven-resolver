@@ -1,4 +1,4 @@
-# Upgrading Resolver (major versions)
+# Upgrading Resolver
 <!---
  Licensed to the Apache Software Foundation (ASF) under one or more
  contributor license agreements.  See the NOTICE file distributed with
@@ -16,8 +16,19 @@
  limitations under the License.
 -->
 
-This page collects quick guides for developers upgrading from one major
-version of Resolver to another.
+This page collects quick guides for developers upgrading Resolver.
+
+# Upgrading to 2.0.27
+
+The enhanced local repository manager now automatically reuses tracked cached release artifacts across remote repository origin changes for the stock unsplit layout (`DefaultLocalPathPrefixComposerFactory` with split disabled).
+This changes the default trust policy: different repositories may serve different bytes at the same coordinates, and the cached release can be reused without a matching requested origin.
+Split layouts and custom prefix composer factories remain origin-sensitive by default.
+An explicitly false `aether.chainedLocalRepository.ignoreTailAvailability` also suppresses automatic relaxation, unless an explicit enhanced-manager setting overrides it.
+
+Set `aether.lrm.enhanced.ignoreAvailability=false` to disable the new fallback and restore the enhanced manager's previous origin-checking behavior, including its existing legacy-origin matching rules.
+For strict origin checking across all chained repositories, also set `aether.chainedLocalRepository.ignoreTailAvailability=false` to disable the independent tail bypass.
+Snapshots, metadata and provenance recording are unchanged, and the fallback does not search other split paths.
+See [Release Availability Policy](local-repository.html#Release_Availability_Policy) for configuration precedence and migration from tracking-filename workarounds.
 
 # Upgrading from 1.x to 2.x
 

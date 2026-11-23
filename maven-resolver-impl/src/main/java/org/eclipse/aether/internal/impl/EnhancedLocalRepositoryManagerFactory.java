@@ -60,7 +60,8 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
 
     /**
      * Whether tracked release artifacts may be reused regardless of their recorded remote origin.
-     * If unset, enabled for the stock unsplit local path prefix composer, unless
+     * If unset, this property defaults to {@code true} for the stock unsplit
+     * {@link DefaultLocalPathPrefixComposerFactory}, unless
      * {@link ChainedLocalRepositoryManager#CONFIG_PROP_IGNORE_TAIL_AVAILABILITY} is explicitly false.
      * Split layouts and custom prefix composer factories default to origin-sensitive lookups.
      * An explicit value overrides this automatic policy. Matching origins retain repository attribution;
@@ -72,6 +73,8 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
      * @configurationType {@link java.lang.Boolean}
+     * @configurationDefaultValue true for the stock unsplit layout unless chained tail availability is explicitly
+     * false; false otherwise (automatic).
      * @since 2.0.27
      */
     public static final String CONFIG_PROP_IGNORE_AVAILABILITY = CONFIG_PROPS_PREFIX + "ignoreAvailability";
