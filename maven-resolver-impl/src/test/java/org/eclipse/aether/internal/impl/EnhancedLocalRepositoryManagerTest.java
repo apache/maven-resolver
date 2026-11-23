@@ -131,6 +131,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 RepositoryIdHelper::simpleRepositoryKey,
                 "_remote.repositories",
                 true,
+                false,
                 trackingFileManager,
                 new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory())
                         .createComposer(session));
@@ -434,6 +435,7 @@ public class EnhancedLocalRepositoryManagerTest {
                 RepositoryIdHelper.getRepositoryKeyFunction("nid_hurl"),
                 "_remote.repositories",
                 true,
+                false,
                 trackingFileManager,
                 new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory())
                         .createComposer(session));

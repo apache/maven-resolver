@@ -77,9 +77,14 @@ transitively resolved, untrusted POM under the same id as a trusted repository â
 origin in a shared local repository. This is scoped to the tracking entries: repository aggregation and (split)
 path composition keep following the system-wide function above, whose default is unchanged. If the system-wide
 function is explicitly configured, tracking follows it; the `aether.system.trackingRepositoryKeyFunction`
-configuration property, when set, overrides both. Tracking entries written under a different function than the
-active one are fail-safe: affected artifacts simply appear locally unavailable and are re-fetched (with checksum
-validation) once.
+configuration property, when set, overrides both.
+With strict origin checking, tracking entries written under a different function than the active one make affected artifacts locally unavailable, so they are re-fetched (with checksum validation) once.
+The [enhanced LRM release availability policy](local-repository.html#release-availability-policy), controlled by the Boolean `aether.lrm.enhanced.ignoreAvailability` (legacy alias `aether.enhancedLocalRepository.ignoreAvailability`, with the current key taking precedence), can instead reuse tracked releases across an origin mismatch without changing repository keys or provenance records.
+Absent an explicit override, this fallback is enabled only for the stock default prefix composer factory with split disabled, and is disabled for custom composer factories, split enabled, or an explicit `aether.chainedLocalRepository.ignoreTailAvailability=false`.
+Matching origins retain normal repository attribution; fallback results have a `null` repository, while registration (`add`), snapshots and metadata remain unchanged.
+The fallback still rejects missing files and noncanonical paths and does not search other split paths.
+**Warning:** This changes the trust policy because different repositories may supply different bytes for the same coordinates.
+For strict checking across all chained repositories, disable both the enhanced LRM fallback and the independent chain-tail availability bypass as described in the linked policy.
 
 ## Implemented Repository Key Functions
 

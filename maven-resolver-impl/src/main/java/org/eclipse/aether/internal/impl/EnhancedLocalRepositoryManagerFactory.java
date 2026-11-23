@@ -30,6 +30,7 @@ import org.eclipse.aether.repository.NoLocalRepositoryManagerException;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.spi.remoterepo.RepositoryKeyFunctionFactory;
 import org.eclipse.aether.util.ConfigUtils;
+import org.eclipse.aether.util.repository.ChainedLocalRepositoryManager;
 
 import static java.util.Objects.requireNonNull;
 
@@ -37,8 +38,7 @@ import static java.util.Objects.requireNonNull;
  * Creates enhanced local repository managers for repository types {@code "default"} or {@code "" (automatic)}. Enhanced
  * local repository manager is built upon the classical Maven 2.0 local repository structure but additionally keeps
  * track of from what repositories a cached artifact was resolved. Resolution of locally cached artifacts will be
- * rejected in case the current resolution request does not match the known source repositories of an artifact, thereby
- * emulating physically separated artifact caches per remote repository.
+ * subject to the origin policy configured by {@link #CONFIG_PROP_IGNORE_AVAILABILITY}.
  */
 @Singleton
 @Named(EnhancedLocalRepositoryManagerFactory.NAME)
@@ -57,6 +57,26 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
     public static final String CONFIG_PROP_TRACKING_FILENAME = CONFIG_PROPS_PREFIX + "trackingFilename";
 
     public static final String DEFAULT_TRACKING_FILENAME = "_remote.repositories";
+
+    /**
+     * Whether tracked release artifacts may be reused regardless of their recorded remote origin.
+     * If unset, enabled for the stock unsplit local path prefix composer, unless
+     * {@link ChainedLocalRepositoryManager#CONFIG_PROP_IGNORE_TAIL_AVAILABILITY} is explicitly false.
+     * Split layouts and custom prefix composer factories default to origin-sensitive lookups.
+     * An explicit value overrides this automatic policy. Matching origins retain repository attribution;
+     * fallback results have no repository assigned. Provenance recording, snapshots and metadata are unchanged.
+     * Different repositories can serve different bytes for identical coordinates: enable only when the local
+     * cache is trusted across repository configuration changes. This does not search other split paths.
+     * The alias {@code aether.enhancedLocalRepository.ignoreAvailability} is accepted with lower precedence.
+     * Setting this to false does not disable the independent chained repository tail bypass.
+     *
+     * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
+     * @configurationType {@link java.lang.Boolean}
+     * @since 2.0.27
+     */
+    public static final String CONFIG_PROP_IGNORE_AVAILABILITY = CONFIG_PROPS_PREFIX + "ignoreAvailability";
+
+    private static final String ALIAS_IGNORE_AVAILABILITY = "aether.enhancedLocalRepository.ignoreAvailability";
 
     /**
      * Whether to verify that the real (on-disk) path of a locally cached artifact matches the requested path
@@ -149,6 +169,20 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
         boolean legacyLocalRepository =
                 ConfigUtils.getBoolean(session, DEFAULT_LEGACY_LOCAL_REPOSITORY, CONFIG_PROP_LEGACY_LOCAL_REPOSITORY);
 
+        final boolean automaticIgnoreAvailability =
+                localPathPrefixComposerFactory instanceof DefaultLocalPathPrefixComposerFactory
+                        && !ConfigUtils.getBoolean(
+                                session,
+                                LocalPathPrefixComposerFactorySupport.DEFAULT_SPLIT,
+                                LocalPathPrefixComposerFactorySupport.CONFIG_PROP_SPLIT,
+                                "aether.enhancedLocalRepository.split")
+                        && ConfigUtils.getBoolean(
+                                session,
+                                ChainedLocalRepositoryManager.DEFAULT_IGNORE_TAIL_AVAILABILITY,
+                                ChainedLocalRepositoryManager.CONFIG_PROP_IGNORE_TAIL_AVAILABILITY);
+        final boolean ignoreAvailability = ConfigUtils.getBoolean(
+                session, automaticIgnoreAvailability, CONFIG_PROP_IGNORE_AVAILABILITY, ALIAS_IGNORE_AVAILABILITY);
+
         if ("".equals(repository.getContentType()) || "default".equals(repository.getContentType())) {
             return new EnhancedLocalRepositoryManager(
                     repository.getBasePath(),
@@ -156,6 +190,7 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
                     repositoryKeyFunctionFactory.trackingRepositoryKeyFunction(session),
                     trackingFilename,
                     legacyLocalRepository,
+                    ignoreAvailability,
                     trackingFileManager,
                     localPathPrefixComposerFactory.createComposer(session));
         } else {

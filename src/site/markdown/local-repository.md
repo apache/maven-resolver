@@ -40,11 +40,28 @@ Enhanced LRM is enhanced with several extra
 features, one most notable is scoping cached content by its origin and context: 
 if you downloaded an artifact A1 from repository R1 
 and later initiate build that requires same artifact A1, but repository R1 
-is not defined in build, the A1 artifact cached from R1 remote repository should be handled 
-as not present, and needs to be re-downloaded, despite same coordinates. 
+is not defined in build, strict origin checking treats the A1 artifact cached from R1 as not present and requires it to be re-downloaded, despite same coordinates.
 Those two, originating from two different repositories may not be the same thing. 
 This is meant to protect users from "bad practice" (artifact coordinates are 
 unique in ideal world).
+
+#### Release Availability Policy
+
+The Boolean configuration property `aether.lrm.enhanced.ignoreAvailability` explicitly overrides whether tracked release artifacts may be reused when their recorded origin does not match the requested repositories.
+The legacy alias `aether.enhancedLocalRepository.ignoreAvailability` is also accepted, but the current key wins when both are set.
+Resolver itself does not support Maven-specific aliases for this setting.
+
+When neither key is set, the policy is automatically `true` only with the stock `DefaultLocalPathPrefixComposerFactory` and split disabled; it is `false` with custom composer factories or split enabled.
+Explicitly setting `aether.chainedLocalRepository.ignoreTailAvailability` to `false` also makes this automatic policy `false`, but does not override an explicitly configured enhanced LRM policy.
+Set `aether.lrm.enhanced.ignoreAvailability=false` to require origin matching in the enhanced LRM.
+
+When enabled, only tracked releases gain a fallback across an origin mismatch; matching origins are still attributed normally, while a fallback result has a `null` repository.
+Artifact registration (`add`) and provenance tracking remain unchanged, and snapshots and metadata are unaffected.
+Missing files and noncanonical paths are still rejected, and the fallback does not search other split paths.
+The chained LRM's tail availability bypass remains independent and defaults to `true`, so strict origin checking across all chain members requires both `aether.lrm.enhanced.ignoreAvailability=false` and `aether.chainedLocalRepository.ignoreTailAvailability=false`.
+
+**Warning:** Enabling this fallback changes the trust policy: repositories may serve different bytes for the same coordinates, and a cached release may now be reused despite its origin mismatch.
+If you previously changed `aether.lrm.enhanced.trackingFilename` (or its legacy alias `aether.enhancedLocalRepository.trackingFilename`) to bypass origin checks, restore the original tracking filename and use the availability policy instead, keeping the existing provenance records rather than deleting them.
 
 #### Split Local Repository
 
