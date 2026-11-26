@@ -1,0 +1,195 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# Language-independent version comparison cases.
+# left <TAB> right <TAB> expected (LT, EQ or GT).
+0		EQ
+ga.ga.foo	foo	LT
+0.foo.1.2.3	foo.1.2.3	GT
+0.foo	foo	GT
+1.0.0-foo	1-foo	EQ
+1.0.0-ga-foo	1-foo	LT
+1.0.0-ga-foo	1-ga-foo	EQ
+1.0.0.final-foo	1-foo	LT
+1.0.0.final-foo	1-final-foo	EQ
+1.ga	1.0	EQ
+ga.1	0.1	LT
+1.ga.1	1.0.1	LT
+1.0.final.1	1.0.1.final	LT
+2	10	LT
+1.2	1.10	LT
+1.0.2	1.0.10	LT
+1.0.0.2	1.0.0.10	LT
+1.0.20101206.111434.1	1.0.20101206.111435.1	LT
+1.0.20101206.111434.2	1.0.20101206.111434.10	LT
+1.0	1-0	EQ
+1.0	1_0	EQ
+1.a	1a	EQ
+1	01	EQ
+1.2	1.002	EQ
+1.2.3	1.2.0003	EQ
+1.2.3.4	1.2.3.00004	EQ
+1	1.0.0.0.0.0.0.0.0.0.0.0.0.0	EQ
+1	1-0-0-0-0-0-0-0-0-0-0-0-0-0	EQ
+1	1.0-0.0-0.0-0.0-0.0-0.0-0.0	EQ
+1	1.0000000000000	EQ
+1.0	1.0.0	EQ
+1.0_ga	1.0.0_ga	EQ
+1.0-ga	1.0.0-ga	EQ
+1.0.ga	1.0.0.ga	EQ
+1.0ga	1.0.0ga	EQ
+1.0-alpha	1.0.0-alpha	EQ
+1.0.alpha	1.0.0.alpha	EQ
+1.0alpha	1.0.0alpha	EQ
+1.0-alpha-snapshot	1.0.0-alpha-snapshot	EQ
+1.0.alpha.snapshot	1.0.0.alpha.snapshot	EQ
+1.x.0-alpha	1.x.0.0-alpha	EQ
+1.x.0.alpha	1.x.0.0.alpha	EQ
+1.x.0-alpha-snapshot	1.x.0.0-alpha-snapshot	EQ
+1.x.0.alpha.snapshot	1.x.0.0.alpha.snapshot	EQ
+1	1.............	EQ
+1	1-------------	EQ
+1.0	1.............	EQ
+1.0	1-------------	EQ
+1.0	1_______	EQ
+0.1	.1	EQ
+0.0.1	..1	EQ
+0.1	-1	EQ
+0.0.1	--1	EQ
+0.1	_1	EQ
+1.0.1	1..1	EQ
+1.0.0.1	1...1	EQ
+1.0.1	1--1	EQ
+1.0.0.1	1---1	EQ
+1.0.1.2.3.4.5.6.7.8.9.0.1.2.10	1.0.1.2.3.4.5.6.7.8.9.0.1.2.3	GT
+1.1234567890123456789012345678901	1.123456789012345678901234567891	GT
+1alpha10	1.alpha.10	EQ
+1alpha10	1-alpha-10	EQ
+1.alpha10	1.alpha2	GT
+10alpha	1alpha	GT
+1-alpha1	1-a1	EQ
+1-alpha	1-beta	LT
+1-beta1	1-b1	EQ
+1-beta	1-milestone	LT
+1-milestone1	1-m1	EQ
+1-milestone	1-rc	LT
+1-rc	1-cr	EQ
+1-rc	1-snapshot	LT
+1-snapshot	1	LT
+1	1-ga	EQ
+1	1.ga.0.ga	EQ
+1.0	1-ga	EQ
+1	1-ga.ga	EQ
+1	1-ga-ga	EQ
+A	A.ga.ga	EQ
+A	A-ga-ga	EQ
+1	1-final	EQ
+1	1-release	EQ
+1	1-sp	LT
+A.rc.1	A.ga.1	LT
+A.sp.1	A.ga.1	GT
+A.rc.x	A.ga.x	LT
+A.sp.x	A.ga.x	GT
+1-abc	1-alpha	GT
+1-abc	1-beta	GT
+1-abc	1-milestone	GT
+1-abc	1-rc	GT
+1-abc	1-snapshot	GT
+1-abc	1	GT
+1-abc	1-sp	GT
+1.0a	1.0	GT
+1.0-a	1.0	GT
+1.0.a	1.0	GT
+1.0b	1.0	GT
+1.0-b	1.0	GT
+1.0.b	1.0	GT
+1.0m	1.0	GT
+1.0-m	1.0	GT
+1.0.m	1.0	GT
+1.0a1	1.0	LT
+1.0-a1	1.0	LT
+1.0.a1	1.0	LT
+1.0b1	1.0	LT
+1.0-b1	1.0	LT
+1.0.b1	1.0	LT
+1.0m1	1.0	LT
+1.0-m1	1.0	LT
+1.0.m1	1.0	LT
+1.0a.1	1.0	GT
+1.0a-1	1.0	GT
+1.0b.1	1.0	GT
+1.0b-1	1.0	GT
+1.0m.1	1.0	GT
+1.0m-1	1.0	GT
+1-abc	1-abcd	LT
+1-abc	1-bcd	LT
+1-abc	1-aac	GT
+1.alpha	1.ALPHA	EQ
+1.alpha	1.Alpha	EQ
+1.beta	1.BETA	EQ
+1.beta	1.Beta	EQ
+1.milestone	1.MILESTONE	EQ
+1.milestone	1.Milestone	EQ
+1.rc	1.RC	EQ
+1.rc	1.Rc	EQ
+1.cr	1.CR	EQ
+1.cr	1.Cr	EQ
+1.snapshot	1.SNAPSHOT	EQ
+1.snapshot	1.Snapshot	EQ
+1.ga	1.GA	EQ
+1.ga	1.Ga	EQ
+1.final	1.FINAL	EQ
+1.final	1.Final	EQ
+1.release	1.RELEASE	EQ
+1.release	1.Release	EQ
+1.sp	1.SP	EQ
+1.sp	1.Sp	EQ
+1.unknown	1.UNKNOWN	EQ
+1.unknown	1.Unknown	EQ
+1.0.0-1	1.0.0_1	EQ
+1.0.0-1	1.0.0.1	EQ
+1.0.0_1	1.0.0.1	EQ
+1-abcdefghijklmnopqrstuvwxyz	1-ABCDEFGHIJKLMNOPQRSTUVWXYZ	EQ
+1-ga	1-1	LT
+1.ga	1.1	LT
+1-ga	1.0	EQ
+1-ga-1	1-0-1	LT
+1.sp	1.0	GT
+1.sp	1.1	LT
+1-abc	1-1	LT
+1.abc	1.1	LT
+1-xyz	1-1	LT
+1.xyz	1.1	LT
+1.min	1.0-alpha-1	LT
+1.min	1.0-SNAPSHOT	LT
+1.min	1.0	LT
+1.min	1.9999999999	LT
+1.min	1.MIN	EQ
+1.min	0.99999	GT
+1.min	0.max	GT
+1.max	1.0-alpha-1	GT
+1.max	1.0-SNAPSHOT	GT
+1.max	1.0	GT
+1.max	1.9999999999	GT
+1.max	1.MAX	EQ
+1.max	2.0-alpha-1	LT
+1.max	2.min	LT
+1.7	J	GT
+7	J	GT
+7	c	GT
+zebra	aardvark	GT
+ζέβρα	zebra	GT
