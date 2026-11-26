@@ -41,7 +41,7 @@ updates:
     - dependency-name: "javax.servlet:javax.servlet-api"
       versions: [ "[4.0.0,)" ]
     # Baseline is Maven 3.9 with Resolver 1.9; Maven 3.10 pulls Resolver 2.x.
-    # Excludes the Maven artifacts this plugin uses.
+    # Excludes the Maven artifacts this project uses.
     - dependency-name: "org.apache.maven:maven-model-builder"
       versions: [ ">= 3.10.0" ]
     - dependency-name: "org.apache.maven:maven-plugin-api"
