@@ -20,11 +20,11 @@ package org.eclipse.aether.util;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -335,10 +335,10 @@ public final class ConfigUtils {
                 Properties parsed = new Properties();
                 try {
                     parsed.load(new StringReader((String) value));
-                } catch (IOException e) {
-                    throw new UncheckedIOException("Failed to parse map configuration value for " + key, e);
+                } catch (IOException | IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Failed to parse map configuration value for " + key, e);
                 }
-                return parsed;
+                return new HashMap<>(parsed);
             }
         }
 
