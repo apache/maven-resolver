@@ -78,7 +78,7 @@ snapshots. Dependency graph transformers can identify and mark
 conflicting nodes in the dirty tree and resolve conflicting versions or
 scopes by pruning unwanted parts from the graph.
 
-Several classes from `maven-resolver-provider` helps to construct a
+Several classes from `maven-resolver-provider` (Maven 3) or `maven-impl` (Maven 4) help to construct a
 session that mimics the resolution rules used by Maven. In
 case you want to customize the graph construction, feel free to have a
 look at the source of that class to learn about the implementation
