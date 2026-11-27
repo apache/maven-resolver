@@ -253,7 +253,9 @@ public final class ConfigurationProperties {
      * {@code Map<String, String>}, mapping a header name to its value. Besides this general key, clients may also
      * specify headers for a specific remote repository by appending the suffix {@code .&lt;repoId&gt;} to this key when
      * storing the headers map. The repository-specific headers map is supposed to be complete, i.e. is not merged with
-     * the general headers map.
+     * the general headers map. When this property is set to a string, for example from the Maven command line, it is
+     * parsed as a properties file: one {@code name=value} pair per line, with the escaping rules of
+     * {@link java.util.Properties#load(java.io.Reader)}.
      * <p>
      * <strong>Security note:</strong> configured headers are attached to every request the transport sends for the
      * repository and, depending on the transport implementation, may be re-sent when the repository responds with
@@ -263,7 +265,7 @@ public final class ConfigurationProperties {
      * headers to the repository origin by default, controlled by {@link #HTTP_ORIGIN_SCOPED_HEADERS}.
      *
      * @configurationSource {@link RepositorySystemSession#getConfigProperties()}
-     * @configurationType {@link java.util.Map}
+     * @configurationType {@link java.util.Map} or {@link String} in properties-file syntax
      * @configurationRepoIdSuffix Yes
      */
     public static final String HTTP_HEADERS = PREFIX_TRANSPORT_HTTP + "headers";

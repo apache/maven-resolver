@@ -44,3 +44,23 @@ Read the API documentation for `RepositorySystemSession.SessionBuilder` to learn
 If you use a Maven plugin or run code embedded in Maven, the session is already created for you. You can derive a new session with the copy constructor of `DefaultRepositorySystemSession` if you must alter the session.
 
 To read configuration from the user's `settings.xml` in a non-Maven project, use the [MIMA](https://github.com/maveniverse/mima) library. MIMA provides the necessary parts. Direct any questions about MIMA to the Maven mailing list.
+
+## Configuring map-valued properties
+
+Most configuration properties hold a single value. Some, such as `aether.transport.http.headers`, hold a map. An application can set the map directly:
+
+```java
+session.setConfigProperty(
+        ConfigurationProperties.HTTP_HEADERS,
+        Collections.singletonMap("X-Custom-Header", "value"));
+```
+
+When the value comes from a string, for example a Maven command-line property, use the properties-file syntax: one `name=value` pair per line, with the escaping rules of `java.util.Properties`. Lines starting with `#` are comments.
+
+```java
+session.setConfigProperty(
+        ConfigurationProperties.HTTP_HEADERS,
+        "Accept=application/json\nX-Custom-Header=value\n");
+```
+
+When the property is read, a string is converted to a map in the same way as a map set directly, so both forms are interchangeable.
