@@ -28,8 +28,8 @@
 
   <artifactId>maven-resolver-supplier-mvn4</artifactId>
 
-  <name>Maven Artifact Resolver Instance Supplier Maven4</name>
-  <description>A helper module to provide RepositorySystem instances.</description>
+  <name>Maven Artifact Resolver Instance Supplier Maven4 (deprecated)</name>
+  <description>Deprecated helper module to provide RepositorySystem instances. Migrate to the Maven 4 standalone API in org.apache.maven.impl.standalone (maven-impl) instead.</description>
 
   <properties>
     <javaVersion>17</javaVersion>

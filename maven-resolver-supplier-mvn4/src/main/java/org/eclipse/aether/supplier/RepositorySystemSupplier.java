@@ -180,7 +180,10 @@ import org.eclipse.aether.version.VersionScheme;
  * warnings are suppressed for the whole class.
  *
  * @since 2.0.0
+ * @deprecated Use the Maven 4 standalone API in the {@code org.apache.maven.impl.standalone} package of the
+ * {@code org.apache.maven:maven-impl} module instead.
  */
+@Deprecated
 @SuppressWarnings("deprecation")
 public class RepositorySystemSupplier implements Supplier<RepositorySystem> {
     private final AtomicBoolean closed = new AtomicBoolean(false);

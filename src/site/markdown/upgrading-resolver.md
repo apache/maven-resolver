@@ -70,7 +70,7 @@ and `org.eclipse.aether.supplier.SessionBuilderSupplier`:
 | Module | Scope semantics | Java |
 |---|---|---|
 | `maven-resolver-supplier-mvn3` | Maven 3: `compile`, `provided`, `runtime`, `test`, `system`, with `test` and `provided` dropped transitively | 8 |
-| `maven-resolver-supplier-mvn4` | Maven 4: the Maven 4 build scopes and resolution scopes | 17 |
+| `maven-resolver-supplier-mvn4` | Maven 4: the Maven 4 build scopes and resolution scopes. Deprecated, see the module page. | 17 |
 
 Choose `mvn3` when the application must resolve exactly like Maven 3 did, for
 example a tool that compares its result with `dependency:tree`. Choose `mvn4`
@@ -179,7 +179,7 @@ Maven 4 should take scopes, types and class path logic from Maven's own
 | Resolver 1.9.x | Resolver 2.x |
 |---|---|
 | `maven-resolver-transport-http` (Apache HttpClient 4, package `org.eclipse.aether.transport.http`) | `maven-resolver-transport-apache` (Apache HttpClient 4, package `org.eclipse.aether.transport.apache`, factory `ApacheTransporterFactory`). The connector configuration keys moved, see step 6. |
-| `maven-resolver-supplier` | `maven-resolver-supplier-mvn3` or `maven-resolver-supplier-mvn4`, see step 2. |
+| `maven-resolver-supplier` | `maven-resolver-supplier-mvn3` or `maven-resolver-supplier-mvn4` (deprecated), see step 2. |
 | `maven-resolver-transport-wagon`, `maven-resolver-transport-file`, `maven-resolver-transport-classpath` | Unchanged coordinates; the configuration keys moved to the `aether.transport.*` namespace. |
 | `maven-resolver-named-locks-hazelcast` | Deprecated, support will be dropped. Use the default file locks, `maven-resolver-named-locks-ipc` (Java 17) for a lock daemon shared between JVMs, or `maven-resolver-named-locks-redisson` (Java 11). |
 
