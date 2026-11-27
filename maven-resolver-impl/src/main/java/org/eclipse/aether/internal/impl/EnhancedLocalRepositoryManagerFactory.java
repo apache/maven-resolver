@@ -34,7 +34,7 @@ import org.eclipse.aether.util.ConfigUtils;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Creates enhanced local repository managers for repository types {@code "default"} or {@code "" (automatic)}. Enhanced
+ * Creates enhanced local repository managers for repository types {@code "enhanced"}, {@code "default"} or {@code "" (automatic)}. Enhanced
  * local repository manager is built upon the classical Maven 2.0 local repository structure but additionally keeps
  * track of from what repositories a cached artifact was resolved. Resolution of locally cached artifacts will be
  * rejected in case the current resolution request does not match the known source repositories of an artifact, thereby
@@ -149,11 +149,9 @@ public class EnhancedLocalRepositoryManagerFactory implements LocalRepositoryMan
         boolean legacyLocalRepository =
                 ConfigUtils.getBoolean(session, DEFAULT_LEGACY_LOCAL_REPOSITORY, CONFIG_PROP_LEGACY_LOCAL_REPOSITORY);
 
-        // "enhanced" is the content type the manager reports, so accept it to make create -> getContentType ->
-        // recreate round-trips work. "" and "default" stay accepted for existing callers.
-        if ("".equals(repository.getContentType())
-                || "default".equals(repository.getContentType())
-                || EnhancedLocalRepositoryManagerFactory.NAME.equals(repository.getContentType())) {
+        // "enhanced" is what the manager reports, so accepting it makes getContentType() round-trip
+        String type = repository.getContentType();
+        if ("".equals(type) || "default".equals(type) || NAME.equals(type)) {
             return new EnhancedLocalRepositoryManager(
                     repository.getBasePath(),
                     localPathComposer,
