@@ -105,6 +105,8 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     private final boolean legacyLocalRepository;
 
+    private final boolean ignoreAvailability;
+
     private final TrackingFileManager trackingFileManager;
 
     private final LocalPathPrefixComposer localPathPrefixComposer;
@@ -114,9 +116,9 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      * keys in the tracking file); path composition keeps using the (system-wide) key function held by the
      * superclass. URL-qualified by default, so two repositories merely sharing an id are not treated as the same
      * origin - see {@link org.eclipse.aether.ConfigurationProperties#REPOSITORY_TRACKING_REPOSITORY_KEY_FUNCTION}.
-     * Lookups of entries written under a different key function miss and fail safe: the artifact stays tracked
-     * (so the untracked inter-op fallback in {@link #checkFind} does not accept it) but unavailable, forcing a
-     * checksum-validated re-fetch.
+     * With strict origin checking, entries written under a different key function miss: the artifact stays
+     * tracked (so the untracked inter-op fallback in {@link #checkFind} does not accept it) but unavailable,
+     * forcing a checksum-validated re-fetch. Origin-independent reuse may instead accept tracked releases.
      */
     private final RepositoryKeyFunction trackingRepositoryKeyFunction;
 
@@ -137,18 +139,21 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
      */
     private final ConcurrentHashMap<Path, Properties> trackingFileCache = new ConcurrentHashMap<>();
 
+    @SuppressWarnings("checkstyle:parameternumber")
     EnhancedLocalRepositoryManager(
             Path basedir,
             LocalPathComposer localPathComposer,
             RepositoryKeyFunction trackingRepositoryKeyFunction,
             String trackingFilename,
             boolean legacyLocalRepository,
+            boolean ignoreAvailability,
             TrackingFileManager trackingFileManager,
             LocalPathPrefixComposer localPathPrefixComposer) {
         super(basedir, "enhanced", localPathComposer);
         this.trackingRepositoryKeyFunction = requireNonNull(trackingRepositoryKeyFunction);
         this.trackingFilename = requireNonNull(trackingFilename);
         this.legacyLocalRepository = legacyLocalRepository;
+        this.ignoreAvailability = ignoreAvailability;
         this.trackingFileManager = requireNonNull(trackingFileManager);
         this.localPathPrefixComposer = requireNonNull(localPathPrefixComposer);
     }
@@ -307,8 +312,8 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
 
     /**
      * Applies the tracking-state based acceptance rules to given result: an artifact installed into the local
-     * repository is always accepted, an artifact downloaded from a remote repository is accepted only if
-     * downloaded from one of the request repositories.
+     * repository is always accepted. Remote artifacts require a matching origin, except tracked releases
+     * when origin-independent reuse is enabled.
      *
      * @return {@code true} if the result was made available, {@code false} otherwise.
      */
@@ -370,6 +375,11 @@ class EnhancedLocalRepositoryManager extends SimpleLocalRepositoryManager {
                     }
                 }
             }
+        }
+        if (ignoreAvailability && !result.getRequest().getArtifact().isSnapshot() && isTracked(props, path)) {
+            // Known provenance, but no matching origin: do not attribute the artifact to a request repository.
+            result.setAvailable(true);
+            return true;
         }
         return false;
     }

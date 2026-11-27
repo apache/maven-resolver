@@ -25,8 +25,11 @@ import java.util.Collections;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.LocalArtifactRegistration;
 import org.eclipse.aether.repository.LocalArtifactRequest;
 import org.eclipse.aether.repository.LocalArtifactResult;
+import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.repository.RepositoryIdHelper;
 import org.junit.jupiter.api.Test;
@@ -46,6 +49,7 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
                 RepositoryIdHelper::simpleRepositoryKey,
                 "_remote.repositories",
                 true,
+                false,
                 trackingFileManager,
                 new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory())
                         .createComposer(session));
@@ -65,6 +69,35 @@ public class EnhancedSplitLocalRepositoryManagerTest extends EnhancedLocalReposi
         assertEquals("1.0-SNAPSHOT", artifact.getBaseVersion());
         assertEquals(
                 "installed/g/i/d/a.i.d/1.0-SNAPSHOT/a.i.d-1.0-SNAPSHOT.jar", manager.getPathForLocalArtifact(artifact));
+    }
+
+    @Test
+    void availabilityOverrideDoesNotSearchOtherRepositoryPrefixes() throws Exception {
+        session.setConfigProperty(EnhancedLocalRepositoryManagerFactory.CONFIG_PROP_IGNORE_AVAILABILITY, true);
+        session.setConfigProperty(DefaultLocalPathPrefixComposerFactory.CONFIG_PROP_SPLIT_REMOTE_REPOSITORY, true);
+        final EnhancedLocalRepositoryManagerFactory factory = new EnhancedLocalRepositoryManagerFactory(
+                new DefaultLocalPathComposer(),
+                trackingFileManager,
+                new DefaultLocalPathPrefixComposerFactory(new DefaultRepositoryKeyFunctionFactory()),
+                new DefaultRepositoryKeyFunctionFactory());
+        final LocalRepositoryManager split = factory.newInstance(session, new LocalRepository(basedir));
+        final Artifact release = new DefaultArtifact("gid:aid:1.0");
+        final Path path = split.getAbsolutePathForRemoteArtifact(release, repository, testContext);
+        Files.createDirectories(path.getParent());
+        Files.write(path, new byte[] {1});
+        split.add(session, new LocalArtifactRegistration(release, repository, Collections.singleton(testContext)));
+        final RemoteRepository other =
+                new RemoteRepository.Builder("other", "default", "https://other.invalid/").build();
+        assertNotEquals(path, split.getAbsolutePathForRemoteArtifact(release, other, testContext));
+        final LocalArtifactResult missing =
+                split.find(session, new LocalArtifactRequest(release, Collections.singletonList(other), testContext));
+        assertFalse(missing.isAvailable());
+        assertNull(missing.getPath());
+        final LocalArtifactResult matched = split.find(
+                session, new LocalArtifactRequest(release, Collections.singletonList(repository), testContext));
+        assertTrue(matched.isAvailable());
+        assertEquals(path, matched.getPath());
+        assertEquals(repository, matched.getRepository());
     }
 
     // asserts on the composed relative path, which only the deprecated getPathFor* methods expose
