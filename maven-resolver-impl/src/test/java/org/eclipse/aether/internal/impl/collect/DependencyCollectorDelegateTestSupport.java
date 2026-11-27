@@ -644,6 +644,26 @@ public abstract class DependencyCollectorDelegateTestSupport {
         assertEquals("kept", dep(result.getRoot(), 0).getArtifact().getArtifactId());
     }
 
+    /**
+     * Same as {@link #testSelectorSeesManagedScopeOfTransitiveDependency()} but the managed dependency is the target of
+     * a relocation, which the Bf collector handles in a separate branch.
+     */
+    @Test
+    void testSelectorSeesManagedScopeOfRelocatedDependency() throws Exception {
+        collector = setupCollector(newReader("mgmt-before-select-relocation/"));
+        TestDependencyManager depMgmt = new TestDependencyManager();
+        depMgmt.scope("gid:managed:ext", "test");
+        session.setDependencyManager(depMgmt);
+        session.setDependencySelector(new RejectingScopeSelector("test"));
+
+        CollectResult result = collector.collectDependencies(
+                session, new CollectRequest(newDep("gid:root:ext:ver", "compile"), singletonList(repository)));
+
+        assertEquals(0, result.getExceptions().size());
+        assertEquals(1, result.getRoot().getChildren().size());
+        assertEquals("kept", dep(result.getRoot(), 0).getArtifact().getArtifactId());
+    }
+
     private static final class RejectingScopeSelector implements DependencySelector {
 
         private final String rejectedScope;
