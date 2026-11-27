@@ -585,7 +585,6 @@ public abstract class DependencyCollectorDelegateTestSupport {
      */
     @Test
     void testSelectorSeesManagedScopeOfTransitiveDependency() throws Exception {
-        setupCollector();
         collector.setArtifactDescriptorReader(newReader("mgmt-before-select/"));
         TestDependencyManager depMgmt = new TestDependencyManager();
         depMgmt.scope("gid:managed:ext", "test");
@@ -606,7 +605,6 @@ public abstract class DependencyCollectorDelegateTestSupport {
      */
     @Test
     void testSelectorSeesManagedScopeOfRootDependency() throws Exception {
-        setupCollector();
         collector.setArtifactDescriptorReader(newReader("mgmt-before-select/"));
         TestDependencyManager depMgmt = new TestDependencyManager();
         depMgmt.scope("gid:managed:ext", "test");
