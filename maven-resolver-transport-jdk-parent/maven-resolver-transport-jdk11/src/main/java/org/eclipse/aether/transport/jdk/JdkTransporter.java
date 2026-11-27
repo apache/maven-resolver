@@ -730,11 +730,14 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
 
     @Override
     protected void implClose() {
-        if (client != null) {
-            JdkTransporterCloser.closer(client).run();
-        }
-        if (requestSigner != null) {
-            requestSigner.close();
+        try {
+            if (client != null) {
+                JdkTransporterCloser.closer(client).run();
+            }
+        } finally {
+            if (requestSigner != null) {
+                requestSigner.close();
+            }
         }
     }
 
