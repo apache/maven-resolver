@@ -29,7 +29,7 @@ import java.util.Set;
  *
  * @see HttpTransporterUtils#getHttpRequestSigner(org.eclipse.aether.RepositorySystemSession,
  *      org.eclipse.aether.repository.RemoteRepository)
- * @since 2.0.26
+ * @since 2.0.27
  */
 public interface HttpRequestSigner extends AutoCloseable {
     /**

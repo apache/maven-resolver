@@ -256,13 +256,14 @@ public final class HttpTransporterUtils {
      * {@code null} when requests are not signed. For {@link ConfigurationProperties#HTTP_REQUEST_SIGNER_AWS_SIGV4}
      * the repository's username and password are the access key and secret key; without repository authentication
      * the {@code AWS_ACCESS_KEY_ID}, {@code AWS_SECRET_ACCESS_KEY} and {@code AWS_SESSION_TOKEN} environment
-     * variables are used. A repository authentication with only one of the two is an error. The region comes from {@link ConfigurationProperties#HTTP_AWS_REGION}, then the
-     * {@code AWS_REGION} and {@code AWS_DEFAULT_REGION} environment variables, then the default.
+     * variables are used. A repository authentication with only one of the two is an error. The region comes from
+     * {@link ConfigurationProperties#HTTP_AWS_REGION}, then the {@code AWS_REGION} and {@code AWS_DEFAULT_REGION}
+     * environment variables, then the default.
      *
      * @throws IllegalStateException if signing is configured but no credentials can be found, or the repository
      *     authentication has only one of username and password
      * @throws IllegalArgumentException if an unknown signer is configured
-     * @since 2.0.26
+     * @since 2.0.27
      */
     public static HttpRequestSigner getHttpRequestSigner(RepositorySystemSession session, RemoteRepository repository) {
         String signer = ConfigUtils.getString(
