@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.transport.s3;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -34,8 +35,12 @@ import org.eclipse.aether.transport.s3.internal.RepositoryIdObjectNameMapperFact
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class S3TransporterFactoryTest {
@@ -62,6 +67,34 @@ class S3TransporterFactoryTest {
                 .addUsername("username")
                 .addPassword("password")
                 .build());
+    }
+
+    @Test
+    void usernameWithoutPasswordIsRejected() {
+        RemoteRepository half = new RemoteRepository.Builder("repo", "default", "s3+https://localhost")
+                .setAuthentication(
+                        new AuthenticationBuilder().addUsername("username").build())
+                .build();
+        assertThrows(NoTransporterException.class, () -> factory.newInstance(session, half));
+    }
+
+    @Test
+    void classifyMapsMissingObjectsToNotFound() throws Exception {
+        try (Transporter transporter = factory.newInstance(session, repository)) {
+            assertEquals(
+                    Transporter.ERROR_NOT_FOUND,
+                    transporter.classify(NoSuchKeyException.builder().build()));
+            assertEquals(
+                    Transporter.ERROR_NOT_FOUND,
+                    transporter.classify(NoSuchBucketException.builder().build()));
+            assertEquals(
+                    Transporter.ERROR_NOT_FOUND,
+                    transporter.classify(S3Exception.builder().statusCode(404).build()));
+            assertEquals(
+                    Transporter.ERROR_OTHER,
+                    transporter.classify(S3Exception.builder().statusCode(500).build()));
+            assertEquals(Transporter.ERROR_OTHER, transporter.classify(new IOException()));
+        }
     }
 
     @Test

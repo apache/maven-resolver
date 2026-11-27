@@ -48,7 +48,9 @@ import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
+import software.amazon.awssdk.regions.providers.AwsProfileRegionProvider;
+import software.amazon.awssdk.regions.providers.AwsRegionProviderChain;
+import software.amazon.awssdk.regions.providers.SystemSettingsRegionProvider;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -136,13 +138,17 @@ final class S3Transporter extends AbstractTransporter implements Transporter {
      * chain applies, so environment variables, profiles, container and instance roles work as with any AWS tool.
      */
     private static AwsCredentialsProvider credentialsProvider(
-            RepositorySystemSession session, RemoteRepository repository) {
+            RepositorySystemSession session, RemoteRepository repository) throws NoTransporterException {
         try (AuthenticationContext repoAuthContext = AuthenticationContext.forRepository(session, repository)) {
             if (repoAuthContext != null) {
                 String username = repoAuthContext.get(AuthenticationContext.USERNAME);
                 String password = repoAuthContext.get(AuthenticationContext.PASSWORD);
                 if (username != null && password != null) {
                     return StaticCredentialsProvider.create(AwsBasicCredentials.create(username, password));
+                }
+                if (username != null || password != null) {
+                    throw new NoTransporterException(
+                            repository, "Both username (access key) and password (secret key) are required");
                 }
             }
         }
@@ -159,7 +165,9 @@ final class S3Transporter extends AbstractTransporter implements Transporter {
             return Region.of(configured);
         }
         try {
-            return DefaultAwsRegionProviderChain.builder().build().getRegion();
+            // not DefaultAwsRegionProviderChain: it ends in the EC2 metadata lookup, which stalls off AWS
+            return new AwsRegionProviderChain(new SystemSettingsRegionProvider(), new AwsProfileRegionProvider())
+                    .getRegion();
         } catch (SdkClientException e) {
             return Region.of(S3TransporterConfigurationKeys.DEFAULT_REGION);
         }
