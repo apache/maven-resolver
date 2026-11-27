@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.aether.ConfigurationProperties;
@@ -265,10 +266,22 @@ public class HttpTransporterUtilsTest {
         RemoteRepository repository = new RemoteRepository.Builder("test", "default", "https://example.com/").build();
         session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS, "X-Test=one\nAccept=application/json\n");
 
-        assertEquals(
-                "one", HttpTransporterUtils.getHttpHeaders(session, repository).get("X-Test"));
-        assertEquals(
-                "application/json",
-                HttpTransporterUtils.getHttpHeaders(session, repository).get("Accept"));
+        Map<String, String> headers = HttpTransporterUtils.getHttpHeaders(session, repository);
+
+        assertEquals("one", headers.get("X-Test"));
+        assertEquals("application/json", headers.get("Accept"));
+    }
+
+    @Test
+    void getHttpHeadersRepositorySpecificStringPropertyWins() {
+        DefaultRepositorySystemSession session = TestUtils.newSession();
+        RemoteRepository repository = new RemoteRepository.Builder("test", "default", "https://example.com/").build();
+        session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS, "X-General=general");
+        session.setConfigProperty(ConfigurationProperties.HTTP_HEADERS + ".test", "X-Repo=repo");
+
+        Map<String, String> headers = HttpTransporterUtils.getHttpHeaders(session, repository);
+
+        assertEquals("repo", headers.get("X-Repo"));
+        assertFalse(headers.containsKey("X-General"));
     }
 }

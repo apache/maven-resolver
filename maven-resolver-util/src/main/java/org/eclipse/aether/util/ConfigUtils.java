@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -338,7 +339,7 @@ public final class ConfigUtils {
                 } catch (IOException e) {
                     throw new UncheckedIOException("Failed to parse map configuration value for " + key, e);
                 }
-                return parsed;
+                return new HashMap<>(parsed);
             }
         }
 
