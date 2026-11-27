@@ -40,6 +40,7 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencyManagement;
 import org.eclipse.aether.collection.DependencyManager;
+import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyCycle;
@@ -576,6 +577,68 @@ public abstract class DependencyCollectorDelegateTestSupport {
         request = new CollectRequest(dependency, singletonList(repository));
         result = collector.collectDependencies(session, request);
         assertEqualSubtree(root, result.getRoot());
+    }
+
+    /**
+     * Dependency management must be applied before the selector is consulted. Here the manager changes the scope to
+     * one the selector rejects; the managed dependency must therefore be excluded. See maven-resolver#808.
+     */
+    @Test
+    void testSelectorSeesManagedScopeOfTransitiveDependency() throws Exception {
+        collector.setArtifactDescriptorReader(newReader("mgmt-before-select/"));
+        TestDependencyManager depMgmt = new TestDependencyManager();
+        depMgmt.scope("gid:managed:ext", "test");
+        session.setDependencyManager(depMgmt);
+        session.setDependencySelector(new RejectingScopeSelector("test"));
+
+        CollectResult result = collector.collectDependencies(
+                session, new CollectRequest(newDep("gid:root:ext:ver", "compile"), singletonList(repository)));
+
+        assertEquals(0, result.getExceptions().size());
+        assertEquals(1, result.getRoot().getChildren().size());
+        assertEquals("kept", dep(result.getRoot(), 0).getArtifact().getArtifactId());
+    }
+
+    /**
+     * Same as {@link #testSelectorSeesManagedScopeOfTransitiveDependency()} but for dependencies of the collect
+     * request root itself, which the collectors handle in a separate code path.
+     */
+    @Test
+    void testSelectorSeesManagedScopeOfRootDependency() throws Exception {
+        collector.setArtifactDescriptorReader(newReader("mgmt-before-select/"));
+        TestDependencyManager depMgmt = new TestDependencyManager();
+        depMgmt.scope("gid:managed:ext", "test");
+        session.setDependencyManager(depMgmt);
+        session.setDependencySelector(new RejectingScopeSelector("test"));
+
+        CollectRequest request = new CollectRequest(
+                Arrays.asList(newDep("gid:managed:ext:ver", "compile"), newDep("gid:kept:ext:ver", "compile")),
+                null,
+                singletonList(repository));
+        CollectResult result = collector.collectDependencies(session, request);
+
+        assertEquals(0, result.getExceptions().size());
+        assertEquals(1, result.getRoot().getChildren().size());
+        assertEquals("kept", dep(result.getRoot(), 0).getArtifact().getArtifactId());
+    }
+
+    private static final class RejectingScopeSelector implements DependencySelector {
+
+        private final String rejectedScope;
+
+        private RejectingScopeSelector(String rejectedScope) {
+            this.rejectedScope = rejectedScope;
+        }
+
+        @Override
+        public boolean selectDependency(Dependency dependency) {
+            return !rejectedScope.equals(dependency.getScope());
+        }
+
+        @Override
+        public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
+            return this;
+        }
     }
 
     static class TestDependencyManager implements DependencyManager {
