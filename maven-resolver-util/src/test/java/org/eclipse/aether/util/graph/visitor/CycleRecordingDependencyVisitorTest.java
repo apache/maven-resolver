@@ -109,4 +109,23 @@ public class CycleRecordingDependencyVisitorTest {
         assertEquals(1, visitor.getCycles().size());
         assertEquals(1, visitor.getBackEdges().size());
     }
+
+    @Test
+    void recordsSelfLoopAndSecondCycle() throws Exception {
+        DependencyNode root = parse("cycles-self-loop.txt");
+        CycleRecordingDependencyVisitor visitor = new CycleRecordingDependencyVisitor();
+
+        assertTimeoutPreemptively(Duration.ofSeconds(10), () -> root.accept(visitor));
+
+        // a -> b -> b is a self-loop, c -> a closes a second cycle.
+        List<List<DependencyNode>> cycles = visitor.getCycles();
+        assertEquals(2, cycles.size());
+        assertEquals(2, cycles.get(0).size());
+        assertSame(cycles.get(0).get(0), cycles.get(0).get(1));
+        assertEquals("b", artifactId(cycles.get(0).get(0)));
+        assertEquals(3, cycles.get(1).size());
+        assertEquals("a", artifactId(cycles.get(1).get(0)));
+        assertEquals("c", artifactId(cycles.get(1).get(1)));
+        assertSame(cycles.get(1).get(0), cycles.get(1).get(2));
+    }
 }
