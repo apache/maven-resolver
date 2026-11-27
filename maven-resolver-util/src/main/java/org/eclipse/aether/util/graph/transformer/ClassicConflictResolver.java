@@ -431,8 +431,8 @@ public final class ClassicConflictResolver extends ConflictResolver {
 
         /**
          * The set of conflict ids which could apply to ancestors of nodes with the current conflict id, used to avoid
-         * recursion early on. This is basically a superset of the key set of resolvedIds, the additional ids account
-         * for cyclic dependencies.
+         * recursion early on. This is basically a superset of the key set of resolvedIds, the additional ids are all
+         * ids that take part in a dependency cycle.
          */
         final Collection<String> potentialAncestorIds;
 
@@ -536,7 +536,7 @@ public final class ClassicConflictResolver extends ConflictResolver {
             optionalitySelector = ClassicConflictResolver.this.optionalitySelector.getInstance(root, context);
         }
 
-        void prepare(String conflictId, Collection<String> cyclicPredecessors) {
+        void prepare(String conflictId, Collection<String> cyclicIds) {
             currentId = conflictId;
             conflictCtx.conflictId = conflictId;
             conflictCtx.winner = null;
@@ -544,8 +544,8 @@ public final class ClassicConflictResolver extends ConflictResolver {
             conflictCtx.optional = null;
             items.clear();
             infos.clear();
-            if (cyclicPredecessors != null) {
-                potentialAncestorIds.addAll(cyclicPredecessors);
+            if (cyclicIds != null) {
+                potentialAncestorIds.addAll(cyclicIds);
             }
         }
 
