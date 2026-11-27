@@ -68,6 +68,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
@@ -147,9 +148,12 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
         ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1, runnable -> {
             Thread thread = new Thread(runnable, "aether-jdk-read-timeout");
             thread.setDaemon(true);
+            thread.setContextClassLoader(null);
             return thread;
         });
         scheduler.setRemoveOnCancelPolicy(true);
+        scheduler.setKeepAliveTime(30, TimeUnit.SECONDS);
+        scheduler.allowCoreThreadTimeOut(true);
         return scheduler;
     }
 
