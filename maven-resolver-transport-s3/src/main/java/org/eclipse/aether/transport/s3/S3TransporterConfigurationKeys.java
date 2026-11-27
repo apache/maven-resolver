@@ -25,7 +25,7 @@ import org.eclipse.aether.transport.s3.internal.FixedBucketObjectNameMapperFacto
 /**
  * Configuration for the S3 transport.
  *
- * @since 2.0.26
+ * @since 2.0.27
  */
 public final class S3TransporterConfigurationKeys {
     private S3TransporterConfigurationKeys() {}

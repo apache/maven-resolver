@@ -36,7 +36,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A transporter factory for repositories served over the S3 API, built on the AWS SDK for Java 2.x.
  *
- * @since 2.0.26
+ * @since 2.0.27
  */
 @Named(S3TransporterFactory.NAME)
 public final class S3TransporterFactory implements TransporterFactory {

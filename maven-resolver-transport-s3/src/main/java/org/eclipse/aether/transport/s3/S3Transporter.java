@@ -63,7 +63,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A transporter for the S3 API, built on the AWS SDK for Java 2.x.
  *
- * @since 2.0.26
+ * @since 2.0.27
  */
 final class S3Transporter extends AbstractTransporter implements Transporter {
     private final URI baseUri;

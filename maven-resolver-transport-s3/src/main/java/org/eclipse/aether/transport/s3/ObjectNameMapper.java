@@ -21,7 +21,7 @@ package org.eclipse.aether.transport.s3;
 /**
  * Mapping for {@link ObjectName}.
  *
- * @since 2.0.26
+ * @since 2.0.27
  */
 public interface ObjectNameMapper {
     /**

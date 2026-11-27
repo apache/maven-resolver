@@ -26,7 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * Factory for {@link ObjectNameMapper}.
  *
- * @since 2.0.26
+ * @since 2.0.27
  */
 public interface ObjectNameMapperFactory {
     /**

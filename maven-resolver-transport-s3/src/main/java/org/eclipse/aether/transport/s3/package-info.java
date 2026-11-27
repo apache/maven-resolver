@@ -31,6 +31,6 @@
  * {@code external:http:*} mirror blocking. To use a plaintext endpoint anyway, explicitly set the configuration
  * property {@code aether.transport.s3.allowInsecureProtocol} to {@code true}.
  *
- * @since 2.0.26
+ * @since 2.0.27
  */
 package org.eclipse.aether.transport.s3;
