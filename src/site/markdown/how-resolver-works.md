@@ -24,8 +24,9 @@ It also explains the main concepts and components of Resolver.
 
 Resolver alone is incomplete. It needs an application such as 
 Maven to resolve versions and build effective models.
-The Maven module `org.apache.maven:maven-resolver-provider` complements it with
-models and implementations of missing components.
+In Maven 3, the module `org.apache.maven:maven-resolver-provider` complements it with
+models and implementations of missing components; in Maven 4, the `org.apache.maven.impl` package in the
+[maven-impl module](https://maven.apache.org/ref/4-LATEST/impl/maven-impl/apidocs/index.html) does.
 
 
 ## Core Concepts

@@ -24,10 +24,10 @@ Resolver (formerly Aether) is the answer. It is an *embeddable Java library that
 
 There are many ways to transfer artifacts, describe their relationships, and use them. Resolver was designed to be customizable, so you can augment or replace the stock functionality. The Resolver Core itself does not know how to handle Maven repositories, for example. It is tool agnostic. It provides a general artifact resolution and deployment framework and leaves details such as the repository format to extensions.
 
-The `maven-resolver-provider` from the [Apache Maven](https://maven.apache.org/) project supports Maven repositories. If you want to consume artifacts from the [Central Repository](https://search.maven.org/?eh=), Resolver together with the Maven Resolver Provider is the best choice. This simplifies your work with artifacts. It also ensures interoperability with other tools that work with Maven repositories.
+The `maven-resolver-provider` module in Maven 3, and the `org.apache.maven.impl` package of the `maven-impl` module in Maven 4, from the [Apache Maven](https://maven.apache.org/) project support Maven repositories. If you want to consume artifacts from the [Central Repository](https://search.maven.org/?eh=), Resolver together with the Maven Resolver Provider is the best choice. This simplifies your work with artifacts. It also ensures interoperability with other tools that work with Maven repositories.
 
 ## How To Embed Resolver
 
-As noted earlier, Resolver alone does not know how to handle Maven repositories and models. To make Resolver minimally functional, you need the `maven-resolver-provider` module. That module contains the required component implementations and the required models for Maven repositories. It gives Resolver basic functionality.
+As noted earlier, Resolver alone does not know how to handle Maven repositories and models. To make Resolver minimally functional, you need the `maven-resolver-provider` module (Maven 3) or the `maven-impl` module (Maven 4). That module contains the required component implementations and the required models for Maven repositories. It gives Resolver basic functionality.
 
 The next level adds Maven environment awareness. This awareness honors files such as `settings.xml`. You can achieve it with libraries such as [MIMA](https://github.com/maveniverse/mima).
