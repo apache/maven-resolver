@@ -18,12 +18,16 @@
  */
 package org.eclipse.aether.util;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.eclipse.aether.RepositorySystemSession;
 
@@ -310,12 +314,15 @@ public final class ConfigUtils {
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property. A {@link String} value is parsed using the syntax of
+     * {@link Properties#load(java.io.Reader)}, that is one {@code key=value} pair per line, with the same escaping and
+     * comment rules as a properties file. This allows clients such as Maven to pass map-valued properties on the
+     * command line as a string.
      *
      * @param properties The configuration properties to read, must not be {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a map.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
-     *            a map is found.
+     *            a map or a string to be parsed as a map is found.
      * @return The property value or {@code null} if none.
      */
     public static Map<?, ?> getMap(Map<?, ?> properties, Map<?, ?> defaultValue, String... keys) {
@@ -324,6 +331,14 @@ public final class ConfigUtils {
 
             if (value instanceof Map) {
                 return (Map<?, ?>) value;
+            } else if (value instanceof String) {
+                Properties parsed = new Properties();
+                try {
+                    parsed.load(new StringReader((String) value));
+                } catch (IOException | IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Failed to parse map configuration value for " + key, e);
+                }
+                return new HashMap<>(parsed);
             }
         }
 
@@ -331,13 +346,14 @@ public final class ConfigUtils {
     }
 
     /**
-     * Gets the specified configuration property.
+     * Gets the specified configuration property. A {@link String} value is parsed using the syntax of
+     * {@link Properties#load(java.io.Reader)}, that is one {@code key=value} pair per line.
      *
      * @param session The repository system session from which to read the configuration property, must not be
      *            {@code null}.
      * @param defaultValue The default value to return in case none of the property keys is set to a map.
      * @param keys The property keys to read, must not be {@code null}. The specified keys are read one after one until
-     *            a map is found.
+     *            a map or a string to be parsed as a map is found.
      * @return The property value or {@code null} if none.
      */
     public static Map<?, ?> getMap(RepositorySystemSession session, Map<?, ?> defaultValue, String... keys) {

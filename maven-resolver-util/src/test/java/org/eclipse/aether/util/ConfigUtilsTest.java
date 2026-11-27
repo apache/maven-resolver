@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ConfigUtilsTest {
@@ -61,6 +62,46 @@ public class ConfigUtilsTest {
         Map<?, ?> val = new HashMap<Object, Object>();
         config.put("some-map", val);
         assertSame(val, ConfigUtils.getMap(config, null, "no-object", "some-map"));
+    }
+
+    @Test
+    public void testGetMapStringConversion() {
+        config.put("some-map", "X-Test=value\nAccept=application/json\n");
+
+        Map<?, ?> result = ConfigUtils.getMap(config, null, "some-map");
+
+        assertEquals("value", result.get("X-Test"));
+        assertEquals("application/json", result.get("Accept"));
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void testGetMapStringConversionEscapesAndComments() {
+        config.put("some-map", "X-Test=one\\ttwo\\nthree\n# a comment\nEmpty=\n");
+
+        Map<?, ?> result = ConfigUtils.getMap(config, null, "some-map");
+
+        assertEquals("one\ttwo\nthree", result.get("X-Test"));
+        assertEquals("", result.get("Empty"));
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void testGetMapStringMalformedEscape() {
+        config.put("some-map", "X-Test=\\uZZZZ");
+
+        IllegalArgumentException e =
+                assertThrows(IllegalArgumentException.class, () -> ConfigUtils.getMap(config, null, "some-map"));
+        assertTrue(e.getMessage().contains("some-map"));
+    }
+
+    @Test
+    public void testGetMapStringAlternativeKeys() {
+        config.put("some-map", "X-Test=value");
+
+        Map<?, ?> result = ConfigUtils.getMap(config, null, "no-object", "some-map");
+
+        assertEquals("value", result.get("X-Test"));
     }
 
     @Test
