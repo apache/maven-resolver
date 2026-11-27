@@ -689,7 +689,9 @@ public abstract class HttpTransporterTest {
         String acceptEncoding =
                 httpServer.getLogEntries().get(0).getRequestHeaders().get("Accept-Encoding");
         assertNotNull(acceptEncoding, "Missing Accept-Encoding header when retrieving pom");
-        assertTrue(acceptEncoding.contains(encoding));
+        assertTrue(
+                acceptEncoding.contains(encoding),
+                "Expected Accept-Encoding header to contain " + encoding + ", but was: " + acceptEncoding);
         // check original response header sent by server (client transparently handles compression and removes it)
         // see https://issues.apache.org/jira/browse/HTTPCORE-792
         // and https://github.com/mizosoft/methanol/issues/182
