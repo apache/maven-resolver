@@ -35,7 +35,9 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Jetty transporter UT.
@@ -174,5 +176,14 @@ class JettyTransporterTest extends HttpTransporterTest {
 
     public JettyTransporterTest() {
         super(() -> new JettyTransporterFactory(standardChecksumExtractor(), new PathProcessorSupport()));
+    }
+
+    @Test
+    void testCanHandleHttpProtocolsOnly() {
+        JettyTransporterFactory factory =
+                new JettyTransporterFactory(standardChecksumExtractor(), new PathProcessorSupport());
+        assertTrue(factory.canHandle("http"));
+        assertTrue(factory.canHandle("HTTPS"));
+        assertFalse(factory.canHandle("file"));
     }
 }
