@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
@@ -48,7 +47,7 @@ public final class CycleRecordingDependencyVisitor implements DependencyVisitor 
 
     private final Map<DependencyNode, Object> visitedNodes;
 
-    private final Stack<Frame> stack;
+    private final List<Frame> stack;
 
     private final List<List<DependencyNode>> cycles;
 
@@ -68,7 +67,7 @@ public final class CycleRecordingDependencyVisitor implements DependencyVisitor 
     public CycleRecordingDependencyVisitor(DependencyVisitor visitor) {
         this.visitor = visitor;
         this.visitedNodes = new IdentityHashMap<>(512);
-        this.stack = new Stack<>();
+        this.stack = new ArrayList<>();
         this.cycles = new ArrayList<>();
     }
 
@@ -101,10 +100,12 @@ public final class CycleRecordingDependencyVisitor implements DependencyVisitor 
         boolean visited = visitedNodes.put(node, Boolean.TRUE) != null;
 
         int ancestor = -1;
-        for (int i = stack.size() - 1; i >= 0; i--) {
-            if (stack.get(i).node == node) {
-                ancestor = i;
-                break;
+        if (visited) {
+            for (int i = stack.size() - 1; i >= 0; i--) {
+                if (stack.get(i).node == node) {
+                    ancestor = i;
+                    break;
+                }
             }
         }
 
@@ -129,13 +130,13 @@ public final class CycleRecordingDependencyVisitor implements DependencyVisitor 
             descend = visitor.visitEnter(node);
         }
 
-        stack.push(new Frame(node, delegated));
+        stack.add(new Frame(node, delegated));
         return descend;
     }
 
     @Override
     public boolean visitLeave(DependencyNode node) {
-        Frame frame = stack.pop();
+        Frame frame = stack.remove(stack.size() - 1);
         if (frame.delegated) {
             return visitor.visitLeave(frame.node);
         }
