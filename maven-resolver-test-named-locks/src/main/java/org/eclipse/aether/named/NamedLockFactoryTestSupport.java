@@ -30,13 +30,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.Timeout;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * UT support for {@link NamedLockFactory}. Subclass MUST populate the {@link #namedLockFactory} field in a
  * {@link org.junit.jupiter.api.BeforeAll} method; the factory is shut down once all tests of the class ran.
  * <p>
- * Published in the {@code test-jar} of this module for the named lock implementations living in other modules.
+ * Shared by the named lock implementations living in other modules.
  */
 public abstract class NamedLockFactoryTestSupport {
 

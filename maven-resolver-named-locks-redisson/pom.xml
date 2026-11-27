@@ -108,14 +108,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-impl</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.resolver</groupId>
-      <artifactId>maven-resolver-named-locks</artifactId>
-      <type>test-jar</type>
+      <artifactId>maven-resolver-test-named-locks</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

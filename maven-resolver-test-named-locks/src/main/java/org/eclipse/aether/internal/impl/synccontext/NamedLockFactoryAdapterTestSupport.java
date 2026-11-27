@@ -42,7 +42,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -272,7 +273,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         final RepositorySystemSession session;
         final Access chained;
 
-        public Access(
+        Access(
                 boolean shared,
                 CountDownLatch winner,
                 CountDownLatch loser,

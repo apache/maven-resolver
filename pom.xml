@@ -55,6 +55,7 @@
     <module>maven-resolver-impl</module>
     <module>maven-resolver-test-util</module>
     <module>maven-resolver-test-http</module>
+    <module>maven-resolver-test-named-locks</module>
     <module>maven-resolver-connector-basic</module>
     <module>maven-resolver-transport-apache</module>
     <module>maven-resolver-transport-classpath</module>
@@ -152,12 +153,6 @@
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
-        <artifactId>maven-resolver-named-locks</artifactId>
-        <version>${project.version}</version>
-        <type>test-jar</type>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-named-locks-hazelcast</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -170,12 +165,6 @@
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-impl</artifactId>
         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.maven.resolver</groupId>
-        <artifactId>maven-resolver-impl</artifactId>
-        <version>${project.version}</version>
-        <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
@@ -240,6 +229,11 @@
       <dependency>
         <groupId>org.apache.maven.resolver</groupId>
         <artifactId>maven-resolver-test-http</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-test-named-locks</artifactId>
         <version>${project.version}</version>
       </dependency>
 
