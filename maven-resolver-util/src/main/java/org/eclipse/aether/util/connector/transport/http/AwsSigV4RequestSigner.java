@@ -47,9 +47,9 @@ import static java.util.Objects.requireNonNull;
  * Signature Version 4</a>, as S3 and S3-compatible object stores expect it. The payload is declared as
  * {@code UNSIGNED-PAYLOAD}, which S3 accepts and which keeps the transports from reading uploads twice; the
  * signed headers are {@code host}, {@code x-amz-date}, {@code x-amz-content-sha256} and, with a session token,
- * {@code x-amz-security-token}. The request path is signed as sent, without re-encoding or normalization, which is
- * what S3 requires. The query string is signed as sent, sorted but not decoded and re-encoded, and the path is
- * encoded once, so this signer is meant for S3 and S3-compatible stores, not for services that double-encode the
+ * {@code x-amz-security-token}. Each path segment is percent-decoded and then encoded exactly once, which is what
+ * S3 requires, and the path is not normalized. The query string is signed as sent, sorted but not decoded and
+ * re-encoded, so this signer is meant for S3 and S3-compatible stores, not for services that double-encode the
  * path.
  *
  * @since 2.0.27
