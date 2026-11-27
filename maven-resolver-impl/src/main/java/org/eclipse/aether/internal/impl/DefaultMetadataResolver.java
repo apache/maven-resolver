@@ -526,7 +526,11 @@ public class DefaultMetadataResolver implements MetadataResolver {
 
                 try (RepositoryConnector connector =
                         repositoryConnectorProvider.newRepositoryConnector(session, requestRepository)) {
-                    connector.get(null, Collections.singletonList(download));
+                    try {
+                        connector.get(null, Collections.singletonList(download));
+                    } catch (RuntimeException e) {
+                        download.setException(new MetadataTransferException(metadata, requestRepository, e));
+                    }
                 }
 
                 exception = download.getException();

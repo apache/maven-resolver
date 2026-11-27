@@ -351,6 +351,47 @@ public class DefaultArtifactResolverTest {
         }
     }
 
+    @Test
+    void testResolveRemoteArtifactTriesNextRepositoryAfterConnectorFailure() throws ArtifactResolutionException {
+        resolver = setupArtifactResolver(
+                (s, versionRequest) -> new VersionResult(versionRequest)
+                        .setVersion(versionRequest.getArtifact().getVersion()),
+                new StaticUpdateCheckManager(true));
+        AtomicInteger attempts = new AtomicInteger();
+        RecordingRepositoryConnector connector = new RecordingRepositoryConnector() {
+
+            @Override
+            public void get(
+                    Collection<? extends ArtifactDownload> artifactDownloads,
+                    Collection<? extends MetadataDownload> metadataDownloads) {
+                if (attempts.getAndIncrement() == 0) {
+                    throw new IllegalStateException("repository unavailable");
+                }
+                super.get(artifactDownloads, metadataDownloads);
+            }
+        };
+        connector.setExpectGet(artifact);
+        repositoryConnectorProvider.setConnector(connector);
+
+        ArtifactRequest request = new ArtifactRequest(artifact, null, "");
+        request.addRepository(new RemoteRepository.Builder("first", "default", "file:///first").build());
+        request.addRepository(new RemoteRepository.Builder("second", "default", "file:///second").build());
+
+        ArtifactResult result;
+        try {
+            result = resolver.resolveArtifact(session, request);
+        } catch (ArtifactResolutionException e) {
+            assertEquals(2, attempts.get());
+            throw e;
+        }
+
+        assertEquals(1, result.getExceptions().size());
+        assertInstanceOf(ArtifactTransferException.class, result.getExceptions().get(0));
+        assertNotNull(result.getArtifact().getPath());
+        assertEquals(2, attempts.get());
+        connector.assertSeenExpected();
+    }
+
     private List<Boolean> resolveCachedFromForeignRepository() throws IOException, ArtifactResolutionException {
         writeString(lrm.getAbsolutePathForLocalArtifact(artifact), "cached");
         lrm.setArtifactAvailability(artifact, false);
