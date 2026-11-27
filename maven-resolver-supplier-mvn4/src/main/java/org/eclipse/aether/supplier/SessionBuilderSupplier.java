@@ -66,7 +66,10 @@ import static java.util.Objects.requireNonNull;
  * Extend this class and override methods to customize, if needed.
  *
  * @since 2.0.0
+ * @deprecated Use the Maven 4 standalone API in the {@code org.apache.maven.impl.standalone} package of the
+ * {@code org.apache.maven:maven-impl} module instead.
  */
+@Deprecated
 public class SessionBuilderSupplier {
     protected final RepositorySystem repositorySystem;
     protected final InternalScopeManager scopeManager;
