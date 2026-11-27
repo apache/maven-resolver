@@ -565,7 +565,14 @@ public class DefaultArtifactResolver implements ArtifactResolver {
         try {
             try (RepositoryConnector connector =
                     repositoryConnectorProvider.newRepositoryConnector(session, group.repository)) {
-                connector.get(downloads, null);
+                try {
+                    connector.get(downloads, null);
+                } catch (RuntimeException e) {
+                    for (ArtifactDownload download : downloads) {
+                        download.setException(
+                                new ArtifactTransferException(download.getArtifact(), group.repository, e));
+                    }
+                }
             }
         } catch (NoRepositoryConnectorException e) {
             for (ArtifactDownload download : downloads) {

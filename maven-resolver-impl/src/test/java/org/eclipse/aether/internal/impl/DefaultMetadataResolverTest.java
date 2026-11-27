@@ -51,6 +51,7 @@ import org.eclipse.aether.spi.connector.ArtifactDownload;
 import org.eclipse.aether.spi.connector.MetadataDownload;
 import org.eclipse.aether.spi.connector.filter.RemoteRepositoryFilterSource;
 import org.eclipse.aether.transfer.MetadataNotFoundException;
+import org.eclipse.aether.transfer.MetadataTransferException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -188,6 +189,44 @@ public class DefaultMetadataResolverTest {
         assertEquals(metadata, event.getMetadata());
         assertNull(event.getException());
         assertNotNull(event.getPath());
+    }
+
+    @Test
+    void testResolveMetadataContinuesAfterConnectorFailure() {
+        AtomicInteger attempts = new AtomicInteger();
+        connector = new RecordingRepositoryConnector() {
+
+            @Override
+            public void get(
+                    Collection<? extends ArtifactDownload> artifactDownloads,
+                    Collection<? extends MetadataDownload> metadataDownloads) {
+                if (attempts.getAndIncrement() == 0) {
+                    throw new IllegalStateException("repository unavailable");
+                }
+                super.get(artifactDownloads, metadataDownloads);
+            }
+        };
+        connector.setExpectGet(metadata);
+        connectorProvider.setConnector(connector);
+
+        RemoteRepository first = new RemoteRepository.Builder("first", "default", "file:///first").build();
+        RemoteRepository second = new RemoteRepository.Builder("second", "default", "file:///second").build();
+        MetadataRequest firstRequest = new MetadataRequest(metadata, first, "first");
+        MetadataRequest secondRequest = new MetadataRequest(metadata, second, "second");
+
+        List<MetadataResult> results = resolver.resolveMetadata(session, Arrays.asList(firstRequest, secondRequest));
+
+        assertEquals(2, attempts.get());
+        assertEquals(2, results.size());
+        assertEquals(
+                1L,
+                results.stream()
+                        .filter(result -> result.getException() instanceof MetadataTransferException)
+                        .count());
+        assertEquals(
+                1L,
+                results.stream().filter(result -> result.getException() == null).count());
+        connector.assertSeenExpected();
     }
 
     @Test
