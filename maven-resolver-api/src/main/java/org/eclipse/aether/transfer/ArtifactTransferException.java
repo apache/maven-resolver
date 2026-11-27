@@ -18,6 +18,7 @@
  */
 package org.eclipse.aether.transfer;
 
+import org.eclipse.aether.DebugMessageSupplier;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -25,7 +26,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * Thrown when an artifact could not be uploaded/downloaded to/from a particular remote repository.
  */
-public class ArtifactTransferException extends RepositoryException {
+public class ArtifactTransferException extends RepositoryException implements DebugMessageSupplier {
 
     private final transient Artifact artifact;
 
@@ -127,5 +128,14 @@ public class ArtifactTransferException extends RepositoryException {
      */
     public boolean isFromCache() {
         return fromCache;
+    }
+
+    @Override
+    public String getDebugMessage() {
+        if (getCause() instanceof DebugMessageSupplier) {
+            return ((DebugMessageSupplier) getCause()).getDebugMessage();
+        } else {
+            return "";
+        }
     }
 }

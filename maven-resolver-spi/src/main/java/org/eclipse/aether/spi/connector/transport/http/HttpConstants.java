@@ -46,6 +46,8 @@ public final class HttpConstants {
 
     public static final String CONTENT_RANGE = "Content-Range";
 
+    public static final String CONTENT_TYPE = "Content-Type";
+
     public static final String ETAG = "ETag";
 
     public static final String IF_UNMODIFIED_SINCE = "If-Unmodified-Since";

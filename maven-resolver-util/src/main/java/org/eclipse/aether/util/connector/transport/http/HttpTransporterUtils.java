@@ -517,4 +517,16 @@ public final class HttpTransporterUtils {
         }
         return new URI(uri.getScheme() + "://" + uri.getRawAuthority() + path);
     }
+
+    /**
+     * Getter for {@link ConfigurationProperties#HTTP_CAPTURE_RESPONSE_BODY_FOR_ERRORS}.
+     *
+     * @since 2.0.27
+     */
+    public static boolean getCaptureResponseBodyForErrors(RepositorySystemSession session) {
+        return ConfigUtils.getBoolean(
+                session,
+                ConfigurationProperties.DEFAULT_HTTP_CAPTURE_RESPONSE_BODY_FOR_ERRORS,
+                ConfigurationProperties.HTTP_CAPTURE_RESPONSE_BODY_FOR_ERRORS);
+    }
 }

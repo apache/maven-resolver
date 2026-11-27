@@ -39,7 +39,7 @@ final class MetadataTransportListener extends TransferTransportListener<Metadata
     public void transferFailed(Exception exception, int classification) {
         MetadataTransferException e;
         if (classification == Transporter.ERROR_NOT_FOUND) {
-            e = new MetadataNotFoundException(getTransfer().getMetadata(), repository);
+            e = new MetadataNotFoundException(getTransfer().getMetadata(), repository, exception);
         } else {
             e = new MetadataTransferException(getTransfer().getMetadata(), repository, exception);
         }

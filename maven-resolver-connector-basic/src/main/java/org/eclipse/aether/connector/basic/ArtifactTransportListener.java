@@ -39,7 +39,7 @@ final class ArtifactTransportListener extends TransferTransportListener<Artifact
     public void transferFailed(Exception exception, int classification) {
         ArtifactTransferException e;
         if (classification == Transporter.ERROR_NOT_FOUND) {
-            e = new ArtifactNotFoundException(getTransfer().getArtifact(), repository);
+            e = new ArtifactNotFoundException(getTransfer().getArtifact(), repository, exception);
         } else {
             e = new ArtifactTransferException(getTransfer().getArtifact(), repository, exception);
         }

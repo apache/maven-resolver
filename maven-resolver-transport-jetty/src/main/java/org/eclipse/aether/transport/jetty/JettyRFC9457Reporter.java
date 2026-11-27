@@ -24,18 +24,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.spi.connector.transport.http.RFC9457.RFC9457Reporter;
 import org.eclipse.jetty.client.InputStreamResponseListener;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.http.HttpHeader;
 
-public class JettyRFC9457Reporter
-        extends RFC9457Reporter<InputStreamResponseListener, HttpTransporterException, Request> {
-    public static final JettyRFC9457Reporter INSTANCE = new JettyRFC9457Reporter();
+public class JettyRFC9457Reporter extends RFC9457Reporter<InputStreamResponseListener, Request> {
 
-    private JettyRFC9457Reporter() {}
+    protected JettyRFC9457Reporter(boolean captureResponseBody) {
+        super(captureResponseBody);
+    }
 
     @Override
     public void prepareRequest(Request request) {
@@ -43,13 +42,12 @@ public class JettyRFC9457Reporter
     }
 
     @Override
-    protected boolean isRFC9457Message(final InputStreamResponseListener listener) {
+    protected String getContentType(final InputStreamResponseListener listener) {
         try {
             Response response = listener.get(1, TimeUnit.SECONDS);
-            String contentType = response.getHeaders().get(HttpHeader.CONTENT_TYPE);
-            return hasRFC9457ContentType(contentType);
+            return response.getHeaders().get(HttpHeader.CONTENT_TYPE);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            return false;
+            return null;
         }
     }
 
@@ -76,7 +74,7 @@ public class JettyRFC9457Reporter
     @Override
     protected String getBody(final InputStreamResponseListener listener) throws IOException {
         try (InputStream is = listener.getInputStream()) {
-            return readBody(is);
+            return readBody(is, getContentType(listener));
         }
     }
 }
