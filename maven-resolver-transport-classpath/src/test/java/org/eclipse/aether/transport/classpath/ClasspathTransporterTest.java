@@ -327,4 +327,11 @@ public class ClasspathTransporterTest {
         transporter.get(task);
         assertEquals("test", task.getDataString());
     }
+
+    @Test
+    void testCanHandleClasspathProtocolOnly() {
+        ClasspathTransporterFactory factory = new ClasspathTransporterFactory();
+        assertTrue(factory.canHandle("classpath"));
+        assertFalse(factory.canHandle("http"));
+    }
 }

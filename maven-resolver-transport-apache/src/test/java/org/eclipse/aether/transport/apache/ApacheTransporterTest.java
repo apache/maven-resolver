@@ -75,6 +75,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -559,5 +560,14 @@ class ApacheTransporterTest extends HttpTransporterTest {
         newTransporter(httpServer.getHttpUrl());
         httpServer.setServerErrorsBeforeWorks(1, 504);
         transporter.peek(new PeekTask(URI.create("repo/file.txt")));
+    }
+
+    @Test
+    void testCanHandleHttpProtocolsOnly() {
+        ApacheTransporterFactory factory =
+                new ApacheTransporterFactory(standardChecksumExtractor(), new PathProcessorSupport());
+        assertTrue(factory.canHandle("http"));
+        assertTrue(factory.canHandle("HTTPS"));
+        assertFalse(factory.canHandle("file"));
     }
 }

@@ -25,6 +25,9 @@ import org.eclipse.aether.spi.io.PathProcessorSupport;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * URL Transporter UT.
  */
@@ -244,4 +247,13 @@ class UrlTransporterTest extends HttpTransporterTest {
     @Disabled
     @Test
     protected void testRetryHandler_tooManyRequests_withRetryAfterHeader_explicitCount_positive() {}
+
+    @Test
+    void testCanHandleHttpProtocolsOnly() {
+        UrlTransporterFactory factory =
+                new UrlTransporterFactory(standardChecksumExtractor(), new PathProcessorSupport());
+        assertTrue(factory.canHandle("http"));
+        assertTrue(factory.canHandle("HTTPS"));
+        assertFalse(factory.canHandle("file"));
+    }
 }
