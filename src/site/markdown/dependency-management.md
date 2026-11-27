@@ -49,13 +49,18 @@ wins, and a rule declared at the root overrides all others.
 ## Effect on transitive dependencies
 
 The depth at which a rule is collected and the depth at which it is applied determine whether it reaches transitives.
-The implementations in `org.eclipse.aether.util.graph.manager` differ in exactly this respect:
+The implementations in `org.eclipse.aether.util.graph.manager` differ in exactly this respect. Depths are counted
+from the manager's factory: 0 is the factory, 1 is the root and 2 and above are its descendants. "Collects rules
+before" is exclusive, so a rule is collected from a node only if the node's depth is below that number:
 
-| Implementation | Collects rules up to | Applies rules from | Intended use |
+| Implementation | Collects rules before depth | Applies rules from | Intended use |
 | --- | --- | --- | --- |
-| [`ClassicDependencyManager`](apidocs/org/eclipse/aether/util/graph/manager/ClassicDependencyManager.html) | depth 2 | depth 2 | Maven 2.x compatible behaviour. |
+| [`ClassicDependencyManager`](apidocs/org/eclipse/aether/util/graph/manager/ClassicDependencyManager.html) | root only (depth 1 is skipped for Maven 2.x compatibility) | depth 2 | Maven 2.x compatible behaviour. Ignores exclusions introduced by direct dependencies. |
 | [`DefaultDependencyManager`](apidocs/org/eclipse/aether/util/graph/manager/DefaultDependencyManager.html) | any depth | depth 0 | Aggressive; can override the model builder. Not recommended for Maven. |
 | [`TransitiveDependencyManager`](apidocs/org/eclipse/aether/util/graph/manager/TransitiveDependencyManager.html) | any depth | depth 2 | Recommended for modern Maven: full transitive management without fighting the model builder. |
+
+With `TransitiveDependencyManager`, version and exclusion rules are collected at any depth, but scope and optional
+rules only from the root, to avoid interfering with inheritance.
 
 A rule found at depth 1 is therefore normally applied to dependencies at depth 2 and below, not to its own node.
 Root rules are the exception: they are also applied to the root's direct dependencies. This is why a version declared
@@ -99,7 +104,11 @@ root
     └── com.acme:lib:2.0    (managed from 1.2)
 ```
 
-Mediation then sees one version for `com.acme:lib` and keeps a single node, so the resolved graph is a tree:
+The `(managed from ...)` annotations appear only when `DependencyManagerUtils.CONFIG_PROP_VERBOSE` is enabled; see the
+[dependency graph troubleshooting guide](dependency-graph.html#troubleshooting-a-dependency-graph).
+
+Mediation then sees one version for `com.acme:lib` and keeps a single node, the first one encountered at equal
+depth, so the resolved graph is a tree:
 
 ```
 root
@@ -110,4 +119,4 @@ root
 
 If the two managed versions had differed, mediation would still have to select one; with verbose conflict resolution
 enabled, the losing node remains in the graph marked as a conflict loser instead of being pruned. Resolving artifacts
-finally downloads `a:1.0`, `b:1.0` and `lib:2.0` — never the unmanaged `1.0` or `1.2` files.
+then downloads `a:1.0`, `b:1.0` and `lib:2.0` — never the unmanaged `1.0` or `1.2` files.
