@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.eclipse.aether.named.hazelcast;
+package org.eclipse.aether.internal.impl.synccontext;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.SyncContext;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.internal.impl.named.DefaultNamedLockFactorySelector;
+import org.eclipse.aether.internal.impl.synccontext.named.NameMapper;
 import org.eclipse.aether.internal.impl.synccontext.named.NameMappers;
 import org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapter;
 import org.eclipse.aether.named.NamedLockFactory;
@@ -39,7 +41,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static java.util.Objects.requireNonNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -47,43 +51,45 @@ import static org.mockito.Mockito.when;
  * UT support for {@link SyncContextFactory}.
  */
 public abstract class NamedLockFactoryAdapterTestSupport {
-    protected static final HazelcastClientUtils utils = new HazelcastClientUtils();
-
     private static final long ADAPTER_TIME = 1000L;
 
     private static final TimeUnit ADAPTER_TIME_UNIT = TimeUnit.MILLISECONDS;
 
     /**
-     * Subclass should populate this field, using {@link #setNamedLockFactory(NamedLockFactory)}, but subclass
-     * must take care of proper cleanup as well, if needed!
+     * Subclass MAY populate this field but subclass must take care of proper cleanup as well, if needed!
      */
+    protected static NameMapper nameMapper = NameMappers.discriminatingNameMapper();
+
+    /**
+     * Subclass MUST populate this field but subclass must take care of proper cleanup as well, if needed! Once set,
+     * subclass MUST call {@link #createAdapter()}.
+     */
+    protected static NamedLockFactory namedLockFactory;
+
     private static NamedLockFactoryAdapter adapter;
 
     private RepositorySystemSession session;
 
-    protected static void setNamedLockFactory(final NamedLockFactory namedLockFactory) {
-        adapter = new NamedLockFactoryAdapter(
-                NameMappers.discriminatingNameMapper(), namedLockFactory, ADAPTER_TIME, ADAPTER_TIME_UNIT);
+    public static void createAdapter() {
+        requireNonNull(namedLockFactory, "NamedLockFactory not set");
+        adapter = new NamedLockFactoryAdapter(nameMapper, namedLockFactory, ADAPTER_TIME, ADAPTER_TIME_UNIT);
     }
 
     @AfterAll
-    static void cleanup() {
+    static void cleanupAdapter() {
         if (adapter != null) {
             adapter.getNamedLockFactory().shutdown();
         }
-
-        utils.cleanup();
     }
 
     @BeforeEach
     void before() throws IOException {
-        LocalRepository localRepository =
-                new LocalRepository(Files.createTempDirectory("test").toFile());
+        LocalRepository localRepository = new LocalRepository(Files.createTempDirectory("test"));
         session = mock(RepositorySystemSession.class);
         when(session.getLocalRepository()).thenReturn(localRepository);
         HashMap<String, Object> config = new HashMap<>();
-        config.put(NamedLockFactoryAdapter.CONFIG_PROP_TIME, String.valueOf(ADAPTER_TIME));
-        config.put(NamedLockFactoryAdapter.CONFIG_PROP_TIME_UNIT, ADAPTER_TIME_UNIT.name());
+        config.put(DefaultNamedLockFactorySelector.CONFIG_PROP_LOCK_WAIT_TIME, String.valueOf(ADAPTER_TIME));
+        config.put(DefaultNamedLockFactorySelector.CONFIG_PROP_LOCK_WAIT_TIME_UNIT, ADAPTER_TIME_UNIT.name());
         when(session.getConfigProperties()).thenReturn(config);
     }
 
@@ -100,6 +106,34 @@ public abstract class NamedLockFactoryAdapterTestSupport {
                             new DefaultArtifact("groupId:artifactId:1.0"),
                             new DefaultArtifact("groupId:artifactId:1.1")),
                     null);
+        }
+    }
+
+    @Test
+    void multipleAcquires() {
+        try (SyncContext syncContext = adapter.newInstance(session, false)) {
+            syncContext.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0")), null);
+            syncContext.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.1")), null);
+        }
+    }
+
+    @Test
+    @Timeout(15)
+    void multipleAcquiresWithALoser() throws InterruptedException {
+        try (SyncContext syncContext1 = adapter.newInstance(session, false)) {
+            syncContext1.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0")), null);
+            syncContext1.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.1")), null);
+            CountDownLatch loser = new CountDownLatch(1);
+            Thread t1 = new Thread(() -> {
+                try (SyncContext syncContext2 = adapter.newInstance(session, false)) {
+                    syncContext2.acquire(Arrays.asList(new DefaultArtifact("groupId:artifactId:1.0")), null);
+                } catch (IllegalStateException e) {
+                    loser.countDown();
+                }
+            });
+            t1.start();
+            t1.join(5000);
+            assertTrue(loser.await(5, TimeUnit.SECONDS), "expected a loser");
         }
     }
 
@@ -200,6 +234,37 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
     }
 
+    @Test
+    void fullyConsumeLockTime() throws InterruptedException {
+        long start = System.nanoTime();
+        CountDownLatch winners = new CountDownLatch(1); // we expect 1 winner
+        CountDownLatch losers = new CountDownLatch(1); // we expect 1 loser
+        Thread t1 = new Thread(new Access(false, winners, losers, adapter, session, null));
+        Thread t2 = new Thread(new Access(false, winners, losers, adapter, session, null));
+        t1.start();
+        t2.start();
+        t1.join(5000);
+        t2.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected a winner");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected a loser");
+        long end = System.nanoTime();
+        long duration = end - start;
+        long expectedDuration = ADAPTER_TIME_UNIT.toNanos(ADAPTER_TIME);
+        assertTrue(duration >= expectedDuration); // equal in ideal case
+    }
+
+    @Test
+    void releasedExclusiveAllowAccess() throws InterruptedException {
+        CountDownLatch winners = new CountDownLatch(2); // we expect 1 winner
+        CountDownLatch losers = new CountDownLatch(0); // we expect 1 loser
+        Thread t1 = new Thread(new Access(false, winners, losers, adapter, session, null));
+        new Access(false, winners, losers, adapter, session, null).run();
+        t1.start();
+        t1.join(5000);
+        assertTrue(winners.await(5, TimeUnit.SECONDS), "expected both threads to win");
+        assertTrue(losers.await(5, TimeUnit.SECONDS), "expected no loser");
+    }
+
     private static class Access implements Runnable {
         final boolean shared;
         final CountDownLatch winner;
@@ -208,7 +273,7 @@ public abstract class NamedLockFactoryAdapterTestSupport {
         final RepositorySystemSession session;
         final Access chained;
 
-        public Access(
+        Access(
                 boolean shared,
                 CountDownLatch winner,
                 CountDownLatch loser,
