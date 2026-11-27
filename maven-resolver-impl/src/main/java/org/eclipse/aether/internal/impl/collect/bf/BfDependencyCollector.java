@@ -197,11 +197,16 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
 
             List<DependencyNode> parents = Collections.singletonList(node);
             for (Dependency dependency : dependencies) {
-                if (rootDepSelector != null && !rootDepSelector.selectDependency(dependency)) {
+                PremanagedDependency premanagedDependency =
+                        PremanagedDependency.create(rootDepManager, dependency, false, args.premanagedState);
+                Dependency managedDependency = premanagedDependency.getManagedDependency();
+
+                // Dependency management must run before selection: selectors reason about the managed state.
+                if (rootDepSelector != null && !rootDepSelector.selectDependency(managedDependency)) {
                     continue;
                 }
                 RequestTrace childTrace =
-                        collectStepTrace(trace, args.request.getRequestContext(), parents, dependency);
+                        collectStepTrace(trace, args.request.getRequestContext(), parents, managedDependency);
                 DependencyProcessingContext processingContext = new DependencyProcessingContext(
                         rootDepSelector,
                         rootDepManager,
@@ -212,8 +217,8 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                         managedDependencies,
                         parents,
                         dependency,
-                        PremanagedDependency.create(rootDepManager, dependency, false, args.premanagedState));
-                processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
+                        premanagedDependency);
+                processingContext.withDependency(managedDependency);
                 resolveArtifactDescriptorAsync(args, processingContext, results);
                 args.dependencyProcessingQueue.add(processingContext);
             }
@@ -285,16 +290,18 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                 }
 
                 if (!descriptorResult.getRelocations().isEmpty()) {
-                    if (context.depSelector == null || context.depSelector.selectDependency(d)) {
-                        boolean disableVersionManagementSubsequently = originalArtifact
-                                        .getGroupId()
-                                        .equals(d.getArtifact().getGroupId())
-                                && originalArtifact
-                                        .getArtifactId()
-                                        .equals(d.getArtifact().getArtifactId());
+                    boolean disableVersionManagementSubsequently =
+                            originalArtifact.getGroupId().equals(d.getArtifact().getGroupId())
+                                    && originalArtifact
+                                            .getArtifactId()
+                                            .equals(d.getArtifact().getArtifactId());
 
-                        PremanagedDependency premanagedDependency = PremanagedDependency.create(
-                                context.depManager, d, disableVersionManagementSubsequently, args.premanagedState);
+                    PremanagedDependency premanagedDependency = PremanagedDependency.create(
+                            context.depManager, d, disableVersionManagementSubsequently, args.premanagedState);
+                    Dependency managedDependency = premanagedDependency.getManagedDependency();
+
+                    // Dependency management must run before selection: selectors reason about the managed state.
+                    if (context.depSelector == null || context.depSelector.selectDependency(managedDependency)) {
                         DependencyProcessingContext relocatedContext = new DependencyProcessingContext(
                                 context.depSelector,
                                 context.depManager,
@@ -307,7 +314,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                                 d,
                                 premanagedDependency);
 
-                        relocatedContext.withDependency(premanagedDependency.getManagedDependency());
+                        relocatedContext.withDependency(managedDependency);
                         resolveArtifactDescriptorAsync(args, relocatedContext, results);
                         processDependency(
                                 args,
@@ -438,13 +445,16 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
             parents.addAll(parentContext.parents);
             parents.add(child);
             for (Dependency dependency : descriptorResult.getDependencies()) {
-                if (childSelector != null && !childSelector.selectDependency(dependency)) {
-                    continue;
-                }
-                RequestTrace childTrace =
-                        collectStepTrace(parentContext.trace, args.request.getRequestContext(), parents, dependency);
                 PremanagedDependency premanagedDependency = PremanagedDependency.create(
                         childManager, dependency, disableVersionManagement, args.premanagedState);
+                Dependency managedDependency = premanagedDependency.getManagedDependency();
+
+                // Dependency management must run before selection: selectors reason about the managed state.
+                if (childSelector != null && !childSelector.selectDependency(managedDependency)) {
+                    continue;
+                }
+                RequestTrace childTrace = collectStepTrace(
+                        parentContext.trace, args.request.getRequestContext(), parents, managedDependency);
                 DependencyProcessingContext processingContext = new DependencyProcessingContext(
                         childSelector,
                         childManager,
@@ -457,7 +467,7 @@ public class BfDependencyCollector extends DependencyCollectorDelegate {
                         dependency,
                         premanagedDependency);
                 // resolve descriptors ahead for managed dependency
-                processingContext.withDependency(processingContext.premanagedDependency.getManagedDependency());
+                processingContext.withDependency(managedDependency);
                 resolveArtifactDescriptorAsync(args, processingContext, results);
                 args.dependencyProcessingQueue.add(processingContext);
             }
