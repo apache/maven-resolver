@@ -342,6 +342,15 @@ public class DefaultArtifactResolver implements ArtifactResolver, Service {
 
                     artifact = artifact.setVersion(versionResult.getVersion());
 
+                    if (artifact.getVersion().trim().isEmpty()) {
+                        // the version resolver reported success but produced no usable version (e.g. the
+                        // requested artifact had no version at all); fail here with a clear artifact-level
+                        // message instead of an opaque IllegalArgumentException from the local path composer
+                        result.addException(new ArtifactNotFoundException(
+                                artifact, null, "The version of " + artifact + " is missing or blank"));
+                        continue;
+                    }
+
                     if (versionResult.getRepository() != null) {
                         if (versionResult.getRepository() instanceof RemoteRepository) {
                             filteredRemoteRepositories =
