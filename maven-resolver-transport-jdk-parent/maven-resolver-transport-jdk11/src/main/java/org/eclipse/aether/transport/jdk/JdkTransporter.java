@@ -65,7 +65,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
@@ -122,7 +125,9 @@ import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.D
  * <p>
  * Known issues:
  * <ul>
- *     <li>Does not properly support {@link ConfigurationProperties#REQUEST_TIMEOUT} prior Java 26, see <a href="https://bugs.openjdk.org/browse/JDK-8208693">JDK-8208693</a></li>
+ *     <li>Does not properly support {@link ConfigurationProperties#REQUEST_TIMEOUT} for response headers prior Java 26,
+ *     see <a href="https://bugs.openjdk.org/browse/JDK-8208693">JDK-8208693</a>. Stalls while reading the response
+ *     body are bounded separately by Methanol's read timeout.</li>
  * </ul>
  * <p>
  * Related: <a href="https://dev.to/kdrakon/httpclient-can-t-connect-to-a-tls-proxy-118a">No TLS proxy supported</a>.
@@ -131,6 +136,26 @@ import static org.eclipse.aether.transport.jdk.JdkTransporterConfigurationKeys.D
  */
 final class JdkTransporter extends AbstractTransporter implements HttpTransporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkTransporter.class);
+
+    /**
+     * Methanol 1.9.0 schedules read timeouts on a shared scheduler that retains cancelled tasks until their deadline
+     * (https://github.com/mizosoft/methanol/issues/196). Until the upstream fix is released, use a scheduler with the
+     * remove-on-cancel policy enabled, as proposed in https://github.com/mizosoft/methanol/pull/197.
+     */
+    private static final ScheduledExecutorService READ_TIMEOUT_SCHEDULER = newReadTimeoutScheduler();
+
+    private static ScheduledExecutorService newReadTimeoutScheduler() {
+        ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1, runnable -> {
+            Thread thread = new Thread(runnable, "aether-jdk-read-timeout");
+            thread.setDaemon(true);
+            thread.setContextClassLoader(null);
+            return thread;
+        });
+        scheduler.setRemoveOnCancelPolicy(true);
+        scheduler.setKeepAliveTime(30, TimeUnit.SECONDS);
+        scheduler.allowCoreThreadTimeOut(true);
+        return scheduler;
+    }
 
     private static final DateTimeFormatter RFC7231 = DateTimeFormatter.ofPattern(
                     "EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
@@ -820,6 +845,8 @@ final class JdkTransporter extends AbstractTransporter implements HttpTransporte
                 // https://bugs.openjdk.org/browse/JDK-8208693
                 // but better than nothing
                 .requestTimeout(Duration.ofMillis(requestTimeout))
+                // bounds stalls while the response body is being read, not just the response headers
+                .readTimeout(Duration.ofMillis(requestTimeout), READ_TIMEOUT_SCHEDULER)
                 .sslContext(sslContext);
 
         if (insecure) {

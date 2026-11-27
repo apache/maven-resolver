@@ -20,11 +20,15 @@ package org.eclipse.aether.internal.test.util.http;
 
 import javax.net.ssl.SSLContext;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -34,6 +38,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1929,5 +1934,51 @@ public abstract class HttpTransporterTest {
         newTransporter("https://localhost");
         newTransporter("HTTPS://localhost");
         newTransporter("HttpS://localhost");
+    }
+
+    @Test
+    @Timeout(10)
+    void testGet_BodyReadTimeout() throws Exception {
+        session.setConfigProperty(ConfigurationProperties.REQUEST_TIMEOUT, 300);
+        try (ServerSocket server = new ServerSocket(0)) {
+            newTransporter("http://localhost:" + server.getLocalPort());
+
+            Thread responder = new Thread(() -> {
+                try (Socket socket = server.accept()) {
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1));
+                    String line;
+                    while ((line = reader.readLine()) != null && !line.isEmpty()) {
+                        // drain the request headers before responding
+                    }
+                    OutputStream out = socket.getOutputStream();
+                    out.write("HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\npartial"
+                            .getBytes(StandardCharsets.ISO_8859_1));
+                    out.flush();
+                    Thread.sleep(5000);
+                } catch (IOException e) {
+                    // the client closed the connection after the timeout, as expected
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+            responder.setDaemon(true);
+            responder.start();
+
+            long start = System.nanoTime();
+            Exception error =
+                    assertThrows(Exception.class, () -> transporter.get(new GetTask(URI.create("repo/file.txt"))));
+            long elapsedMillis = Duration.ofNanos(System.nanoTime() - start).toMillis();
+
+            boolean timeoutSignalled = (error.getClass().getSimpleName() + " " + error.getMessage())
+                    .toLowerCase(Locale.ROOT)
+                    .contains("timeout");
+            // Methanol closes the body stream when the read deadline fires, which surfaces as IOException("closed").
+            assertTrue(
+                    timeoutSignalled || (error instanceof IOException && "closed".equalsIgnoreCase(error.getMessage())),
+                    () -> "Expected a timeout, got " + error);
+            assertEquals(Transporter.ERROR_OTHER, transporter.classify(error));
+            assertTrue(elapsedMillis < 2000, "Body stall should fail at the timeout, took " + elapsedMillis + "ms");
+        }
     }
 }
