@@ -24,6 +24,8 @@ import java.util.stream.Stream;
 
 import org.eclipse.aether.version.Version;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,9 +38,18 @@ public class GenericVersionTest extends AbstractVersionTest {
         return new GenericVersion(version);
     }
 
-    @Test
-    void testEmptyVersion() {
-        assertOrder(X_EQ_Y, "0", "");
+    @ParameterizedTest(name = "{0}: {1} {2} {3}")
+    @CsvFileSource(resources = "/version-comparison.csv", encoding = "UTF-8", numLinesToSkip = 1)
+    void testVersionComparisons(String testCase, String left, String operator, String right) {
+        int expected;
+        if ("LT".equals(operator)) {
+            expected = X_LT_Y;
+        } else if ("GT".equals(operator)) {
+            expected = X_GT_Y;
+        } else {
+            expected = X_EQ_Y;
+        }
+        assertOrder(expected, left, right);
     }
 
     // Block of tests from https://issues.apache.org/jira/browse/MRESOLVER-336
@@ -120,25 +131,6 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    void testEdgeCase_1_2() {
-        // as expected
-        assertOrder(X_LT_Y, "ga.ga.foo", "foo");
-    }
-
-    @Test
-    void testEdgeCase_2_1() {
-        assertOrder(X_GT_Y, "0.foo.1.2.3", "foo.1.2.3");
-        // they were equal in Resolver 1.x
-        assertOrder(X_GT_Y, "0.foo", "foo");
-        assertOrder(X_EQ_Y, "1.0.0-foo", "1-foo");
-        // but "foo" != "ga" (string > qualifier)
-        assertOrder(X_LT_Y, "1.0.0-ga-foo", "1-foo");
-        assertOrder(X_EQ_Y, "1.0.0-ga-foo", "1-ga-foo");
-        assertOrder(X_LT_Y, "1.0.0.final-foo", "1-foo");
-        assertOrder(X_EQ_Y, "1.0.0.final-foo", "1-final-foo");
-    }
-
-    @Test
     void testEdgeCase_2_2() {
         Version v1 = newVersion("0.0.0.ga.ga.foo");
         Version v2 = newVersion("foo");
@@ -149,35 +141,6 @@ public class GenericVersionTest extends AbstractVersionTest {
         assertNotEquals(v2, v3);
         // but "0" != "ga"
         assertNotEquals(v1, v3);
-    }
-
-    @Test
-    void testEdgeCase_2_3() {
-        // 1.ga trimmed to 1 == 1.0.0.0.0.0...
-        assertOrder(X_EQ_Y, "1.ga", "1.0");
-        // ga.1 is not trimmed < 0.1 (as qualifier < number)
-        assertOrder(X_LT_Y, "ga.1", "0.1");
-        // 1.ga.1 is not trimmed < 1.0.1 (as qualifier < number)
-        assertOrder(X_LT_Y, "1.ga.1", "1.0.1");
-    }
-
-    @Test
-    void testEdgeCase_2_4() {
-        assertOrder(X_LT_Y, "1.0.final.1", "1.0.1.final");
-    }
-
-    @Test
-    void testQualifier() {
-        String ver = "1.0.0";
-        assertOrder(X_LT_Y, ver + ".a1", ver + ".b1");
-        assertOrder(X_LT_Y, ver + ".b1", ver + ".m1");
-        assertOrder(X_LT_Y, ver + ".m1", ver + ".rc");
-        assertOrder(X_LT_Y, ver + ".rc", ver + "-SNAPSHOT");
-        assertOrder(X_LT_Y, ver + "-SNAPSHOT", ver);
-        assertOrder(X_EQ_Y, ver + ".ga", ver + ".final");
-        assertOrder(X_EQ_Y, ver + ".final", ver + ".release");
-        assertOrder(X_LT_Y, ver + ".final", ver + ".sp");
-        assertOrder(X_LT_Y, ver, ver + ".sp");
     }
 
     @Test
@@ -196,220 +159,6 @@ public class GenericVersionTest extends AbstractVersionTest {
     // End of https://issues.apache.org/jira/browse/MRESOLVER-336
 
     @Test
-    void testNumericOrdering() {
-        assertOrder(X_LT_Y, "2", "10");
-        assertOrder(X_LT_Y, "1.2", "1.10");
-        assertOrder(X_LT_Y, "1.0.2", "1.0.10");
-        assertOrder(X_LT_Y, "1.0.0.2", "1.0.0.10");
-        assertOrder(X_LT_Y, "1.0.20101206.111434.1", "1.0.20101206.111435.1");
-        assertOrder(X_LT_Y, "1.0.20101206.111434.2", "1.0.20101206.111434.10");
-    }
-
-    @Test
-    void testDelimiters() {
-        assertOrder(X_EQ_Y, "1.0", "1-0");
-        assertOrder(X_EQ_Y, "1.0", "1_0");
-        assertOrder(X_EQ_Y, "1.a", "1a");
-    }
-
-    @Test
-    void testLeadingZerosAreSemanticallyIrrelevant() {
-        assertOrder(X_EQ_Y, "1", "01");
-        assertOrder(X_EQ_Y, "1.2", "1.002");
-        assertOrder(X_EQ_Y, "1.2.3", "1.2.0003");
-        assertOrder(X_EQ_Y, "1.2.3.4", "1.2.3.00004");
-    }
-
-    @Test
-    void testTrailingZerosAreSemanticallyIrrelevant() {
-        assertOrder(X_EQ_Y, "1", "1.0.0.0.0.0.0.0.0.0.0.0.0.0");
-        assertOrder(X_EQ_Y, "1", "1-0-0-0-0-0-0-0-0-0-0-0-0-0");
-        assertOrder(X_EQ_Y, "1", "1.0-0.0-0.0-0.0-0.0-0.0-0.0");
-        assertOrder(X_EQ_Y, "1", "1.0000000000000");
-        assertOrder(X_EQ_Y, "1.0", "1.0.0");
-    }
-
-    @Test
-    void testTrailingZerosBeforeQualifierAreSemanticallyIrrelevant() {
-        assertOrder(X_EQ_Y, "1.0_ga", "1.0.0_ga");
-        assertOrder(X_EQ_Y, "1.0-ga", "1.0.0-ga");
-        assertOrder(X_EQ_Y, "1.0.ga", "1.0.0.ga");
-        assertOrder(X_EQ_Y, "1.0ga", "1.0.0ga");
-
-        assertOrder(X_EQ_Y, "1.0-alpha", "1.0.0-alpha");
-        assertOrder(X_EQ_Y, "1.0.alpha", "1.0.0.alpha");
-        assertOrder(X_EQ_Y, "1.0alpha", "1.0.0alpha");
-        assertOrder(X_EQ_Y, "1.0-alpha-snapshot", "1.0.0-alpha-snapshot");
-        assertOrder(X_EQ_Y, "1.0.alpha.snapshot", "1.0.0.alpha.snapshot");
-
-        assertOrder(X_EQ_Y, "1.x.0-alpha", "1.x.0.0-alpha");
-        assertOrder(X_EQ_Y, "1.x.0.alpha", "1.x.0.0.alpha");
-        assertOrder(X_EQ_Y, "1.x.0-alpha-snapshot", "1.x.0.0-alpha-snapshot");
-        assertOrder(X_EQ_Y, "1.x.0.alpha.snapshot", "1.x.0.0.alpha.snapshot");
-    }
-
-    @Test
-    void testTrailingDelimitersAreSemanticallyIrrelevant() {
-        assertOrder(X_EQ_Y, "1", "1.............");
-        assertOrder(X_EQ_Y, "1", "1-------------");
-        assertOrder(X_EQ_Y, "1.0", "1.............");
-        assertOrder(X_EQ_Y, "1.0", "1-------------");
-        assertOrder(X_EQ_Y, "1.0", "1_______");
-    }
-
-    @Test
-    void testInitialDelimiters() {
-        assertOrder(X_EQ_Y, "0.1", ".1");
-        assertOrder(X_EQ_Y, "0.0.1", "..1");
-        assertOrder(X_EQ_Y, "0.1", "-1");
-        assertOrder(X_EQ_Y, "0.0.1", "--1");
-        assertOrder(X_EQ_Y, "0.1", "_1");
-    }
-
-    @Test
-    void testConsecutiveDelimiters() {
-        assertOrder(X_EQ_Y, "1.0.1", "1..1");
-        assertOrder(X_EQ_Y, "1.0.0.1", "1...1");
-        assertOrder(X_EQ_Y, "1.0.1", "1--1");
-        assertOrder(X_EQ_Y, "1.0.0.1", "1---1");
-    }
-
-    @Test
-    void testUnlimitedNumberOfVersionComponents() {
-        assertOrder(X_GT_Y, "1.0.1.2.3.4.5.6.7.8.9.0.1.2.10", "1.0.1.2.3.4.5.6.7.8.9.0.1.2.3");
-    }
-
-    @Test
-    void testUnlimitedNumberOfDigitsInNumericComponent() {
-        assertOrder(X_GT_Y, "1.1234567890123456789012345678901", "1.123456789012345678901234567891");
-    }
-
-    @Test
-    void testTransitionFromDigitToLetterAndViceVersaIsEquivalentToDelimiter() {
-        assertOrder(X_EQ_Y, "1alpha10", "1.alpha.10");
-        assertOrder(X_EQ_Y, "1alpha10", "1-alpha-10");
-
-        assertOrder(X_GT_Y, "1.alpha10", "1.alpha2");
-        assertOrder(X_GT_Y, "10alpha", "1alpha");
-    }
-
-    @Test
-    void testWellKnownQualifierOrdering() {
-        assertOrder(X_EQ_Y, "1-alpha1", "1-a1");
-        assertOrder(X_LT_Y, "1-alpha", "1-beta");
-        assertOrder(X_EQ_Y, "1-beta1", "1-b1");
-        assertOrder(X_LT_Y, "1-beta", "1-milestone");
-        assertOrder(X_EQ_Y, "1-milestone1", "1-m1");
-        assertOrder(X_LT_Y, "1-milestone", "1-rc");
-        assertOrder(X_EQ_Y, "1-rc", "1-cr");
-        assertOrder(X_LT_Y, "1-rc", "1-snapshot");
-        assertOrder(X_LT_Y, "1-snapshot", "1");
-        assertOrder(X_EQ_Y, "1", "1-ga");
-        assertOrder(X_EQ_Y, "1", "1.ga.0.ga");
-        assertOrder(X_EQ_Y, "1.0", "1-ga");
-        assertOrder(X_EQ_Y, "1", "1-ga.ga");
-        assertOrder(X_EQ_Y, "1", "1-ga-ga");
-        assertOrder(X_EQ_Y, "A", "A.ga.ga");
-        assertOrder(X_EQ_Y, "A", "A-ga-ga");
-        assertOrder(X_EQ_Y, "1", "1-final");
-        assertOrder(X_EQ_Y, "1", "1-release");
-        assertOrder(X_LT_Y, "1", "1-sp");
-
-        assertOrder(X_LT_Y, "A.rc.1", "A.ga.1");
-        assertOrder(X_GT_Y, "A.sp.1", "A.ga.1");
-        assertOrder(X_LT_Y, "A.rc.x", "A.ga.x");
-        assertOrder(X_GT_Y, "A.sp.x", "A.ga.x");
-    }
-
-    @Test
-    void testWellKnownQualifierVersusUnknownQualifierOrdering() {
-        assertOrder(X_GT_Y, "1-abc", "1-alpha");
-        assertOrder(X_GT_Y, "1-abc", "1-beta");
-        assertOrder(X_GT_Y, "1-abc", "1-milestone");
-        assertOrder(X_GT_Y, "1-abc", "1-rc");
-        assertOrder(X_GT_Y, "1-abc", "1-snapshot");
-        assertOrder(X_GT_Y, "1-abc", "1");
-        assertOrder(X_GT_Y, "1-abc", "1-sp");
-    }
-
-    @Test
-    void testWellKnownSingleCharQualifiersOnlyRecognizedIfImmediatelyFollowedByNumber() {
-        assertOrder(X_GT_Y, "1.0a", "1.0");
-        assertOrder(X_GT_Y, "1.0-a", "1.0");
-        assertOrder(X_GT_Y, "1.0.a", "1.0");
-        assertOrder(X_GT_Y, "1.0b", "1.0");
-        assertOrder(X_GT_Y, "1.0-b", "1.0");
-        assertOrder(X_GT_Y, "1.0.b", "1.0");
-        assertOrder(X_GT_Y, "1.0m", "1.0");
-        assertOrder(X_GT_Y, "1.0-m", "1.0");
-        assertOrder(X_GT_Y, "1.0.m", "1.0");
-
-        assertOrder(X_LT_Y, "1.0a1", "1.0");
-        assertOrder(X_LT_Y, "1.0-a1", "1.0");
-        assertOrder(X_LT_Y, "1.0.a1", "1.0");
-        assertOrder(X_LT_Y, "1.0b1", "1.0");
-        assertOrder(X_LT_Y, "1.0-b1", "1.0");
-        assertOrder(X_LT_Y, "1.0.b1", "1.0");
-        assertOrder(X_LT_Y, "1.0m1", "1.0");
-        assertOrder(X_LT_Y, "1.0-m1", "1.0");
-        assertOrder(X_LT_Y, "1.0.m1", "1.0");
-
-        assertOrder(X_GT_Y, "1.0a.1", "1.0");
-        assertOrder(X_GT_Y, "1.0a-1", "1.0");
-        assertOrder(X_GT_Y, "1.0b.1", "1.0");
-        assertOrder(X_GT_Y, "1.0b-1", "1.0");
-        assertOrder(X_GT_Y, "1.0m.1", "1.0");
-        assertOrder(X_GT_Y, "1.0m-1", "1.0");
-    }
-
-    @Test
-    void testUnknownQualifierOrdering() {
-        assertOrder(X_LT_Y, "1-abc", "1-abcd");
-        assertOrder(X_LT_Y, "1-abc", "1-bcd");
-        assertOrder(X_GT_Y, "1-abc", "1-aac");
-    }
-
-    @Test
-    void testCaseInsensitiveOrderingOfQualifiers() {
-        assertOrder(X_EQ_Y, "1.alpha", "1.ALPHA");
-        assertOrder(X_EQ_Y, "1.alpha", "1.Alpha");
-
-        assertOrder(X_EQ_Y, "1.beta", "1.BETA");
-        assertOrder(X_EQ_Y, "1.beta", "1.Beta");
-
-        assertOrder(X_EQ_Y, "1.milestone", "1.MILESTONE");
-        assertOrder(X_EQ_Y, "1.milestone", "1.Milestone");
-
-        assertOrder(X_EQ_Y, "1.rc", "1.RC");
-        assertOrder(X_EQ_Y, "1.rc", "1.Rc");
-        assertOrder(X_EQ_Y, "1.cr", "1.CR");
-        assertOrder(X_EQ_Y, "1.cr", "1.Cr");
-
-        assertOrder(X_EQ_Y, "1.snapshot", "1.SNAPSHOT");
-        assertOrder(X_EQ_Y, "1.snapshot", "1.Snapshot");
-
-        assertOrder(X_EQ_Y, "1.ga", "1.GA");
-        assertOrder(X_EQ_Y, "1.ga", "1.Ga");
-        assertOrder(X_EQ_Y, "1.final", "1.FINAL");
-        assertOrder(X_EQ_Y, "1.final", "1.Final");
-        assertOrder(X_EQ_Y, "1.release", "1.RELEASE");
-        assertOrder(X_EQ_Y, "1.release", "1.Release");
-
-        assertOrder(X_EQ_Y, "1.sp", "1.SP");
-        assertOrder(X_EQ_Y, "1.sp", "1.Sp");
-
-        assertOrder(X_EQ_Y, "1.unknown", "1.UNKNOWN");
-        assertOrder(X_EQ_Y, "1.unknown", "1.Unknown");
-    }
-
-    @Test
-    void testHypenBeforeUnderscoreDotOrder() {
-        assertOrder(X_EQ_Y, "1.0.0-1", "1.0.0_1");
-        assertOrder(X_EQ_Y, "1.0.0-1", "1.0.0.1");
-        assertOrder(X_EQ_Y, "1.0.0_1", "1.0.0.1");
-    }
-
-    @Test
     void testCaseInsensitiveOrderingOfQualifiersIsLocaleIndependent() {
         Locale orig = Locale.getDefault();
         try {
@@ -421,26 +170,6 @@ public class GenericVersionTest extends AbstractVersionTest {
         } finally {
             Locale.setDefault(orig);
         }
-    }
-
-    @Test
-    void testQualifierVersusNumberOrdering() {
-        assertOrder(X_LT_Y, "1-ga", "1-1");
-        assertOrder(X_LT_Y, "1.ga", "1.1");
-        assertOrder(X_EQ_Y, "1-ga", "1.0");
-        assertOrder(X_EQ_Y, "1.ga", "1.0");
-
-        assertOrder(X_LT_Y, "1-ga-1", "1-0-1");
-        assertOrder(X_LT_Y, "1.ga.1", "1.0.1");
-
-        assertOrder(X_GT_Y, "1.sp", "1.0");
-        assertOrder(X_LT_Y, "1.sp", "1.1");
-
-        assertOrder(X_LT_Y, "1-abc", "1-1");
-        assertOrder(X_LT_Y, "1.abc", "1.1");
-
-        assertOrder(X_LT_Y, "1-xyz", "1-1");
-        assertOrder(X_LT_Y, "1.xyz", "1.1");
     }
 
     @Test
@@ -480,53 +209,10 @@ public class GenericVersionTest extends AbstractVersionTest {
     }
 
     @Test
-    void testMinimumSegment() {
-        assertOrder(X_LT_Y, "1.min", "1.0-alpha-1");
-        assertOrder(X_LT_Y, "1.min", "1.0-SNAPSHOT");
-        assertOrder(X_LT_Y, "1.min", "1.0");
-        assertOrder(X_LT_Y, "1.min", "1.9999999999");
-
-        assertOrder(X_EQ_Y, "1.min", "1.MIN");
-
-        assertOrder(X_GT_Y, "1.min", "0.99999");
-        assertOrder(X_GT_Y, "1.min", "0.max");
-    }
-
-    @Test
-    void testMaximumSegment() {
-        assertOrder(X_GT_Y, "1.max", "1.0-alpha-1");
-        assertOrder(X_GT_Y, "1.max", "1.0-SNAPSHOT");
-        assertOrder(X_GT_Y, "1.max", "1.0");
-        assertOrder(X_GT_Y, "1.max", "1.9999999999");
-
-        assertOrder(X_EQ_Y, "1.max", "1.MAX");
-
-        assertOrder(X_LT_Y, "1.max", "2.0-alpha-1");
-        assertOrder(X_LT_Y, "1.max", "2.min");
-    }
-
-    @Test
-    void testCompareLettersToNumbers() {
-        assertOrder(X_GT_Y, "1.7", "J");
-    }
-
-    @Test
-    void testCompareDigitToLetter() {
-        assertOrder(X_GT_Y, "7", "J");
-        assertOrder(X_GT_Y, "7", "c");
-    }
-
-    @Test
     void testNonAsciiDigits() { // These should not be treated as digits.
         String arabicEight = "\u0668";
         assertOrder(X_GT_Y, "1", arabicEight);
         assertOrder(X_GT_Y, "9", arabicEight);
-    }
-
-    @Test
-    void testLexicographicOrder() {
-        assertOrder(X_GT_Y, "zebra", "aardvark");
-        assertOrder(X_GT_Y, "ζέβρα", "zebra");
     }
 
     /**
